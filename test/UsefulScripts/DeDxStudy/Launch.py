@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import urllib
 import string
 import os,sys,time
@@ -53,8 +52,10 @@ LOCALTIER   = 'T2_CH_CERN'
 #DATASETMASK = '/MinimumBias/Run2015B-SiStripCalMinBias-PromptReco-v1/ALCARECO'
 #DATASETMASK = '/StreamExpress/Run2015B-SiStripCalMinBias-Express-v1/ALCARECO'
 #DATASETMASK = '/ZeroBias/Run2015B-PromptReco-v1/RECO'
-DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
-EndPath     = "/storage/data/cms/store/user/jozobec/dEdxCalib"
+###/ZeroBias/Run2017F-SiStripCalMinBias-06Nov2017-v1/ALCARECO
+
+DATASETMASK = ['/ZeroBias/Run2017B-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017C-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017D-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017E-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017F-SiStripCalMinBias-17Nov2017-v1/ALCARECO']  #0bias. Highly ionizing proton
+EndPath     = "/storage/data/cms/store/user/jpriscia/dEdxCalib"
 ISLOCAL     = False
 TransferDirectlyToStorage = True
 LoadJson(JSON)
@@ -84,7 +85,14 @@ def filesFromDataset(dataset):
 
 def filesFromDataset2(dataset):
    Files = []
-   Runs  = ['278018', '278308', '279931', '280385']
+   Runs=[]
+   jsonFile = open(JSON,'r')
+   runList=json.load(jsonFile,encoding='utf-8').items()
+   runList.sort()
+   for run in runList :
+      Runs.append(str(run[0]))
+      print str(run[0])
+
    for run in Runs:
       output = os.popen('das_client --limit=0 --query \'file run=%s dataset=%s\'' % (run, dataset)).read().split('\n')
       for f in output:
@@ -110,7 +118,11 @@ LaunchOnCondor.Jobs_Queue = '8nh'
 if not TransferDirectlyToStorage:
    os.system("mkdir -p out");
 else:
-   os.system('mkdir -p %s/{278018,278308,279931,280385}' % EndPath)
+   jsonFile = open(JSON,'r')
+   runList=json.load(jsonFile,encoding='utf-8').items()
+   runList.sort()
+   for run in runList :
+      os.system('mkdir -p %s/%s' %(EndPath,run[0]))
 for DATASET in datasetList :
    DATASET = DATASET.replace('\n','')
    FILELIST = filesFromDataset2(DATASET)

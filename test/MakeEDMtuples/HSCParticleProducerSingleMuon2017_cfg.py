@@ -1,7 +1,7 @@
 import sys, os
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
-from pdb import set_trace
+
 options = VarParsing('python')
 
 options.register('GTAG', '94X_dataRun2_ReReco_EOY17_v2',

@@ -237,15 +237,14 @@ def CreateTheShellFile(argv, options=''):
         for i in range(len(Jobs_FinalCmds)):
                 #shell_file.write('echo ' + Jobs_FinalCmds[i]+'\n')
 		shell_file.write(Jobs_FinalCmds[i]+'\n')
+        if subTool=='slurm':
+           logsDir = Farm_Directories[2]
+           if(not os.path.isabs(logsDir)): logsDir = os.getcwd()+'/'+logsDir;
+           shell_file.write('mv %s.err %s.log %s \n' % (LogFileName, LogFileName, logsDir))
         if Jobs_RunHere==0:
            outDir = Farm_Directories[3]
            if(not os.path.isabs(outDir)): outDir = os.getcwd()+'/'+outDir;
- 	   shell_file.write('mv '+ Jobs_Name+'* '+outDir+'\n')
-	if subTool=='slurm':
-           logsDir = Farm_Directories[2]
-           if(not os.path.isabs(logsDir)): logsDir = os.getcwd()+'/'+logsDir;
- 	   shell_file.write('mv %s.err %s.log %s \n' % (LogFileName, LogFileName, logsDir))
-	#   shell_file.write('\n\'\n')
+ 	   shell_file.write('mv '+ ' *'+Jobs_Name+'* '+outDir+'\n')
 	shell_file.close()
 	os.system("chmod 777 "+Path_Shell)
 
@@ -571,8 +570,3 @@ def SendCMSMergeJob(FarmDirectory, JobName, InputFiles, OutputFile, KeepStatemen
         SendCluster_Push  (["CMSSW", Temp_Cfg])
         SendCluster_Submit()
         os.system('rm '+ Temp_Cfg)
-
-
-
-
-

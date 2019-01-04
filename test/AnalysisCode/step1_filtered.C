@@ -126,7 +126,7 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
 
    //setup ROOT global variables (mostly cosmetic and histo in file treatment)
    setTDRStyle();
-=   gStyle->SetPadTopMargin   (0.05);
+   gStyle->SetPadTopMargin   (0.05);
    gStyle->SetPadBottomMargin(0.10);
    gStyle->SetPadRightMargin (0.18);
    gStyle->SetPadLeftMargin  (0.13);
@@ -430,6 +430,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
    bool PUA = (vertexColl.size()<15);
    bool PUB = (vertexColl.size()>=15);
 
+   // questo non so bene cosa sia ....Jessica
    if(st){st->BS_TNOH->Fill(track->found(),Event_Weight);
           if(PUA)st->BS_TNOH_PUA->Fill(track->found(),Event_Weight);
           if(PUB)st->BS_TNOH_PUB->Fill(track->found(),Event_Weight);
@@ -442,6 +443,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
    if(TypeMode!=3 && track->hitPattern().numberOfValidPixelHits()<GlobalMinNOPH)return false;
    if(TypeMode!=3 && track->validFraction()<GlobalMinFOVH)return false;
 
+   //to be added Jessica
    int missingHitsTillLast = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);;
    double validFractionTillLast = track->found()<=0?-1:track->found() / float(track->found() + missingHitsTillLast);
   
@@ -584,7 +586,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
 //     if(TypeMode!=4){       if(EoP>GlobalMaxEIsol)return false;     }
      if(EoP>GlobalMaxEIsol)return false;
      if(st){st->EIsol   ->Fill(0.0,Event_Weight);}
-    
+     
      // relative tracker isolation
      if (st) {  st->BS_SumpTOverpT->Fill(hscpIso.Get_TK_SumEt()/track->pt(), Event_Weight); }
 //     if(TypeMode==4) { if(hscpIso.Get_TK_SumEt()/track->pt()>GlobalMaxRelTIsol)return false;   }
@@ -697,8 +699,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
    if(st){if(GenBeta>=0)st->Beta_PreselectedC->Fill(GenBeta, Event_Weight);
           if(DZSB  && OASB)st->BS_Dxy_Cosmic->Fill(dxy, Event_Weight);
           if(DXYSB && OASB)st->BS_Dz_Cosmic->Fill(dz, Event_Weight);
-          if(DXYSB && DZSB)st->BS_OpenAngle   if(TypeMode==5 && fabs(dz)>GlobalMaxDZ) DZSB = true;
-_Cosmic->Fill(OpenAngle,Event_Weight);
+          if(DXYSB && DZSB)st->BS_OpenAngle_Cosmic->Fill(OpenAngle,Event_Weight);
 
 
           TVector3 outerHit = getOuterHitPos(dedxHits);
@@ -1111,20 +1112,7 @@ std::cout<<"F\n";
       //needed for bookeeping
       bool* HSCPTk              = new bool[CutPt.size()];
       bool* HSCPTk_SystP        = new bool[CutPt.size()];
-      bool* HSCPTk_SystI        = new bool[CutPt.size()];
-      bool* HSCPTk_SystT        = new bool[CutPt.size()];
-      bool* HSCPTk_SystM        = new bool[CutPt.size()];
-      bool* HSCPTk_SystPU       = new bool[CutPt.size()];
-      bool* HSCPTk_SystHUp      = new bool[CutPt.size()];
-      bool* HSCPTk_SystHDown    = new bool[CutPt.size()];
-      double* MaxMass           = new double[CutPt.size()];
-      double* MaxMass_SystP     = new double[CutPt.size()];
-      double* MaxMass_SystI     = new double[CutPt.size()];
-      double* MaxMass_SystT     = new double[CutPt.size()];
-      double* MaxMass_SystM     = new double[CutPt.size()];
-      double* MaxMass_SystPU    = new double[CutPt.size()];
-      double* MaxMass_SystHUp   = new double[CutPt.size()];
-      double* MaxMass_SystHDown = new double[CutPt.size()];
+      //many other like this..removed JESS
 
       moduleGeom::loadGeometry(analysis_path+"../../data/CMS_GeomTree.root");
       muonTimingCalculator tofCalculator;
@@ -1286,20 +1274,8 @@ std::cout<<"G\n";
             //reinitialize the bookeeping array for each event
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk        [CutIndex] = false;   }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystP  [CutIndex] = false;   }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystI  [CutIndex] = false;   }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystT  [CutIndex] = false;   }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystM  [CutIndex] = false;   }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystPU [CutIndex] = false; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystHUp[CutIndex] = false; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystHDown[CutIndex] = false; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass       [CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystP [CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystI [CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystT [CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystM [CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystPU[CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystHUp [CutIndex] = -1; }
-            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystHDown[CutIndex] = -1; }
+	    //many others like this..removed JESS
+
 
             HIPemulator.setEventRate(); //take it from a pdf
             HIPemulatorUp.setEventRate(HIPemulator.getEventRatePixel()*1.25, HIPemulator.getEventRateStrip()*1.80);  // deltaPixel = 3.653981e+02, basePixel = 1.332625e+03; deltaStrip = 4.662832e+02, baseStrip = 5.958308e+02, from Run257805
@@ -1368,7 +1344,7 @@ std::cout<<"G\n";
                DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
                DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulator:NULL);
                DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulatorUp:NULL);
-               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulatorDown:NULL); //HERE - MAURO
+               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulatorDown:NULL);
                DeDxData* dedxSObj  = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj  = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements()>0?&dedxMUpObjTmp:NULL;

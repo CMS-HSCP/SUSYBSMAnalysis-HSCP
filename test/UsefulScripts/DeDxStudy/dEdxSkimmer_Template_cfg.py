@@ -3,11 +3,10 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("DEDXUNCSKIM")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.load('Configuration.Geometry.GeometryExtended2015Reco_cff')
-process.load('Configuration.StandardSequences.MagneticField_38T_PostLS1_cff')
+process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load('Configuration.StandardSequences.Services_cff')
-
 
 process.load('Configuration.StandardSequences.RawToDigi_cff')
 process.load('Configuration.StandardSequences.L1Reco_cff')
@@ -30,8 +29,7 @@ process.source = cms.Source("PoolSource",
 
 #process.GlobalTag.globaltag = GTAG
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-#process.GlobalTag = GlobalTag(process.GlobalTag, "GR_P_V56", '')
-process.GlobalTag = GlobalTag(process.GlobalTag, "80X_dataRun2_2016LegacyRepro_v4", '')
+process.GlobalTag = GlobalTag(process.GlobalTag, "94X_dataRun2_ReReco_EOY17_v2", '')
 
 
 process.load('Alignment.CommonAlignmentProducer.AlignmentTrackSelector_cfi')
@@ -64,9 +62,6 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep EventAux_*_*_*",
          "keep LumiSummary_*_*_*",
          "keep *_RefitterForDeDx_*_DEDXUNCSKIM",
-#         "keep *_offlinePrimaryVertices_*_*",
-#         "keep *_siPixelClusters_*_DEDXUNCSKIM",
-#         "keep *_siStripClusters_*_DEDXUNCSKIM",
          "keep *_dedxHitInfo_*_DEDXUNCSKIM",
     ),
     fileName = cms.untracked.string("dEdxSkim.root"),
