@@ -29,11 +29,11 @@ def IsGoodLumi(R, L):
 
 def IsFileWithGoodLumi(F):  
    #check if the file contains at least one good lumi section using DAS_CLIENT --> commented out because VERY SLOW!
-   #print 'das_client.py --limit=0 --query "lumi file='+f+' |  grep lumi.run_number,lumi.number"'      
+   #print 'dasgoclient --limit=0 --query "lumi file='+f+' |  grep lumi.run_number,lumi.number"'      
    #containsGoodLumi = False
-   #for run in commands.getstatusoutput('das_client.py --limit=0 --query "run file='+f+'"')[1].replace('[','').replace(']','').split(','):
+   #for run in commands.getstatusoutput('dasgoclient --limit=0 --query "run file='+f+'"')[1].replace('[','').replace(']','').split(','):
    #   if(not IsGoodRun(int(run))):continue
-   #   for lumi in commands.getstatusoutput('das_client.py --limit=0 --query "lumi file='+f+'"')[1].replace('[','').replace(']','').split(','):
+   #   for lumi in commands.getstatusoutput('dasgoclient --limit=0 --query "lumi file='+f+'"')[1].replace('[','').replace(']','').split(','):
    #      if(IsGoodLumi(run, lumi)):return True
 
    #FASTER technique only based on run number and file name parsing
@@ -55,7 +55,8 @@ LOCALTIER   = 'T2_CH_CERN'
 ###/ZeroBias/Run2017F-SiStripCalMinBias-06Nov2017-v1/ALCARECO
 
 DATASETMASK = ['/ZeroBias/Run2017B-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017C-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017D-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017E-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017F-SiStripCalMinBias-17Nov2017-v1/ALCARECO']  #0bias. Highly ionizing proton
-EndPath     = "/storage/data/cms/store/user/jpriscia/dEdxCalib"
+username    = commands.getstatusoutput('whoami') 
+EndPath     = "/storage/data/cms/store/user/"+username[1]+"/dEdxCalib"
 ISLOCAL     = False
 TransferDirectlyToStorage = True
 LoadJson(JSON)
@@ -69,14 +70,14 @@ def initProxy():
 
 def filesFromDataset(dataset):
    ISLOCAL=False
-   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "site dataset='+dataset+' | grep site.name,site.dataset_fraction"')
+   command_out = commands.getstatusoutput('dasgoclient --limit=0 --query "site dataset='+dataset+' | grep site.name,site.dataset_fraction"')
    for site in command_out[1].split('\n'):
       if(LOCALTIER in site and '100.00%' in site): 
          ISLOCAL=True
          break
 
    Files = []
-   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "file dataset='+dataset+'"')
+   command_out = commands.getstatusoutput('dasgoclient --limit=0 --query "file dataset='+dataset+'"')
    for f in command_out[1].split():
       if(not IsFileWithGoodLumi(f)):continue
       if(ISLOCAL): Files += [f]

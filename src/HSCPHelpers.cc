@@ -1,3 +1,4 @@
+#include "SUSYBSMAnalysis/HSCP/interface/HSCPHelpers.h"
 
 namespace hscphelpers {
   TH3F* preprocess_dEdx_template(TH3F* DeDxMap_, bool splitByModuleType) {
@@ -32,7 +33,7 @@ namespace hscphelpers {
 
   int  muonStations(const reco::HitPattern& hitPattern) {
     int stations[4] = { 0,0,0,0 };
-    for (int i=0; i<hitPattern.numberOfHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
+    for (int i=0; i<hitPattern.numberOfValidTrackerHits(); i++) {
       uint32_t pattern = hitPattern.getHitPattern(reco::HitPattern::HitCategory::TRACK_HITS, i );
       if(pattern == 0) break;
       if(hitPattern.muonHitFilter(pattern) && (int(hitPattern.getSubStructure(pattern)) == 1 || int(hitPattern.getSubStructure(pattern)) == 2) && hitPattern.getHitType(pattern) == 0){
@@ -45,7 +46,7 @@ namespace hscphelpers {
 
 
 
-  double rescaledPt(const double& pt, const double& eta, const double& phi, const int& charge)
+  double rescaledPt(const double& pt, const double& eta, const double& phi, const int& charge, const int& TypeMode)
   {
     if(TypeMode!=3) {
       double newInvPt = 1/pt+0.000236-0.000135*pow(eta,2)+charge*0.000282*TMath::Sin(phi-1.337);

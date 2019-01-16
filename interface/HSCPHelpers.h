@@ -8,6 +8,8 @@
 
 #include "TH1F.h"
 #include "TH3F.h"
+#include "TMath.h"
+
 #include "DataFormats/TrackReco/interface/HitPattern.h"
 
 namespace hscphelpers {

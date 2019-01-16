@@ -126,7 +126,7 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
 
    //setup ROOT global variables (mostly cosmetic and histo in file treatment)
    setTDRStyle();
-=   gStyle->SetPadTopMargin   (0.05);
+   gStyle->SetPadTopMargin   (0.05);
    gStyle->SetPadBottomMargin(0.10);
    gStyle->SetPadRightMargin (0.18);
    gStyle->SetPadLeftMargin  (0.13);

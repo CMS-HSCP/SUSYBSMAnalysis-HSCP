@@ -8,6 +8,7 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "TTree.h"
 
@@ -20,7 +21,7 @@ public:
 	void fill_evtinfo(const edm::EventID& id);
 
 	void set_trackinfo(TTree* tree);
-	void fill_trackinfo(const reco::TrackRef& trk);
+	void fill_trackinfo(const reco::TrackRef& trk, reco::Vertex& bestVtx);
 
         void set_trigInfo(TTree* tree);
         void fill_trigInfo(const edm::TriggerResults& triggerResults, const edm::TriggerNames& trigNames);
@@ -37,17 +38,17 @@ private:
 	unsigned long long evt_ = 0;
 
 
-	float dxy = -1000;
-	float dx = -1000; 
+	float dxy_ = -1000;
+	float dz_ = -1000; 
 
-	float track_p = -1000;
-	float track_pt = -1000;
-	float track_eta = -1000;
+	float track_p_ = -1000;
+	float track_pt_ = -1000;
+	float track_eta_ = -1000;
 
-	float track_Is = -1000;
-	float track_Ih = -1000;
+	float track_Is_ = -1000;
+	float track_Ih_ = -1000;
 
-	float track_TOF = -1000;
+	float track_TOF_ = -1000;
 
 
 	

@@ -138,7 +138,7 @@ def CreateTheShellFile(argv, options=''):
 
 	shell_file=open(Path_Shell,'w')
 	shell_file.write('#! /bin/sh\n')
-	shell_file.write(CopyRights + '\n')
+	# shell_file.write(CopyRights + '\n')
 	if subTool == 'slurm':
 	    shell_file.write('#SBATCH --job-name=%s_job\n' % Path_Shell)
 	    #shell_file.write('#SBATCH --output=%s.log\n' % Path_Log)
