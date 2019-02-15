@@ -104,7 +104,7 @@ int                GlobalMinNOPH      =   2;      // cut on number of (valid) tr
 double             GlobalMinFOVH      =   0.8;//0.0AMSB;    // cut on fraction of valid track hits
 unsigned int       GlobalMaxNOMHTillLast = 99999;//1AMSB;     // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
 double             GlobalMinFOVHTillLast =-99999;//0.85AMSB;   // cut on the fraction of valid hits divided by total expected hits until the last one
-unsigned int       GlobalMinNOM       =   6;//7AMSB;      // cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used) -- should be more stringent -- 10 should be used
+unsigned int       GlobalMinNOM       =   6;//7AMSB;      // cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
 double             GlobalMinNDOF      =   8;      // cut on number of     DegreeOfFreedom used for muon TOF measurement
 double             GlobalMinNDOFDT    =   6;      // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
 double             GlobalMinNDOFCSC   =   6;      // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
@@ -207,7 +207,6 @@ void InitBaseDirectory(){
    if(!hostTmp||!analystTmp)return;
    string analyst(analystTmp);
    string host   (hostTmp);
-  
    if(getenv("PWD")!=NULL)host+=string(" PWD=") + getenv("PWD");
 
    // BaseDirectory is first set for the AAA protocol ...

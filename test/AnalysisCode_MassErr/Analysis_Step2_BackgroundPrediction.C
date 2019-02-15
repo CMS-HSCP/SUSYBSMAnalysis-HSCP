@@ -35,13 +35,8 @@ using namespace std;
 
 /////////////////////////// CODE PARAMETERS /////////////////////////////
 
-void symmetrizeHisto (TH1D* histo, int mode=2);
-void symmetrizeHisto (TH2D* histo, int mode=2);
-void compareForwardToBackwardWeights (TH1D* EtaS, TH1D* EtaB);
-
 void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
 {
-   bool symmetrizeHistos = false;
    if(InputPattern=="COMPILE")return;
 
    setTDRStyle();
@@ -93,8 +88,6 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
 	  if(!list->At(d)->IsFolder())continue;
 	  string DirName;
 	  DirName = DirName + list->At(d)->GetName();
-//	  if (DirName.find("Data13TeV16")==string::npos) continue;
-//	  if (DirName.find("Data13TeV16G")!=string::npos) continue;
 	  if(DirName.find("Cosmic")!=string::npos) continue;
 
           if(DirName.find("7TeV")!=string::npos){
@@ -375,20 +368,12 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
          TH1D* Pred_EtaB_Proj     = Pred_EtaB ->ProjectionY("ProjEtaB" ,CutIndex+1,CutIndex+1);  
          TH1D* Pred_EtaS_Proj     = Pred_EtaS ->ProjectionY("ProjEtaS" ,CutIndex+1,CutIndex+1); 
          TH1D* Pred_EtaS2_Proj    = Pred_EtaS2->ProjectionY("ProjEtaS2",CutIndex+1,CutIndex+1);
-	 // here
-
-         if (CutIndex==4) compareForwardToBackwardWeights (Pred_EtaS_Proj, Pred_EtaB_Proj);
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaB_Proj);
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS_Proj);
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS2_Proj);
-
          TH1D* Pred_EtaB_Proj_PE  = (TH1D*)Pred_EtaB_Proj ->Clone("Pred_EtaB_Proj_PE");  Pred_EtaB_Proj_PE ->Reset();
          TH1D* Pred_EtaS_Proj_PE  = (TH1D*)Pred_EtaS_Proj ->Clone("Pred_EtaS_Proj_PE");  Pred_EtaS_Proj_PE ->Reset();
          TH1D* Pred_EtaS2_Proj_PE = (TH1D*)Pred_EtaS2_Proj->Clone("Pred_EtaS2_Proj_PE"); Pred_EtaS2_Proj_PE->Reset();
 
          Pred_EtaP->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
          TH2D* Pred_EtaPWeighted    = (TH2D*)Pred_EtaP->Project3D("zy");
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaPWeighted);
          TH2D* Pred_EtaPWeighted_PE = (TH2D*)Pred_EtaPWeighted->Clone("Pred_EtaPWeightedPE");   Pred_EtaPWeighted_PE->Reset();
 
          TH1D* Pred_I_Proj = Pred_I->ProjectionY("ProjI",CutIndex+1,CutIndex+1);
@@ -400,7 +385,7 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
          TH2D* Pred_Prof_MassTOF  =  new TH2D("Pred_Prof_MassTOF" ,"Pred_Prof_MassTOF" ,MassNBins,0,MassHistoUpperBound, NPseudoExp, 0, NPseudoExp);  
          TH2D* Pred_Prof_MassComb =  new TH2D("Pred_Prof_MassComb","Pred_Prof_MassComb",MassNBins,0,MassHistoUpperBound, NPseudoExp, 0, NPseudoExp);
 
-          for(int x=0;x<=Pred_Mass->GetNbinsY()+1;x++){ // taking the overflow as well
+          for(int x=0;x<Pred_Mass->GetNbinsY()+1;x++){
              for(unsigned int pe=0;pe<NPseudoExp;pe++){
                 Pred_Prof_Mass    ->SetBinContent(x, pe, 0);
                 Pred_Prof_MassTOF ->SetBinContent(x, pe, 0);
@@ -436,88 +421,32 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
          for(int i=0;i<Pred_EtaS2_Proj_PE->GetNbinsX()+1;i++){Pred_EtaS2_Proj_PE->SetBinContent(i,RNG->Poisson(Pred_EtaS2_Proj->GetBinContent(i)) );} Pred_EtaS2_Proj_PE->Scale(1.0/Pred_EtaS2_Proj_PE->Integral());
 
          for(int i=0;i<Pred_EtaPWeighted_PE->GetNbinsX()+1;i++){
-         for(int j=0;j<=Pred_EtaPWeighted_PE->GetNbinsY()+1;j++){ // take the overflow as well
+         for(int j=0;j<Pred_EtaPWeighted_PE->GetNbinsY()+1;j++){
             Pred_EtaPWeighted_PE->SetBinContent(i,j,RNG->Poisson(Pred_EtaPWeighted->GetBinContent(i,j)));
          }}
-/*
-// this part does the reweighing in terms of removing either high or
-// low momentum tracks (currently set on removing low momenta first) to match the Eta distribution
-// to remove high momenta, change this loop a few lines below
-// for (int y = 0; y <= EtaPC->GetNbinsY()+1; y++)
-// loop into
-// for (int y = EtaPC->GetNbinsY()+1; --y;)
-// if you opt for this reweighing, be sure to use EtaPC in the end for your momentum distribution
-// instead of Pred_EtaPWeighted_PE
-//
-	 TH1D* AbsoluteWeight = Pred_EtaPWeighted_PE->ProjectionX("PWeighted");
-	 Pred_EtaB_Proj_PE->Scale(AbsoluteWeight->GetMaximum()/Pred_EtaB_Proj_PE->GetMaximum());
-	 Pred_EtaS_Proj_PE->Scale(AbsoluteWeight->GetMaximum()/Pred_EtaS_Proj_PE->GetMaximum());
-	 for (int x = 0; x < AbsoluteWeight->GetNbinsX()+1; x++) {
-            AbsoluteWeight->SetBinContent(x, Pred_EtaB_Proj_PE->GetBinContent(x) - Pred_EtaS_Proj_PE->GetBinContent(x));
-            if (AbsoluteWeight->GetBinContent(x)<0) AbsoluteWeight->SetBinContent(x, 0);
-	 }
-	 TH2D* EtaPC = (TH2D*) Pred_EtaPWeighted_PE->Clone("EtaPC");
-	 for (int x = 0; x < EtaPC->GetNbinsX()+1; x++){
-            if (AbsoluteWeight->GetBinContent(x)<=0) continue;
-            for (int y = 0; y <= EtaPC->GetNbinsY()+1; y++){
-               if (EtaPC->GetBinContent(x,y)>0){
-              	  if (AbsoluteWeight->GetBinContent(x) >= EtaPC->GetBinContent(x,y)){
-              	     AbsoluteWeight->SetBinContent(x, AbsoluteWeight->GetBinContent(x) - EtaPC->GetBinContent(x,y));
-              	     EtaPC->SetBinContent(x, y, 0);
-                     if (AbsoluteWeight->GetBinContent(x)<=0) break;
-              	  } else {
-                     EtaPC->SetBinContent(x, y, EtaPC->GetBinContent(x, y) - AbsoluteWeight->GetBinContent(x));
-              	     break;
-              	  }
-               }
-            }
-	 }
-	 delete AbsoluteWeight;
-*/
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaB_Proj_PE);
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS_Proj_PE);
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS2_Proj_PE);
-         if (symmetrizeHistos) symmetrizeHisto(Pred_EtaPWeighted_PE);
-	 Pred_EtaB_Proj_PE->Scale(1.0/Pred_EtaB_Proj_PE->Integral());
-	 Pred_EtaS_Proj_PE->Scale(1.0/Pred_EtaS_Proj_PE->Integral());
 
          double WeightP = 0.0;
          for(int x=0;x<=Pred_EtaPWeighted_PE->GetXaxis()->GetNbins();x++){
             WeightP = 0.0;
-//          reweigh C_Eta on B_Eta/A_Eta
             if(Pred_EtaB_Proj_PE->GetBinContent(x)>0){
                               WeightP = Pred_EtaS_Proj_PE ->GetBinContent(x)/Pred_EtaB_Proj_PE->GetBinContent(x);
                if(TypeMode==2)WeightP*= Pred_EtaS2_Proj_PE->GetBinContent(x)/Pred_EtaB_Proj_PE->GetBinContent(x);
             }
-/*
-//          reweigh C_Eta on B_Eta/C_Eta -- not out of the box, in this case we don't need the    
-//	    TH1D* Pred_EtaCRegion = (TH1D*) Pred_EtaPWeighted->ProjectionX ("Pred_EtaCRegion");
-	    TH1D* Pred_EtaCRegion = (TH1D*) EtaPC->ProjectionX ("Pred_EtaCRegion", 0, EtaPC->GetNbinsY()+1);
-	    Pred_EtaCRegion->Scale(1.0/Pred_EtaCRegion->Integral());
-            if(Pred_EtaCRegion->GetBinContent(x)>0){
-                              WeightP = Pred_EtaS_Proj_PE ->GetBinContent(x)/Pred_EtaCRegion->GetBinContent(x);
-               if(TypeMode==2)WeightP*= Pred_EtaS2_Proj_PE->GetBinContent(x)/Pred_EtaCRegion->GetBinContent(x);
-            }
-	    delete Pred_EtaCRegion;
-*/
-            for(int y=0;y<=Pred_EtaPWeighted_PE->GetYaxis()->GetNbins()+1;y++){ // take the overflow as well
+
+            for(int y=0;y<=Pred_EtaPWeighted_PE->GetYaxis()->GetNbins();y++){
                Pred_EtaPWeighted_PE->SetBinContent(x,y,Pred_EtaPWeighted_PE->GetBinContent(x,y)*WeightP);
-//               EtaPC->SetBinContent(x,y,EtaPC->GetBinContent(x,y)*WeightP);
             }
          }
 
-	 // Plus side
-         TH1D* Pred_P_ProjPE = Pred_EtaPWeighted_PE /*EtaPC*/->ProjectionY("Pred_P_ProjPE", 0, 30);                                                        Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral(0, Pred_P_ProjPE->GetNbinsX()+1)); // include overflow
-	 // Minus side
-//         TH1D* Pred_P_ProjPE_M = Pred_EtaPWeighted_PE /*EtaPC*/->ProjectionY("Pred_P_ProjPE", 0, 30);                                                        Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral(0, Pred_P_ProjPE->GetNbinsX()+1)); // include overflow
+         TH1D* Pred_P_ProjPE = Pred_EtaPWeighted_PE->ProjectionY("Pred_P_ProjPE");                                                        Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral());
          for(int i=0;i<Pred_I_ProjPE->GetNbinsX()+1;i++){Pred_I_ProjPE->SetBinContent(i,RNG->Poisson(Pred_I_Proj->GetBinContent(i)) );}   Pred_I_ProjPE->Scale(1.0/Pred_I_ProjPE->Integral());
          for(int i=0;i<Pred_T_ProjPE->GetNbinsX()+1;i++){Pred_T_ProjPE->SetBinContent(i,RNG->Poisson(Pred_T_Proj->GetBinContent(i)) );}   Pred_T_ProjPE->Scale(1.0/Pred_T_ProjPE->Integral());
 
          //save the predP distribution
-         for(int x=0;x<=Pred_P_ProjPE->GetNbinsX()+1;x++){Pred_P->SetBinContent(CutIndex+1, x, Pred_P->GetBinContent(CutIndex+1, x) + Pred_P_ProjPE->GetBinContent(x) * PE_P);}; // overflow
+         for(int x=0;x<Pred_P_ProjPE->GetNbinsX()+1;x++){Pred_P->SetBinContent(CutIndex+1, x, Pred_P->GetBinContent(CutIndex+1, x) + Pred_P_ProjPE->GetBinContent(x) * PE_P);};
 
          double Proba, MI, MComb;//, MT=0, ProbaT=0;
-         for(int x=0;x<=Pred_P_ProjPE->GetNbinsX()+1;x++){    if(Pred_P_ProjPE->GetBinContent(x)<=0.0){continue;}  const double& p = (x<Pred_P_ProjPE->GetNbinsX()+1)?Pred_P_ProjPE->GetBinCenter(x):Pred_P_ProjPE->GetBinCenter(x+3); //overflow bin
+         for(int x=0;x<Pred_P_ProjPE->GetNbinsX()+1;x++){    if(Pred_P_ProjPE->GetBinContent(x)<=0.0){continue;}  const double& p = Pred_P_ProjPE->GetBinCenter(x);
          for(int y=0;y<Pred_I_ProjPE->GetNbinsX()+1;y++){    if(Pred_I_ProjPE->GetBinContent(y)<=0.0){continue;}  const double& i = Pred_I_ProjPE->GetBinCenter(y);
             Proba = Pred_P_ProjPE->GetBinContent(x) * Pred_I_ProjPE->GetBinContent(y);  if(Proba<=0 || isnan((float)Proba))continue;
             MI = GetMass(p,i, false);
@@ -543,49 +472,35 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
             Pred_Prof_Mass    ->SetBinContent(x, pe, tmpH_Mass    ->GetBinContent(x) * PE_P);
             Pred_Prof_MassTOF ->SetBinContent(x, pe, tmpH_MassTOF ->GetBinContent(x) * PE_P);
             Pred_Prof_MassComb->SetBinContent(x, pe, tmpH_MassComb->GetBinContent(x) * PE_P);
-            if(isnan((float)(tmpH_Mass    ->GetBinContent(x) * PE_P))){printf("%f x %f\n",tmpH_Mass    ->GetBinContent(x), P /*PE_P*/); fflush(stdout);exit(0);}
+            if(isnan((float)(tmpH_Mass    ->GetBinContent(x) * PE_P))){printf("%f x %f\n",tmpH_Mass    ->GetBinContent(x),PE_P); fflush(stdout);exit(0);}
          }
         
-	 if (DirName.find("13TeV16G")==string::npos && is2016 && CutIndex == 4) {Pred_EtaPWeighted_PE->SaveAs("Pred_EtaPWeighted_PE.root");/* if (EtaPC) EtaPC->SaveAs("EtaPC.root");*/}
-//         delete EtaPC;
          delete Pred_P_ProjPE;
          delete tmpH_Mass;
          delete tmpH_MassTOF;
          delete tmpH_MassComb;
         }printf("\n");
 
-       TH2D* MassesLooseCut = NULL;
-       if (CutIndex == 4) MassesLooseCut = new TH2D ("MassesLooseCut", "MassesLooseCut", NPseudoExp, 0, NPseudoExp, MassNBins,0,MassHistoUpperBound);
-//       std::vector <double> masses;
        for(int x=0;x<Pred_Mass->GetNbinsY()+1;x++){
-          double Mean=0, MeanTOF=0, MeanComb=0, Median=0;
+          double Mean=0, MeanTOF=0, MeanComb=0;
           for(unsigned int pe=0;pe<NPseudoExp;pe++){
              Mean     += Pred_Prof_Mass    ->GetBinContent(x, pe);
              MeanTOF  += Pred_Prof_MassTOF ->GetBinContent(x, pe);
              MeanComb += Pred_Prof_MassComb->GetBinContent(x, pe);
-//	     masses.push_back(Pred_Prof_Mass    ->GetBinContent(x, pe));
-	     if (MassesLooseCut) MassesLooseCut->SetBinContent (pe, x, Pred_Prof_Mass->GetBinContent (x, pe));
           }Mean/=NPseudoExp; MeanTOF/=NPseudoExp;  MeanComb/=NPseudoExp;
-//	  std::sort (masses.begin(), masses.end());
-//	  if (NPseudoExp%2==0) Median = masses[NPseudoExp/2];
-//	  if (NPseudoExp%2==1) Median = masses[(NPseudoExp+1)/2];
 
-          double Err=0, ErrTOF=0, ErrComb=0, MAD=0;
+          double Err=0, ErrTOF=0, ErrComb=0;
           for(unsigned int pe=0;pe<NPseudoExp;pe++){
              Err     += pow(Mean     - Pred_Prof_Mass    ->GetBinContent(x, pe),2);
              ErrTOF  += pow(MeanTOF  - Pred_Prof_MassTOF ->GetBinContent(x, pe),2);
              ErrComb += pow(MeanComb - Pred_Prof_MassComb->GetBinContent(x, pe),2);
-	     MAD     += fabs(Median - Pred_Prof_Mass->GetBinContent(x, pe));
           }Err=sqrt(Err/(NPseudoExp-1)); ErrTOF=sqrt(ErrTOF/(NPseudoExp-1));  ErrComb=sqrt(ErrComb/(NPseudoExp-1));
-//	  MAD /= NPseudoExp;
 
           Pred_Mass    ->SetBinContent(CutIndex+1,x,Mean    ); Pred_Mass      ->SetBinError(CutIndex+1,x,Err    );
-//          Pred_Mass    ->SetBinContent(CutIndex+1,x,Median  ); Pred_Mass      ->SetBinError(CutIndex+1,x,MAD    );
           Pred_MassTOF ->SetBinContent(CutIndex+1,x,MeanTOF ); Pred_MassTOF   ->SetBinError(CutIndex+1,x,ErrTOF );
           Pred_MassComb->SetBinContent(CutIndex+1,x,MeanComb); Pred_MassComb  ->SetBinError(CutIndex+1,x,ErrComb);
        }
-       if (MassesLooseCut && is2016 && DirName.find("13TeV16G")==string::npos)
-          {MassesLooseCut->SaveAs("MassesLooseCut.root");Pred_EtaPWeighted_PE->SaveAs("Pred_EtaP_Weighted_PE.root"); delete MassesLooseCut;}
+
        delete Pred_EtaB_Proj_PE;
        delete Pred_EtaS_Proj_PE;
        delete Pred_EtaS2_Proj_PE;
@@ -643,158 +558,3 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
 	}//end loop on sub directory
       }//End of loop on two predictions
 }
-
-void symmetrizeHisto (TH1D* histo, int mode){
-   int limit, shift = 0;
-   if (histo->GetNbinsX()%2==0) limit = histo->GetNbinsX()/2;
-   else {
-      limit = (histo->GetNbinsX()-1)/2; // in that case ignore the middle bin
-      shift = 2;
-   }
-   if (mode==0){
-      for (int x=0; x <= limit; x++){
-         histo->SetBinContent (x, 0.5*histo->GetBinContent(x) + 0.5*histo->GetBinContent(histo->GetNbinsX() - x));
-         histo->SetBinContent (histo->GetNbinsX() - x, histo->GetBinContent(x));
-      }
-   } else if (mode>0){
-      int left  = histo->Integral(0, limit),
-	  right = histo->Integral(limit+shift, histo->GetNbinsX()+1);
-      if (mode == 1){ // take the larger half only
-         if (right > left){
-            for (int x = 0; x <= limit; x++)
-               histo->SetBinContent(x, histo->GetBinContent(histo->GetNbinsX() - x));
-	 } else {
-            for (int x = histo->GetNbinsX(); x >= limit; x--)
-               histo->SetBinContent(x, histo->GetBinContent(histo->GetNbinsX() - x));
-	 }
-      } else if (mode == 2){ // take the larger of the two opposite bins
-         for (int x = 0; x <= histo->GetNbinsX(); x++){
-            if (histo->GetBinContent(histo->GetNbinsX() - x) >= histo->GetBinContent(x))
-               histo->SetBinContent(x, histo->GetBinContent(histo->GetNbinsX() - x));
-	    else histo->SetBinContent(histo->GetNbinsX() - x, histo->GetBinContent(x)); 
-	 }
-      } else if (mode == 3){ // take the smaller half only
-         if (right < left){
-            for (int x = 0; x <= limit; x++)
-               histo->SetBinContent(x, histo->GetBinContent(histo->GetNbinsX() - x));
-	 } else {
-            for (int x = histo->GetNbinsX(); x >= limit; x--)
-               histo->SetBinContent(x, histo->GetBinContent(histo->GetNbinsX() - x));
-	 }
-      } else if (mode == 4){ // take the smaller of the two opposite bins
-         for (int x = 0; x <= histo->GetNbinsX(); x++){
-            if (histo->GetBinContent(histo->GetNbinsX() - x) <= histo->GetBinContent(x))
-               histo->SetBinContent(x, histo->GetBinContent(histo->GetNbinsX() - x));
-	    else histo->SetBinContent(histo->GetNbinsX() - x, histo->GetBinContent(x)); 
-	 }
-      }
-   }
-}
-
-void symmetrizeHisto (TH2D* histo, int mode){
-   int limit, shift = 0;
-   if (histo->GetNbinsX()%2==0) limit = histo->GetNbinsX()/2;
-   else {
-      limit = (histo->GetNbinsX()-1)/2; // in that case ignore the middle bin
-      shift = 2;
-   }
-   if (mode == 0){ // take (histogram + mirrored histogram)/2
-      for (int y=0; y <= histo->GetNbinsY()+1; y++){ // transform the overflow as well
-         for (int x=0; x <= limit; x++){
-            histo->SetBinContent(x, y, 0.5*histo->GetBinContent(x, y) + 0.5*histo->GetBinContent(histo->GetNbinsX() - x, y));
-            histo->SetBinContent(histo->GetNbinsX() - x, y, histo->GetBinContent(x, y));
-         }
-      }
-   } else if (mode > 0){
-      int left  = histo->Integral(0, limit),
-	  right = histo->Integral(limit+shift, histo->GetNbinsX()+1);
-      if (mode == 1){ // take the larger half only
-         if (right > left){
-            for (int y=0; y <= histo->GetNbinsY()+1; y++){ // transform the overflow as well
-               for (int x = 0; x <= limit; x++)
-                  histo->SetBinContent(x, y, histo->GetBinContent(histo->GetNbinsX() - x, y));
-	    }
-	 } else {
-            for (int y=0; y <= histo->GetNbinsY()+1; y++){ // transform the overflow as well
-               for (int x = histo->GetNbinsX(); x >= limit; x--)
-                  histo->SetBinContent(x, y, histo->GetBinContent(histo->GetNbinsX() - x, y));
-            }
-	 }
-      } else if (mode == 2){ // take the larger of the two opposite bins
-         for (int y = 0; y <= histo->GetNbinsY()+1; y++){
-            for (int x = 0; x <= histo->GetNbinsX(); x++){
-               if (histo->GetBinContent(histo->GetNbinsX() - x, y) >= histo->GetBinContent(x, y))
-                  histo->SetBinContent(x, y, histo->GetBinContent(histo->GetNbinsX() - x, y));
-               else histo->SetBinContent(histo->GetNbinsX() - x, y, histo->GetBinContent(x, y)); 
-	    }
-	 }
-      } else if (mode == 3){ // take the smaller half only
-         if (right < left){
-            for (int y=0; y <= histo->GetNbinsY()+1; y++){ // transform the overflow as well
-               for (int x = 0; x <= limit; x++)
-                  histo->SetBinContent(x, y, histo->GetBinContent(histo->GetNbinsX() - x, y));
-	    }
-	 } else {
-            for (int y=0; y <= histo->GetNbinsY()+1; y++){ // transform the overflow as well
-               for (int x = histo->GetNbinsX(); x >= limit; x--)
-                  histo->SetBinContent(x, y, histo->GetBinContent(histo->GetNbinsX() - x, y));
-            }
-	 }
-      } else if (mode == 4){ // take the smaller of the two opposite bins
-         for (int y = 0; y <= histo->GetNbinsY()+1; y++){
-            for (int x = 0; x <= histo->GetNbinsX(); x++){
-               if (histo->GetBinContent(histo->GetNbinsX() - x, y) <= histo->GetBinContent(x, y))
-                  histo->SetBinContent(x, y, histo->GetBinContent(histo->GetNbinsX() - x, y));
-               else histo->SetBinContent(histo->GetNbinsX() - x, y, histo->GetBinContent(x, y)); 
-	    }
-	 }
-      }
-   }
-}
-
-void compareForwardToBackwardWeights (TH1D* EtaS, TH1D* EtaB){
-   int limit = EtaS->GetNbinsX(),
-       bins  = limit,
-       shift = 1;
-   if (limit%2==0) limit = (limit+2) / 2;
-   else {limit /= 2; shift = 2;}
-   vector <double> eta;              // x value
-   vector <double> etaSL;            // height of the bins in B region
-   vector <double> etaSR;            // height of the bins in B region
-   vector <double> etaBL;            // height of the bins in A region
-   vector <double> etaBR;            // height of the bins in A region
-   vector <double> weightsL;         // weights for |Eta| < 0
-   vector <double> weightsR;         // weights for |Eta| > 0
-   vector <double> ratioR2L;         // ratio of the weights
-
-   for (int x = limit; x <= bins; x++){
-      printf ("limit = %d, bins = %d, x = %d, bins-x+1 = %d etaL = %.2lf etaR = %.2lf\n",
-         limit, bins, x, bins-x+1, EtaS->GetBinCenter(x), EtaS->GetBinCenter(bins-x+1));
-      eta     .push_back(std::fabs(EtaS->GetBinCenter(x)));
-      etaSL   .push_back(EtaS->GetBinContent(bins-x+1));
-      etaBL   .push_back(EtaB->GetBinContent(bins-x+1));
-      weightsL.push_back(EtaB->GetBinContent(bins-x+1)>0?((EtaS->GetBinContent(bins-x+1)*EtaB->Integral())/(EtaB->GetBinContent(bins-x+1)*EtaS->Integral())):0);
-      etaSR   .push_back(EtaS->GetBinContent(x));
-      etaBR   .push_back(EtaB->GetBinContent(x));
-      weightsR.push_back(EtaB->GetBinContent(x)>0?((EtaS->GetBinContent(x)*EtaB->Integral())/(EtaB->GetBinContent(x)*EtaS->Integral())):0);
-      ratioR2L.push_back(weightsL[weightsL.size()-1]>0?(weightsR[weightsR.size()-1]/weightsL[weightsL.size()-1]):0);
-   }
-
-   TGraph* EtaSL    = new TGraph ((int) eta.size(), &eta[0], &etaSL[0]);
-   TGraph* EtaSR    = new TGraph ((int) eta.size(), &eta[0], &etaSR[0]);
-   TGraph* EtaBL    = new TGraph ((int) eta.size(), &eta[0], &etaBL[0]);
-   TGraph* EtaBR    = new TGraph ((int) eta.size(), &eta[0], &etaBR[0]);
-   TGraph* WeightsL = new TGraph ((int) eta.size(), &eta[0], &weightsL[0]);
-   TGraph* WeightsR = new TGraph ((int) eta.size(), &eta[0], &weightsR[0]);
-   TGraph* RatioR2L = new TGraph ((int) eta.size(), &eta[0], &ratioR2L[0]);
-
-   // save all these control graphs
-   EtaSL->SaveAs ("EtaSL.root");
-   EtaSR->SaveAs ("EtaSR.root");
-   EtaBL->SaveAs ("EtaBL.root");
-   EtaBR->SaveAs ("EtaBR.root");
-   WeightsL->SaveAs ("WeightsL.root");
-   WeightsR->SaveAs ("WeightsR.root");
-   RatioR2L->SaveAs ("RatioR2L.root");
-}
-

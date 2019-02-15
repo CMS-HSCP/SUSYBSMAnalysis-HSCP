@@ -222,7 +222,6 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
    sprintf(Command,"mkdir -p %s",Buffer); system(Command);
 
    // get all the samples and clean the list to keep only the one we want to run on... Also initialize the BaseDirectory
-   printf(" InitBaseDirectory() <-------------\n");
    InitBaseDirectory();
    GetSampleDefinition(samples);
    samplesFull = samples;

@@ -65,11 +65,11 @@ void Analysis_Step3_MakePlots()
    SQRTS=13.0;
 
 //   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
-
-   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
+/*
+   InputPattern = "Results/Type0/";   CutIndex = 8; CutIndexTight = 29;
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16_Tight");
-/*
+
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight");
 
@@ -81,9 +81,7 @@ void Analysis_Step3_MakePlots()
    
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 //   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
-*/
    PredictionAndControlPlot(InputPattern, "Data13TeV16", CutIndex, 0);
-   return;
    PredictionAndControlPlot(InputPattern, "Data13TeV16G", CutIndex, 0);
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
@@ -113,11 +111,11 @@ void Analysis_Step3_MakePlots()
    CheckPrediction(InputPattern, "_Flip", "Data13TeV16");
    CheckPrediction(InputPattern, "_Flip", "Data13TeV16G");
 //  std::cout<<"B\n";
-
+*/
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
-//   InputPattern="Results/Type2/";
+   InputPattern="Results/Type2/";
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV16");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
-//   GetSystematicOnPrediction(InputPattern, "Data13TeV16G");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+   GetSystematicOnPrediction(InputPattern, "Data13TeV16G");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 
   std::cout<<"ALL DONE WITH THE PLOTTING CODE\n";
 
@@ -288,7 +286,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
 //      Pred13TeV15  = GetProjectionFromPath(InputFile, string("Data13TeV/Pred_"  ) + HistoSuffix, CutIndex, "TmpPredMass15");
 //      Data13TeV15  = GetProjectionFromPath(InputFile, string("Data13TeV/"       ) + HistoSuffix, CutIndex, "TmpDataMass15");
-      Pred13TeV16  = GetProjectionFromPath(InputFile, string("Data13TeV16/Pred_") + HistoSuffix/* + ";24"*/, CutIndex, "TmpPredMass16");
+      Pred13TeV16  = GetProjectionFromPath(InputFile, string("Data13TeV16/Pred_") + HistoSuffix, CutIndex, "TmpPredMass16");
       Data13TeV16  = GetProjectionFromPath(InputFile, string("Data13TeV16/"     ) + HistoSuffix, CutIndex, "TmpDataMass16");
 
       if(showMC)MCPred    = GetProjectionFromPath(InputFile, string("MCTr_13TeV16/Pred_"  ) + HistoSuffix,  CutIndex, "TmpMCPred");
@@ -1196,7 +1194,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
 
    if(TypeMode<3) {//These plots only made for analyses using mass distribution
    //Show P, I and TOF distribution in the signal region (observed and predicted)
-   TH2D* Pred_P                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P"/*;24"*/);
+   TH2D* Pred_P                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P");
    TH2D* Pred_I                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_I");
    TH2D* Pred_TOF              = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_TOF");
    TH2D* Data_I                = (TH2D*)GetObjectFromPath(InputFile, Data+"/RegionD_I");   
@@ -1250,7 +1248,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
 
    if(CutIndex_Flip>0 && TypeMode>=2){
    //Show P, I and TOF distribution in the region with TOF < 1(observed and predicted)
-   TH2D* Pred_P_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P_Flip");
+   TH2D* Pred_P_Flip                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P_Flip");
    TH2D* Pred_I_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_I_Flip");
    TH2D* Pred_TOF_Flip               = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_TOF_Flip");
    TH2D* Data_I_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/RegionD_I_Flip");   
@@ -3942,8 +3940,8 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2, bool GPeriodF
    TypeMode = TypeFromPattern(InputPattern);
    string LegendTitle = LegendFromType(InputPattern);;
 
-   string S1 = !GPeriodFlag?"DY_13TeV16_M600_Q1" :"DY_13TeV16G_M600_Q1"; //double Q1=1;
-   string S2 = !GPeriodFlag?"DY_13TeV16_M600_Q2" :"DY_13TeV16G_M600_Q2" ; //double Q2=1;
+   string S1 = !GPeriodFlag?"DY_13TeV16_M400_Q1" :"DY_13TeV16G_M400_Q1"; //double Q1=1;
+   string S2 = !GPeriodFlag?"DY_13TeV16_M400_Q2" :"DY_13TeV16G_M400_Q2" ; //double Q2=1;
    string S3 = !GPeriodFlag?"DY_13TeV16_M1000_Q1":"DY_13TeV16G_M1000_Q1"; //double Q3=1;
 
    string Da = !GPeriodFlag?"Data13TeV16":"Data13TeV16G";

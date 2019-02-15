@@ -70,14 +70,10 @@ class stSample{
       char str7TeV[]="_7TeV";
       char str8TeV[]="_8TeV";
       char str13TeV[]="_13TeV";
-      char str13TeV16[]="_13TeV16";
-      char str13TeV16G[]="_13TeV16G";
       string toReturn=Name;
       if(toReturn.find(strMass) !=string::npos)toReturn.erase(toReturn.find( strMass), string( strMass).length());
       if(toReturn.find(str7TeV) !=string::npos)toReturn.erase(toReturn.find( str7TeV), string( str7TeV).length());
       if(toReturn.find(str8TeV) !=string::npos)toReturn.erase(toReturn.find( str8TeV), string( str8TeV).length());
-      if(toReturn.find(str13TeV16G)!=string::npos)toReturn.erase(toReturn.find(str13TeV16G), string(str13TeV16G).length());
-      if(toReturn.find(str13TeV16)!=string::npos)toReturn.erase(toReturn.find(str13TeV16), string(str13TeV16).length());
       if(toReturn.find(str13TeV)!=string::npos)toReturn.erase(toReturn.find(str13TeV), string(str13TeV).length());
       return toReturn;
    }

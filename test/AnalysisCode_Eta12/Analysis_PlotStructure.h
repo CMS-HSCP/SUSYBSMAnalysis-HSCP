@@ -1,12 +1,114 @@
-// Original Author:  Jessica Prisciandaro
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
+// Original Author:  Loic Quertenmont
 
-//#include "Analysis_Global.h"
-//#include "Analysis_Samples.h"
+#include "Analysis_Global.h"
+#include "Analysis_Samples.h"
 
 //define a container for all plots that should be produced per sample
-struct controlPlots {
-  
+struct stPlots {
+   bool         SelPlot;
+   std::string  Name;
+   TDirectory*  Directory;
+   TTree*       Tree;
+   unsigned int NCuts;
+   unsigned int Tree_Run;
+   unsigned int Tree_Event;
+   unsigned int Tree_Hscp;
+   float        Tree_Pt;
+   float        Tree_I;
+   float        Tree_TOF;
+   float        Tree_Mass;
+   float        Tree_dZ;
+   float        Tree_dXY;
+   float        Tree_dR;
+   float        Tree_eta;
+   float        Tree_phi;
+
+
+
+   TH2F*  Mass;
+   TH2F*  MassTOF;
+   TH2F*  MassComb;
+   TH2F*  MaxEventMass;
+
+   TH2F*  Mass_SystP;
+   TH2F*  MassTOF_SystP;
+   TH2F*  MassComb_SystP;
+   TH2F*  MaxEventMass_SystP;
+
+   TH2F*  Mass_SystI;
+   TH2F*  MassTOF_SystI;
+   TH2F*  MassComb_SystI;
+   TH2F*  MaxEventMass_SystI;
+
+   TH2F*  Mass_SystM;
+   TH2F*  MassTOF_SystM;
+   TH2F*  MassComb_SystM;
+   TH2F*  MaxEventMass_SystM;
+
+   TH2F*  Mass_SystT;
+   TH2F*  MassTOF_SystT;
+   TH2F*  MassComb_SystT;
+   TH2F*  MaxEventMass_SystT;
+
+   TH2F*  Mass_SystPU;
+   TH2F*  MassTOF_SystPU;
+   TH2F*  MassComb_SystPU;
+   TH2F*  MaxEventMass_SystPU;
+
+   TH2F*  Mass_SystHUp;
+   TH2F*  MassTOF_SystH;
+   TH2F*  MassComb_SystHUp;
+   TH2F*  MaxEventMass_SystHUp;
+
+   TH2F*  Mass_SystHDown;
+   TH2F*  MassComb_SystHDown;
+   TH2F*  MaxEventMass_SystHDown;
+
+
+
+   TH2F*  Mass_Flip;
+   TH2F*  MassTOF_Flip;
+   TH2F*  MassComb_Flip;
+
+   TProfile* IntLumi;
+   TH1F* TotalE;
+   TH1F* TotalEPU; 
+   TH1F* TotalTE;
+   TH1F* Total;
+   TH1F* V3D; 
+   TH1F* Chi2;  
+   TH1F* Qual; 
+   TH1F* TNOH;
+   TH1F* TNOM;
+   TH1F* nDof;
+   TH1F* tofError;
+   TH1F* Pterr;
+   TH1F* MPt; 
+   TH1F* MI; 
+   TH1F* MTOF; 
+   TH1F* TIsol;
+   TH1F* EIsol;
+   TH1F* SumpTOverpT;
+   TH1F* Pt;	
+   TH1F* I;	
+   TH1F* TOF;
+   TH1F* HSCPE;
+   TH1F* NVTrack;
+   TH1F* Stations;
+   TH1F* Dxy;
+   TH1F* Dz;
+   TH1F* SegSep;
+   TH1F* FailDz;
+   TH1F* Basic;
+   
+   TH1F* HSCPE_SystP;
+   TH1F* HSCPE_SystI;
+   TH1F* HSCPE_SystM;
+   TH1F* HSCPE_SystT;
+   TH1F* HSCPE_SystPU;
+   TH1F* HSCPE_SystHUp;
+   TH1F* HSCPE_SystHDown;
+
    TH1F* Gen_DecayLength;
    TH1F* Beta_Gen;
    TH1F* Beta_GenCharged;
@@ -29,7 +131,7 @@ struct controlPlots {
    TH1F*  BS_TNOPH;
    TH1F*  BS_TNOHFractionTillLast;
    TH1F*  BS_TNOMHTillLast;
-  TH1F*  BS_Eta;     //J.
+   TH1F*  BS_Eta;
    TH1F*  BS_TNOM;
    TH1F*  BS_TNOM_PUA;
    TH1F*  BS_TNOM_PUB;
@@ -84,20 +186,28 @@ struct controlPlots {
    TH1F*  BS_LastHitDXY;
    TH1F*  BS_LastHitD3D;
 
+   TH2F* AS_Eta_RegionA;
+   TH2F* AS_Eta_RegionB;
+   TH2F* AS_Eta_RegionC;
+   TH2F* AS_Eta_RegionD;
+   TH2F* AS_Eta_RegionE;
+   TH2F* AS_Eta_RegionF;
+   TH2F* AS_Eta_RegionG;
+   TH2F* AS_Eta_RegionH;
 
-   TH1F*  BS_P; 
-   TH1F*  BS_Pt;
+   TH1F*  BS_P; 	   TH2F*  AS_P;
+   TH1F*  BS_Pt;	   TH2F*  AS_Pt;
    TH1F*  BS_Pt_PUA;
    TH1F*  BS_Pt_PUB;
    TH1F*  BS_Pt_DT;
    TH1F*  BS_Pt_CSC;
-   TH1F*  BS_Is;
+   TH1F*  BS_Is;	   TH2F*  AS_Is;
    TH1F*  BS_Is_PUA;
    TH1F*  BS_Is_PUB;
-   TH1F*  BS_Im;
+   TH1F*  BS_Im;           TH2F*  AS_Im;
    TH1F*  BS_Im_PUA;
    TH1F*  BS_Im_PUB;
-   TH1F*  BS_TOF; 
+   TH1F*  BS_TOF;          TH2F*  AS_TOF;
    TH1F*  BS_TOF_PUA;
    TH1F*  BS_TOF_PUB;
    TH1F*  BS_TOF_DT;
@@ -113,6 +223,7 @@ struct controlPlots {
    TH2F*  BS_EtaPt;	   //TH3F*  AS_EtaPt;
    TH2F*  BS_EtaTOF;       //TH3F*  AS_EtaTOF;
    TH2F*  BS_EtaDz;
+   TH2F*  BS_EtaNBH;       // number of bad hits vs Eta
 
 
    TH2F*  BS_PIs;	   TH3F*  AS_PIs;
@@ -124,14 +235,108 @@ struct controlPlots {
    TH2F*  BS_TOFIs;        TH3F*  AS_TOFIs;  
    TH2F*  BS_TOFIm;        TH3F*  AS_TOFIm;   
 
+  //Prediction histograms
+  TH1D* H_A;
+  TH1D* H_B;
+  TH1D* H_C;
+  TH1D* H_D;
+  TH1D* H_E;
+  TH1D* H_F;
+  TH1D* H_G;
+  TH1D* H_H;
 
   //Prediction histograms for muon only analysis which is binned depending on eta nd number of muon stations
+  TH1D* H_B_Binned[MaxPredBins];
+  TH1D* H_D_Binned[MaxPredBins];
+  TH1D* H_F_Binned[MaxPredBins];
+  TH1D* H_H_Binned[MaxPredBins];
 
+  TH1D*  HCuts_Pt;
+  TH1D*  HCuts_Is;
+  TH1D*  HCuts_TOF;
+
+  TH1D*  Hist_Pt ;
+  TH1D*  Hist_Is  ;
+  TH1D*  Hist_TOF;
+
+  TH3D*  Pred_EtaP ;
+  TH2D*  Pred_I    ;
+  TH2D*  Pred_TOF  ;
+  TH2D*  Pred_EtaB;
+  TH2D*  Pred_EtaS;
+  TH2D*  Pred_EtaS2;
+
+  TH2D*  RegionD_P;
+  TH2D*  RegionD_I;
+  TH2D*  RegionD_Ias;
+  TH2D*  RegionD_TOF;
+
+  TH2D*  RegionH_Ias;
+
+  TH1D* H_A_Flip;
+  TH1D* H_B_Flip;
+  TH1D* H_C_Flip;
+  TH1D* H_D_Flip;
+  TH1D* H_E_Flip;
+  TH1D* H_F_Flip;
+  TH1D* H_G_Flip;
+  TH1D* H_H_Flip;
+
+  TH1D* H_B_Binned_Flip[MaxPredBins];
+  TH1D* H_D_Binned_Flip[MaxPredBins];
+  TH1D* H_F_Binned_Flip[MaxPredBins];
+  TH1D* H_H_Binned_Flip[MaxPredBins];
+
+  TH3D*  Pred_EtaP_Flip ;
+  TH2D*  Pred_I_Flip    ;
+  TH2D*  Pred_TOF_Flip  ;
+  TH2D*  Pred_EtaB_Flip;
+  TH2D*  Pred_EtaS_Flip;
+  TH2D*  Pred_EtaS2_Flip;
+
+  TH2D*  RegionD_P_Flip;
+  TH2D*  RegionD_I_Flip;
+  TH2D*  RegionD_Ias_Flip;
+  TH2D*  RegionD_TOF_Flip;
+
+  TH2D*  RegionH_Ias_Flip;
+
+  TH2D* H_D_DzSidebands;
 
   TH2F*  genrecopT;
   TH1F*  genlevelpT;
   TH1F*  genleveleta;
   TH1F*  genlevelbeta;
+
+  TH1D*  CtrlPt_S1_Is;
+  TH1D*  CtrlPt_S2_Is;
+  TH1D*  CtrlPt_S3_Is;
+  TH1D*  CtrlPt_S4_Is;
+
+  TH1D*  CtrlIs_S1_TOF;
+  TH1D*  CtrlIs_S2_TOF;
+  TH1D*  CtrlIs_S3_TOF;
+  TH1D*  CtrlIs_S4_TOF;
+
+  TH1D*  CtrlIm_S1_TOF;
+  TH1D*  CtrlIm_S2_TOF;
+  TH1D*  CtrlIm_S3_TOF;
+  TH1D*  CtrlIm_S4_TOF;
+
+  TH1D*  CtrlPt_S1_Im;
+  TH1D*  CtrlPt_S2_Im;
+  TH1D*  CtrlPt_S3_Im;
+  TH1D*  CtrlPt_S4_Im;
+
+  TH1D*  CtrlPt_S1_TOF;
+  TH1D*  CtrlPt_S2_TOF;
+  TH1D*  CtrlPt_S3_TOF;
+  TH1D*  CtrlPt_S4_TOF;
+
+  TH1D* CtrlPt_S1_TOF_Binned[MaxPredBins];
+  TH1D* CtrlPt_S2_TOF_Binned[MaxPredBins];
+  TH1D* CtrlPt_S3_TOF_Binned[MaxPredBins];
+  TH1D* CtrlPt_S4_TOF_Binned[MaxPredBins];
 };
 
 // initialize all the plots but also the directory structure to save them in the file
@@ -148,6 +353,90 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
    //return 0 if the directory already exist, in that case just take the directory
    if(!st.Directory)HistoFile->GetDirectory(Name.c_str());
    st.Directory->cd();
+   Name = "IntLumi";  st.IntLumi = new TProfile(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "TotalE";   st.TotalE  = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "TotalEPU"; st.TotalEPU= new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "TotalTE";  st.TotalTE = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "Total";    st.Total   = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "V3D";      st.V3D     = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "Chi2";     st.Chi2    = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "Qual";     st.Qual    = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "TNOH";     st.TNOH    = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "TNOM";     st.TNOM    = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "nDof";     st.nDof    = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "tofError"; st.tofError= new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "Pterr";    st.Pterr   = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "TIsol";    st.TIsol   = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "EIsol";    st.EIsol   = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "SumpTOverpT";  st.SumpTOverpT = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "MPt";      st.MPt     = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "MI";       st.MI      = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "MTOF";     st.MTOF    = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);     
+   Name = "Pt";       st.Pt      = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);     
+   Name = "I";        st.I       = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);     
+   Name = "TOF";      st.TOF     = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);     st.TOF    ->Sumw2();
+   Name = "HSCPE";    st.HSCPE   = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);     st.HSCPE    ->Sumw2();
+   Name = "NVTrack";  st.NVTrack = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "Stations"; st.Stations= new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "Dxy";      st.Dxy     = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "Dz";       st.Dz      = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "SegSep";   st.SegSep  = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "FailDz";   st.FailDz  = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "Basic";    st.Basic   = new TH1F(Name.c_str(), Name.c_str(),  1    , 0,  1);
+
+   Name = "HSCPE_SystP";    st.HSCPE_SystP  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystP    ->Sumw2();
+   Name = "HSCPE_SystI";    st.HSCPE_SystI  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystI    ->Sumw2();
+   Name = "HSCPE_SystM";    st.HSCPE_SystM  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystM    ->Sumw2();
+   Name = "HSCPE_SystT";    st.HSCPE_SystT  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystT    ->Sumw2();
+   Name = "HSCPE_SystPU";   st.HSCPE_SystPU = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystPU    ->Sumw2();
+   Name = "HSCPE_SystHUp";    st.HSCPE_SystHUp  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystHUp    ->Sumw2();
+   Name = "HSCPE_SystHDown";    st.HSCPE_SystHDown  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystHDown    ->Sumw2();
+
+   Name = "Mass";     st.Mass     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass    ->Sumw2();
+   Name = "MassTOF";  st.MassTOF  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF ->Sumw2();
+   Name = "MassComb"; st.MassComb = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb->Sumw2();
+   Name = "MaxEventMass";     st.MaxEventMass     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MaxEventMass    ->Sumw2();
+
+   Name = "Mass_SystP";     st.Mass_SystP     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystP    ->Sumw2();
+   Name = "MassTOF_SystP";  st.MassTOF_SystP  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystP ->Sumw2();
+   Name = "MassComb_SystP"; st.MassComb_SystP = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystP->Sumw2();
+   Name = "MaxEventMass_SystP";     st.MaxEventMass_SystP = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystP->Sumw2();
+
+   Name = "Mass_SystI";     st.Mass_SystI     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystI    ->Sumw2();
+   Name = "MassTOF_SystI";  st.MassTOF_SystI  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystI ->Sumw2();
+   Name = "MassComb_SystI"; st.MassComb_SystI = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystI->Sumw2();
+   Name = "MaxEventMass_SystI";     st.MaxEventMass_SystI = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystI->Sumw2();
+
+   Name = "Mass_SystM";     st.Mass_SystM     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystM    ->Sumw2();
+   Name = "MassTOF_SystM";  st.MassTOF_SystM  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystM ->Sumw2();
+   Name = "MassComb_SystM"; st.MassComb_SystM = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystM->Sumw2();
+   Name = "MaxEventMass_SystM";     st.MaxEventMass_SystM = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystM->Sumw2();
+
+   Name = "Mass_SystT";     st.Mass_SystT     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystT    ->Sumw2();
+   Name = "MassTOF_SystT";  st.MassTOF_SystT  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystT ->Sumw2();
+   Name = "MassComb_SystT"; st.MassComb_SystT = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystT->Sumw2();
+   Name = "MaxEventMass_SystT";     st.MaxEventMass_SystT = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystT->Sumw2();
+
+   Name = "Mass_SystPU";    st.Mass_SystPU     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystPU    ->Sumw2();
+   Name = "MassTOF_SystPU"; st.MassTOF_SystPU  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystPU ->Sumw2();
+   Name = "MassComb_SystPU";st.MassComb_SystPU = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystPU->Sumw2();
+   Name = "MaxEventMass_SystPU";  st.MaxEventMass_SystPU = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystPU->Sumw2();
+
+   Name = "Mass_SystHUp";     st.Mass_SystHUp     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystHUp    ->Sumw2();
+   Name = "MassTOF_SystH";  st.MassTOF_SystH  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystH ->Sumw2();
+   Name = "MassComb_SystHUp"; st.MassComb_SystHUp = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystHUp->Sumw2();
+   Name = "MaxEventMass_SystHUp";     st.MaxEventMass_SystHUp = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystHUp->Sumw2();
+
+   Name = "Mass_SystHDown";     st.Mass_SystHDown     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystHDown    ->Sumw2();
+   Name = "MassComb_SystHDown"; st.MassComb_SystHDown = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystHDown->Sumw2();
+   Name = "MaxEventMass_SystHDown";     st.MaxEventMass_SystHDown = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystHDown->Sumw2();
+
+
+
+
+   Name = "Mass_Flip";     st.Mass_Flip     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_Flip    ->Sumw2();
+   Name = "MassTOF_Flip";  st.MassTOF_Flip  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_Flip ->Sumw2();
+   Name = "MassComb_Flip"; st.MassComb_Flip = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_Flip->Sumw2();
 
    if(SkipSelectionPlot)return;
    Name = "Gen_DecayLength"  ; st.Gen_DecayLength  = new TH1F(Name.c_str(), Name.c_str(),               1000, 0,1000); st.Gen_DecayLength  ->Sumw2();
@@ -258,12 +547,28 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
      Name = "BS_TOF_Binned"; Name.append(Suffix); st.BS_TOF_Binned[i] = new TH1F(Name.c_str(), Name.c_str() ,150, -1, 5); st.BS_TOF_Binned[i]->Sumw2();
    }
 
+   Name = "AS_Eta_RegionA" ; st.AS_Eta_RegionA  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionA->Sumw2();
+   Name = "AS_Eta_RegionB" ; st.AS_Eta_RegionB  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionB->Sumw2();
+   Name = "AS_Eta_RegionC" ; st.AS_Eta_RegionC  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionC->Sumw2();
+   Name = "AS_Eta_RegionD" ; st.AS_Eta_RegionD  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionD->Sumw2();
+   Name = "AS_Eta_RegionE" ; st.AS_Eta_RegionE  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionE->Sumw2();
+   Name = "AS_Eta_RegionF" ; st.AS_Eta_RegionF  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionF->Sumw2();
+   Name = "AS_Eta_RegionG" ; st.AS_Eta_RegionG  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionG->Sumw2();
+   Name = "AS_Eta_RegionH" ; st.AS_Eta_RegionH  = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,  52,  -2.6,  2.6);           st.AS_Eta_RegionH->Sumw2();
+
+   Name = "AS_P"    ; st.AS_P     = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound); st.AS_P->Sumw2();
+   Name = "AS_Pt"   ; st.AS_Pt    = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound); st.AS_Pt->Sumw2();
+   Name = "AS_Is"   ; st.AS_Is    = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, dEdxS_UpLim);       st.AS_Is->Sumw2();
+   Name = "AS_Im"   ; st.AS_Im    = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts,100, 0, dEdxM_UpLim);       st.AS_Im->Sumw2();
+   Name = "AS_TOF"  ; st.AS_TOF   = new TH2F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 1, 5);                 st.AS_TOF->Sumw2();
+
 
    Name = "BS_EtaIs"; st.BS_EtaIs = new TH2F(Name.c_str(), Name.c_str(),                   50,-3, 3, 50, 0, dEdxS_UpLim);
    Name = "BS_EtaIm"; st.BS_EtaIm = new TH2F(Name.c_str(), Name.c_str(),                   50,-3, 3,100, 0, dEdxM_UpLim);
    Name = "BS_EtaP" ; st.BS_EtaP  = new TH2F(Name.c_str(), Name.c_str(),                   50,-3, 3, 50, 0, PtHistoUpperBound);
    Name = "BS_EtaPt"; st.BS_EtaPt = new TH2F(Name.c_str(), Name.c_str(),                   50,-3, 3, 50, 0, PtHistoUpperBound);
-   Name = "BS_EtaTOF" ; st.BS_EtaTOF  = new TH2F(Name.c_str(), Name.c_str(),               50,-3, 3, 50, 0, 3);
+   Name = "BS_EtaTOF" ; st.BS_EtaTOF = new TH2F (Name.c_str(), Name.c_str(),               50,-3, 3, 50, 0, 3);
+   Name = "BS_EtaNBH" ; st.BS_EtaNBH = new TH2F (Name.c_str(), Name.c_str(),               60,-3, 3, 24, 0,24);
    Name = "BS_EtaDz"; st.BS_EtaDz  = new TH2F(Name.c_str(), Name.c_str(),                 50,-3, 3, 50, -IPbound, IPbound);
    Name = "BS_PIs"  ; st.BS_PIs   = new TH2F(Name.c_str(), Name.c_str(),                   50, 0, PtHistoUpperBound, 100, 0, dEdxS_UpLim);
    Name = "BS_PImHD"; st.BS_PImHD = new TH2F(Name.c_str(), Name.c_str(),                  500, 0, PtHistoUpperBound,1000, 0, dEdxM_UpLim);
@@ -276,13 +581,145 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
    //   Name = "BS_TOFIm"; st.BS_TOFIm = new TH2F(Name.c_str(), Name.c_str(),                   100, 1, 5, 200, 0, dEdxM_UpLim);
    Name = "BS_TOFIm"; st.BS_TOFIm = new TH2F(Name.c_str(), Name.c_str(),                   50, 0, 5, 100, 0, dEdxM_UpLim);
 
+//   Name = "AS_EtaIs"; st.AS_EtaIs = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, dEdxS_UpLim);
+//   Name = "AS_EtaIm"; st.AS_EtaIm = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3,100, 0, dEdxM_UpLim);
+//   Name = "AS_EtaP" ; st.AS_EtaP  = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
+//   Name = "AS_EtaPt"; st.AS_EtaPt = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
+//   Name = "AS_EtaTOF"; st.AS_EtaTOF = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, 3);
+   Name = "AS_PIs"  ; st.AS_PIs   = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+   Name = "AS_PIm"  ; st.AS_PIm   = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound,100, 0, dEdxM_UpLim);
+   Name = "AS_PtIs" ; st.AS_PtIs  = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+   Name = "AS_PtIm" ; st.AS_PtIm  = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound,100, 0, dEdxM_UpLim);
+   Name = "AS_TOFIs"; st.AS_TOFIs = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, 5, 50, 0, dEdxS_UpLim);
+   Name = "AS_TOFIm"; st.AS_TOFIm = new TH3F(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, 5,100, 0, dEdxM_UpLim);
 
    Name = "H_D_DzSidebands"; st.H_D_DzSidebands = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, DzRegions, 0, DzRegions); st.H_D_DzSidebands->Sumw2();
 
    //Background prediction histograms don't need to be made for signal or individual MC samples
+   if(!isSignal) {
+   Name = "H_A"; st.H_A = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_A->Sumw2();
+   Name = "H_B"; st.H_B = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_B->Sumw2();
+   Name = "H_C"; st.H_C = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_C->Sumw2();
+   Name = "H_D"; st.H_D = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_D->Sumw2();
+   Name = "H_E"; st.H_E = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_E->Sumw2();
+   Name = "H_F"; st.H_F = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_F->Sumw2();
+   Name = "H_G"; st.H_G = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_G->Sumw2();
+   Name = "H_H"; st.H_H = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_H->Sumw2();
 
-
+   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
+   for(int i=0; i<PredBins; i++) {
+     char Suffix[1024];
+     sprintf(Suffix,"_%i",i);
+     Name = "H_B_Binned"; Name.append(Suffix); st.H_B_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_B_Binned[i]->Sumw2();
+     Name = "H_D_Binned"; Name.append(Suffix); st.H_D_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_D_Binned[i]->Sumw2();
+     Name = "H_F_Binned"; Name.append(Suffix); st.H_F_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_F_Binned[i]->Sumw2();
+     Name = "H_H_Binned"; Name.append(Suffix); st.H_H_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_H_Binned[i]->Sumw2();
    }
+
+   Name = "Hist_Is"; st.Hist_Is = new TH1D(Name.c_str(), Name.c_str() ,200,0,dEdxS_UpLim); st.Hist_Is->Sumw2();
+   Name = "Hist_Pt"; st.Hist_Pt = new TH1D(Name.c_str(), Name.c_str() ,200,0,PtHistoUpperBound); st.Hist_Pt->Sumw2();
+   Name = "Hist_TOF"; st.Hist_TOF = new TH1D(Name.c_str(), Name.c_str() ,200,-10,20); st.Hist_TOF->Sumw2();
+   //The following are only used to create the predicted mass spectrum.  Memory intensive so don't initialize for analyses not doing mass fits
+   if(TypeMode<3) {
+     Name = "Pred_I"; st.Pred_I = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 400,0,dEdxM_UpLim); st.Pred_I->Sumw2();
+     Name = "Pred_EtaB"; st.Pred_EtaB = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins,-3,3); st.Pred_EtaB->Sumw2();
+     Name = "Pred_EtaS"; st.Pred_EtaS = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins,-3,3); st.Pred_EtaS->Sumw2();
+     Name = "Pred_EtaS2"; st.Pred_EtaS2 = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins,-3,3); st.Pred_EtaS2->Sumw2();
+     Name = "Pred_EtaP"; st.Pred_EtaP = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.Pred_EtaP->Sumw2();
+     Name = "Pred_TOF"; st.Pred_TOF = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts,   200,GlobalMinTOF,5); st.Pred_TOF->Sumw2();
+   }
+
+   Name = "RegionD_I"; st.RegionD_I = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 400,0,dEdxM_UpLim); st.RegionD_I->Sumw2();
+   Name = "RegionD_Ias"; st.RegionD_Ias = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 100, 0, dEdxS_UpLim); st.RegionD_Ias->Sumw2();
+   Name = "RegionD_P"; st.RegionD_P = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 200,GlobalMinPt,PtHistoUpperBound); st.RegionD_P->Sumw2();
+   Name = "RegionD_TOF"; st.RegionD_TOF = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 200,GlobalMinTOF,5); st.RegionD_TOF->Sumw2();
+
+   Name = "RegionH_Ias"; st.RegionH_Ias = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 100, 0, dEdxS_UpLim); st.RegionH_Ias->Sumw2();
+
+   Name = "H_A_Flip"; st.H_A_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_A_Flip->Sumw2();
+   Name = "H_B_Flip"; st.H_B_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_B_Flip->Sumw2();
+   Name = "H_C_Flip"; st.H_C_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_C_Flip->Sumw2();
+   Name = "H_D_Flip"; st.H_D_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_D_Flip->Sumw2();
+   Name = "H_E_Flip"; st.H_E_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_E_Flip->Sumw2();
+   Name = "H_F_Flip"; st.H_F_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_F_Flip->Sumw2();
+   Name = "H_G_Flip"; st.H_G_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_G_Flip->Sumw2();
+   Name = "H_H_Flip"; st.H_H_Flip = new TH1D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip); st.H_H_Flip->Sumw2();
+
+   for(int i=0; i<PredBins; i++) {
+     char Suffix[1024];
+     sprintf(Suffix,"_%i",i);
+     Name = "H_B_Binned_Flip"; Name.append(Suffix); st.H_B_Binned_Flip[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_B_Binned_Flip[i]->Sumw2();
+     Name = "H_D_Binned_Flip"; Name.append(Suffix); st.H_D_Binned_Flip[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_D_Binned_Flip[i]->Sumw2();
+     Name = "H_F_Binned_Flip"; Name.append(Suffix); st.H_F_Binned_Flip[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_F_Binned_Flip[i]->Sumw2();
+     Name = "H_H_Binned_Flip"; Name.append(Suffix); st.H_H_Binned_Flip[i] = new TH1D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts); st.H_H_Binned_Flip[i]->Sumw2();
+   }
+
+   //The following are only used to create the predicted mass spectrum.  Memory intensive so don't initialize for analyses not doing mass fits
+   if(TypeMode<3) {
+     Name = "Pred_I_Flip"; st.Pred_I_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, 400,0,dEdxM_UpLim); st.Pred_I_Flip->Sumw2();
+     Name = "Pred_EtaB_Flip"; st.Pred_EtaB_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, EtaBins,-3,3); st.Pred_EtaB_Flip->Sumw2();
+     Name = "Pred_EtaS_Flip"; st.Pred_EtaS_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, EtaBins,-3,3); st.Pred_EtaS_Flip->Sumw2();
+     Name = "Pred_EtaS2_Flip"; st.Pred_EtaS2_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, EtaBins,-3,3); st.Pred_EtaS2_Flip->Sumw2();
+     Name = "Pred_EtaP_Flip"; st.Pred_EtaP_Flip = new TH3D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.Pred_EtaP_Flip->Sumw2();
+     Name = "Pred_TOF_Flip"; st.Pred_TOF_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip,   200,GlobalMinTOF,5); st.Pred_TOF_Flip->Sumw2();
+   }
+
+   Name = "RegionD_I_Flip"; st.RegionD_I_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, 400,0,dEdxM_UpLim); st.RegionD_I_Flip->Sumw2();
+   Name = "RegionD_Ias_Flip"; st.RegionD_Ias_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, 100, 0, dEdxS_UpLim); st.RegionD_Ias_Flip->Sumw2();
+   Name = "RegionD_P_Flip"; st.RegionD_P_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, 200,GlobalMinPt,PtHistoUpperBound); st.RegionD_P_Flip->Sumw2();
+   Name = "RegionD_TOF_Flip"; st.RegionD_TOF_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, 200,-3,1); st.RegionD_TOF_Flip->Sumw2();
+
+   Name = "RegionH_Ias_Flip"; st.RegionH_Ias_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts_Flip,0,NCuts_Flip, 100, 0, dEdxS_UpLim); st.RegionH_Ias_Flip->Sumw2();
+
+   Name = "CtrlPt_S1_Is"; st.CtrlPt_S1_Is = new TH1D(Name.c_str(), Name.c_str(),200,0,dEdxS_UpLim); st.CtrlPt_S1_Is->Sumw2();
+   Name = "CtrlPt_S2_Is"; st.CtrlPt_S2_Is = new TH1D(Name.c_str(), Name.c_str(),200,0,dEdxS_UpLim); st.CtrlPt_S2_Is->Sumw2();
+   Name = "CtrlPt_S3_Is"; st.CtrlPt_S3_Is = new TH1D(Name.c_str(), Name.c_str(),200,0,dEdxS_UpLim); st.CtrlPt_S3_Is->Sumw2();
+   Name = "CtrlPt_S4_Is"; st.CtrlPt_S4_Is = new TH1D(Name.c_str(), Name.c_str(),200,0,dEdxS_UpLim); st.CtrlPt_S4_Is->Sumw2();
+
+   Name = "CtrlPt_S1_Im"; st.CtrlPt_S1_Im = new TH1D(Name.c_str(), Name.c_str(),400,0,dEdxM_UpLim); st.CtrlPt_S1_Im->Sumw2();
+   Name = "CtrlPt_S2_Im"; st.CtrlPt_S2_Im = new TH1D(Name.c_str(), Name.c_str(),400,0,dEdxM_UpLim); st.CtrlPt_S2_Im->Sumw2();
+   Name = "CtrlPt_S3_Im"; st.CtrlPt_S3_Im = new TH1D(Name.c_str(), Name.c_str(),400,0,dEdxM_UpLim); st.CtrlPt_S3_Im->Sumw2();
+   Name = "CtrlPt_S4_Im"; st.CtrlPt_S4_Im = new TH1D(Name.c_str(), Name.c_str(),400,0,dEdxM_UpLim); st.CtrlPt_S4_Im->Sumw2();
+
+   Name = "CtrlIs_S1_TOF"; st.CtrlIs_S1_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIs_S1_TOF->Sumw2();
+   Name = "CtrlIs_S2_TOF"; st.CtrlIs_S2_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIs_S2_TOF->Sumw2();
+   Name = "CtrlIs_S3_TOF"; st.CtrlIs_S3_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIs_S3_TOF->Sumw2();
+   Name = "CtrlIs_S4_TOF"; st.CtrlIs_S4_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIs_S4_TOF->Sumw2();
+
+   Name = "CtrlIm_S1_TOF"; st.CtrlIm_S1_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIm_S1_TOF->Sumw2();
+   Name = "CtrlIm_S2_TOF"; st.CtrlIm_S2_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIm_S2_TOF->Sumw2();
+   Name = "CtrlIm_S3_TOF"; st.CtrlIm_S3_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIm_S3_TOF->Sumw2();
+   Name = "CtrlIm_S4_TOF"; st.CtrlIm_S4_TOF = new TH1D(Name.c_str(), Name.c_str(),200,0,5); st.CtrlIm_S4_TOF->Sumw2();
+
+   Name = "CtrlPt_S1_TOF"; st.CtrlPt_S1_TOF = new TH1D(Name.c_str(), Name.c_str(),200,-2,7); st.CtrlPt_S1_TOF->Sumw2();
+   Name = "CtrlPt_S2_TOF"; st.CtrlPt_S2_TOF = new TH1D(Name.c_str(), Name.c_str(),200,-2,7); st.CtrlPt_S2_TOF->Sumw2();
+   Name = "CtrlPt_S3_TOF"; st.CtrlPt_S3_TOF = new TH1D(Name.c_str(), Name.c_str(),200,-2,7); st.CtrlPt_S3_TOF->Sumw2();
+   Name = "CtrlPt_S4_TOF"; st.CtrlPt_S4_TOF = new TH1D(Name.c_str(), Name.c_str(),200,-2,7); st.CtrlPt_S4_TOF->Sumw2();
+
+   for(int i=0; i<PredBins; i++) {
+     char Suffix[1024];
+     sprintf(Suffix,"_%i",i);
+     Name = "CtrlPt_S1_TOF_Binned"; Name.append(Suffix); st.CtrlPt_S1_TOF_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,200,-2,7); st.CtrlPt_S1_TOF_Binned[i]->Sumw2();
+     Name = "CtrlPt_S2_TOF_Binned"; Name.append(Suffix); st.CtrlPt_S2_TOF_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,200,-2,7); st.CtrlPt_S2_TOF_Binned[i]->Sumw2();
+     Name = "CtrlPt_S3_TOF_Binned"; Name.append(Suffix); st.CtrlPt_S3_TOF_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,200,-2,7); st.CtrlPt_S3_TOF_Binned[i]->Sumw2();
+     Name = "CtrlPt_S4_TOF_Binned"; Name.append(Suffix); st.CtrlPt_S4_TOF_Binned[i] = new TH1D(Name.c_str(), Name.c_str() ,200,-2,7); st.CtrlPt_S4_TOF_Binned[i]->Sumw2();
+   }
+   }
+
+   st.Tree = new TTree("HscpCandidates", "HscpCandidates");
+   st.Tree->SetDirectory(0);
+   st.Tree->Branch("Run"     ,&st.Tree_Run       ,"Run/i");
+   st.Tree->Branch("Event"   ,&st.Tree_Event     ,"Event/i");
+   st.Tree->Branch("Hscp"    ,&st.Tree_Hscp      ,"Hscp/i");
+   st.Tree->Branch("Pt"      ,&st.Tree_Pt        ,"Pt/F");
+   st.Tree->Branch("I"       ,&st.Tree_I         ,"I/F");
+   st.Tree->Branch("TOF"     ,&st.Tree_TOF       ,"TOF/F");
+   st.Tree->Branch("Mass"    ,&st.Tree_Mass      ,"Mass/F");
+   st.Tree->Branch("dZ"      ,&st.Tree_dZ        ,"dZ/F");
+   st.Tree->Branch("dXY"     ,&st.Tree_dXY       ,"dXY/F");
+   st.Tree->Branch("dR"      ,&st.Tree_dR        ,"dR/F");
+   st.Tree->Branch("eta"     ,&st.Tree_eta       ,"eta/F");
+   st.Tree->Branch("phi"     ,&st.Tree_phi       ,"phi/F");
 
 
    HistoFile->cd();
@@ -304,6 +741,73 @@ bool stPlots_InitFromFile(TFile* HistoFile, stPlots& st, std::string BaseName)
       printf("Can't find subdirectory %s in opened file\n",BaseName.c_str());
       return false;
    }
+
+   st.IntLumi           = (TProfile*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/IntLumi");
+   st.TotalE            = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TotalE");
+   st.TotalEPU          = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TotalEPU");
+   st.TotalTE           = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TotalTE");
+   st.Total             = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Total");
+   st.V3D               = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/V3D");
+   st.Dxy               = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Dxy");
+   st.Dz                = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Dz");
+   st.Chi2              = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Chi2");
+   st.Qual              = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Qual");
+   st.TNOH              = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TNOH");
+   st.TNOM              = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TNOM");
+   st.nDof              = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/nDof");
+   st.Pterr             = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Pterr");
+   st.TIsol             = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TIsol");
+   st.EIsol             = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/EIsol");
+   st.MPt               = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MPt");
+   st.MI                = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MI");
+   st.MTOF              = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MTOF");
+   st.Basic             = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Basic");
+   st.Pt                = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Pt");
+   st.I                 = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/I");
+   st.TOF               = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/TOF");
+   st.HSCPE             = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE");
+
+   st.HSCPE_SystP       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystP");
+   st.HSCPE_SystI       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystI");
+   st.HSCPE_SystM       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystM");
+   st.HSCPE_SystT       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystT");
+   st.HSCPE_SystPU      = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystPU");
+   st.HSCPE_SystHUp     = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystHUp");
+   st.HSCPE_SystHDown   = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystHDown");
+
+   st.Mass              = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass");
+   st.MassTOF           = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF");
+   st.MassComb          = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb");
+   st.MaxEventMass      = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass");
+
+   st.Mass_SystP        = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystP");
+   st.MassTOF_SystP     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystP");
+   st.MassComb_SystP    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystP");
+   st.MaxEventMass_SystP= (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystP");
+
+   st.Mass_SystI        = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystI");
+   st.MassTOF_SystI     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystI");
+   st.MassComb_SystI    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystI");
+   st.MaxEventMass_SystI    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystI");
+
+   st.Mass_SystT        = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystT");
+   st.MassTOF_SystT     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystT");
+   st.MassComb_SystT    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystT");
+   st.MaxEventMass_SystT    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystT");
+
+   st.Mass_SystPU        = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystPU");
+   st.MassTOF_SystPU     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystPU");
+   st.MassComb_SystPU    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystPU");
+   st.MaxEventMass_SystPU= (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystPU");
+
+   st.Mass_SystHUp      = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystHUp");
+   st.MassTOF_SystH     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystH");
+   st.MassComb_SystHUp  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystHUp");
+   st.MaxEventMass_SystHUp  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystHUp");
+
+   st.Mass_SystHDown     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystHDown");
+   st.MassComb_SystHDown = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystHDown");
+   st.MaxEventMass_SystHDown = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystHDown");
 
 
    st.Gen_DecayLength   = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Gen_DecayLength");
@@ -411,16 +915,31 @@ bool stPlots_InitFromFile(TFile* HistoFile, stPlots& st, std::string BaseName)
    st.BS_EtaPt  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_EtaPt");
    //st.AS_EtaPt  = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_EtaPt");
    st.BS_EtaTOF  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_EtaTOF");
+   st.BS_EtaNBH  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_EtaNBH");
    //st.AS_EtaTOF  = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_EtaTOF");
    st.BS_PIs    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_PIs");
+   st.AS_PIs    = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_PIs");
    st.BS_PImHD  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_PImHD");
    st.BS_PIm    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_PIm");
+   st.AS_PIm    = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_PIm");
    st.BS_PtIs   = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_PtIs");
+   st.AS_PtIs   = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_PtIs");
    st.BS_PtIm   = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_PtIm");
+   st.AS_PtIm   = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_PtIm");
    st.BS_PtTOF   = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_PtTOF");
    st.BS_TOFIs  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_TOFIs");
+   st.AS_TOFIs  = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_TOFIs");
    st.BS_TOFIm  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_TOFIm");
-   
+   st.AS_TOFIm  = (TH3F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_TOFIm");
+
+   st.AS_Eta_RegionA  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionA");
+   st.AS_Eta_RegionB  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionB");
+   st.AS_Eta_RegionC  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionC");
+   st.AS_Eta_RegionD  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionD");
+   st.AS_Eta_RegionE  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionE");
+   st.AS_Eta_RegionF  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionF");
+   st.AS_Eta_RegionG  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionG");
+   st.AS_Eta_RegionH  = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_Eta_RegionH");
 
    st.BS_Pt_Binned[0] = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_Pt_Binned_0");
    st.BS_Pt_Binned[1] = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_Pt_Binned_1");
@@ -450,6 +969,129 @@ void stPlots_Clear(stPlots* st, bool WriteFirst=false)
    delete st->Directory;
 }
 
+// add one candidate to the bookeeping tree --> the event must be saved in the tree if you want to find it back with the DumpInfo.C code later on
+void stPlots_FillTree(stPlots* st, unsigned int Run, unsigned int Event, unsigned int Hscp, double Pt, double I, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, int MaxEntry=20000){
+   if(MaxEntry>0 && st->Tree->GetEntries()>=MaxEntry)return;
+   st->Tree_Run   = Run;
+   st->Tree_Event = Event;
+   st->Tree_Hscp  = Hscp;
+   st->Tree_Pt    = Pt;
+   st->Tree_I     = I;
+   st->Tree_TOF   = TOF;
+   st->Tree_Mass  = Mass;
+   st->Tree_dZ    = dZ;
+   st->Tree_dXY   = dXY;
+   st->Tree_dR    = dR;
+   st->Tree_eta    = eta;
+   st->Tree_phi    = phi;
+   st->Tree->Fill();
+}
+
+// dump a full preselection and selection cut flow table
+void stPlots_Dump(stPlots& st, FILE* pFile, int CutIndex){
+   fprintf(pFile,"#################### %20s ####################\n",st.Name.c_str());
+   fprintf(pFile,"#Events                       = %4.2E\n",st.TotalE->GetBinContent(1       ));
+   fprintf(pFile,"#Triggered Events             = %4.2E Eff=%4.3E\n",st.TotalTE->GetBinContent(1     ),st.TotalTE->GetBinContent(1      )/st.TotalE->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks                       = %4.2E\n",st.Total->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing TNOH   cuts   = %4.2E Eff=%4.3E\n",st.TNOH ->GetBinContent(1       ), st.TNOH ->GetBinContent(1       ) /st.Total->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing TNOM   cuts   = %4.2E Eff=%4.3E\n",st.TNOM ->GetBinContent(1       ), st.TNOM ->GetBinContent(1       ) /st.TNOH ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing nDof   cuts   = %4.2E Eff=%4.3E\n",st.nDof ->GetBinContent(1       ), st.nDof ->GetBinContent(1       ) /st.TNOM ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Qual   cuts   = %4.2E Eff=%4.3E\n",st.Qual ->GetBinContent(1       ), st.Qual ->GetBinContent(1       ) /st.nDof ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Chi2   cuts   = %4.2E Eff=%4.3E\n",st.Chi2 ->GetBinContent(1       ), st.Chi2 ->GetBinContent(1       ) /st.Qual ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Min Pt cuts   = %4.2E Eff=%4.3E\n",st.MPt  ->GetBinContent(1       ), st.MPt  ->GetBinContent(1       ) /st.Chi2 ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Min I  cuts   = %4.2E Eff=%4.3E\n",st.MI   ->GetBinContent(1       ), st.MI   ->GetBinContent(1       ) /st.MPt  ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Min TOFcuts   = %4.2E Eff=%4.3E\n",st.MTOF ->GetBinContent(1       ), st.MTOF ->GetBinContent(1       ) /st.MI   ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Dxy    cuts   = %4.2E Eff=%4.3E\n",st.Dxy  ->GetBinContent(1       ), st.Dxy  ->GetBinContent(1       ) /st.MTOF   ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing TIsol  cuts   = %4.2E Eff=%4.3E\n",st.TIsol->GetBinContent(1       ), st.TIsol->GetBinContent(1       ) /st.Dxy  ->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing EIsol  cuts   = %4.2E Eff=%4.3E\n",st.EIsol->GetBinContent(1       ), st.EIsol->GetBinContent(1       ) /st.TIsol->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing PtErr  cuts   = %4.2E Eff=%4.3E\n",st.Pterr->GetBinContent(1       ), st.Pterr->GetBinContent(1       ) /st.EIsol->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Dz  cuts      = %4.2E Eff=%4.3E\n",st.Dz   ->GetBinContent(1       ), st.Dz   ->GetBinContent(1       ) /st.Pterr->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Basic  cuts   = %4.2E Eff=%4.3E\n",st.Basic->GetBinContent(1       ), st.Basic->GetBinContent(1       ) /st.Total->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing Pt     cuts   = %4.2E Eff=%4.3E\n",st.Pt   ->GetBinContent(CutIndex+1), st.Pt   ->GetBinContent(CutIndex+1) /st.Pterr->GetBinContent(1       ));
+   fprintf(pFile,"#Tracks passing I      cuts   = %4.2E Eff=%4.3E\n",st.I    ->GetBinContent(CutIndex+1), st.I    ->GetBinContent(CutIndex+1) /st.Pt   ->GetBinContent(CutIndex+1));
+   fprintf(pFile,"#Tracks passing TOF    cuts   = %4.2E Eff=%4.3E\n",st.TOF  ->GetBinContent(CutIndex+1), st.TOF  ->GetBinContent(CutIndex+1) /st.I    ->GetBinContent(CutIndex+1));
+   fprintf(pFile,"#Tracks passing selection     = %4.2E Eff=%4.3E\n",st.TOF  ->GetBinContent(CutIndex+1), st.TOF  ->GetBinContent(CutIndex+1) /st.Total->GetBinContent(1       ));   
+   fprintf(pFile,"--------------------\n");
+   fprintf(pFile,"HSCP Detection Efficiency Before Trigger                           Eff=%4.3E\n",st.TOF->GetBinContent(CutIndex+1) /(2*st.TotalE ->GetBinContent(1       )));
+   fprintf(pFile,"HSCP Detection Efficiency After  Trigger                           Eff=%4.3E\n",st.TOF->GetBinContent(CutIndex+1) /(2*st.TotalTE->GetBinContent(1       )));
+   fprintf(pFile,"#HSCPTrack per HSCPEvent (with at least one HSCPTrack)             Eff=%4.3E\n",st.TOF->GetBinContent(CutIndex+1) /(  st.HSCPE  ->GetBinContent(CutIndex+1)));
+   fprintf(pFile,"HSCP Event Efficiency                                              Eff=%4.3E\n",st.HSCPE->GetBinContent(CutIndex+1) /(  st.TotalE  ->GetBinContent(1)));
+
+   // Table1- Numbers (tracks/events) at various cut stages: with event weights
+   //  fprintf(pFile,"%-24s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Signal", "#Evts", "#TrEvts", "#GlTrks", "#NOH", "#NOM", "#TOFnDOF", "#TrkQ", "#TrkChi", "#pT", "#dedx", "#TOF", "#v3D", "#Dxy","#TIsol", "#EIsol", "#SigmapT", "#Dz", "#PreSelTr", "#PreSelE", "#pT", "#Ias", "#1/beta", "#Events");
+   //  fprintf(pFile,"%-24s%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f%-10.2f\n", st.Name.c_str(), st.TotalE->GetBinContent(1), st.TotalTE->GetBinContent(1), st.Total->GetBinContent(1), st.TNOH->GetBinContent(1), st.TNOM->GetBinContent(1), st.nDof->GetBinContent(1), st.Qual->GetBinContent(1), st.Chi2->GetBinContent(1), st.MPt->GetBinContent(1), st.MI->GetBinContent(1), st.MTOF->GetBinContent(1), st.V3D->GetBinContent(1), st.Dxy->GetBinContent(1), st.TIsol->GetBinContent(1), st.EIsol->GetBinContent(1), st.Pterr->GetBinContent(1), st.Dz->GetBinContent(1), st.TOF->GetBinContent(1), st.HSCPE->GetBinContent(1), st.Pt->GetBinContent(CutIndex+1), st.I->GetBinContent(CutIndex+1), st.TOF->GetBinContent(CutIndex+1), st.HSCPE->GetBinContent(CutIndex+1));
+  
+   // Table2- Efficiencies at various cut stages: with event weights
+   //  fprintf(pFile,"                        %-200s%-50s%-30s\n", "Track-based Efficiency", "Event-based efficiency", "Track/Event");
+   //  fprintf(pFile,"%-24s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Signal", "NOH", "NOM", "TOFnDOF", "Qual", "Chi2", "pT", "Ias", "SigmaTOF", "3D vertex", "dxy", "Tk-Isol", "Cal-Isol", "sigmapT", "dz", "1/beta", "PreSelgm", "PreSelgen", "PreSeltr", "Selgen", "Seltr", "Trigger", "PreSelgen", "PreSeltr", "Selgen", "Seltr", "GlmuperTr", "PreSel", "FinalSel");
+   //  fprintf(pFile,"%-24s%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f%-10.5f\n", st.Name.c_str(), st.TNOH->GetBinContent(1)/st.Total->GetBinContent(1), st.TNOM->GetBinContent(1)/st.TNOH->GetBinContent(1), st.nDof->GetBinContent(1)/st.TNOM->GetBinContent(1), st.Qual->GetBinContent(1)/st.nDof->GetBinContent(1), st.Chi2->GetBinContent(1)/st.Qual->GetBinContent(1), st.MPt->GetBinContent(1)/st.Chi2->GetBinContent(1), st.MI->GetBinContent(1)/st.MPt->GetBinContent(1), st.MTOF->GetBinContent(1)/st.MI->GetBinContent(1), st.V3D->GetBinContent(1)/st.MTOF->GetBinContent(1), st.Dxy->GetBinContent(1)/st.V3D->GetBinContent(1), st.TIsol->GetBinContent(1)/st.Dxy->GetBinContent(1), st.EIsol->GetBinContent(1)/st.TIsol->GetBinContent(1), st.Pterr->GetBinContent(1)/st.EIsol->GetBinContent(1), st.Dz->GetBinContent(1)/st.Pterr->GetBinContent(1), st.TOF->GetBinContent(1)/st.Dz->GetBinContent(1), st.TOF->GetBinContent(1)/st.Total->GetBinContent(1), st.TOF->GetBinContent(1)/(2*st.TotalE->GetBinContent(1)), st.TOF->GetBinContent(1)/(2*st.TotalTE->GetBinContent(1)), st.TOF->GetBinContent(CutIndex+1)/(2*st.TotalE->GetBinContent(1)), st.TOF->GetBinContent(CutIndex+1)/(2*st.TotalTE->GetBinContent(1)), st.TotalTE->GetBinContent(1)/st.TotalE->GetBinContent(1), st.HSCPE->GetBinContent(1)/st.TotalE->GetBinContent(1), st.HSCPE->GetBinContent(1)/st.TotalTE->GetBinContent(1), st.HSCPE->GetBinContent(CutIndex+1)/st.TotalE->GetBinContent(1), st.HSCPE->GetBinContent(CutIndex+1)/st.TotalTE->GetBinContent(1), st.Total->GetBinContent(1)/(2*st.TotalTE->GetBinContent(1)), st.TOF->GetBinContent(1)/st.HSCPE->GetBinContent(1), st.TOF->GetBinContent(CutIndex+1)/st.HSCPE->GetBinContent(CutIndex+1));
+
+
+// Table1- Numbers at various cut stages: with event weights
+// Column1: Signal Name
+// Column2: # of generated events
+// Column3: # of triggered events
+// Column4: # of tracks being global muon
+// Column5: # of tracks passing eta, NOH, NOPixelH, ValidFraction cut
+// Column6: # of tracks passing NOM cut
+// Column7: # of tracks passing TOF, DT and CSC nDOF cuts
+// Column8: # of tracks passing track quality cut
+// Column9: # of tracks passing track chi2 cut
+// Column10:# of tracks passing track pT cut
+// Column11:# of tracks passing track Ias and dedx cut
+// Column12:# of tracks passing track sigma(1/beta) cut and timeAtIP cut
+// Column13:# of tracks passing v3D cut
+// Column14:# of tracks passing Dxy cut
+// Column15:# of tracks passing tracker isolation
+// Column16:# of tracks passing Cal isolation
+// Column17:# of tracks passing Sigma(pT) cut
+// Column18:# of tracks passing dz cut
+// Column19:# of tracks passing all preselection cuts, including 1/beta > 1.0
+// Column20:# of events passing all preselection cuts, including 1/beta > 1.0
+// Column21:# of tracks passing pT final selection
+// Column22:# of tracks passing Ias final selection
+// Column23:# of tracks passing 1/beta final selection
+// Column24:#Events in final selection
+
+
+// Table2: Efficiency numbers for various cut stages
+
+// ** Track-based efficiency
+// to pass eta, NOH, NOPixelH and valid fraction cut for a global muon track
+// to pass NOM cut relative to previous number of tracks
+// to pass TOF, DT and CSC dof cuts relative to previous number of tracks
+// to pass quality cut relative to previous number of tracks
+// to pass chi2 cut relative to previous number of tracks
+// to pass pT cut relative to previous number of tracks
+// to pass Ias and dedx cuts relative to previous number of tracks
+// to pass sigma(1/beta) cut relative to previous number of tracks
+// to pass 3D vertex cut relative to previous number of tracks
+// to pass dxy cut relative to previous number of tracks
+// to pass tracker isolation cut relative to previous number of tracks
+// to pass calorimeter isolation cut relative to previous number of tracks
+// to pass sigma (pt) cut relative to previous number of tracks
+// to pass dz cut relative to previous number of tracks
+// to pass 1/beta cut relative to previous number of tracks
+// Preselection efficiency for a global muon track
+// Preselection efficiency for a track in generated event
+// Preselection efficiency for a track in triggerred event
+// Final selection efficiency for a track in a generated event
+// Final selection efficiency for a track in a triggerred event
+
+// ** Event-based efficiency
+// Trigger efficiency per generated event
+// Preselection eff per generated event
+// Preselection eff per triggerred event
+// Final selection eff per generated event
+// Final selection eff per triggerred event
+
+// ** Track/Event
+// global muon per triggerred event
+// Number of tracks per event at preselection
+// Number of tracks per event at final selection
+
+   fprintf(pFile,"\n\n");
+}
 
 // draw all plots that are not meant for comparison with other samples (mostly 2D plots that can't be superimposed)
 void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, unsigned int CutIndex)
@@ -465,7 +1107,9 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
 
    char InputHist [1024]; sprintf (InputHist, "Results/Type%i/Histos.root", TypeMode);
    TFile* InputFile = new TFile (InputHist);
-
+   TH1D* HCuts_Pt  = (TH1D*) GetObjectFromPath (InputFile, "HCuts_Pt");
+   TH1D* HCuts_Is  = (TH1D*) GetObjectFromPath (InputFile, "HCuts_I");
+   TH1D* HCuts_TOF = (TH1D*) GetObjectFromPath (InputFile, "HCuts_TOF");
    char PtCutStr [1024]; sprintf (PtCutStr, "%.0f GeV", HCuts_Pt ->GetBinContent(CutIndex+1));
    char ICutStr  [1024]; sprintf (ICutStr,  "%.2f",     HCuts_Is ->GetBinContent(CutIndex+1));
    char TOFCutStr[1024]; sprintf (TOFCutStr,"%.3f",     HCuts_TOF->GetBinContent(CutIndex+1));
@@ -479,6 +1123,16 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
    SaveCanvas(c1,SavePath,"EtaIs_BS", true);
    delete c1;
 
+//   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+//   st.AS_EtaIs->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);   
+//   Histos[0] = (TH1*)st.AS_EtaIs->Project3D("zy"); legend.push_back("After Cut");
+//   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", dEdxS_Legend.c_str(), 0,0, 0,0, false);
+//   c1->SetLogz(true); c1->SetRightMargin(0.15);
+//   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+//   SaveCanvas(c1,SavePath,std::string("EtaIs_AS")+CutIndexStr, true);
+//   delete Histos[0];
+//   delete c1;
+
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
    Histos[0] = (TH1*)st.BS_EtaIm;                 legend.push_back("Before Cut");
    DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", dEdxM_Legend.c_str(), 0,0, 0,0, false);
@@ -487,6 +1141,23 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
    SaveCanvas(c1,SavePath,"EtaIm_BS", true);
    delete c1;
 
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   Histos[0] = (TH1*)st.BS_EtaNBH;                 legend.push_back("Before Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", "##NBH", 0,0, 0,0, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,"EtaNBH_BS", true);
+   delete c1;
+
+//   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+//   st.AS_EtaIm->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+//   Histos[0] = (TH1*)st.AS_EtaIm->Project3D("zy");legend.push_back("After Cut");
+//   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", dEdxM_Legend.c_str(), 0,0, 0,0, false);
+//   c1->SetLogz(true); c1->SetRightMargin(0.15);
+//   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+//   SaveCanvas(c1,SavePath,std::string("EtaIm_AS")+CutIndexStr, true);
+//   delete Histos[0];
+//   delete c1;
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
    Histos[0] = (TH1*)st.BS_EtaP;                  legend.push_back("Before Cut");
@@ -496,6 +1167,15 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
    SaveCanvas(c1,SavePath,"EtaP_BS", true);
    delete c1;
 
+//   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+//   st.AS_EtaP->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+//   Histos[0] = (TH1*)st.AS_EtaP->Project3D("zy"); legend.push_back("After Cut");
+//   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", "p (GeV)", 0,0, 0,0, false);
+//   c1->SetLogz(true); c1->SetRightMargin(0.15);
+//   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+//   SaveCanvas(c1,SavePath,std::string("EtaP_AS")+CutIndexStr, true);
+//   delete Histos[0];
+//   delete c1;
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
    Histos[0] = (TH1*)st.BS_EtaPt;                 legend.push_back("Before Cut");
@@ -505,13 +1185,34 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
    SaveCanvas(c1,SavePath,"EtaPt_BS", true);
    delete c1;
 
+//   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+//   st.AS_EtaPt->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+//   Histos[0] = (TH1*)st.AS_EtaPt->Project3D("zy");legend.push_back("After Cut");
+//   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", "p_{T} (GeV)", 0,0, 0,0, false);
+//   c1->SetLogz(true); c1->SetRightMargin(0.15);
+//   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+//   SaveCanvas(c1,SavePath,std::string("EtaPt_AS")+CutIndexStr, true);
+//   delete Histos[0];
+//   delete c1;
+
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
-   Histos[0] = (TH1*)st.BS_EtaTOF;                 legend.push_back("Before Cut");
+   Histos[0] = (TH1*)st.BS_EtaTOF;                legend.push_back("Before Cut");
    DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", "1/#beta", 0,0, 0,0, false);
    c1->SetLogz(true); c1->SetRightMargin(0.15);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,SavePath,"EtaTOF_BS", true);
    delete c1;
+
+//   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+//   st.AS_EtaTOF->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+//   Histos[0] = (TH1*)st.AS_EtaTOF->Project3D("zy");legend.push_back("After Cut");
+//   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ",  "#eta", "1/#beta", 0,0, 0,0, false);
+//   c1->SetLogz(true); c1->SetRightMargin(0.15);
+//   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+//   SaveCanvas(c1,SavePath,std::string("EtaTOF_AS")+CutIndexStr, true);
+//   delete Histos[0];
+//   delete c1;
+
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
    Histos[0] = (TH1*)st.BS_PIs;                   legend.push_back("Before Cut");
@@ -546,11 +1247,52 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
    delete c1;
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   st.AS_PIs->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+   Histos[0] = (TH1*)st.AS_PIs->Project3D("zy");  legend.push_back("After Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "p (GeV)", dEdxS_Legend.c_str(), 0,0, 0,0, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("PIs_AS")+CutIndexStr, true);
+   delete Histos[0];
+   delete c1;
+
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
    Histos[0] = (TH1*)st.BS_PtTOF;                  legend.push_back("Before Cut");
    DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "p_{T} (GeV)", "1/#beta", 0,0, 0,0, false);
    c1->SetLogz(true); c1->SetRightMargin(0.15);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,SavePath,"PtTOF_BS", true);
+   delete c1;
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   st.AS_PIm->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+   Histos[0] = (TH1*)st.AS_PIm->Project3D("zy");  legend.push_back("After Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "p (GeV)", dEdxM_Legend.c_str(), 0,0, 0,15, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("PIm_AS")+CutIndexStr, true);
+   delete Histos[0];
+   delete c1;
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   st.AS_PtIs->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+   Histos[0] = (TH1*)st.AS_PtIs->Project3D("zy"); legend.push_back("After Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "p_{T} (GeV)", dEdxS_Legend.c_str(), 0,0, 0,0, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("PtIs_AS")+CutIndexStr, true);
+   delete Histos[0];
+   delete c1;
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   st.AS_PtIm->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+   Histos[0] = (TH1*)st.AS_PtIm->Project3D("zy"); legend.push_back("After Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "p_{T} (GeV)", dEdxM_Legend.c_str(), 0,0, 0,15, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("PtIm_AS")+CutIndexStr, true);
+   delete Histos[0];
    delete c1;
 
 
@@ -570,6 +1312,87 @@ void stPlots_Draw(stPlots& st, std::string SavePath, std::string LegendTitle, un
    SaveCanvas(c1,SavePath,"TOFIm_BS", true);
    delete c1;
 
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   st.AS_TOFIs->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+   Histos[0] = (TH1*)st.AS_TOFIs->Project3D("zy");legend.push_back("After Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "1/#beta", dEdxS_Legend.c_str(), 0,0, 0,0, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("TOFIs_AS")+CutIndexStr, true);
+   delete Histos[0];
+   delete c1;
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   st.AS_TOFIm->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
+   Histos[0] = (TH1*)st.AS_TOFIm->Project3D("zy");legend.push_back("After Cut");
+   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "1/#beta", dEdxM_Legend.c_str(), 0,0, 0,15, false);
+   c1->SetLogz(true); c1->SetRightMargin(0.15);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("TOFIm_AS")+CutIndexStr, true);
+   delete Histos[0];
+   delete c1;
+
+
+   TH1** Histos1D = new TH1*[10];
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   Histos1D[0] = (TH1*)st.AS_Eta_RegionA->ProjectionY((st.Name+"A").c_str(),CutIndex+1,CutIndex+1); legend.push_back("A");  
+   if(Histos1D[0]->Integral()>0) Histos1D[0]->Scale(1.0/Histos1D[0]->Integral());
+   Histos1D[1] = (TH1*)st.AS_Eta_RegionB->ProjectionY((st.Name+"B").c_str(),CutIndex+1,CutIndex+1); legend.push_back("B");
+   if(Histos1D[1]->Integral()>0) Histos1D[1]->Scale(1.0/Histos1D[1]->Integral());
+   Histos1D[2] = (TH1*)st.AS_Eta_RegionC->ProjectionY((st.Name+"C").c_str(),CutIndex+1,CutIndex+1); legend.push_back("C");
+   if(Histos1D[2]->Integral()>0) Histos1D[2]->Scale(1.0/Histos1D[2]->Integral());
+   Histos1D[3] = (TH1*)st.AS_Eta_RegionD->ProjectionY((st.Name+"D").c_str(),CutIndex+1,CutIndex+1); legend.push_back("D");
+   if(Histos1D[3]->Integral()>0) Histos1D[3]->Scale(1.0/Histos1D[3]->Integral());
+   Histos1D[4] = (TH1*)st.AS_Eta_RegionE->ProjectionY((st.Name+"E").c_str(),CutIndex+1,CutIndex+1); legend.push_back("E");
+   if(Histos1D[4]->Integral()>0) Histos1D[4]->Scale(1.0/Histos1D[4]->Integral());
+   Histos1D[5] = (TH1*)st.AS_Eta_RegionF->ProjectionY((st.Name+"F").c_str(),CutIndex+1,CutIndex+1); legend.push_back("F");
+   if(Histos1D[5]->Integral()>0) Histos1D[5]->Scale(1.0/Histos1D[5]->Integral());
+   Histos1D[6] = (TH1*)st.AS_Eta_RegionG->ProjectionY((st.Name+"G").c_str(),CutIndex+1,CutIndex+1); legend.push_back("G");
+   if(Histos1D[6]->Integral()>0) Histos1D[6]->Scale(1.0/Histos1D[6]->Integral());
+   Histos1D[7] = (TH1*)st.AS_Eta_RegionH->ProjectionY((st.Name+"H").c_str(),CutIndex+1,CutIndex+1); legend.push_back("H");
+   if(Histos1D[7]->Integral()>0) Histos1D[7]->Scale(1.0/Histos1D[7]->Integral());
+   DrawSuperposedHistos((TH1**)Histos1D, legend, "E1",  "#eta", "arbitrary units", 0, 0, 0, 0.1);
+   DrawLegend((TObject**)Histos1D,legend,"","P", 0.63, 0.88, 0.38, 0.045);
+   c1->SetLogy(false);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("EtaRegions_AS")+CutIndexStr);
+   for(unsigned int i=0;i<8;i++){delete Histos1D[i];}
+   delete c1;
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   Histos1D[0] = (TH1*)st.AS_Eta_RegionA->ProjectionY((st.Name+"A").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}<"+string(PtCutStr)+" & I_{as}<"+string(ICutStr));
+   if(Histos1D[0]->Integral()>0) Histos1D[0]->Scale(1.0/Histos1D[0]->Integral());
+   Histos1D[1] = (TH1*)st.AS_Eta_RegionB->ProjectionY((st.Name+"B").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}<"+string(PtCutStr)+" & I_{as}>"+string(ICutStr));
+   if(Histos1D[1]->Integral()>0) Histos1D[1]->Scale(1.0/Histos1D[1]->Integral());
+   Histos1D[2] = (TH1*)st.AS_Eta_RegionC->ProjectionY((st.Name+"C").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}>"+string(PtCutStr)+" & I_{as}<"+string(ICutStr));
+   if(Histos1D[2]->Integral()>0) Histos1D[2]->Scale(1.0/Histos1D[2]->Integral());
+   Histos1D[3] = (TH1*)st.AS_Eta_RegionD->ProjectionY((st.Name+"D").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}>"+string(PtCutStr)+" & I_{as}>"+string(ICutStr));
+   if(Histos1D[3]->Integral()>0) Histos1D[3]->Scale(1.0/Histos1D[3]->Integral());
+   DrawSuperposedHistos((TH1**)Histos1D, legend, "E1",  "#eta", "arbitrary units", 0, 0, 0, 0.1);
+   DrawLegend((TObject**)Histos1D,legend,"","P", 0.80, 0.88, 0.38, 0.045);
+   c1->SetLogy(false);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("EtaRegions_ABCD_AS")+CutIndexStr);
+   for(unsigned int i=0;i<4;i++){delete Histos1D[i];}
+   delete c1;
+
+   c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   Histos1D[0] = (TH1*)st.AS_Eta_RegionA->ProjectionY((st.Name+"A").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}<"+string(PtCutStr)+" & 1/#beta<"+string(TOFCutStr));
+   if(Histos1D[0]->Integral()>0) Histos1D[0]->Scale(1.0/Histos1D[0]->Integral());
+   Histos1D[1] = (TH1*)st.AS_Eta_RegionE->ProjectionY((st.Name+"E").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}<"+string(PtCutStr)+" & 1/#beta>"+string(TOFCutStr));
+   if(Histos1D[1]->Integral()>0) Histos1D[1]->Scale(1.0/Histos1D[1]->Integral());
+   Histos1D[2] = (TH1*)st.AS_Eta_RegionC->ProjectionY((st.Name+"C").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}>"+string(PtCutStr)+" & 1/#beta<"+string(TOFCutStr));
+   if(Histos1D[2]->Integral()>0) Histos1D[2]->Scale(1.0/Histos1D[2]->Integral());
+   Histos1D[3] = (TH1*)st.AS_Eta_RegionG->ProjectionY((st.Name+"G").c_str(),CutIndex+1,CutIndex+1); legend.push_back("p_{T}>"+string(PtCutStr)+" & 1/#beta>"+string(TOFCutStr));
+   if(Histos1D[3]->Integral()>0) Histos1D[3]->Scale(1.0/Histos1D[3]->Integral());
+   DrawSuperposedHistos((TH1**)Histos1D, legend, "E1",  "#eta", "arbitrary units", 0, 0, 0, 0.1);
+   DrawLegend((TObject**)Histos1D,legend,"","P", 0.80, 0.88, 0.30, 0.045);
+   c1->SetLogy(false);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,SavePath,std::string("EtaRegions_ACEG_AS")+CutIndexStr);
+   for(unsigned int i=0;i<4;i++){delete Histos1D[i];}
+   delete c1;
 
 
    if(st.BS_Pt_PUA!=NULL)     {
@@ -1041,6 +1864,7 @@ void stPlots_DrawComparison(std::string SavePath, std::string LegendTitle, unsig
 
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   c1->SetLogy(true);
    for(unsigned int i=0;i<st.size();i++){
      Histos[i] = (TH1*)st[i]->BS_Eta->Clone();        legend.push_back(lg[i]);  if(Histos[i]->Integral()>0) Histos[i]->Scale(1.0/Histos[i]->Integral()); }
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "#eta", "Fraction of tracks", 0,0, 1E-3,3);

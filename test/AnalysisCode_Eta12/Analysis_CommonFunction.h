@@ -86,21 +86,6 @@ double GetTOFMass(double P, double TOF){
    return GetMassFromBeta(P, 1/TOF);
 }
 
-double GetMassErr (double P, double PErr, double dEdx, double dEdxErr, double M){
-   if (M < 0) return -1;
-   double KErr     = 0.2;
-   double CErr     = 0.4;
-   double cErr     = 0.01;
-   double Criteria = dEdx - dEdxC_Data;
-   double Fac1     = P*P/(2*M*dEdxK_Data);
-   double Fac2     = pow(2*M*M*dEdxK_Data/(P*P), 2);
-   double MassErr  = Fac1*sqrt(Fac2*pow(PErr/P, 2) + Criteria*Criteria*pow(KErr/dEdxK_Data,2) + dEdxErr*dEdxErr + dEdxC_Data*dEdxC_Data);
-
-   if (std::isnan(MassErr) || std::isinf(MassErr)) MassErr = -1;
-
-   return MassErr/M;
-}
-
 // estimate beta from a dEdx value, if dEdx is below the allowed threshold returns a negative beta value
 double GetIBeta(double I, bool MC){
    double& K = dEdxK_Data;
@@ -728,7 +713,7 @@ class dedxHIPEmulator{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL, double* dEdxErr = NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL);
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
@@ -930,7 +915,7 @@ HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, 
 
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator, double* dEdxErr){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -1057,13 +1042,10 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
               //harmonic2 estimator           
               result=0;
               double expo = -2;
-	      if (dEdxErr) *dEdxErr = 0;
               for(int i = 0; i< size; i ++){
                  result+=pow(vect[i],expo);
-		 if (dEdxErr) *dEdxErr += pow(vect[i],2*(expo-1))*pow(0.01,2);
               }
               result = pow(result/size,1./expo);
-	      if (dEdxErr) *dEdxErr = result*result*result*sqrt(*dEdxErr)/size;
            }
 //           printf("Ih = %f\n------------------\n",result);
         }

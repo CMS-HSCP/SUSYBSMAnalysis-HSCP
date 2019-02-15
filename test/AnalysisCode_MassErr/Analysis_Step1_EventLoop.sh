@@ -1,6 +1,3 @@
-export REMOTESTORAGESERVER=cms-xrd-global.cern.ch
-export REMOTESTORAGEPATH=//store/user/jozobec/HSCP2016/
-
 root -l -b << EOF
   TString makeshared(gSystem->GetMakeSharedLib());
   makeshared.ReplaceAll("-W ", "-Wno-deprecated-declarations -Wno-deprecated -Wno-unused-local-typedefs -Wno-attributes ");
@@ -17,6 +14,6 @@ root -l -b << EOF
   gSystem->Load("libDataFormatsHepMCCandidate.so");
   gSystem->Load("libPhysicsToolsUtilities.so");
   gInterpreter->SetClassAutoparsing(false)
-  .x Analysis_Step1_EventLoop.C++("ANALYSE_138_to_138", 0);
+  .x Analysis_Step1_EventLoop.C++("ANALYSE_137_to_137", 0);
 EOF
 

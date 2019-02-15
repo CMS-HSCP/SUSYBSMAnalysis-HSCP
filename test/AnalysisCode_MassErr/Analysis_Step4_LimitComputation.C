@@ -119,7 +119,7 @@ double PlotMaxScale = 1000;
 //Easy flag to skip running time consuming Cls expected limits. True runs the limit, false does not
 bool FullExpLimit=true;
 
-void Optimize(string InputPattern, string Data, string signal, bool shape, bool cutFromFile, int* OptimCutIndex=nullptr);
+void Optimize(string InputPattern, string Data, string signal, bool shape, bool cutFromFile);
 double GetSignalMeanHSCPPerEvent(string InputPattern, unsigned int CutIndex, double MinRange, double MaxRange);
 TGraph* MakePlot(FILE* pFile, FILE* talkFile, string InputPattern, string ModelName, int XSectionType, std::vector<stSample>& modelSamples, double& LInt);
 TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern, string ModelName, std::vector<stSample>& modelSample);
@@ -135,7 +135,7 @@ void saveVariationHistoForLimit(TH1* histo, TH1* vardown, string Name, string va
 void testShapeBasedAnalysis(string InputPattern, string signal);
 double computeSignificance(string datacard, bool expected, string& signal, string massStr, float Strength);
 bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, string& InputPattern, string& signal, unsigned int CutIndex, bool Shape, bool Temporary, stAllInfo& result, TH1* MassData, TH1* MassPred, TH1* MassSign, TH1* MassSignP, TH1* MassSignI, TH1* MassSignM, TH1* MassSignHUp, TH1* MassSignHDown, TH1* MassSignT, TH1* MassSignPU);
-bool Combine(string InputPattern, string signal7, string signal8, int* OptimCutIndex=nullptr);
+bool Combine(string InputPattern, string signal7, string signal8);
 bool useSample(int TypeMode, string sample);
 
 double MinRange = 0;
@@ -238,20 +238,19 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
       string EXCLUSIONDIR_SAVE = EXCLUSIONDIR;
 
       //2016 PreG Limits
-      signed int OptCutIndex = -1;
       printf("2016 pre-G Data ...\n");
       Data = "Data13TeV16"; SQRTS=1316.0; EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"13TeV16";
-      Optimize(InputPattern, Data, signal, SHAPESTRING!="", true, &OptCutIndex);
+      Optimize(InputPattern, Data, signal, SHAPESTRING!="", true);
 
       //2016 PostG Limits
       printf("2016G post-G Data ...\n");
       Data = "Data13TeV16G"; SQRTS=13167.0; EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"13TeV16G";
-      Optimize(InputPattern, Data, ReplacePartOfString(signal, "13TeV16", "13TeV16G"), SHAPESTRING!="", true, &OptCutIndex);
+      Optimize(InputPattern, Data, ReplacePartOfString(signal, "13TeV16", "13TeV16G"), SHAPESTRING!="", true);
 
       //Combined Limits
       printf("Combining ...\n");
       EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"COMB2016";  SQRTS=131667.0;
-      Combine(InputPattern, signal13TeV16, signal13TeV16G, &OptCutIndex);
+      Combine(InputPattern, signal13TeV16, signal13TeV16G);
       return;
    }
 
@@ -332,14 +331,14 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
             samples[s].Name = ReplacePartOfString (samples[s].Name,"_13TeV"   , "");
          }
       } else if (SQRTS==131677){
-//              if (samples[s].Name.find("13TeV16")==std::npos) continue;
-         if (samples[s].Name.find("13TeV16G")==string::npos) continue;
-         samples[s].Name = ReplacePartOfString (samples[s].Name,"_13TeV16G", "");
+//            if (samples[s].Name.find("13TeV16")==std::npos) continue;
+            if (samples[s].Name.find("13TeV16G")==string::npos) continue;
+            samples[s].Name = ReplacePartOfString (samples[s].Name,"_13TeV16G", "");
       }
-        
+      
       if (!samples[s].ModelName().empty()){
          modelMap[samples[s].ModelName()].push_back(samples[s]);
-         if(modelMap[samples[s].ModelName()].size()==1) modelVector.push_back(samples[s].ModelName());
+         modelVector.push_back(samples[s].ModelName());
       }
    }
    printf("EXCLUSIONDIR = %s\nData = %s\n",EXCLUSIONDIR.c_str(), Data.c_str());  
@@ -955,7 +954,6 @@ std::cout<<"TESTC\n";
       ThErrorMap[modelVector[k]] = ThXSecErr[k];
    }
 
-   // FIXME add GluinoN_f50 maybe as well?
    if (MODE.find("13TeV16")==std::string::npos){
       ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
       MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
@@ -1838,6 +1836,7 @@ TGraph* MakePlot(FILE* pFile, FILE* talkFile, string InputPattern, string ModelN
      XSecExp   [i] = Infos[i].XSec_Exp;
      LInt          = std::max(LInt, Infos[i].LInt);
 
+     if (ModelName.find("Stop")!=string::npos && ModelName.find("N")==string::npos) printf ("Model = %s Mass = %.0f XSecObs = %.3E\n", (InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelSamples[signalPoints[i]].Name +".txt").c_str(), Mass[i], XSecObs[i]);
      //printf("%i %s\n", (int)FileFound, (InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelSamples[signalPoints[i]].Name +".txt").c_str());
 //     I++;
    }
@@ -1991,48 +1990,27 @@ void DrawModelLimitWithBand(string InputPattern){
    double LInt = 0;
    for(unsigned int k=0; k<modelVector.size(); k++){
       bool isNeutral = false;if(modelVector[k].find("GluinoN")!=string::npos || modelVector[k].find("StopN")!=string::npos)isNeutral = true;
-      bool skip = false;
-      bool isComb = EXCLUSIONDIR.find("COMB2016")!=string::npos;
-      
-      printf ("Model = %s\n", (modelVector[k]).c_str());
-
-      if (modelVector[k] == "") continue;
-      if (modelVector[k].find("16")!=string::npos && isComb) continue;
       if(TypeMode!=0 && isNeutral) continue;
 
       unsigned int N = modelMap[modelVector[k]].size();
-      stAllInfo Infos;
-      vector<double> Mass, XSecTh, XSecExp,XSecObs, XSecExpUp,XSecExpDown,XSecExp2Up,XSecExp2Down;
+      stAllInfo Infos;double Mass[N], XSecTh[N], XSecExp[N],XSecObs[N], XSecExpUp[N],XSecExpDown[N],XSecExp2Up[N],XSecExp2Down[N];
       for(unsigned int i=0;i<N;i++){
-         string samplePath = InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelMap[modelVector[k]][i].Name +".txt";
-	 if (isComb){
-            samplePath = cleanSampleName (samplePath);
-         }
-         Infos = stAllInfo(samplePath);
-         if (Infos.Mass < 100){
-            printf ("Point at %s not found ...\n", samplePath.c_str());
-	    skip = true;
-	    N--;
-	    continue;
-         }
-	 if (Mass.size() > 0 && Infos.Mass < Mass[Mass.size()-1]) break;
-         std::cout << samplePath << std::endl;
-         Mass        .push_back(Infos.Mass);
-         XSecTh      .push_back(Infos.XSec_Th);
-         XSecObs     .push_back(Infos.XSec_Obs);
-         XSecExp     .push_back(Infos.XSec_Exp);
-         XSecExpUp   .push_back(Infos.XSec_ExpUp);
-         XSecExpDown .push_back(Infos.XSec_ExpDown);
-         XSecExp2Up  .push_back(Infos.XSec_Exp2Up);
-         XSecExp2Down.push_back(Infos.XSec_Exp2Down);
+         Infos = stAllInfo(InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelMap[modelVector[k]][i].Name +".txt");
+         Mass        [i]=Infos.Mass;
+         XSecTh      [i]=Infos.XSec_Th;
+         XSecObs     [i]=Infos.XSec_Obs;
+         XSecExp     [i]=Infos.XSec_Exp;
+         XSecExpUp   [i]=Infos.XSec_ExpUp;
+         XSecExpDown [i]=Infos.XSec_ExpDown;
+         XSecExp2Up  [i]=Infos.XSec_Exp2Up;
+         XSecExp2Down[i]=Infos.XSec_Exp2Down;
          LInt           =std::max(LInt, Infos.LInt);
       }
-      if (skip) continue;
-      TGraph* graphtheory  = new TGraph(Mass.size(),&(Mass[0]),&(XSecTh [0]));
-      TGraph* graphobs     = new TGraph(Mass.size(),&(Mass[0]),&(XSecObs[0]));
-      TGraph* graphexp     = new TGraph(Mass.size(),&(Mass[0]),&(XSecExp[0]));
-      TCutG*  ExpErr       = GetErrorBand("ExpErr"      ,Mass.size(),&(Mass[0]), &(XSecExpDown[0]),&(XSecExpUp[0]),PlotMinScale,PlotMaxScale);
-      TCutG*  Exp2SigmaErr = GetErrorBand("Exp2SigmaErr",Mass.size(),&(Mass[0]),&(XSecExp2Down[0]),&(XSecExp2Up[0]),PlotMinScale,PlotMaxScale);
+      TGraph* graphtheory  = new TGraph(N,Mass,XSecTh);
+      TGraph* graphobs     = new TGraph(N,Mass,XSecObs);
+      TGraph* graphexp     = new TGraph(N,Mass,XSecExp);
+      TCutG*  ExpErr       = GetErrorBand("ExpErr"      ,N,Mass,XSecExpDown ,XSecExpUp , PlotMinScale, PlotMaxScale);
+      TCutG*  Exp2SigmaErr = GetErrorBand("Exp2SigmaErr",N,Mass,XSecExp2Down,XSecExp2Up, PlotMinScale, PlotMaxScale);
 
       graphtheory->SetLineStyle(3);
       graphtheory->SetFillColor(kBlue);
@@ -2050,34 +2028,29 @@ void DrawModelLimitWithBand(string InputPattern){
       graphobs->SetMarkerStyle(23);
 
       TCanvas* c1 = new TCanvas("c1", "c1",600,600);
-      TH1D* frame = new TH1D("frame", "frame", 1,50, 2650);
-      frame->GetXaxis()->SetNdivisions(505);
-      frame->SetTitle("");
-      frame->SetStats(kFALSE);
-      frame->GetXaxis()->SetTitle("Mass (GeV)");
-      frame->GetYaxis()->SetTitle("95% CL limit on #sigma (pb)");
-      frame->GetYaxis()->SetTitleOffset(1.40);
-      frame->SetMaximum(PlotMaxScale);
-      frame->SetMinimum(PlotMinScale);
-      frame->GetYaxis()->SetRangeUser(2e-5, 1.5e1); // JOZZE EDIT
-      frame->Draw("AXIS");
-
-
-      Exp2SigmaErr->Draw("F");
-      ExpErr      ->Draw("F");
-      graphexp->Draw("LP");
-      graphobs->Draw("LP");
-      graphtheory->Draw("L");
+      TMultiGraph* MG = new TMultiGraph();
+      MG->Add(graphexp      ,"LP");
+      MG->Add(graphobs      ,"LP");
+      MG->Add(graphtheory   ,"L");
+      MG->Draw("A");
+      Exp2SigmaErr->Draw("f");
+      ExpErr      ->Draw("f");
+      MG          ->Draw("same");
+      MG->SetTitle("");
+      MG->GetXaxis()->SetTitle("Mass (GeV)");
+      MG->GetYaxis()->SetTitle("#sigma (pb)");
+      MG->GetYaxis()->SetTitleOffset(1.70);
+      MG->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
       DrawPreliminary(LegendFromType(InputPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
 
-      TLegend* LEG = new TLegend(0.60,0.82-8*0.043,0.93,0.82);
+      TLegend* LEG = EXCLUSIONDIR.find("COMB")==string::npos ? new TLegend(0.45,0.58,0.65,0.90) : new TLegend(0.45,0.10,0.65,0.42);
       //TLegend* LEG = new TLegend(0.40,0.65,0.8,0.90);
       string headerstr = "95% CL Limits (";
       headerstr += LegendFromType(InputPattern) + string(")");
       LEG->SetHeader(headerstr.c_str());
       LEG->SetFillColor(0); 
       LEG->SetBorderSize(0);
-      fprintf (stderr, "k/kMax = (%u / %lu)\tN=%lu out of %lu\n", k+1, modelVector.size(), Mass.size(), modelMap[modelVector[k]].size());
+      fprintf (stderr, "k/kMax = (%u / %lu)\tN=%u out of %lu\n", k+1, modelVector.size(), N, modelMap[modelVector[k]].size());
       LEG->AddEntry(graphtheory,  modelMap[modelVector[k]][0].ModelLegend().c_str() ,"L");
       LEG->AddEntry(graphexp    , "Expected"             ,"L");
       LEG->AddEntry(ExpErr      , "Expected #pm 1#sigma" ,"F");
@@ -2087,7 +2060,6 @@ void DrawModelLimitWithBand(string InputPattern){
       c1->SetLogy(true);
 
       SaveCanvas(c1,"Results/"+SHAPESTRING+EXCLUSIONDIR+"/", string(prefix+ modelVector[k] + "ExclusionLog"));
-      delete frame;
       delete c1;
    }
 }
@@ -2161,8 +2133,8 @@ void DrawRatioBands(string InputPattern)
       TGraph* graphtheory  = new TGraph(N,Mass,XSecTh);
       TGraph* graphobs     = new TGraph(N,Mass,XSecObs);
       TGraph* graphexp     = new TGraph(N,Mass,XSecExp);
-      TCutG*  ExpErr       = GetErrorBand(Form("ExpErr%i",k)      ,N,Mass,XSecExpDown ,XSecExpUp,  PlotMinScale, PlotMaxScale);
-      TCutG*  Exp2SigmaErr = GetErrorBand(Form("Exp2SigmaErr%i",k),N,Mass,XSecExp2Down,XSecExp2Up, PlotMinScale, PlotMaxScale);
+      TCutG*  ExpErr       = GetErrorBand(Form("ExpErr%i",k)      ,N,Mass,XSecExpDown ,XSecExpUp,  0.0, 3.0);
+      TCutG*  Exp2SigmaErr = GetErrorBand(Form("Exp2SigmaErr%i",k),N,Mass,XSecExp2Down,XSecExp2Up, 0.0, 3.0);
 
       graphAtheory [k] = graphtheory;      
       graphAobs    [k] = graphobs;
@@ -2273,7 +2245,7 @@ void DrawRatioBands(string InputPattern)
 }
 
 //will run on all possible selection and try to identify which is the best one for this sample
-void Optimize(string InputPattern, string Data, string signal, bool shape, bool cutFromFile, int* OptCutIndex){
+void Optimize(string InputPattern, string Data, string signal, bool shape, bool cutFromFile){
    printf("Optimize selection for %s in %s\n",signal.c_str(), InputPattern.c_str());fflush(stdout);
 
    //get the typeMode from pattern
@@ -2285,7 +2257,6 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    //Identify the signal sample
    GetSampleDefinition(samples);
    CurrentSampleIndex        = JobIdToIndex(signal,samples); 
-   printf("CurrentSampleIndez = %d\n", CurrentSampleIndex);
    if(CurrentSampleIndex<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  } 
 
    if      (Data.find("7TeV"    )!=string::npos){SQRTS=7.0;    } //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);
@@ -2339,7 +2310,7 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 
    //If Take the cuts From File --> Load the actual cut index
    int OptimCutIndex = -1;  //int OptimMassWindow;
-   if(cutFromFile && OptimCutIndex < 0){ // if less than zero, read from the file, otherwise don't
+   if(cutFromFile){
       FILE* pFile = fopen("Analysis_Cuts.txt","r");
       if(!pFile){printf("Can't open %s\n","Analysis_Cuts.txt"); return;}
 
@@ -2395,8 +2366,6 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 
    //normalise the signal samples to XSection * IntLuminosity
    double LInt  = H_Lumi->GetBinContent(1); // FIXME JOZE
-   if (signal.find("13TeV16G")!=string::npos) LInt = IntegratedLuminosity13TeV16G; // FIXME quick and dirty patch, but shouldn't be needed if you run from step 1 - 5
-   else if (signal.find("13TeV16")!=string::npos) LInt = IntegratedLuminosity13TeV16PreG;
 //   double LInt  = IntegratedLuminosity13TeV16 - IntegratedLuminosity13TeV16PostHIP;
 //   LInt = Data.find("13TeV16")!=string::npos?IntegratedLuminosity13TeV16:IntegratedLuminosity13TeV15; // from before, but a neat trick
    double norm  = samples[CurrentSampleIndex].XSec*LInt/TotalE  ->Integral(); //normalize the samples to the actual lumi used for limits
@@ -2411,6 +2380,19 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    MassSignT     ->Scale(norm);
    MassSignPU    ->Scale(normPU);
 
+   //Compute mass range for the cut&count search
+   double Mean=-1,Width=-1;
+   if(!shape && TypeMode<=2){
+      TH1D* tmpMassSignProj = MassSign->ProjectionY("MassSignProj0",1,1);
+      Mean  = tmpMassSignProj->GetMean();
+      Width = tmpMassSignProj->GetRMS();
+      MinRange = std::max(0.0, Mean-2*Width);
+      MinRange = tmpMassSignProj->GetXaxis()->GetBinLowEdge(tmpMassSignProj->GetXaxis()->FindBin(MinRange)); //Round to a bin value to avoid counting prpoblem due to the binning. 
+      delete tmpMassSignProj;
+   }else{
+      MinRange = 0;
+   }
+
    //prepare output directory and log file
    string outpath = InputPattern + "/"+SHAPESTRING+EXCLUSIONDIR+"/";
    MakeDirectories(outpath);
@@ -2420,28 +2402,8 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       if(!pFile)printf("Can't open file : %s\n",(outpath+"/"+signal+".info").c_str());
    }
 
-   //Compute mass range for the cut&count search
    stAllInfo result;
    stAllInfo toReturn;
-   double Mean=-1,Width=-1;
-   if(!shape && TypeMode<=2){
-      TH1D* tmpMassSignProj = MassSign->ProjectionY("MassSignProj0",1,1);
-      Mean                  = tmpMassSignProj->GetMean();
-      Width                 = tmpMassSignProj->GetRMS();
-      MinRange              = std::max(0.0, Mean-2*Width);
-      if (OptimCutIndex>=0) { // if we have an optimal cut index
-         TH1D* MassPredTMP = ((TH2D*)MassPred)->ProjectionY("MassPredProj", OptimCutIndex, OptimCutIndex); // FIXME
-         result.NPred = MassPredTMP->Integral(MassPredTMP->GetXaxis()->FindBin(MinRange), MassPredTMP->GetXaxis()->FindBin(MaxRange)); // FIXME make sure that the mass cut has NPred > 1E-2
-         for (; result.NPred < 1e-3; MinRange -= 10)
-            result.NPred = MassPredTMP->Integral(MassPredTMP->GetXaxis()->FindBin(MinRange), MassPredTMP->GetXaxis()->FindBin(MaxRange));
-         MinRange = tmpMassSignProj->GetXaxis()->GetBinLowEdge(tmpMassSignProj->GetXaxis()->FindBin(MinRange)); //Round to a bin value to avoid counting prpoblem due to the binning. 
-         delete tmpMassSignProj; delete MassPredTMP;
-      }
-   }else{
-      MinRange = 0;
-   }
-   printf ("MassCut = %.0lf, NPred = % .2e\n", MinRange, result.NPred);
-
    //loop on all possible selections and determine which is the best one
    for(int CutIndex=0;CutIndex<MassData->GetNbinsX();CutIndex++){
       //if(CutIndex>25)break; //for debugging purposes
@@ -2452,7 +2414,7 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       //make sure the pT cut is high enough to get some statistic for both ABCD and mass shape
       if(HCuts_Pt ->GetBinContent(CutIndex+1) < 64 && TypeMode!=4){printf("Skip cut=%i because of too lose pT cut\n", CutIndex); continue; }
 
-      //make sure we have a reliable prediction of the number of events
+      //make sure we have a reliable prediction of the number of events      
       if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1) >0 &&(H_A->GetBinContent(CutIndex+1)<25 ||  H_F->GetBinContent(CutIndex+1)<25 || H_G->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (AFG/EE) is not reliable
       if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1)==0 && H_A->GetBinContent(CutIndex+1)<=0 && (H_C->GetBinContent(CutIndex+1)<25 || H_B->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CB/A) is not reliable
       if(OptimCutIndex<0 && H_F->GetBinContent(CutIndex+1) >0 && H_A->GetBinContent(CutIndex+1)<=0 && (H_B->GetBinContent(CutIndex+1)<25 || H_H->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CB/A) is not reliable
@@ -2463,7 +2425,7 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
          double N_P = H_P->GetBinContent(CutIndex+1);       
          if(H_E->GetBinContent(CutIndex+1) >0 && (H_A->GetBinContent(CutIndex+1)<0.25*N_P || H_F->GetBinContent(CutIndex+1)<0.25*N_P || H_G->GetBinContent(CutIndex+1)<0.25*N_P)){printf("Skip cut=%i because of unreliable mass prediction\n", CutIndex); continue;}  //Skip events where Mass Prediction is not reliable
          if(H_E->GetBinContent(CutIndex+1)==0 && (H_C->GetBinContent(CutIndex+1)<0.25*N_P || H_B->GetBinContent(CutIndex+1)<0.25*N_P)){printf("Skip cut=%i because of unreliable mass prediction\n", CutIndex); continue;}  //Skip events where Mass Prediction is not reliable
-      }
+      }      
 
       //prepare outputs result structure
       result = toReturn;
@@ -2688,8 +2650,6 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    double NSignErr, NSignPErr, NSignIErr, NSignMErr, NSignHErrUp, NSignHErrDown, NSignTErr, NSignPUErr;
    double signalsMeanHSCPPerEvent = GetSignalMeanHSCPPerEvent(InputPattern,CutIndex, MinRange, MaxRange);
 
-   printf ("signalsMeanHSCPPerEvent = %lf\n", signalsMeanHSCPPerEvent);
-   printf ("CurrentSampleIndex = %d, CutIndex = %d\n", CurrentSampleIndex, CutIndex);
    //IF 2D histograms --> we get all the information from there (and we can do shape based analysis AND/OR cut on mass)
    if(MassData->InheritsFrom("TH2")){
       //make the projection of all the 2D input histogram to get the shape for this single point
@@ -2797,7 +2757,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    result.NPred     = NPred;
    result.NPredErr  = NPredErr;
    result.NSign     = NSign;
-   printf ("NSign = %lf = %lf/(%.2e*%.4lf)\n", NSign/(result.XSec_Th*result.LInt), NSign, result.XSec_Th, result.LInt);
+   printf ("NSign = %lf = %lf/(%.2e*%.4lf)\n", NSign, NSign/(result.XSec_Th*result.LInt),result.XSec_Th, result.LInt);
    NSign /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
 //   NPred /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
    double SignalScaleFactor = 1.0;
@@ -3118,15 +3078,11 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
 }
 
 
-bool Combine(string InputPattern, string signal1, string signal2, int* OptCutIndex){
+bool Combine(string InputPattern, string signal1, string signal2){
 //   CurrentSampleIndex        = JobIdToIndex(signal, samples); if(CurrentSampleIndex<0){  printf("There is no signal corresponding to the JobId Given\n");  return false;  }
 //   int s = CurrentSampleIndex;
-   GetSampleDefinition(samples);
-   int SampleIndex1 = JobIdToIndex(signal1,samples),
-       SampleIndex2 = JobIdToIndex(signal2,samples);
+  int TypeMode = TypeFromPattern(InputPattern);
 
-   int TypeMode = TypeFromPattern(InputPattern);
-   
    string outpath = InputPattern + "/"+SHAPESTRING+EXCLUSIONDIR+"/";
    MakeDirectories(outpath);
    string JobName;
@@ -3140,7 +3096,7 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
    string signal12;
    string CodeToExecute = "combineCards.py ";
    char massStr[255];
-   
+
    if (signal1.find("7TeV")!=string::npos && signal2.find("8TeV")!=string::npos){
       //Get Optimal cut from sample11
       EXCLUSION1 = "EXCLUSION7TeV";
@@ -3183,8 +3139,6 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
       EXCLUSION2 = "/EXCLUSION"+signal2.substr(toBreak2+1, signal2.size()-toBreak2-1);
       signal11   = signal1.substr(0, toBreak1);
       signal12   = signal2.substr(0, toBreak2);
-      SampleIndex1 = JobIdToIndex(ReplacePartOfString(signal11, "13TeV", "13TeV16"), samples);
-      SampleIndex2 = JobIdToIndex(ReplacePartOfString(signal12, "13TeV16", "13TeV16G"), samples);
       //Get Optimal cut from sample11
       std::cout << "Loading " << InputPattern+EXCLUSION1+"/"+ReplacePartOfString(signal11,"13TeV", "13TeV16")+".txt" << std::endl;
       result11 =  stAllInfo(InputPattern+EXCLUSION1+"/"+ReplacePartOfString(signal11,"13TeV", "13TeV16")+".txt");
@@ -3196,7 +3150,6 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
 
       result =  stAllInfo(InputPattern+EXCLUSION2+"/"+ReplacePartOfString(signal12, "13TeV16", "13TeV16G")+".txt");
       sprintf(massStr,"%.0f",result.Mass);
-
 
       signal = signal11;
       signal = ReplacePartOfString(signal, "_13TeV16G", "");
@@ -3225,105 +3178,6 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
 //	 printf ("Renaming the signal in the datacard:\n%s\n", PreExecuteCode.c_str());
 //	 system(PreExecuteCode.c_str());
       }
-   }
-   if (result11.MassCut != result12.MassCut/* && OptCutIndex != nullptr*/ && (SampleIndex1 < 0 || SampleIndex2 < 0)){printf("These two signals are not listed!\n");return false;} 
-   else if (result11.MassCut != result12.MassCut && SampleIndex1 >= 0 && SampleIndex2 >=0 && SampleIndex1 != SampleIndex2){
-      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode";
-      FILE* fdebug = fopen("DifferentMassCuts.txt", "a");
-      fprintf (fdebug, "%s\t%s\n", (ReplacePartOfString(signal12, "13TeV16", "13TeV16G")+".txt").c_str(), (ReplacePartOfString(signal11, "13TeV", "13TeV16")+".txt").c_str());
-      fclose(fdebug);
-
-      /* take the smaller of the two mass cuts */
-      bool SecondIsGreater = (result11.MassCut<result12.MassCut);
-      double MassCut2 = SecondIsGreater?result11.MassCut:result12.MassCut;
-
-      // runCombine must be rerun for a different mass cut for the less permissive datacard
-      // TOFIXCOMBINE
-      string Data = SecondIsGreater?ReplacePartOfString(signal12,"13TeV16","13TeV16G"):ReplacePartOfString(signal11, "13TeV", "13TeV16");
-      string tmp = Data;
-      double SQRTS_OLD = SQRTS;
-      if (Data.find("7TeV")!=string::npos) {tmp = "7TeV"; SQRTS = 7.0;}
-      else if (Data.find("8TeV")!=string::npos) {tmp = "8TeV"; SQRTS = 8.0;}
-      else if (Data.find("13TeV16G")!=string::npos) {tmp = "13TeV16G"; SQRTS = 13167.0;}
-      else if (Data.find("13TeV16")!=string::npos) {tmp = "13TeV16"; SQRTS = 1316.0;}
-      else if (Data.find("13TeV")!=string::npos) {tmp = "13TeV"; SQRTS = 13.0;}
-      Data = "Data"+tmp;
-
-      printf ("DATA = %s\n", Data.c_str());
-      printf ("Rerunning %s (sample index = %d) to change its mass cut from %.0lf to %.0lf ...\n", SecondIsGreater?ReplacePartOfString(signal12,"13TeV16", "13TeV16G").c_str():ReplacePartOfString(signal11,"13TeV","13TeV16").c_str(), SecondIsGreater?SampleIndex2:SampleIndex1, SecondIsGreater?result12.MassCut:result11.MassCut, MassCut2);
-      if (SecondIsGreater) result12.MassCut = result11.MassCut;
-      else result11.MassCut = result12.MassCut;
-      CurrentSampleIndex = SecondIsGreater?SampleIndex2:SampleIndex1;
-      MinRange = MassCut2;
-      result.MassCut      = MinRange;
-/*
-      printf("2016G Data ...\n");
-      Data = "Data13TeV16G"; SQRTS=13167.0; EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"13TeV16G";
-      Optimize(InputPattern, Data, ReplacePartOfString(signal, "13TeV16", "13TeV"), SHAPESTRING!="", true);
-*/
-      TFile*InputFile     = new TFile((InputPattern + "Histos.root").c_str());
-      TH1D* H_P           = (TH1D*)GetObjectFromPath(InputFile, Data+"/H_P");
-      TH1D* H_D           = (TH1D*)GetObjectFromPath(InputFile, Data+"/H_D");
-      TH2D* MassData      = (TH2D*)GetObjectFromPath(InputFile, Data+"/Mass");
-      TH2D* MassPred      = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_Mass");
-      TH2D* MassSign      = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass" );
-      if(!MassSign){printf("The sample %s is not present in the root file, returns\n", ReplacePartOfString(signal11, "13TeV", "13TeV16").c_str());return false;}
-      TH2D* MassSignP     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystP"    );
-      TH2D* MassSignI     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystI"    );
-      TH2D* MassSignM     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystM"    );
-      TH2D* MassSignHUp   = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystHUp"  );
-      TH2D* MassSignHDown = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystHDown");
-      TH2D* MassSignT     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystT"    );
-      TH2D* MassSignPU    = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystPU"   );
-      TH1D* TotalE        = (TH1D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name+"/TotalE" );
-      TH1D* TotalEPU      = (TH1D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name+"/TotalEPU" );
-
-      double norm  = samples[CurrentSampleIndex].XSec*(SecondIsGreater?result12.LInt:result11.LInt)/TotalE  ->Integral(); //normalize the samples to the actual lumi used for limits
-      double normPU= samples[CurrentSampleIndex].XSec*(SecondIsGreater?result12.LInt:result11.LInt)/(TotalEPU->Integral()>0?TotalEPU->Integral():TotalE->Integral());
-
-      MassSign      ->Scale(norm);
-      MassSignP     ->Scale(norm);
-      MassSignI     ->Scale(norm);
-      MassSignM     ->Scale(norm);
-      MassSignHUp   ->Scale(norm);
-      MassSignHDown ->Scale(norm);
-      MassSignT     ->Scale(norm);
-      MassSignPU    ->Scale(normPU);
-
-
-
-      // so far the shape analysis is disabled here! change the lines here to change it
-      bool shape = false;
-      string signalToReturn = SecondIsGreater?ReplacePartOfString(signal12,"13TeV16", "13TeV16G"):ReplacePartOfString(signal11,"13TeV","13TeV16");
-      if(TypeMode<=2){runCombine(false, true, true, InputPattern, signalToReturn, SecondIsGreater?result12.Index:result11.Index, false, shape, SecondIsGreater?result12:result11, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU);
-      }else          {runCombine(false, true, true, InputPattern, signalToReturn, SecondIsGreater?result12.Index:result11.Index , false, shape, SecondIsGreater?result12:result11, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU);
-      }
-     
-      //overwrite the last result and update it to the new mass cut
-      printf ("New NPred = % .2e\n", SecondIsGreater?result12.NPred:result11.NPred);
-      string OverwritePath = InputPattern+(SecondIsGreater?EXCLUSION2:EXCLUSION1)+"/"+(SecondIsGreater?ReplacePartOfString(signal12,"13TeV16","13TeV16G"):ReplacePartOfString(signal11,"13TeV", "13TeV16"))+".txt";
-      printf ("Results written in %s.\n", OverwritePath.c_str());
-      if (SecondIsGreater)
-         result12.Save(OverwritePath);
-      if (!SecondIsGreater)
-         result11.Save(OverwritePath);
-      if (SQRTS != SQRTS_OLD) SQRTS = SQRTS_OLD;
-
-      delete H_P           ;
-      delete H_D           ;
-      delete MassData      ;
-      delete MassPred      ;
-      delete MassSign      ;
-      delete MassSignP     ;
-      delete MassSignI     ;
-      delete MassSignM     ;
-      delete MassSignHUp   ;
-      delete MassSignHDown ;
-      delete MassSignT     ;
-      delete MassSignPU    ;
-      delete TotalE        ;
-      delete TotalEPU      ;
-      delete InputFile;
    }
 
    double NSign1 = result11.NSign/(result11.XSec_Th*result11.LInt),
@@ -3399,7 +3253,7 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
    double NSign = result.NSign;
    if (SignalScaleFactor1 != SignalScaleFactor2){
       printf ("\nMaking a note in ListOfMismatches.log!\n");
-      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode";
+      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode_Eta12";
       FILE * fdebug = fopen ((analysisPath+"/ListOfMismatches.log").c_str(), "a");
       fprintf (fdebug, "Type %d Signal %s does not match!\n", TypeMode, signal.c_str());
       fclose(fdebug);

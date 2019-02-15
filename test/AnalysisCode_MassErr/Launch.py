@@ -13,7 +13,7 @@ LaunchOnCondor.Jobs_InitCmds       = ['ulimit -c 0;']  #disable production of co
 LaunchOnCondor.subTool = 'condor'
 #LaunchOnCondor.Jobs_Queue = '8nh'
 
-UseRemoteSamples          = True
+UseRemoteSamples          = True 
 RemoteStorageDir          = '/storage/data/cms/store/user/jozobec/HSCP2016/'
 RemoteServer              = 'cms-xrd-global.cern.ch'
 #RemoteStorageDir          = '/store/group/phys_exotica/hscp/'
@@ -45,7 +45,7 @@ if CMSSW_VERSION == 'CMSSW_VERSION':
   print 'please setup your CMSSW environement'
   sys.exit(0)
 
-# if("CMSSW_8" in CMSSW_VERSION): CMSSW_VERSION = CMSSW_VERSION + " CMSSW_7_4"
+if("CMSSW_8" in CMSSW_VERSION): CMSSW_VERSION = CMSSW_VERSION + " CMSSW_7_4"
 
 def skipSamples(type, name):
    if(name.find("AMSB")!=-1 and type!=0):return True; #only consider AMSB in TkOnly analysis
@@ -61,16 +61,18 @@ def skipSamples(type, name):
    return False
 
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
+   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
-      os.system('voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/x509_user_proxy/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+
 
 if sys.argv[1]=='1':	
         if UseRemoteSamples:
-	    initProxy()
+           initProxy()
         print 'ANALYSIS'
         FarmDirectory = "FARM"
         JobName = "HscpAnalysis"
+        LaunchOnCondor.subTool = 'condor'
         LaunchOnCondor.Jobs_RunHere = 0
         LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
         f= open('Analysis_Samples.txt','r')
@@ -84,11 +86,12 @@ if sys.argv[1]=='1':
                  #LaunchOnCondor.Jobs_FinalCmds = ['mv *.root %s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/Results/Type%i/' % (os.environ['CMSSW_BASE'], Type)]
                  LaunchOnCondor.Jobs_FinalCmds = ['cp -r Results %s/src/SUSYBSMAnalysis/HSCP/test/%s/ && rm -rf Results' % (os.environ['CMSSW_BASE'], os.path.basename(os.getcwd()) if os.getcwd().find('AnalysisCode') > 0 else 'AnalysisCode')]
                  if(UseRemoteSamples):
-                    LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir.replace('/storage/data/cms/store/', '//store/')]
+                    LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export HOME=%s' % os.environ['HOME'], 'export X509_USER_PROXY=$HOME/x509_user_proxy/x509_proxy; voms-proxy-init --noregen;', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir.replace('/storage/data/cms/store/', '//store/')]
                  else: LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0']
                  if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
                  if vals[2].find("13TeV16") < 0: continue # skip everything that is not 2016 -- namely the 2015 samples
 #                 if(int(vals[1])!=1):continue #Skip everything except for background MC
+                 if(int(vals[1])>0):continue #Skip all data
                  LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , Type, vals[2].rstrip() ])
         f.close()
         LaunchOnCondor.SendCluster_Submit()
@@ -108,7 +111,7 @@ elif sys.argv[1]=='2':
               print("Small files have been found, these are generally due to either crashed jobs, or to still running jobs.\nThe following files will NOT be hadd:\n" + smallFiles + "\n\n")           
            os.system('find ' + Path + 'Histos_*.root  -type f -size +1024c | xargs hadd -n 50 -f ' + Path + 'Histos.root ')
            LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step2_BackgroundPrediction.C", '"'+Path+'"'])
-#        LaunchOnCondor.SendCluster_Submit()
+        LaunchOnCondor.SendCluster_Submit()
 
 elif sys.argv[1]=='3':
         print 'PLOTTING'

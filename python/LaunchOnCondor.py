@@ -7,7 +7,6 @@ import glob
 import fnmatch
 import commands
 import re
-from pdb import set_trace
 
 CopyRights  = '####################################\n'
 CopyRights += '#        LaunchOnFarm Script       #\n'
@@ -112,7 +111,7 @@ def CreateTheConfigFile(argv):
 	   config_file.close()
            step+=1
 
-def CreateTheShellFile(argv, options=''):   
+def CreateTheShellFile(argv):   
 	global Path_Shell
 	global Path_Log
 	global Path_Cfg
@@ -138,7 +137,7 @@ def CreateTheShellFile(argv, options=''):
 
 	shell_file=open(Path_Shell,'w')
 	shell_file.write('#! /bin/sh\n')
-	# shell_file.write(CopyRights + '\n')
+	shell_file.write(CopyRights + '\n')
 	if subTool == 'slurm':
 	    shell_file.write('#SBATCH --job-name=%s_job\n' % Path_Shell)
 	    #shell_file.write('#SBATCH --output=%s.log\n' % Path_Log)
@@ -228,7 +227,7 @@ def CreateTheShellFile(argv, options=''):
 		if Jobs_RunHere==0:
 			shell_file.write('cd -\n')
                 for config in Path_Cfg:
- 		        shell_file.write('cmsRun ' + os.getcwd() + '/'+config + ' ' + options+'\n')
+ 		        shell_file.write('cmsRun ' + os.getcwd() + '/'+config + '\n')
 	else:
 		print #Program to use is not specified... Guess it is bash command		
                 shell_file.write('#Program to use is not specified... Guess it is bash command\n')
@@ -237,14 +236,15 @@ def CreateTheShellFile(argv, options=''):
         for i in range(len(Jobs_FinalCmds)):
                 #shell_file.write('echo ' + Jobs_FinalCmds[i]+'\n')
 		shell_file.write(Jobs_FinalCmds[i]+'\n')
-        if subTool=='slurm':
-           logsDir = Farm_Directories[2]
-           if(not os.path.isabs(logsDir)): logsDir = os.getcwd()+'/'+logsDir;
-           shell_file.write('mv %s.err %s.log %s \n' % (LogFileName, LogFileName, logsDir))
         if Jobs_RunHere==0:
            outDir = Farm_Directories[3]
            if(not os.path.isabs(outDir)): outDir = os.getcwd()+'/'+outDir;
- 	   shell_file.write('mv '+ ' *'+Jobs_Name+'* '+outDir+'\n')
+ 	   shell_file.write('mv '+ Jobs_Name+'* '+outDir+'\n')
+	if subTool=='slurm':
+           logsDir = Farm_Directories[2]
+           if(not os.path.isabs(logsDir)): logsDir = os.getcwd()+'/'+logsDir;
+ 	   shell_file.write('mv %s.err %s.log %s \n' % (LogFileName, LogFileName, logsDir))
+	#   shell_file.write('\n\'\n')
 	shell_file.close()
 	os.system("chmod 777 "+Path_Shell)
 
@@ -323,12 +323,23 @@ def CreateTheCmdFile():
            cmd_file.write('Universe                = vanilla\n')
 	   cmd_file.write('Environment             = CONDORJOBID=$(Process)\n')
 	   cmd_file.write('notification            = Error\n')
+	   cmd_file.write('Proxy_filename          = x509_proxy\n')
+	   cmd_file.write('Proxy_path              = '+os.path.expanduser('~/private/')+'$(Proxy_filename)\n')
+	   cmd_file.write('arguments               = $(Proxy_path)\n')
+	   cmd_file.write('when_to_transfer_output = ON_EXIT\n')
+	   cmd_file.write('transfer_output_files   = \"\" \n')
+	   cmd_file.write('transfer_input_files    = $(Proxy_path)\n')
 	   #site specific code
   	   if  (commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be" )!=-1): cmd_file.write('requirements            = (CMSFARM=?=True)&&(Memory > 200)\n')
            elif(commands.getstatusoutput("uname -n"   )[1].find("purdue.edu")!=-1): cmd_file.write('requirements            = (request_memory > 200)\n')
-	   else: 		                                                    cmd_file.write('requirements            = (Memory > 200)\n')
 	   cmd_file.write('should_transfer_files   = YES\n')
-	   cmd_file.write('when_to_transfer_output = ON_EXIT\n')
+	   cmd_file.write('executable = $(filename)\n')
+	   cmd_file.write('output = '+Farm_Directories[2]+'$Fn(filename).$(ClusterId).$(ProcId).out\n')
+	   cmd_file.write('arguments = $(Proxy_filename)\n')
+	   cmd_file.write('error  = '+Farm_Directories[2]+'$Fn(filename).$(ClusterId).$(ProcId).err\n')
+	   cmd_file.write('log    = '+Farm_Directories[2]+'$Fn(filename).$(ClusterId).$(ProcId).log\n')
+	   cmd_file.write('+JobFlavour = \"testmatch\"\n')
+	   cmd_file.write('queue filename matching files '+Farm_Directories[1]+'*'+Jobs_Name+'.sh\n')
         elif subTool=='slurm':
 	   cmd_file.write('#!/bin/bash\n')
 	   cmd_file.write(CopyRights + '\n')
@@ -415,7 +426,7 @@ def SendCluster_Create(FarmDirectory, JobName):
 	global Jobs_Name
 	global Jobs_Count
         global Farm_Directories
-        
+
 	#determine what is the submission system available, or use condor
         if(subTool==''):
   	   if(  not commands.getstatusoutput("which bjobs")[1].startswith("which:")): subTool = 'bsub'
@@ -423,24 +434,21 @@ def SendCluster_Create(FarmDirectory, JobName):
            elif( not commands.getstatusoutput("which srun")[1].startswith("which:")): subTool = 'slurm'
            else:                                                                   subTool = 'condor'
         if(Jobs_Queue.find('crab')>=0):                                            subTool = 'crab'
-        
+
 	Jobs_Name  = JobName
 	Jobs_Count = 0
 
         CreateDirectoryStructure(FarmDirectory)
         CreateTheCmdFile()
 
-def SendCluster_Push(Argv, options='', index=None):
+def SendCluster_Push(Argv):
         global Farm_Directories
         global Jobs_Count
         global Jobs_Index
 	global Path_Shell
 	global Path_Log
-        
-        if index is None:
-            Jobs_Index = "%04i_" % Jobs_Count
-        else:
-            Jobs_Index = index
+
+	Jobs_Index = "%04i_" % Jobs_Count
         if Jobs_Count==0 and (Argv[0]=="ROOT" or Argv[0]=="FWLITE"):                
                 #First Need to Compile the macro --> Create a temporary shell path with no arguments
                 print "Compiling the Macro..."
@@ -449,8 +457,9 @@ def SendCluster_Push(Argv, options='', index=None):
                 os.system('rm '+Path_Shell)
 		print "Getting the jobs..."
 	print Argv
-        CreateTheShellFile(Argv, options)
-        AddJobToCmdFile()
+        CreateTheShellFile(Argv)
+        if subTool != 'condor':
+		AddJobToCmdFile()
 	Jobs_Count = Jobs_Count+1
 
 def SendCluster_Submit():
@@ -570,3 +579,8 @@ def SendCMSMergeJob(FarmDirectory, JobName, InputFiles, OutputFile, KeepStatemen
         SendCluster_Push  (["CMSSW", Temp_Cfg])
         SendCluster_Submit()
         os.system('rm '+ Temp_Cfg)
+
+
+
+
+

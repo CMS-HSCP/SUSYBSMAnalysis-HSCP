@@ -3,20 +3,13 @@
 ## Setup working area
 
 ```bash
-export SCRAM_ARCH=slc6_amd64_gcc630
-
-cmsrel CMSSW_9_4_3
+cmsrel CMSSW_8_0_30
 cd CMSSW_9_4_3/src/
 cmsenv
 
 git cms-init
 # for the following step you should have a GitHub's ssh key
 git clone git@github.com:CMS-HSCP/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis/HSCP 
-
-# Before compile, hide BigNTuplizer 
-pushd SUSYBSMAnalysis/HSCP/plugins
-mv BigNtuplizer.cc BigNtuplizer.cc.bkp
-popd
 
 scram b -j8
 ```

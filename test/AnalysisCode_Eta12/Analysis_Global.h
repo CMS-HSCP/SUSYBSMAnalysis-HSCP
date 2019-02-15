@@ -92,7 +92,7 @@ int                MassNBins           = 300;
 double             IPbound             = 1.0;
 
 // Thresholds for candidate preselection --> note that some of the followings can be replaced at the beginning of Analysis_Step1_EventLoop function
-double             GlobalMaxEta       =   2.1;    // cut on inner tracker track eta
+double             GlobalMaxEta       =   1.2;    // cut on inner tracker track eta
 double             GlobalMaxV3D       =   99999;  //0.50;   // cut on 3D distance (cm) to closest vertex
 double             GlobalMaxDZ        =   0.50;   // cut on 1D distance (cm) to closest vertex in "Z" direction
 double             GlobalMaxDXY       =   0.50;   // cut on 2D distance (cm) to closest vertex in "R" direction
@@ -104,12 +104,12 @@ int                GlobalMinNOPH      =   2;      // cut on number of (valid) tr
 double             GlobalMinFOVH      =   0.8;//0.0AMSB;    // cut on fraction of valid track hits
 unsigned int       GlobalMaxNOMHTillLast = 99999;//1AMSB;     // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
 double             GlobalMinFOVHTillLast =-99999;//0.85AMSB;   // cut on the fraction of valid hits divided by total expected hits until the last one
-unsigned int       GlobalMinNOM       =   6;//7AMSB;      // cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used) -- should be more stringent -- 10 should be used
+unsigned int       GlobalMinNOM       =   6;//7AMSB;      // cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
 double             GlobalMinNDOF      =   8;      // cut on number of     DegreeOfFreedom used for muon TOF measurement
 double             GlobalMinNDOFDT    =   6;      // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
 double             GlobalMinNDOFCSC   =   6;      // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
 double             GlobalMaxTOFErr    =   0.15;//0.07;   // cut on error on muon TOF measurement
-double             GlobalMaxPterr     = 1;//0.50;//0.25;   // cut on error on track pT measurement 
+double             GlobalMaxPterr     =   0.25;//0.50;//0.25;   // cut on error on track pT measurement 
 double             GlobalMaxTIsol     =  50;      // cut on tracker isolation (SumPt)
 double             GlobalMaxRelTIsol  =  9999999; // cut on relative tracker isolation (SumPt/Pt)
 double             GlobalMaxEIsol     =  0.30;    // cut on calorimeter isolation (E/P)
@@ -207,7 +207,6 @@ void InitBaseDirectory(){
    if(!hostTmp||!analystTmp)return;
    string analyst(analystTmp);
    string host   (hostTmp);
-  
    if(getenv("PWD")!=NULL)host+=string(" PWD=") + getenv("PWD");
 
    // BaseDirectory is first set for the AAA protocol ...

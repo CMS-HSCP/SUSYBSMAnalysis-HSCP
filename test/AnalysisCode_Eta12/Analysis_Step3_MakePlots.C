@@ -22,7 +22,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 void PredictionWithMassCut (string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip, double MassCut=100);
 void PredictionAndControlPlot(string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip);
 void CutFlow(string InputPattern, unsigned int CutIndex=0);
-void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, double ylow=8e-3, double yhigh=1.5e+7, bool setLog=true);
+void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, bool GFlag = false, double ylow=8e-3, double yhigh=1.5e+7, bool setLog=true);
 void SelectionPlot (string InputPattern, unsigned int CutIndex, unsigned int CutIndexTight);
 
 void Make2DPlot_Core(string ResultPattern, unsigned int CutIndex);
@@ -62,14 +62,14 @@ void Analysis_Step3_MakePlots()
    string InputPattern;				unsigned int CutIndex;     unsigned int CutIndex_Flip=1;  unsigned int CutIndexTight;
    std::vector<string> Legends;                 std::vector<string> Inputs;
 
-   SQRTS=13.0;
+   SQRTS=1316.0;
 
-//   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
+   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16_Tight");
-/*
+
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight");
 
@@ -78,12 +78,14 @@ void Analysis_Step3_MakePlots()
    CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
-   
+   CutFlowPlot(InputPattern, 0, true);
+   CutFlowPlot(InputPattern, CutIndex, true);
+   CutFlowPlot(InputPattern, CutIndexTight, true);
+ 
+
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 //   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
-*/
    PredictionAndControlPlot(InputPattern, "Data13TeV16", CutIndex, 0);
-   return;
    PredictionAndControlPlot(InputPattern, "Data13TeV16G", CutIndex, 0);
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
@@ -103,6 +105,10 @@ void Analysis_Step3_MakePlots()
    CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, 0, true);
+   CutFlowPlot(InputPattern, CutIndex, true);
+   CutFlowPlot(InputPattern, CutIndexTight, true);
+
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 
 //   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
@@ -115,7 +121,7 @@ void Analysis_Step3_MakePlots()
 //  std::cout<<"B\n";
 
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
-//   InputPattern="Results/Type2/";
+   InputPattern="Results/Type2/";
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV16");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV16G");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 
@@ -288,7 +294,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
 //      Pred13TeV15  = GetProjectionFromPath(InputFile, string("Data13TeV/Pred_"  ) + HistoSuffix, CutIndex, "TmpPredMass15");
 //      Data13TeV15  = GetProjectionFromPath(InputFile, string("Data13TeV/"       ) + HistoSuffix, CutIndex, "TmpDataMass15");
-      Pred13TeV16  = GetProjectionFromPath(InputFile, string("Data13TeV16/Pred_") + HistoSuffix/* + ";24"*/, CutIndex, "TmpPredMass16");
+      Pred13TeV16  = GetProjectionFromPath(InputFile, string("Data13TeV16/Pred_") + HistoSuffix, CutIndex, "TmpPredMass16");
       Data13TeV16  = GetProjectionFromPath(InputFile, string("Data13TeV16/"     ) + HistoSuffix, CutIndex, "TmpDataMass16");
 
       if(showMC)MCPred    = GetProjectionFromPath(InputFile, string("MCTr_13TeV16/Pred_"  ) + HistoSuffix,  CutIndex, "TmpMCPred");
@@ -363,7 +369,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
    //compute integral for few mass window
    if(Data13TeV16G && Pred13TeV16G){
-      printf("Computing Chi2 between data and prediction at 2016 13TeV:\n");
+      printf("Computing Chi2 between data and prediction at 2016G 13TeV:\n");
       double Chi2 = Data13TeV16G->Chi2Test(Pred13TeV16G, "UW P");
 
       for(double M=0;M<=1000;M+=100){
@@ -1147,12 +1153,13 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    CtrlIs_S4_TOF->Draw("E1 same"); //redraw this histogram to make sure it is on top of the other ones
    DrawLegend(Histos,legend, "","P", 0.93, 0.88, 0.40, 0.05);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));   
+   c1->SetLogy(true);
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Is_TOFSpectrumLog");
 
    c1->SetLogy(false);
 //   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
 //   DrawLegend(Histos,legend, "","P");
-   if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Is_TOFSpectrum");
+   if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Is_TOFSpectrumNoLog");
    delete c1;
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
@@ -1196,7 +1203,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
 
    if(TypeMode<3) {//These plots only made for analyses using mass distribution
    //Show P, I and TOF distribution in the signal region (observed and predicted)
-   TH2D* Pred_P                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P"/*;24"*/);
+   TH2D* Pred_P                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P");
    TH2D* Pred_I                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_I");
    TH2D* Pred_TOF              = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_TOF");
    TH2D* Data_I                = (TH2D*)GetObjectFromPath(InputFile, Data+"/RegionD_I");   
@@ -1250,7 +1257,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
 
    if(CutIndex_Flip>0 && TypeMode>=2){
    //Show P, I and TOF distribution in the region with TOF < 1(observed and predicted)
-   TH2D* Pred_P_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P_Flip");
+   TH2D* Pred_P_Flip                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P_Flip");
    TH2D* Pred_I_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_I_Flip");
    TH2D* Pred_TOF_Flip               = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_TOF_Flip");
    TH2D* Data_I_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/RegionD_I_Flip");   
@@ -1720,7 +1727,7 @@ void CutFlow(string InputPattern, unsigned int CutIndex){
     InputFile->Close();
 }
 
-void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double yhigh, bool setLog){
+void CutFlowPlot(string InputPattern, unsigned int CutIndex, bool GFlag, double ylow, double yhigh, bool setLog){
 
     TFile* InputFile = new TFile((InputPattern + "Histos.root").c_str());
     if (!InputFile) std::cerr << "File could not be opened!" << std::endl;
@@ -1732,26 +1739,27 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     char ICutStr  [1024]; sprintf (ICutStr,  "I_{as}>%.2f", HCuts_Is ->GetBinContent(CutIndex+1));
     char TOFCutStr[1024]; sprintf (TOFCutStr,"1/#beta>%.3f", HCuts_TOF->GetBinContent(CutIndex+1));
 
+    string tmp = GFlag?"G":"";
     vector < pair<stSample, Color_t> > SamplesToDraw;
 //    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV"             , samples)], kBlack      ));
 //    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV16"           , samples)], kGray   + 1 ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV16"             , samples)], kBlack      ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV16G"            , samples)], kAzure      ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("MC_13TeV16_DYToMuMu"     , samples)], kBlue   - 3 ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Gluino_13TeV16_M1000_f10", samples)], kRed    + 1 ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Stop_13TeV16_M1000"      , samples)], kSpring - 9 ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("GMStau_13TeV16_M494"     , samples)], kOrange + 7 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV16"+tmp                , samples)], kBlack      ));
+//    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV16G"            , samples)], kPink       ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("MC_13TeV16"+tmp+"_DYToMuMu"     , samples)], kBlue   - 3 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Gluino_13TeV16"+tmp+"_M1000_f10", samples)], kRed    + 1 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Stop_13TeV16"+tmp+"_M1000"      , samples)], kSpring - 9 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("GMStau_13TeV16"+tmp+"_M494"     , samples)], kOrange + 7 ));
     pair < TH1F*, TH1F* > * histos = new pair < TH1F*, TH1F* >[SamplesToDraw.size()];
 
 //    const char * AxisLabels [16] = {"Initial", "#hit #geq 8", "dE/dx #hit #geq 6", "nDof #geq 8", "high purity track", "#chi^{2}/nDof < 5",
 //	    "pT > 55", "#beta^{-1}>1", "d_{xy}<5mm", "tracker iso < 50", "E/p iso < 0.3", "pT_{err} < 25%", "d_{z}<5mm", 
 //	    "pT", "I_{as}", "#beta^{-1}"};
     const char * AxisLabels [16] = {"Triggered", "#hit>7", "#dEdxHit>5", "nDof>7", "Track Qual.", "#chi^{2}/nDof<5",
-	    "p_{T}>55 GeV", "1/#beta>1", "dXY<5 mm", "TkIso<50", "E/p<0.3", "#sigma_{p_{T}}/p_{T}<25 %", "dZ<5 mm", PtCutStr, ICutStr, TOFCutStr};
+	    "p_{T}>55 GeV",/* "1/#beta>1",*/ "dXY<5 mm", "TkIso<50", "E/p<0.3", "#sigma_{p_{T}}/p_{T}<25 %", "dZ<5 mm", PtCutStr, ICutStr, TOFCutStr};
 
     unsigned int NumberOfCuts = sizeof(AxisLabels)/sizeof(const char *);
     TypeMode = TypeFromPattern(InputPattern);
-    if(CutIndex==0)NumberOfCuts-=3;
+    if(CutIndex==0)NumberOfCuts-=4;
     else if (TypeMode==0)NumberOfCuts-=1; //TkOnly does not have TOF cut
 
     // initialize histograms and fill them
@@ -1773,15 +1781,15 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
         Num.push_back (st.Chi2 ->GetBinContent (1));          Eff.push_back (Num[ 5]/ Num[ 0]);
         Num.push_back (st.MPt  ->GetBinContent (1));          Eff.push_back (Num[ 6]/ Num[ 0]);
 //        Num.push_back (st.MI   ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
-        Num.push_back (st.MTOF ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
-        Num.push_back (st.Dxy  ->GetBinContent (1));          Eff.push_back (Num[ 8]/ Num[ 0]);
-        Num.push_back (st.TIsol->GetBinContent (1));          Eff.push_back (Num[ 9]/ Num[ 0]);
-        Num.push_back (st.EIsol->GetBinContent (1));          Eff.push_back (Num[10]/ Num[ 0]);
-        Num.push_back (st.Pterr->GetBinContent (1));          Eff.push_back (Num[11]/ Num[ 0]);
-        Num.push_back (st.Dz   ->GetBinContent (1));          Eff.push_back (Num[12]/ Num[ 0]);
-        Num.push_back (st.Pt   ->GetBinContent (CutIndex+1)); Eff.push_back (Num[13]/ Num[ 0]);
-        Num.push_back (st.I    ->GetBinContent (CutIndex+1)); Eff.push_back (Num[14]/ Num[ 0]);
-        Num.push_back (st.TOF  ->GetBinContent (CutIndex+1)); Eff.push_back (Num[15]/ Num[ 0]);
+//        Num.push_back (st.MTOF ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
+        Num.push_back (st.Dxy  ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
+        Num.push_back (st.TIsol->GetBinContent (1));          Eff.push_back (Num[ 8]/ Num[ 0]);
+        Num.push_back (st.EIsol->GetBinContent (1));          Eff.push_back (Num[ 9]/ Num[ 0]);
+        Num.push_back (st.Pterr->GetBinContent (1));          Eff.push_back (Num[10]/ Num[ 0]);
+        Num.push_back (st.Dz   ->GetBinContent (1));          Eff.push_back (Num[11]/ Num[ 0]);
+        Num.push_back (st.Pt   ->GetBinContent (CutIndex+1)); Eff.push_back (Num[12]/ Num[ 0]);
+        Num.push_back (st.I    ->GetBinContent (CutIndex+1)); Eff.push_back (Num[13]/ Num[ 0]);
+        Num.push_back (st.TOF  ->GetBinContent (CutIndex+1)); Eff.push_back (Num[14]/ Num[ 0]);
 
         for (unsigned int cut_i = 1; cut_i <= NumberOfCuts; cut_i++){
             if (std::isnan(Eff[cut_i-1])) Eff[cut_i-1] = 0.0;
@@ -1857,9 +1865,9 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
         T.DrawLatex (histos[0].first->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
 
     leg->Draw();
-    SQRTS=1316; string LegendTitle = LegendFromType(InputPattern);
+    SQRTS=GFlag?13167:1316; string LegendTitle = LegendFromType(InputPattern);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
-    char SaveName [128]; sprintf (SaveName, "CutFlowPlot_Abs_%u", CutIndex);
+    char SaveName [128]; sprintf (SaveName, "CutFlowPlot_13TeV16%s_Abs_%u", tmp.c_str(), CutIndex);
     c1->SetGridx(false);
     c1->SetGridy(false);
     SaveCanvas(c1, InputPattern, SaveName);
@@ -1921,9 +1929,9 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
         T.DrawLatex (histos[0].second->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
 
     leg->Draw();
-    SQRTS=1316; LegendTitle = LegendFromType(InputPattern);
+    SQRTS=GFlag?13167:1316; LegendTitle = LegendFromType(InputPattern);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
-    sprintf (SaveName, "CutFlowPlot_Eff_%u", CutIndex);
+    sprintf (SaveName, "CutFlowPlot_13TeV16%s_Eff_%u", tmp.c_str(), CutIndex);
     c1->SetGridx(false);
     c1->SetGridy(false);
     SaveCanvas(c1, InputPattern, SaveName);
@@ -3950,6 +3958,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2, bool GPeriodF
    string outName = !GPeriodFlag?"2DPlotsS":"2DPlotsSG";
 
    if (GPeriodFlag) SQRTS = 13167.0;
+   else SQRTS = 1316.0;
 
    int S1i   = JobIdToIndex(S1,samples);    if(S1i<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  } 
    int S2i   = JobIdToIndex(S2,samples);    if(S2i<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  }                

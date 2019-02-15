@@ -955,7 +955,6 @@ std::cout<<"TESTC\n";
       ThErrorMap[modelVector[k]] = ThXSecErr[k];
    }
 
-   // FIXME add GluinoN_f50 maybe as well?
    if (MODE.find("13TeV16")==std::string::npos){
       ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
       MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
@@ -3228,7 +3227,7 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
    }
    if (result11.MassCut != result12.MassCut/* && OptCutIndex != nullptr*/ && (SampleIndex1 < 0 || SampleIndex2 < 0)){printf("These two signals are not listed!\n");return false;} 
    else if (result11.MassCut != result12.MassCut && SampleIndex1 >= 0 && SampleIndex2 >=0 && SampleIndex1 != SampleIndex2){
-      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode";
+      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode_Eta12";
       FILE* fdebug = fopen("DifferentMassCuts.txt", "a");
       fprintf (fdebug, "%s\t%s\n", (ReplacePartOfString(signal12, "13TeV16", "13TeV16G")+".txt").c_str(), (ReplacePartOfString(signal11, "13TeV", "13TeV16")+".txt").c_str());
       fclose(fdebug);
@@ -3399,7 +3398,7 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
    double NSign = result.NSign;
    if (SignalScaleFactor1 != SignalScaleFactor2){
       printf ("\nMaking a note in ListOfMismatches.log!\n");
-      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode";
+      string analysisPath = "/home/ucl/cp3/jzobec/Run2HSCP16/Run2HSCP16_v4/CMSSW_8_0_30/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode_Eta12";
       FILE * fdebug = fopen ((analysisPath+"/ListOfMismatches.log").c_str(), "a");
       fprintf (fdebug, "Type %d Signal %s does not match!\n", TypeMode, signal.c_str());
       fclose(fdebug);
