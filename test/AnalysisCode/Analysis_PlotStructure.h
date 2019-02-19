@@ -259,12 +259,14 @@ struct stPlots {
   TH1D*  Hist_Is  ;
   TH1D*  Hist_TOF;
 
+ //FIXME ------ To be modified for Number Of Hits (NOH)
   TH3D*  Pred_EtaP ;
   TH2D*  Pred_I    ;
   TH2D*  Pred_TOF  ;
   TH2D*  Pred_EtaB;
   TH2D*  Pred_EtaS;
   TH2D*  Pred_EtaS2;
+// end FIXME
 
   TH2D*  RegionD_P;
   TH2D*  RegionD_I;
@@ -287,12 +289,15 @@ struct stPlots {
   TH1D* H_F_Binned_Flip[MaxPredBins];
   TH1D* H_H_Binned_Flip[MaxPredBins];
 
+
+ //FIXME ------ To be modified for Number Of Hits (NOH)
   TH3D*  Pred_EtaP_Flip ;
   TH2D*  Pred_I_Flip    ;
   TH2D*  Pred_TOF_Flip  ;
   TH2D*  Pred_EtaB_Flip;
   TH2D*  Pred_EtaS_Flip;
   TH2D*  Pred_EtaS2_Flip;
+// end FIXME
 
   TH2D*  RegionD_P_Flip;
   TH2D*  RegionD_I_Flip;

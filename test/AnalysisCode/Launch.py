@@ -45,7 +45,7 @@ if CMSSW_VERSION == 'CMSSW_VERSION':
   print 'please setup your CMSSW environement'
   sys.exit(0)
 
-# if("CMSSW_8" in CMSSW_VERSION): CMSSW_VERSION = CMSSW_VERSION + " CMSSW_7_4"
+if("CMSSW_8" in CMSSW_VERSION): CMSSW_VERSION = CMSSW_VERSION + " CMSSW_7_4"
 
 def skipSamples(type, name):
    if(name.find("AMSB")!=-1 and type!=0):return True; #only consider AMSB in TkOnly analysis

@@ -64,12 +64,12 @@ void Analysis_Step3_MakePlots()
 
    SQRTS=13.0;
 
-//   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
+   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16_Tight");
-/*
+
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight");
 
@@ -81,9 +81,9 @@ void Analysis_Step3_MakePlots()
    
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 //   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
-*/
+
    PredictionAndControlPlot(InputPattern, "Data13TeV16", CutIndex, 0);
-   return;
+//   return;
    PredictionAndControlPlot(InputPattern, "Data13TeV16G", CutIndex, 0);
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
