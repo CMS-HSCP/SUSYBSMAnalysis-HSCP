@@ -13,7 +13,7 @@ git clone git@github.com:CMS-HSCP/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis/HSCP
 
 # Pick the 2016 branch
 pushd SUSYBSMAnalysis/HSCP/
-git checkout -b Run2_2016
+git checkout Run2_2016
 popd
 
 scram b -j8
