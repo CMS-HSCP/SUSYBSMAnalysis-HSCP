@@ -47,10 +47,10 @@ datasetList = [
 ##  ["Run258705", "/storage/data/cms/store/user/jozobec/out/258705/"],
 ##  ["Run258741", "/storage/data/cms/store/user/jozobec/out/258741/"],
 ##  ["Run258750", "/storage/data/cms/store/user/jozobec/out/258750/"],
-  ["Run278018", "/storage/data/cms/store/user/jozobec/dEdxCalib/278018/"],
-  ["Run278308", "/storage/data/cms/store/user/jozobec/dEdxCalib/278308/"],
-  ["Run279931", "/storage/data/cms/store/user/jozobec/dEdxCalib/279931/"],
-  ["Run280385", "/storage/data/cms/store/user/jozobec/dEdxCalib/280385/"],
+  ["Run278018", "/eos/user/j/jpriscia/out/278018/"],
+  ["Run278308", "/eos/user/j/jpriscia/out/278308/"],
+  ["Run279931", "/eos/user/j/jpriscia/out/279931/"],
+##  ["Run280385", "/storage/data/cms/store/user/jozobec/dEdxCalib/280385/"],
 
 #  ["MCGluino_M1000_f10", "Gluino_13TeV_M1000_f10"],
 #  ["MCGluino_M1400_f10", "Gluino_13TeV_M1400_f10"],
@@ -63,7 +63,7 @@ datasetList = [
 #  ["MCDYM2600Q2",        "DY_13TeV_M2600_Q2"],
 ]
 
-isLocal = False  #allow to access data in Louvain from remote sites
+isLocal = True  #allow to access data in Louvain from remote sites
 if(commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be")!=-1): isLocal = True
 os.system('rm -rf ~/x509_user_proxy/x509_proxy')
 
@@ -77,7 +77,7 @@ if sys.argv[1]=='1':
 
 	   JobName = "DEDXHISTO_"+DATASET[0]
 	   FarmDirectory = "FARM_DEDXHISTO_"+DATASET[0]
-	   LaunchOnCondor.Jobs_Queue = '8nh'
+           LaunchOnCondor.subTool = 'condor'
 	   LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
  	   FILELIST = []        

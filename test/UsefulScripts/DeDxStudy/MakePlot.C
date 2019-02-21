@@ -1,4 +1,3 @@
-
 #include <exception>
 #include <vector>
 #include <fstream>
@@ -29,7 +28,7 @@
 
 using namespace std;
 
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 0.6, double MaxRange = 1.2, double MassCenter = 0.938, double LeftMassMargin = 0.2, double RightMassMargin = 0.2); // by default use protons
+void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 0.8, double MaxRange = 2.0, double MassCenter = 1.88, double LeftMassMargin = 0.2, double RightMassMargin = 0.2); // by default use protons
 double GetMass(double P, double I, double* K, double* C);
 
 typedef struct dEdxPlotObj
@@ -105,6 +104,12 @@ typedef struct dEdxPlotObj
       for (unsigned int i = 0; i < HitObjName.size(); i++){
          dEdxTemplate   [i] = (TH3F*) GetObjectFromPath (InputFile, (HitObjName[i] + "_ChargeVsPath").c_str());
          hit_MIP        [i] = (TH1D*) GetObjectFromPath (InputFile, (HitObjName[i] + "_Hit"         ).c_str());
+	 //cout << (HitObjName[i] + "_ChargeVsPath").c_str()<<endl;
+	 if (dEdxTemplate[i]){
+	   cout<<"object found "<< (HitObjName[i] + "_ChargeVsPath").c_str()<<endl;
+	   cout<<"name is "<<dEdxTemplate[i]->GetName()<<endl;
+	 }
+	 if (!dEdxTemplate[i]) cout<<"object not  found "<< (HitObjName[i] + "_ChargeVsPath").c_str()<<endl;
 
          Charge_Vs_XYH  [i] = new TH2D* [15];
          Charge_Vs_XYHN [i] = new TH2D* [15];
@@ -117,6 +122,7 @@ typedef struct dEdxPlotObj
          }
       }
 
+
       for (unsigned int i = 0; i < StdObjName.size(); i++){
          HdedxMIP          [i] = (TH1D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_MIP"         ).c_str() );
          HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP"     ).c_str() );
@@ -126,13 +132,16 @@ typedef struct dEdxPlotObj
          HdedxVsEtaProfile [i] = (TProfile*) GetObjectFromPath (InputFile, (StdObjName[i] + "_Eta"         ).c_str() );
 
          if (StdObjName[i].find("Ias")==string::npos){
+
             HMass        [i]  = (TH1D*) GetObjectFromPath(InputFile, (StdObjName[i] + "_Mass").c_str() );
             HProtonHitSO [i]  = (TH1D*) GetObjectFromPath(InputFile, (StdObjName[i] + "_ProtonHitSO").c_str() );
             HProtonHitPO [i]  = (TH1D*) GetObjectFromPath(InputFile, (StdObjName[i] + "_ProtonHitPO").c_str() );
             K [StdObjName[i]] = K_;  Kerr[StdObjName[i]] = Kerr_;
             C [StdObjName[i]] = C_;  Cerr[StdObjName[i]] = Cerr_;
+
             //while we're at it, get the constants
             if (type != 2){
+
                double Ktmp = K_; double Ctmp = C_; double KerrTmp = Kerr_; double CerrTmp = Cerr_;
                ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp);
                K [StdObjName[i]] = Ktmp;  Kerr[StdObjName[i]] = KerrTmp;
@@ -145,6 +154,7 @@ typedef struct dEdxPlotObj
             else
                HMassHSCP[i] = NULL;
          } else {
+
             HMass [i] = NULL;
             K[StdObjName[i]] = -1; Kerr[StdObjName[i]] = -1;
             C[StdObjName[i]] = -1; Cerr[StdObjName[i]] = -1;
@@ -172,6 +182,9 @@ double GetMass(double P, double I, dEdxPlotObj* plotObj, string ObjName){
 
 
 double GetMass(double P, double I, double* K, double* C){
+  //  *C=4.591; // to remove
+  // *K = 2.002; //to remove
+   
    return sqrt((I-(*C))/(*K))*P;
 }
 
@@ -245,9 +258,8 @@ void MakePlot()
 //   HitObjName.push_back("hit_SP_in_noC");
 //   HitObjName.push_back("hit_SP_in_noC_CI");
 //   HitObjName.push_back("hit_SP_in_noC_CC");
-   HitObjName.push_back("hit_SP_in_noC_CCC");         HitObjLegend.push_back("Strip+Pixel charges");
+   HitObjName.push_back("hit_SP_in_noC_CCC");         HitObjLegend.push_back("Strip+Pixel charges"); //questo forse serve..
 //   HitObjName.push_back("hit_SP_in_noC_newCCC");      HitObjLegend.push_back("Strip+Pixel charges, new CC");
-
    vector<string> StdObjName;                         vector<string> StdObjLegend;
 //   StdObjName.push_back("harm2_SO");
 //   StdObjName.push_back("harm2_SO_in");
@@ -260,18 +272,19 @@ void MakePlot()
 //   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, old CC");
 //   StdObjName.push_back("harm2_SP_in_noC_newCCC");    StdObjLegend.push_back("harm-2, new CC");
 
-   StdObjName.push_back("harm2_PO_raw");                StdObjLegend.push_back("harm-2, PO");
-   StdObjName.push_back("Hybr2005_PO_raw");             StdObjLegend.push_back("Hybr-2-05, PO");
-   StdObjName.push_back("Hybr2010_PO_raw");             StdObjLegend.push_back("Hybr-2-10, PO");
-   StdObjName.push_back("Hybr2015_PO_raw");             StdObjLegend.push_back("Hybr-2-15, PO");
+//   StdObjName.push_back("harm2_PO_raw");                StdObjLegend.push_back("harm-2, PO");
+//   StdObjName.push_back("Hybr2005_PO_raw");             StdObjLegend.push_back("Hybr-2-05, PO");
+//   StdObjName.push_back("Hybr2010_PO_raw");             StdObjLegend.push_back("Hybr-2-10, PO");
+//   StdObjName.push_back("Hybr2015_PO_raw");             StdObjLegend.push_back("Hybr-2-15, PO");
 
-   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, SO");
-   StdObjName.push_back("Hybr2005_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-05, SO");
-   StdObjName.push_back("Hybr2010_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-10, SO");
-   StdObjName.push_back("Hybr2015_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-15, SO");
+//   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, SO");
+///    StdObjName.push_back("Hybr2005_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-05, SO");
+//   StdObjName.push_back("Hybr2010_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-10, SO");
+//   StdObjName.push_back("Hybr2015_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-15, SO");  // those were uncommented before, but this is not what I want....
 //   StdObjName.push_back("harm2_SO_in_noC_CCC");
 //   StdObjName.push_back("hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-10, SP");
-//   StdObjName.push_back("hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");
+   StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");  // i think that is the one to keep
+
 //   StdObjName.push_back("hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-20, SP");
 //   StdObjName.push_back("hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-25, SP");
 //   StdObjName.push_back("hybr203_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-30, SP");
@@ -308,9 +321,9 @@ void MakePlot()
 //   StdObjName.push_back("Ias_SP_in_noC_CCC");           StdObjLegend.push_back("Ias (2015)");
 //   StdObjName.push_back("Ias_SP_in_noC_CCC16");         StdObjLegend.push_back("Ias (2016)");
 //   StdObjName.push_back("Ias_SP_in_noC_newCCC");      StdObjLegend.push_back("Ias, new CC");
-   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");
-   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");
-   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");
+   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
+   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
+   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
 
 
    vector <dEdxPlotObj*> plotObj;
@@ -346,18 +359,19 @@ void MakePlot()
       }
    }
 
+ 
    cerr << "====== TESTA :: 2D Histograms ======" << endl;
    Draw2D (SaveDir, plotObj);
 
    cerr << "====== TESTB :: Standard Histos ======" << endl;
    SuperposeFilesOnDeDxObj (SaveDir, plotObj);
-   HitPlots (SaveDir, plotObj);
+   // HitPlots (SaveDir, plotObj);
 
    cerr << "====== TESTC :: Cross-compare estimators ======" << endl;
-   CrossCompareAndControlPlots (SaveDir, plotObj, "SO", "Hybr");
+   //   CrossCompareAndControlPlots (SaveDir, plotObj, "SO", "Hybr");
    
    cerr << "====== TESTD :: Systematics study ======" << endl;
-//   SystStudy (SaveDir, plotObj);
+   //SystStudy (SaveDir, plotObj);
 
    cerr << "====== TESTE :: Scale Factors ======" << endl;
    double SFMip, SFProfile;
@@ -365,7 +379,7 @@ void MakePlot()
    fprintf (fout, "=================\n >>> Old CCC >>>\n=================\n");
    for (size_t i = 0; i < plotObj.size(); i++){
       if(plotObj[i]->type==2) continue;
-      getScaleFactor(plotObj[i]->InputFile, NULL, "hit_SO_in_noC_CCC", "hit_PO", SaveDir, plotObj[i]->SavePrefix, &SFMip, &SFProfile);
+      getScaleFactor(plotObj[i]->InputFile, NULL, "hit_SO_in_noC_CCC", "hit_PO", SaveDir, plotObj[i]->SavePrefix, &SFMip, &SFProfile);   // here is where it computes the scale factor!
       fprintf (fout, (plotObj[i]->LegEntry + "\tPO to SO :: MIP:%.7lf\tProfile:%.7lf\n").c_str(), SFMip, SFProfile);
       if(i == MCIndex) continue;
       getScaleFactor (plotObj[i]->InputFile, plotObj[MCIndex]->InputFile, "hit_SO_in_noC_CCC", "", SaveDir, plotObj[i]->SavePrefix+"hit_SO", &SFMip, &SFProfile);
@@ -401,9 +415,9 @@ void MakePlot()
 //   ObjNames.push_back("Hybr2025_SP_in_noC_CCC_MIP");  LegendLabels.push_back("Hybrid-2-25"); Colors.push_back(kBlue);
 //   ObjNames.push_back("Hybr2030_SP_in_noC_CCC_MIP");  LegendLabels.push_back("Hybrid-2-30"); Colors.push_back(kGreen);
 //   ObjNames.push_back("Hybr2035_SP_in_noC_CCC_MIP");  LegendLabels.push_back("Hybrid-2-35"); Colors.push_back(kCyan);
-//   ObjNames.push_back("Ias_SP_in_noC_CCC_MIP");           LegendLabels.push_back("Ias (old)"); Colors.push_back(kMagenta);
-//   ObjNames.push_back("Ias_SP_in_noC_CCC16_MIP");         LegendLabels.push_back("Ias (new)"); Colors.push_back(kAzure+2);
-//   MakeROCGeneral (plotObj[8]->InputFile, plotObj[12]->InputFile, ObjNames, LegendLabels, Colors, SaveDir, "Estimators");
+//   ObjNames.push_back("Ias_SP_in_noC_CCC_MIP");           LegendLabels.push_back("Ias (old)"); Colors.push_back(kMagenta);   //to uncomment later
+//   ObjNames.push_back("Ias_SP_in_noC_CCC16_MIP");         LegendLabels.push_back("Ias (new)"); Colors.push_back(kAzure+2);   // to uncomment later
+//   MakeROCGeneral (plotObj[8]->InputFile, plotObj[12]->InputFile, ObjNames, LegendLabels, Colors, SaveDir, "Estimators");  //to uncomment later
 }
 
    /* 
@@ -642,7 +656,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 		  c1->SetLogy(true);
 		  sprintf(buffer,"%sProjectionFit_P%03i_%03i","fit/",(int)(100*FitResult->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResult->GetXaxis()->GetBinUpEdge(x)) );
-		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"./",buffer);}
+		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"../DeDxStudy/",buffer);}
 		  delete c1;
                   delete Projection;
                   delete mygaus;
@@ -665,13 +679,13 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       line2->Draw();
 
 	       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
-	       TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange);
+	       TF1* myfit = new TF1("myfit","[0]*pow(1.88/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
 	       myfit->SetParameter(0, 4.2);
 	       myfit->SetParameter(1, 3.2);
-	       myfit->SetParLimits(0, 2.00,6.0);
-	       myfit->SetParLimits(1, 2.00,6.0);
+	       myfit->SetParLimits(0, 1.5,3.0); //
+	       myfit->SetParLimits(1, 2.5,6.0); // 
 	       myfit->SetLineWidth(2);
 	       myfit->SetLineColor(2);
 	       FitResult->Fit("myfit", "M R E I 0");
@@ -700,7 +714,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       st->AddText(buffer);
 	       st->Draw("same");
 	       sprintf(buffer,"%sFit","fit/");
-	       SaveCanvas(c1,"./",buffer);              
+	       SaveCanvas(c1,"../DeDxStudy/",buffer);              
 	       delete c1;
 
           delete line1;
@@ -713,8 +727,8 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 
 void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, bool showChi2){
-   double MinRange = 0.60;
-   double MaxRange = 1.20;
+   double MinRange = 0.8;
+   double MaxRange = 1.0;
    char buffer[2048];
    for (size_t j = 0; j < plotObj[0]->StdObjName.size(); j++){
       bool isEstim = (plotObj[0]->StdObjName[j].find("Ias")==string::npos);
@@ -744,7 +758,7 @@ void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, b
             for(int x=1;x<=inputnew[inputnew.size()-1]->GetNbinsX();x++){
             for(int y=1;y<=inputnew[inputnew.size()-1]->GetNbinsY();y++){
                double Mass = GetMass(inputnew[inputnew.size()-1]->GetXaxis()->GetBinCenter(x),inputnew[inputnew.size()-1]->GetYaxis()->GetBinCenter(y), plotObj[i], plotObj[i]->StdObjName[j]);
-               if (Mass < 0.938-0.20 || Mass > 0.938+0.20) inputnew[inputnew.size()-1]->SetBinContent (x,y,0);
+               if (Mass < 1.88-0.20 || Mass > 1.88+0.20) inputnew[inputnew.size()-1]->SetBinContent (x,y,0);  //Mass was at 0.938
             }}
          }
          SaveNames.push_back (plotObj[i]->LegEntry);
@@ -948,7 +962,7 @@ void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, b
       TH1D h ("temp", "temp", 1, MinRange, MaxRange);
       h.GetXaxis()->SetTitle("p (GeV)");
       h.GetYaxis()->SetTitle(isEstim?"#mu (I_{h}) (MeV/cm)":"#mu (I_{as})");
-      h.GetXaxis()->SetRangeUser (0.6, 1.2);
+      h.GetXaxis()->SetRangeUser (MinRange, MaxRange);
       h.SetAxisRange (0, isEstim?15:1.0, "Y");
       h.GetYaxis()->SetTitleOffset(1.35);
       h.SetStats(0);
@@ -978,7 +992,7 @@ void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, b
       leg->SetBorderSize(0);
       h.GetYaxis()->SetTitle (isEstim?"#sigma (I_{h}) (MeV/cm)":"#sigma (I_{as})");
       h.SetAxisRange (0, isEstim?1.5:0.2, "Y");
-      h.GetXaxis()->SetRangeUser (0.6, 1.2);
+      h.GetXaxis()->SetRangeUser (MinRange, MaxRange);
       h.Draw();
       for (int fileIndex = 0; fileIndex < SaveNames.size(); fileIndex++){
          gSigmas[fileIndex] = new TGraphErrors (inputnew[fileIndex]->GetXaxis()->FindBin(MaxRange) - inputnew[fileIndex]->GetXaxis()->FindBin(MinRange), momenta[fileIndex], sigmas[fileIndex], momenta_err[fileIndex], sigmas_err[fileIndex]);
@@ -1015,7 +1029,7 @@ void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, b
          h.Reset();
          h.SetTitle("");
          h.SetStats(0);
-         h.GetXaxis()->SetRangeUser (0.6, 1.2);
+         h.GetXaxis()->SetRangeUser (MinRange, MaxRange);
          h.GetXaxis()->SetTitle ("p (GeV)");
          if (plot == 0){
             upEstim = 15;
@@ -1059,7 +1073,7 @@ void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, b
          TH1D h2 ("temp2", "temp2", 1, MinRange, MaxRange);
          h2.SetTitle("");
          h2.SetStats(0);
-         h2.GetXaxis()->SetRangeUser (0.6, 1.2);
+         h2.GetXaxis()->SetRangeUser (0.8, 2.0);
          h2.GetXaxis()->SetTitle ("");
          h2.GetXaxis()->SetLabelFont (43);
          h2.GetXaxis()->SetLabelSize (15);
@@ -1474,7 +1488,7 @@ void CrossCompareAndControlPlots (string SaveDir, vector <dEdxPlotObj*> plotObj,
       ObjNames.push_back("Hybr2015_SP_in_noC_CCC_MIP");    LegendLabels.push_back("hybrid2-15, old CC"); Colors.push_back(kOrange);
       ObjNames.push_back("Hybr2015_SP_in_noC_newCCC_MIP"); LegendLabels.push_back("hybrid2-15, new CC"); Colors.push_back(kGreen);
       ObjNames.push_back("Ias_SP_in_noC_CCC_MIP");         LegendLabels.push_back("I_{as}, old CC");     Colors.push_back(kBlack);
-      ObjNames.push_back("Ias_SP_in_noC_newCCC_MIP");      LegendLabels.push_back("I_{as}, new CC");     Colors.push_back(kOrange+3);
+      ObjNames.push_back("Ias_SP_in_noC_newACCC_MIP");      LegendLabels.push_back("I_{as}, new CC");     Colors.push_back(kOrange+3);
       MakeROCGeneral (plotObj[2]->InputFile, plotObj[i]->InputFile, ObjNames, LegendLabels, Colors, SaveDir, "Estimators_hybrid-"+plotObj[i]->SavePrefix);
    }
 
@@ -1784,9 +1798,9 @@ void SuperposeFilesOnDeDxObj (string SaveDir, vector<dEdxPlotObj*> plotObj){
             histos.push_back(plotObj[i]->HMass[j]);
             histos[histos.size()-1]->Reset();
             for (int x = 1; x <= plotObj[i]->HdedxVsP[j]->GetNbinsX(); x++){
-               if (plotObj[i]->HdedxVsP[j]->GetXaxis()->GetBinCenter(x) > 3.0) continue;
+	      if (plotObj[i]->HdedxVsP[j]->GetXaxis()->GetBinCenter(x) > 3.0) continue; //3.0 was the default
                for (int y = 1; y <= plotObj[i]->HdedxVsP[j]->GetNbinsY(); y++){
-                  if(plotObj[i]->HdedxVsP[j]->GetYaxis()->GetBinCenter(y)<plotObj[i]->C[plotObj[i]->StdObjName[j]]+3.0)continue;
+		 if(plotObj[i]->HdedxVsP[j]->GetYaxis()->GetBinCenter(y)<plotObj[i]->C[plotObj[i]->StdObjName[j]]+1.5)continue; //3.0 was the default
                   histos[histos.size()-1]->Fill(GetMass (plotObj[i]->HdedxVsP[j]->GetXaxis()->GetBinCenter(x),
                                            plotObj[i]->HdedxVsP[j]->GetYaxis()->GetBinCenter(y),
                                            plotObj[i], plotObj[i]->StdObjName[j]),
@@ -1932,7 +1946,7 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          TF1* KaonLine      = NULL;
          TF1* ProtonLine    = NULL;
          TF1* DeuteronLine  = NULL;
-         TF1* ProtonLineFit = NULL;
+         TF1* DeuteronLineFit = NULL;
 
 /*
             plotObj[i]->HdedxVsP[j]->SetStats(kFALSE);
@@ -1964,20 +1978,20 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             DeuteronLine->SetLineWidth(2);
             DeuteronLine->SetRange(DeuteronLine->GetX(15), DeuteronLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
 
-            TF1* ProtonLineFit = GetMassLine(0.938, plotObj[i], plotObj[i]->StdObjName[j]);
-            ProtonLineFit->SetLineColor(2);
-            ProtonLineFit->SetLineWidth(2);
-            ProtonLineFit->SetRange(0.6,1.2);
+            TF1* DeuteronLineFit = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
+            DeuteronLineFit->SetLineColor(2);
+            DeuteronLineFit->SetLineWidth(2);
+            DeuteronLineFit->SetRange(0.8,2.0); //range to fix
 
             PionLine->Draw("same");
             KaonLine->Draw("same");
             ProtonLine->Draw("same");
             DeuteronLine->Draw("same");
-            ProtonLineFit->Draw("same");
+            DeuteronLineFit->Draw("same");
          }
          DrawPreliminary ("", 13.0, plotObj[i]->LegEntry);
          SaveCanvas(c1, SaveDir, plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP", true);
-         if (PionLine){ delete PionLine; delete KaonLine; delete ProtonLine; delete DeuteronLine; delete ProtonLineFit; }
+         if (PionLine){ delete PionLine; delete KaonLine; delete ProtonLine; delete DeuteronLine; delete DeuteronLineFit; }
          delete c1;
 
          // REAL K and C :: FOR AN -- LOIC
@@ -2007,7 +2021,7 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          KaonLine      = NULL;
          ProtonLine    = NULL;
          DeuteronLine  = NULL;
-         ProtonLineFit = NULL;
+         DeuteronLineFit = NULL;
 
 /*
             plotObj[i]->HdedxVsP[j]->SetStats(kFALSE);
@@ -2043,20 +2057,20 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             DeuteronLine->SetLineWidth(2);
             DeuteronLine->SetRange(DeuteronLine->GetX(15), DeuteronLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
 
-            TF1* ProtonLineFit = GetMassLine(0.938, (plotObj[i]->type == 0)?dEdxK_Data1:dEdxK_MC1, (plotObj[i]->type == 0)?dEdxC_Data1:dEdxC_MC1);
-            ProtonLineFit->SetLineColor(2);
-            ProtonLineFit->SetLineWidth(2);
-            ProtonLineFit->SetRange(0.6,1.2);
+            TF1* DeuteronLineFit = GetMassLine(1.88, (plotObj[i]->type == 0)?dEdxK_Data1:dEdxK_MC1, (plotObj[i]->type == 0)?dEdxC_Data1:dEdxC_MC1);
+            DeuteronLineFit->SetLineColor(2);
+            DeuteronLineFit->SetLineWidth(2);
+            DeuteronLineFit->SetRange(0.8,2.0);
 
             PionLine->Draw("same");
             KaonLine->Draw("same");
             ProtonLine->Draw("same");
             DeuteronLine->Draw("same");
-            ProtonLineFit->Draw("same");
+            DeuteronLineFit->Draw("same");
          }
          DrawPreliminary ("", 13.0, plotObj[i]->LegEntry);
          SaveCanvas(c1, SaveDir, plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP_KCData", true);
-         if (PionLine){ delete PionLine; delete KaonLine; delete ProtonLine; delete DeuteronLine; delete ProtonLineFit; }
+         if (PionLine){ delete PionLine; delete KaonLine; delete ProtonLine; delete DeuteronLine; delete DeuteronLineFit; }
          delete c1;
 
          c1 = new TCanvas("c1", "c1", 600,600);
@@ -2071,11 +2085,20 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          delete c1;
       }
 
+      cout<<"qui arriva"<<endl;
       for (size_t j=0; j < plotObj[i]->HitObjName.size(); j++){
+	cout <<(plotObj[i]->HitObjName[j]).c_str()<<endl;
          if (plotObj[i]->HitObjName[j].find("SP")==string::npos) continue;
-         plotObj[i]->dEdxTemplate[j]->SetName("Charge_Vs_Path");
-         plotObj[i]->dEdxTemplate[j]->SaveAs (("dEdxTemplate_" + plotObj[i]->HitObjName[j] + "_" + plotObj[i]->SavePrefix + ".root").c_str());
-         MakeMapPlots (plotObj[i]->dEdxTemplate[j], plotObj[i]->HitObjName[j], SaveDir, "Map" + plotObj[i]->SavePrefix);
+	 cout<<"e` qui il problema"<<endl;
+	 cout<<plotObj[i]<<endl;
+	 cout<<plotObj[i]->dEdxTemplate[j]<<endl;
+	 if (plotObj[i]->dEdxTemplate[j]){
+	   cout<<"abbiamo il template"<<endl;
+	   plotObj[i]->dEdxTemplate[j]->SetName("Charge_Vs_Path");
+	   plotObj[i]->dEdxTemplate[j]->SaveAs (("dEdxTemplate_" + plotObj[i]->HitObjName[j] + "_" + plotObj[i]->SavePrefix + ".root").c_str());
+	   cout<<"qui anche"<<endl;
+	   MakeMapPlots (plotObj[i]->dEdxTemplate[j], plotObj[i]->HitObjName[j], SaveDir, "Map" + plotObj[i]->SavePrefix);
+	   cout <<"qui pure"<<endl;}
 /*         
          TH1D* hit_MIP = (TH1D*) GetObjectFromPath (InputFiles[fileIndex], (ObjName[i]+"_Hit").c_str());
 
@@ -2090,41 +2113,53 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          delete c1;
 */
          // all the other graphs -- Charge_Vs_XYNLetc.
+
+
+	 
+	 cout<<"qui pure"<<endl;
          string topologies [] = {"IB1", "IB2", "OB1", "OB2", "W1A", "W2A", "W3A", "W1B", "W2B", "W3B", "W4", "W5", "W6", "W7", "Pixel"};
+
          for (unsigned int g=0;g<15;g++){
             char Id [255]; sprintf (Id, "%02i", g+1);
-            TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
-            plotObj[i]->Charge_Vs_XYH[j][g]->SetStats(kFALSE);
-            plotObj[i]->Charge_Vs_XYH[j][g]->GetXaxis()->SetTitle("local x coordinate");
-            plotObj[i]->Charge_Vs_XYH[j][g]->GetYaxis()->SetTitle("local y coordinate");
-            plotObj[i]->Charge_Vs_XYH[j][g]->SetAxisRange (-7,7,"X");
-            plotObj[i]->Charge_Vs_XYH[j][g]->SetAxisRange (-15,15,"Y");
-            plotObj[i]->Charge_Vs_XYH[j][g]->Draw("COLZ");
-            DrawPreliminary (topologies[g], 13.0, plotObj[i]->LegEntry);
-            SaveCanvas (c1, SaveDir, plotObj[i]->HitObjName[j]+"_"+plotObj[i]->SavePrefix +"_ChargeVsXYH"+string(Id), true);
-            delete c1;
 
-            c1 = new TCanvas ("c1", "c1", 600, 600);
-            plotObj[i]->Charge_Vs_XYHN[j][g]->SetStats(kFALSE);
-            plotObj[i]->Charge_Vs_XYHN[j][g]->GetXaxis()->SetTitle("normalized x coordinate");
-            plotObj[i]->Charge_Vs_XYHN[j][g]->GetYaxis()->SetTitle("normalized y coordinate");
-            plotObj[i]->Charge_Vs_XYHN[j][g]->SetAxisRange (-1.5,1.5,"X");
-            plotObj[i]->Charge_Vs_XYHN[j][g]->SetAxisRange (-1.5,1.5,"Y");
-            plotObj[i]->Charge_Vs_XYHN[j][g]->Draw("COLZ");
-            DrawPreliminary (topologies[g], 13.0, plotObj[i]->LegEntry);
-            SaveCanvas (c1, SaveDir, plotObj[i]->HitObjName[j]+"_"+plotObj[i]->SavePrefix +"_ChargeVsXYHN"+string(Id), true);
-            delete c1;
+	    TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
+	    if (plotObj[i]->Charge_Vs_XYH[j][g]){
+	      plotObj[i]->Charge_Vs_XYH[j][g]->SetStats(kFALSE);
+	      plotObj[i]->Charge_Vs_XYH[j][g]->GetXaxis()->SetTitle("local x coordinate");
+	      plotObj[i]->Charge_Vs_XYH[j][g]->GetYaxis()->SetTitle("local y coordinate");
+	      plotObj[i]->Charge_Vs_XYH[j][g]->SetAxisRange (-7,7,"X");
+	      plotObj[i]->Charge_Vs_XYH[j][g]->SetAxisRange (-15,15,"Y");
+	      plotObj[i]->Charge_Vs_XYH[j][g]->Draw("COLZ");
+	      DrawPreliminary (topologies[g], 13.0, plotObj[i]->LegEntry);
+	      SaveCanvas (c1, SaveDir, plotObj[i]->HitObjName[j]+"_"+plotObj[i]->SavePrefix +"_ChargeVsXYH"+string(Id), true);
+	    }
+	    delete c1;
 
-            c1 = new TCanvas ("c1", "c1", 600, 600);
-            plotObj[i]->Charge_Vs_XYLN[j][g]->SetStats(kFALSE);
-            plotObj[i]->Charge_Vs_XYLN[j][g]->GetXaxis()->SetTitle("normalized x coordinate");
-            plotObj[i]->Charge_Vs_XYLN[j][g]->GetYaxis()->SetTitle("normalized y coordinate");
-            plotObj[i]->Charge_Vs_XYLN[j][g]->SetAxisRange (-1.5,1.5,"X");
-            plotObj[i]->Charge_Vs_XYLN[j][g]->SetAxisRange (-1.5,1.5,"Y");
-            plotObj[i]->Charge_Vs_XYLN[j][g]->Draw("COLZ");
-            DrawPreliminary (topologies[g], 13.0, plotObj[i]->LegEntry);
-            SaveCanvas (c1, SaveDir, plotObj[i]->HitObjName[j]+"_"+plotObj[i]->SavePrefix +"_ChargeVsXYLN"+string(Id), true);
-            delete c1;
+	    if (plotObj[i]->Charge_Vs_XYHN[j][g]){
+	      c1 = new TCanvas ("c1", "c1", 600, 600);
+	      plotObj[i]->Charge_Vs_XYHN[j][g]->SetStats(kFALSE);
+	      plotObj[i]->Charge_Vs_XYHN[j][g]->GetXaxis()->SetTitle("normalized x coordinate");
+	      plotObj[i]->Charge_Vs_XYHN[j][g]->GetYaxis()->SetTitle("normalized y coordinate");
+	      plotObj[i]->Charge_Vs_XYHN[j][g]->SetAxisRange (-1.5,1.5,"X");
+	      plotObj[i]->Charge_Vs_XYHN[j][g]->SetAxisRange (-1.5,1.5,"Y");
+	      plotObj[i]->Charge_Vs_XYHN[j][g]->Draw("COLZ");
+	      DrawPreliminary (topologies[g], 13.0, plotObj[i]->LegEntry);
+	      SaveCanvas (c1, SaveDir, plotObj[i]->HitObjName[j]+"_"+plotObj[i]->SavePrefix +"_ChargeVsXYHN"+string(Id), true);
+	      delete c1;
+	    }
+
+	    if(plotObj[i]->Charge_Vs_XYLN[j][g]){
+	      c1 = new TCanvas ("c1", "c1", 600, 600);
+	      plotObj[i]->Charge_Vs_XYLN[j][g]->SetStats(kFALSE);
+	      plotObj[i]->Charge_Vs_XYLN[j][g]->GetXaxis()->SetTitle("normalized x coordinate");
+	      plotObj[i]->Charge_Vs_XYLN[j][g]->GetYaxis()->SetTitle("normalized y coordinate");
+	      plotObj[i]->Charge_Vs_XYLN[j][g]->SetAxisRange (-1.5,1.5,"X");
+	      plotObj[i]->Charge_Vs_XYLN[j][g]->SetAxisRange (-1.5,1.5,"Y");
+	      plotObj[i]->Charge_Vs_XYLN[j][g]->Draw("COLZ");
+	      DrawPreliminary (topologies[g], 13.0, plotObj[i]->LegEntry);
+	      SaveCanvas (c1, SaveDir, plotObj[i]->HitObjName[j]+"_"+plotObj[i]->SavePrefix +"_ChargeVsXYLN"+string(Id), true);
+	      delete c1;
+	    }
          }
       }
    }

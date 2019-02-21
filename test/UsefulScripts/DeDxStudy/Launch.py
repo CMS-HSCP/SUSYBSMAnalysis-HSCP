@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import urllib
 import string
 import os,sys,time
@@ -29,11 +30,11 @@ def IsGoodLumi(R, L):
 
 def IsFileWithGoodLumi(F):  
    #check if the file contains at least one good lumi section using DAS_CLIENT --> commented out because VERY SLOW!
-   #print 'dasgoclient --limit=0 --query "lumi file='+f+' |  grep lumi.run_number,lumi.number"'      
+   #print 'das_client.py --limit=0 --query "lumi file='+f+' |  grep lumi.run_number,lumi.number"'      
    #containsGoodLumi = False
-   #for run in commands.getstatusoutput('dasgoclient --limit=0 --query "run file='+f+'"')[1].replace('[','').replace(']','').split(','):
+   #for run in commands.getstatusoutput('das_client.py --limit=0 --query "run file='+f+'"')[1].replace('[','').replace(']','').split(','):
    #   if(not IsGoodRun(int(run))):continue
-   #   for lumi in commands.getstatusoutput('dasgoclient --limit=0 --query "lumi file='+f+'"')[1].replace('[','').replace(']','').split(','):
+   #   for lumi in commands.getstatusoutput('das_client.py --limit=0 --query "lumi file='+f+'"')[1].replace('[','').replace(']','').split(','):
    #      if(IsGoodLumi(run, lumi)):return True
 
    #FASTER technique only based on run number and file name parsing
@@ -52,13 +53,10 @@ LOCALTIER   = 'T2_CH_CERN'
 #DATASETMASK = '/MinimumBias/Run2015B-SiStripCalMinBias-PromptReco-v1/ALCARECO'
 #DATASETMASK = '/StreamExpress/Run2015B-SiStripCalMinBias-Express-v1/ALCARECO'
 #DATASETMASK = '/ZeroBias/Run2015B-PromptReco-v1/RECO'
-###/ZeroBias/Run2017F-SiStripCalMinBias-06Nov2017-v1/ALCARECO
-
-DATASETMASK = ['/ZeroBias/Run2017B-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017C-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017D-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017E-SiStripCalMinBias-17Nov2017-v1/ALCARECO','/ZeroBias/Run2017F-SiStripCalMinBias-17Nov2017-v1/ALCARECO']  #0bias. Highly ionizing proton
-username    = commands.getstatusoutput('whoami') 
-EndPath     = "/storage/data/cms/store/user/"+username[1]+"/dEdxCalib"
+DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
+EndPath     = "/storage/data/cms/store/user/jpriscia/dEdxCalib"
 ISLOCAL     = False
-TransferDirectlyToStorage = True
+TransferDirectlyToStorage = False
 LoadJson(JSON)
 
 def initProxy():
@@ -70,14 +68,14 @@ def initProxy():
 
 def filesFromDataset(dataset):
    ISLOCAL=False
-   command_out = commands.getstatusoutput('dasgoclient --limit=0 --query "site dataset='+dataset+' | grep site.name,site.dataset_fraction"')
+   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "site dataset='+dataset+' | grep site.name,site.dataset_fraction"')
    for site in command_out[1].split('\n'):
       if(LOCALTIER in site and '100.00%' in site): 
          ISLOCAL=True
          break
 
    Files = []
-   command_out = commands.getstatusoutput('dasgoclient --limit=0 --query "file dataset='+dataset+'"')
+   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "file dataset='+dataset+'"')
    for f in command_out[1].split():
       if(not IsFileWithGoodLumi(f)):continue
       if(ISLOCAL): Files += [f]
@@ -86,14 +84,7 @@ def filesFromDataset(dataset):
 
 def filesFromDataset2(dataset):
    Files = []
-   Runs=[]
-   jsonFile = open(JSON,'r')
-   runList=json.load(jsonFile,encoding='utf-8').items()
-   runList.sort()
-   for run in runList :
-      Runs.append(str(run[0]))
-      print str(run[0])
-
+   Runs  = ['278018', '278308', '279931', '280385']
    for run in Runs:
       output = os.popen('das_client --limit=0 --query \'file run=%s dataset=%s\'' % (run, dataset)).read().split('\n')
       for f in output:
@@ -114,16 +105,14 @@ datasetList = DATASETMASK
 JobName = "DEDXSKIMMER"
 FarmDirectory = "FARM_EDM"
 LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
-LaunchOnCondor.Jobs_Queue = '8nh'
+#LaunchOnCondor.Jobs_Queue = '8nh'
+LaunchOnCondor.subTool = 'condor'
+
 
 if not TransferDirectlyToStorage:
-   os.system("mkdir -p out");
+   os.system("mkdir -p /eos/user/j/jpriscia/out");
 else:
-   jsonFile = open(JSON,'r')
-   runList=json.load(jsonFile,encoding='utf-8').items()
-   runList.sort()
-   for run in runList :
-      os.system('mkdir -p %s/%s' %(EndPath,run[0]))
+   os.system('mkdir -p %s/{278018,278308,279931,280385}' % EndPath)
 for DATASET in datasetList :
    DATASET = DATASET.replace('\n','')
    FILELIST = filesFromDataset2(DATASET)
@@ -152,7 +141,7 @@ for DATASET in datasetList :
          f.write("\n")
       f.close()   
       if not TransferDirectlyToStorage:
-         LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + os.getcwd() + "/out/dEdxSkim_%s_%i.root && rm dEdxSkim.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
+         LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/j/jpriscia/out/dEdxSkim_%s_%i.root && rm dEdxSkim.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
       else:
          LaunchOnCondor.Jobs_FinalCmds = ["lcg-cp -v -n 10 -D srmv2 -b file://${PWD}/dEdxSkim.root srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2\?SFN=%s/%s/dEdxSkim_%s_%i.root && rm -f dEdxSkim.root" % (EndPath, inFile[0], inFile[0], LaunchOnCondor.Jobs_Count)] # if you do not use zsh, change '\?' to '?'
       LaunchOnCondor.SendCluster_Push  (["CMSSW", "dEdxSkimmer_cfg.py" ])
