@@ -1084,8 +1084,8 @@ std::cout<<"D\n";
 
 std::cout<<"E\n";
 
-//      if(isData){    trackerCorrector.LoadDeDxCalibration(analysis_path+"../UsefulScripts/MuonTimingStudy/forJoze/Weights_ALCARECO.root"); 
-      if(isData){    trackerCorrector.TrackerGains = NULL;
+ if(isData){    trackerCorrector.LoadDeDxCalibration(analysis_path+"./../data/Data13TeVGains_v2.root");  //Je: those are the correct calib tree to use. I don't know why the default was null, but it was wrong
+	// if(isData){    trackerCorrector.TrackerGains = NULL;
       }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
       }
 
@@ -1199,6 +1199,7 @@ std::cout<<"G\n";
             if(ientry%TreeStep==0){printf(".");fflush(stdout);}
             if(checkDuplicates && duplicateChecker.isDuplicate(ev.eventAuxiliary().run(), ev.eventAuxiliary().event()))continue;
 
+	    //Je: once we have the templates we have to update those lines below as well.. 
             //if run change, update conditions
             if(CurrentRun != ev.eventAuxiliary().run()){
                CurrentRun = ev.eventAuxiliary().run();
