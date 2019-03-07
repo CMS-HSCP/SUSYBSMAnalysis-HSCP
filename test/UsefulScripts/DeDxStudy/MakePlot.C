@@ -28,7 +28,7 @@
 
 using namespace std;
 
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 0.8, double MaxRange = 2.0, double MassCenter = 1.88, double LeftMassMargin = 0.2, double RightMassMargin = 0.2); // by default use protons
+void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8); // by default use protons
 double GetMass(double P, double I, double* K, double* C);
 
 typedef struct dEdxPlotObj
@@ -321,9 +321,9 @@ void MakePlot()
 //   StdObjName.push_back("Ias_SP_in_noC_CCC");           StdObjLegend.push_back("Ias (2015)");
 //   StdObjName.push_back("Ias_SP_in_noC_CCC16");         StdObjLegend.push_back("Ias (2016)");
 //   StdObjName.push_back("Ias_SP_in_noC_newCCC");      StdObjLegend.push_back("Ias, new CC");
-   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
-   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
-   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
+///////   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
+///////   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
+//////   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
 
 
    vector <dEdxPlotObj*> plotObj;
@@ -588,7 +588,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	      for(int x=1;x<=inputnew->GetNbinsX();x++){
 	      for(int y=1;y<=inputnew->GetNbinsY();y++){
 		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
-		if(isnan(float(Mass)) || Mass<MassCenter-LeftMassMargin || Mass>MassCenter+RightMassMargin)inputnew->SetBinContent(x,y,0);        
+		if(isnan(float(Mass)) || Mass<MassCenter-(LeftMassMargin+LeftMassMargin*x/50.) || Mass>MassCenter+RightMassMargin)inputnew->SetBinContent(x,y,0);        
 	      }}
 
 	      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
@@ -679,13 +679,13 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       line2->Draw();
 
 	       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
-	       TF1* myfit = new TF1("myfit","[0]*pow(1.88/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass
+	       TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
-	       myfit->SetParameter(0, 4.2);
-	       myfit->SetParameter(1, 3.2);
-	       myfit->SetParLimits(0, 1.5,3.0); //
-	       myfit->SetParLimits(1, 2.5,6.0); // 
+	       myfit->SetParameter(0, 1.8);
+	       myfit->SetParameter(1, 3.8);
+	       myfit->SetParLimits(0, 1.3,3.0); //
+	       myfit->SetParLimits(1, 3.8,3.8); // 
 	       myfit->SetLineWidth(2);
 	       myfit->SetLineColor(2);
 	       FitResult->Fit("myfit", "M R E I 0");
@@ -728,7 +728,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, bool showChi2){
    double MinRange = 0.8;
-   double MaxRange = 1.0;
+   double MaxRange = 1.8;
    char buffer[2048];
    for (size_t j = 0; j < plotObj[0]->StdObjName.size(); j++){
       bool isEstim = (plotObj[0]->StdObjName[j].find("Ias")==string::npos);
@@ -758,7 +758,7 @@ void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, b
             for(int x=1;x<=inputnew[inputnew.size()-1]->GetNbinsX();x++){
             for(int y=1;y<=inputnew[inputnew.size()-1]->GetNbinsY();y++){
                double Mass = GetMass(inputnew[inputnew.size()-1]->GetXaxis()->GetBinCenter(x),inputnew[inputnew.size()-1]->GetYaxis()->GetBinCenter(y), plotObj[i], plotObj[i]->StdObjName[j]);
-               if (Mass < 1.88-0.20 || Mass > 1.88+0.20) inputnew[inputnew.size()-1]->SetBinContent (x,y,0);  //Mass was at 0.938
+               if (Mass < 1.88-0.40 || Mass > 1.88+0.40) inputnew[inputnew.size()-1]->SetBinContent (x,y,0);  //Mass was at 0.938
             }}
          }
          SaveNames.push_back (plotObj[i]->LegEntry);
@@ -1981,7 +1981,7 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             TF1* DeuteronLineFit = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
             DeuteronLineFit->SetLineColor(2);
             DeuteronLineFit->SetLineWidth(2);
-            DeuteronLineFit->SetRange(0.8,2.0); //range to fix
+            DeuteronLineFit->SetRange(1.0,1.6); //range to fix
 
             PionLine->Draw("same");
             KaonLine->Draw("same");

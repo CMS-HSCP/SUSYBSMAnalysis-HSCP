@@ -8,7 +8,7 @@ import glob
 import commands
 import json
 import collections # kind of map
-
+from pdb import set_trace
 
 
 
@@ -47,9 +47,12 @@ datasetList = [
 ##  ["Run258705", "/storage/data/cms/store/user/jozobec/out/258705/"],
 ##  ["Run258741", "/storage/data/cms/store/user/jozobec/out/258741/"],
 ##  ["Run258750", "/storage/data/cms/store/user/jozobec/out/258750/"],
-  ["Run278018", "/eos/user/j/jpriscia/out/278018/"],
-  ["Run278308", "/eos/user/j/jpriscia/out/278308/"],
-  ["Run279931", "/eos/user/j/jpriscia/out/279931/"],
+  ["Run278018", "/storage/data/cms/store/user/jozobec/dEdxCalib/278018/","listFiles_278018.txt"],
+  ["Run278308", "/storage/data/cms/store/user/jozobec/dEdxCalib/278308/","listFiles_278308.txt"],
+  ["Run279931", "/storage/data/cms/store/user/jozobec/dEdxCalib/279931/","listFiles_279931.txt"],
+#  ["Run278018", "/eos/user/j/jpriscia/out/278018/"],
+#  ["Run278308", "/eos/user/j/jpriscia/out/278308/"],
+#  ["Run279931", "/eos/user/j/jpriscia/out/279931/"],
 ##  ["Run280385", "/storage/data/cms/store/user/jozobec/dEdxCalib/280385/"],
 
 #  ["MCGluino_M1000_f10", "Gluino_13TeV_M1000_f10"],
@@ -63,8 +66,8 @@ datasetList = [
 #  ["MCDYM2600Q2",        "DY_13TeV_M2600_Q2"],
 ]
 
-isLocal = True  #allow to access data in Louvain from remote sites
-if(commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be")!=-1): isLocal = True
+isLocal = False  #allow to access data in Louvain from remote sites
+#if(commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be")!=-1): isLocal = True
 os.system('rm -rf ~/x509_user_proxy/x509_proxy')
 
 
@@ -88,14 +91,17 @@ if sys.argv[1]=='1':
                  initProxy()
                  initCommand = 'export X509_USER_PROXY=~/x509_user_proxy/x509_proxy; voms-proxy-init --noregen;'
                  LaunchOnCondor.Jobs_InitCmds = [initCommand]
-                 print initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}'
-                 print commands.getstatusoutput(initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}')
-                 LocalFileList = commands.getstatusoutput(initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}')[1].split('\n')
-                 for f in LocalFileList:
-                    if(f[-5:].find('.root')==-1):continue #only .root file considered
-                    FILELIST += ["root://cms-xrd-global.cern.ch/"+DATASET[1].replace('/storage/data/cms/store/','/store/')+f]
+                 #print initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}'
+                 #print commands.getstatusoutput(initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}')
+                 #LocalFileList = commands.getstatusoutput(initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}')[1].split('\n')
+
+                 with open(DATASET[2], 'r') as fileList:
+                   for f in fileList:
+                     #if(f[-5:].find('.root')==-1):continue #only .root file considered
+                     FILELIST += ["root://cms-xrd-global.cern.ch/"+DATASET[1].replace('/storage/data/cms/store/','/store/')+f.rstrip()]
+    
            else: #file path is an HSCP sample name, use the name to run the job
-              FILELIST += [DATASET[1]]
+             FILELIST += [DATASET[1]]
              
 
            print FILELIST

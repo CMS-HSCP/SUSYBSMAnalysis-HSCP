@@ -287,9 +287,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 //         dEdxTemplatesCI    = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CI.root" , true);
          dEdxTemplatesCCC   = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
          //dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);// commented from Joze code
-	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);  //tentativo a caso
-//         trackerCorrector.LoadDeDxCalibration  (DIRNAME+"/../../../data/Data13TeVGains_v2.root");
-         trackerCorrector.TrackerGains = NULL;
+	 //////////////	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);  //tentativo a caso
+	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);
+         trackerCorrector.LoadDeDxCalibration  (DIRNAME+"/../../../data/Data13TeVGains_v2.root");
+	 //        trackerCorrector.TrackerGains = NULL;
    }else{
          dEdxSF [0]      = 1.09711;
          dEdxSF [1]      = 1.09256;
@@ -408,7 +409,9 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 //   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_newCCC"     , 2, 3, dEdxTemplatesnewCCC, 2.7, 3.2, NULL, true, true, false, 2,  2) );
 
    printf("Progressing Bar           :0%%       20%%       40%%       60%%       80%%       100%%\n");
+   
    for(unsigned int f=0;f<FileName.size();f++){
+     cout<<"opening file: "<<FileName[f].c_str()<<endl;
      TFile* file = TFile::Open(FileName[f].c_str() );
      fwlite::Event ev(file);
      printf("Scanning the ntuple %2i/%2i :", (int)f+1, (int)FileName.size());
@@ -422,19 +425,19 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
             CurrentRun = ev.eventAuxiliary().run();
             trackerCorrector.setRun (CurrentRun);
 
-	    if (isData){
+	     if (isData){
 	      switch (CurrentRun){
-	      case 278018: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.48; break;
-	      case 278308: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278308.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.50;break;
-	      case 279931: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run279931.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.59;break;
-	      default:  dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.48;break;
+	      case 278018: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822*1.04098; break;
+	      case 278308: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278308.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822*1.06009;break;
+	      case 279931: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run279931.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822*1.12230;break;
+	      default:  dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822;break;
               }
-	       for (size_t r=0; r<results.size(); r++)
+	      for (size_t r=0; r<results.size(); r++)
 	       {
-                   if (results[r]->Name.find("Ias") != std::string::npos)
-                      results[r]->dEdxTemplates = dEdxTemplatesCCC16;
+		 if (results[r]->Name.find("Ias") != std::string::npos)
+		   results[r]->dEdxTemplates = dEdxTemplatesCCC16;
 	       }
-	    }
+	     }
          }
 
          fwlite::Handle<DeDxHitInfoAss> dedxCollH;

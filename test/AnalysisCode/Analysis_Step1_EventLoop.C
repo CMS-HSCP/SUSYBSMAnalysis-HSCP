@@ -1084,7 +1084,7 @@ std::cout<<"D\n";
 
 std::cout<<"E\n";
 
- if(isData){    trackerCorrector.LoadDeDxCalibration(analysis_path+"./../data/Data13TeVGains_v2.root");  //Je: those are the correct calib tree to use. I don't know why the default was null, but it was wrong
+ if(isData){    trackerCorrector.LoadDeDxCalibration(analysis_path+"../../data/Data13TeVGains_v2.root");  //Je: those are the correct calib tree to use. I don't know why the default was null, but it was wrong
 	// if(isData){    trackerCorrector.TrackerGains = NULL;
       }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
       }
