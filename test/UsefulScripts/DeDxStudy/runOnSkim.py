@@ -16,9 +16,9 @@ def getChunksFromList(MyList, n):
   return [MyList[x:x+n] for x in range(0, len(MyList), n)]
 
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600)):
+   if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
-      os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/x509_user_proxy/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
 
 
 if len(sys.argv)==1:
@@ -47,9 +47,11 @@ datasetList = [
 ##  ["Run258705", "/storage/data/cms/store/user/jozobec/out/258705/"],
 ##  ["Run258741", "/storage/data/cms/store/user/jozobec/out/258741/"],
 ##  ["Run258750", "/storage/data/cms/store/user/jozobec/out/258750/"],
-  ["Run278018", "/storage/data/cms/store/user/jozobec/dEdxCalib/278018/","listFiles_278018.txt"],
-  ["Run278308", "/storage/data/cms/store/user/jozobec/dEdxCalib/278308/","listFiles_278308.txt"],
-  ["Run279931", "/storage/data/cms/store/user/jozobec/dEdxCalib/279931/","listFiles_279931.txt"],
+#  ["Run278018", "/storage/data/cms/store/user/jozobec/dEdxCalib/278018/","listFiles_278018.txt"],
+#  ["Run278308", "/storage/data/cms/store/user/jozobec/dEdxCalib/278308/","listFiles_278308.txt"],
+#  ["Run279931", "/storage/data/cms/store/user/jozobec/dEdxCalib/279931/","listFiles_279931.txt"],
+  ["RunPostG", "/eos/user/j/jpriscia/out/postG/"]
+#  ["RunPreG", "/eos/user/j/jpriscia/out/preG/"],
 #  ["Run278018", "/eos/user/j/jpriscia/out/278018/"],
 #  ["Run278308", "/eos/user/j/jpriscia/out/278308/"],
 #  ["Run279931", "/eos/user/j/jpriscia/out/279931/"],
@@ -66,9 +68,9 @@ datasetList = [
 #  ["MCDYM2600Q2",        "DY_13TeV_M2600_Q2"],
 ]
 
-isLocal = False  #allow to access data in Louvain from remote sites
+isLocal = True  #allow to access data in Louvain from remote sites
 #if(commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be")!=-1): isLocal = True
-os.system('rm -rf ~/x509_user_proxy/x509_proxy')
+#os.system('rm -rf ~/x509_user_proxy/x509_proxy')
 
 
 if sys.argv[1]=='1':
@@ -89,7 +91,7 @@ if sys.argv[1]=='1':
       	         FILELIST = LaunchOnCondor.GetListOfFiles('', DATASET[1]+'/*.root', '')
               else:
                  initProxy()
-                 initCommand = 'export X509_USER_PROXY=~/x509_user_proxy/x509_proxy; voms-proxy-init --noregen;'
+                 initCommand = 'export X509_USER_PROXY=~/private/x509_proxy; voms-proxy-init --noregen;'
                  LaunchOnCondor.Jobs_InitCmds = [initCommand]
                  #print initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}'
                  #print commands.getstatusoutput(initCommand+'lcg-ls -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN='+DATASET[1]+'" | xargs -I {} basename {}')

@@ -13,9 +13,9 @@ types = set()
 #    types.add(anaType)
 
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600)):
+   if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
-      os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/x509_user_proxy/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      os.system('voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
 
 types.add(0)
 types.add(2)
@@ -41,6 +41,10 @@ with open(samplesFiles) as ifile:
                             continue
                         todo.append(f)
                         print f
+
+
+
+from pdb import set_trace
 
 newcmd = open("newcmd.cmd", "w")
 newcmd.write('#!/bin/bash\n')

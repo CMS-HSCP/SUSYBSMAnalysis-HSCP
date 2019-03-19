@@ -277,7 +277,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    if(isData){
          SuppressFakeHIP = true; // never fake HIPs for Data -- they are already present as it is
          dEdxSF [0] = 1.00000;
-         dEdxSF [1] = 1.41822;
+         //dEdxSF [1] = 1.41822*1.0371500*0.99565; //preG
+	 dEdxSF [1] = 1.41822*1.1265500*1.00815;  //postG
 //         dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
 //         dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
 //         dEdxTemplates      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Data.root"           , true);
@@ -287,8 +288,11 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 //         dEdxTemplatesCI    = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CI.root" , true);
          dEdxTemplatesCCC   = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
          //dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);// commented from Joze code
-	 //////////////	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);  //tentativo a caso
-	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);
+	 /////	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);  //tentativo a caso
+	 //////dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);
+	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPostG.root", true);
+	 //dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root", true);
+
          trackerCorrector.LoadDeDxCalibration  (DIRNAME+"/../../../data/Data13TeVGains_v2.root");
 	 //        trackerCorrector.TrackerGains = NULL;
    }else{
@@ -403,9 +407,9 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 //   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CI"      , 2, 3, dEdxTemplatesCI , NULL, true, true, false, false, 1) );
 //   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CC"      , 2, 3, dEdxTemplatesCC , NULL, true, true, false, true,  0) );
 //   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CCC"     , 2, 3, dEdxTemplatesCCC,   2.7, 3.2, NULL, true, true, false, 1,  1) );
-   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CCC16"   , 2, 3, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );
-   results.push_back(new dEdxStudyObj("Ias_SO_in_noC_CCC16"   , 2, 2, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );
-   results.push_back(new dEdxStudyObj("Ias_PO_in_noC_CCC16"   , 2, 1, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );
+  results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CCC16"   , 2, 3, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );
+  results.push_back(new dEdxStudyObj("Ias_SO_in_noC_CCC16"   , 2, 2, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );
+  results.push_back(new dEdxStudyObj("Ias_PO_in_noC_CCC16"   , 2, 1, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );
 //   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_newCCC"     , 2, 3, dEdxTemplatesnewCCC, 2.7, 3.2, NULL, true, true, false, 2,  2) );
 
    printf("Progressing Bar           :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -426,12 +430,12 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
             trackerCorrector.setRun (CurrentRun);
 
 	     if (isData){
-	      switch (CurrentRun){
+	       /*   switch (CurrentRun){
 	      case 278018: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822*1.04098; break;
 	      case 278308: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278308.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822*1.06009;break;
 	      case 279931: dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run279931.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822*1.12230;break;
 	      default:  dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true); dEdxSF [0] = 1.00000; dEdxSF [1] = 1.41822;break;
-              }
+              }*/
 	      for (size_t r=0; r<results.size(); r++)
 	       {
 		 if (results[r]->Name.find("Ias") != std::string::npos)

@@ -53,16 +53,18 @@ LOCALTIER   = 'T2_CH_CERN'
 #DATASETMASK = '/MinimumBias/Run2015B-SiStripCalMinBias-PromptReco-v1/ALCARECO'
 #DATASETMASK = '/StreamExpress/Run2015B-SiStripCalMinBias-Express-v1/ALCARECO'
 #DATASETMASK = '/ZeroBias/Run2015B-PromptReco-v1/RECO'
-DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
+####DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
+#DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
+DATASETMASK = ['/ZeroBias/Run2016C-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016D-SiStripCalMinBias-18Apr2017-v1/ALCARECO','/ZeroBias/Run2016E-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
 EndPath     = "/storage/data/cms/store/user/jpriscia/dEdxCalib"
 ISLOCAL     = False
 TransferDirectlyToStorage = False
 LoadJson(JSON)
 
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600)):
+   if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
-      os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/x509_user_proxy/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      os.system('mkdir -p ~/private; voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
 
 
 
@@ -84,7 +86,8 @@ def filesFromDataset(dataset):
 
 def filesFromDataset2(dataset):
    Files = []
-   Runs  = ['278018', '278308', '279931', '280385']
+   #Runs  = ['278018', '278308', '279931', '280385']
+   Runs  = ['275777','275920','276525','276585','276870']
    for run in Runs:
       output = os.popen('das_client --limit=0 --query \'file run=%s dataset=%s\'' % (run, dataset)).read().split('\n')
       for f in output:
@@ -112,7 +115,7 @@ LaunchOnCondor.subTool = 'condor'
 if not TransferDirectlyToStorage:
    os.system("mkdir -p /eos/user/j/jpriscia/out");
 else:
-   os.system('mkdir -p %s/{278018,278308,279931,280385}' % EndPath)
+   os.system('mkdir -p %s/{275777,275920,276525,276585,276870}' % EndPath)
 for DATASET in datasetList :
    DATASET = DATASET.replace('\n','')
    FILELIST = filesFromDataset2(DATASET)
@@ -120,7 +123,7 @@ for DATASET in datasetList :
 
    LaunchOnCondor.Jobs_InitCmds = []
 #      if(not ISLOCAL):LaunchOnCondor.Jobs_InitCmds = ['export X509_USER_PROXY=~/x509_user_proxy/x509_proxy; voms-proxy-init --noregen;']
-   if(not ISLOCAL):LaunchOnCondor.Jobs_InitCmds = ['export X509_USER_PROXY=~/x509_user_proxy/x509_proxy']
+   if(not ISLOCAL):LaunchOnCondor.Jobs_InitCmds = ['export X509_USER_PROXY=~/private/x509_proxy']
 
    for inFileList in getChunksFromList(FILELIST,1):
       os.system("cp dEdxSkimmer_Template_cfg.py dEdxSkimmer_cfg.py")

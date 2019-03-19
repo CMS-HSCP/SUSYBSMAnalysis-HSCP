@@ -29,7 +29,7 @@ process.source = cms.Source("PoolSource",
 
 #process.GlobalTag.globaltag = GTAG
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, "94X_dataRun2_ReReco_EOY17_v2", '')
+process.GlobalTag = GlobalTag(process.GlobalTag, "80X_dataRun2_2016LegacyRepro_v4", '')
 
 
 process.load('Alignment.CommonAlignmentProducer.AlignmentTrackSelector_cfi')
