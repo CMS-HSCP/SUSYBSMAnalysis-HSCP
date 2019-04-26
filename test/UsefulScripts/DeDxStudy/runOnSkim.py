@@ -31,26 +31,13 @@ if len(sys.argv)==1:
 
 
 datasetList = [
-##  ["Run251252", "/storage/data/cms/store/user/querten/AAA/HSCP/dedxSkim/Run251252/"],
-##  ["Run257395", "/storage/data/cms/store/user/jozobec/out/257395/"],
-##  ["Run257396", "/storage/data/cms/store/user/jozobec/out/257396/"],
-#  ["Run257490", "/storage/data/cms/store/user/jozobec/out/257490/"],
-##  ["Run257599", "/storage/data/cms/store/user/jozobec/out/257599/"],
-#  ["Run257805", "/storage/data/cms/store/user/jozobec/out/257805/"],
-##  ["Run257816", "/storage/data/cms/store/user/jozobec/out/257816/"],
-##  ["Run257819", "/storage/data/cms/store/user/jozobec/out/257819/"],
-#  ["Run257823", "/storage/data/cms/store/user/jozobec/out/257823/"],
-##  ["Run258443", "/storage/data/cms/store/user/jozobec/out/258443/"],
-##  ["Run258446", "/storage/data/cms/store/user/jozobec/out/258446/"],
-##  ["Run258655", "/storage/data/cms/store/user/jozobec/out/258655/"],
-##  ["Run258694", "/storage/data/cms/store/user/jozobec/out/258694/"],
-##  ["Run258705", "/storage/data/cms/store/user/jozobec/out/258705/"],
-##  ["Run258741", "/storage/data/cms/store/user/jozobec/out/258741/"],
-##  ["Run258750", "/storage/data/cms/store/user/jozobec/out/258750/"],
 #  ["Run278018", "/storage/data/cms/store/user/jozobec/dEdxCalib/278018/","listFiles_278018.txt"],
 #  ["Run278308", "/storage/data/cms/store/user/jozobec/dEdxCalib/278308/","listFiles_278308.txt"],
 #  ["Run279931", "/storage/data/cms/store/user/jozobec/dEdxCalib/279931/","listFiles_279931.txt"],
-  ["RunPostG", "/eos/user/j/jpriscia/out/postG/"]
+#  ["RunPostG", "/eos/user/j/jpriscia/out/postG/"]
+  ["Region2",  "/eos/user/j/jpriscia/out/Region2/"],
+  ["Region3",  "/eos/user/j/jpriscia/out/Region3/"],
+  ["Region4",  "/eos/user/j/jpriscia/out/Region4/"],
 #  ["RunPreG", "/eos/user/j/jpriscia/out/preG/"],
 #  ["Run278018", "/eos/user/j/jpriscia/out/278018/"],
 #  ["Run278308", "/eos/user/j/jpriscia/out/278308/"],

@@ -1,4 +1,3 @@
-
 #include <exception>
 #include <vector>
 
@@ -287,14 +286,16 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
       bool isData   = (samples[s].Type==0);
       bool isMC     = (samples[s].Type==1);
       bool isSignal = (samples[s].Type>=2);
-      bool is2016   = (samples[s].Name.find("13TeV16")!=std::string::npos);
-
+      bool is2016   = (samples[s].Name.find("13TeV16")==std::string::npos)?false:true;
+      bool is2016G  = (samples[s].Name.find("13TeV16G")==std::string::npos)?false:true;
 
       dEdxTemplatesOld = loadDeDxTemplate(DIRNAME+(isData?"/../../../data/Data13TeV16_dEdxTemplate.root":"/../../../data/MC13TeV16_dEdxTemplate.root"), true);
       if(isData){  // 2016 values
          dEdxSF [0] = 1.00000;
-         dEdxSF [1] = 1.41822;
-         dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);
+         dEdxSF [1] = 1.464;
+	 if (is2016G) dEdxSF[1] = 1.611;  //PostG
+         //dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);
+	 dEdxTemplates = loadDeDxTemplate((!is2016G)?(DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root"):(DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPostG.root"), true);
       }else{  
          dEdxSF [0] = 1.09711;
          dEdxSF [1] = 1.09256;

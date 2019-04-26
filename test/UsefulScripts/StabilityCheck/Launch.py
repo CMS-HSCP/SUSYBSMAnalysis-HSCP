@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import urllib
 import string
 import os
@@ -10,14 +9,16 @@ import time
 
 LaunchOnCondor.Jobs_InitCmds       = ['ulimit -c 0;']  #disable production of core dump in case of job crash
 
-UseRemoteSamples                   = False
+UseRemoteSamples                   = True
 RemoteStorageDir                   = '/storage/data/cms/store/user/jozobec/HSCP2016/'
 #RemoteStorageDir                   = '/store/group/phys_exotica/hscp/'
 
+
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600)):
+   if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
-      os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/x509_user_proxy/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      os.system('mkdir -p ~/private; voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+
 
 if sys.argv[1]=='1':
    if UseRemoteSamples:
@@ -29,8 +30,9 @@ if sys.argv[1]=='1':
    FarmDirectory = "FARM"
    JobName = "HSCPStability"
    LaunchOnCondor.Jobs_RunHere = 0
-   LaunchOnCondor.Jobs_Queue = "8nh"
    LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
+   LaunchOnCondor.subTool = 'condor'
+
    #LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/StabilityCheck.C", '"ANALYSE"'])
    #LaunchOnCondor.SendCluster_Push(["BASH", "sh " + os.getcwd()+"/StabilityCheck.sh " + os.getcwd()+"/pictures"])
 

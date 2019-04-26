@@ -249,78 +249,12 @@ void MakePlot()
 
    vector<string> HitObjName;                         vector<string> HitObjLegend;
    HitObjName.push_back("hit_PO");                    HitObjLegend.push_back("Pixel");
-//   HitObjName.push_back("hit_PO_noHIP");              HitObjLegend.push_back("Pixel w/o HIP");
    HitObjName.push_back("hit_SO_in_noC_CCC");         HitObjLegend.push_back("Strip");
-//   HitObjName.push_back("hit_SO_in_noC_CCC_noHIP");   HitObjLegend.push_back("Strip w/o HIP, new CC");
-//   HitObjName.push_back("hit_SO_in_noC_newCCC");      HitObjLegend.push_back("Strip, new CC");
-//   HitObjName.push_back("hit_SO_in_noC_newCCC_noHIP");HitObjLegend.push_back("Strip w/o HIP, new CC");
-//   HitObjName.push_back("hit_SP");                    HitObjLegend.push_back("Strip+Pixel charges, untrimmed");
-//   HitObjName.push_back("hit_SP_in_noC");
-//   HitObjName.push_back("hit_SP_in_noC_CI");
-//   HitObjName.push_back("hit_SP_in_noC_CC");
    HitObjName.push_back("hit_SP_in_noC_CCC");         HitObjLegend.push_back("Strip+Pixel charges"); //questo forse serve..
-//   HitObjName.push_back("hit_SP_in_noC_newCCC");      HitObjLegend.push_back("Strip+Pixel charges, new CC");
+
    vector<string> StdObjName;                         vector<string> StdObjLegend;
-//   StdObjName.push_back("harm2_SO");
-//   StdObjName.push_back("harm2_SO_in");
-//   StdObjName.push_back("harm2_SO_in_noC");
-//   StdObjName.push_back("harm2_SP");
-//   StdObjName.push_back("harm2_SP_in");
-//   StdObjName.push_back("harm2_SP_in_noC");
-//   StdObjName.push_back("harm2_SP_in_noC_CI");
-//   StdObjName.push_back("harm2_SP_in_noC_CC");
-//   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, old CC");
-//   StdObjName.push_back("harm2_SP_in_noC_newCCC");    StdObjLegend.push_back("harm-2, new CC");
-
-//   StdObjName.push_back("harm2_PO_raw");                StdObjLegend.push_back("harm-2, PO");
-//   StdObjName.push_back("Hybr2005_PO_raw");             StdObjLegend.push_back("Hybr-2-05, PO");
-//   StdObjName.push_back("Hybr2010_PO_raw");             StdObjLegend.push_back("Hybr-2-10, PO");
-//   StdObjName.push_back("Hybr2015_PO_raw");             StdObjLegend.push_back("Hybr-2-15, PO");
-
-//   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, SO");
-///    StdObjName.push_back("Hybr2005_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-05, SO");
-//   StdObjName.push_back("Hybr2010_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-10, SO");
-//   StdObjName.push_back("Hybr2015_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-15, SO");  // those were uncommented before, but this is not what I want....
-//   StdObjName.push_back("harm2_SO_in_noC_CCC");
-//   StdObjName.push_back("hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-10, SP");
    StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");  // i think that is the one to keep
 
-//   StdObjName.push_back("hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-20, SP");
-//   StdObjName.push_back("hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-25, SP");
-//   StdObjName.push_back("hybr203_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-30, SP");
-//   StdObjName.push_back("hybr2035_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-35, SP");
-//   StdObjName.push_back("hybr204_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-40, SP");
-//   StdObjName.push_back("harm2_SO_in_noC_CCC");       StdObjLegend.push_back("harm-2, SO");
-//   StdObjName.push_back("Hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-10, SP");
-//   StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-15");
-//   StdObjName.push_back("Hybr2015_SP_in_noC_newCCC"); StdObjLegend.push_back("Hybrid2-15, new CC");
-//   StdObjName.push_back("Hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-20, SP");
-//   StdObjName.push_back("Hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-25, SP");
-//   StdObjName.push_back("Hybr203_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-30, SP");
-//   StdObjName.push_back("Hybr2035_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-35, SP");
-//   StdObjName.push_back("Hybr204_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-40, SP");
-//   StdObjName.push_back("hybr201_SO_in_noC_CCC");
-//   StdObjName.push_back("hybr202_SO_in_noC_CCC");
-//   StdObjName.push_back("hybr203_SO_in_noC_CCC");
-//   StdObjName.push_back("hybr204_SO_in_noC_CCC");
-//   StdObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
-//   StdObjName.push_back("Ias_PO");
-//   StdObjName.push_back("Ias_SO_inc");
-//   StdObjName.push_back("Ias_SO");
-//   StdObjName.push_back("Ias_SO_in");
-//   StdObjName.push_back("Ias_SO_in_noC");
-//   StdObjName.push_back("Ias_SO_in_noC_CI");
-//   StdObjName.push_back("Ias_SO_in_noC_CC");
-//   StdObjName.push_back("Ias_SO_in_noC_CCC");
-//   StdObjName.push_back("Ias_SP_inc");
-//   StdObjName.push_back("Ias_SP");
-//   StdObjName.push_back("Ias_SP_in");
-//   StdObjName.push_back("Ias_SP_in_noC");
-//   StdObjName.push_back("Ias_SP_in_noC_CI");
-//   StdObjName.push_back("Ias_SP_in_noC_CC");
-//   StdObjName.push_back("Ias_SP_in_noC_CCC");           StdObjLegend.push_back("Ias (2015)");
-//   StdObjName.push_back("Ias_SP_in_noC_CCC16");         StdObjLegend.push_back("Ias (2016)");
-//   StdObjName.push_back("Ias_SP_in_noC_newCCC");      StdObjLegend.push_back("Ias, new CC");
    StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
    StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
    StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
@@ -336,7 +270,10 @@ void MakePlot()
 //////   plotObj.push_back(new dEdxPlotObj("Histos_Run278308.root", "Run 278308",   "Run278308", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 /////   plotObj.push_back(new dEdxPlotObj("Histos_Run279931.root", "Run 279931",   "Run279931", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 ////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Run PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Runs PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+/////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Runs PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+plotObj.push_back(new dEdxPlotObj("Histos_Region2.root", "Region2",   "Region2", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+plotObj.push_back(new dEdxPlotObj("Histos_Region3.root", "Region3",   "Region3", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+plotObj.push_back(new dEdxPlotObj("Histos_Region4.root", "Region4",   "Region4", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run280385.root", "Run 280385",   "Run280385", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCDYM2600Q2.root",        "DY, Q = 2, M = 2.6TeV",    "DYM2600Q2",        HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCGluino_M1000_f10.root", "Gluino, f=10, M = 1TeV",   "Gluino_M1000_f10", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));

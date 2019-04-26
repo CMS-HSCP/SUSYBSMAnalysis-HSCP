@@ -322,6 +322,7 @@ def CreateTheCmdFile():
 	if subTool=='condor':
            cmd_file.write('Universe                = vanilla\n')
 	   cmd_file.write('Environment             = CONDORJOBID=$(Process)\n')
+           cmd_file.write('requirements            = (OpSysAndVer =?= "SLCern6")\n')
 	   cmd_file.write('notification            = Error\n')
 	   cmd_file.write('Proxy_filename          = x509_proxy\n')
 	   cmd_file.write('Proxy_path              = '+os.path.expanduser('~/private/')+'$(Proxy_filename)\n')
@@ -330,8 +331,8 @@ def CreateTheCmdFile():
 	   cmd_file.write('transfer_output_files   = \"\" \n')
 	   cmd_file.write('transfer_input_files    = $(Proxy_path)\n')
 	   #site specific code
-  	   if  (commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be" )!=-1): cmd_file.write('requirements            = (CMSFARM=?=True)&&(Memory > 200)\n')
-           elif(commands.getstatusoutput("uname -n"   )[1].find("purdue.edu")!=-1): cmd_file.write('requirements            = (request_memory > 200)\n')
+  	   if  (commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be" )!=-1): cmd_file.write('requirements            = (CMSFARM=?=True)&&(Memory > 200)&&(OpSysAndVer =?= "SLCern6")\n')
+           elif(commands.getstatusoutput("uname -n"   )[1].find("purdue.edu")!=-1): cmd_file.write('requirements            = (request_memory > 200) && (OpSysAndVer =?= "SLCern6")\n')
 	   cmd_file.write('should_transfer_files   = YES\n')
 	   cmd_file.write('executable = $(filename)\n')
 	   cmd_file.write('output = '+Farm_Directories[2]+'$Fn(filename).$(ClusterId).$(ProcId).out\n')
