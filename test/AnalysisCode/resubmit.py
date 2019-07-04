@@ -53,11 +53,11 @@ for i, executable in enumerate(todo):
 #      toWrite = 'bsub -q 8nh -J HSCPResub_%i \'%s%s 0 ele\'' % (i, os.environ['CMSSW_BASE'], executable)
 #   elif os.environ['HOST'].find('ingrid'):
 #      toWrite = 'sbatch --partition=Def --qos=normal --wckey=cms %s\n' % executable
-   toWrite = 'sbatch --partition=Def --qos=normal --wckey=cms FARM/inputs/%s' % executable
+   toWrite = 'queue filename matching files FARM/inputs/%s' % executable
    print toWrite
    newcmd.write(toWrite+'\n')
 newcmd.close()
 
 #initProxy()
-os.system('sh newcmd.cmd')
+#os.system('sh newcmd.cmd')
 

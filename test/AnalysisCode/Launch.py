@@ -14,9 +14,10 @@ LaunchOnCondor.subTool = 'condor'
 #LaunchOnCondor.Jobs_Queue = '8nh'
 
 UseRemoteSamples          = True
-RemoteStorageDir          = '/storage/data/cms/store/user/jozobec/HSCP2016/'
-RemoteServer              = 'cms-xrd-global.cern.ch'
-#RemoteStorageDir          = '/store/group/phys_exotica/hscp/'
+#RemoteStorageDir          = '/storage/data/cms/store/user/jozobec/HSCP2016/'
+#RemoteServer              = 'cms-xrd-global.cern.ch'
+RemoteServer              = 'eoscms.cern.ch'
+RemoteStorageDir          = '//eos/cms/store/group/phys_exotica/hscp/'
 
 #the vector below contains the "TypeMode" of the analyses that should be run
 AnalysesToRun = [0,2]#,4]#,3,5]
@@ -84,7 +85,8 @@ if sys.argv[1]=='1':
                  #LaunchOnCondor.Jobs_FinalCmds = ['mv *.root %s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/Results/Type%i/' % (os.environ['CMSSW_BASE'], Type)]
                  LaunchOnCondor.Jobs_FinalCmds = ['cp -r Results %s/src/SUSYBSMAnalysis/HSCP/test/%s/ && rm -rf Results' % (os.environ['CMSSW_BASE'], os.path.basename(os.getcwd()) if os.getcwd().find('AnalysisCode') > 0 else 'AnalysisCode')]
                  if(UseRemoteSamples):
-                    LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir.replace('/storage/data/cms/store/', '//store/')]
+                    #LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir.replace('/storage/data/cms/store/', '//store/')]
+                    LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir]
                  else: LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0']
                  if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
                  if vals[2].find("13TeV16") < 0: continue # skip everything that is not 2016 -- namely the 2015 samples
@@ -106,9 +108,10 @@ elif sys.argv[1]=='2':
            smallFiles = commands.getstatusoutput('find ' + Path + 'Histos_*.root  -type f -size -1024c -exec ls -lSh {} +')[1]
            if(len(smallFiles)>1):
               print("Small files have been found, these are generally due to either crashed jobs, or to still running jobs.\nThe following files will NOT be hadd:\n" + smallFiles + "\n\n")           
-           os.system('find ' + Path + 'Histos_*.root  -type f -size +1024c | xargs hadd -n 50 -f ' + Path + 'Histos.root ')
+           #os.system('find ' + Path + 'Histos_*.root  -type f -size +1024c | xargs hadd -n 50 -f ' + Path + 'Histos.root ')
+           os.system('find ' + Path + 'Histos_*.root  -type f -size +1024c | xargs hadd  -f ' + Path + 'Histos.root ')
            LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step2_BackgroundPrediction.C", '"'+Path+'"'])
-#        LaunchOnCondor.SendCluster_Submit()
+           LaunchOnCondor.SendCluster_Submit()
 
 elif sys.argv[1]=='3':
         print 'PLOTTING'
@@ -138,11 +141,13 @@ elif sys.argv[1]=='4':
         print 'LIMIT COMPUTATION (ONLY)'
         FarmDirectory = "FARM"
         JobName = "HscpLimits"
-        LaunchOnCondor.Jobs_Queue   = '8nh'
         LaunchOnCondor.Jobs_RunHere = 1
         LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
-        if not os.path.islink('%s/src/HiggsAnalysis' % base80X):
+        #from pdb import set_trace
+        #set_trace()
+        if not os.path.isdir('%s/src/HiggsAnalysis' % base80X):  #is dir->islink
+           print 'Error: %s/src/HiggsAnalysis does not exist' % base80X
            if not os.path.isdir('%s/src/HiggsAnalysis' % base74X):
               print 'Error: %s/src/HiggsAnalysis does not exist' % base74X
               print 'Make sure you set up the correct CMSSW_7_4_X version and path in base74X variable.'
@@ -153,7 +158,7 @@ elif sys.argv[1]=='4':
               print 'cd %s/src && ln -s %s/src/HiggsAnalysis' % (base80X, base74X)
               os.system('cd %s/src && ln -s %s/src/HiggsAnalysis' % (base80X, base74X))
 
-        LaunchOnCondor.Jobs_InitCmds += ['cd %s/src' % base74X, 'eval `scramv1 runtime -sh`', 'cd -']
+        LaunchOnCondor.Jobs_InitCmds += ['cd %s/src' % base80X, 'eval `scramv1 runtime -sh`', 'cd -']
 
         f = open('Analysis_Samples.txt','r')
         for line in f :
@@ -179,7 +184,7 @@ elif sys.argv[1]=='4':
 #              #print vals[2] + "   " + str(skip)
 
               Path = "Results/Type"+str(Type)+"/"
-#              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMPUTELIMIT2016"' if vals[2].find("13TeV16G") == -1 else '"COMPUTELIMIT2016G"', '"'+Path+'"', vals[2] ]) # compute separately 2016 preG and postG
+              #LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMPUTELIMIT2016"' if vals[2].find("13TeV16G") == -1 else '"COMPUTELIMIT2016G"', '"'+Path+'"', vals[2] ]) # compute separately 2016 preG and postG
 
               LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE2016"', '"'+Path+'"', vals[2] ]) #combine 2016 preG, postG, and combined 2016 in the same job
         f.close()
