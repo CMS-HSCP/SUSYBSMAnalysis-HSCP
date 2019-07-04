@@ -109,7 +109,7 @@ TH3F* dEdxTemplates = NULL;
 dedxGainCorrector trackerCorrector;
 double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
-   1.21836    // [1]  Pixel data to SiStrip data
+   1.464//1.21836    // [1]  Pixel data to SiStrip data
 };
 dedxHIPEmulator HIPemulator;
 dedxHIPEmulator HIPemulatorUp (false, "ratePdfPixel_Up", "ratePdfStrip_Up");
@@ -1074,10 +1074,10 @@ std::cout<<"D\n";
       string analysis_path (basepath);
       if(isData){ 
          dEdxSF [0] = 1.00000;
-	 dEdxSF[1] = 1.464;  //PreG
-	 if (is2016G) dEdxSF[1] = 1.611;  //PostG
-         dEdxTemplates = loadDeDxTemplate((!is2016G)?(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root"):(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPostG.root"), true); //fix if you want to run on 2015
-	 //dEdxTemplates = loadDeDxTemplate((!is2016)?(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root"):(analysis_path+"../../data/Data13TeV16_dEdxTemplate.root"), true);
+	 dEdxSF[1] = 1.6107 *0.9134500*0.9999500;  //PreG SF
+	 //if (is2016G) dEdxSF[1] = 1.6107*0.9726500*0.9868500;  //PostG - first period  -- change for the other two periods later
+	 //dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root");
+	 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root");
       }else{  
          dEdxSF [0] = (is2016)?1.09711:1.09708;
          dEdxSF [1] = (is2016)?1.09256:1.01875;
@@ -1207,16 +1207,37 @@ std::cout<<"G\n";
                CurrentRun = ev.eventAuxiliary().run();
                tofCalculator.setRun(CurrentRun);
                trackerCorrector.setRun(CurrentRun);
-	       if (is2016G){
-                  dEdxK_Data    = 2.3786; // +/- 0 dEdxC_Data    = 3.530; // +/- 0.625
-                  dEdxC_Data    = 3.4222; // +/- 0.625
 
-//                  dEdxTemplates = loadDeDxTemplate(analysis_path+"../UsefulScripts/DeDxStudy/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);
+	       if (278018 <= CurrentRun && CurrentRun < 278770){
+		 dEdxK_Data = 2.205;
+                 dEdxC_Data = 3.468;
+                 dEdxSF [1] = 1.6107*0.9726500*0.9868500;
+		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region1.root");
+
+	       }
+
+	       if (278770 <= CurrentRun && CurrentRun < 278822){
+		 dEdxK_Data = 2.426;
+		 dEdxC_Data = 3.869;
+		 dEdxSF [1] = 1.6107*1.0666500*1.0070500;
+		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region2.root");
+	       }
+
+	       if (278822 <= CurrentRun && CurrentRun < 279479){
+		 dEdxK_Data = 2.426;
+		 dEdxC_Data = 3.838;
+		 dEdxSF [1]  = 1.6107*1.0769500*1.0067500;
+		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region3.root");
+	       }
+
+	       if (279479 <= CurrentRun){
+		 dEdxK_Data = 2.436;
+		 dEdxC_Data = 3.724;
+		 dEdxSF [1] = 1.6107*1.0448500*0.9991500;
+		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region4.root");
 	       }
 
             }
-
-
 
             //compute event weight
             if(samples[s].Type>0){Event_Weight = SampleWeight * GetPUWeight(ev, samples[s].Pileup, PUSystFactor, LumiWeightsMC, LumiWeightsMCSyst);}else{Event_Weight = 1;}

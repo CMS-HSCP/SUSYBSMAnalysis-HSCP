@@ -58,6 +58,7 @@ double DistToHSCP (const reco::TrackRef& track, const std::vector<reco::GenParti
 bool isCompatibleWithCosmic (const reco::TrackRef& track, const std::vector<reco::Vertex>& vertexColl);
 double GetMass (double P, double I, double K, double C);
 
+// some variables
 
 const double P_Min               = 1   ;
 const double P_Max               = 16  ; // 1 + 14 + 1; final one is for pixel!
@@ -69,6 +70,8 @@ const double Charge_Min          = 0   ;
 const double Charge_Max          = 5000;
 const int    Charge_NBins        = 500 ;
 
+
+// let's define a struct..
 struct dEdxStudyObj
 {
    string Name;
@@ -130,20 +133,23 @@ struct dEdxStudyObj
    TH2D* Charge_Vs_XYHN[16];
    TH2D* Charge_Vs_XYLN[16];
 
-
+  //this is the template initialization, and the Tracker Gains initialization 
    TH3F* dEdxTemplates = NULL;
    std::unordered_map<unsigned int,double>* TrackerGains = NULL;
 
+
+  //we need to understand the various parts..
    dEdxStudyObj(string Name_, int type_, int subdet_, TH3F* dEdxTemplates_=NULL, double K_=2.7, double C_=3.2, std::unordered_map<unsigned int,double>* TrackerGains_=NULL, bool mustBeInside_=false, bool removeCosmics_=false, bool correctFEDSat_=false, int useClusterCleaning_=0, int crossTalkInvAlgo_=0, double dropLowerDeDxValue_ = 0, bool trimPixel_ = false, bool fakeHIP_=true){
       Name = Name_;
 
+      //what are they??
       if     (type_==0){ isHit=true;  isEstim= false; isDiscrim = false; useTrunc = false;} // hit level only
       else if(type_==1){ isHit=false; isEstim= true;  isDiscrim = false; useTrunc = false;} // harm2
       else if(type_==2){ isHit=false; isEstim= false; isDiscrim = true;  useTrunc = false;} // Ias via harm2
       else if(type_==3){ isHit=false; isEstim= true;  isDiscrim = false; useTrunc = true; } // trunc40
       else             { isHit=false; isEstim= false; isDiscrim = false;}
 
-           if(subdet_==1){ usePixel = true;  useStrip = false;}
+      if(subdet_==1){ usePixel = true;  useStrip = false;}  //this is strip and pixel definition
       else if(subdet_==2){ usePixel = false; useStrip = true; }
       else               { usePixel = true;  useStrip = true; }
 
@@ -278,11 +284,12 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          SuppressFakeHIP = true; // never fake HIPs for Data -- they are already present as it is
          dEdxSF [0] = 1.00000;
          //dEdxSF [1] = 1.41822*1.0371500*0.99565; //preG
-	 dEdxSF [1] = 1.6107;  //postG
+	 //dEdxSF [1] = 1.6107;  //postG
+	 dEdxSF[1] =  1.6107 *0.9134500; //preG after step1
          dEdxTemplatesCCC   = loadDeDxTemplate (DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
-	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPostG.root", true);
-         trackerCorrector.LoadDeDxCalibration  (DIRNAME+"/../../../data/Data13TeVGains_v2.root");
-	 //        trackerCorrector.TrackerGains = NULL;
+	 dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root", true);
+         //trackerCorrector.LoadDeDxCalibration  (DIRNAME+"/../../../data/Data13TeVGains_v2.root");
+	 trackerCorrector.TrackerGains = NULL;
    }else{
          dEdxSF [0]      = 1.09711;
          dEdxSF [1]      = 1.09256;
@@ -292,19 +299,22 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          trackerCorrector.TrackerGains = NULL;
    }
 
+
    if (!trackerCorrector.TrackerGains) std::cerr << "Could not load TrackerGains!!!" << std::endl;
    if (trackerCorrector.TrackerGains) std::cerr << "TrackerGains loaded!!!" << std::endl;
 
    TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");  //File must be opened before the histogram are created
 
    std::vector<dEdxStudyObj*> results;
+
+
    results.push_back(new dEdxStudyObj("hit_PO"      , 0, 1, NULL, 2.7, 3.2, NULL, false, false, false, 1, 1) );
    results.push_back(new dEdxStudyObj("hit_SO_in_noC_CCC", 0, 2, NULL, 2.7, 3.2  , trackerCorrector.TrackerGains, true, true, false, 1, 1) );
    results.push_back(new dEdxStudyObj("hit_SP_in_noC_CCC", 0, 3, NULL, 2.7, 3.2, trackerCorrector.TrackerGains, true, true, false, 1,  1) );
    results.push_back(new dEdxStudyObj("Hybr2015_SP_in_noC_CCC"   , 1, 3, NULL, isData?2.580:2.935, isData?3.922:3.197  , trackerCorrector.TrackerGains, true, true, false, 1,  1, 0.15, true) );     //THIS IS THE TO KEEP
-   results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CCC16"   , 2, 3, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );  //to uncomment in second step
-   results.push_back(new dEdxStudyObj("Ias_SO_in_noC_CCC16"   , 2, 2, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );     //to uncomment in second step
-   results.push_back(new dEdxStudyObj("Ias_PO_in_noC_CCC16"   , 2, 1, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );       //to uncomment in second step
+   //// results.push_back(new dEdxStudyObj("Ias_SP_in_noC_CCC16"   , 2, 3, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );  //to uncomment in second step
+   //// results.push_back(new dEdxStudyObj("Ias_SO_in_noC_CCC16"   , 2, 2, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );     //to uncomment in second step
+   //// results.push_back(new dEdxStudyObj("Ias_PO_in_noC_CCC16"   , 2, 1, dEdxTemplatesCCC16, 2.7, 3.2, NULL, true, true, false, 1,  1) );       //to uncomment in second step
 
    printf("Progressing Bar           :0%%       20%%       40%%       60%%       80%%       100%%\n");
    
@@ -324,28 +334,33 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
             trackerCorrector.setRun (CurrentRun);
 
 	    if (isData){
-	      if (CurrentRun >= 278018  && CurrentRun< 278308){
-		dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region2.root", true); 
+	      if (CurrentRun >= 278018  && CurrentRun< 278770){
+		dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region1.root", true); 
 		dEdxSF [0] = 1.00000;
-		dEdxSF [1] = 1.6107*0.9399500*0.9911500;
+		dEdxSF [1] = 1.6107*0.9726500;
 	      }
-	      if (CurrentRun >= 278308  && CurrentRun< 279116){
+	      if (CurrentRun >= 278770  && CurrentRun< 278822){
+		dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region2.root", true); 
+		dEdxSF [0] = 1.00000; 
+		dEdxSF [1] = 1.6107*1.0666500;
+	      }
+	      if (CurrentRun >= 278822  && CurrentRun< 279479){
 		dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region3.root", true); 
 		dEdxSF [0] = 1.00000; 
-		dEdxSF [1] = 1.6107*0.9573500*0.9965500;
+		dEdxSF [1] = 1.6107*1.0769500;
 	      }
-	      if (CurrentRun >= 279116){
-		dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region4.root", true); 
-		dEdxSF [0] = 1.00000; 
-		dEdxSF [1] = 1.6107*1.0446500*1.0022500;
-	      }
+	      if (CurrentRun >= 279479){
+                dEdxTemplatesCCC16 = loadDeDxTemplate (DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region4.root", true);
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.0448500;
+              }
 	      
 	      for (size_t r=0; r<results.size(); r++)
 	       {
 		 if (results[r]->Name.find("Ias") != std::string::npos)
 		   results[r]->dEdxTemplates = dEdxTemplatesCCC16;
 	       }
-	     }
+	    }
          }
 
          fwlite::Handle<DeDxHitInfoAss> dedxCollH;
@@ -394,12 +409,48 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
             }else{
                if(track->pt()>=45)continue;
             }
-
+//--- dedxHits change to dedxHitsInit
+// dedxHits is without strip hits below 2.3
+//
             //load dEdx informations
-            const DeDxHitInfo* dedxHits = NULL;
+            const DeDxHitInfo* dedxHitsInit = NULL;
             DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
-            if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
-            if(!dedxHits)continue;
+            if(!dedxHitsRef.isNull())dedxHitsInit = &(*dedxHitsRef);
+            if(!dedxHitsInit)continue;
+
+            std::vector<int> myvector;
+            for(unsigned int h=0;h<hitDeDx.size();h++){
+            if(hitDeDx[h].subDet>= 3 && hitDeDx[h].dedx<2.3) myvector.push_back(h);
+            }
+
+            for (unsigned i=myvector.size();i>0; i--){
+             hitDeDx.erase(hitDeDx.begin()+myvector[i-1]);
+            }
+
+            DeDxHitInfo* dedxHits = new DeDxHitInfo();
+         for (unsigned h=0; h< dedxHitsInit->size(); ++h){
+         bool delHit=0;
+         for (unsigned i=0; i<myvector.size(); ++i)
+           if (h==myvector[i]) delHit=true;
+
+         if(!delHit){
+           if(dedxHitsInit->stripCluster(h))
+             dedxHits->addHit(dedxHitsInit->charge(h),
+                                      dedxHitsInit->pathlength(h),
+                                      dedxHitsInit->detId(h),
+                                      dedxHitsInit->pos(h),
+                                      *dedxHitsInit->stripCluster(h)
+                                      );
+           else if(dedxHitsInit->pixelCluster(h))
+               dedxHits->addHit(dedxHitsInit->charge(h),
+                                        dedxHitsInit->pathlength(h),
+                                        dedxHitsInit->detId(h),
+                                        dedxHitsInit->pos(h),
+                                        *dedxHitsInit->pixelCluster(h)
+                                        );
+           }
+       }
+// --- end of change
 
             //hit level dEdx information (only done for MIPs)
             if(track->pt() > 5){

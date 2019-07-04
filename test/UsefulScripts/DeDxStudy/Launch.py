@@ -54,7 +54,7 @@ LOCALTIER   = 'T2_CH_CERN'
 #DATASETMASK = '/StreamExpress/Run2015B-SiStripCalMinBias-Express-v1/ALCARECO'
 #DATASETMASK = '/ZeroBias/Run2015B-PromptReco-v1/RECO'
 ####DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
-DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
+DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
 #DATASETMASK = ['/ZeroBias/Run2016C-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016D-SiStripCalMinBias-18Apr2017-v1/ALCARECO','/ZeroBias/Run2016E-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
 EndPath     = "/storage/data/cms/store/user/jpriscia/dEdxCalib"
 ISLOCAL     = False
@@ -86,11 +86,12 @@ def filesFromDataset(dataset):
 
 def filesFromDataset2(dataset):
    Files = []
-   Runs = ['278239', '278240', '278273'] #region 2 -- also 278018 , now removed because already processed
+   #Runs = ['278239', '278240', '278273'] #region 2 -- also 278018 , now removed because already processed
    # Runs = ['278308'] #region 3
    # Runs = ['279931'] #region 4
    #Runs  = ['278018', '278308', '279931', '280385'] #PostG old
    #Runs  = ['275777','275920','276525','276585','276870'] #PreG
+   Runs = [277992,278509,278345]#'278803','278805','278808','278820','278822','278874','278875','278923','278962','278975']
    for run in Runs:
       output = os.popen('das_client --limit=0 --query \'file run=%s dataset=%s\'' % (run, dataset)).read().split('\n')
       for f in output:

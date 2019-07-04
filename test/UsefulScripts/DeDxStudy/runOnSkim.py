@@ -35,10 +35,11 @@ datasetList = [
 #  ["Run278308", "/storage/data/cms/store/user/jozobec/dEdxCalib/278308/","listFiles_278308.txt"],
 #  ["Run279931", "/storage/data/cms/store/user/jozobec/dEdxCalib/279931/","listFiles_279931.txt"],
 #  ["RunPostG", "/eos/user/j/jpriscia/out/postG/"]
+  ["Region1",  "/eos/user/j/jpriscia/out/Region1/"],
   ["Region2",  "/eos/user/j/jpriscia/out/Region2/"],
   ["Region3",  "/eos/user/j/jpriscia/out/Region3/"],
   ["Region4",  "/eos/user/j/jpriscia/out/Region4/"],
-#  ["RunPreG", "/eos/user/j/jpriscia/out/preG/"],
+  ["RunPreG", "/eos/user/j/jpriscia/out/preG/"],
 #  ["Run278018", "/eos/user/j/jpriscia/out/278018/"],
 #  ["Run278308", "/eos/user/j/jpriscia/out/278308/"],
 #  ["Run279931", "/eos/user/j/jpriscia/out/279931/"],

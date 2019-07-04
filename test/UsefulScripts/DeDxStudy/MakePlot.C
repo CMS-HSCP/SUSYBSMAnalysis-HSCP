@@ -28,7 +28,7 @@
 
 using namespace std;
 
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8); // by default use protons
+void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.3, double MassCenter = 1.875, double LeftMassMargin = 0.1, double RightMassMargin = 0.4); // by default use protons
 double GetMass(double P, double I, double* K, double* C);
 
 typedef struct dEdxPlotObj
@@ -209,6 +209,8 @@ TF1* GetMassLine(double M, dEdxPlotObj* plotObj, string ObjName, bool left=false
    return MassLine;
 }
 
+
+
 TF1* GetMassLine(double M, double K, double C, bool left=false)
 {  
    double BetaMax = 0.9;
@@ -254,10 +256,10 @@ void MakePlot()
 
    vector<string> StdObjName;                         vector<string> StdObjLegend;
    StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");  // i think that is the one to keep
-
-   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
-   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
-   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
+ 
+     StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
+     StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
+     StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
 
 
    vector <dEdxPlotObj*> plotObj;
@@ -269,11 +271,12 @@ void MakePlot()
 //////   plotObj.push_back(new dEdxPlotObj("Histos_Run278018.root", "Run 278018",   "Run278018", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //////   plotObj.push_back(new dEdxPlotObj("Histos_Run278308.root", "Run 278308",   "Run278308", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 /////   plotObj.push_back(new dEdxPlotObj("Histos_Run279931.root", "Run 279931",   "Run279931", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Run PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+plotObj.push_back(new dEdxPlotObj("Histos_RunPreG.root", "Run PreG",   "RunPreG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 /////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Runs PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-plotObj.push_back(new dEdxPlotObj("Histos_Region2.root", "Region2",   "Region2", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-plotObj.push_back(new dEdxPlotObj("Histos_Region3.root", "Region3",   "Region3", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-plotObj.push_back(new dEdxPlotObj("Histos_Region4.root", "Region4",   "Region4", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//plotObj.push_back(new dEdxPlotObj("Histos_Region1.root", "Region1",   "Region1", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//plotObj.push_back(new dEdxPlotObj("Histos_Region2.root", "Region2",   "Region2", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//plotObj.push_back(new dEdxPlotObj("Histos_Region3.root", "Region3",   "Region3", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//plotObj.push_back(new dEdxPlotObj("Histos_Region4.root", "Region4",   "Region4", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run280385.root", "Run 280385",   "Run280385", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCDYM2600Q2.root",        "DY, Q = 2, M = 2.6TeV",    "DYM2600Q2",        HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCGluino_M1000_f10.root", "Gluino, f=10, M = 1TeV",   "Gluino_M1000_f10", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
@@ -651,7 +654,6 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       line2->SetLineStyle(2);
 	       line2->Draw();
 
-
 	       double prevConstants [] = {*K, *Kerr, *C, *Cerr};
 
 	       TF1* fitC =  new TF1("fitC","[0]", 1,4);
@@ -673,7 +675,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 
 
-	       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
+	       // TF1* myfit = new TF1("myfit","[1]+(pow(1.8756,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
 	       TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
@@ -724,7 +726,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, bool showChi2){
    double MinRange = 0.8;
-   double MaxRange = 1.8;
+   double MaxRange = 1.6;
    char buffer[2048];
    for (size_t j = 0; j < plotObj[0]->StdObjName.size(); j++){
       bool isEstim = (plotObj[0]->StdObjName[j].find("Ias")==string::npos);
@@ -1945,6 +1947,8 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          TF1* DeuteronLine  = NULL;
          TF1* DeuteronLineFit = NULL;
 
+	 TF1* PionLineOld = NULL;
+	 TF1* DeuteronLineOld = NULL;
 /*
             plotObj[i]->HdedxVsP[j]->SetStats(kFALSE);
             plotObj[i]->HdedxVsP[j]->GetXaxis()->SetTitle("p (GeV)");
@@ -1959,7 +1963,12 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             PionLine->SetLineColor(1);
             PionLine->SetLineWidth(2);
             PionLine->SetRange(PionLine->GetX(15),1 );//PionLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
-
+	    
+	    TF1* PionLineOld = GetMassLine(0.140,2.21, 3.29);
+            PionLineOld->SetLineColor(7);
+            PionLineOld->SetLineWidth(2);
+	    PionLineOld->SetRange(1,4);
+	    
 	    TF1* PionLineFit = GetMassLine(0.140, plotObj[i], plotObj[i]->StdObjName[j]);
             PionLineFit->SetLineColor(8);
 	    PionLineFit->SetLineWidth(2);
@@ -1980,11 +1989,16 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             DeuteronLine->SetLineColor(1);
             DeuteronLine->SetLineWidth(2);
             DeuteronLine->SetRange(DeuteronLine->GetX(15), DeuteronLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
+	    
+	    TF1* DeuteronLineOld = GetMassLine(1.88,2.21, 3.29);
+	    DeuteronLineOld->SetLineColor(7);
+            DeuteronLineOld->SetLineWidth(2);
+            DeuteronLineOld->SetRange(0.8,1.6);
 
             TF1* DeuteronLineFit = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
             DeuteronLineFit->SetLineColor(2);
             DeuteronLineFit->SetLineWidth(2);
-            DeuteronLineFit->SetRange(1.0,1.6); //range to fix
+            DeuteronLineFit->SetRange(0.8,1.6); //range to fix
 
             PionLine->Draw("same");
 	    PionLineFit->Draw("same");
@@ -1992,6 +2006,9 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             ProtonLine->Draw("same");
             DeuteronLine->Draw("same");
             DeuteronLineFit->Draw("same");
+	    //DeuteronLineOld->Draw("same");
+	    //PionLineOld->Draw("same");
+
          }
          DrawPreliminary ("", 13.0, plotObj[i]->LegEntry);
          SaveCanvas(c1, SaveDir, plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP", true);

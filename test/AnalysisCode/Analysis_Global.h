@@ -144,8 +144,8 @@ double             dEdxC_Data15    = 3.339;
 double             dEdxK_MC15      = 2.535;
 double             dEdxC_MC15      = 3.339;
 
-double             dEdxK_Data16    = 2.247; //updated with pion fit (march 2019)
-double             dEdxC_Data16    = 3.346; //updated  with pion fit (march 2019)
+double             dEdxK_Data16    = 2.270; //updated with pion fit (march 2019)
+double             dEdxC_Data16    = 3.475; //updated  with pion fit (march 2019)
 double             dEdxK_MC16      = 2.935;
 double             dEdxC_MC16      = 3.197;
 

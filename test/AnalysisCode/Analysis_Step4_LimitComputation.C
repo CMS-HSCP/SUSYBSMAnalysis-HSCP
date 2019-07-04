@@ -935,7 +935,7 @@ std::cout<<"TESTB\n";
 
 std::cout<<"TESTC\n";
 
-
+ std::cout<<"qui arriva\n";
    //Make the final plot with all curves in it
    // I don't like much this part because it is dependent of what is in Analysis_Samples.h in an hardcoded way   
    std::map<string, TGraph*> TkGraphMap;
@@ -946,6 +946,7 @@ std::cout<<"TESTC\n";
    std::map<string, TGraph*> ThGraphMap;
    std::map<string, TCutG* > ThErrorMap;
    for(unsigned int k=0; k<modelVector.size(); k++){
+     std::cout << modelVector[k] << std::endl;
       TkGraphMap[modelVector[k]] = TkGraphs [k];
       MuGraphMap[modelVector[k]] = MuGraphs [k];
       //LQGraphMap[modelVector[k]] = LQGraphs [k];
@@ -954,15 +955,17 @@ std::cout<<"TESTC\n";
       ThGraphMap[modelVector[k]] = ThXSec   [k];
       ThErrorMap[modelVector[k]] = ThXSecErr[k];
    }
+   std::cout<<"qui anche \n";
 
    // FIXME add GluinoN_f50 maybe as well?
    if (MODE.find("13TeV16")==std::string::npos){
-      ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
-      MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-      MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-      TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["GluinoN_f10"  ]->SetLineColor(4);  TkGraphMap["GluinoN_f10"  ]->SetMarkerColor(4);   TkGraphMap["GluinoN_f10"  ]->SetLineWidth(2);   TkGraphMap["GluinoN_f10"  ]->SetLineStyle(1);  TkGraphMap["GluinoN_f10"  ]->SetMarkerStyle(26);
+     std::cout<<"entrare anche 1"<<std::endl;
+     ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
+     MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
+     MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
+     TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["GluinoN_f10"  ]->SetLineColor(4);  TkGraphMap["GluinoN_f10"  ]->SetMarkerColor(4);   TkGraphMap["GluinoN_f10"  ]->SetLineWidth(2);   TkGraphMap["GluinoN_f10"  ]->SetLineStyle(1);  TkGraphMap["GluinoN_f10"  ]->SetMarkerStyle(26);
       ThGraphMap["Stop"         ]->SetLineColor(2);  ThGraphMap["Stop"         ]->SetMarkerColor(2);   ThGraphMap["Stop"         ]->SetLineWidth(1);   ThGraphMap["Stop"         ]->SetLineStyle(2);  ThGraphMap["Stop"         ]->SetMarkerStyle(1);
       MuGraphMap["Stop"         ]->SetLineColor(2);  MuGraphMap["Stop"         ]->SetMarkerColor(2);   MuGraphMap["Stop"         ]->SetLineWidth(2);   MuGraphMap["Stop"         ]->SetLineStyle(1);  MuGraphMap["Stop"         ]->SetMarkerStyle(21);
       TkGraphMap["Stop"         ]->SetLineColor(2);  TkGraphMap["Stop"         ]->SetMarkerColor(2);   TkGraphMap["Stop"         ]->SetLineWidth(2);   TkGraphMap["Stop"         ]->SetLineStyle(1);  TkGraphMap["Stop"         ]->SetMarkerStyle(21);
@@ -979,55 +982,63 @@ std::cout<<"TESTC\n";
       ThGraphMap["DY_Q2"        ]->SetLineColor(43); ThGraphMap["DY_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(10); ThGraphMap["DY_Q2"      ]->SetMarkerStyle(1);
       MuGraphMap["DY_Q2"        ]->SetLineColor(43); MuGraphMap["DY_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
       TkGraphMap["DY_Q2"        ]->SetLineColor(43); TkGraphMap["DY_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
-   }
+      std::cout<<"esce anche"<<std::endl;
+   
+}
+
+
    else if (MODE.find("13TeV16")!=std::string::npos && MODE.find("13TeV16G")==std::string::npos){
-      ThGraphMap["Gluino16_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16_f10"   ]->SetMarkerStyle(1);
-      MuGraphMap["Gluino16_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
-      MuGraphMap["Gluino16_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
-      TkGraphMap["Gluino16_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16N_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16N_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16N_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16N_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16N_f10"  ]->SetMarkerStyle(26);
-      ThGraphMap["Stop16"         ]->SetLineColor(2);  ThGraphMap["Stop16"         ]->SetMarkerColor(2);   ThGraphMap["Stop16"         ]->SetLineWidth(1);   ThGraphMap["Stop16"         ]->SetLineStyle(2);  ThGraphMap["Stop16"         ]->SetMarkerStyle(1);
-      MuGraphMap["Stop16"         ]->SetLineColor(2);  MuGraphMap["Stop16"         ]->SetMarkerColor(2);   MuGraphMap["Stop16"         ]->SetLineWidth(2);   MuGraphMap["Stop16"         ]->SetLineStyle(1);  MuGraphMap["Stop16"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16"         ]->SetLineColor(2);  TkGraphMap["Stop16"         ]->SetMarkerColor(2);   TkGraphMap["Stop16"         ]->SetLineWidth(2);   TkGraphMap["Stop16"         ]->SetLineStyle(1);  TkGraphMap["Stop16"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16N"        ]->SetLineColor(2);  TkGraphMap["Stop16N"        ]->SetMarkerColor(2);   TkGraphMap["Stop16N"        ]->SetLineWidth(2);   TkGraphMap["Stop16N"        ]->SetLineStyle(1);  TkGraphMap["Stop16N"        ]->SetMarkerStyle(25);
-      ThGraphMap["GMStau16"       ]->SetLineColor(1);  ThGraphMap["GMStau16"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16"       ]->SetLineWidth(1);   ThGraphMap["GMStau16"       ]->SetLineStyle(3);  ThGraphMap["GMStau16"       ]->SetMarkerStyle(1);
-      ThGraphMap["PPStau16"       ]->SetLineColor(6);  ThGraphMap["PPStau16"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16"       ]->SetLineWidth(1);   ThGraphMap["PPStau16"       ]->SetLineStyle(4);  ThGraphMap["PPStau16"       ]->SetMarkerStyle(1);
-      MuGraphMap["GMStau16"       ]->SetLineColor(1);  MuGraphMap["GMStau16"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16"       ]->SetLineWidth(2);   MuGraphMap["GMStau16"       ]->SetLineStyle(1);  MuGraphMap["GMStau16"       ]->SetMarkerStyle(20);
-      MuGraphMap["PPStau16"       ]->SetLineColor(6);  MuGraphMap["PPStau16"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16"       ]->SetLineWidth(2);   MuGraphMap["PPStau16"       ]->SetLineStyle(1);  MuGraphMap["PPStau16"       ]->SetMarkerStyle(20);
-      TkGraphMap["GMStau16"       ]->SetLineColor(1);  TkGraphMap["GMStau16"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16"       ]->SetLineWidth(2);   TkGraphMap["GMStau16"       ]->SetLineStyle(1);  TkGraphMap["GMStau16"       ]->SetMarkerStyle(20);
-      TkGraphMap["PPStau16"       ]->SetLineColor(6);  TkGraphMap["PPStau16"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16"       ]->SetLineWidth(2);   TkGraphMap["PPStau16"       ]->SetLineStyle(1);  TkGraphMap["PPStau16"       ]->SetMarkerStyle(20);
-      ThGraphMap["DY16_Q1"        ]->SetLineColor(46); ThGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16_Q1"        ]->SetMarkerStyle(1);
-      MuGraphMap["DY16_Q1"        ]->SetLineColor(46); MuGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q1"      ]->SetMarkerStyle(20);
-      TkGraphMap["DY16_Q1"        ]->SetLineColor(46); TkGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q1"      ]->SetMarkerStyle(20);
-      ThGraphMap["DY16_Q2"        ]->SetLineColor(43); ThGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16_Q2"      ]->SetMarkerStyle(1);
-      MuGraphMap["DY16_Q2"        ]->SetLineColor(43); MuGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
-      TkGraphMap["DY16_Q2"        ]->SetLineColor(43); TkGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
+     ThGraphMap["Gluino16_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16_f10"   ]->SetMarkerStyle(1);
+     MuGraphMap["Gluino16_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
+     MuGraphMap["Gluino16_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino16_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
+     TkGraphMap["Gluino16_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino16N_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16N_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16N_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16N_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16N_f10"  ]->SetMarkerStyle(26);
+     ThGraphMap["Stop16"         ]->SetLineColor(2);  ThGraphMap["Stop16"         ]->SetMarkerColor(2);   ThGraphMap["Stop16"         ]->SetLineWidth(1);   ThGraphMap["Stop16"         ]->SetLineStyle(2);  ThGraphMap["Stop16"         ]->SetMarkerStyle(1);
+     MuGraphMap["Stop16"         ]->SetLineColor(2);  MuGraphMap["Stop16"         ]->SetMarkerColor(2);   MuGraphMap["Stop16"         ]->SetLineWidth(2);   MuGraphMap["Stop16"         ]->SetLineStyle(1);  MuGraphMap["Stop16"         ]->SetMarkerStyle(21);
+     TkGraphMap["Stop16"         ]->SetLineColor(2);  TkGraphMap["Stop16"         ]->SetMarkerColor(2);   TkGraphMap["Stop16"         ]->SetLineWidth(2);   TkGraphMap["Stop16"         ]->SetLineStyle(1);  TkGraphMap["Stop16"         ]->SetMarkerStyle(21);
+     TkGraphMap["Stop16N"        ]->SetLineColor(2);  TkGraphMap["Stop16N"        ]->SetMarkerColor(2);   TkGraphMap["Stop16N"        ]->SetLineWidth(2);   TkGraphMap["Stop16N"        ]->SetLineStyle(1);  TkGraphMap["Stop16N"        ]->SetMarkerStyle(25);
+     ThGraphMap["GMStau16"       ]->SetLineColor(1);  ThGraphMap["GMStau16"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16"       ]->SetLineWidth(1);   ThGraphMap["GMStau16"       ]->SetLineStyle(3);  ThGraphMap["GMStau16"       ]->SetMarkerStyle(1);
+     ThGraphMap["PPStau16"       ]->SetLineColor(6);  ThGraphMap["PPStau16"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16"       ]->SetLineWidth(1);   ThGraphMap["PPStau16"       ]->SetLineStyle(4);  ThGraphMap["PPStau16"       ]->SetMarkerStyle(1);
+     MuGraphMap["GMStau16"       ]->SetLineColor(1);  MuGraphMap["GMStau16"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16"       ]->SetLineWidth(2);   MuGraphMap["GMStau16"       ]->SetLineStyle(1);  MuGraphMap["GMStau16"       ]->SetMarkerStyle(20);
+     MuGraphMap["PPStau16"       ]->SetLineColor(6);  MuGraphMap["PPStau16"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16"       ]->SetLineWidth(2);   MuGraphMap["PPStau16"       ]->SetLineStyle(1);  MuGraphMap["PPStau16"       ]->SetMarkerStyle(20);
+     TkGraphMap["GMStau16"       ]->SetLineColor(1);  TkGraphMap["GMStau16"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16"       ]->SetLineWidth(2);   TkGraphMap["GMStau16"       ]->SetLineStyle(1);  TkGraphMap["GMStau16"       ]->SetMarkerStyle(20);
+     TkGraphMap["PPStau16"       ]->SetLineColor(6);  TkGraphMap["PPStau16"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16"       ]->SetLineWidth(2);   TkGraphMap["PPStau16"       ]->SetLineStyle(1);  TkGraphMap["PPStau16"       ]->SetMarkerStyle(20);
+     ThGraphMap["DY16_Q1"        ]->SetLineColor(46); ThGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16_Q1"        ]->SetMarkerStyle(1);
+     MuGraphMap["DY16_Q1"        ]->SetLineColor(46); MuGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q1"      ]->SetMarkerStyle(20);
+     TkGraphMap["DY16_Q1"        ]->SetLineColor(46); TkGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q1"      ]->SetMarkerStyle(20);
+     ThGraphMap["DY16_Q2"        ]->SetLineColor(43); ThGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16_Q2"      ]->SetMarkerStyle(1);
+     MuGraphMap["DY16_Q2"        ]->SetLineColor(43); MuGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
+     TkGraphMap["DY16_Q2"        ]->SetLineColor(43); TkGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
    }
+
+
    else if (MODE.find("13TeV16G")!=std::string::npos){
-      ThGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16G_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(1);
-      MuGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
-      MuGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
-      TkGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16GN_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16GN_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16GN_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerStyle(26);
-      ThGraphMap["Stop16G"         ]->SetLineColor(2);  ThGraphMap["Stop16G"         ]->SetMarkerColor(2);   ThGraphMap["Stop16G"         ]->SetLineWidth(1);   ThGraphMap["Stop16G"         ]->SetLineStyle(2);  ThGraphMap["Stop16G"         ]->SetMarkerStyle(1);
-      MuGraphMap["Stop16G"         ]->SetLineColor(2);  MuGraphMap["Stop16G"         ]->SetMarkerColor(2);   MuGraphMap["Stop16G"         ]->SetLineWidth(2);   MuGraphMap["Stop16G"         ]->SetLineStyle(1);  MuGraphMap["Stop16G"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16G"         ]->SetLineColor(2);  TkGraphMap["Stop16G"         ]->SetMarkerColor(2);   TkGraphMap["Stop16G"         ]->SetLineWidth(2);   TkGraphMap["Stop16G"         ]->SetLineStyle(1);  TkGraphMap["Stop16G"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16GN"        ]->SetLineColor(2);  TkGraphMap["Stop16GN"        ]->SetMarkerColor(2);   TkGraphMap["Stop16GN"        ]->SetLineWidth(2);   TkGraphMap["Stop16GN"        ]->SetLineStyle(1);  TkGraphMap["Stop16GN"        ]->SetMarkerStyle(25);
-      ThGraphMap["GMStau16G"       ]->SetLineColor(1);  ThGraphMap["GMStau16G"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16G"       ]->SetLineWidth(1);   ThGraphMap["GMStau16G"       ]->SetLineStyle(3);  ThGraphMap["GMStau16G"       ]->SetMarkerStyle(1);
-      ThGraphMap["PPStau16G"       ]->SetLineColor(6);  ThGraphMap["PPStau16G"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16G"       ]->SetLineWidth(1);   ThGraphMap["PPStau16G"       ]->SetLineStyle(4);  ThGraphMap["PPStau16G"       ]->SetMarkerStyle(1);
-      MuGraphMap["GMStau16G"       ]->SetLineColor(1);  MuGraphMap["GMStau16G"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16G"       ]->SetLineWidth(2);   MuGraphMap["GMStau16G"       ]->SetLineStyle(1);  MuGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
-      MuGraphMap["PPStau16G"       ]->SetLineColor(6);  MuGraphMap["PPStau16G"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16G"       ]->SetLineWidth(2);   MuGraphMap["PPStau16G"       ]->SetLineStyle(1);  MuGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
-      TkGraphMap["GMStau16G"       ]->SetLineColor(1);  TkGraphMap["GMStau16G"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16G"       ]->SetLineWidth(2);   TkGraphMap["GMStau16G"       ]->SetLineStyle(1);  TkGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
-      TkGraphMap["PPStau16G"       ]->SetLineColor(6);  TkGraphMap["PPStau16G"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16G"       ]->SetLineWidth(2);   TkGraphMap["PPStau16G"       ]->SetLineStyle(1);  TkGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
-      ThGraphMap["DY16G_Q1"        ]->SetLineColor(46); ThGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16G_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16G_Q1"        ]->SetMarkerStyle(1);
-      MuGraphMap["DY16G_Q1"        ]->SetLineColor(46); MuGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
-      TkGraphMap["DY16G_Q1"        ]->SetLineColor(46); TkGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
-      ThGraphMap["DY16G_Q2"        ]->SetLineColor(43); ThGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16G_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16G_Q2"      ]->SetMarkerStyle(1);
-      MuGraphMap["DY16G_Q2"        ]->SetLineColor(43); MuGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
-      TkGraphMap["DY16G_Q2"        ]->SetLineColor(43); TkGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
+     ThGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16G_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(1);
+     MuGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
+     MuGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
+     TkGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino16GN_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16GN_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16GN_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerStyle(26);
+     ThGraphMap["Stop16G"         ]->SetLineColor(2);  ThGraphMap["Stop16G"         ]->SetMarkerColor(2);   ThGraphMap["Stop16G"         ]->SetLineWidth(1);   ThGraphMap["Stop16G"         ]->SetLineStyle(2);  ThGraphMap["Stop16G"         ]->SetMarkerStyle(1);
+     MuGraphMap["Stop16G"         ]->SetLineColor(2);  MuGraphMap["Stop16G"         ]->SetMarkerColor(2);   MuGraphMap["Stop16G"         ]->SetLineWidth(2);   MuGraphMap["Stop16G"         ]->SetLineStyle(1);  MuGraphMap["Stop16G"         ]->SetMarkerStyle(21);
+     TkGraphMap["Stop16G"         ]->SetLineColor(2);  TkGraphMap["Stop16G"         ]->SetMarkerColor(2);   TkGraphMap["Stop16G"         ]->SetLineWidth(2);   TkGraphMap["Stop16G"         ]->SetLineStyle(1);  TkGraphMap["Stop16G"         ]->SetMarkerStyle(21);
+     TkGraphMap["Stop16GN"        ]->SetLineColor(2);  TkGraphMap["Stop16GN"        ]->SetMarkerColor(2);   TkGraphMap["Stop16GN"        ]->SetLineWidth(2);   TkGraphMap["Stop16GN"        ]->SetLineStyle(1);  TkGraphMap["Stop16GN"        ]->SetMarkerStyle(25);
+     ThGraphMap["GMStau16G"       ]->SetLineColor(1);  ThGraphMap["GMStau16G"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16G"       ]->SetLineWidth(1);   ThGraphMap["GMStau16G"       ]->SetLineStyle(3);  ThGraphMap["GMStau16G"       ]->SetMarkerStyle(1);
+     ThGraphMap["PPStau16G"       ]->SetLineColor(6);  ThGraphMap["PPStau16G"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16G"       ]->SetLineWidth(1);   ThGraphMap["PPStau16G"       ]->SetLineStyle(4);  ThGraphMap["PPStau16G"       ]->SetMarkerStyle(1);
+     MuGraphMap["GMStau16G"       ]->SetLineColor(1);  MuGraphMap["GMStau16G"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16G"       ]->SetLineWidth(2);   MuGraphMap["GMStau16G"       ]->SetLineStyle(1);  MuGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
+     MuGraphMap["PPStau16G"       ]->SetLineColor(6);  MuGraphMap["PPStau16G"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16G"       ]->SetLineWidth(2);   MuGraphMap["PPStau16G"       ]->SetLineStyle(1);  MuGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
+     TkGraphMap["GMStau16G"       ]->SetLineColor(1);  TkGraphMap["GMStau16G"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16G"       ]->SetLineWidth(2);   TkGraphMap["GMStau16G"       ]->SetLineStyle(1);  TkGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
+     TkGraphMap["PPStau16G"       ]->SetLineColor(6);  TkGraphMap["PPStau16G"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16G"       ]->SetLineWidth(2);   TkGraphMap["PPStau16G"       ]->SetLineStyle(1);  TkGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
+     ThGraphMap["DY16G_Q1"        ]->SetLineColor(46); ThGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16G_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16G_Q1"        ]->SetMarkerStyle(1);
+     MuGraphMap["DY16G_Q1"        ]->SetLineColor(46); MuGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
+     TkGraphMap["DY16G_Q1"        ]->SetLineColor(46); TkGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
+     ThGraphMap["DY16G_Q2"        ]->SetLineColor(43); ThGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16G_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16G_Q2"      ]->SetMarkerStyle(1);
+     MuGraphMap["DY16G_Q2"        ]->SetLineColor(43); MuGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
+     TkGraphMap["DY16G_Q2"        ]->SetLineColor(43); TkGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
    }
+
+
    //MOGraphMap["Gluino_f10"   ]->SetLineColor(4);  MOGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
    //MOGraphMap["Gluino_f50"   ]->SetLineColor(4);  MOGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
    //MOGraphMap["Gluino_f100"  ]->SetLineColor(4);  MOGraphMap["Gluino_f100"  ]->SetMarkerColor(4);   MOGraphMap["Gluino_f100"  ]->SetLineWidth(2);   MOGraphMap["Gluino_f100"  ]->SetLineStyle(1);  MOGraphMap["Gluino_f100"  ]->SetMarkerStyle(26);
@@ -1056,6 +1067,8 @@ std::cout<<"TESTC\n";
    //HQGraphMap["DY_Q7"        ]->SetLineColor(12); HQGraphMap["DY_Q7"        ]->SetMarkerColor(12);  HQGraphMap["DY_Q7"        ]->SetLineWidth(2);   HQGraphMap["DY_Q7"        ]->SetLineStyle(1);  HQGraphMap["DY_Q7"        ]->SetMarkerStyle(34);
    //ThGraphMap["DY_Q8"        ]->SetLineColor(14); ThGraphMap["DY_Q8"        ]->SetMarkerColor(14);  ThGraphMap["DY_Q8"        ]->SetLineWidth(1);   ThGraphMap["DY_Q8"        ]->SetLineStyle(10); ThGraphMap["DY_Q8"        ]->SetMarkerStyle(1);
    //HQGraphMap["DY_Q8"        ]->SetLineColor(14); HQGraphMap["DY_Q8"        ]->SetMarkerColor(14);  HQGraphMap["DY_Q8"        ]->SetLineWidth(2);   HQGraphMap["DY_Q8"        ]->SetLineStyle(1);  HQGraphMap["DY_Q8"        ]->SetMarkerStyle(24);
+
+   std::cout<<"qui anche 2\n";
 
 std::cout<<"TESTD\n";
    c1 = new TCanvas("c1", "c1",600,600);
@@ -2956,14 +2969,14 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       //If very low background range too small, set limit at 0.001.  Only affects scanning range not final limit
       if(NPred<0.001) NPred=0.001;
       string CodeToExecute = "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
       CodeToExecute += "cd $OLDPWD; cp /tmp/shape_" + JobName + ".* " + InputPattern+"/"+SHAPESTRING+EXCLUSIONDIR+"/." + ";";
       CodeToExecute += "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "hadd -f higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
       system(CodeToExecute.c_str());
 
@@ -3417,14 +3430,14 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
             if(NPred<0.001) NPred=0.001;
       string CodeToExecute = "cp " + outpath+"shape_"+JobName+".dat /tmp/.;";
       CodeToExecute += "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
       CodeToExecute += "cd $OLDPWD; cp /tmp/shape_" + JobName + ".* " + InputPattern+"/"+SHAPESTRING+EXCLUSIONDIR+"/." + ";";
       CodeToExecute += "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "hadd -f higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
       system(CodeToExecute.c_str());
 
