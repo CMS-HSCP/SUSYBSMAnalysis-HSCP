@@ -27,8 +27,9 @@
 #include "FWCore/FWLite/interface/FWLiteEnabler.h"
 
 using namespace std;
-
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.3, double MassCenter = 1.875, double LeftMassMargin = 0.1, double RightMassMargin = 0.4); // by default use protons
+double minValue = 0.9;
+double maxValue = 1.45;
+void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = minValue, double MaxRange = maxValue, double MassCenter = 1.875, double LeftMassMargin = 0.1, double RightMassMargin = 0.4); // by default use protons
 double GetMass(double P, double I, double* K, double* C);
 
 typedef struct dEdxPlotObj
@@ -69,7 +70,7 @@ typedef struct dEdxPlotObj
    dEdxPlotObj (string FileName_, string LegEntry_, string SavePrefix_,
          vector<string> HitObjName_, vector<string> StdObjName_, vector<string> HitObjLegend_, vector<string> StdObjLegend_,
          unsigned short type_,
-         double K_ = 2.26949, double Kerr_ = 0.001, double C_ = 3.32082, double Cerr_ = 0.001){
+         double K_ = 2.3, double Kerr_ = 0.001, double C_ = 3.5, double Cerr_ = 0.001){
 
       // Initialize all the variables
       FileName    = FileName_;
@@ -527,20 +528,30 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
        for(unsigned int loop=0;loop<5 and !hasConverged; loop++){
 	      TH2D* inputnew = (TH2D*)input->Clone("tempTH2D");
 	      TH2D* inputnewPion = (TH2D*)input->Clone("tempTH2D");
-	      inputnew->Rebin2D(5,10);
-	      inputnewPion->Rebin2D(5,10);
+	      //inputnew->Rebin2D(5,10);
+	      inputnew->Rebin2D(4,6);
+	      inputnewPion->Rebin2D(4,6);
 	      for(int x=1;x<=inputnew->GetNbinsX();x++){
 	      for(int y=1;y<=inputnew->GetNbinsY();y++){
-		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
-		if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
+		//double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
+		//if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
+		float x_val = inputnew->GetXaxis()->GetBinCenter(x);
+		float y_val = inputnew->GetYaxis()->GetBinCenter(y);
+		//float y_low = -5.03120943515188* x_val + 14.0895660192897;
+		float y_low = -5.155511078012* x_val + 13.824632031125;
+		float y_high = -9.3956418177081* x_val + 24.4014853860585;
+		if(x_val<minValue || x_val>maxValue || y_val<y_low || y_val>y_high){
 		  inputnew->SetBinContent(x,y,0);        
 		  //cout<<x<<"   "<<y<<endl;
 		}
-		if (inputnew->GetYaxis()->GetBinCenter(y)<2 || inputnew->GetYaxis()->GetBinCenter(y)>4.2) inputnewPion->SetBinContent(x,y,0);
-		//cout<< inputnewPion->GetBinContent(x,y)<<endl;
+
 	      }}
 
-	      
+	      for(int x=1;x<=inputnewPion->GetNbinsX();x++){
+		for(int y=1;y<=inputnewPion->GetNbinsY();y++){
+		  if (inputnewPion->GetYaxis()->GetBinCenter(y)<2. || inputnewPion->GetYaxis()->GetBinCenter(y)>4.) inputnewPion->SetBinContent(x,y,0);
+		  else std::cout<<'abbiamo eventi'<<std::endl;
+		}}
 
 	      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
 	      c1->SetLogz(true);
@@ -558,6 +569,11 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	//      DeuteronLine->Draw("same");
 	//      TritonLine->Draw("same");
 	      SaveCanvas(c1, "fit/", "dedxVsP");
+	      // TFile f2("AFile2.root");
+	      TFile f("fit/dedxP.root","recreate");
+	      inputnew->Write();
+	      f.Write();
+	      f.Close();
 	      delete c1;
 
 
@@ -665,7 +681,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       cout<<"prima del fit"<<endl;
                FitResultPion->Fit("fitC", "M R E I 0");
 	       cout<<"dopo il fit"<<endl;
-               fitC->SetRange(1,4);
+               fitC->SetRange(1,5);
                fitC->Draw("same");
 	       cout<<"ha fatto il fit"<<endl;
 	       *C    = fitC->GetParameter(0);
@@ -701,14 +717,14 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       printf("C Constant changed from %6.4f+-%6.4f to %6.4f+-%6.4f    (diff = %6.3f%%)\n",
                 prevConstants[2], prevConstants[3], *C, *Cerr, 100.0*((*C)-prevConstants[2])/(*C));
 
-          if(std::max(fabs(100.0*((*K)-prevConstants[0])/(*K)), fabs(100.0*((*C)-prevConstants[2])/(*C)))<1.0)
+	       if(std::max(fabs(100.0*((*K)-prevConstants[0])/(*K)), fabs(100.0*((*C)-prevConstants[2])/(*C)))<0.05) // before < 1.0
              hasConverged=true;  //<1% variation of the constant --> converged
 
 	       TPaveText* st = new TPaveText(0.40,0.78,0.79,0.89, "NDC");
 	       st->SetFillColor(0);
 	       sprintf(buffer,"K = %4.3f +- %6.4f",myfit->GetParameter(0), myfit->GetParError(0));
 	       st->AddText(buffer);
-	       sprintf(buffer,"C = %4.3f +- %6.4f",myfit->GetParameter(1), myfit->GetParError(1));
+	       sprintf(buffer,"C = %4.3f +- %6.4f",myfit->GetParameter(1), *Cerr);
 	       st->AddText(buffer);
 	       st->Draw("same");
 	       sprintf(buffer,"%sFit","fit/");
@@ -725,8 +741,8 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 
 void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, bool showChi2){
-   double MinRange = 0.8;
-   double MaxRange = 1.6;
+   double MinRange = minValue;
+   double MaxRange = maxValue;
    char buffer[2048];
    for (size_t j = 0; j < plotObj[0]->StdObjName.size(); j++){
       bool isEstim = (plotObj[0]->StdObjName[j].find("Ias")==string::npos);
@@ -1998,7 +2014,7 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             TF1* DeuteronLineFit = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
             DeuteronLineFit->SetLineColor(2);
             DeuteronLineFit->SetLineWidth(2);
-            DeuteronLineFit->SetRange(0.8,1.6); //range to fix
+            DeuteronLineFit->SetRange(minValue,maxValue); //range to fix
 
             PionLine->Draw("same");
 	    PionLineFit->Draw("same");
