@@ -1,6 +1,7 @@
 #include <exception>
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -28,7 +29,7 @@
 
 using namespace std;
 double minValue = 0.9;
-double maxValue = 1.45;
+double maxValue = 1.3;
 void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = minValue, double MaxRange = maxValue, double MassCenter = 1.875, double LeftMassMargin = 0.1, double RightMassMargin = 0.4); // by default use protons
 double GetMass(double P, double I, double* K, double* C);
 
@@ -531,8 +532,8 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	      //inputnew->Rebin2D(5,10);
 	      inputnew->Rebin2D(4,6);
 	      inputnewPion->Rebin2D(4,6);
-	      for(int x=1;x<=inputnew->GetNbinsX();x++){
-	      for(int y=1;y<=inputnew->GetNbinsY();y++){
+	      for(int x=1;x<=inputnew->GetNbinsX()+1;x++){
+	      for(int y=1;y<=inputnew->GetNbinsY()+1;y++){
 		//double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
 		//if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
 		float x_val = inputnew->GetXaxis()->GetBinCenter(x);
@@ -540,17 +541,17 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		//float y_low = -5.03120943515188* x_val + 14.0895660192897;
 		float y_low = -5.155511078012* x_val + 13.824632031125;
 		float y_high = -9.3956418177081* x_val + 24.4014853860585;
-		if(x_val<minValue || x_val>maxValue || y_val<y_low || y_val>y_high){
+		if(x_val<minValue || x_val>maxValue || y_val<y_low || y_val>y_high || y_val>14){
 		  inputnew->SetBinContent(x,y,0);        
 		  //cout<<x<<"   "<<y<<endl;
 		}
 
 	      }}
 
-	      for(int x=1;x<=inputnewPion->GetNbinsX();x++){
-		for(int y=1;y<=inputnewPion->GetNbinsY();y++){
-		  if (inputnewPion->GetYaxis()->GetBinCenter(y)<2. || inputnewPion->GetYaxis()->GetBinCenter(y)>4.) inputnewPion->SetBinContent(x,y,0);
-		  else std::cout<<'abbiamo eventi'<<std::endl;
+	      for(int x=1;x<=inputnewPion->GetNbinsX()+1;x++){
+		for(int y=1;y<=inputnewPion->GetNbinsY()+1;y++){
+		  if (inputnewPion->GetYaxis()->GetBinCenter(y)<2.5 || inputnewPion->GetYaxis()->GetBinCenter(y)>4.2) inputnewPion->SetBinContent(x,y,0);
+		  // else std::cout<<"abbiamo eventi"<<std::endl;
 		}}
 
 	      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
@@ -593,17 +594,22 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
                FitResultPion->GetYaxis()->SetTitleOffset(1.20);
                FitResultPion->Reset();
 
+	       int idx=0;
+
 	       for(int x=1;x<inputnew->GetXaxis()->FindBin(5);x++){
 		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
-	    
-		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
-		  if(Projection->Integral()<100)continue;
-		  Projection->SetAxisRange(0.1,25,"X");
+		  idx++;
+		  std::ostringstream oss;
+		  oss << "proj_" << idx;
+
+		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY(oss.str().c_str(),x,x))->Clone();
+		  if(Projection->Integral()<100)continue; 
+		  Projection->SetAxisRange(0.1,25,"X"); //0.1 , 25
 		  Projection->Sumw2();
 		  Projection->Scale(1.0/Projection->Integral());
 
 
-		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
+		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15); 
 		  Projection->Fit("mygaus","Q0 RME");
 		  double chiFromFit  = (mygaus->GetChisquare())/(mygaus->GetNDF());
 		  FitResult->SetBinContent(x, mygaus->GetParameter(1));
@@ -612,7 +618,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		  mygaus->SetLineColor(2);
 		  mygaus->SetLineWidth(2);
 
-		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
+		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("projPi",x,x))->Clone();
                   if(ProjectionPion->Integral()<100)continue;
                   ProjectionPion->SetAxisRange(0.1,25,"X");
                   ProjectionPion->Sumw2();
@@ -640,8 +646,8 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		  TPaveText* stt = new TPaveText(0.55,0.82,0.79,0.92, "NDC");
 		  stt->SetFillColor(0);
 		  stt->SetTextAlign(31);
-		  sprintf(buffer,"Proton  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
-		  sprintf(buffer,"Proton  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
+		  sprintf(buffer,"Deuteron  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
+		  sprintf(buffer,"Deuteron  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
 		  stt->Draw("same");
 
 		  //std::cout << "P = " << P << "  --> Proton dE/dx = " << mygaus->GetParameter(1) << endl;
@@ -649,27 +655,39 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		  c1->SetLogy(true);
 		  sprintf(buffer,"%sProjectionFit_P%03i_%03i","fit/",(int)(100*FitResult->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResult->GetXaxis()->GetBinUpEdge(x)) );
 		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"../DeDxStudy/",buffer);}
+
+
+		  TCanvas* c1Pion  = new TCanvas("canvasPion", "canvasPion", 600,600);
+                  ProjectionPion->Draw();
+                  ProjectionPion->SetTitle("");
+                  ProjectionPion->SetStats(kFALSE);
+                  ProjectionPion->GetXaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
+                  ProjectionPion->GetYaxis()->SetTitle("#Entries");
+                  ProjectionPion->GetYaxis()->SetTitleOffset(1.30);
+                  ProjectionPion->SetAxisRange(1E-5,1.0,"Y");
+
+                  mygausPion->Draw("same");
+
+
+                  c1Pion->SetLogy(true);
+		  sprintf(buffer,"%sProjectionFitPion_P%03i_%03i","fit/",(int)(100*FitResultPion->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResultPion->GetXaxis()->GetBinUpEdge(x)) );
+		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1Pion,"../DeDxStudy/",buffer);}
+                  //sprintf(buffer,"%sProjectionFitPion_P%03i_%03i","fit/",(int)(100*FitResultPion->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResultPion->GetXaxis()->GetBinUpEdge(x)) );
+
 		  delete c1;
+		  delete c1Pion;
                   delete Projection;
                   delete mygaus;
                   delete stt;
 	       }
 
-	       c1  = new TCanvas("canvas", "canvas", 600,600);
-	       FitResult->SetAxisRange(0,2.5,"X");
-	       FitResult->SetAxisRange(0,15,"Y");
-	       FitResult->Draw("");
+	       TCanvas * c1Pion  = new TCanvas("canvasPion", "canvasPion", 600,600);
+	       FitResultPion->SetAxisRange(0,4.,"X");
+	       FitResultPion->SetAxisRange(0,15,"Y");
+	       FitResultPion->Draw("");
 
-	       TLine* line1 = new TLine(MinRange, FitResult->GetMinimum(), MinRange, FitResult->GetMaximum());
-	       line1->SetLineWidth(2);
-	       line1->SetLineStyle(2);
-	       line1->Draw();
 
-	       TLine* line2 = new TLine(MaxRange, FitResult->GetMinimum(), MaxRange, FitResult->GetMaximum());
-	       line2->SetLineWidth(2);
-	       line2->SetLineStyle(2);
-	       line2->Draw();
-
+	      
 	       double prevConstants [] = {*K, *Kerr, *C, *Cerr};
 
 	       TF1* fitC =  new TF1("fitC","[0]", 1,4);
@@ -687,17 +705,35 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       *C    = fitC->GetParameter(0);
 	       *Cerr = fitC->GetParError(0);
 	       cout<< "il valore e`: "<<*C<<"   " <<*Cerr<< endl;
+	       fitC->SetRange(1,4);
+               fitC->Draw("same");
+	       sprintf(buffer,"%sFitPion","fit/");
+               SaveCanvas(c1Pion,"../DeDxStudy/",buffer);
 
 
+	       c1  = new TCanvas("canvas", "canvas", 600,600);
+               FitResult->SetAxisRange(0,2.5,"X");
+               FitResult->SetAxisRange(0,15,"Y");
+               FitResult->Draw("");
 
+	       
+               TLine* line1 = new TLine(MinRange, FitResult->GetMinimum(), MinRange, FitResult->GetMaximum());
+               line1->SetLineWidth(2);
+               line1->SetLineStyle(2);
+               line1->Draw();
+
+               TLine* line2 = new TLine(MaxRange, FitResult->GetMinimum(), MaxRange, FitResult->GetMaximum());
+               line2->SetLineWidth(2);
+               line2->SetLineStyle(2);
+               line2->Draw();
 
 	       // TF1* myfit = new TF1("myfit","[1]+(pow(1.8756,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
 	       TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
-	       myfit->SetParameter(0, 1.8);
+	       myfit->SetParameter(0, 1.2);
 	       myfit->SetParameter(1, *C);
-	       myfit->SetParLimits(0, 1.3,3.0); //
+	       myfit->SetParLimits(0, 1.1,2.3); //
 	       myfit->SetParLimits(1, *C,*C);
 	       // myfit->SetParLimits(1, 3.8,3.8); // 
 	       myfit->SetLineWidth(2);
@@ -729,6 +765,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       st->Draw("same");
 	       sprintf(buffer,"%sFit","fit/");
 	       SaveCanvas(c1,"../DeDxStudy/",buffer);              
+	       
 	       delete c1;
 
           delete line1;
@@ -736,6 +773,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
           delete myfit;
           delete FitResult;
           delete inputnew;
+	  delete inputnewPion;
        }
 }
 
