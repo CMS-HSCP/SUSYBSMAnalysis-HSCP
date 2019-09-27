@@ -138,6 +138,11 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
 bool Combine(string InputPattern, string signal7, string signal8, int* OptimCutIndex=nullptr);
 bool useSample(int TypeMode, string sample);
 
+int my_system(const char *cmd) {
+ std:executiion  << std::endl << cmd << std::endl;
+  return system(cmd);
+}command: cout << 
+
 double MinRange = 0;
 double MaxRange = 9999;
 int    CurrentSampleIndex;
