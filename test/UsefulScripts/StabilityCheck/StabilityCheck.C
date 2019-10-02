@@ -54,7 +54,7 @@ using namespace edm;
 using namespace trigger;
 
 
-#include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
+#include "Analysis_Step1_EventLoop.C"
 
 #endif
 
@@ -89,6 +89,8 @@ struct plotSt{
    TH1D* Vertex;
    TH1D* VertexDT;
    TH1D* VertexCSC;
+   TH1D* HMass;
+   TH1D* HMassTOF;
    std::map<unsigned int, TH1D** > dEdxHitPerLumi;
 
    plotSt(string prefix, string sufix){
@@ -123,6 +125,8 @@ struct plotSt{
       histoName=prefix + "Vertex"       + sufix ; Vertex       = new TH1D(histoName.c_str(), histoName.c_str(),  100, -10.0, 10.0);
       histoName=prefix + "VertexDT"     + sufix ; VertexDT     = new TH1D(histoName.c_str(), histoName.c_str(),  100, -10.0, 10.0);
       histoName=prefix + "VertexCSC"    + sufix ; VertexCSC    = new TH1D(histoName.c_str(), histoName.c_str(),  100, -10.0, 10.0);
+      histoName=prefix + "Mass"         + sufix ; HMass        = new TH1D(histoName.c_str(), histoName.c_str(),  800, 0.0,4000.0);
+      histoName=prefix + "MassTOF"      + sufix ; HMassTOF     = new TH1D(histoName.c_str(), histoName.c_str(),  800, 0.0,4000.0);
    };
 };
 std::map<string, std::map<string, plotSt*> > MapRunTriggerPlots;
@@ -233,8 +237,8 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 
    std::vector<string> versions;
    versions.push_back("");
-//   versions.push_back("AOD");
-//   versions.push_back("FAKE");
+   versions.push_back("AOD");
+   versions.push_back("FAKE");
 
 
 
@@ -288,17 +292,37 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
       bool isMC     = (samples[s].Type==1);
       bool isSignal = (samples[s].Type>=2);
       bool is2016   = (samples[s].Name.find("13TeV16")!=std::string::npos);
+      bool is2016G  = (samples[s].Name.find("13TeV16G")!=std::string::npos);
+
+     if(!is2016G)
+        HIPemulator.setPeriodHIPRate(is2016G);
+     else
+        HIPemulator.setPeriodHIPRate(is2016G);
+ 
+
+      std::cout<<"----> isData "<< isData<<
+	"  isMC "<<isMC<<
+	"  isSignal "<<isSignal<<
+	"  is2016 "<< is2016<<
+	"  is2016G "<< is2016G<<std::endl;
 
 
-      dEdxTemplatesOld = loadDeDxTemplate(DIRNAME+(isData?"/../../../data/Data13TeV16_dEdxTemplate.root":"/../../../data/MC13TeV16_dEdxTemplate.root"), true);
-      if(isData){  // 2016 values
-         dEdxSF [0] = 1.00000;
-         dEdxSF [1] = 1.41822;
-         dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/Data13TeV16_dEdxTemplate.root", true);
+//      dEdxTemplatesOld = loadDeDxTemplate(DIRNAME+(isData?"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root":"/../../../data/MC13TeV16_dEdxTemplate.root"), true);
+      if(isData){  // preG 2016 values
+        dEdxTemplatesOld    = loadDeDxTemplate(DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root");
+      
+
+
+/* to be defined below for currentrun
+  if (CurrentRun >= 278018  && CurrentRun< 278308){
+	      }
+*/
       }else{  
-         dEdxSF [0] = 1.09711;
-         dEdxSF [1] = 1.09256;
-         dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/MC13TeV16_dEdxTemplate.root", true);
+	//it is overwritten bellow, can be deleted from here
+	dEdxSF [0] = 1.09711;
+	dEdxSF [1] = 1.09256;
+	dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/MC13TeV16_dEdxTemplate.root", true);
+	dEdxTemplatesOld = loadDeDxTemplate(DIRNAME+"/../../../data/MC13TeV16_dEdxTemplate.root", true);
       }
 
       if(isData){    trackerCorrector.LoadDeDxCalibration(DIRNAME+"/../../../data/Data13TeVGains_v2.root"); 
@@ -307,17 +331,22 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 
    moduleGeom::loadGeometry(DIRNAME+"/../../../data/CMS_GeomTree.root");
    muonTimingCalculator tofCalculator;
-   tofCalculator.loadTimeOffset(DIRNAME+"/../../../data/MuonTimeOffset.txt");
+   tofCalculator.loadTimeOffset(DIRNAME+"/../../../data/MuonTimeOffset_new.txt");
    unsigned int CurrentRun = 0;
+
 
 //   dedxHIPEmulator HIPemulator;
 
    fwlite::ChainEvent ev(DataFileName);
+//mk_ 
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Looping on Tree              :");
 
    std::map<string, plotSt*>* MapTriggerPlots=NULL;;
    int NEvents = ev.size();// / NJobs;
+//mk_
+//   if(!isMC)
+//	NEvents = 10000;
    int FirstEvent = 0;//JobIndex * NEvents;
    int TreeStep = NEvents/50;if(TreeStep==0)TreeStep=1;
    double totalNEvents      = 0.0;
@@ -325,6 +354,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    double totalPreselTracks = 0.0;
    for(Long64_t e=FirstEvent;e<FirstEvent+NEvents;e++){
       ev.to(e); 
+//mk_
       if(e%TreeStep==0){printf(".");fflush(stdout);}
 
       //if run change, update conditions
@@ -333,6 +363,93 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          totalPreselEvents=0;
 	 totalPreselTracks=0;
          CurrentRun = ev.eventAuxiliary().run();
+
+        //preG
+
+ 
+//       dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/");
+//skale
+        dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root");
+        dEdxSF [0] = 1.00000;
+        dEdxSF [1] = 1.6107 *0.91345;
+	dEdxK_Data = 2.062; 
+	dEdxC_Data = 3.430;
+
+              if (CurrentRun >= 278018  && CurrentRun< 278770){
+              //  dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region1.root");
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*0.9726500;
+                dEdxK_Data = 2.028;
+                dEdxC_Data = 3.428;
+              }
+
+               if (CurrentRun >= 278770  && CurrentRun< 278822){
+              //dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region2.root");
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.06665;
+                dEdxK_Data = 2.300;
+                dEdxC_Data = 3.825;
+               }
+
+               if (CurrentRun >= 278822  && CurrentRun< 279479){
+              //  dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region2.root");
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.07695;
+                dEdxK_Data = 2.300;
+                dEdxC_Data = 3.799;
+                }
+              if (CurrentRun >= 279479){
+              //  dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region4.root");
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.0448500;
+                dEdxK_Data = 2.275;
+                dEdxC_Data = 3.675;
+               }
+
+	      if(isMC){
+		dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+
+		//		dEdxSF [0] = 1.09711;
+		//              dEdxSF [1] = 1.09256;
+		  dEdxSF [0] = 1.09711;
+		  dEdxSF [1] = 1.16;
+		  
+		  if(is2016){
+                  dEdxK_Data = 2.062;//preG
+                  dEdxC_Data = 3.430;//preG
+
+		    dEdxK_MC = dEdxK_Data;
+		    dEdxC_MC = dEdxC_Data;
+		  }
+
+		  if(is2016G){
+		    dEdxK_MC = 2.300;
+		    dEdxC_MC = 3.700;
+		  }
+
+		  /*888
+		if(is2016){
+		  dEdxSF [0] = 1.0;
+		  dEdxSF [1] = 1.0;
+		}
+		if(is2016G){
+		  dEdxSF [0] = 1.5;
+		  dEdxSF [1] = 2.0;
+		  }*/
+	      }
+
+         
+	      std::cout<<"------> dEdx parameters  Run = "<<CurrentRun<< 
+		"  SF(0)= " << dEdxSF[0]<< " SF(1)= " <<dEdxSF[1]; 	
+	      if(isData)
+		std::cout<<//"------> dEdx parameters  Run = "<<CurrentRun<< 
+		"    K= " << dEdxK_Data<< " C= " <<dEdxC_Data<<std::endl; 
+	      if(isMC)
+		std::cout<<//"------> dEdx parameters  Run = "<<CurrentRun<< 
+		"    K= " << dEdxK_MC<< " C= " <<dEdxC_MC<<std::endl; 
+ 
+
+         
          tofCalculator.setRun(CurrentRun);
          trackerCorrector.setRun(CurrentRun);
 
@@ -478,8 +595,52 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             bool fake=false;
             if(versions[v]=="FAKE" && !isData)fake=true;
 
+//           std::cout <<__LINE__<< " fake  " << versions[v] << " "<< fake  << std::endl;
+
             HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, tkGains, false, 1);
             if(fake)HIPemulator.fakeHIP(hitDeDx);
+
+/*------------NO CUT on dedx strip
+ *
+//remove strip hits with a small value of dedx 
+  
+            std::vector<int> myvector;
+            for(unsigned int h=0;h<hitDeDx.size();h++){
+            if(hitDeDx[h].subDet>= 3 && hitDeDx[h].dedx<2.3) myvector.push_back(h); //select nr hits to vector
+            }
+
+            // erase them in the inverted sequence
+            for (unsigned i=myvector.size();i>0; i--){
+             hitDeDx.erase(hitDeDx.begin()+myvector[i-1]);
+            }
+
+// the same hits are removed from main collection and stored in a new coll
+            DeDxHitInfo* dedxHitsFiltered = new DeDxHitInfo();
+         for (unsigned h=0; h< dedxHits->size(); ++h){
+         bool delHit=0;
+         for (unsigned i=0; i<myvector.size(); ++i)
+           if (h==myvector[i]) delHit=true;
+
+         if(!delHit){
+           if(dedxHits->stripCluster(h))
+             dedxHitsFiltered->addHit(dedxHits->charge(h),
+                                      dedxHits->pathlength(h),
+                                      dedxHits->detId(h),
+                                      dedxHits->pos(h),
+                                      *dedxHits->stripCluster(h)
+                                      );
+           else if(dedxHits->pixelCluster(h))
+               dedxHitsFiltered->addHit(dedxHits->charge(h),
+                                        dedxHits->pathlength(h),
+                                        dedxHits->detId(h),
+                                        dedxHits->pos(h),
+                                        *dedxHits->pixelCluster(h)
+                                        );
+           }
+       }
+*/
+
+
             for(unsigned int h=0;h<hitDeDx.size();h++){
                if((useClusterCleaning && !hitDeDx[h].passClusterCleaning) || !hitDeDx[h].isInside)continue;
                if(hitDeDx[h].subDet< 3){plots->dEdxHitPixel->Fill(hitDeDx[h].dedx); (dEdxHitPerLumiIt->second)[1]->Fill(hitDeDx[h].dedx);}
@@ -491,8 +652,8 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             DeDxData dedxMin2Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.2, fake?&HIPemulator:NULL);
             DeDxData dedxMin3Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.3, fake?&HIPemulator:NULL);
             DeDxData dedxMin4Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.4, fake?&HIPemulator:NULL);
-            DeDxData dedxSObj    = computedEdx(dedxHits, dEdxSF, dEdxTemplates   , true, useClusterCleaning, TypeMode==5, false, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
-            DeDxData dedxSObjOld = computedEdx(dedxHits, dEdxSF, dEdxTemplatesOld, true, useClusterCleaning, TypeMode==5, false, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
+            DeDxData dedxSObj    = computedEdx(dedxHits, dEdxSF, dEdxTemplates   , true, useClusterCleaning, 0, false, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
+            DeDxData dedxSObjOld = computedEdx(dedxHits, dEdxSF, dEdxTemplatesOld, true, useClusterCleaning, 0, false, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
             DeDxData dedxMObj  = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
             DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
             DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.0, fake?&HIPemulator:NULL);
@@ -511,6 +672,17 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                   tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
                }          
             }
+// mass calculation
+
+            double Mass     = -999; if(dedxMin1Obj.dEdx()) Mass = GetMass(track->p(),dedxMin1Obj.dEdx(),!isData);
+            double MassTOF  = -999; if(tof->inverseBeta()>1.)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
+
+if(Mass>500)            std::cout<<versions[v]<<" Masy "<< Mass << "  tof: "<< MassTOF
+<<"  Ih "<<dedxMin1Obj.dEdx()
+<<"  Ias "<<dedxSObj.dEdx()
+<<"  tof "<<tof->inverseBeta()
+<<"  p "<< track->p()
+<<"  pt " << track->pt()<<"  eta "<<track->eta() << "   run "<< CurrentRun<< "  evt "<< ev.eventAuxiliary().event()<<std::endl; 
 
             if(plotPerEvent){plots->NVert->Fill(vertexColl.size()); (dEdxHitPerLumiIt->second)[0]->Fill(vertexColl.size());}
             plots->Pt   ->Fill(hscp.trackRef()->pt());
@@ -535,9 +707,12 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             plots->dEdxMSF->Fill(dedxMSObj.dEdx());
             plots->dEdxMPF->Fill(dedxMPObj.dEdx());
             }
+    
+            if(Mass>0)plots->HMass->Fill(Mass);
 
             if(tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttof->inverseBeta()-1)<50){
                plots->TOF->Fill(tof->inverseBeta());
+               if(MassTOF>0) plots->HMassTOF->Fill(MassTOF);
                if(dttof->nDof()>=GlobalMinNDOFDT) plots->TOFDT->Fill(dttof->inverseBeta());
                if(csctof->nDof()>=GlobalMinNDOFCSC) plots->TOFCSC->Fill(csctof->inverseBeta());
                plots->Vertex->Fill(tof->timeAtIpInOut());

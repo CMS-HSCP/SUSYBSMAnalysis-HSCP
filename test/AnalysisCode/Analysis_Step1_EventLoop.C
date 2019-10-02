@@ -109,7 +109,7 @@ TH3F* dEdxTemplates = NULL;
 dedxGainCorrector trackerCorrector;
 double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
-   1.21836    // [1]  Pixel data to SiStrip data
+   1.464//1.21836    // [1]  Pixel data to SiStrip data
 };
 dedxHIPEmulator HIPemulator;
 dedxHIPEmulator HIPemulatorUp (false, "ratePdfPixel_Up", "ratePdfStrip_Up");
@@ -246,9 +246,9 @@ std::cout<<"A\n";
    //FIXME  pileup scenario must be updated based on data/mc
    bool is2016  = (samples[0].Name.find("13TeV16") !=std::string::npos)?true:false;
    bool is2016G = (samples[0].Name.find("13TeV16G")!=std::string::npos)?true:false;
-   HIPemulator.    setPeriodHIPRate(is2016);
-   HIPemulatorUp.  setPeriodHIPRate(is2016);
-   HIPemulatorDown.setPeriodHIPRate(is2016);
+   HIPemulator.    setPeriodHIPRate(is2016G);
+   HIPemulatorUp.  setPeriodHIPRate(is2016G);
+   HIPemulatorDown.setPeriodHIPRate(is2016G);
    if(samples[0].Pileup=="S15"){        for(int i=0; i<100; ++i) BgLumiMC.push_back(Pileup_MC_Startup2015_25ns[i]);
    }else if(samples[0].Pileup=="NoPU" && !is2016 && !is2016G){ for(int i=0; i<100; ++i) BgLumiMC.push_back(TrueDist2015_f[i]); //Push same as 2015 data to garantee no PU reweighting
    }else if(samples[0].Pileup=="NoPU" && is2016 && !is2016G) { for(int i=0; i<100; ++i) BgLumiMC.push_back(TrueDist2016_f[i]); //Push same as 2016 data to garantee no PU reweighting
@@ -388,6 +388,9 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
    }
 
    if(fabs(track->eta())>GlobalMaxEta) return false;
+ //mk_ to byla jakas proba   if(fabs(track->eta())<1.2) return false;   
+ //mk_ a new cut on eta
+ 
 
    //Cut on number of matched muon stations
    int count = muonStations(track->hitPattern());
@@ -1074,14 +1077,13 @@ std::cout<<"D\n";
       string analysis_path (basepath);
       if(isData){ 
          dEdxSF [0] = 1.00000;
-	 dEdxSF[1] = 1.464;  //PreG
-	 if (is2016G) dEdxSF[1] = 1.611;  //PostG
-         dEdxTemplates = loadDeDxTemplate((!is2016G)?(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root"):(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPostG.root"), true); //fix if you want to run on 2015
-	 //dEdxTemplates = loadDeDxTemplate((!is2016)?(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root"):(analysis_path+"../../data/Data13TeV16_dEdxTemplate.root"), true);
+	 //mk_dEdxSF [1] = 1.6107 *0.91345;  //PreG
+         //mk_ if (is2016G) dEdxSF[1] = 1.6107 * 1.06665;  //PostG - first period  -- change for the other two periods later
+         dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true); //fix if you want to run on 2015
       }else{  
-         dEdxSF [0] = (is2016)?1.09711:1.09708;
-         dEdxSF [1] = (is2016)?1.09256:1.01875;
-         dEdxTemplates = loadDeDxTemplate((!is2016)?(analysis_path+"../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root"):(analysis_path+"../../data/MC13TeV16_dEdxTemplate.root"), true); // this will need to be checked if we rerun on MC
+         dEdxSF [0] = 1.09711;
+         dEdxSF [1] = 1.09256;
+         dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true); // this will need to be checked if we rerun on MC
       }
 
 std::cout<<"E\n";
@@ -1207,13 +1209,65 @@ std::cout<<"G\n";
                CurrentRun = ev.eventAuxiliary().run();
                tofCalculator.setRun(CurrentRun);
                trackerCorrector.setRun(CurrentRun);
-	       if (is2016G){
-                  dEdxK_Data    = 2.3786; // +/- 0 dEdxC_Data    = 3.530; // +/- 0.625
-                  dEdxC_Data    = 3.4222; // +/- 0.625
+              
+               if(isData){//fix if you want to use 2015
+                 //preG
+               dEdxSF [0] = 1.00000;
+               dEdxSF [1] = 1.6107*0.91345;
+               dEdxK_Data = 2.062;
+               dEdxC_Data = 3.430;
 
-//                  dEdxTemplates = loadDeDxTemplate(analysis_path+"../UsefulScripts/DeDxStudy/dEdxTemplate_hit_SP_in_noC_CCC_Run278018.root", true);
-	       }
 
+               if (278018 <= CurrentRun && CurrentRun < 278770){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*0.9726500;
+                dEdxK_Data = 2.028;
+                dEdxC_Data = 3.428;
+               }
+
+               if (278770 <= CurrentRun && CurrentRun < 278822){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.06665;
+                dEdxK_Data = 2.300;
+                dEdxC_Data = 3.825;
+               }
+
+               if (278822 <= CurrentRun && CurrentRun < 279479){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.07695;
+                dEdxK_Data = 2.300;
+                dEdxC_Data = 3.799;
+
+               }
+
+               if (279479 <= CurrentRun){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.0448500;
+                dEdxK_Data = 2.275;
+                dEdxC_Data = 3.675;
+               }
+               
+              if(isMC){
+                  dEdxSF [0] = 1.09711;
+                  dEdxSF [1] = 1.16;
+
+                  if(is2016){ //preG
+                  dEdxK_Data = 2.062;// przepisane dla pewnosci
+                  dEdxC_Data = 3.430;// prepisane dla pewnosci
+
+                    dEdxK_MC = dEdxK_Data;
+                    dEdxC_MC = dEdxC_Data;
+                  }
+
+                  if(is2016G){
+                    dEdxK_MC = 2.300;
+                    dEdxC_MC = 3.700;
+                  }
+
+
+              }
+               }
+              std::cout<<"------> dEdx parameters SF for run = "<<CurrentRun<< "  "<< dEdxSF[1]<<std::endl;
             }
 
 
@@ -1396,9 +1450,11 @@ std::cout<<"G\n";
 //std::cout<<"TESTC\n";
                   }
                }
+if(!dedxHits) continue; // skip tracks without hits otherwise there will be a crash
+            HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
 
-               //Compute dE/dx on the fly
-               //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
+          
+               
 	       double dEdxErr = 0;
                DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
                DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulator:NULL, &dEdxErr);

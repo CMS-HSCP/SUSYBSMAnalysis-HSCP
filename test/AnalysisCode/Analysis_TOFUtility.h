@@ -570,14 +570,15 @@ public:
           thisHit.weightVertex = 1. / (theStripError_ * theStripError_);
 
           //if to use offset correction
-          // thisHit.timeCorr = hiti->tpeak();
-          // if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
-          // if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
+          thisHit.timeCorr = hiti->tpeak();
+          if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
+          if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
 
           //if do not to use offset correction
-          thisHit.timeCorr = hiti->tpeak();
-          if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= 0;
-          if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= 0;
+         // Corrections were removed by Oleg by mistake
+         // thisHit.timeCorr = hiti->tpeak();
+         // if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= 0;
+         // if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= 0;
           tms.push_back(thisHit);
 
           //  cout << ic<<" t0Offset       (cscSegs[ic]->cscDetId().rawId()) = " << t0Offset       (cscSegs[ic]->cscDetId().rawId()) << endl;
@@ -591,14 +592,15 @@ public:
           thisHit.weightVertex = 1. / (theWireError_ * theWireError_);
 
           //if to use offset correction
-          //    thisHit.timeCorr = hiti->wireTime();
-          //    if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
-          //    if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
+          thisHit.timeCorr = hiti->wireTime();
+          if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
+          if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
 
           //if not to use offset correction
-          thisHit.timeCorr = hiti->wireTime();
-          if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= 0;
-          if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= 0;
+          // Corrections were removed by Oleg by mistake
+          //thisHit.timeCorr = hiti->wireTime();
+          //if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= 0;
+          //if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= 0;
           tms.push_back(thisHit);
         }
       } // rechit
@@ -756,17 +758,18 @@ public:
 
           //if to use the offset correction
 
-          //  if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr = segm->t0();
-          //      else thisHit.timeCorr = 0.;
-          //      if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= t0Offset       (DTChamberId(hiti->geographicalId()).rawId());
-          //       if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= t0OffsetChamber(DTChamberId(hiti->geographicalId()).rawId());
+          if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr = segm->t0();
+          else thisHit.timeCorr = 0.;
+          if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= t0Offset       (DTChamberId(hiti->geographicalId()).rawId());
+          if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= t0OffsetChamber(DTChamberId(hiti->geographicalId()).rawId());
 
 
           //if not to use the offset correction
-          if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr = segm->t0();
-          else thisHit.timeCorr = 0.;
-          if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= 0;
-          if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= 0;
+          // Corrections were removed by Oleg by mistake
+          //if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr = segm->t0();
+          //else thisHit.timeCorr = 0.;
+          //if (CORRECTION_LEVEL == 1)thisHit.timeCorr -= 0;
+          //if (CORRECTION_LEVEL == 2)thisHit.timeCorr -= 0;
 
           TVector3 localPointOnCell;
           if (doWireCorr_ && !bothProjections && dtcell->propagateParametersOnPlane(posp, momv, localPointOnCell)) {
