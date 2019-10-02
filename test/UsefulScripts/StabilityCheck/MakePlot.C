@@ -1,6 +1,8 @@
 
 #include <vector>
 #include <algorithm>
+#include <string>
+#include <iostream>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -160,7 +162,7 @@ void MakedEdxPlot()
    if(LoadLumiToRun()){
       TLegend* leg;
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1c,",4800,1000);          legend.clear();
       TGraph* graph =  ConvertFromRunToIntLumi(SingleMu_dEdxMProf  , "A*", "I_{h} (MeV/cm)");
       TGraph* graphS = ConvertFromRunToIntLumi(SingleMu_dEdxMSProf, "*" , "I_{h} (MeV/cm)");
       TGraph* graphP = ConvertFromRunToIntLumi(SingleMu_dEdxMPProf, "*" , "I_{h} (MeV/cm)");
@@ -182,7 +184,7 @@ void MakedEdxPlot()
       SaveCanvas(c1,"pictures/","GraphdEdx_Profile_dEdxM");
       delete c1;  delete leg;
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
       TGraph* graphSC = ConvertFromRunToIntLumi(SingleMu_dEdxMSCProf, "A*", "I_{h} (MeV/cm)");
       TGraph* graphSF = ConvertFromRunToIntLumi(SingleMu_dEdxMSFProf, "*" , "I_{h} (MeV/cm)");
       graphSC->SetMarkerColor(2);    graphSC->SetMarkerStyle(26);
@@ -198,7 +200,7 @@ void MakedEdxPlot()
       SaveCanvas(c1,"pictures/","GraphdEdx_Profile_dEdxMS");
       delete c1; delete leg;
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
       TGraph* graphPC = ConvertFromRunToIntLumi(SingleMu_dEdxMPCProf, "A*", "I_{h} (MeV/cm)");
       TGraph* graphPF = ConvertFromRunToIntLumi(SingleMu_dEdxMPFProf, "*" , "I_{h} (MeV/cm)");
       graphPC->SetMarkerColor(2);    graphPC->SetMarkerStyle(26);
@@ -217,12 +219,12 @@ void MakedEdxPlot()
 
 
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
       TGraph* graphNV = ConvertFromRunToIntLumi(SingleMu_NVertProf, "A*" , "<#Reco Vertices>",0,0);
       SaveCanvas(c1,"pictures/","GraphdEdx_Profile_Vert");
       delete c1;
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
       TGraph* graphpT = ConvertFromRunToIntLumi(SingleMu_PtProf, "A*" , "<p_{T}> (GeV)",0,0);
       SaveCanvas(c1,"pictures/","GraphdEdx_Profile_pT");
       delete c1;
@@ -243,7 +245,7 @@ void MakedEdxPlot()
 
 
    SQRTS = 1316;
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
    Histos[0] = SingleMu_NVertProf;                 legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "<#Reco Vertices>", 0,0, 0,0);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
@@ -254,7 +256,7 @@ void MakedEdxPlot()
 
  
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
    Histos[0] = SingleMu_PtProf;                    legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "p_{T} (GeV)", 0,0, 0,0);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
@@ -263,7 +265,7 @@ void MakedEdxPlot()
    SaveCanvas(c1,"pictures/","dEdx_Profile_Pt");
    delete c1;
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
    Histos[0] = SingleMu_dEdxProf;                  legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{as}", 0,0, 0.02,0.06);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
@@ -272,7 +274,7 @@ void MakedEdxPlot()
    SaveCanvas(c1,"pictures/","dEdx_Profile_dEdx");
    delete c1;
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
    Histos[0] = SingleMu_dEdxMProf;                  legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h}", 0,0, 3.2,3.4);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
@@ -282,7 +284,7 @@ void MakedEdxPlot()
    delete c1;
 
 /*
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
    Histos[0] = SingleMu_dEdxMProfLumi166380;       legend.push_back("SingleMu50 - Run166380");
    Histos[1] = SingleMu_dEdxMProfLumi166512;       legend.push_back("SingleMu50 - Run166512");
    Histos[2] = SingleMu_dEdxMProfLumi167807;       legend.push_back("SingleMu50 - Run167807");
@@ -306,7 +308,17 @@ double GetMeanAndRMS(TFile* InputFile, string path, double& mean, double& rms, b
       rms  = -999;
    }else{
       toReturn = histo->GetEntries();
+      //mk_
       mean = histo->GetMean();
+
+      /*   int nq = 4;
+   double xq[nq];  // position where to compute the quantiles in [0,1]
+   double yq[nq];  // array to contain the quantiles
+   for (int i=0;i<nq;i++) xq[i] = float(i+1)/nq;
+   histo->GetQuantiles(nq,yq,xq);
+
+      mean = yq[1];//50% histo->GetRMS();
+      */
       rms  = histo->GetMeanError();
 
       if(histo->GetEntries()>10 && gaussianFit){
@@ -332,7 +344,7 @@ void printAverageValue(std::vector<string>& runList, TFile* InputFile, string Hi
       printf("   Run=%s --> average=%8.4E  NEntries=%8.4E\n", runList[r].c_str(), mean, NEntries);
    }
 }
-
+/* HIP
 TH2D* getHIPRateGraph(std::vector<string>& runList, TFile* InputFile, string HistoName, float threshold, string HistoWeightName){
    printf("HIP value for %s\n", HistoName.c_str());
 
@@ -404,10 +416,10 @@ TH1D* getHIPRate(std::vector<string>& runList, TFile* InputFile, string HistoNam
       TH1D* histo = (TH1D*)GetObjectFromPath(InputFile, nameStr);
       if(histo){
          double rate = histo->Integral(0, histo->GetXaxis()->FindBin(threshold)) / histo->Integral(0, histo->GetNbinsX()+2);
-//         sprintf(nameStr, "%s/%s", runList[r].c_str(), HistoWeightName.c_str());
-//         double NEntries=GetMeanAndRMS(InputFile, nameStr, mean, rms);
+         sprintf(nameStr, "%s/%s", runList[r].c_str(), HistoWeightName.c_str());
+         double NEntries=GetMeanAndRMS(InputFile, nameStr, mean, rms);
          printf("   Run=%s --> average=%6.2f  IntLumi=%8.4E --> %6.2f%%\n", runList[r].c_str(), mean, runIntLumi, 100.0*rate);
-         //toReturn->Fill(100.0*rate, NEntries);
+         toReturn->Fill(100.0*rate, NEntries);
       }
 
       if(runList[r].find("MC")!=string::npos)continue; 
@@ -428,10 +440,10 @@ TH1D* getHIPRate(std::vector<string>& runList, TFile* InputFile, string HistoNam
 
             double rate = histo->Integral(0, histo->GetXaxis()->FindBin(threshold)) / histo->Integral(0, histo->GetNbinsX()+2);
 
-//            sprintf(nameStr, "%s/%s%s", runList[r].c_str(), HistoWeightName.c_str(),name.c_str()+name.find("_ls"));
-//            double NEntries=GetMeanAndRMS(InputFile, nameStr, mean, rms);
-//            if(NEntries<100)continue;
-            //printf("   Run=%s - %s --> average=%6.2f  NEntries=%8.4E --> %6.2f%%\n", runList[r].c_str(), name.c_str()+name.find("_ls"), mean, NEntries, 100.0*rate);            
+            sprintf(nameStr, "%s/%s%s", runList[r].c_str(), HistoWeightName.c_str(),name.c_str()+name.find("_ls"));
+            double NEntries=GetMeanAndRMS(InputFile, nameStr, mean, rms);
+            if(NEntries<100)continue;
+            printf("   Run=%s - %s --> average=%6.2f  NEntries=%8.4E --> %6.2f%%\n", runList[r].c_str(), name.c_str()+name.find("_ls"), mean, NEntries, 100.0*rate);            
             toReturn->Fill(100.0*rate, intLumi );
          }
       }
@@ -443,7 +455,7 @@ TH1D* getHIPRate(std::vector<string>& runList, TFile* InputFile, string HistoNam
    return toReturn;
 }
 
-
+*///HIP
 
 
 TGraphErrors* getStabilityGraph(std::vector<string>& runList, TFile* InputFile, string HistoName, bool gaussianFit=false, unsigned int color=4, unsigned int marker=20){
@@ -472,7 +484,10 @@ TGraphErrors* getEfficiencyGraph(std::vector<string>& runList, TFile* InputFile,
    for(unsigned int r=0;r<runList.size();r++){
       char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
       TH1D* histo = (TH1D*) GetObjectFromPath(InputFile, name);
-      graph->SetPoint(r, r+0.5, histo->GetBinContent(1));   graph->SetPointError(r, 0, 0);
+      if(!histo)
+	cout<<"there is a problem with "<<name<<endl;
+      else			
+        graph->SetPoint(r, r+0.5, histo->GetBinContent(1));   graph->SetPointError(r, 0, 0);
    }
    graph->SetLineWidth(2);
    graph->SetLineColor(color);
@@ -487,15 +502,30 @@ double GetMeanAndRMS2D(TFile* InputFile, string path, int XBin, double& mean, do
    double toReturn=-1;
    char BinNum [1024]; sprintf(BinNum, "%d", XBin);
    TH2D* tmp = (TH2D*)GetObjectFromPath(InputFile, path);
-   TH1D* histo = tmp->ProjectionY((string(tmp->GetName())+"_Y"+string(BinNum)).c_str(), XBin, XBin);
+   if(!tmp)
+      cout<<"there is a problem with "<<path<<endl;
+   else
+{
+      TH1D* histo = tmp->ProjectionY((string(tmp->GetName())+"_Y"+string(BinNum)).c_str(), XBin, XBin);
 
    if(!histo){
       mean = -999;
       rms  = -999;
    }else{
       toReturn = histo->GetEntries();
+      //mk_
       mean = histo->GetMean();
-      rms  = histo->GetMeanError();
+      /*
+   int nq = 4;
+   double xq[nq];  // position where to compute the quantiles in [0,1]
+   double yq[nq];  // array to contain the quantiles
+   for (int i=0;i<nq;i++) xq[i] = float(i+1)/nq;
+    histo->GetQuantiles(nq,yq,xq);
+
+      mean = yq[1];//50% histo->GetRMS();
+      //mean = histo->GetRMS();
+      */      
+     rms  = histo->GetMeanError();
 
       if(histo->GetEntries()>10 && gaussianFit){
          rms  = histo->GetRMS(); 
@@ -506,6 +536,7 @@ double GetMeanAndRMS2D(TFile* InputFile, string path, int XBin, double& mean, do
          rms  = fit->GetParError(1);
          delete fit;
       }
+}
       delete tmp;
       delete histo;
    }
@@ -531,7 +562,7 @@ TGraphErrors* getStabilityGraphFrom2D(std::vector<string>& runList, TFile* Input
 }
 
 void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, double xMin, double xMax, string savePath, double YMIN=1E-3, string YLegend="", std::vector<string>* runLegend=NULL, std::vector<string>* selRuns=NULL){
-   TCanvas* c = new TCanvas("c","c,",600,600);     
+   TCanvas* c = new TCanvas("c","c,",1200,1200);     
    c->SetLeftMargin(0.12);
    c->SetRightMargin(0.05);
 
@@ -548,12 +579,17 @@ void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, d
    double yMax=-1E100;
    double yMin= 1E100;
 
+   //----------overall of data
    std::vector<TH1D*> histoVec;
    std::vector<double> entriesVec;
 
    TH1D* Average=NULL;
 
    for(unsigned int r=0;r<runList.size();r++){
+    
+    if(r<(*selRuns).size())
+    std::cout<<r<<" runList in  "<<runList[r].c_str()<<"  "<<(*selRuns)[r].c_str() <<" "<< (*runLegend)[r].c_str()<<std::endl;
+
       if(runLegend==NULL && runList[r].find("MC")!=string::npos)continue;
 
       char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
@@ -570,10 +606,85 @@ void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, d
          histo->SetName((runList[r]).c_str());
          entriesVec.push_back(histo->GetEntries());
          histoVec.push_back(histo);
+         //if( (runList[r]).c_str()==(*selRuns)[histoVec.size()].c_str() ) 
+    std::cout<<r<<" runList OUT  "<<runList[r].c_str()<<"  "<<(*selRuns)[histoVec.size()-1].c_str() <<" "<< (*runLegend)[histoVec.size()-1].c_str()<<std::endl;
+
       }
+
+   }
+   //----------overall of data - preG
+   std::vector<TH1D*> histoVec_preG;
+   std::vector<double> entriesVec_preG;
+   int nrun=0; 
+   int postGrun=278308;     
+
+   TH1D* Average_preG=NULL;
+
+   for(unsigned int r=0;r<runList.size();r++){
+     if(runList[r].find("MC")==string::npos){
+       //       std::cout<<"------line "<<__LINE__ <<" "<<runList[r]<<std::endl;
+       nrun=std::stoi(runList[r]);
+       //std::cout<<"------line "<<__LINE__ <<" "<<runList[r]<<"  "<<nrun<< std::endl;
+     }
+
+      if(runLegend==NULL && runList[r].find("MC")!=string::npos)continue;
+     if(nrun>=postGrun)continue;// run selecton for preG
+
+     char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
+     TH1D* histo = (TH1D*)GetObjectFromPath(InputFile, name);  
+     if(!histo)continue;
+     
+     if(runList[r].find("MC")==string::npos){ //only for data
+       if(Average_preG==NULL){Average_preG = (TH1D*)histo->Clone("Data Average - preG");
+       }else{
+	 Average_preG->Add(histo);
+	 //	 std::cout<<"preG ------line "<<__LINE__ <<" "<<runList[r]<<std::endl;
+       }
+      //std::cout<<"add---line "<<__LINE__ <<" "<<runList[r]<<"  "<<nrun<< std::endl;
+      }
+     
+//      if(selRuns==NULL || find(selRuns->begin(), selRuns->end(), runList[r])!=selRuns->end()){
+//         histo->SetName((runList[r]).c_str());
+//         entriesVec_preG.push_back(histo->GetEntries());
+//         histoVec_preG.push_back(histo);
+//      }
+   }
+   //----------overall of data - postG
+   std::vector<TH1D*> histoVec_postG;
+   std::vector<double> entriesVec_postG;
+
+   TH1D* Average_postG=NULL;
+
+   for(unsigned int r=0;r<runList.size();r++){
+     if(runList[r].find("MC")==string::npos){
+       //       std::cout<<"------line "<<__LINE__ <<" "<<runList[r]<<std::endl;
+       nrun=std::stoi(runList[r]);
+     }
+     if(runLegend==NULL && runList[r].find("MC")==string::npos)continue;
+     if(nrun<postGrun)continue;// run selecton for postG
+
+     char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
+     TH1D* histo = (TH1D*)GetObjectFromPath(InputFile, name);  
+     if(!histo)continue;
+     
+     if(runList[r].find("MC")==string::npos){ //only for data
+       if(Average_postG==NULL){Average_postG = (TH1D*)histo->Clone("Data Average - postG");
+       }else{ 
+	 Average_postG->Add(histo);
+	 //	 std::cout<<"postG ------line "<<__LINE__ <<" "<<runList[r]<<std::endl;
+       }
+      }
+     
+//      if(selRuns==NULL || find(selRuns->begin(), selRuns->end(), runList[r])!=selRuns->end()){
+//         histo->SetName((runList[r]).c_str());
+//         entriesVec_postG.push_back(histo->GetEntries());
+//         histoVec_postG.push_back(histo);
+//      }
    }
 
-   unsigned int NPlotToShow = 10;
+
+
+   unsigned int NPlotToShow = 12;//mk11;
    if(!runLegend)NPlotToShow=25;
    std::sort(entriesVec.begin(), entriesVec.end(), std::greater<double>());
    double MinEntryCut = entriesVec.size()<NPlotToShow?0:entriesVec[NPlotToShow-1];
@@ -581,10 +692,17 @@ void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, d
 
    TLegend* LEG = new TLegend(0.40,0.70,0.85,0.95);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);    LEG->SetNColumns(2);
    for(unsigned int r=0;r<histoVec.size();r++){
+std::cout<<r<<" histoVec  "<<string(histoVec[r]->GetName())<<"  "<<(*runLegend)[r].c_str() <<std::endl;
+
       histoVec[r]->Scale(1.0/histoVec[r]->Integral());
       if(string(histoVec[r]->GetName()).find("MC")!=string::npos){
-         histoVec[r]->SetLineColor(2);
-         histoVec[r]->SetLineWidth(4);
+         if(string(histoVec[r]->GetName()).find("G")!=string::npos){ //warunek na to, ze G zostalo znalezione
+            histoVec[r]->SetLineColor(2);
+            histoVec[r]->SetLineWidth(4);
+         } else{
+             histoVec[r]->SetLineColor(7);
+             histoVec[r]->SetLineWidth(2); 
+         }
          histoVec[r]->Draw("L same");
       }else{
          if(histoVec[r]->GetEntries()<MinEntryCut)continue;
@@ -595,8 +713,13 @@ void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, d
          histoVec[r]->Draw("P same");
       }
       if(runLegend!=NULL){ 
-         if(string(histoVec[r]->GetName()).find("MC")!=string::npos)LEG->AddEntry(histoVec[r],(*runLegend)[r].c_str()  , "L");
-         else                                                       LEG->AddEntry(histoVec[r],(*runLegend)[r].c_str()  , "P");    
+//         if(string(histoVec[r]->GetName()).find("MC")!=string::npos)LEG->AddEntry(histoVec[r],(*runLegend)[r].c_str()  , "L");
+
+         if(string(histoVec[r]->GetName()).find("MC")!=string::npos){
+	LEG->AddEntry(histoVec[r],(*runLegend)[r].c_str()  , "L");
+        std::cout<<r<<" ~~~~~~~~~~rozjechane "<<string(histoVec[r]->GetName())<<"  "<<(*runLegend)[r].c_str() <<std::endl;
+}
+  else                                                       LEG->AddEntry(histoVec[r],(*runLegend)[r].c_str()  , "P");    
       }else{     LEG->AddEntry(histoVec[r], histoVec[r]->GetName(), "P");     }
 
       yMax = std::max(yMax, histoVec[r]->GetMaximum());
@@ -606,9 +729,23 @@ void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, d
    if(Average!=NULL){
       Average->Scale(1.0/Average->Integral());
       Average->SetLineColor(1);
-      Average->SetLineWidth(2);     
+      Average->SetLineWidth(4);     
       Average->Draw("L same");
       LEG->AddEntry(Average, "2016 - Overall", "L"); 
+   }
+   if(Average_preG!=NULL){
+      Average_preG->Scale(1.0/Average_preG->Integral());
+      Average_preG->SetLineColor(4);
+      Average_preG->SetLineWidth(3);     
+      Average_preG->Draw("L same");
+      LEG->AddEntry(Average_preG, "2016 - preG", "L"); 
+   }
+   if(Average_postG!=NULL){
+      Average_postG->Scale(1.0/Average_postG->Integral());
+      Average_postG->SetLineColor(8);
+      Average_postG->SetLineWidth(3);     
+      Average_postG->Draw("L same");
+      LEG->AddEntry(Average_postG, "2016 - postG", "L"); 
    }
 
    frame->SetMaximum(yMax*10.0);
@@ -658,21 +795,36 @@ void MakePlot()
    unsigned int N= runList.size();
    std::sort(runList.begin(), runList.end());
 
+/*
+ * 115->2755832, 117->275834,119->275836, 121->275847  z jednego napełnienia preG
+ *
+ * 227->278803, 231->278820   z pierwszego schodka F/G
+ * 241->278975, 245->279029   z drugiego schodka F/G (to już jest chyba G)
+ *
+ * 263->279694, 289->280249
+ */
    std::vector<string> selectedRuns;   std::vector<string> selectedLegs;
-   selectedRuns.push_back("273446");   selectedLegs.push_back("R273446 <#vtx>=17.1");
-   selectedRuns.push_back("273447");   selectedLegs.push_back("R273447 <#vtx>=16.5");
-   selectedRuns.push_back("273448");   selectedLegs.push_back("R273448 <#vtx>=15.4");
-   selectedRuns.push_back("273449");   selectedLegs.push_back("R273449 <#vtx>=14.7");
-   selectedRuns.push_back("273450");   selectedLegs.push_back("R273450 <#vtx>=13.5");
-   selectedRuns.push_back("274998");   selectedLegs.push_back("R274998 <#vtx>=17.7");
-   selectedRuns.push_back("274999");   selectedLegs.push_back("R274999 <#vtx>=15.0");
-   selectedRuns.push_back("275000");   selectedLegs.push_back("R275000 <#vtx>=13.3");
-   selectedRuns.push_back("275001");   selectedLegs.push_back("R275001 <#vtx>=11.4");
-   selectedRuns.push_back("MC_13TeV_DYToMuMu");  selectedLegs.push_back("MC: DY to #mu#mu");
+   selectedRuns.push_back("275832");   selectedLegs.push_back("R275832 <nVx>= 21.4");//21.4356
+   selectedRuns.push_back("275834");   selectedLegs.push_back("R275834 <nVx>= 18.6");//18.5741
+   selectedRuns.push_back("275836");   selectedLegs.push_back("R275836 <nVx>= 16.0");// 16.0481
+   selectedRuns.push_back("275847");   selectedLegs.push_back("R275847 <nVx>= 11.2");//11.1610
+   selectedRuns.push_back("278803");   selectedLegs.push_back("R278803 <nVx>= 23.7");//23.7284
+   selectedRuns.push_back("278820");   selectedLegs.push_back("R278820 <nVx>= 19.0");//18.9934
+   selectedRuns.push_back("278975");   selectedLegs.push_back("R278975 <nVx>= 14.5");//14.4766
+   selectedRuns.push_back("279029");   selectedLegs.push_back("R279029 <nVx>= 16.5");//16.4575
+   selectedRuns.push_back("279694");   selectedLegs.push_back("R279694 <nVx>= 18.0");//18.0304
+   selectedRuns.push_back("280249");   selectedLegs.push_back("R280249 <nVx>= 17.3");//17.2824
+   selectedRuns.push_back("MC_13TeV16_DYToMuMu");  selectedLegs.push_back("MC16 postG: DY to #mu#mu");
+   selectedRuns.push_back("MC_13TeV16G_DYToMuMu");  selectedLegs.push_back("MC16 pre: DY to #mu#mu");
 
    std::vector<string> selectedRuns275001;   std::vector<string> selectedLegs275001;
-   selectedRuns275001.push_back("275001");   selectedLegs275001.push_back("R275001");
-   selectedRuns275001.push_back("MC_13TeV_DYToMuMu");  selectedLegs275001.push_back("MC: DY to #mu#mu");
+   selectedRuns275001.push_back("275000");   selectedLegs275001.push_back("R275000");
+   selectedRuns275001.push_back("MC_13TeV16_DYToMuMu");  selectedLegs275001.push_back("MC16 postG: DY to #mu#mu");
+   selectedRuns275001.push_back("MC_13TeV16G_DYToMuMu");  selectedLegs275001.push_back("MC16 pre: DY to #mu#mu");
+   //  selectedRuns275001.push_back("MC_13TeV15G_DYToMuMu");  selectedLegs275001.push_back("MC16G: DY to #mu#mu");
+   //selectedRuns275001.push_back("MC_13TeV_WToMu");  selectedLegs275001.push_back("MC15: W to #mu");
+   //selectedRuns275001.push_back("MC_13TeV16_WToMu");  selectedLegs275001.push_back("MC16: W to #mu");
+   //selectedRuns275001.push_back("MC_13TeV16G_WToMu");  selectedLegs275001.push_back("MC16G: W to #mu");
 
 
 
@@ -693,9 +845,10 @@ void MakePlot()
 //   triggers.push_back("HLT_PFMET170_HBHECleaned");
 
    std::vector<string> versions;
+
+   versions.push_back("FAKE");
+   versions.push_back("AOD");
    versions.push_back("");
-//   versions.push_back("AOD");
-//   versions.push_back("FAKE");
 
    for(unsigned int T=0;T<triggers.size();T++){
    for(unsigned int V=0;V<versions.size();V++){
@@ -706,8 +859,10 @@ void MakePlot()
 
       SQRTS=1316.0;
 
-      if(V==0 && T==0){
-/*         c1 = new TCanvas("c1","c1,",600,600);                      
+/* HIPS
+      //   if(V==0 && T==0){
+      if(T==0){  
+	c1 = new TCanvas("c1","c1,",1200,1200);                      
          TH1D* frame = new TH1D("frameR", "frameR", 1, -5.5, -3.5);
          frame->SetTitle("");
          frame->SetStats(kFALSE);
@@ -726,7 +881,7 @@ void MakePlot()
          SaveCanvas(c1,"pictures/","HIP_RateGraph");
          delete c1;
 
-         c1 = new TCanvas("c1","c1,",600,600);
+         c1 = new TCanvas("c1","c1,",1200,1200);
          c1->SetLogy(true);
          TH1D* PixelHIP = getHIPRate(runList, InputFile, trigger+"dEdxHitPixel", 2.0, trigger+"NVert");   PixelHIP->SetLineColor(2); PixelHIP->SetLineWidth(2); PixelHIP->Draw("HIST E1");
          TH1D* StripHIP = getHIPRate(runList, InputFile, trigger+"dEdxHitStrip", 2.0, trigger+"NVert");   StripHIP->SetLineColor(4); StripHIP->SetLineWidth(2); StripHIP->Draw("HIST E1 same");
@@ -736,7 +891,7 @@ void MakePlot()
 
 
          std::vector<string> subDets = {"PIB", "PIE", "TIB", "TID", "TOB", "TEC"};
-         c1 = new TCanvas("c1","c1,",600,600);
+         c1 = new TCanvas("c1","c1,",1200,1200);
          c1->SetLogy(true);
          for(unsigned int d=0;d<subDets.size();d++){
             if((d+1)<3){
@@ -747,22 +902,23 @@ void MakePlot()
          }
          DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
          SaveCanvas(c1,"pictures/","HIP_RateSubDet");
-         delete c1;*/
+         delete c1;
       }
-     
+    *///HIPS 
 
 
-
+/*
       SQRTS = 1316;
-      c1 = new TCanvas("c1","c1,",1200,600);        
-      frameR->GetYaxis()->SetTitle("<#Vertices>");       frameR->SetMinimum(7.0);   frameR->SetMaximum(27);  frameR->Draw("AXIS");
+      c1 = new TCanvas("c1","c1,",4800,1000);        
+      frameR->GetYaxis()->SetTitle("<#Vertices>");       frameR->SetMinimum(0.0);   frameR->SetMaximum(30.0);  frameR->Draw("AXIS");
       g1 = getStabilityGraph(runList, InputFile, trigger+"NVert");  g1->Draw("0 P same");
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_NVert_"+trigger+"_"+version);
       delete c1;
+      delete g1;
 
       SQRTS = 1316;
-      c1 = new TCanvas("c1","c1,",1200,600);        
+      c1 = new TCanvas("c1","c1,",4800,1000);        
       frameR->GetYaxis()->SetTitle("<Preselection Efficiency>");       frameR->SetMinimum(0.0);   frameR->SetMaximum(0.4);  frameR->Draw("AXIS");
       g1 = getEfficiencyGraph(runList, InputFile, trigger+"PreselEff");  g1->Draw("0 P same");
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
@@ -770,23 +926,25 @@ void MakePlot()
       delete c1;
 
       SQRTS = 1316;
-      c1 = new TCanvas("c1","c1,",1200,600);        
+      c1 = new TCanvas("c1","c1,",4800,1000);        
       frameR->GetYaxis()->SetTitle("<Presel. tracks / Num. of Events>");       frameR->SetMinimum(0.0);   frameR->SetMaximum(0.4);  frameR->Draw("AXIS");
       g1 = getEfficiencyGraph(runList, InputFile, trigger+"TPsVNEvts");  g1->Draw("0 P same");
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_TPsVNEvts_"+trigger+"_"+version);
       delete c1;
+      delete g1;
 
       SQRTS = 1316;
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
       frameR->GetYaxis()->SetTitle("p_{T} (GeV)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(150.0);  frameR->Draw("AXIS");
       g1 = getStabilityGraph(runList, InputFile, trigger+"Pt");  g1->Draw("0 P same");
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_Pt_"+trigger+"_"+version);
       delete c1;
+      delete g1;
 
       SQRTS = 1316;
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
       frameR->GetYaxis()->SetTitle("p_{T} (GeV)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(150.0);  frameR->Draw("AXIS");
       LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
       TGraphErrors* gr1 = getStabilityGraphFrom2D(runList, InputFile, trigger+"PtEta", 1, false, kBlack);  gr1->Draw("0 P same"); LEG->AddEntry(gr1, "|#eta| < 0.9", "PE");
@@ -797,11 +955,11 @@ void MakePlot()
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_PtEta_"+trigger+"_"+version);
       delete c1;
-
+*/ //summarys
 
 //
 //      SQRTS = 1316;
-//      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+//      c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
 //      frameR->GetYaxis()->SetTitle("p_{T_{BPS}} (GeV)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
 //      g1 = getStabilityGraph(runList, InputFile, trigger+"PtBPS");  g1->Draw("0 P same");
 //      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
@@ -809,18 +967,22 @@ void MakePlot()
 //      delete c1;
 
 
-      std::string dEdxVariables[] = {"dEdx", "dEdxM", "dEdxMS", "dEdxMP", "dEdxMSC", "dEdxMPC", "dEdxMSF", "dEdxMPF", "dEdxMT", "dEdxMin1", "dEdxMin2", "dEdxMin3", "dEdxMin4", "dEdxHitStrip", "dEdxHitPixel"};
-      std::string dEdxLegends[]   = {"I_{as}", "I_{h}", "I_{h} StripOnly", "I_{h} PixelOnly", "I_{h} StripOnly Barrel", "I_{h} PixelOnly Barrel", "I_{h} StripOnly Endcap", "I_{h} PixelOnly Endcap", "I_{T40}", "I_{h} (Hybrid-2-15)", "I_{h} drop lowHit (20%)", "I_{h} drop lowHit (30%)", "I_{h} drop lowHit (40%)", "Strip Hit dEdx", "Pixel Hit dEdx"};
+      std::string dEdxVariables[] = {"dEdx"  , "dEdxM",          "dEdxMS",          "dEdxMP",                "dEdxMSC",                "dEdxMPC",                "dEdxMSF",                "dEdxMPF",  "dEdxMT",            "dEdxMin1",                "dEdxMin2",                "dEdxMin3",                "dEdxMin4",   "dEdxHitStrip", "dEdxHitPixel", "Mass","MassTOF"};
+      std::string dEdxLegends[]   = {"I_{as}", "I_{h}", "I_{h} StripOnly", "I_{h} PixelOnly", "I_{h} StripOnly Barrel", "I_{h} PixelOnly Barrel", "I_{h} StripOnly Endcap", "I_{h} PixelOnly Endcap", "I_{T40}", "I_{h} (Hybrid-2-15)", "I_{h} drop lowHit (20%)", "I_{h} drop lowHit (30%)", "I_{h} drop lowHit (40%)", "Strip Hit dEdx", "Pixel Hit dEdx","Mass","MassTOF"};
       for(unsigned int S=0;S<sizeof(dEdxVariables)/sizeof(string);S++){
          if(dEdxLegends[S].find("I_{as}")!=std::string::npos){
             //overlay(runList     , InputFile,  trigger+dEdxVariables[S]+version, 0.0, 0.5, "overlay_"+dEdxVariables[S]+version+"All", 1E-5, dEdxLegends[S].c_str()); 
             overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 0.5, "overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs, &selectedRuns);
 
             overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 0.5, "275001overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs275001, &selectedRuns275001);
-         }else{
-            //overlay(runList     , InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "overlay_"+dEdxVariables[S]+version+"All", 1E-5, dEdxLegends[S].c_str());
-            overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs, &selectedRuns);
+         }else if (dEdxLegends[S].find("Mass")!=std::string::npos){
 
+            //overlay(runList     , InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "overlay_"+dEdxVariables[S]+version+"All", 1E-5, dEdxLegends[S].c_str());
+//mass plots
+             overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 600.0, "overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs, &selectedRuns);
+            overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 600.0, "275001overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs275001, &selectedRuns275001);
+            }else{
+            overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs, &selectedRuns);
             overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "275001overlay_"+dEdxVariables[S]+"_"+trigger+"_"+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs275001, &selectedRuns275001);
 
 
@@ -830,20 +992,26 @@ void MakePlot()
      }
 
 //      overlay(runList, InputFile,  trigger+"dEdxHitPixel"+version, 0.0, 10, "overlay_dEdxHitPixel"+version+"All", 1E-4, "Pixel Hit dEdx (MeV/cm)");
-      overlay(runList, InputFile,  trigger+"dEdxHitPixel"+version, 0.0, 6, string("overlay_dEdxHitPixel")+"_"+trigger+"_"+version, 1E-4, "Pixel Hit dEdx (MeV/cm)", &selectedLegs, &selectedRuns);
+      overlay(runList, InputFile,  trigger+"dEdxHitPixel"+version, 0.0, 20, string("overlay_dEdxHitPixel")+"_"+trigger+"_"+version, 1E-4, "Pixel Hit dEdx (MeV/cm)", &selectedLegs, &selectedRuns);
 
 //      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 10, "overlay_dEdxHitStrip"+version+"All", 1E-4, "Strip Hit dEdx (MeV/cm)");
-      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 6, string("overlay_dEdxHitStrip")+"_"+trigger+"_"+version, 1E-4, "Strip Hit dEdx (MeV/cm)", &selectedLegs, &selectedRuns);
+      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 20, string("overlay_dEdxHitStrip")+"_"+trigger+"_"+version, 1E-4, "Strip Hit dEdx (MeV/cm)", &selectedLegs, &selectedRuns);
 
-      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 6, string("275001overlay_dEdxHitStrip")+"_"+trigger+"_"+version, 1E-4, "Strip Hit dEdx (MeV/cm)", &selectedLegs275001, &selectedRuns275001);
+      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 20, string("275001overlay_dEdxHitStrip")+"_"+trigger+"_"+version, 1E-4, "Strip Hit dEdx (MeV/cm)", &selectedLegs275001, &selectedRuns275001);
 
 
       for(unsigned int S=0;S<sizeof(dEdxVariables)/sizeof(string);S++){
-         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
          if(dEdxLegends[S].find("I_{as}")!=std::string::npos){
             frameR->GetYaxis()->SetTitle("I_{as}");   frameR->SetMinimum(0.0);   frameR->SetMaximum(0.05);  frameR->Draw("AXIS");
          }else{
-           frameR->GetYaxis()->SetTitle(dEdxLegends[S].c_str());   frameR->SetMinimum(2.5);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
+           frameR->GetYaxis()->SetTitle(dEdxLegends[S].c_str());   frameR->SetMinimum(2.5);   frameR->SetMaximum(5);  frameR->Draw("AXIS");
+           if(dEdxLegends[S].find("Hit dEdx")!=std::string::npos){
+             frameR->GetYaxis()->SetTitle(dEdxLegends[S].c_str());   frameR->SetMinimum(2.5);   frameR->SetMaximum(5);  frameR->Draw("AXIS");
+             }
+           if(dEdxLegends[S].find("Mass")!=std::string::npos){
+             frameR->GetYaxis()->SetTitle(dEdxLegends[S].c_str());   frameR->SetMinimum(0.0);   frameR->SetMaximum(150);  frameR->Draw("AXIS");
+             }
          }
          LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
          g1 = getStabilityGraph(runList, InputFile, trigger+dEdxVariables[S]      , false);         g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
@@ -855,8 +1023,8 @@ void MakePlot()
      }
 
 
-         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-         frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
+         c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
+         frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(5);  frameR->Draw("AXIS");
          LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
          g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxM", false, 1, 20);            g1->Draw("0 P same");     LEG->AddEntry(g1, "drop  0%" ,"P");
          g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxMin1", false, 2, 20);            g1->Draw("0 P same");     LEG->AddEntry(g1, "drop 15%" ,"P");
@@ -869,7 +1037,7 @@ void MakePlot()
          delete c1;
 
 
-         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
          frameR->GetYaxis()->SetTitle("I_{as}");   frameR->SetMinimum(0.0);   frameR->SetMaximum(0.05);  frameR->Draw("AXIS");
          LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
          g1 = getStabilityGraph(runList, InputFile, trigger+"dEdx", false, 1, 20);            g1->Draw("0 P same");     LEG->AddEntry(g1, "I_{as} (new)" ,"P");
@@ -883,7 +1051,7 @@ void MakePlot()
       std::string TOFVariables[] = {"TOF", "TOFDT", "TOFCSC", "Vertex", "VertexDT", "VertexCSC"};
       std::string TOFLegends[]   = {"1/#beta_{TOF}", "1/#beta_{TOF DT}", "1/#beta_{TOF CSC}", "Vertex time [ns]", "Vertex time from DT [ns]", "Vertex time from CSC  [ns]" };
       for(unsigned int T=0;T<sizeof(TOFVariables)/sizeof(string);T++){
-         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         c1 = new TCanvas("c1","c1,",4800,1000);          legend.clear();
          if(TOFVariables[T].find("Vertex")!=std::string::npos){
          frameR->GetYaxis()->SetTitle(TOFLegends[T].c_str());   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
          }else{
