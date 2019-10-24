@@ -246,9 +246,9 @@ std::cout<<"A\n";
    //FIXME  pileup scenario must be updated based on data/mc
    bool is2016  = (samples[0].Name.find("13TeV16") !=std::string::npos)?true:false;
    bool is2016G = (samples[0].Name.find("13TeV16G")!=std::string::npos)?true:false;
-   HIPemulator.    setPeriodHIPRate(is2016);
-   HIPemulatorUp.  setPeriodHIPRate(is2016);
-   HIPemulatorDown.setPeriodHIPRate(is2016);
+   HIPemulator.    setPeriodHIPRate(is2016G);
+   HIPemulatorUp.  setPeriodHIPRate(is2016G);
+   HIPemulatorDown.setPeriodHIPRate(is2016G);
    if(samples[0].Pileup=="S15"){        for(int i=0; i<100; ++i) BgLumiMC.push_back(Pileup_MC_Startup2015_25ns[i]);
    }else if(samples[0].Pileup=="NoPU" && !is2016 && !is2016G){ for(int i=0; i<100; ++i) BgLumiMC.push_back(TrueDist2015_f[i]); //Push same as 2015 data to garantee no PU reweighting
    }else if(samples[0].Pileup=="NoPU" && is2016 && !is2016G) { for(int i=0; i<100; ++i) BgLumiMC.push_back(TrueDist2016_f[i]); //Push same as 2016 data to garantee no PU reweighting
@@ -1074,14 +1074,14 @@ std::cout<<"D\n";
       string analysis_path (basepath);
       if(isData){ 
          dEdxSF [0] = 1.00000;
-	 dEdxSF[1] = 1.6107 *0.9134500*0.9999500;  //PreG SF
+	 // cc- // dEdxSF[1] = 1.6107 *0.9134500*0.9999500;  //PreG SF
 	 //if (is2016G) dEdxSF[1] = 1.6107*0.9726500*0.9868500;  //PostG - first period  -- change for the other two periods later
-	 //dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root");
-	 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root");
+	 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+	 // cc- // dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root");
       }else{  
-         dEdxSF [0] = (is2016)?1.09711:1.09708;
-         dEdxSF [1] = (is2016)?1.09256:1.01875;
-         dEdxTemplates = loadDeDxTemplate((!is2016)?(analysis_path+"../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root"):(analysis_path+"../../data/MC13TeV16_dEdxTemplate.root"), true); // this will need to be checked if we rerun on MC
+         dEdxSF [0] = 1.09711;
+         dEdxSF [1] = 1.09256;
+         dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true); // this will need to be checked if we rerun on MC
       }
 
 std::cout<<"E\n";
@@ -1208,35 +1208,64 @@ std::cout<<"G\n";
                tofCalculator.setRun(CurrentRun);
                trackerCorrector.setRun(CurrentRun);
 
-	       if (278018 <= CurrentRun && CurrentRun < 278770){
-		 dEdxK_Data = 2.205;
-                 dEdxC_Data = 3.468;
-                 dEdxSF [1] = 1.6107*0.9726500*0.9868500;
-		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region1.root");
+               if(isData){//fix if you want to use 2015
+                  //preG
+                dEdxSF [0] = 1.00000;
+               dEdxSF [1] = 1.6107*0.91345;
+               dEdxK_Data = 2.062;
+               dEdxC_Data = 3.430;
 
-	       }
 
-	       if (278770 <= CurrentRun && CurrentRun < 278822){
-		 dEdxK_Data = 2.426;
-		 dEdxC_Data = 3.869;
-		 dEdxSF [1] = 1.6107*1.0666500*1.0070500;
-		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region2.root");
-	       }
+               if (278018 <= CurrentRun && CurrentRun < 278770){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*0.9726500;
+                dEdxK_Data = 2.028;
+                dEdxC_Data = 3.428;
+               }
 
-	       if (278822 <= CurrentRun && CurrentRun < 279479){
-		 dEdxK_Data = 2.426;
-		 dEdxC_Data = 3.838;
-		 dEdxSF [1]  = 1.6107*1.0769500*1.0067500;
-		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region3.root");
-	       }
+               if (278770 <= CurrentRun && CurrentRun < 278822){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.06665;
+                dEdxK_Data = 2.300;
+                dEdxC_Data = 3.825;
+               }
 
-	       if (279479 <= CurrentRun){
-		 dEdxK_Data = 2.436;
-		 dEdxC_Data = 3.724;
-		 dEdxSF [1] = 1.6107*1.0448500*0.9991500;
-		 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_Region4.root");
-	       }
+               if (278822 <= CurrentRun && CurrentRun < 279479){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.07695;
+                dEdxK_Data = 2.300;
+                dEdxC_Data = 3.799;
 
+               }
+
+               if (279479 <= CurrentRun){
+                dEdxSF [0] = 1.00000;
+                dEdxSF [1] = 1.6107*1.0448500;
+                dEdxK_Data = 2.275;
+                dEdxC_Data = 3.675;
+               }
+               
+              if(isMC){
+                  dEdxSF [0] = 1.09711;
+                  dEdxSF [1] = 1.16;
+
+                  if(is2016){ //preG
+                  dEdxK_Data = 2.062;// przepisane dla pewnosci
+                  dEdxC_Data = 3.430;// prepisane dla pewnosci
+
+                    dEdxK_MC = dEdxK_Data;
+                    dEdxC_MC = dEdxC_Data;
+                  }
+
+                  if(is2016G){
+                    dEdxK_MC = 2.300;
+                    dEdxC_MC = 3.700;
+                  }
+
+
+              }
+               }
+              std::cout<<"------> dEdx parameters SF for run = "<<CurrentRun<< "  "<< dEdxSF[1]<<std::endl;
             }
 
             //compute event weight
@@ -1417,7 +1446,8 @@ std::cout<<"G\n";
 //std::cout<<"TESTC\n";
                   }
                }
-
+            if(!dedxHits) continue; // skip tracks without hits otherwise there will be a crash
+            HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
 	       double dEdxErr = 0;

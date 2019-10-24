@@ -481,67 +481,24 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
 
 
-   TH1D *Pred13TeV16GR=NULL, *Pred13TeV16R=NULL, *Pred13TeV15R=NULL, *Pred8TeVR=NULL, *Pred7TeVR=NULL, *PredMCR=NULL, *ErrorBand=NULL, *ErrorBandG=NULL;
+   TH1D *Pred13TeV16GR=NULL, *Pred13TeV16R=NULL, *Pred13TeV15R=NULL, *Pred8TeVR=NULL, *Pred7TeVR=NULL, *PredMCR=NULL;
    if(Pred13TeV16G){
-     
-     Pred13TeV16GR = (TH1D*) Data13TeV16G->Clone("Data13TeV16GR");
-     ErrorBandG = (TH1D*) Pred13TeV16G->Clone("ErrorBandG");
-     ErrorBandG->SetFillStyle(3005);
-     ErrorBandG->SetFillColor(kGray+3);
-     for(size_t i = 0; i <= ErrorBandG->GetNbinsX();i++) {
-       double est = ErrorBandG->GetBinContent(i);
-       Pred13TeV16GR->SetBinContent(i, 
-				    (est != 0) ? Pred13TeV16GR->GetBinContent(i) / est : -10
-				    );
-       Pred13TeV16GR->SetBinError(i,
-				  (est != 0) ? Pred13TeV16GR->GetBinError(i) / est : 0
-				  );
-
-       ErrorBandG->SetBinContent(i, 1.);
-       ErrorBandG->SetBinError(i, 
-			       (est != 0) ? ErrorBandG->GetBinError(i) / est : 0
-			       );
-       cout<<"error is: "<<ErrorBandG->GetBinError(i)<<endl;
-     }
-
-   }
-     // Pred13TeV16GR = (TH1D*)Pred13TeV16G->Clone("Pred13TeV16GR"); Pred13TeV16GR->Reset();
-     // for(unsigned int i=0;i<(unsigned int)Pred13TeV16G->GetNbinsX();i++){
-     // double Perr=0; double P = Pred13TeV16G->IntegralAndError(i,Pred13TeV16G->GetNbinsX()+1, Perr);   if(P<=0)continue;
-     // double Derr=0; double D = Data13TeV16G->IntegralAndError(i,Data13TeV16G->GetNbinsX()+1, Derr);
-     // Perr = sqrt(Perr*Perr + pow(P*SystError,2));
-     // Pred13TeV16GR->SetBinContent(i, D/P);  Pred13TeV16GR->SetBinError (i, sqrt(pow(Derr*P,2) +pow(Perr*D,2))/pow(P,2));      
-     //}}
+      Pred13TeV16GR = (TH1D*)Pred13TeV16G->Clone("Pred13TeV16GR"); Pred13TeV16GR->Reset();
+      for(unsigned int i=0;i<(unsigned int)Pred13TeV16G->GetNbinsX();i++){
+      double Perr=0; double P = Pred13TeV16G->IntegralAndError(i,Pred13TeV16G->GetNbinsX()+1, Perr);   if(P<=0)continue;
+      double Derr=0; double D = Data13TeV16G->IntegralAndError(i,Data13TeV16G->GetNbinsX()+1, Derr);
+      Perr = sqrt(Perr*Perr + pow(P*SystError,2));
+      Pred13TeV16GR->SetBinContent(i, D/P);  Pred13TeV16GR->SetBinError (i, sqrt(pow(Derr*P,2) +pow(Perr*D,2))/pow(P,2));      
+   }}
 
    if(Pred13TeV16){
-
-     Pred13TeV16R = (TH1D*)Data13TeV16->Clone("Data13TeV16R");
-     //Pred13TeV16R->Divide(Pred13TeV16);
-     ErrorBand = (TH1D*) Pred13TeV16->Clone("ErrorBand");
-     ErrorBand->SetFillStyle(3005);
-     ErrorBand->SetFillColor(kGray+3);
-     for(size_t i = 0; i <= ErrorBand->GetNbinsX();i++) {
-       double est = ErrorBand->GetBinContent(i);
-       Pred13TeV16R->SetBinContent(i,
-                                    (est != 0) ? Pred13TeV16R->GetBinContent(i) / est : -10
-                                    );
-       Pred13TeV16R->SetBinError(i,
-                                  (est != 0) ? Pred13TeV16R->GetBinError(i) / est : 0
-                                  );
-
-       ErrorBand->SetBinContent(i, 1.);
-       ErrorBand->SetBinError(i,
-                               (est != 0) ? ErrorBand->GetBinError(i) / est : 0
-                               );
-     }
-   }
-     // Pred13TeV16R = (TH1D*)Pred13TeV16->Clone("Pred13TeV16R"); Pred13TeV16R->Reset();
-     // for(unsigned int i=0;i<(unsigned int)Pred13TeV16->GetNbinsX();i++){
-     // double Perr=0; double P = Pred13TeV16->IntegralAndError(i,Pred13TeV16->GetNbinsX()+1, Perr);   if(P<=0)continue;
-     // double Derr=0; double D = Data13TeV16->IntegralAndError(i,Data13TeV16->GetNbinsX()+1, Derr);
-     // Perr = sqrt(Perr*Perr + pow(P*SystError,2));
-     //  Pred13TeV16R->SetBinContent(i, D/P);  Pred13TeV16R->SetBinError (i, sqrt(pow(Derr*P,2) +pow(Perr*D,2))/pow(P,2));      
-     //}}
+      Pred13TeV16R = (TH1D*)Pred13TeV16->Clone("Pred13TeV16R"); Pred13TeV16R->Reset();
+      for(unsigned int i=0;i<(unsigned int)Pred13TeV16->GetNbinsX();i++){
+      double Perr=0; double P = Pred13TeV16->IntegralAndError(i,Pred13TeV16->GetNbinsX()+1, Perr);   if(P<=0)continue;
+      double Derr=0; double D = Data13TeV16->IntegralAndError(i,Data13TeV16->GetNbinsX()+1, Derr);
+      Perr = sqrt(Perr*Perr + pow(P*SystError,2));
+      Pred13TeV16R->SetBinContent(i, D/P);  Pred13TeV16R->SetBinError (i, sqrt(pow(Derr*P,2) +pow(Perr*D,2))/pow(P,2));      
+   }}
 
    if(Pred13TeV15){
       Pred13TeV15R = (TH1D*)Pred13TeV15->Clone("Pred13TeV15R"); Pred13TeV15R->Reset();
@@ -950,9 +907,6 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
       Pred13TeV16R->SetLineColor(2);
       Pred13TeV16R->SetFillColor(0);
       Pred13TeV16R->Draw("same E1");
-      ErrorBand->SetMarkerStyle(1);
-      ErrorBand->SetMarkerSize(0);
-      ErrorBand->Draw("E3 same");
    }
 
    if(Pred13TeV16G){
@@ -962,20 +916,17 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
       Pred13TeV16GR->SetLineColor(2);
       Pred13TeV16GR->SetFillColor(0);
       Pred13TeV16GR->Draw("same E1");
-      ErrorBandG->SetMarkerStyle(1);
-      ErrorBandG->SetMarkerSize(0);
-      ErrorBandG->Draw("hist L same");
    }
 
 
 
    // FIXME this line needs to be edited ... 2800 is waaay too much (obviously)
-   TLine* LineAtOne = new TLine(0,1,1600,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
+   TLine* LineAtOne = new TLine(0,1,1000,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
 
-   //TLatex T;
-   // T.SetTextAlign(33);
-   // T.SetTextSize (0.15);
-   //T.DrawLatex (1580, 2.4, "R = #int_{M}^{#infty} dm_{obs} / #int_{M}^{#infty} dm_{pred}");
+   TLatex T;
+   T.SetTextAlign(33);
+   T.SetTextSize (0.15);
+   T.DrawLatex (1580, 2.4, "R = #int_{M}^{#infty} dm_{obs} / #int_{M}^{#infty} dm_{pred}");
 
    c1->cd();
    SaveCanvas(c1, InputPattern, string("Rescale_") + HistoSuffix + "_" + DataName);

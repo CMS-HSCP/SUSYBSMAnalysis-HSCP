@@ -133,7 +133,7 @@ elif sys.argv[1]=='4o':
               if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
 #              if(vals[2].find("8TeV")<0):continue
               Path = "Results/Type"+str(Type)+"/"
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"OPTIMIZE"', '"'+Path+'"', vals[2] ])
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"OPTIMIZE2016"', '"'+Path+'"', vals[2] ])
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 
@@ -186,7 +186,7 @@ elif sys.argv[1]=='4':
               Path = "Results/Type"+str(Type)+"/"
               #LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMPUTELIMIT2016"' if vals[2].find("13TeV16G") == -1 else '"COMPUTELIMIT2016G"', '"'+Path+'"', vals[2] ]) # compute separately 2016 preG and postG
 
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE2016"', '"'+Path+'"', vals[2] ]) #combine 2016 preG, postG, and combined 2016 in the same job
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE_2016"', '"'+Path+'"', vals[2] ]) #combine 2016 preG, postG, and combined 2016 in the same job
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 

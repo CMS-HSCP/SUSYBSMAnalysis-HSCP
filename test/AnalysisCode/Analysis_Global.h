@@ -223,7 +223,7 @@ void InitBaseDirectory(){
    }else if(host.find("cern.ch")!=std::string::npos){
       //BaseDirectory = "rfio:/castor/cern.ch/user/r/rybinska/HSCPEDMFiles/";
       //BaseDirectory = "root://eoscms//eos/cms/store/cmst3/user/querten/12_08_30_HSCP_EDMFiles/";    //for run1
-      BaseDirectory = "root://eoscms//eos/cms/store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/";  //for run2
+      BaseDirectory = "root://eoscms//eos/cms/store/group/phys_exotica/hscp/";  //for run2
    }else if(host.find("fnal.gov")!=std::string::npos){
      BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/lpchscp/2012HSCPEDMFiles/"; //for run1
    }else if(host.find("ingrid-ui")!=std::string::npos){

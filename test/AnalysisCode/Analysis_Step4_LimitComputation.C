@@ -138,10 +138,10 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
 bool Combine(string InputPattern, string signal7, string signal8, int* OptimCutIndex=nullptr);
 bool useSample(int TypeMode, string sample);
 
-int my_system(const char *cmd) {
- std:executiion  << std::endl << cmd << std::endl;
-  return system(cmd);
-}command: cout << 
+// int my_system(const char *cmd) {
+//  std:executiion  << std::endl << cmd << std::endl;
+//   return system(cmd);
+// }command: cout << 
 
 double MinRange = 0;
 double MaxRange = 9999;
@@ -257,6 +257,18 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
       printf("Combining ...\n");
       EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"COMB2016";  SQRTS=131667.0;
       Combine(InputPattern, signal13TeV16, signal13TeV16G, &OptCutIndex);
+      return;
+   }
+
+   if(MODE.find("COMBINE_2016")!=string::npos){
+      
+      string signal13TeV16  = ReplacePartOfString(signal, "13TeV16", "13TeV") + "W13TeV16";
+      string signal13TeV16G = ReplacePartOfString(signal, "13TeV16G", "13TeV") + "W13TeV16G";
+      
+      string EXCLUSIONDIR_SAVE = EXCLUSIONDIR;
+      printf("Combining ...\n");
+      EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"COMB2016";  SQRTS=131667.0;
+      Combine(InputPattern, signal13TeV16, signal13TeV16G);
       return;
    }
 

@@ -2,6 +2,10 @@
 
 ## Setup working area
 
+Instruction for Combine installation taken from [Combine page](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#slc6cc7-release-cmssw_8_1_x).
+
+Be sure to use SL6.
+
 ```bash
 cmsrel CMSSW_8_0_30
 cd CMSSW_8_0_30/src/
@@ -17,8 +21,19 @@ git checkout Run2_2016
 popd
 
 scram b -j8
-```
 
+#Installing Combine
+
+git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+cd HiggsAnalysis/CombinedLimit
+
+cd $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit
+git fetch origin
+git checkout v7.0.13
+
+scramv1 b clean; scramv1 b
+
+```
 -------------------------------
 
 ## Run the code
