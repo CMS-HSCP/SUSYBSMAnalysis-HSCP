@@ -10,11 +10,17 @@ struct stPlots {
    TDirectory*  Directory;
    TTree*       Tree;
    unsigned int NCuts;
+   unsigned int Tree_Trig;
    unsigned int Tree_Run;
    unsigned int Tree_Event;
+   unsigned int Tree_Lumi;
    unsigned int Tree_Hscp;
+   float        Tree_Charge;
    float        Tree_Pt;
+   float        Tree_PtErr;
    float        Tree_I;
+   float        Tree_Ih;
+   float        Tree_Ick;
    float        Tree_TOF;
    float        Tree_Mass;
    float        Tree_dZ;
@@ -22,6 +28,34 @@ struct stPlots {
    float        Tree_dR;
    float        Tree_eta;
    float        Tree_phi;
+   unsigned int Tree_NOH; //number of (valid) track pixel+strip hits 
+   unsigned int Tree_NOPH;//number of (valid) track pixel hits
+   float        Tree_FOVH;//fraction of valid track hits
+   unsigned int Tree_NOMH;//number of missing hits from IP till last hit (excluding hits behind the last hit)
+   float        Tree_FOVHD;//fraction of valid hits divided by total expected hits until the last one
+   unsigned int Tree_NOM;//number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+   float        Tree_Weight;
+   float        Tree_GenId;
+   float        Tree_GenCharge;
+   float        Tree_GenMass;
+   float        Tree_GenPt;
+   float        Tree_GenEta;
+   float        Tree_GenPhi;
+ 
+   TTree*       GenTree;
+   unsigned int GenTree_Run;
+   unsigned int GenTree_Event;
+   unsigned int GenTree_Lumi;
+   unsigned int GenTree_Hscp;
+   float        GenTree_Weight;
+   float        GenTree_GenId;
+   float        GenTree_GenCharge;
+   float        GenTree_GenMass;
+   float        GenTree_GenPt;
+   float        GenTree_GenEta;
+   float        GenTree_GenPhi;
+
+
 
 
 
@@ -266,6 +300,26 @@ struct stPlots {
   TH2D*  Pred_EtaB;
   TH2D*  Pred_EtaS;
   TH2D*  Pred_EtaS2;
+
+  //pz
+
+  TH2D* PDF_E_Eta;
+  TH2D* PDF_A_Eta;
+  TH3D* PDF_H_EtaMass;
+  TH3D* PDF_G_EtaP;
+  TH3D* PDF_C_EtaP;
+  TH3D* PDF_F_EtaICK;
+  TH3D* PDF_B_EtaICK;
+
+  TH2D* PDF_E_Eta_Flip;
+  TH2D* PDF_A_Eta_Flip;
+  TH3D* PDF_H_EtaMass_Flip;
+  TH3D* PDF_G_EtaP_Flip;
+  TH3D* PDF_C_EtaP_Flip;
+  TH3D* PDF_F_EtaICK_Flip;
+  TH3D* PDF_B_EtaICK_Flip;
+
+
 // end FIXME
 
   TH2D*  RegionD_P;
@@ -632,6 +686,34 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
      Name = "Pred_EtaS2"; st.Pred_EtaS2 = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins,-3,3); st.Pred_EtaS2->Sumw2();
      Name = "Pred_EtaP"; st.Pred_EtaP = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.Pred_EtaP->Sumw2();
      Name = "Pred_TOF"; st.Pred_TOF = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts,   200,GlobalMinTOF,5); st.Pred_TOF->Sumw2();
+     //pz
+
+     Name = "PDF_G_EtaP"; st.PDF_G_EtaP = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.PDF_G_EtaP->Sumw2();
+     Name = "PDF_C_EtaP"; st.PDF_C_EtaP = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.PDF_C_EtaP->Sumw2();
+
+     Name = "PDF_A_Eta"; st.PDF_A_Eta = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3); st.PDF_A_Eta->Sumw2();
+     Name = "PDF_E_Eta"; st.PDF_E_Eta = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3); st.PDF_E_Eta->Sumw2();
+
+
+     Name = "PDF_B_EtaICK"; st.PDF_B_EtaICK = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 60,-2.,3.); st.PDF_B_EtaICK->Sumw2();
+     Name = "PDF_F_EtaICK"; st.PDF_F_EtaICK = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 60,-2.,3.); st.PDF_F_EtaICK->Sumw2();
+
+     Name = "PDF_H_EtaMass"; st.PDF_H_EtaMass = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, MassNBins,0,MassHistoUpperBound); st.PDF_H_EtaMass->Sumw2();
+
+     //pz FLIP
+     Name = "PDF_G_EtaP_Flip"; st.PDF_G_EtaP_Flip = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.PDF_G_EtaP_Flip->Sumw2();
+     Name = "PDF_C_EtaP_Flip"; st.PDF_C_EtaP_Flip = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); st.PDF_C_EtaP_Flip->Sumw2();
+
+     Name = "PDF_A_Eta_Flip"; st.PDF_A_Eta_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3); st.PDF_A_Eta_Flip->Sumw2();
+     Name = "PDF_E_Eta_Flip"; st.PDF_E_Eta_Flip = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3); st.PDF_E_Eta_Flip->Sumw2();
+
+
+     Name = "PDF_B_EtaICK_Flip"; st.PDF_B_EtaICK_Flip = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 60,-2.,3.); st.PDF_B_EtaICK_Flip->Sumw2();
+     Name = "PDF_F_EtaICK_Flip"; st.PDF_F_EtaICK_Flip = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 60,-2.,3.); st.PDF_F_EtaICK_Flip->Sumw2();
+
+     Name = "PDF_H_EtaMass_Flip"; st.PDF_H_EtaMass_Flip = new TH3D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, MassNBins,0,MassHistoUpperBound); st.PDF_H_EtaMass_Flip->Sumw2();
+
+     
    }
 
    Name = "RegionD_I"; st.RegionD_I = new TH2D(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, 400,0,dEdxM_UpLim); st.RegionD_I->Sumw2();
@@ -713,11 +795,17 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
 
    st.Tree = new TTree("HscpCandidates", "HscpCandidates");
    st.Tree->SetDirectory(0);
+   st.Tree->Branch("Trig"    ,&st.Tree_Trig      ,"Trig/i");
    st.Tree->Branch("Run"     ,&st.Tree_Run       ,"Run/i");
    st.Tree->Branch("Event"   ,&st.Tree_Event     ,"Event/i");
+   st.Tree->Branch("Lumi"    ,&st.Tree_Lumi      ,"Lumi/i");
    st.Tree->Branch("Hscp"    ,&st.Tree_Hscp      ,"Hscp/i");
+   st.Tree->Branch("Charge"  ,&st.Tree_Charge    ,"Charge/F");
    st.Tree->Branch("Pt"      ,&st.Tree_Pt        ,"Pt/F");
+   st.Tree->Branch("PtErr"   ,&st.Tree_PtErr     ,"PtErr/F");
    st.Tree->Branch("I"       ,&st.Tree_I         ,"I/F");
+   st.Tree->Branch("Ih"      ,&st.Tree_Ih        ,"Ih/F");
+   st.Tree->Branch("Ick"     ,&st.Tree_Ick       ,"Ick/F");
    st.Tree->Branch("TOF"     ,&st.Tree_TOF       ,"TOF/F");
    st.Tree->Branch("Mass"    ,&st.Tree_Mass      ,"Mass/F");
    st.Tree->Branch("dZ"      ,&st.Tree_dZ        ,"dZ/F");
@@ -725,6 +813,34 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
    st.Tree->Branch("dR"      ,&st.Tree_dR        ,"dR/F");
    st.Tree->Branch("eta"     ,&st.Tree_eta       ,"eta/F");
    st.Tree->Branch("phi"     ,&st.Tree_phi       ,"phi/F");
+   st.Tree->Branch("NOH"     ,&st.Tree_NOH       ,"NOH/i");
+   st.Tree->Branch("NOPH"    ,&st.Tree_NOPH      ,"NOPH/i");
+   st.Tree->Branch("FOVH"    ,&st.Tree_FOVH      ,"FOVH/F");
+   st.Tree->Branch("NOMH"    ,&st.Tree_NOMH      ,"NOMH/i");
+   st.Tree->Branch("FOVHD"   ,&st.Tree_FOVHD     ,"FOVHD/F");
+   st.Tree->Branch("NOM"     ,&st.Tree_NOM       ,"NOM/i");
+   st.Tree->Branch("Weight"  ,&st.Tree_Weight    ,"Weight/F");
+   st.Tree->Branch("GenId"   ,&st.Tree_GenId     ,"GenId/F");
+   st.Tree->Branch("GenCharge",&st.Tree_GenCharge,"GenCharge/F");
+   st.Tree->Branch("GenMass" ,&st.Tree_GenMass   ,"GenMass/F");
+   st.Tree->Branch("GenPt"   ,&st.Tree_GenPt     ,"GenPt/F");
+   st.Tree->Branch("GenEta"  ,&st.Tree_GenEta    ,"GenEta/F");
+   st.Tree->Branch("GenPhi"  ,&st.Tree_GenPhi    ,"GenPhi/F");
+
+
+   st.GenTree = new TTree("GenHscpCandidates", "GenHscpCandidates");
+   st.GenTree->SetDirectory(0);
+   st.GenTree->Branch("Run"     ,&st.GenTree_Run       ,"Run/i");
+   st.GenTree->Branch("Event"   ,&st.GenTree_Event     ,"Event/i");
+   st.GenTree->Branch("Lumi"    ,&st.GenTree_Lumi      ,"Lumi/i");
+   st.GenTree->Branch("Hscp"    ,&st.GenTree_Hscp      ,"Hscp/i");
+   st.GenTree->Branch("Weight"  ,&st.GenTree_Weight    ,"Weight/F");
+   st.GenTree->Branch("GenId"   ,&st.GenTree_GenId     ,"GenId/F");
+   st.GenTree->Branch("GenCharge",&st.GenTree_GenCharge,"GenCharge/F");
+   st.GenTree->Branch("GenMass" ,&st.GenTree_GenMass   ,"GenMass/F");
+   st.GenTree->Branch("GenPt"   ,&st.GenTree_GenPt     ,"GenPt/F");
+   st.GenTree->Branch("GenEta"  ,&st.GenTree_GenEta    ,"GenEta/F");
+   st.GenTree->Branch("GenPhi"  ,&st.GenTree_GenPhi    ,"GenPhi/F");
 
 
    HistoFile->cd();
@@ -969,28 +1085,69 @@ void stPlots_Clear(stPlots* st, bool WriteFirst=false)
 {
    if(WriteFirst){
       st->Tree->SetDirectory(st->Directory);
+      st->GenTree->SetDirectory(st->Directory);
       st->Directory->Write();
    }
    delete st->Directory;
 }
 
 // add one candidate to the bookeeping tree --> the event must be saved in the tree if you want to find it back with the DumpInfo.C code later on
-void stPlots_FillTree(stPlots* st, unsigned int Run, unsigned int Event, unsigned int Hscp, double Pt, double I, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, int MaxEntry=20000){
+void stPlots_FillTree(stPlots* st, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi, int MaxEntry=20000){
+ 
    if(MaxEntry>0 && st->Tree->GetEntries()>=MaxEntry)return;
+   st->Tree_Trig   = Trig;
    st->Tree_Run   = Run;
    st->Tree_Event = Event;
+   st->Tree_Lumi = Lumi;
    st->Tree_Hscp  = Hscp;
+   st->Tree_Charge = Charge;
    st->Tree_Pt    = Pt;
+   st->Tree_PtErr = PtErr;
    st->Tree_I     = I;
+   st->Tree_Ih    = Ih;
+   st->Tree_Ick   = Ick;
    st->Tree_TOF   = TOF;
    st->Tree_Mass  = Mass;
    st->Tree_dZ    = dZ;
    st->Tree_dXY   = dXY;
    st->Tree_dR    = dR;
-   st->Tree_eta    = eta;
-   st->Tree_phi    = phi;
+   st->Tree_eta   = eta;
+   st->Tree_phi   = phi;
+   st->Tree_NOH   = noh;
+   st->Tree_NOPH  = noph;
+   st->Tree_FOVH  = fovh;
+   st->Tree_NOMH  = nomh;
+   st->Tree_FOVHD = fovhd;
+   st->Tree_NOM   = nom;
+   st->Tree_Weight   = weight;
+   st->Tree_GenId    = genid;
+   st->Tree_GenCharge = gencharge;
+   st->Tree_GenMass  = genmass;
+   st->Tree_GenPt    = genpt;
+   st->Tree_GenEta   = geneta;
+   st->Tree_GenPhi   = genphi;
+
    st->Tree->Fill();
 }
+
+void stPlots_GenFillTree(stPlots* st,  unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi, int MaxEntry=20000){
+   
+   if(MaxEntry>0 && st->GenTree->GetEntries()>=MaxEntry)return;
+   st->GenTree_Run   = Run;
+   st->GenTree_Event = Event;
+   st->GenTree_Lumi = Lumi;
+   st->GenTree_Hscp  = Hscp;
+   st->GenTree_Weight   = weight;
+   st->GenTree_GenId    = genid;
+   st->GenTree_GenCharge = gencharge;
+   st->GenTree_GenMass  = genmass;
+   st->GenTree_GenPt    = genpt;
+   st->GenTree_GenEta   = geneta;
+   st->GenTree_GenPhi   = genphi;
+   
+   st->GenTree->Fill();
+}
+
 
 // dump a full preselection and selection cut flow table
 void stPlots_Dump(stPlots& st, FILE* pFile, int CutIndex){

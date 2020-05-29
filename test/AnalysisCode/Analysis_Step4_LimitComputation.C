@@ -111,6 +111,8 @@ string EXCLUSIONDIR = "EXCLUSION";
 //Background prediction rescale and uncertainty
 double RescaleFactor = 1.0;
 double RescaleError  = 0.2;
+//mk 
+//double RescaleError  = 0.9;
 
 //final Plot y-axis range
 double PlotMinScale = 2.0e-7;
@@ -138,8 +140,14 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
 bool Combine(string InputPattern, string signal7, string signal8, int* OptimCutIndex=nullptr);
 bool useSample(int TypeMode, string sample);
 
+// int my_system(const char *cmd) {
+//  std:executiion  << std::endl << cmd << std::endl;
+//   return system(cmd);
+// }command: cout << 
+
 double MinRange = 0;
 double MaxRange = 9999;
+double XsecUnit = 1000; // mk to get limits at level of fb (for pb =1)
 int    CurrentSampleIndex;
 
 std::vector<stSample> samples;
@@ -172,7 +180,16 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    string Data;
    if(MODE.find("SHAPE")!=string::npos){SHAPESTRING="SHAPE";}else{SHAPESTRING="";}
 
+/*   if(MODE.find("COMPUTELIMIT")!=string::npos || MODE.find("OPTIMIZE")!=string::npos){
+      if(signal.find("7TeV")!=string::npos){ Data = "Data7TeV";  SQRTS= 7.0; EXCLUSIONDIR+= "7TeV"; }
+      if(signal.find("8TeV")!=string::npos){ Data = "Data8TeV";  SQRTS= 8.0; EXCLUSIONDIR+= "8TeV"; }
+      if(signal.find("13TeV")!=string::npos){Data = "Data13TeV"; SQRTS=13.0; EXCLUSIONDIR+="13TeV"; }
+      printf("EXCLUSIONDIR = %s\nData = %s\n",EXCLUSIONDIR.c_str(), Data.c_str());  
 
+      if(MODE.find("COMPUTELIMIT")!=string::npos){Optimize(InputPattern, Data, signal, SHAPESTRING!="", true);      return;}
+      if(MODE.find("OPTIMIZE")!=string::npos){    Optimize(InputPattern, Data, signal, SHAPESTRING!="", false);     return;} //testShapeBasedAnalysis(InputPattern,signal);  //use the second part if you want to run shape based analyssi on optimal point form c&c      
+   }
+*/
    if(MODE.find("COMPUTELIMIT2015")!=string::npos || MODE.find("OPTIMIZE2015")!=string::npos){
       if(signal.find("13TeV")!=string::npos){Data = "Data13TeV"; SQRTS=1315.0; EXCLUSIONDIR+="13TeV15"; }
       printf("EXCLUSIONDIR = %s\nData = %s\n",EXCLUSIONDIR.c_str(), Data.c_str());  
@@ -243,6 +260,18 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
       printf("Combining ...\n");
       EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"COMB2016";  SQRTS=131667.0;
       Combine(InputPattern, signal13TeV16, signal13TeV16G, &OptCutIndex);
+      return;
+   }
+
+   if(MODE.find("COMBINE_2016")!=string::npos){
+      
+      string signal13TeV16  = ReplacePartOfString(signal, "13TeV16", "13TeV") + "W13TeV16";
+      string signal13TeV16G = ReplacePartOfString(signal, "13TeV16G", "13TeV") + "W13TeV16G";
+      
+      string EXCLUSIONDIR_SAVE = EXCLUSIONDIR;
+      printf("Combining ...\n");
+      EXCLUSIONDIR=EXCLUSIONDIR_SAVE+"COMB2016";  SQRTS=131667.0;
+      Combine(InputPattern, signal13TeV16, signal13TeV16G);
       return;
    }
 
@@ -335,8 +364,32 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    }
    printf("EXCLUSIONDIR = %s\nData = %s\n",EXCLUSIONDIR.c_str(), Data.c_str());  
 
+   //unti we have all the samples at both 7 and 8TeV, add the 7TeV models
+//   if(SQRTS== 8.0){
+//      for(unsigned int s=0;s<samples.size();s++){
+//       if(samples[s].Type!=2)continue;
+// 
+//        if(modelMap.find(samples[s].ModelName())==modelMap.end()){
+//          modelMap[samples[s].ModelName()].push_back(samples[s]);
+//          if(modelMap[samples[s].ModelName()].size()==1)modelVector.push_back(samples[s].ModelName());
+//        }
+//      }      
+//   } 
+
+   //based on the modelMap
+   //DrawRatioBands(TkPattern); 
+   //DrawRatioBands(MuPattern);
+   //DrawRatioBands(MOPattern); 
+   //DrawRatioBands(HQPattern);
+   //DrawRatioBands(LQPattern);
+
+   //draw the cross section limit for all model
    DrawModelLimitWithBand(TkPattern);
    DrawModelLimitWithBand(MuPattern);
+  // DrawModelLimitWithBand(MOPattern);
+   //DrawModelLimitWithBand(HQPattern);
+   //DrawModelLimitWithBand(LQPattern);
+   //make plots of the observed limit for all signal model (and mass point) and save the result in a latex table
 
    TCanvas* c1;
    TLegend* LEG;
@@ -385,10 +438,119 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    fprintf(talkFile,"      \\end{tabular}\n\\end{sidewaystable}\n\n");
 
    //DISABLED FOR NOW ON the MuonOnly, mCHamps and Frac Charge plots
+   /*
+   fprintf(pFile   , "%% %50s\n", "MuOnly");
+   fprintf(pFile   , "\\begin{table}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(talkFile, "\\begin{sidewaystable}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(talkFile,"Sample & Mass(GeV) & Pt(GeV) & $I_{as}$ & $#beta^{-1]$ & Mass Cut (GeV) & N pred & N observed & Eff \\\\\n");
+   fprintf(talkFile, "\\hline\n");
+   TGraph** MOGraphs = new TGraph*[modelVector.size()];
+   for(unsigned int k=0; k<modelVector.size(); k++){
+     bool isNeutral = false;if(modelVector[k].find("GluinoN")!=string::npos || modelVector[k].find("StopN")!=string::npos)isNeutral = true;
+     if(isNeutral) continue;//skip charged suppressed models                                                                                                                      
+     MOGraphs[k] = MakePlot(pFile,talkFile,MOPattern,modelVector[k], 2, modelMap[modelVector[k]], LInt);
+   }
+   fprintf(pFile   ,"      \\end{tabular}\n\\end{table}\n\n");
+   fprintf(talkFile,"      \\end{tabular}\n\\end{sidewaystable}\n\n");
+
+
+   fprintf(pFile   , "%% %50s\n", "multiple charge");
+   fprintf(pFile   , "\\begin{table}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(talkFile, "\\begin{sidewaystable}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(talkFile,"Sample & Mass(GeV) & Pt(GeV) & $I_{as}$ & $#beta^{-1]$ & Mass Cut (GeV) & N pred & N observed & Eff \\\\\n");
+   fprintf(talkFile, "\\hline\n");
+   TGraph** HQGraphs  = new TGraph*[modelVector.size()];
+   for(unsigned int k=0; k<modelVector.size(); k++){
+     bool ismHSCP = false;
+     if(modelVector[k].find("DY_Q")!=string::npos && modelVector[k].find("o3")==string::npos ) ismHSCP = true;
+     if(!ismHSCP) continue;  //  only mHSCP models
+     HQGraphs[k] = MakePlot(pFile,talkFile,HQPattern,modelVector[k], 2, modelMap[modelVector[k]], LInt);
+   }
+   fprintf(pFile   ,"      \\end{tabular}\n\\end{table}\n\n");
+   fprintf(talkFile,"      \\end{tabular}\n\\end{sidewaystable}\n\n");
+
+   fprintf(pFile   , "%% %50s\n", "fractionnally charge");
+   fprintf(pFile   , "\\begin{table}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(talkFile, "\\begin{sidewaystable}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(talkFile,"Sample & Mass(GeV) & Pt(GeV) & $I_{as}$ & $#beta^{-1]$ & Mass Cut (GeV) & N pred & N observed & Eff \\\\\n");
+   fprintf(talkFile, "\\hline\n");
+   TGraph** LQGraphs = new TGraph*[modelVector.size()];
+   for(unsigned int k=0; k<modelVector.size(); k++){
+      bool isFractional = false;if(modelVector[k].find("1o3")!=string::npos || modelVector[k].find("2o3")!=string::npos ||modelVector[k].find("Q1")!=string::npos)isFractional = true;
+      if(!isFractional) continue;//skip q>=1 charged suppressed models
+      LQGraphs[k] = MakePlot(pFile,talkFile,LQPattern,modelVector[k], 2, modelMap[modelVector[k]], LInt);
+   }
+   fprintf(pFile   ,"      \\end{tabular}\n\\end{table}\n\n");
+   fprintf(talkFile,"      \\end{tabular}\n\\end{sidewaystable}\n\n");
+   */
    fprintf(pFile   ,"\\end{document}\n\n");
    fprintf(talkFile,"\\end{document}\n\n");
 
    //DISABLED FOR NOW ON, WILL NEED TO BE ADAPTED FOR THE PAPER SUMMARY TABLE
+   /*
+   if(SQRTS==8.0){
+      fprintf(pFile,"%%TKONLY\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummary(pFile, talkFile, TkPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%TKTOF\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummary(pFile, talkFile, MuPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%MUONLY\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummary(pFile, talkFile, MOPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%Q>1\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummary(pFile, talkFile, HQPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%Q<1\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummary(pFile, talkFile, LQPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"\n\n\n\n\n\n");
+      fprintf(pFile,"%%TKONLY\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummaryPaper(pFile, talkFile, TkPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%TKTOF\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummaryPaper(pFile, talkFile, MuPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%MUONLY\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummaryPaper(pFile, talkFile, MOPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%Q>1\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummaryPaper(pFile, talkFile, HQPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+
+      fprintf(pFile,"%%Q<1\n");
+      fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
+      fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
+      for(unsigned int k=0; k<modelVector.size(); k++){printSummaryPaper(pFile, talkFile, LQPattern , modelVector[k], modelMap[modelVector[k]]); }
+      fprintf(pFile,"\\hline\n\n\n");
+   }*/
+
    //print a table with all uncertainty on signal efficiency
 
    c1 = new TCanvas("c1", "c1",600,600);
@@ -482,6 +644,142 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
      delete LEG;
    }
 
+   /*
+   fprintf(pFile   ,"\n\n %20s \n\n", LegendFromType(MOPattern).c_str());
+   fprintf(pFile,             "%20s   Eff   --> PScale |  DeDxScale | PUScale | TOFScale | TotalUncertainty     \n","Model");
+   fprintf(talkFile, "\\hline\n%20s &  Eff    & PScale &  DeDxScale & PUScale & TOFScale & TotalUncertainty \\\\\n","Model");
+
+   c1 = new TCanvas("c1", "c1",600,600);
+   c1->SetLeftMargin(0.15);
+   TMultiGraph* MOSystGraphs = new TMultiGraph();
+
+   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG->SetNColumns(2) ;
+   LEG->SetFillColor(0);
+   LEG->SetFillStyle(0);
+   LEG->SetBorderSize(0);
+
+   Graphs=0;
+   for(unsigned int k=0; k<modelVector.size(); k++){
+     TGraph* Uncertainty = CheckSignalUncertainty(pFile,talkFile,MOPattern, modelVector[k], modelMap[modelVector[k]]);
+     if(Uncertainty!=NULL && useSample(3, modelVector[k])) {
+       Uncertainty->SetLineColor(Color[Graphs]);  Uncertainty->SetMarkerColor(Color[Graphs]);   Uncertainty->SetMarkerStyle(20); Uncertainty->SetLineWidth(2);
+       MOSystGraphs->Add(Uncertainty,"LP");
+       LEG->AddEntry(Uncertainty,  modelVector[k].c_str() ,"L");
+       Graphs++;
+     }
+   }
+   if(Graphs>0) {
+   MOSystGraphs->Draw("A");
+   MOSystGraphs->SetTitle("");
+   MOSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
+   MOSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
+   MOSystGraphs->GetYaxis()->SetTitleOffset(1.40);
+   MOSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.6);
+   MOSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+
+   LEG->Draw();
+   c1->SetLogy(false);
+   c1->SetGridy(false);
+
+   DrawPreliminary(LegendFromType(MOPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"Results/"+SHAPESTRING+EXCLUSIONDIR+"/", "MOUncertainty");
+   delete c1;
+   delete MOSystGraphs;
+   delete LEG;
+   }
+
+   c1 = new TCanvas("c1", "c1",600,600);
+   c1->SetLeftMargin(0.15);
+   TMultiGraph* LQSystGraphs = new TMultiGraph();
+
+   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG->SetNColumns(2) ;
+   LEG->SetFillColor(0);
+   LEG->SetFillStyle(0);
+   LEG->SetBorderSize(0);
+
+   fprintf(pFile   ,"\n\n %20s \n\n", LegendFromType(LQPattern).c_str());
+   fprintf(pFile   ,          "%20s    Eff   --> PScale |  DeDxScale | PUScale | TotalUncertainty     \n","Model");
+   fprintf(talkFile, "\\hline\n%20s &  Eff     & PScale &  DeDxScale & PUScale & TotalUncertainty \\\\\n","Model");
+
+   Graphs=0;
+   for(unsigned int k=0; k<modelVector.size(); k++){
+     TGraph* Uncertainty = CheckSignalUncertainty(pFile,talkFile,LQPattern, modelVector[k], modelMap[modelVector[k]]);
+     if(Uncertainty!=NULL && useSample(5, modelVector[k])) {
+       Uncertainty->SetLineColor(Color[Graphs]);  Uncertainty->SetMarkerColor(Color[Graphs]);   Uncertainty->SetMarkerStyle(20); Uncertainty->SetLineWidth(2);
+       LQSystGraphs->Add(Uncertainty,"LP");
+       LEG->AddEntry(Uncertainty,  modelVector[k].c_str() ,"L");
+       Graphs++;
+     }
+   }
+
+   if(Graphs>0) {
+   LQSystGraphs->Draw("A");
+   LQSystGraphs->SetTitle("");
+   LQSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
+   LQSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
+   LQSystGraphs->GetYaxis()->SetTitleOffset(1.40);
+   LQSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.6);
+   LQSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+
+   LEG->Draw();
+   c1->SetLogy(false);
+   c1->SetGridy(false);
+
+   DrawPreliminary(LegendFromType(LQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"Results/"+SHAPESTRING+EXCLUSIONDIR+"/", "LQUncertainty");
+   delete c1;
+   delete LQSystGraphs;
+   delete LEG;
+   }
+
+
+   c1 = new TCanvas("c1", "c1",600,600);
+   c1->SetLeftMargin(0.15);
+   TMultiGraph* HQSystGraphs = new TMultiGraph();
+
+   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG->SetNColumns(2) ;
+   LEG->SetFillColor(0);
+   LEG->SetFillStyle(0);
+   LEG->SetBorderSize(0);
+
+   fprintf(pFile   ,"\n\n %20s \n\n", LegendFromType(HQPattern).c_str());
+   fprintf(pFile   ,          "%20s    Eff   --> PScale |  DeDxScale | PUScale | TotalUncertainty     \n","Model");
+   fprintf(talkFile, "\\hline\n%20s &  Eff     & PScale &  DeDxScale & PUScale & TotalUncertainty \\\\\n","Model");
+
+   Graphs=0;
+   for(unsigned int k=0; k<modelVector.size(); k++){
+     TGraph* Uncertainty = CheckSignalUncertainty(pFile,talkFile,HQPattern, modelVector[k], modelMap[modelVector[k]]);
+     if(Uncertainty!=NULL && useSample(4, modelVector[k])) {
+       Uncertainty->SetLineColor(Color[Graphs]);  Uncertainty->SetMarkerColor(Color[Graphs]);   Uncertainty->SetMarkerStyle(20); Uncertainty->SetLineWidth(2);
+       HQSystGraphs->Add(Uncertainty,"LP");
+       LEG->AddEntry(Uncertainty,  modelVector[k].c_str() ,"L");
+       Graphs++;
+     }
+   }
+
+   if(Graphs>0) {
+   HQSystGraphs->Draw("A");
+   HQSystGraphs->SetTitle("");
+   HQSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
+   HQSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
+   HQSystGraphs->GetYaxis()->SetTitleOffset(1.40);
+   HQSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.6);
+   HQSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+
+   LEG->Draw();
+   c1->SetLogy(false);
+   c1->SetGridy(false);
+
+   DrawPreliminary(LegendFromType(HQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"Results/"+SHAPESTRING+EXCLUSIONDIR+"/", "HQUncertainty");
+   delete c1;
+   delete HQSystGraphs;
+   delete LEG;
+   }
+   */
 std::cout<<"TESTA\n";
 
    //Get Theoretical xsection and error bands
@@ -529,7 +827,11 @@ std::cout<<"TESTA\n";
 //            #Prospino xsection that I get looks very weird, use pythia for the time being
             ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Low,THXSEC13TeV_GMStau_High, PlotMinScale, PlotMaxScale);
-
+//            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+//            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+//            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+//            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);            
          }else{
             const int NMass=sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double);
             double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
@@ -546,14 +848,24 @@ std::cout<<"TESTA\n";
 //            #Prospino xsection that I get looks very weird, use pythia for the time being
             ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Low,THXSEC13TeV_PPStau_High, PlotMinScale, PlotMaxScale);
-
+//            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);            
+//            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+//            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+//            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
          }else{
            const int NMass=sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double);
            double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
            ThXSec   [k] = new TGraph(NMass,THXSEC13TeV_PPStau_Mass,ones);
          }
        }else{
+         //if(modelVector[k].find("o3")!=string::npos){
+         //   ThXSec   [k] = MakePlot(NULL, NULL, LQPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+         //}else if(modelVector[k].find("DY_Q")!=string::npos){
+         //   ThXSec   [k] = MakePlot(NULL, NULL, HQPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+         //}else{
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+         //}
          double* XSecErrLow  = new double[ThXSec[k]->GetN()];
          double* XSecErrHigh = new double[ThXSec[k]->GetN()];
          //assume 10% error on xsection
@@ -605,13 +917,45 @@ std::cout<<"TESTB\n";
       fprintf(pFile,"%20s --> Excluded mass range %8.3f - %8.3fGeV\n", modelVector[k].c_str(), minMass, maxMass);
       //fprintf(pFile,"%20s --> Excluded mass below %8.3fGeV\n", modelVector[k].c_str(), FindIntersectionBetweenTwoGraphs(MuGraphs[k],  ThXSec[k], MuGraphs[k]->GetX()[0], MuGraphs[k]->GetX()[MuGraphs[k]->GetN()-1], 1, 0.00));
    }
+   /*
+   fprintf(pFile,"-----------------------\n0%% MU+Only        \n-------------------------\n");
+   for(unsigned int k=0; k<modelVector.size(); k++){
+      bool isNeutral = false;if(modelVector[k].find("GluinoN")!=string::npos || modelVector[k].find("StopN")!=string::npos)isNeutral = true;
+      if(isNeutral) continue;//skip charged suppressed models
+      if(MOGraphs[k]->GetN()==0) continue;
+      if(MOGraphs[k]->GetX()[MOGraphs[k]->GetN()-1]<0) continue;
+      fprintf(pFile,"%20s --> Excluded mass below %8.3fGeV\n", modelVector[k].c_str(), FindIntersectionBetweenTwoGraphs(MOGraphs[k],  ThXSec[k], MOGraphs[k]->GetX()[0], MOGraphs[k]->GetX()[MOGraphs[k]->GetN()-1], 1, 0.00));
+   }
 
+   fprintf(pFile,"-----------------------\n0%% Q>1            \n-------------------------\n");
+   for(unsigned int k=0; k<modelVector.size(); k++){
+     bool ismHSCP = false;
+     if(modelVector[k].find("DY_Q")!=string::npos && modelVector[k].find("o3")==string::npos ) ismHSCP = true;
+     if(!ismHSCP) continue; 
+
+      if(HQGraphs[k]->GetN()==0) continue;
+      if(HQGraphs[k]->GetX()[HQGraphs[k]->GetN()-1]<0) continue;
+      double minMass=-1, maxMass=-1;
+      FindRangeBetweenTwoGraphs(HQGraphs[k],  ThXSec[k], HQGraphs[k]->GetX()[0], HQGraphs[k]->GetX()[HQGraphs[k]->GetN()-1], 1, 0.00, minMass, maxMass);
+      fprintf(pFile,"%20s --> Excluded mass range %8.3f - %8.3fGeV\n", modelVector[k].c_str(), minMass, maxMass);
+      //fprintf(pFile,"%20s --> Excluded mass below %8.3fGeV\n", modelVector[k].c_str(), FindIntersectionBetweenTwoGraphs(HQGraphs[k],  ThXSec[k], HQGraphs[k]->GetX()[0], HQGraphs[k]->GetX()[HQGraphs[k]->GetN()-1], 1, 0.00));
+   }
+
+   fprintf(pFile,"-----------------------\n0%% Q<1             \n-------------------------\n");
+   for(unsigned int k=0; k<modelVector.size(); k++){
+      bool isFractional = false;if(modelVector[k].find("1o3")!=string::npos || modelVector[k].find("2o3")!=string::npos || modelVector[k].find("DY_Q1")!=string::npos)isFractional = true;
+      if(!isFractional) continue;//skip non fractional charge models
+      if(LQGraphs[k]->GetN()==0) continue;
+      if(LQGraphs[k]->GetX()[LQGraphs[k]->GetN()-1]<0) continue;
+      fprintf(pFile,"%20s --> Excluded mass below %8.3fGeV\n", modelVector[k].c_str(), FindIntersectionBetweenTwoGraphs(LQGraphs[k],  ThXSec[k], LQGraphs[k]->GetX()[0], LQGraphs[k]->GetX()[LQGraphs[k]->GetN()-1], 1, 0.00));
+   }
+   */
    fclose(pFile);
   
 
 std::cout<<"TESTC\n";
 
-
+ std::cout<<"qui arriva\n";
    //Make the final plot with all curves in it
    // I don't like much this part because it is dependent of what is in Analysis_Samples.h in an hardcoded way   
    std::map<string, TGraph*> TkGraphMap;
@@ -622,6 +966,9 @@ std::cout<<"TESTC\n";
    std::map<string, TGraph*> ThGraphMap;
    std::map<string, TCutG* > ThErrorMap;
    for(unsigned int k=0; k<modelVector.size(); k++){
+ std::cout<<k<<" "<<modelVector[k]<< " "<<MODE.c_str()<<std::endl;
+
+     std::cout << modelVector[k] << std::endl;
       TkGraphMap[modelVector[k]] = TkGraphs [k];
       MuGraphMap[modelVector[k]] = MuGraphs [k];
       //LQGraphMap[modelVector[k]] = LQGraphs [k];
@@ -630,15 +977,23 @@ std::cout<<"TESTC\n";
       ThGraphMap[modelVector[k]] = ThXSec   [k];
       ThErrorMap[modelVector[k]] = ThXSecErr[k];
    }
+   std::cout<<"qui anche \n";
+std::cout<<MODE.c_str()<<std::endl;
 
    // FIXME add GluinoN_f50 maybe as well?
-   if (MODE.find("13TeV16")==std::string::npos){
-      ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
-      MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-      MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-      TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["GluinoN_f10"  ]->SetLineColor(4);  TkGraphMap["GluinoN_f10"  ]->SetMarkerColor(4);   TkGraphMap["GluinoN_f10"  ]->SetLineWidth(2);   TkGraphMap["GluinoN_f10"  ]->SetLineStyle(1);  TkGraphMap["GluinoN_f10"  ]->SetMarkerStyle(26);
+  
+// if (MODE.find("13TeV16")==std::string::npos){
+ std::cout<<"loop 1 "<<MODE.c_str()<<std::endl;
+
+     std::cout<<"entrare anche 1"<<std::endl;
+     ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
+ std::cout<<"loop 1 "<<MODE.c_str()<<std::endl;
+
+     MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
+     MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
+     TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["GluinoN_f10"  ]->SetLineColor(4);  TkGraphMap["GluinoN_f10"  ]->SetMarkerColor(4);   TkGraphMap["GluinoN_f10"  ]->SetLineWidth(2);   TkGraphMap["GluinoN_f10"  ]->SetLineStyle(1);  TkGraphMap["GluinoN_f10"  ]->SetMarkerStyle(26);
       ThGraphMap["Stop"         ]->SetLineColor(2);  ThGraphMap["Stop"         ]->SetMarkerColor(2);   ThGraphMap["Stop"         ]->SetLineWidth(1);   ThGraphMap["Stop"         ]->SetLineStyle(2);  ThGraphMap["Stop"         ]->SetMarkerStyle(1);
       MuGraphMap["Stop"         ]->SetLineColor(2);  MuGraphMap["Stop"         ]->SetMarkerColor(2);   MuGraphMap["Stop"         ]->SetLineWidth(2);   MuGraphMap["Stop"         ]->SetLineStyle(1);  MuGraphMap["Stop"         ]->SetMarkerStyle(21);
       TkGraphMap["Stop"         ]->SetLineColor(2);  TkGraphMap["Stop"         ]->SetMarkerColor(2);   TkGraphMap["Stop"         ]->SetLineWidth(2);   TkGraphMap["Stop"         ]->SetLineStyle(1);  TkGraphMap["Stop"         ]->SetMarkerStyle(21);
@@ -655,24 +1010,17 @@ std::cout<<"TESTC\n";
       ThGraphMap["DY_Q2"        ]->SetLineColor(43); ThGraphMap["DY_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(10); ThGraphMap["DY_Q2"      ]->SetMarkerStyle(1);
       MuGraphMap["DY_Q2"        ]->SetLineColor(43); MuGraphMap["DY_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
       TkGraphMap["DY_Q2"        ]->SetLineColor(43); TkGraphMap["DY_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
-   }
+      std::cout<<"esce anche"<<std::endl;
+   
+//}
+
+/*
    else if (MODE.find("13TeV16")!=std::string::npos && MODE.find("13TeV16G")==std::string::npos){
-      ThGraphMap["Gluino16_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16_f10"   ]->SetMarkerStyle(1);
-      MuGraphMap["Gluino16_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
-      MuGraphMap["Gluino16_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
-      TkGraphMap["Gluino16_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16N_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16N_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16N_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16N_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16N_f10"  ]->SetMarkerStyle(26);
-      ThGraphMap["Stop16"         ]->SetLineColor(2);  ThGraphMap["Stop16"         ]->SetMarkerColor(2);   ThGraphMap["Stop16"         ]->SetLineWidth(1);   ThGraphMap["Stop16"         ]->SetLineStyle(2);  ThGraphMap["Stop16"         ]->SetMarkerStyle(1);
-      MuGraphMap["Stop16"         ]->SetLineColor(2);  MuGraphMap["Stop16"         ]->SetMarkerColor(2);   MuGraphMap["Stop16"         ]->SetLineWidth(2);   MuGraphMap["Stop16"         ]->SetLineStyle(1);  MuGraphMap["Stop16"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16"         ]->SetLineColor(2);  TkGraphMap["Stop16"         ]->SetMarkerColor(2);   TkGraphMap["Stop16"         ]->SetLineWidth(2);   TkGraphMap["Stop16"         ]->SetLineStyle(1);  TkGraphMap["Stop16"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16N"        ]->SetLineColor(2);  TkGraphMap["Stop16N"        ]->SetMarkerColor(2);   TkGraphMap["Stop16N"        ]->SetLineWidth(2);   TkGraphMap["Stop16N"        ]->SetLineStyle(1);  TkGraphMap["Stop16N"        ]->SetMarkerStyle(25);
-      ThGraphMap["GMStau16"       ]->SetLineColor(1);  ThGraphMap["GMStau16"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16"       ]->SetLineWidth(1);   ThGraphMap["GMStau16"       ]->SetLineStyle(3);  ThGraphMap["GMStau16"       ]->SetMarkerStyle(1);
-      ThGraphMap["PPStau16"       ]->SetLineColor(6);  ThGraphMap["PPStau16"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16"       ]->SetLineWidth(1);   ThGraphMap["PPStau16"       ]->SetLineStyle(4);  ThGraphMap["PPStau16"       ]->SetMarkerStyle(1);
-      MuGraphMap["GMStau16"       ]->SetLineColor(1);  MuGraphMap["GMStau16"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16"       ]->SetLineWidth(2);   MuGraphMap["GMStau16"       ]->SetLineStyle(1);  MuGraphMap["GMStau16"       ]->SetMarkerStyle(20);
-      MuGraphMap["PPStau16"       ]->SetLineColor(6);  MuGraphMap["PPStau16"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16"       ]->SetLineWidth(2);   MuGraphMap["PPStau16"       ]->SetLineStyle(1);  MuGraphMap["PPStau16"       ]->SetMarkerStyle(20);
-   else if (MODE.find("13TeV16")!=std::string::npos && MODE.find("13TeV16G")==std::string::npos){
+ std::cout<<"loop 2 "<<MODE.c_str()<<std::endl;
+
      ThGraphMap["Gluino16_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16_f10"   ]->SetMarkerStyle(1);
+ std::cout<<"loop 2 "<<MODE.c_str()<<std::endl;
+
      MuGraphMap["Gluino16_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
      MuGraphMap["Gluino16_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16_f50"   ]->SetMarkerStyle(23);
      TkGraphMap["Gluino16_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16_f10"   ]->SetMarkerStyle(22);
@@ -685,39 +1033,80 @@ std::cout<<"TESTC\n";
      ThGraphMap["GMStau16"       ]->SetLineColor(1);  ThGraphMap["GMStau16"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16"       ]->SetLineWidth(1);   ThGraphMap["GMStau16"       ]->SetLineStyle(3);  ThGraphMap["GMStau16"       ]->SetMarkerStyle(1);
      ThGraphMap["PPStau16"       ]->SetLineColor(6);  ThGraphMap["PPStau16"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16"       ]->SetLineWidth(1);   ThGraphMap["PPStau16"       ]->SetLineStyle(4);  ThGraphMap["PPStau16"       ]->SetMarkerStyle(1);
      MuGraphMap["GMStau16"       ]->SetLineColor(1);  MuGraphMap["GMStau16"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16"       ]->SetLineWidth(2);   MuGraphMap["GMStau16"       ]->SetLineStyle(1);  MuGraphMap["GMStau16"       ]->SetMarkerStyle(20);
-     MuGraphMap["PPStau16"       ]->SetLineColor(1);  TkGraphMap["GMStau16"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16"       ]->SetLineWidth(2);   TkGraphMap["GMStau16"       ]->SetLineStyle(1);  TkGraphMap["GMStau16"       ]->SetMarkerStyle(20);
+     MuGraphMap["PPStau16"       ]->SetLineColor(6);  MuGraphMap["PPStau16"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16"       ]->SetLineWidth(2);   MuGraphMap["PPStau16"       ]->SetLineStyle(1);  MuGraphMap["PPStau16"       ]->SetMarkerStyle(20);
+     TkGraphMap["GMStau16"       ]->SetLineColor(1);  TkGraphMap["GMStau16"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16"       ]->SetLineWidth(2);   TkGraphMap["GMStau16"       ]->SetLineStyle(1);  TkGraphMap["GMStau16"       ]->SetMarkerStyle(20);
      TkGraphMap["PPStau16"       ]->SetLineColor(6);  TkGraphMap["PPStau16"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16"       ]->SetLineWidth(2);   TkGraphMap["PPStau16"       ]->SetLineStyle(1);  TkGraphMap["PPStau16"       ]->SetMarkerStyle(20);
      ThGraphMap["DY16_Q1"        ]->SetLineColor(46); ThGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16_Q1"        ]->SetMarkerStyle(1);
      MuGraphMap["DY16_Q1"        ]->SetLineColor(46); MuGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q1"      ]->SetMarkerStyle(20);
      TkGraphMap["DY16_Q1"        ]->SetLineColor(46); TkGraphMap["DY16_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q1"      ]->SetMarkerStyle(20);
-    ThGraphMap["DY16_Q2"        ]->SetLineColor(43); ThGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16_Q2"      ]->SetMarkerStyle(1);
-      MuGraphMap["DY16_Q2"        ]->SetLineColor(43); MuGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
-      TkGraphMap["DY16_Q2"        ]->SetLineColor(43); TkGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
+     ThGraphMap["DY16_Q2"        ]->SetLineColor(43); ThGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16_Q2"      ]->SetMarkerStyle(1);
+     MuGraphMap["DY16_Q2"        ]->SetLineColor(43); MuGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
+     TkGraphMap["DY16_Q2"        ]->SetLineColor(43); TkGraphMap["DY16_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16_Q2"      ]->SetMarkerStyle(34);
    }
+
+
    else if (MODE.find("13TeV16G")!=std::string::npos){
-      ThGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16G_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(1);
-      MuGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
-      MuGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
-      TkGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
-      TkGraphMap["Gluino16GN_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16GN_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16GN_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerStyle(26);
-      ThGraphMap["Stop16G"         ]->SetLineColor(2);  ThGraphMap["Stop16G"         ]->SetMarkerColor(2);   ThGraphMap["Stop16G"         ]->SetLineWidth(1);   ThGraphMap["Stop16G"         ]->SetLineStyle(2);  ThGraphMap["Stop16G"         ]->SetMarkerStyle(1);
-      MuGraphMap["Stop16G"         ]->SetLineColor(2);  MuGraphMap["Stop16G"         ]->SetMarkerColor(2);   MuGraphMap["Stop16G"         ]->SetLineWidth(2);   MuGraphMap["Stop16G"         ]->SetLineStyle(1);  MuGraphMap["Stop16G"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16G"         ]->SetLineColor(2);  TkGraphMap["Stop16G"         ]->SetMarkerColor(2);   TkGraphMap["Stop16G"         ]->SetLineWidth(2);   TkGraphMap["Stop16G"         ]->SetLineStyle(1);  TkGraphMap["Stop16G"         ]->SetMarkerStyle(21);
-      TkGraphMap["Stop16GN"        ]->SetLineColor(2);  TkGraphMap["Stop16GN"        ]->SetMarkerColor(2);   TkGraphMap["Stop16GN"        ]->SetLineWidth(2);   TkGraphMap["Stop16GN"        ]->SetLineStyle(1);  TkGraphMap["Stop16GN"        ]->SetMarkerStyle(25);
-      ThGraphMap["GMStau16G"       ]->SetLineColor(1);  ThGraphMap["GMStau16G"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16G"       ]->SetLineWidth(1);   ThGraphMap["GMStau16G"       ]->SetLineStyle(3);  ThGraphMap["GMStau16G"       ]->SetMarkerStyle(1);
-      ThGraphMap["PPStau16G"       ]->SetLineColor(6);  ThGraphMap["PPStau16G"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16G"       ]->SetLineWidth(1);   ThGraphMap["PPStau16G"       ]->SetLineStyle(4);  ThGraphMap["PPStau16G"       ]->SetMarkerStyle(1);
-      MuGraphMap["GMStau16G"       ]->SetLineColor(1);  MuGraphMap["GMStau16G"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16G"       ]->SetLineWidth(2);   MuGraphMap["GMStau16G"       ]->SetLineStyle(1);  MuGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
-      MuGraphMap["PPStau16G"       ]->SetLineColor(6);  MuGraphMap["PPStau16G"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16G"       ]->SetLineWidth(2);   MuGraphMap["PPStau16G"       ]->SetLineStyle(1);  MuGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
-      TkGraphMap["GMStau16G"       ]->SetLineColor(1);  TkGraphMap["GMStau16G"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16G"       ]->SetLineWidth(2);   TkGraphMap["GMStau16G"       ]->SetLineStyle(1);  TkGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
-      TkGraphMap["PPStau16G"       ]->SetLineColor(6);  TkGraphMap["PPStau16G"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16G"       ]->SetLineWidth(2);   TkGraphMap["PPStau16G"       ]->SetLineStyle(1);  TkGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
-      ThGraphMap["DY16G_Q1"        ]->SetLineColor(46); ThGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16G_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16G_Q1"        ]->SetMarkerStyle(1);
-      MuGraphMap["DY16G_Q1"        ]->SetLineColor(46); MuGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
-      TkGraphMap["DY16G_Q1"        ]->SetLineColor(46); TkGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
-      ThGraphMap["DY16G_Q2"        ]->SetLineColor(43); ThGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16G_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16G_Q2"      ]->SetMarkerStyle(1);
-      MuGraphMap["DY16G_Q2"        ]->SetLineColor(43); MuGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
-      TkGraphMap["DY16G_Q2"        ]->SetLineColor(43); TkGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
+ std::cout<<"loop 3 "<<MODE.c_str()<<std::endl;
+
+     ThGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino16G_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(1);
+ std::cout<<"loop 3 "<<MODE.c_str()<<std::endl;
+
+     MuGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
+
+     MuGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino16G_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f10"   ]->SetMarkerStyle(22);
+     TkGraphMap["Gluino16G_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino16G_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino16G_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino16G_f50"   ]->SetMarkerStyle(23);
+     TkGraphMap["Gluino16GN_f10"  ]->SetLineColor(4);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerColor(4);   TkGraphMap["Gluino16GN_f10"  ]->SetLineWidth(2);   TkGraphMap["Gluino16GN_f10"  ]->SetLineStyle(1);  TkGraphMap["Gluino16GN_f10"  ]->SetMarkerStyle(26);
+     ThGraphMap["Stop16G"         ]->SetLineColor(2);  ThGraphMap["Stop16G"         ]->SetMarkerColor(2);   ThGraphMap["Stop16G"         ]->SetLineWidth(1);   ThGraphMap["Stop16G"         ]->SetLineStyle(2);  ThGraphMap["Stop16G"         ]->SetMarkerStyle(1);
+     MuGraphMap["Stop16G"         ]->SetLineColor(2);  MuGraphMap["Stop16G"         ]->SetMarkerColor(2);   MuGraphMap["Stop16G"         ]->SetLineWidth(2);   MuGraphMap["Stop16G"         ]->SetLineStyle(1);  MuGraphMap["Stop16G"         ]->SetMarkerStyle(21);
+     TkGraphMap["Stop16G"         ]->SetLineColor(2);  TkGraphMap["Stop16G"         ]->SetMarkerColor(2);   TkGraphMap["Stop16G"         ]->SetLineWidth(2);   TkGraphMap["Stop16G"         ]->SetLineStyle(1);  TkGraphMap["Stop16G"         ]->SetMarkerStyle(21);
+     TkGraphMap["Stop16GN"        ]->SetLineColor(2);  TkGraphMap["Stop16GN"        ]->SetMarkerColor(2);   TkGraphMap["Stop16GN"        ]->SetLineWidth(2);   TkGraphMap["Stop16GN"        ]->SetLineStyle(1);  TkGraphMap["Stop16GN"        ]->SetMarkerStyle(25);
+     ThGraphMap["GMStau16G"       ]->SetLineColor(1);  ThGraphMap["GMStau16G"       ]->SetMarkerColor(1);   ThGraphMap["GMStau16G"       ]->SetLineWidth(1);   ThGraphMap["GMStau16G"       ]->SetLineStyle(3);  ThGraphMap["GMStau16G"       ]->SetMarkerStyle(1);
+     ThGraphMap["PPStau16G"       ]->SetLineColor(6);  ThGraphMap["PPStau16G"       ]->SetMarkerColor(6);   ThGraphMap["PPStau16G"       ]->SetLineWidth(1);   ThGraphMap["PPStau16G"       ]->SetLineStyle(4);  ThGraphMap["PPStau16G"       ]->SetMarkerStyle(1);
+     MuGraphMap["GMStau16G"       ]->SetLineColor(1);  MuGraphMap["GMStau16G"       ]->SetMarkerColor(1);   MuGraphMap["GMStau16G"       ]->SetLineWidth(2);   MuGraphMap["GMStau16G"       ]->SetLineStyle(1);  MuGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
+     MuGraphMap["PPStau16G"       ]->SetLineColor(6);  MuGraphMap["PPStau16G"       ]->SetMarkerColor(6);   MuGraphMap["PPStau16G"       ]->SetLineWidth(2);   MuGraphMap["PPStau16G"       ]->SetLineStyle(1);  MuGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
+     TkGraphMap["GMStau16G"       ]->SetLineColor(1);  TkGraphMap["GMStau16G"       ]->SetMarkerColor(1);   TkGraphMap["GMStau16G"       ]->SetLineWidth(2);   TkGraphMap["GMStau16G"       ]->SetLineStyle(1);  TkGraphMap["GMStau16G"       ]->SetMarkerStyle(20);
+     TkGraphMap["PPStau16G"       ]->SetLineColor(6);  TkGraphMap["PPStau16G"       ]->SetMarkerColor(6);   TkGraphMap["PPStau16G"       ]->SetLineWidth(2);   TkGraphMap["PPStau16G"       ]->SetLineStyle(1);  TkGraphMap["PPStau16G"       ]->SetMarkerStyle(20);
+     ThGraphMap["DY16G_Q1"        ]->SetLineColor(46); ThGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY16G_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY16G_Q1"        ]->SetMarkerStyle(1);
+     MuGraphMap["DY16G_Q1"        ]->SetLineColor(46); MuGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
+     TkGraphMap["DY16G_Q1"        ]->SetLineColor(46); TkGraphMap["DY16G_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY16G_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q1"      ]->SetMarkerStyle(20);
+     ThGraphMap["DY16G_Q2"        ]->SetLineColor(43); ThGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY16G_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY16G_Q2"        ]->SetLineStyle(10); ThGraphMap["DY16G_Q2"      ]->SetMarkerStyle(1);
+     MuGraphMap["DY16G_Q2"        ]->SetLineColor(43); MuGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
+     TkGraphMap["DY16G_Q2"        ]->SetLineColor(43); TkGraphMap["DY16G_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY16G_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY16G_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY16G_Q2"      ]->SetMarkerStyle(34);
    }
+*/
+
+
+   //MOGraphMap["Gluino_f10"   ]->SetLineColor(4);  MOGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
+   //MOGraphMap["Gluino_f50"   ]->SetLineColor(4);  MOGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+   //MOGraphMap["Gluino_f100"  ]->SetLineColor(4);  MOGraphMap["Gluino_f100"  ]->SetMarkerColor(4);   MOGraphMap["Gluino_f100"  ]->SetLineWidth(2);   MOGraphMap["Gluino_f100"  ]->SetLineStyle(1);  MOGraphMap["Gluino_f100"  ]->SetMarkerStyle(26);
+   //MOGraphMap["Stop"         ]->SetLineColor(2);  MOGraphMap["Stop"         ]->SetMarkerColor(2);   MOGraphMap["Stop"         ]->SetLineWidth(2);   MOGraphMap["Stop"         ]->SetLineStyle(1);  MOGraphMap["Stop"         ]->SetMarkerStyle(21);
+   //ThGraphMap["DY_Q1o3"      ]->SetLineColor(41); ThGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  ThGraphMap["DY_Q1o3"      ]->SetLineWidth(1);   ThGraphMap["DY_Q1o3"      ]->SetLineStyle(9);  ThGraphMap["DY_Q1o3"      ]->SetMarkerStyle(1);
+   //TkGraphMap["DY_Q1o3"      ]->SetLineColor(41); TkGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  TkGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   TkGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  TkGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
+   //MOGraphMap["DY_Q1o3"      ]->SetLineColor(41); MOGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  MOGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   MOGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  MOGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
+   //LQGraphMap["DY_Q1o3"      ]->SetLineColor(41); LQGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  LQGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
+   //ThGraphMap["DY_Q2o3"      ]->SetLineColor(43); ThGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  ThGraphMap["DY_Q2o3"      ]->SetLineWidth(1);   ThGraphMap["DY_Q2o3"      ]->SetLineStyle(10); ThGraphMap["DY_Q2o3"      ]->SetMarkerStyle(1);
+   //TkGraphMap["DY_Q2o3"      ]->SetLineColor(43); TkGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  TkGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   TkGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  TkGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //MuGraphMap["DY_Q2o3"      ]->SetLineColor(43); MuGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  MuGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   MuGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  MuGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //MOGraphMap["DY_Q2o3"      ]->SetLineColor(43); MOGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  MOGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   MOGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  MOGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //LQGraphMap["DY_Q2o3"      ]->SetLineColor(43); LQGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  LQGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //LQGraphMap["DY_Q1"        ]->SetLineColor(46); LQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  LQGraphMap["DY_Q1"        ]->SetLineWidth(2);   LQGraphMap["DY_Q1"        ]->SetLineStyle(1);  LQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
+   //HQGraphMap["DY_Q1"        ]->SetLineColor(46); HQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  HQGraphMap["DY_Q1"        ]->SetLineWidth(2);   HQGraphMap["DY_Q1"        ]->SetLineStyle(1);  HQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
+   //HQGraphMap["DY_Q2"        ]->SetLineColor(2 ); HQGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  HQGraphMap["DY_Q2"        ]->SetLineWidth(2);   HQGraphMap["DY_Q2"        ]->SetLineStyle(1);  HQGraphMap["DY_Q2"        ]->SetMarkerStyle(21);
+   //ThGraphMap["DY_Q3"        ]->SetLineColor(1 ); ThGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  ThGraphMap["DY_Q3"        ]->SetLineWidth(1);   ThGraphMap["DY_Q3"        ]->SetLineStyle(9);  ThGraphMap["DY_Q3"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q3"        ]->SetLineColor(1 ); HQGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  HQGraphMap["DY_Q3"        ]->SetLineWidth(2);   HQGraphMap["DY_Q3"        ]->SetLineStyle(1);  HQGraphMap["DY_Q3"        ]->SetMarkerStyle(22);
+   //ThGraphMap["DY_Q4"        ]->SetLineColor(6 ); ThGraphMap["DY_Q4"        ]->SetMarkerColor(6 );  ThGraphMap["DY_Q4"        ]->SetLineWidth(1);   ThGraphMap["DY_Q4"        ]->SetLineStyle(3);  ThGraphMap["DY_Q4"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q4"        ]->SetLineColor(6 ); HQGraphMap["DY_Q4"        ]->SetMarkerColor(6 );  HQGraphMap["DY_Q4"        ]->SetLineWidth(2);   HQGraphMap["DY_Q4"        ]->SetLineStyle(1);  HQGraphMap["DY_Q4"        ]->SetMarkerStyle(23);
+   //ThGraphMap["DY_Q5"        ]->SetLineColor(4 ); ThGraphMap["DY_Q5"        ]->SetMarkerColor(4 );  ThGraphMap["DY_Q5"        ]->SetLineWidth(1);   ThGraphMap["DY_Q5"        ]->SetLineStyle(8);  ThGraphMap["DY_Q5"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q5"        ]->SetLineColor(4 ); HQGraphMap["DY_Q5"        ]->SetMarkerColor(4 );  HQGraphMap["DY_Q5"        ]->SetLineWidth(2);   HQGraphMap["DY_Q5"        ]->SetLineStyle(1);  HQGraphMap["DY_Q5"        ]->SetMarkerStyle(29);
+   //ThGraphMap["DY_Q6"        ]->SetLineColor(9 ); ThGraphMap["DY_Q6"        ]->SetMarkerColor(9 );  ThGraphMap["DY_Q6"        ]->SetLineWidth(1);   ThGraphMap["DY_Q6"        ]->SetLineStyle(6);  ThGraphMap["DY_Q6"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q6"        ]->SetLineColor(9 ); HQGraphMap["DY_Q6"        ]->SetMarkerColor(9 );  HQGraphMap["DY_Q6"        ]->SetLineWidth(2);   HQGraphMap["DY_Q6"        ]->SetLineStyle(1);  HQGraphMap["DY_Q6"        ]->SetMarkerStyle(33);
+   //ThGraphMap["DY_Q7"        ]->SetLineColor(12); ThGraphMap["DY_Q7"        ]->SetMarkerColor(12);  ThGraphMap["DY_Q7"        ]->SetLineWidth(1);   ThGraphMap["DY_Q7"        ]->SetLineStyle(7);  ThGraphMap["DY_Q7"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q7"        ]->SetLineColor(12); HQGraphMap["DY_Q7"        ]->SetMarkerColor(12);  HQGraphMap["DY_Q7"        ]->SetLineWidth(2);   HQGraphMap["DY_Q7"        ]->SetLineStyle(1);  HQGraphMap["DY_Q7"        ]->SetMarkerStyle(34);
+   //ThGraphMap["DY_Q8"        ]->SetLineColor(14); ThGraphMap["DY_Q8"        ]->SetMarkerColor(14);  ThGraphMap["DY_Q8"        ]->SetLineWidth(1);   ThGraphMap["DY_Q8"        ]->SetLineStyle(10); ThGraphMap["DY_Q8"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q8"        ]->SetLineColor(14); HQGraphMap["DY_Q8"        ]->SetMarkerColor(14);  HQGraphMap["DY_Q8"        ]->SetLineWidth(2);   HQGraphMap["DY_Q8"        ]->SetLineStyle(1);  HQGraphMap["DY_Q8"        ]->SetMarkerStyle(24);
+
+   std::cout<<"qui anche 2\n";
 
 std::cout<<"TESTD\n";
    c1 = new TCanvas("c1", "c1",600,600);
@@ -732,15 +1121,16 @@ std::cout<<"TESTD\n";
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(PlotMaxScale);
    frame->SetMinimum(PlotMinScale);
-   frame->GetYaxis()->SetRangeUser(!Combine?1e-4:2e-5, !Combine?1.5e1:2.5e1); // JOZZE EDIT
+//   frame->GetYaxis()->SetRangeUser(!Combine?1e-4:2e-5, !Combine?1.5e1:2.5e1); // JOZZE EDIT
+   frame->GetYaxis()->SetRangeUser(5e-5,1.1e1);//mk
    frame->Draw("AXIS");
 
 
 //   MGMu->Draw("A");
 
    std::string tmp = "";
-   if      (MODE.find("13TeV16G")!=std::string::npos) tmp = "16G";
-   else if (MODE.find("13TeV16")!=std::string::npos)  tmp = "16" ;
+//   if      (MODE.find("13TeV16G")!=std::string::npos) tmp = "16G";
+//   else if (MODE.find("13TeV16")!=std::string::npos)  tmp = "16" ;
 
 ////   if(!Combine) {
       ThErrorMap["Gluino"+tmp+"_f10"]->Draw("F");
@@ -811,7 +1201,9 @@ std::cout<<"TESTD\n";
    TGraph* StauThLeg = (TGraph*) ThGraphMap["GMStau"+tmp        ]->Clone("StauThLeg");
    StauThLeg->SetFillColor(ThErrorMap["Gluino"+tmp+"_f10"]->GetFillColor());
    LEGTh->AddEntry(StauThLeg   ,"stau (NLO)" ,"LF");
-
+   //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
+   //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
+   //LEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
    TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY"+tmp+"_Q1"        ]->Clone("DYQ1ThLeg");
    DYQ1ThLeg->SetFillColor(ThErrorMap["DY"+tmp+"_Q1"]->GetFillColor());
    LEGTh->AddEntry(DYQ1ThLeg   ,"|Q| = 1e (LO)" ,"LF");
@@ -828,7 +1220,18 @@ std::cout<<"TESTD\n";
 
    c1 = new TCanvas("c1", "c1",600,600);
    c1->SetLogy(true);
-   frame->GetYaxis()->SetRangeUser(!Combine?1e-4:2e-5, !Combine?1.5e1:2.5e1); // JOZZE EDIT
+//   frame = new TH1D("frame", "frame", 1,50, 2650);
+//   frame->GetXaxis()->SetNdivisions(505);
+//   frame->SetTitle("");
+//   frame->SetStats(kFALSE);
+//   frame->GetXaxis()->SetTitle("Mass (GeV)");
+//   frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+//   frame->GetYaxis()->SetTitleOffset(1.40);
+//   frame->SetMaximum(PlotMaxScale);
+//   frame->SetMinimum(PlotMinScale);
+//   frame->GetYaxis()->SetRangeUser(!Combine?1e-4:2e-5, !Combine?1.5e1:2.5e1); // JOZZE EDIT
+   frame->GetYaxis()->SetRangeUser(5e-5,1.1e1);//mk
+
    frame->Draw("AXIS");
 
 ////   if(!Combine) {
@@ -932,9 +1335,16 @@ std::cout<<"F\n";
 if(Combine){
 
    c1 = new TCanvas("c1", "c1",600,600);
-
-   frame->SetMaximum(20);
-   frame->SetMinimum(1e-3);
+//   frame = new TH1D("frame", "frame", 1,90, 570);
+//   frame->GetXaxis()->SetNdivisions(505);
+//   frame->SetTitle("");
+//   frame->SetStats(kFALSE);
+//   frame->GetXaxis()->SetTitle("Mass (GeV)");
+//   frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+//   frame->GetYaxis()->SetTitleOffset(1.40);
+   frame->SetMaximum(5e-2);
+   frame->SetMinimum(5e-5);//mk
+   frame->GetXaxis()->SetRangeUser(50,1700.);
    frame->Draw("AXIS");
 
    MuGraphMap["GMStau"       ]->SetLineColor(2);  MuGraphMap["GMStau"       ]->SetMarkerColor(2);   MuGraphMap["GMStau"       ]->SetLineWidth(2);   MuGraphMap["GMStau"       ]->SetLineStyle(1);  MuGraphMap["GMStau"       ]->SetMarkerStyle(22);
@@ -958,27 +1368,305 @@ if(Combine){
    LEGTk->SetFillColor(0); 
    LEGTk->SetFillStyle(0);
    LEGTk->SetBorderSize(0);
-   LEGTk->SetHeader("Stau prod. (direct+indirect)");
-   LEGTk->AddEntry(MuGraphMap["GMStau"     ], LegendFromType(MuPattern).c_str()                              ,"LP");
+   LEGTk->SetHeader("Stau prod. (cascade)");
    LEGTk->AddEntry(TkGraphMap["GMStau"     ], LegendFromType(TkPattern).c_str()                              ,"LP");
+   LEGTk->AddEntry(MuGraphMap["GMStau"     ], LegendFromType(MuPattern).c_str()                              ,"LP");
    LEGTk->Draw();
 
-   LEGTh =/* !Combine ? */new TLegend(0.50,0.92-3*0.043,0.83,0.92)/* : new TLegend(0.45,0.15+0*0.043,0.80,0.15+3*0.043)*/;
+   LEGTh =/* !Combine ? new TLegend(0.50,0.92-3*0.043,0.83,0.92)*/  new TLegend(0.50,0.92-3*0.043,0.83,.65);
    LEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGTh->SetTextSize(18); //font size     
    LEGTh->SetFillColor(0); 
    LEGTh->SetFillStyle(0);
    LEGTh->SetBorderSize(0);
    LEGTh->SetHeader("Stau prod. (direct)");
-   LEGTh->AddEntry(MuGraphMap["PPStau"     ], LegendFromType(MuPattern).c_str()                              ,"LP");
    LEGTh->AddEntry(TkGraphMap["PPStau"     ], LegendFromType(TkPattern).c_str()                              ,"LP");
+   LEGTh->AddEntry(MuGraphMap["PPStau"     ], LegendFromType(MuPattern).c_str()                              ,"LP");
    LEGTh->Draw();
+
 
    c1->SetLogy(true);
    SaveCanvas(c1, outpath, string("StauExclusionLog"));
    delete c1;
 }
 //////////////////////////////////////
+
+
+   /*
+   c1 = new TCanvas("c1", "c1",600,600);
+
+   TMultiGraph* MGMO = new TMultiGraph();
+   if(!Combine) {
+   MGMO->Add(ThGraphMap["Gluino_f10" ]     ,"L");
+   MGMO->Add(ThGraphMap["Stop"       ]     ,"L");
+   //MGMO->Add(ThGraphMap["DY_Q1o3"    ]     ,"L");
+   //MGMO->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
+   }
+
+   //TGraph* DYQ1o3ThLeg = (TGraph*) ThGraphMap["DY_Q1o3"        ]->Clone("DYQ1o3ThLeg");
+   //DYQ1o3ThLeg->SetFillColor(ThErrorMap["DY_Q1o3"]->GetFillColor());
+   //LQLEGTh->AddEntry(DYQ1o3ThLeg   ,"|Q| = e/3   (LO)" ,"LF");
+   //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
+   //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
+   //LQLEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3   (LO)" ,"LF");
+   //LQLEGTh->Draw();
+
+
+   MGMO->Add(MOGraphMap["Gluino_f10" ]     ,"LP");
+   MGMO->Add(MOGraphMap["Gluino_f50" ]     ,"LP");
+   MGMO->Add(MOGraphMap["Gluino_f100"]     ,"LP");
+   MGMO->Add(MOGraphMap["Stop"       ]     ,"LP");
+   //MGMO->Add(MOGraphMap["DY_Q1o3"    ]     ,"LP");
+   //MGMO->Add(MOGraphMap["DY_Q2o3"    ]     ,"LP");
+
+   MGMO->Draw("A");
+   if(!Combine) {
+     ThErrorMap["Gluino_f10"]->Draw("f");
+     ThErrorMap["Stop"      ]->Draw("f");
+     //ThErrorMap["DY_Q1o3"   ]->Draw("f");
+     //ThErrorMap["DY_Q2o3"   ]->Draw("f");
+   }else{
+      TLine* LineAtOne = new TLine(50,1,1550,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
+   }
+
+   MGMO->Draw("same");
+   MGMO->SetTitle("");
+   MGMO->GetXaxis()->SetTitle("Mass (GeV)");
+   MGMO->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+   MGMO->GetYaxis()->SetTitleOffset(1.40);
+   MGMO->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
+   MGMO->GetXaxis()->SetRangeUser(50,1550);
+   
+   DrawPreliminary(LegendFromType(MOPattern).c_str(), 8.0, IntegratedLuminosityFromE(8.0), true);
+
+   TLegend* LEGMO = !Combine ? new TLegend(0.50,0.92-4*0.043,0.83,0.92) : new TLegend(0.55,0.25,0.80,0.25+4*0.043);
+   LEGMO->SetTextFont(43); //give the font size in pixel (instead of fraction)
+   LEGMO->SetTextSize(18); //font size
+   LEGMO->SetFillColor(0); 
+   LEGMO->SetFillStyle(0);
+   LEGMO->SetBorderSize(0);
+   LEGMO->AddEntry(MOGraphMap["Gluino_f100" ], "gluino; 100% #tilde{g}g"            ,"LP");
+   LEGMO->AddEntry(MOGraphMap["Gluino_f50" ], "gluino; 50% #tilde{g}g"            ,"LP");
+   LEGMO->AddEntry(MOGraphMap["Gluino_f10" ], "gluino; 10% #tilde{g}g"            ,"LP");
+   LEGMO->AddEntry(MOGraphMap["Stop"       ], "stop"                              ,"LP");
+   //LEGMO->AddEntry(TkGraphMap["DY_Q1o3"    ], "|Q| = e/3"            ,"LP");
+   //LEGMO->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e/3"            ,"LP");
+   LEGMO->Draw();
+
+   TLegend* MOLEGTh = new TLegend(0.15,0.92-(1+2)*0.043,0.50,0.92);
+   MOLEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
+   MOLEGTh->SetTextSize(18); //font size
+   if(!Combine) {
+     MOLEGTh->SetHeader("Theoretical Prediction");
+     MOLEGTh->SetFillColor(0);
+     //MOLEGTh->SetFillStyle(0);
+     MOLEGTh->SetBorderSize(0);
+
+     TGraph* GlThLeg = (TGraph*) ThGraphMap["Gluino_f10"]->Clone("GluinoThLeg");
+     GlThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
+     MOLEGTh->AddEntry(GlThLeg, "gluino (NLO+NLL)" ,"LF");
+     TGraph* StThLeg = (TGraph*) ThGraphMap["Stop"      ]->Clone("StopThLeg");
+     StThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
+     MOLEGTh->AddEntry(StThLeg   ,"stop (NLO+NLL)" ,"LF");
+     //TGraph* DYQ1o3ThLeg = (TGraph*) ThGraphMap["DY_Q1o3"        ]->Clone("DYQ1o3ThLeg");
+     //DYQ1o3ThLeg->SetFillColor(ThErrorMap["DY_Q1o3"]->GetFillColor());
+     //MOLEGTh->AddEntry(DYQ1o3ThLeg   ,"|Q| = e/3 (LO)" ,"LF");
+     //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
+     //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
+     //MOLEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
+     MOLEGTh->Draw();
+   }
+
+   c1->SetLogy(true);
+   SaveCanvas(c1, outpath, string("MOExclusionLog"));
+   delete c1;
+
+
+
+
+
+
+
+
+   /////////////////////////////// LQ Analysis
+   TLegend* LQLEGTh = new TLegend(0.15,0.92-(1+2)*0.043,0.50,0.92);
+   LQLEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
+   LQLEGTh->SetTextSize(18); //font size
+   c1 = new TCanvas("c1", "c1",600,600);
+   if(!Combine) {
+   LQLEGTh->SetHeader("Theoretical Prediction");
+   LQLEGTh->SetFillColor(0);
+   //LQLEGTh->SetFillStyle(0);
+   LQLEGTh->SetBorderSize(0);
+
+   TGraph* DYQ1o3ThLeg = (TGraph*) ThGraphMap["DY_Q1o3"        ]->Clone("DYQ1o3ThLeg");
+   DYQ1o3ThLeg->SetFillColor(ThErrorMap["DY_Q1o3"]->GetFillColor());
+   LQLEGTh->AddEntry(DYQ1o3ThLeg   ,"|Q| = e/3   (LO)" ,"LF");
+   TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
+   DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
+   LQLEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3   (LO)" ,"LF");
+   LQLEGTh->Draw();
+   }
+
+   TMultiGraph* MGLQ = new TMultiGraph();
+   if(!Combine) {
+   MGLQ->Add(ThGraphMap["DY_Q1o3"    ]     ,"L");
+   MGLQ->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
+   }
+
+   MGLQ->Add(LQGraphMap["DY_Q1o3"    ]     ,"LP");
+   MGLQ->Add(LQGraphMap["DY_Q2o3"    ]     ,"LP");
+
+   MGLQ->Draw("A");
+   if(!Combine) {
+   ThErrorMap["DY_Q1o3"   ]->Draw("f");
+   ThErrorMap["DY_Q2o3"   ]->Draw("f");
+   }else{
+      TLine* LineAtOne = new TLine(75,1,625,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
+   }
+
+   MGLQ->Draw("same");
+   MGLQ->SetTitle("");
+   MGLQ->GetXaxis()->SetTitle("Mass (GeV)");
+   MGLQ->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+   MGLQ->GetYaxis()->SetTitleOffset(1.40);
+   MGLQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
+   MGLQ->GetXaxis()->SetRangeUser(75,625);
+
+   DrawPreliminary(LegendFromType(LQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+
+   TLegend* LEGLQ = !Combine ? new TLegend(0.50,0.92-2*0.043,0.83,0.92) : new TLegend(0.20,0.88-2*0.043,0.50,0.88);
+   LEGLQ->SetTextFont(43); //give the font size in pixel (instead of fraction)
+   LEGLQ->SetTextSize(18); //font size
+//   LEGLQ->SetHeader("Q<1");
+   LEGLQ->SetFillColor(0); 
+   LEGLQ->SetFillStyle(0);
+   LEGLQ->SetBorderSize(0);
+   LEGLQ->AddEntry(TkGraphMap["DY_Q1o3"    ], "|Q| = e/3"            ,"LP");
+   LEGLQ->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e/3"            ,"LP");
+   if(!Combine) LQLEGTh->Draw();
+
+   LEGLQ->Draw();
+   c1->SetLogy(true);
+   SaveCanvas(c1, outpath, string("LQExclusionLog"));
+   delete c1;
+
+
+   c1 = new TCanvas("c1", "c1",600,600);
+   TMultiGraph* MGHQ = new TMultiGraph();
+
+   if(!Combine) {
+     MGHQ->Add(ThGraphMap["DY_Q1" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q2" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q3" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q4" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q5" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q6" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q7" ]      ,"L");
+     MGHQ->Add(ThGraphMap["DY_Q8" ]      ,"L");
+   }
+   MGHQ->Add(HQGraphMap["DY_Q1" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q2" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q3" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q4" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q5" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q6" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q7" ]      ,"LP");
+   MGHQ->Add(HQGraphMap["DY_Q8" ]      ,"LP");
+   MGHQ->Draw("A");
+   
+   if(!Combine) {
+     ThErrorMap["DY_Q1"]->Draw("f");
+     ThErrorMap["DY_Q2"]->Draw("f");
+     ThErrorMap["DY_Q3"]->Draw("f");
+     ThErrorMap["DY_Q4"]->Draw("f");
+     ThErrorMap["DY_Q5"]->Draw("f");
+     ThErrorMap["DY_Q6"]->Draw("f");
+     ThErrorMap["DY_Q7"]->Draw("f");
+     ThErrorMap["DY_Q8"]->Draw("f");
+   }else{
+      TLine* LineAtOne = new TLine(50,1,1050,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
+   }
+
+   
+   MGHQ->Draw("same");
+   MGHQ->SetTitle("");
+   MGHQ->GetXaxis()->SetTitle("Mass (GeV)");
+   MGHQ->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+   MGHQ->GetYaxis()->SetTitleOffset(1.40);
+   MGHQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
+   //MGHQ->GetYaxis()->SetRangeUser(PlotMinScale,100);
+   MGHQ->GetXaxis()->SetRangeUser(50,1050);
+
+   DrawPreliminary(LegendFromType(HQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   TLegend* LEGHQ = !Combine ? new TLegend(0.62,0.92-0.043-8*0.043,0.83,0.92-0.043) : new TLegend(0.55,0.35,0.80,0.35+6*0.043);
+//   TLegend* LEGHQ = !Combine ? new TLegend(0.62,0.92-5*0.043,0.83,0.92) : new TLegend(0.55,0.35,0.80,0.35+6*0.043);
+   LEGHQ->SetTextFont(43); //give the font size in pixel (instead of fraction)
+   LEGHQ->SetTextSize(18); //font size
+
+   LEGHQ->SetFillColor(0); 
+   //LEGHQ->SetFillStyle(0);
+   LEGHQ->SetBorderSize(0);
+   LEGHQ->AddEntry(HQGraphMap["DY_Q1"] , "|Q| = 1e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q2"] , "|Q| = 2e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q3"] , "|Q| = 3e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q4"] , "|Q| = 4e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q5"] , "|Q| = 5e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q6"] , "|Q| = 6e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q7"] , "|Q| = 7e "    ,"LP");
+   LEGHQ->AddEntry(HQGraphMap["DY_Q8"] , "|Q| = 8e "    ,"LP");
+
+   TLegend* HQLEGTh = new TLegend(0.35,0.92-(1+8)*0.043,0.57,0.92);
+//   TLegend* HQLEGTh = new TLegend(0.3,0.92-(1+5)*0.043,0.57,0.92);
+   HQLEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
+   HQLEGTh->SetTextSize(18); //font size
+   if(!Combine){
+   HQLEGTh->SetHeader("Theoretical Prediction");
+   HQLEGTh->SetFillColor(0);
+   HQLEGTh->SetFillStyle(0);
+   HQLEGTh->SetBorderSize(0);
+   
+   TGraph* Q1ThLeg = (TGraph*) ThGraphMap["DY_Q1"]->Clone("HSCPQ1ThLeg");
+   Q1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
+   HQLEGTh->AddEntry(Q1ThLeg, "|Q| = 1e (LO)" ,"LF");
+
+   TGraph* Q2ThLeg = (TGraph*) ThGraphMap["DY_Q2"]->Clone("HSCPQ2ThLeg");
+   Q2ThLeg->SetFillColor(ThErrorMap["DY_Q2"]->GetFillColor());
+   HQLEGTh->AddEntry(Q2ThLeg, "|Q| = 2e (LO)" ,"LF");
+
+   TGraph* Q3ThLeg = (TGraph*) ThGraphMap["DY_Q3"]->Clone("HSCPQ3ThLeg");
+   Q3ThLeg->SetFillColor(ThErrorMap["DY_Q3"]->GetFillColor());
+   HQLEGTh->AddEntry(Q3ThLeg, "|Q| = 3e (LO)" ,"LF");
+
+   TGraph* Q4ThLeg = (TGraph*) ThGraphMap["DY_Q4"]->Clone("HSCPQ4ThLeg");
+   Q4ThLeg->SetFillColor(ThErrorMap["DY_Q4"]->GetFillColor());
+   HQLEGTh->AddEntry(Q4ThLeg, "|Q| = 4e (LO)" ,"LF");
+
+   TGraph* Q5ThLeg = (TGraph*) ThGraphMap["DY_Q5"]->Clone("HSCPQ5ThLeg");
+   Q5ThLeg->SetFillColor(ThErrorMap["DY_Q5"]->GetFillColor());
+   HQLEGTh->AddEntry(Q5ThLeg, "|Q| = 5e (LO)" ,"LF");
+
+   TGraph* Q6ThLeg = (TGraph*) ThGraphMap["DY_Q6"]->Clone("HSCPQ6ThLeg");
+   Q6ThLeg->SetFillColor(ThErrorMap["DY_Q6"]->GetFillColor());
+   HQLEGTh->AddEntry(Q6ThLeg, "|Q| = 6e (LO)" ,"LF");
+
+   TGraph* Q7ThLeg = (TGraph*) ThGraphMap["DY_Q7"]->Clone("HSCPQ7ThLeg");
+   Q7ThLeg->SetFillColor(ThErrorMap["DY_Q7"]->GetFillColor());
+   HQLEGTh->AddEntry(Q7ThLeg, "|Q| = 7e (LO)" ,"LF");
+
+   TGraph* Q8ThLeg = (TGraph*) ThGraphMap["DY_Q8"]->Clone("HSCPQ8ThLeg");
+   Q8ThLeg->SetFillColor(ThErrorMap["DY_Q8"]->GetFillColor());
+   HQLEGTh->AddEntry(Q8ThLeg, "|Q| = 8e (LO)" ,"LF");
+
+   HQLEGTh->Draw();
+   }
+
+   LEGHQ->Draw();
+   c1->SetLogy(true);
+   SaveCanvas(c1, outpath, string("HQExclusionLog"));
+   delete c1;
+   */
+
 
    return;
 }
@@ -1096,6 +1784,15 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
      TCanvas* c2 = new TCanvas("c2", "c2",600,600);
      c2->SetLeftMargin(0.15);
 
+//     graphSystP = new TGraphErrors(N,Mass,SystP, MassErr, SystErrP);
+//     graphSystI = new TGraphErrors(N,Mass,SystI, MassErr,SystErrI);
+//     graphSystPU = new TGraphErrors(N,Mass,SystPU, MassErr,SystErrPU);
+//     graphSystT = new TGraphErrors(N,Mass,SystT, MassErr,SystErrT);
+//     graphSystTr = new TGraphErrors(N,Mass,SystTr, MassErr,SystErrTr);
+//     graphSystRe = new TGraphErrors(N,Mass,SystRe, MassErr,SystErrRe);
+//     graphSystMB = new TGraphErrors(N,Mass,SystMB, MassErr,SystErrMB);
+//     graphSystTotal = new TGraphErrors(N,Mass,SystTotal, MassErr, SystErrTotal);
+
      graphSystP = new TGraph(N,Mass,SystP);//, MassErr, SystErrP);
      graphSystI = new TGraph(N,Mass,SystI);//, MassErr,SystErrI);
      graphSystM = new TGraph(N,Mass,SystM);//, MassErr,SystErrI);
@@ -1173,7 +1870,7 @@ TGraph* MakePlot(FILE* pFile, FILE* talkFile, string InputPattern, string ModelN
    std::vector<int> signalPoints;
    for(unsigned int i=0;i<modelSamples.size();i++) if(XSectionType==0 || stAllInfo(InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelSamples[i].Name +".txt").XSec_Exp<1E10) {
      //Skip 100GeV for DY Q=7 and Q=8
-     If(XSectionType>0 && (ModelName.find("DY_Q7")!=string::npos || ModelName.find("DY_Q8")!=string::npos) && stAllInfo(InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelSamples[i].Name +".txt").Mass==100.0 )continue;
+     if(XSectionType>0 && (ModelName.find("DY_Q7")!=string::npos || ModelName.find("DY_Q8")!=string::npos) && stAllInfo(InputPattern+""+SHAPESTRING+EXCLUSIONDIR+"/" + modelSamples[i].Name +".txt").Mass==100.0 )continue;
      signalPoints.push_back(i);
    }
    unsigned int N   = signalPoints.size();
@@ -1331,6 +2028,7 @@ double GetSignalMeanHSCPPerEvent(string InputPattern, unsigned int CutIndex, dou
    delete NEventsPassingSelection;
 
    delete InputFile;
+   //toReturn=1.0;// mk per candidate instead of per event
    return toReturn;
 }
 
@@ -1386,7 +2084,7 @@ void DrawModelLimitWithBand(string InputPattern){
          XSecExp2Down.push_back(Infos.XSec_Exp2Down);
          LInt           =std::max(LInt, Infos.LInt);
       }
-      if (skip) continue;
+     // if (skip) continue;
       TGraph* graphtheory  = new TGraph(Mass.size(),&(Mass[0]),&(XSecTh [0]));
       TGraph* graphobs     = new TGraph(Mass.size(),&(Mass[0]),&(XSecObs[0]));
       TGraph* graphexp     = new TGraph(Mass.size(),&(Mass[0]),&(XSecExp[0]));
@@ -1418,7 +2116,10 @@ void DrawModelLimitWithBand(string InputPattern){
       frame->GetYaxis()->SetTitleOffset(1.40);
       frame->SetMaximum(PlotMaxScale);
       frame->SetMinimum(PlotMinScale);
-      frame->GetYaxis()->SetRangeUser(2e-5, 1.5e1); // JOZZE EDIT
+   //   frame->GetYaxis()->SetRangeUser(2e-5, 1.5e1); // JOZZE EDIT
+   frame->GetYaxis()->SetRangeUser(5e-5,1.1e1);//mk
+
+
       frame->Draw("AXIS");
 
 
@@ -1783,13 +2484,28 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    stAllInfo result;
    stAllInfo toReturn;
    double Mean=-1,Width=-1;
+     std::cout<< " Mass0 mktest "<<OptimCutIndex<<std::endl;
+
    if(!shape && TypeMode<=2){
-      TH1D* tmpMassSignProj = MassSign->ProjectionY("MassSignProj0",1,1);
+     std::cout<< " Mass1 mktest "<<OptimCutIndex<<std::endl;
+
+//     TH1D* tmpMassSignProj = MassSign->ProjectionY("MassSignProj0",1,1);
+     //mk wracamy do starych ustawien 
+     int projIndex=0;
+     if (OptimCutIndex>=0)projIndex=OptimCutIndex;
+     TH1D* tmpMassSignProj = MassSign->ProjectionY("MassSignProj0",OptimCutIndex+1,OptimCutIndex+1);
       Mean                  = tmpMassSignProj->GetMean();
       Width                 = tmpMassSignProj->GetRMS();
       MinRange              = std::max(0.0, Mean-2*Width);
+     std::cout<< "----> mktest "<<OptimCutIndex<<std::endl;
+     std::cout<< "Mean "<< Mean<<
+                " Width "<< Width<<
+                " MinRange "<< MinRange<<
+                " Mean-2*Width "<< Mean-2*Width<<std::endl;
+
       if (OptimCutIndex>=0) { // if we have an optimal cut index
-         TH1D* MassPredTMP = ((TH2D*)MassPred)->ProjectionY("MassPredProj", OptimCutIndex, OptimCutIndex); // FIXME
+     std::cout<< "----> mktest "<<OptimCutIndex<<std::endl;
+         TH1D* MassPredTMP = ((TH2D*)MassPred)->ProjectionY("MassPredProj", OptimCutIndex+1, OptimCutIndex+1); // FIXME
          result.NPred = MassPredTMP->Integral(MassPredTMP->GetXaxis()->FindBin(MinRange), MassPredTMP->GetXaxis()->FindBin(MaxRange)); // FIXME make sure that the mass cut has NPred > 1E-2
          for (; result.NPred < 1e-3; MinRange -= 10)
             result.NPred = MassPredTMP->Integral(MassPredTMP->GetXaxis()->FindBin(MinRange), MassPredTMP->GetXaxis()->FindBin(MaxRange));
@@ -1799,14 +2515,22 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    }else{
       MinRange = 0;
    }
+ 
+//mk move a massCut
+   if(MinRange <70) MinRange =70;
+
    printf ("MassCut = %.0lf, NPred = % .2e\n", MinRange, result.NPred);
+
+    // std::cout<< "----> mktest "<<OptimCutIndex<<" MassDataBins "<<MassData->GetNbinsX()<<std::endl;
 
    //loop on all possible selections and determine which is the best one
    for(int CutIndex=0;CutIndex<MassData->GetNbinsX();CutIndex++){
       //if(CutIndex>25)break; //for debugging purposes
+     //std::cout<<CutIndex<< " --1--> mktest "<<OptimCutIndex<<" MassDataBins "<<MassData->GetNbinsX()<<std::endl;
 
       //if we don't want to optimize but take instead the cuts from a file, we can skip all other cuts
       if(OptimCutIndex>=0 && CutIndex!=OptimCutIndex)continue;
+     //std::cout<<CutIndex<< " --2--> mktest "<<OptimCutIndex<<" MassDataBins "<<MassData->GetNbinsX()<<std::endl;
 
       //make sure the pT cut is high enough to get some statistic for both ABCD and mass shape
       if(HCuts_Pt ->GetBinContent(CutIndex+1) < 64 && TypeMode!=4){printf("Skip cut=%i because of too lose pT cut\n", CutIndex); continue; }
@@ -1832,8 +2556,47 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 //         TH1D* tmpMassSignProj = MassSign->ProjectionY("MassSignProj0",1,1);
 //         MinRange = tmpMassSignProj->GetXaxis()->GetBinLowEdge(tmpMassSignProj->GetXaxis()->FindBin(samples[JobIdToIndex(signal,samples)].Mass*0.625));
 //      }
+//mk mechaniczna metoda ustalania ciec
+//mk I want to change massCut as 2/3 of mass for stau, and 1/3 for other samples
+      double tmpMassI =  samples[JobIdToIndex(signal,samples)].Mass; 
+      if(TypeMode<=2){
+        //if(signal.find("Stop")!=string::npos||signal.find("Gluino")!=string::npos||signal.find("Q2")!=string::npos)
+        //  MinRange = round(tmpMassI*(1./3.)/10.)*10.;
+        if(signal.find("Stop")!=string::npos) MinRange = round(tmpMassI*(1./3.)/10.)*10.;
+        if(signal.find("Gluino")!=string::npos) MinRange = round(tmpMassI*(1./3.)/10.)*10.;
+        if(signal.find("Q2")!=string::npos) MinRange = round(tmpMassI*(1./3.)/10.)*10.;
+
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==0)if(signal.find("432")!=string::npos) MinRange = 280; 
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==0)if(signal.find("494")!=string::npos) MinRange = 320; 
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==0)if(signal.find("745")!=string::npos) MinRange = 440; 
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==0)if(signal.find("871")!=string::npos) MinRange = 470; 
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==0)if(signal.find("1559")!=string::npos) MinRange = 710; 
+
+
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==2)if(signal.find("494")!=string::npos) MinRange = 330; 
+
+
+        if(signal.find("PPStau")!=string::npos)if(TypeMode==0)if(signal.find("557")!=string::npos) MinRange = 380;
+        if(signal.find("PPStau")!=string::npos)if(TypeMode==0)if(signal.find("651")!=string::npos) MinRange = 440;
+
+
+
+
+
+
+//mk usuwalm finetuing for staus
+/*
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==0)if(signal.find("494")!=string::npos) MinRange = 300; 
+        if(signal.find("GMStau")!=string::npos)if(TypeMode==2)if(signal.find("494")!=string::npos) MinRange = 330;      
+        if(signal.find("PPStau")!=string::npos)if(TypeMode==2)if(signal.find("247")!=string::npos) MinRange = 120;    
+*/
+      }
+   if(MinRange <70) MinRange =70;
+
+
       result.MassCut   = TypeMode<=2?MinRange:0;
       result.Mass      = samples[JobIdToIndex(signal,samples)].Mass;
+
 //      if (signal.find("Q2")!=string::npos && SQRTS==1316.0 && result.Mass > 1000/* && TypeMode==0*/){
 //         if      (result.Mass == 1400) result.MassCut = 300;
 //         else if (result.Mass == 1800) result.MassCut = 190;
@@ -1842,6 +2605,14 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 //         result.MassCut = result.Mass*0.5;
 //	 MinRange = result.MassCut;
 //      }
+//
+    std::cout<< "----> mktest 2"<<OptimCutIndex<<std::endl;
+     std::cout<<" Mass "<< result.Mass<<
+                " *NEW CUT* " <<result.MassCut << 
+                " Mean "<< Mean<<
+                " Width "<< Width<<
+                " MinRange "<< MinRange<<
+                " Mean-2*Width "<< Mean-2*Width<<std::endl;     
       result.XSec_Th   = samples[JobIdToIndex(signal,samples)].XSec;
       result.XSec_Err  = samples[JobIdToIndex(signal,samples)].XSec * 0.15;
       toReturn = result;
@@ -1890,7 +2661,11 @@ void makeDataCard(string outpath, string rootPath, string ChannelName, string Si
    if(SQRTS==8   ) LumiUnc=1.044;
    if(SQRTS==13  ) LumiUnc=1.027;
    if(SQRTS==1315) LumiUnc=1.027;
-   if(SQRTS==1316) LumiUnc=1.062; // noted from the experts, 6.2%
+   //if(SQRTS==1316) LumiUnc=1.062; // noted from the experts, 6.2%
+   if(SQRTS==1316) LumiUnc=1.025; 
+   if(SQRTS==13167) LumiUnc=1.025;
+   if(SQRTS==131677) LumiUnc=1.025;
+
 
    if(isnan(float(PredRelErr)))PredRelErr= 1.2;
 
@@ -1912,7 +2687,8 @@ void makeDataCard(string outpath, string rootPath, string ChannelName, string Si
    fprintf(pFile, "process  0 1\n");
    fprintf(pFile, "rate    %f %f\n",Sign,std::max(1E-4, Pred) );  //if Pred<1E-4 we have troubles when merging datacards
    fprintf(pFile, "-------------------------------\n");
-   fprintf(pFile, "%35s    %6s %5.3f     1.0  \n","Lumi" , "lnN", LumiUnc);
+//mk obie maja lumi unc   fprintf(pFile, "%35s    %6s %5.3f     1.0  \n","Lumi" , "lnN", LumiUnc);
+   fprintf(pFile, "%35s    %6s %5.3f     1.0\n","Lumi" , "lnN", LumiUnc);
    fprintf(pFile, "%35s    %6s -         %5.3f\n",(ChannelName+"systP").c_str(), "lnN", PredRelErr);
    fprintf(pFile, "%35s    %6s %5.3f     -    \n",(ChannelName+"systS").c_str(), "lnN", SignalUnc);
    if(!Shape){
@@ -2157,7 +2933,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    result.NPredErr  = NPredErr;
    result.NSign     = NSign;
    printf ("NSign = %lf = %lf/(%.2e*%.4lf)\n", NSign/(result.XSec_Th*result.LInt), NSign, result.XSec_Th, result.LInt);
-   NSign /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
+   NSign/= (result.XSec_Th*XsecUnit); //mklim
+  //mk  NSign /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
 //   NPred /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
    double SignalScaleFactor = 1.0;
    for(unsigned int i=0;i<20 && NSign<1e-1; i++){SignalScaleFactor*=10.0;  NSign*=10.0;}  
@@ -2270,6 +3047,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    char TypeStr[255]; sprintf(TypeStr,"Type%i", TypeMode);
    string JobName = TypeStr+signal;
    string datacardPath = "/tmp/shape_"+JobName+".dat";
+
+std::cout<<"----> input to datacards  NData " <<NData<< "  NPred "<< NPred<< "  Err "<<1.0+(Shape?RescaleError:NPredErr/NPred)<<"  NSign "<< NSign<< "  Err "<<1.0+fabs(EffErr/Eff)<< "  SignalUnc "<< SignalUnc<<std::endl; 
    makeDataCard(datacardPath,string("shape_")+JobName+".root", TypeStr,signal, NData, NPred, 1.0+(Shape?RescaleError:NPredErr/NPred), NSign, 1.0+fabs(EffErr/Eff), SignalUnc, Shape);
 
    char massStr[255]; sprintf(massStr,"%.0f",result.Mass);
@@ -2315,14 +3094,14 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       //If very low background range too small, set limit at 0.001.  Only affects scanning range not final limit
       if(NPred<0.001) NPred=0.001;
       string CodeToExecute = "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
       CodeToExecute += "cd $OLDPWD; cp /tmp/shape_" + JobName + ".* " + InputPattern+"/"+SHAPESTRING+EXCLUSIONDIR+"/." + ";";
       CodeToExecute += "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "hadd -f higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
       system(CodeToExecute.c_str());
 
@@ -2339,6 +3118,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       tree->GetBranch("quantileExpected")->SetAddress(&TquantExp);
       for(int ientry=0;ientry<tree->GetEntriesFast();ientry++){
         tree->GetEntry(ientry);
+/*//mklim
         printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit*(SignalScaleFactor/result.LInt));
         if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(SignalScaleFactor/result.LInt);
         }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(SignalScaleFactor/result.LInt);
@@ -2346,6 +3126,16 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
         }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(SignalScaleFactor/result.LInt);
         }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(SignalScaleFactor/result.LInt);
         }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(SignalScaleFactor/result.LInt);
+
+*/
+        printf("Quantile=%f --> Limit = %f, Tlimit=%f  fac=%f  XsecUnit=%f\n", TquantExp, Tlimit*(SignalScaleFactor/(XsecUnit)),Tlimit,SignalScaleFactor,XsecUnit);
+        printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit*(SignalScaleFactor/XsecUnit));
+        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(SignalScaleFactor/XsecUnit);
+        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(SignalScaleFactor/XsecUnit);
+        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*(SignalScaleFactor/XsecUnit);
+        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(SignalScaleFactor/XsecUnit);
+        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(SignalScaleFactor/XsecUnit);
+        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(SignalScaleFactor/XsecUnit);
         }else{printf("Quantil %f unused by the analysis --> check the code\n", TquantExp);
         }
       }
@@ -2685,11 +3475,21 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
       delete InputFile;
    }
 
+/* mklim 
    double NSign1 = result11.NSign/(result11.XSec_Th*result11.LInt),
           NSign2 = result12.NSign/(result12.XSec_Th*result12.LInt),
           SignalScaleFactor1 = 1.0,
           SignalScaleFactor2 = 1.0,
 	  SignalScaleFactor;
+*/
+
+   double NSign1 = result11.NSign/(result11.XSec_Th*XsecUnit),
+          NSign2 = result12.NSign/(result12.XSec_Th*XsecUnit),
+          SignalScaleFactor1 = 1.0,
+          SignalScaleFactor2 = 1.0,
+          SignalScaleFactor;
+
+
 
    for(unsigned int i=0;i<20 && NSign1<1e-1; i++) {SignalScaleFactor1*=10.0; NSign1*=10.0;}
    for(unsigned int i=0;i<20 && NSign2<1e-1; i++) {SignalScaleFactor2*=10.0; NSign2*=10.0;}
@@ -2776,14 +3576,14 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
             if(NPred<0.001) NPred=0.001;
       string CodeToExecute = "cp " + outpath+"shape_"+JobName+".dat /tmp/.;";
       CodeToExecute += "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat > shape_" + JobName + ".log;";
       CodeToExecute += "cd $OLDPWD; cp /tmp/shape_" + JobName + ".* " + InputPattern+"/"+SHAPESTRING+EXCLUSIONDIR+"/." + ";";
       CodeToExecute += "cd /tmp/;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.500 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.160 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
+      CodeToExecute += "combine -M HybridNew  -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "hadd -f higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
       system(CodeToExecute.c_str());
 
@@ -2801,13 +3601,25 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
       tree->GetBranch("quantileExpected")->SetAddress(&TquantExp);
       for(int ientry=0;ientry<tree->GetEntriesFast();ientry++){
         tree->GetEntry(ientry);
-        printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit*(SignalScaleFactor/result.LInt));
-        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(SignalScaleFactor/result.LInt); // FIXME jozze -- had to rescale with LInt, or limits are wrong
-        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(SignalScaleFactor/result.LInt);
-        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*(SignalScaleFactor/result.LInt);
-        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(SignalScaleFactor/result.LInt);
-        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(SignalScaleFactor/result.LInt);
-        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(SignalScaleFactor/result.LInt);
+//Limity z Hybidnew powinny byc liczone w stosumnku do sredniej lumi, a nie sumy
+/* mklim
+        printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit*(SignalScaleFactor/(result.LInt/2.0)));
+        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(SignalScaleFactor/(result.LInt/2.0)); // FIXME jozze -- had to rescale with LInt, or limits are wrong
+        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(SignalScaleFactor/(result.LInt/2.0));
+        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*(SignalScaleFactor/(result.LInt/2.0));
+        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(SignalScaleFactor/(result.LInt/2.0));
+        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(SignalScaleFactor/(result.LInt/2.0));
+        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(SignalScaleFactor/(result.LInt/2.0));
+*/
+
+        printf("Quantile=%f --> Limit = %f, Tlimit=%f  fac=%f  XsecUnit=%f\n", TquantExp, Tlimit*(SignalScaleFactor/(XsecUnit)),Tlimit,SignalScaleFactor,XsecUnit);
+        printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit*(SignalScaleFactor/(XsecUnit)));
+        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(SignalScaleFactor/(XsecUnit)); 
+        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(SignalScaleFactor/(XsecUnit));
+        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*(SignalScaleFactor/(XsecUnit));
+        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(SignalScaleFactor/(XsecUnit));
+        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(SignalScaleFactor/(XsecUnit));
+        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(SignalScaleFactor/(XsecUnit));
         }else{printf("Quantil %f unused by the analysis --> check the code\n", TquantExp);
         }
       }
@@ -2821,13 +3633,16 @@ bool Combine(string InputPattern, string signal1, string signal2, int* OptCutInd
 
 
 bool useSample(int TypeMode, string sample) {
-  if(TypeMode==0 && (sample=="Gluino16_f10" || sample=="Gluino16N_f10" || sample=="Stop16N" || sample=="Stop16" || sample=="DY16_Q2o3" || sample=="GMStau16" || sample=="PPStau16" ||
+ /* mk 
+ if(TypeMode==0 && (sample=="Gluino16_f10" || sample=="Gluino16N_f10" || sample=="Stop16N" || sample=="Stop16" || sample=="DY16_Q2o3" || sample=="GMStau16" || sample=="PPStau16" ||
     sample=="Gluino16G_f10" || sample=="Gluino16GN_f10" || sample=="Stop16GN" || sample=="Stop16G" || sample=="DY16G_Q2o3" || sample=="GMStau16G" || sample=="PPStau16G"))
     return true;
 
   if(TypeMode==2 && (sample=="Gluino16_f10" || sample=="Gluino16_f50" || sample=="Stop16" || sample=="GMStau16" || sample=="PPStau16" || sample=="DY16_Q2o3" || sample=="DY16_Q1" ||
     sample=="Gluino16G_f10" || sample=="Gluino16G_f50" || sample=="Stop16G" || sample=="GMStau16G" || sample=="PPStau16G" || sample=="DY16G_Q2o3" || sample=="DY16G_Q1"))
     return true;
+*/ //mk I want all samples for type0 and type2
+ if(TypeMode<3) return true;
 
   if(TypeMode==3 && (sample=="Stop16" || sample=="Gluino16_f10" || sample=="Gluino16_f50" || sample=="Gluino16_f100" || 
     sample=="Stop16G" || sample=="Gluino16G_f10" || sample=="Gluino16G_f50" || sample=="Gluino16G_f100"))

@@ -38,10 +38,16 @@
 double IntegratedLuminosity13TeV15             = 2490.518; //2439.264; //pb
 //double IntegratedLuminosity13TeV16             = 4002.946; // pb
 double preTrackingChangeL1IntLumi              = 29679.982; // pb
+/* mkwrong values do not include missing edm files
 double IntegratedLuminosity13TeV16             = 34228.911;  // pb -> not from brilcalc, but from the email, brilcalc numpy error
 double IntegratedLuminosity13TeV16G            = 16554.454;  // pb from brilcalc
 //double IntegratedLuminosity13TeV16G            = 18148.982;  // pb from brilcalc
 double IntegratedLuminosity13TeV16PreG         = 17674.457;
+*/
+
+double IntegratedLuminosity13TeV16             = 33676.4;
+double IntegratedLuminosity13TeV16PreG         = 17477.4; 
+double IntegratedLuminosity13TeV16G            = 16199.0; 
 
 double               SQRTS                     = 13;
 double               SQRTS15                   = 1315;
@@ -53,6 +59,8 @@ double IntegratedLuminosityBeforeTriggerChange =    0; //pb
 
 bool correctMassCut                            = true;
 
+//mk trigger
+unsigned int TrigInfo =0; //1 -mu only, 2- met only, 3 mu and met 
 
 string IntegratedLuminosityFromE(double SQRTS_){
   char LumiText[1024];
@@ -86,9 +94,9 @@ std::string BaseDirectory = "undefined... Did you call InitBaseDirectory() ? -->
 
 
 // binning for the pT, mass, and IP distributions
-double             PtHistoUpperBound   = 1200;
-double             MassHistoUpperBound = 3000;
-int                MassNBins           = 300;
+double             PtHistoUpperBound   = 4000;
+double             MassHistoUpperBound = 4000;
+int                MassNBins           = 400;
 double             IPbound             = 1.0;
 
 // Thresholds for candidate preselection --> note that some of the followings can be replaced at the beginning of Analysis_Step1_EventLoop function
@@ -109,7 +117,7 @@ double             GlobalMinNDOF      =   8;      // cut on number of     Degree
 double             GlobalMinNDOFDT    =   6;      // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
 double             GlobalMinNDOFCSC   =   6;      // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
 double             GlobalMaxTOFErr    =   0.15;//0.07;   // cut on error on muon TOF measurement
-double             GlobalMaxPterr     = 1;//0.50;//0.25;   // cut on error on track pT measurement 
+double             GlobalMaxPterr     =  1.;// 0.25;   // cut on error on track pT measurement 
 double             GlobalMaxTIsol     =  50;      // cut on tracker isolation (SumPt)
 double             GlobalMaxRelTIsol  =  9999999; // cut on relative tracker isolation (SumPt/Pt)
 double             GlobalMaxEIsol     =  0.30;    // cut on calorimeter isolation (E/P)

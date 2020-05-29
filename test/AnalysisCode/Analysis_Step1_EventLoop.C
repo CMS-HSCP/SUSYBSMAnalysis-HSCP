@@ -62,6 +62,7 @@ using namespace reweight;
 void InitHistos(stPlots* st=NULL);
 void Analysis_Step1_EventLoop(char* SavePath);
 
+
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic=false, L1BugEmulator* emul=NULL);
 bool   PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev, stPlots* st=NULL, const double& GenBeta=-1, bool RescaleP=false, const double& RescaleI=0.0, const double& RescaleT=0.0, double MassErr=-1);
 bool PassSelection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const fwlite::ChainEvent& ev, const int& CutIndex=0, stPlots* st=NULL, const bool isFlip=false, const double& GenBeta=-1, bool RescaleP=false, const double& RescaleI=0.0, const double& RescaleT=0.0);
@@ -72,6 +73,7 @@ int  muonStations(const reco::HitPattern& hitPattern);
 double scaleFactor(double eta);
 /////////////////////////// VARIABLE DECLARATION /////////////////////////////
 
+bool isMCglobal = false;
 float Event_Weight = 1;
 int   MaxEntry = -1;
 
@@ -311,6 +313,23 @@ bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic, L1Bug
    if(!tr.isValid())         tr = ev.triggerResultsByName("MergeHLT");
    if(!tr.isValid())return false;
 
+   //mk TrigInfo - as global var
+   TrigInfo=0;
+   
+   bool metTrig = false;
+   bool muTrig = false;
+   
+
+   if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*") || passTriggerPatterns(tr, "HLT_PFMET170_HBHECleaned_v*")) metTrig = true;
+   if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*") || passTriggerPatterns(tr, "HLT_Mu50_v*")) muTrig = true;
+
+   if (!metTrig && muTrig) TrigInfo = 1;
+   if (metTrig && !muTrig) TrigInfo = 2;
+   if (metTrig && muTrig)  TrigInfo = 3;
+   //unsigned int TrigInfo =0; //1 -mu only, 2- met only, 3 mu and met 
+
+
+
    if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*") || passTriggerPatterns(tr, "HLT_PFMET170_HBHECleaned_v*"))return true;
    if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*") || passTriggerPatterns(tr, "HLT_Mu50_v*")){
       if (!isData && emul){
@@ -391,6 +410,17 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
  //mk_ to byla jakas proba   if(fabs(track->eta())<1.2) return false;   
  //mk_ a new cut on eta
  
+//max PtCut
+
+//  if(TypeMode==0) if( track->pt*cosh(track->eta() ) < 1700 ) return false;
+//  if(TypeMode==2) if( track->pt*cosh(track->eta() ) <  850 ) return false;
+
+// no max PCut
+//  if(TypeMode==0) if( track->p() > 1700 ) return false;
+//  if(TypeMode==2) if( track->p() >  850 ) return false;
+
+
+
 
    //Cut on number of matched muon stations
    int count = muonStations(track->hitPattern());
@@ -606,7 +636,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
 
    if(st){st->BS_Pterr ->Fill(track->ptError()/track->pt(),Event_Weight);}
    if(TypeMode!=3 && (track->ptError()/track->pt())>GlobalMaxPterr)return false;
-   if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
+   //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
 
    if(std::max(0.0,track->pt())<GlobalMinPt)return false;
    if(st){st->Pterr   ->Fill(0.0,Event_Weight);}
@@ -791,6 +821,8 @@ bool PassSelection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedx
 
    double Is=0;   if(dedxSObj) Is=dedxSObj->dEdx();
    double Ih=0;   if(dedxMObj) Ih=dedxMObj->dEdx();
+   double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
+
    double PtCut=CutPt[CutIndex];
    double ICut=CutI[CutIndex];
    double TOFCut=CutTOF[CutIndex];
@@ -940,12 +972,18 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
          }
 
 
+
+	 //	 if(dedxMObj) Ih=dedxMObj->dEdx();
+	 double Ick=0;  if(dedxMObj) Ick=GetIck(Ih,isMCglobal);
+
+
          for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){
  	    if(MuonTOF<GlobalMinTOF) continue;
             if(TypeMode==5 && isCosmicSB)continue;
             bool PassPtCut  = track->pt()>=CutPt[CutIndex];
             bool PassICut   = (Is>=CutI[CutIndex]);
             bool PassTOFCut = MuonTOF>=CutTOF[CutIndex];
+
             if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
                st->H_D      ->Fill(CutIndex,                Event_Weight);
                if(bin>-1 && bin<MaxPredBins) st->H_D_Binned[bin]->Fill(CutIndex,                Event_Weight);
@@ -957,6 +995,7 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
             }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
                st->H_C     ->Fill(CutIndex,                 Event_Weight);
                if(TypeMode<2)st->Pred_EtaP  ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
+               st->PDF_C_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
                //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
                st->AS_Eta_RegionC->Fill(CutIndex,track->eta());
             }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
@@ -964,6 +1003,7 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
                if(bin>-1 && bin<MaxPredBins) st->H_B_Binned[bin]->Fill(CutIndex,                Event_Weight);
                if(TypeMode<2)st->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
                if(TypeMode<2)st->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
+	       st->PDF_B_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
                //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
                st->AS_Eta_RegionB->Fill(CutIndex,track->eta());
             }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
@@ -972,27 +1012,35 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
                if(TypeMode<2)st->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
                if(TypeMode==2)st->Pred_EtaS2->Fill(CutIndex,track->eta(),        Event_Weight);
                st->AS_Eta_RegionA->Fill(CutIndex,track->eta());
+	       st->PDF_A_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+
             }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
                st->H_H   ->Fill(CutIndex,          Event_Weight);
                if(bin>-1 && bin<MaxPredBins) st->H_H_Binned[bin]->Fill(CutIndex,                Event_Weight);
 	       st->RegionH_Ias->Fill(CutIndex,Is,Event_Weight);
+	       if(TypeMode==2 && Ick>0)st->PDF_H_EtaMass ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
                //Pred_P->Fill(CutIndex,track->p(),        Event_Weight);
                //Pred_I->Fill(CutIndex,Ih,   Event_Weight);
-               st->AS_Eta_RegionH->Fill(CutIndex,track->eta());
+               if(TypeMode==2)st->AS_Eta_RegionH->Fill(CutIndex,track->eta());
             }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
                st->H_G     ->Fill(CutIndex,                 Event_Weight);
                if(TypeMode==2)st->Pred_EtaP  ->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
                st->AS_Eta_RegionG->Fill(CutIndex,track->eta());
+               if(TypeMode==2)st->PDF_G_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
             }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
                st->H_F     ->Fill(CutIndex,                 Event_Weight);
                if(bin>-1 && bin<MaxPredBins) st->H_F_Binned[bin]->Fill(CutIndex,                Event_Weight);
                if(TypeMode==2)st->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
                if(TypeMode==2)st->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
                st->AS_Eta_RegionF->Fill(CutIndex,track->eta());
+	       if(TypeMode==2)st->PDF_F_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
+
             }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
                st->H_E     ->Fill(CutIndex,                 Event_Weight);
                if(TypeMode==2)st->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
                st->AS_Eta_RegionE->Fill(CutIndex,track->eta());
+	       if(TypeMode==2)st->PDF_E_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+
             }
          }
 
@@ -1004,6 +1052,8 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
             bool PassPtCut  = track->pt()>=CutPt_Flip[CutIndex];
             bool PassICut   = (Is>=CutI_Flip[CutIndex]);
             bool PassTOFCut = MuonTOF<=CutTOF_Flip[CutIndex]; 
+
+
             if(TypeMode==5)PassTOFCut=true;
 
             if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
@@ -1016,35 +1066,44 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
             }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
                st->H_C_Flip->Fill(CutIndex,                 Event_Weight);
                if(TypeMode<2)st->Pred_EtaP_Flip->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
+               st->PDF_C_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
                //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
             }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
                st->H_B_Flip->Fill(CutIndex,                 Event_Weight);
                if(bin>-1 && bin<MaxPredBins) st->H_B_Binned_Flip[bin]->Fill(CutIndex,                Event_Weight);
                if(TypeMode<2)st->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
                if(TypeMode<2)st->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+	       st->PDF_B_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
                //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
             }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
                st->H_A_Flip->Fill(CutIndex,                 Event_Weight);
                if(TypeMode==2)st->Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
                if(TypeMode<2)st->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
                if(TypeMode==2)st->Pred_EtaS2_Flip->Fill(CutIndex,track->eta(),        Event_Weight);
+	       st->PDF_A_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
             }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
                st->H_H_Flip->Fill(CutIndex,          Event_Weight);
                if(bin>-1 && bin<MaxPredBins) st->H_H_Binned_Flip[bin]->Fill(CutIndex,                Event_Weight);
 	       st->RegionH_Ias_Flip  ->Fill(CutIndex,Is,Event_Weight);
+	       if(TypeMode==2 && Ick>0)st->PDF_H_EtaMass_Flip ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
+
 	       //Pred_P_Flip->Fill(CutIndex,track->p(),        Event_Weight);
 	       //Pred_I_Flip->Fill(CutIndex,Ih,   Event_Weight);
             }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
                st->H_G_Flip->Fill(CutIndex,                 Event_Weight);
                if(TypeMode==2)st->Pred_EtaP_Flip->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
+               if(TypeMode==2)st->PDF_G_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
+
             }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
                st->H_F_Flip->Fill(CutIndex,                 Event_Weight);
                if(bin>-1 && bin<MaxPredBins) st->H_F_Binned_Flip[bin]->Fill(CutIndex,                Event_Weight);
                if(TypeMode==2)st->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
                if(TypeMode==2)st->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+	       if(TypeMode==2)st->PDF_F_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
             }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
                st->H_E_Flip->Fill(CutIndex,                 Event_Weight);
                if(TypeMode==2)st->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+	       if(TypeMode==2)st->PDF_E_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
             }
          }
 }
@@ -1065,6 +1124,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
       bool isSignal = (samples[s].Type>=2);
       bool is2016   = (samples[s].Name.find("13TeV16")==std::string::npos)?false:true;
       bool is2016G  = (samples[s].Name.find("13TeV16G")==std::string::npos)?false:true;
+      isMCglobal = isMC;
 
       dEdxK_Data = is2016?dEdxK_Data16:dEdxK_Data15;
       dEdxC_Data = is2016?dEdxC_Data16:dEdxC_Data15;
@@ -1197,7 +1257,10 @@ std::cout<<"G\n";
          printf("Building Mass for %10s (%1i/%1i) :",samples[s].Name.c_str(),period+1,(samples[s].Type>=2?RunningPeriods:1));
          int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
 
-         for(Long64_t ientry=0;ientry<ev.size();ientry++){
+
+	 //for(Long64_t ientry=0;ientry<20;ientry++){
+		    //mkpz 
+	   for(Long64_t ientry=0;ientry<ev.size();ientry++){
             ev.to(ientry);
             if(MaxEntry>0 && ientry>MaxEntry)break;
             if(ientry%TreeStep==0){printf(".");fflush(stdout);}
@@ -1217,22 +1280,14 @@ std::cout<<"G\n";
                dEdxK_Data = 2.062;
                dEdxC_Data = 3.430;
 
-
-               if (278018 <= CurrentRun && CurrentRun < 278770){
-                dEdxSF [0] = 1.00000;
-                dEdxSF [1] = 1.6107*0.9726500;
-                dEdxK_Data = 2.028;
-                dEdxC_Data = 3.428;
-               }
-
-               if (278770 <= CurrentRun && CurrentRun < 278822){
+               if (278769 <= CurrentRun && CurrentRun <= 278822){
                 dEdxSF [0] = 1.00000;
                 dEdxSF [1] = 1.6107*1.06665;
                 dEdxK_Data = 2.300;
                 dEdxC_Data = 3.825;
                }
 
-               if (278822 <= CurrentRun && CurrentRun < 279479){
+               if (278873 <= CurrentRun && CurrentRun <= 279116){
                 dEdxSF [0] = 1.00000;
                 dEdxSF [1] = 1.6107*1.07695;
                 dEdxK_Data = 2.300;
@@ -1246,29 +1301,23 @@ std::cout<<"G\n";
                 dEdxK_Data = 2.275;
                 dEdxC_Data = 3.675;
                }
-               
+              } 
               if(isMC){
-                  dEdxSF [0] = 1.09711;
-                  dEdxSF [1] = 1.16;
+//                  dEdxSF [0] = 1.09711;
+//                  dEdxSF [1] = 1.16;
+//old Joze parameters to be used
+         dEdxSF [0] = 1.09711;
+         dEdxSF [1] = 1.09256;
+//KC takie jest od Joze z Global
 
-                  if(is2016){ //preG
-                  dEdxK_Data = 2.062;// przepisane dla pewnosci
-                  dEdxC_Data = 3.430;// prepisane dla pewnosci
 
-                    dEdxK_MC = dEdxK_Data;
-                    dEdxC_MC = dEdxC_Data;
-                  }
-
-                  if(is2016G){
-                    dEdxK_MC = 2.300;
-                    dEdxC_MC = 3.700;
+         dEdxK_MC   = 2.935;
+         dEdxC_MC   = 3.197;
                   }
 
 
-              }
-               }
-              std::cout<<"------> dEdx parameters SF for run = "<<CurrentRun<< "  "<< dEdxSF[1]<<std::endl;
-            }
+              std::cout<<"\n------> dEdx parameters SF for run = "<<CurrentRun<< "  "<< dEdxSF[1]<<std::endl;
+          } 
 
 
 
@@ -1301,17 +1350,263 @@ std::cout<<"G\n";
                GetGenHSCPBeta(genColl,HSCPGenBeta1,HSCPGenBeta2,true);
                if(HSCPGenBeta1>=0)SamplePlots->Beta_GenCharged->Fill(HSCPGenBeta1, Event_Weight); if(HSCPGenBeta2>=0)SamplePlots->Beta_GenCharged->Fill(HSCPGenBeta2, Event_Weight);
 
-               
-	       for(unsigned int g=0;g<genColl.size();g++) {
-		 if(genColl[g].pt()<5)continue;
-		 if(genColl[g].status()!=1)continue;
-		 int AbsPdg=abs(genColl[g].pdgId());
-		 if(AbsPdg<1000000 && AbsPdg!=17)continue;
-		 SamplePlots->genlevelpT->Fill(genColl[g].pt(), Event_Weight);
-		 SamplePlots->genleveleta->Fill(genColl[g].eta(), Event_Weight);
-		 SamplePlots->genlevelbeta->Fill(genColl[g].p()/genColl[g].energy(), Event_Weight);
-	       }
+// R-hadron wights needed due to wrong GenId---------------------------------BEGIN
+
+   double  Wa=1.0, Wad=1.0, Waa=1.0, Wan=1.0;  // Wa is additional weight for single other, Wad for other+double_charged, 
+                                              // Waa for the event with 2 other R-hadron, Wan for other+neutral
+   bool Rhadron=0; // default value - not R-hadron (not need to weight)
+     
+   string sample_name = samples[s].Name;
+
+   //------------ weights for R-hadron samples ----------Start
+
+   if(sample_name== "Gluino_13TeV16_M100N_f10"){Rhadron=1; Wa=1.02544e+00; Wad=1.07061e+00; Waa=1.13625e+00; Wan=1.06637e+00;}
+   if(sample_name== "Gluino_13TeV16G_M100N_f10"){Rhadron=1; Wa=1.01333e+00; Wad=1.05776e+00; Waa=1.11787e+00; Wan=1.06393e+00;}
+   if(sample_name== "Gluino_13TeV16_M100N_f50"){Rhadron=1; Wa=1.02544e+00; Wad=1.07061e+00; Waa=1.13625e+00; Wan=1.06637e+00;}
+   if(sample_name== "Gluino_13TeV16G_M100N_f50"){Rhadron=1; Wa=1.01333e+00; Wad=1.05776e+00; Waa=1.11788e+00; Wan=1.06393e+00;}
+   if(sample_name== "Gluino_13TeV16_M200_f10"){Rhadron=1; Wa=1.01060e+00; Wad=1.08585e+00; Waa=1.14509e+00; Wan=1.07439e+00;}
+   if(sample_name== "Gluino_13TeV16G_M200_f10"){Rhadron=1; Wa=1.00530e+00; Wad=1.08020e+00; Waa=1.13846e+00; Wan=1.07613e+00;}
+   if(sample_name== "Gluino_13TeV16_M200N_f10"){Rhadron=1; Wa=1.00138e+00; Wad=1.05406e+00; Waa=1.13549e+00; Wan=1.06934e+00;}
+   if(sample_name== "Gluino_13TeV16G_M200N_f10"){Rhadron=1; Wa=1.00012e+00; Wad=1.04085e+00; Waa=1.12277e+00; Wan=1.07311e+00;}
+   if(sample_name== "Gluino_13TeV16_M200_f50"){Rhadron=1; Wa=1.01060e+00; Wad=1.08585e+00; Waa=1.14510e+00; Wan=1.07439e+00;}
+   if(sample_name== "Gluino_13TeV16G_M200_f50"){Rhadron=1; Wa=1.00530e+00; Wad=1.08020e+00; Waa=1.13846e+00; Wan=1.07612e+00;}
+   if(sample_name== "Gluino_13TeV16_M200N_f50"){Rhadron=1; Wa=1.00138e+00; Wad=1.05406e+00; Waa=1.13549e+00; Wan=1.06935e+00;}
+   if(sample_name== "Gluino_13TeV16G_M200N_f50"){Rhadron=1; Wa=1.00012e+00; Wad=1.04085e+00; Waa=1.12277e+00; Wan=1.07311e+00;}
+   if(sample_name== "Gluino_13TeV16_M400_f10"){Rhadron=1; Wa=1.01706e+00; Wad=1.11794e+00; Waa=1.14045e+00; Wan=1.06800e+00;}
+   if(sample_name== "Gluino_13TeV16G_M400_f10"){Rhadron=1; Wa=1.00483e+00; Wad=1.24734e+00; Waa=1.12817e+00; Wan=1.07278e+00;}
+   if(sample_name== "Gluino_13TeV16_M400N_f10"){Rhadron=1; Wa=1.08215e+00; Wad=1.06579e+00; Waa=1.14654e+00; Wan=1.05864e+00;}
+   if(sample_name== "Gluino_13TeV16G_M400N_f10"){Rhadron=1; Wa=1.06555e+00; Wad=1.06825e+00; Waa=1.15421e+00; Wan=1.05185e+00;}
+   if(sample_name== "Gluino_13TeV16_M400_f50"){Rhadron=1; Wa=1.01706e+00; Wad=1.11794e+00; Waa=1.14045e+00; Wan=1.06800e+00;}
+   if(sample_name== "Gluino_13TeV16G_M400_f50"){Rhadron=1; Wa=1.00483e+00; Wad=1.24734e+00; Waa=1.12816e+00; Wan=1.07277e+00;}
+   if(sample_name== "Gluino_13TeV16_M400N_f50"){Rhadron=1; Wa=1.08215e+00; Wad=1.06579e+00; Waa=1.14654e+00; Wan=1.05864e+00;}
+   if(sample_name== "Gluino_13TeV16G_M400N_f50"){Rhadron=1; Wa=1.06555e+00; Wad=1.06825e+00; Waa=1.15421e+00; Wan=1.05185e+00;}
+   if(sample_name== "Gluino_13TeV16_M600_f10"){Rhadron=1; Wa=1.07582e+00; Wad=1.05595e+00; Waa=1.14064e+00; Wan=1.06812e+00;}
+   if(sample_name== "Gluino_13TeV16G_M600_f10"){Rhadron=1; Wa=1.05737e+00; Wad=1.04830e+00; Waa=1.13847e+00; Wan=1.07254e+00;}
+   if(sample_name== "Gluino_13TeV16_M600N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.06769e+00; Waa=1.12687e+00; Wan=1.05991e+00;}
+   if(sample_name== "Gluino_13TeV16G_M600N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.04890e+00; Waa=1.11368e+00; Wan=1.05742e+00;}
+   if(sample_name== "Gluino_13TeV16_M600_f50"){Rhadron=1; Wa=1.07582e+00; Wad=1.05595e+00; Waa=1.14065e+00; Wan=1.06813e+00;}
+   if(sample_name== "Gluino_13TeV16G_M600_f50"){Rhadron=1; Wa=1.05737e+00; Wad=1.04830e+00; Waa=1.13845e+00; Wan=1.07254e+00;}
+   if(sample_name== "Gluino_13TeV16_M600N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.06769e+00; Waa=1.12687e+00; Wan=1.05991e+00;}
+   if(sample_name== "Gluino_13TeV16G_M600N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.04890e+00; Waa=1.11368e+00; Wan=1.05742e+00;}
+   if(sample_name== "Gluino_13TeV16_M800_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.03583e+00; Waa=1.13499e+00; Wan=1.06721e+00;}
+   if(sample_name== "Gluino_13TeV16G_M800_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.02294e+00; Waa=1.13032e+00; Wan=1.07048e+00;}
+   if(sample_name== "Gluino_13TeV16_M800N_f10"){Rhadron=1; Wa=1.17722e+00; Wad=1.03942e+00; Waa=1.13085e+00; Wan=1.06297e+00;}
+   if(sample_name== "Gluino_13TeV16G_M800N_f10"){Rhadron=1; Wa=1.18090e+00; Wad=1.02265e+00; Waa=1.11868e+00; Wan=1.06410e+00;}
+   if(sample_name== "Gluino_13TeV16_M800_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.03583e+00; Waa=1.13499e+00; Wan=1.06721e+00;}
+   if(sample_name== "Gluino_13TeV16G_M800_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.02294e+00; Waa=1.13031e+00; Wan=1.07049e+00;}
+   if(sample_name== "Gluino_13TeV16_M800N_f50"){Rhadron=1; Wa=1.17722e+00; Wad=1.03942e+00; Waa=1.13085e+00; Wan=1.06296e+00;}
+   if(sample_name== "Gluino_13TeV16G_M800N_f50"){Rhadron=1; Wa=1.18090e+00; Wad=1.02265e+00; Waa=1.11868e+00; Wan=1.06410e+00;}
+   if(sample_name== "Gluino_13TeV16_M1000_f10"){Rhadron=1; Wa=1.09463e+01; Wad=1.03897e+00; Waa=1.12760e+00; Wan=1.06332e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1000_f10"){Rhadron=1; Wa=3.78760e+01; Wad=1.03466e+00; Waa=1.12804e+00; Wan=1.06625e+00;}
+   if(sample_name== "Gluino_13TeV16_M1000N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.07928e+00; Waa=1.13146e+00; Wan=1.05836e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1000N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.08561e+00; Waa=1.12628e+00; Wan=1.05502e+00;}
+   if(sample_name== "Gluino_13TeV16_M1000_f50"){Rhadron=1; Wa=1.09463e+01; Wad=1.03897e+00; Waa=1.12760e+00; Wan=1.06331e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1000_f50"){Rhadron=1; Wa=3.78760e+01; Wad=1.03466e+00; Waa=1.12803e+00; Wan=1.06624e+00;}
+   if(sample_name== "Gluino_13TeV16_M1000N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.07928e+00; Waa=1.13146e+00; Wan=1.05836e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1000N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.08561e+00; Waa=1.12627e+00; Wan=1.05502e+00;}
+   if(sample_name== "Gluino_13TeV16_M1200_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.04179e+00; Waa=1.13407e+00; Wan=1.06200e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1200_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.02489e+00; Waa=1.12876e+00; Wan=1.06085e+00;}
+   if(sample_name== "Gluino_13TeV16_M1200N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.08557e+00; Waa=1.14153e+00; Wan=1.05728e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1200N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.08035e+00; Waa=1.14312e+00; Wan=1.05405e+00;}
+   if(sample_name== "Gluino_13TeV16_M1200_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.04179e+00; Waa=1.13407e+00; Wan=1.06199e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1200_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.02489e+00; Waa=1.12877e+00; Wan=1.06085e+00;}
+   if(sample_name== "Gluino_13TeV16_M1200N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.08557e+00; Waa=1.14154e+00; Wan=1.05728e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1200N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.08035e+00; Waa=1.14313e+00; Wan=1.05405e+00;}
+   if(sample_name== "Gluino_13TeV16_M1400_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.06238e+00; Waa=1.12582e+00; Wan=1.06014e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1400_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.04640e+00; Waa=1.12155e+00; Wan=1.06117e+00;}
+   if(sample_name== "Gluino_13TeV16_M1400N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.06739e+00; Waa=1.13203e+00; Wan=1.05467e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1400N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.06340e+00; Waa=1.14317e+00; Wan=1.05446e+00;}
+   if(sample_name== "Gluino_13TeV16_M1400_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.06238e+00; Waa=1.12582e+00; Wan=1.06014e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1400_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.04640e+00; Waa=1.12154e+00; Wan=1.06117e+00;}
+   if(sample_name== "Gluino_13TeV16_M1400N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.06739e+00; Waa=1.13204e+00; Wan=1.05466e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1400N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.06340e+00; Waa=1.14317e+00; Wan=1.05446e+00;}
+   if(sample_name== "Gluino_13TeV16_M1600_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.13721e+00; Waa=1.12260e+00; Wan=1.05958e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1600_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.15968e+00; Waa=1.11867e+00; Wan=1.05941e+00;}
+   if(sample_name== "Gluino_13TeV16_M1600N_f10"){Rhadron=1; Wa=1.40489e+00; Wad=1.05869e+00; Waa=1.12437e+00; Wan=1.05206e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1600N_f10"){Rhadron=1; Wa=1.36716e+00; Wad=1.03935e+00; Waa=1.12433e+00; Wan=1.04814e+00;}
+   if(sample_name== "Gluino_13TeV16_M1600_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.13721e+00; Waa=1.12260e+00; Wan=1.05957e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1600_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.15968e+00; Waa=1.11867e+00; Wan=1.05943e+00;}
+   if(sample_name== "Gluino_13TeV16_M1600N_f50"){Rhadron=1; Wa=1.40489e+00; Wad=1.05869e+00; Waa=1.12438e+00; Wan=1.05205e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1600N_f50"){Rhadron=1; Wa=1.36716e+00; Wad=1.03935e+00; Waa=1.12433e+00; Wan=1.04815e+00;}
+   if(sample_name== "Gluino_13TeV16_M1800_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.04399e+00; Waa=1.13701e+00; Wan=1.05993e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1800_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.02927e+00; Waa=1.15483e+00; Wan=1.06635e+00;}
+   if(sample_name== "Gluino_13TeV16_M1800N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.03688e+00; Waa=1.11329e+00; Wan=1.05435e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1800N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.02108e+00; Waa=1.10542e+00; Wan=1.05980e+00;}
+   if(sample_name== "Gluino_13TeV16_M1800_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.04399e+00; Waa=1.13700e+00; Wan=1.05994e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1800_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.02927e+00; Waa=1.15483e+00; Wan=1.06634e+00;}
+   if(sample_name== "Gluino_13TeV16_M1800N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.03688e+00; Waa=1.11329e+00; Wan=1.05435e+00;}
+   if(sample_name== "Gluino_13TeV16G_M1800N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.02108e+00; Waa=1.10541e+00; Wan=1.05979e+00;}
+   if(sample_name== "Gluino_13TeV16_M2000_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.05497e+00; Waa=1.11383e+00; Wan=1.05472e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2000_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.05321e+00; Waa=1.10173e+00; Wan=1.05007e+00;}
+   if(sample_name== "Gluino_13TeV16_M2000N_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.05937e+00; Waa=1.11855e+00; Wan=1.04864e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2000N_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.05173e+00; Waa=1.11570e+00; Wan=1.04457e+00;}
+   if(sample_name== "Gluino_13TeV16_M2000_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.05497e+00; Waa=1.11383e+00; Wan=1.05471e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2000_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.05321e+00; Waa=1.10173e+00; Wan=1.05007e+00;}
+   if(sample_name== "Gluino_13TeV16_M2000N_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.05937e+00; Waa=1.11856e+00; Wan=1.04862e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2000N_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.05173e+00; Waa=1.11569e+00; Wan=1.04457e+00;}
+   if(sample_name== "Gluino_13TeV16_M2200_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.06535e+00; Waa=1.13193e+00; Wan=1.05624e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2200_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.06233e+00; Waa=1.15471e+00; Wan=1.05806e+00;}
+   if(sample_name== "Gluino_13TeV16_M2200N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.05069e+00; Waa=1.11169e+00; Wan=1.04728e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2200N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.03741e+00; Waa=1.10548e+00; Wan=1.04138e+00;}
+   if(sample_name== "Gluino_13TeV16_M2200_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.06535e+00; Waa=1.13192e+00; Wan=1.05624e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2200_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.06233e+00; Waa=1.15470e+00; Wan=1.05806e+00;}
+   if(sample_name== "Gluino_13TeV16_M2200N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.05069e+00; Waa=1.11168e+00; Wan=1.04728e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2200N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.03741e+00; Waa=1.10548e+00; Wan=1.04138e+00;}
+   if(sample_name== "Gluino_13TeV16_M2400_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.09729e+00; Waa=1.11488e+00; Wan=1.05083e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2400_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.11968e+00; Waa=1.09763e+00; Wan=1.04302e+00;}
+   if(sample_name== "Gluino_13TeV16_M2400N_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.02856e+00; Waa=1.11822e+00; Wan=1.05504e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2400N_f10"){Rhadron=1; Wa=      1.0 ; Wad=1.01861e+00; Waa=1.10373e+00; Wan=1.06239e+00;}
+   if(sample_name== "Gluino_13TeV16_M2400_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.09729e+00; Waa=1.11488e+00; Wan=1.05083e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2400_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.11968e+00; Waa=1.09763e+00; Wan=1.04302e+00;}
+   if(sample_name== "Gluino_13TeV16_M2400N_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.02856e+00; Waa=1.11822e+00; Wan=1.05505e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2400N_f50"){Rhadron=1; Wa=      1.0 ; Wad=1.01861e+00; Waa=1.10372e+00; Wan=1.06238e+00;}
+   if(sample_name== "Gluino_13TeV16_M2600_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.03106e+00; Waa=1.11380e+00; Wan=1.04804e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2600_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.01947e+00; Waa=1.10963e+00; Wan=1.04575e+00;}
+   if(sample_name== "Gluino_13TeV16_M2600N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.09505e+00; Waa=1.11331e+00; Wan=1.05058e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2600N_f10"){Rhadron=1; Wa=1.00000e+00; Wad=1.10710e+00; Waa=1.10905e+00; Wan=1.05031e+00;}
+   if(sample_name== "Gluino_13TeV16_M2600_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.03106e+00; Waa=1.11379e+00; Wan=1.04805e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2600_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.01947e+00; Waa=1.10963e+00; Wan=1.04575e+00;}
+   if(sample_name== "Gluino_13TeV16_M2600N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.09505e+00; Waa=1.11331e+00; Wan=1.05059e+00;}
+   if(sample_name== "Gluino_13TeV16G_M2600N_f50"){Rhadron=1; Wa=1.00000e+00; Wad=1.10710e+00; Waa=1.10905e+00; Wan=1.05031e+00;}
+   if(sample_name== "Stop_13TeV16_M100"){Rhadron=1; Wa=1.48895e+00; Wad=1.63773e+00; Waa=3.72100e+00; Wan=1.58986e+00;}
+   if(sample_name== "Stop_13TeV16G_M100"){Rhadron=1; Wa=1.85460e+00; Wad=1.79354e+00; Waa=3.57042e+00; Wan=1.59750e+00;}
+   if(sample_name== "Stop_13TeV16_M100N"){Rhadron=1; Wa=1.52743e+00; Wad=1.39185e+00; Waa=3.89317e+00; Wan=1.58947e+00;}
+   if(sample_name== "Stop_13TeV16G_M100N"){Rhadron=1; Wa=1.47291e+00; Wad=1.27392e+00; Waa=3.88127e+00; Wan=1.56703e+00;}
+   if(sample_name== "Stop_13TeV16_M200"){Rhadron=1; Wa=1.41378e+00; Wad=1.53085e+00; Waa=3.69431e+00; Wan=1.58899e+00;}
+   if(sample_name== "Stop_13TeV16G_M200"){Rhadron=1; Wa=1.31263e+00; Wad=1.38737e+00; Waa=3.69745e+00; Wan=1.57685e+00;}
+   if(sample_name== "Stop_13TeV16_M200N"){Rhadron=1; Wa=1.94239e+00; Wad=1.65615e+00; Waa=3.78488e+00; Wan=1.57685e+00;}
+   if(sample_name== "Stop_13TeV16G_M200N"){Rhadron=1; Wa=2.06572e+00; Wad=1.84068e+00; Waa=3.59161e+00; Wan=1.56411e+00;}
+   if(sample_name== "Stop_13TeV16_M400"){Rhadron=1; Wa=1.48638e+00; Wad=1.77125e+00; Waa=3.91371e+00; Wan=1.57659e+00;}
+   if(sample_name== "Stop_13TeV16G_M400"){Rhadron=1; Wa=1.34605e+00; Wad=1.70643e+00; Waa=4.05354e+00; Wan=1.59001e+00;}
+   if(sample_name== "Stop_13TeV16_M400N"){Rhadron=1; Wa=3.33978e+00; Wad=1.60340e+00; Waa=3.65370e+00; Wan=1.57817e+00;}
+   if(sample_name== "Stop_13TeV16G_M400N"){Rhadron=1; Wa=5.29832e+00; Wad=1.54759e+00; Waa=3.50364e+00; Wan=1.57003e+00;}
+   if(sample_name== "Stop_13TeV16_M600"){Rhadron=1; Wa=1.64779e+00; Wad=1.73679e+00; Waa=3.71421e+00; Wan=1.57603e+00;}
+   if(sample_name== "Stop_13TeV16G_M600"){Rhadron=1; Wa=1.62139e+00; Wad=2.00693e+00; Waa=3.59236e+00; Wan=1.56359e+00;}
+   if(sample_name== "Stop_13TeV16_M600N"){Rhadron=1; Wa=1.29048e+00; Wad=1.64931e+00; Waa=4.03799e+00; Wan=1.60249e+00;}
+   if(sample_name== "Stop_13TeV16G_M600N"){Rhadron=1; Wa=1.25517e+00; Wad=1.67057e+00; Waa=4.32971e+00; Wan=1.62918e+00;}
+   if(sample_name== "Stop_13TeV16_M800"){Rhadron=1; Wa=1.33778e+00; Wad=1.60026e+00; Waa=3.83396e+00; Wan=1.58746e+00;}
+   if(sample_name== "Stop_13TeV16G_M800"){Rhadron=1; Wa=1.29931e+00; Wad=1.59535e+00; Waa=3.83467e+00; Wan=1.58766e+00;}
+   if(sample_name== "Stop_13TeV16_M800N"){Rhadron=1; Wa=2.02103e+00; Wad=1.59819e+00; Waa=3.86165e+00; Wan=1.59136e+00;}
+   if(sample_name== "Stop_13TeV16G_M800N"){Rhadron=1; Wa=2.13045e+00; Wad=1.82254e+00; Waa=3.82256e+00; Wan=1.58237e+00;}
+   if(sample_name== "Stop_13TeV16_M1000"){Rhadron=1; Wa=2.43539e+00; Wad=1.61244e+00; Waa=3.79207e+00; Wan=1.57390e+00;}
+   if(sample_name== "Stop_13TeV16G_M1000"){Rhadron=1; Wa=2.29364e+00; Wad=1.68773e+00; Waa=3.62179e+00; Wan=1.57279e+00;}
+   if(sample_name== "Stop_13TeV16_M1000N"){Rhadron=1; Wa=1.14838e+01; Wad=1.48860e+00; Waa=3.88234e+00; Wan=1.55547e+00;}
+   if(sample_name== "Stop_13TeV16G_M1000N"){Rhadron=1; Wa=1.91021e+01; Wad=1.41199e+00; Waa=4.06618e+00; Wan=1.54431e+00;}
+   if(sample_name== "Stop_13TeV16_M1200"){Rhadron=1; Wa=1.76112e+00; Wad=1.74799e+00; Waa=3.79217e+00; Wan=1.58862e+00;}
+   if(sample_name== "Stop_13TeV16G_M1200"){Rhadron=1; Wa=1.59545e+00; Wad=1.84435e+00; Waa=3.71432e+00; Wan=1.59049e+00;}
+   if(sample_name== "Stop_13TeV16_M1200N"){Rhadron=1; Wa=3.58410e+00; Wad=1.47529e+00; Waa=3.80086e+00; Wan=1.59485e+00;}
+   if(sample_name== "Stop_13TeV16G_M1200N"){Rhadron=1; Wa=3.17943e+00; Wad=1.47822e+00; Waa=3.70784e+00; Wan=1.59335e+00;}
+   if(sample_name== "Stop_13TeV16_M1400"){Rhadron=1; Wa=1.57971e+00; Wad=1.50758e+00; Waa=3.83374e+00; Wan=1.56841e+00;}
+   if(sample_name== "Stop_13TeV16G_M1400"){Rhadron=1; Wa=1.66959e+00; Wad=1.36557e+00; Waa=3.99336e+00; Wan=1.52871e+00;}
+   if(sample_name== "Stop_13TeV16_M1600"){Rhadron=1; Wa=1.00000e+00; Wad=1.63048e+00; Waa=3.90841e+00; Wan=1.57668e+00;}
+   if(sample_name== "Stop_13TeV16G_M1600"){Rhadron=1; Wa=1.00000e+00; Wad=1.55628e+00; Waa=3.97900e+00; Wan=1.56856e+00;}
+   if(sample_name== "Stop_13TeV16_M1600N"){Rhadron=1; Wa=1.00000e+00; Wad=1.74601e+00; Waa=3.88697e+00; Wan=1.61307e+00;}
+   if(sample_name== "Stop_13TeV16G_M1600N"){Rhadron=1; Wa=1.00000e+00; Wad=1.67093e+00; Waa=4.04171e+00; Wan=1.64330e+00;}
+   if(sample_name== "Stop_13TeV16_M1800"){Rhadron=1; Wa=      1.0 ; Wad=1.71460e+00; Waa=3.75776e+00; Wan=1.58930e+00;}
+   if(sample_name== "Stop_13TeV16G_M1800"){Rhadron=1; Wa=      1.0 ; Wad=1.76000e+00; Waa=3.76333e+00; Wan=1.62603e+00;}
+   if(sample_name== "Stop_13TeV16_M1800N"){Rhadron=1; Wa=1.00000e+00; Wad=1.67225e+00; Waa=3.68948e+00; Wan=1.58159e+00;}
+   if(sample_name== "Stop_13TeV16G_M1800N"){Rhadron=1; Wa=1.00000e+00; Wad=1.67238e+00; Waa=3.84747e+00; Wan=1.59714e+00;}
+   if(sample_name== "Stop_13TeV16_M2000"){Rhadron=1; Wa=1.00000e+00; Wad=1.55812e+00; Waa=3.94397e+00; Wan=1.57747e+00;}
+   if(sample_name== "Stop_13TeV16G_M2000"){Rhadron=1; Wa=1.00000e+00; Wad=1.48680e+00; Waa=3.99095e+00; Wan=1.57254e+00;}
+   if(sample_name== "Stop_13TeV16_M2000N"){Rhadron=1; Wa=1.00000e+00; Wad=1.50401e+00; Waa=3.83539e+00; Wan=1.56599e+00;}
+   if(sample_name== "Stop_13TeV16G_M2000N"){Rhadron=1; Wa=1.00000e+00; Wad=1.45216e+00; Waa=3.79238e+00; Wan=1.53687e+00;}
+   if(sample_name== "Stop_13TeV16_M2200"){Rhadron=1; Wa=      1.0 ; Wad=1.59142e+00; Waa=3.86218e+00; Wan=1.54876e+00;}
+   if(sample_name== "Stop_13TeV16G_M2200"){Rhadron=1; Wa=      1.0 ; Wad=1.57193e+00; Waa=3.93874e+00; Wan=1.52037e+00;}
+   if(sample_name== "Stop_13TeV16_M2200N"){Rhadron=1; Wa=1.00000e+00; Wad=1.47373e+00; Waa=3.69419e+00; Wan=1.58923e+00;}
+   if(sample_name== "Stop_13TeV16G_M2200N"){Rhadron=1; Wa=1.00000e+00; Wad=1.48432e+00; Waa=3.66894e+00; Wan=1.61450e+00;}
+   if(sample_name== "Stop_13TeV16_M2400"){Rhadron=1; Wa=      1.0 ; Wad=1.58353e+00; Waa=4.21290e+00; Wan=1.56575e+00;}
+   if(sample_name== "Stop_13TeV16G_M2400"){Rhadron=1; Wa=      1.0 ; Wad=1.53402e+00; Waa=4.37498e+00; Wan=1.51360e+00;}
+   if(sample_name== "Stop_13TeV16_M2400N"){Rhadron=1; Wa=1.52334e+01; Wad=1.64971e+00; Waa=3.80043e+00; Wan=1.58422e+00;}
+   if(sample_name== "Stop_13TeV16G_M2400N"){Rhadron=1; Wa=1.33230e+02; Wad=1.74531e+00; Waa=3.85981e+00; Wan=1.57615e+00;}
+   if(sample_name== "Stop_13TeV16_M2600"){Rhadron=1; Wa=1.40679e+00; Wad=1.62079e+00; Waa=3.80874e+00; Wan=1.56877e+00;}
+   if(sample_name== "Stop_13TeV16G_M2600"){Rhadron=1; Wa=1.36173e+00; Wad=1.72353e+00; Waa=3.91675e+00; Wan=1.54487e+00;}
+   if(sample_name== "Stop_13TeV16_M2600N"){Rhadron=1; Wa=3.45642e+00; Wad=1.59418e+00; Waa=3.88138e+00; Wan=1.60157e+00;}
+   if(sample_name== "Stop_13TeV16G_M2600N"){Rhadron=1; Wa=4.42824e+00; Wad=1.58612e+00; Waa=3.94492e+00; Wan=1.61766e+00;}
+
+
+   //------------ weights for R-hadron samples ----------Stop
+
+   unsigned int nw=0, na=0, nd=0, nn=0; //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
+
+// R-hadron wights needed due to wrong GenId----------------------------------END
+
+
+   // int nrha=0; 
+     for(unsigned int g=0;g<genColl.size();g++) {
+       if(genColl[g].pt()<5)continue;
+       if(genColl[g].status()!=1)continue;
+       int AbsPdg=abs(genColl[g].pdgId());
+       if(AbsPdg<1000000 && AbsPdg!=17)continue;
+
+// categorise event with R-hadrons for additional weighting-----------------------BEGIN
+
+     int GenId=genColl[g].pdgId();
+     
+     if        (    GenId ==1000612||    GenId ==1092214)  { nw+=1;  // count wrong 
+     } else if (abs(GenId)==1006223||abs(GenId)==1092224)  { nd+=1;  // count doble charged
+     } else if (abs(GenId)==1006113.||
+                abs(GenId)==1006333.||
+                abs(GenId)==1006313.||
+                abs(GenId)==1000622.||
+                                      abs(GenId)==1092114.||
+                                      abs(GenId)==1093324.||
+                                      abs(GenId)==1093214.||
+                                      abs(GenId)==1009333.||
+                                      abs(GenId)==1009223.||
+                                      abs(GenId)==1009113.||
+                                      abs(GenId)==1009313.||
+		                      abs(GenId)==1000993.){ nn+=1;  // count neutral
+     } else if (AbsPdg>1000000)                            { na+=1;} // count other R-hadrons
+     
+// categorise event with R-hadrons for additional weighting-----------------------END
+
+     SamplePlots->genlevelpT->Fill(genColl[g].pt(), Event_Weight);
+     SamplePlots->genleveleta->Fill(genColl[g].eta(), Event_Weight);
+     SamplePlots->genlevelbeta->Fill(genColl[g].p()/genColl[g].energy(), Event_Weight);
+
+     /*
+     nrha++;
+//mk rhadron ntuple
+    if(isSignal)
+       stPlots_GenFillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(),ev.eventAuxiliary().luminosityBlock(), nrha, Event_Weight,genColl[g].pdgId(),genColl[g].charge(),genColl[g].mass(),genColl[g].pt(),genColl[g].eta(),genColl[g].phi(),-1);
+
+     } // remove } below if uncommenting
+     nrha=0;
+     */
+
+     }
+
+// additional weighting for R-hadrons---------------------------------------------BEGIN
+
+/*
+     if(nw>0) continue; // to terminate the event
+     if(nd==1&&na==1) Event_Weight*=Wad;       // double_charged + other R-hadron
+     if(nn==1&&na==1) Event_Weight*=Wan;       // neutral        + other R-hadron
+     if(nd==0&&nn==0&&na==1) Event_Weight*=Wa ;       // single other R-hadron (the second lost in action) //nn==0 was missing !!! 
+     if(       na==2) Event_Weight*=Waa;       // 2 others in the event
+// additional weighting for R-hadrons---------------------------------------------BEGIN
+
+*///mkrh test of not removing events
             }
+
+	    // new genHSCP ntuple after correcting weights
+
+	    int nrha=0; 
+	    for(unsigned int g=0;g<genColl.size();g++) {
+	      if(genColl[g].pt()<5)continue;
+	      if(genColl[g].status()!=1)continue;
+	      int AbsPdg=abs(genColl[g].pdgId());
+	      if(AbsPdg<1000000 && AbsPdg!=17)continue;
+
+	      nrha++;
+	      //mk rhadron ntuple
+	      if(isSignal)
+		stPlots_GenFillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(),ev.eventAuxiliary().luminosityBlock(), nrha, Event_Weight,genColl[g].pdgId(),genColl[g].charge(),genColl[g].mass(),genColl[g].pt(),genColl[g].eta(),genColl[g].phi(),-1);
+
+	    }
+	    nrha=0;
+
+
 
             //check if the event is passing trigger
             SamplePlots      ->TotalE  ->Fill(0.0,Event_Weight);  
@@ -1454,12 +1749,19 @@ if(!dedxHits) continue; // skip tracks without hits otherwise there will be a cr
             HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
 
           
+unsigned int codep = 0;
+
+if(isSignal){
+ codep = genColl[ClosestGen].pdgId();
+//mk  std::cout<<"GenId  " <<codep<<std::endl;
+ }
+
                
 	       double dEdxErr = 0;
-               DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulator:NULL, &dEdxErr);
-               DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorUp:NULL);
-               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorDown:NULL);
+               DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL,0,codep);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulator:NULL, &dEdxErr,codep);
+               DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorUp:NULL,0,codep);
+               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorDown:NULL,0,codep);
                DeDxData* dedxSObj  = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj  = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements()>0?&dedxMUpObjTmp:NULL;
@@ -1727,7 +2029,42 @@ if(!dedxHits) continue; // skip tracks without hits otherwise there will be a cr
  
 
                } //end of Cut loop
-               if(PassNonTrivialSelection) stPlots_FillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(), c, track->pt(), dedxSObj ? dedxSObj->dEdx() : -1, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), -1);
+	       //              if(PassNonTrivialSelection) stPlots_FillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(), c, track->pt(), dedxSObj ? dedxSObj->dEdx() : -1, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), -1);
+	       double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),isMC);
+	       int nomh= 0;nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
+	       double fovhd = track->found()<=0?-1:track->found() / float(track->found() + nomh);
+	       unsigned int nom=0; if(dedxSObj) nom=dedxSObj->numberOfMeasurements();
+
+/*
+if(isSignal)std::cout<<"PD "<<genColl[ClosestGen].pdgId()<< "  charge "<<genColl[ClosestGen].charge()<<"  p" <<genColl[ClosestGen].p() <<"  mass "<<genColl[ClosestGen].mass()
+<<"  eta "<< genColl[ClosestGen].eta()
+<<"  phi "<< genColl[ClosestGen].phi() 
+<<"  pt "<< genColl[ClosestGen].pt() 
+<<" charge "<<track->charge()
+<<" nom "<<nom
+<<std::endl;
+*/
+    double weight=0,genid=0,gencharge=-99,genmass=-99,genpt=-99,geneta=-99,genphi=-99;
+         weight = Event_Weight;
+  
+  if(isSignal){
+        genid = genColl[ClosestGen].pdgId();
+        gencharge = genColl[ClosestGen].charge();
+        genmass = genColl[ClosestGen].mass();
+        genpt = genColl[ClosestGen].pt();
+        geneta = genColl[ClosestGen].eta();
+        genphi = genColl[ClosestGen].phi();
+
+                }       
+
+
+	      // if(PassNonTrivialSelection)
+//fill ntuple without any preselection
+//
+//if(PassNonTrivialSelection)  
+
+if(PassNonTrivialSelection||(dedxSObj && dedxSObj->dEdx()> 0. && track->pt()>60.))
+stPlots_FillTree(SamplePlots, TrigInfo, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(),ev.eventAuxiliary().luminosityBlock(), c, track->charge(), track->pt(),track->ptError(), dedxSObj ? dedxSObj->dEdx() : -1,dedxSObj ? dedxMObj->dEdx() : -1,dedxMObj ? Ick2 : -99, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), track->found(), track->hitPattern().numberOfValidPixelHits(), track->validFraction(), nomh,fovhd, nom, weight,genid,gencharge,genmass,genpt,geneta,genphi,-1);
             }// end of Track Loop
 
             //save event dependent information thanks to the bookkeeping

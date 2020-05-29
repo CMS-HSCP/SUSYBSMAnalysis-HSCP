@@ -125,6 +125,16 @@ double GetMass(double P, double I, bool MC){
    return sqrt((I-C)/K)*P;
 }
 
+// pz compute Ick out of dEdx value
+double GetIck(double I, bool MC){
+   double& K = dEdxK_Data;
+   double& C = dEdxC_Data;
+   if(MC){ K = dEdxK_MC;
+           C = dEdxC_MC;  }
+
+   return (I-C)/K;
+}
+
 
 // return a TF1 corresponding to a mass line in the momentum vs dEdx 2D plane
 TF1* GetMassLine(double M, bool MC){
@@ -746,7 +756,7 @@ class dedxHIPEmulator{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL, double* dEdxErr = NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL, double* dEdxErr = NULL, unsigned int pdgId=0);
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
@@ -948,8 +958,17 @@ HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, 
 
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator, double* dEdxErr){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator, double* dEdxErr, unsigned int pdgId){
+
+
+//GenId==1092214, (gluino_uud) and
+//GenId==1000612, (stop_anti-d).
+
+     bool isStrangePdgId = false;
+     if(pdgId==1092214|| pdgId==1000612) isStrangePdgId= true;
+
      if(!dedxHits) return DeDxData(-1, -1, -1);
+
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
      std::vector<double> vect;
@@ -1008,6 +1027,7 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
 
         if(templateHisto){  //save discriminator probability
            double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0*(detid.subdetId()<3?265:1));
+           if(isStrangePdgId) ChargeOverPathlength /= 2; 
 //           if(fakeHIP && detid.subdetId()>=3 && rand()%1000<35)ChargeOverPathlength = ( 0.5 + ((rand()%15000)/10000.0) ) / (3.61e-06*265*10);
 //           if(fakeHIP && detid.subdetId() <3 && rand()%1000<20)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) ) / (3.61e-06*265*10*265);
 
@@ -1025,6 +1045,8 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
            double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
            double ChargeOverPathlength = scaleFactor*Norm*ClusterCharge/dedxHits->pathlength(h);
            if(hipEmulator)ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
+    // mk change 
+           if(isStrangePdgId) ChargeOverPathlength /= 2;
 
            vect.push_back(ChargeOverPathlength); //save charge
            if(detid.subdetId()< 3)vectPixel.push_back(ChargeOverPathlength);
@@ -1061,6 +1083,7 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
               result += vect[i-1] * pow(vect[i-1] - ((2.0*i-1.0)/(2.0*size)),2);
            }
            result *= (3.0/size);
+//mk printf("------> In Ias = %f\n",result);
         }else{  //dEdx estimator
            if(useTruncated){
               //truncated40 estimator
@@ -1083,11 +1106,14 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
               result = pow(result/size,1./expo);
 	      if (dEdxErr) *dEdxErr = result*result*result*sqrt(*dEdxErr)/size;
            }
-//           printf("Ih = %f\n------------------\n",result);
+           //mk if(isStrangePdgId) result /= 2;
+           //mk if(isStrangePdgId) printf("------> In pdgId = %u\n",pdgId);
+           //mk printf("------> In Ih = %f\n",result);
         }
      }else{
         result = -1;
      }
+      //mk printf("Results =%f , NSat = %d  , size = %d\n",result, NSat, size);
      return DeDxData(result, NSat, size);
 }
 

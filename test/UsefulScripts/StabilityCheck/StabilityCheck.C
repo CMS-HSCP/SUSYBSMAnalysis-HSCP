@@ -409,11 +409,13 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 	      if(isMC){
 		dEdxTemplates = loadDeDxTemplate(DIRNAME+"/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
 
-		//		dEdxSF [0] = 1.09711;
-		//              dEdxSF [1] = 1.09256;
-		  dEdxSF [0] = 1.09711;
-		  dEdxSF [1] = 1.16;
-		  
+               //oryginalne sf
+	        dEdxSF [0] = 1.09711;
+                dEdxSF [1] = 1.09256;
+                      std::cout<< "KCMC K= "<<dEdxK_MC<<" C= "<<dEdxC_MC<<std::endl;		
+		 // dEdxSF [0] = 1.09711;
+		 // dEdxSF [1] = 1.16;
+		/* 
 		  if(is2016){
                   dEdxK_Data = 2.062;//preG
                   dEdxC_Data = 3.430;//preG
@@ -426,7 +428,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 		    dEdxK_MC = 2.300;
 		    dEdxC_MC = 3.700;
 		  }
-
+*/
 		  /*888
 		if(is2016){
 		  dEdxSF [0] = 1.0;

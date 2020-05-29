@@ -64,9 +64,72 @@ void Analysis_Step3_MakePlots()
 
    SQRTS=13.0;
 
+// te ploty trzeba rysowac oddzielnie, kazde zawolanie
+/*
+   InputPattern = "Results/Type2/";  
+   GetSystematicOnPrediction(InputPattern, "Data13TeV16");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+exit(0);
+    GetSystematicOnPrediction(InputPattern, "Data13TeV16G");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+exit(0);
+*/
 
+/*
+   Make2DPlot_Special("Results/Type0/", "Results/Type0/",1);
+   
+   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16_Loose_4");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16_Tight_29");
 
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose_4");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight_29");
+
+   InputPattern = "Results/Type0/";   CutIndex = 6; CutIndexTight = 49;
+
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16_Tight");
+
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight");
+
+   CompareRecoAndGenPt("Results/Type0/");
+
+   Make2DPlot_Core(InputPattern, 0);
+   Make2DPlot_Core(InputPattern, CutIndex);  
+   Make2DPlot_Core(InputPattern, CutIndexTight);  
+
+   CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, 0);
+   CutFlowPlot(InputPattern, CutIndex);
+   CutFlowPlot(InputPattern, CutIndexTight);
+   
+   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   PredictionAndControlPlot(InputPattern, "Data13TeV16", CutIndex, 0);
+   PredictionAndControlPlot(InputPattern, "Data13TeV16G", CutIndex, 0);
+*/
+
+//exit(0);
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
+
+//   InputPattern = "Results/Type2/";   CutIndex = 255; CutIndexTight = 526; CutIndex_Flip=12;
+
+   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+
+//   Make2DPlot_Core(InputPattern, 0);
+   MassPrediction(InputPattern, CutIndex,      "Mass"     , false, "13TeV16_Loose_16");
+   MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV16_Tight_299");
+   MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV16_Loose_1");
+   MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV16_Tight_12");
+
+   MassPrediction(InputPattern, CutIndex,      "Mass"     , false, "13TeV16G_Loose_16");
+   MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV16G_Tight_299");
+   MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV16G_Loose_1");
+   MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV16G_Tight_12");
+
+   InputPattern = "Results/Type2/";   CutIndex = 255; CutIndexTight = 526; CutIndex_Flip=12;
+   //CutIndex= 255 --> (Pt> 65.00 I> 0.100 TOF> 1.075)
+   //CutIndex= 526 --> (Pt> 70.00 I> 0.200 TOF> 1.200) 
+   //Flip CutIndex=   1 --> (Pt> 65.00 I> 0.100 TOF> 0.950) 
+   //Flip CutIndex=  12 --> (Pt> 65.00 I> 0.200 TOF> 0.700)
 
    MassPrediction(InputPattern, CutIndex,      "Mass"     , false, "13TeV16_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV16_Tight");
@@ -78,6 +141,8 @@ void Analysis_Step3_MakePlots()
    MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV16G_Loose");
    MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV16G_Tight");
 
+
+   Make2DPlot_Core(InputPattern, 0);
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
    CutFlowPlot(InputPattern, 0);
@@ -85,6 +150,7 @@ void Analysis_Step3_MakePlots()
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 
+   InputPattern = "Results/Type2/";   CutIndex = 255; CutIndexTight = 526; CutIndex_Flip=12;
 //   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
    PredictionAndControlPlot(InputPattern, "Data13TeV16", CutIndex, CutIndex_Flip);
    PredictionAndControlPlot(InputPattern, "Data13TeV16G", CutIndex, CutIndex_Flip);
@@ -93,11 +159,10 @@ void Analysis_Step3_MakePlots()
    CheckPrediction(InputPattern, "_Flip", "Data13TeV16");
    CheckPrediction(InputPattern, "_Flip", "Data13TeV16G");
 //  std::cout<<"B\n";
-
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 //   InputPattern="Results/Type2/";
-//   GetSystematicOnPrediction(InputPattern, "Data13TeV16");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
-//   GetSystematicOnPrediction(InputPattern, "Data13TeV16G");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+   GetSystematicOnPrediction(InputPattern, "Data13TeV16");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+   //GetSystematicOnPrediction(InputPattern, "Data13TeV16G");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 
   std::cout<<"ALL DONE WITH THE PLOTTING CODE\n";
 
@@ -348,9 +413,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
-         double D = Data13TeV16G->Integral( Data13TeV16G->GetXaxis()->FindBin(M),  Data13TeV16G->GetXaxis()->FindBin(2000.0));
-         double P = Pred13TeV16G->Integral( Pred13TeV16G->GetXaxis()->FindBin(M),  Pred13TeV16G->GetXaxis()->FindBin(2000.0));
-         double Perr = 0; for(int i=Pred13TeV16G->GetXaxis()->FindBin(M);i<Pred13TeV16G->GetXaxis()->FindBin(2000.0);i++){ Perr += pow(Pred13TeV16G->GetBinError(i),2); }  Perr = sqrt(Perr);
+         double D = Data13TeV16G->Integral( Data13TeV16G->GetXaxis()->FindBin(M),  Data13TeV16G->GetXaxis()->FindBin(MassHistoUpperBound));
+         double P = Pred13TeV16G->Integral( Pred13TeV16G->GetXaxis()->FindBin(M),  Pred13TeV16G->GetXaxis()->FindBin(MassHistoUpperBound));
+         double Perr = 0; for(int i=Pred13TeV16G->GetXaxis()->FindBin(M);i<Pred13TeV16G->GetXaxis()->FindBin(MassHistoUpperBound);i++){ Perr += pow(Pred13TeV16G->GetBinError(i),2); }  Perr = sqrt(Perr);
          printf("%4.0f<M<2000 --> Obs=%9.3f Data-Pred = %9.3f +- %8.3f(syst+stat) %9.3f (syst) %9.3f (stat)\n", M, D, P, sqrt(Perr*Perr + pow(P*SystError,2)), P*SystError, Perr);
       }
    }
@@ -361,9 +426,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
-         double D = Data13TeV16->Integral( Data13TeV16->GetXaxis()->FindBin(M),  Data13TeV16->GetXaxis()->FindBin(2000.0));
-         double P = Pred13TeV16->Integral( Pred13TeV16->GetXaxis()->FindBin(M),  Pred13TeV16->GetXaxis()->FindBin(2000.0));
-         double Perr = 0; for(int i=Pred13TeV16->GetXaxis()->FindBin(M);i<Pred13TeV16->GetXaxis()->FindBin(2000.0);i++){ Perr += pow(Pred13TeV16->GetBinError(i),2); }  Perr = sqrt(Perr);
+         double D = Data13TeV16->Integral( Data13TeV16->GetXaxis()->FindBin(M),  Data13TeV16->GetXaxis()->FindBin(MassHistoUpperBound));
+         double P = Pred13TeV16->Integral( Pred13TeV16->GetXaxis()->FindBin(M),  Pred13TeV16->GetXaxis()->FindBin(MassHistoUpperBound));
+         double Perr = 0; for(int i=Pred13TeV16->GetXaxis()->FindBin(M);i<Pred13TeV16->GetXaxis()->FindBin(MassHistoUpperBound);i++){ Perr += pow(Pred13TeV16->GetBinError(i),2); }  Perr = sqrt(Perr);
          printf("%4.0f<M<2000 --> Obs=%9.3f Data-Pred = %9.3f +- %8.3f(syst+stat) %9.3f (syst) %9.3f (stat)\n", M, D, P, sqrt(Perr*Perr + pow(P*SystError,2)), P*SystError, Perr);
       }
    }
@@ -374,9 +439,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
-         double D = Data13TeV15->Integral( Data13TeV15->GetXaxis()->FindBin(M),  Data13TeV15->GetXaxis()->FindBin(2000.0));
-         double P = Pred13TeV15->Integral( Pred13TeV15->GetXaxis()->FindBin(M),  Pred13TeV15->GetXaxis()->FindBin(2000.0));
-         double Perr = 0; for(int i=Pred13TeV15->GetXaxis()->FindBin(M);i<Pred13TeV15->GetXaxis()->FindBin(2000.0);i++){ Perr += pow(Pred13TeV15->GetBinError(i),2); }  Perr = sqrt(Perr);
+         double D = Data13TeV15->Integral( Data13TeV15->GetXaxis()->FindBin(M),  Data13TeV15->GetXaxis()->FindBin(MassHistoUpperBound));
+         double P = Pred13TeV15->Integral( Pred13TeV15->GetXaxis()->FindBin(M),  Pred13TeV15->GetXaxis()->FindBin(MassHistoUpperBound));
+         double Perr = 0; for(int i=Pred13TeV15->GetXaxis()->FindBin(M);i<Pred13TeV15->GetXaxis()->FindBin(MassHistoUpperBound);i++){ Perr += pow(Pred13TeV15->GetBinError(i),2); }  Perr = sqrt(Perr);
          printf("%4.0f<M<2000 --> Obs=%9.3f Data-Pred = %9.3f +- %8.3f(syst+stat) %9.3f (syst) %9.3f (stat)\n", M, D, P, sqrt(Perr*Perr + pow(P*SystError,2)), P*SystError, Perr);
       }
    }
@@ -384,9 +449,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    if(Data8TeV && Pred8TeV){
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
-         double D = Data8TeV->Integral( Data8TeV->GetXaxis()->FindBin(M),  Data8TeV->GetXaxis()->FindBin(2000.0));
-         double P = Pred8TeV->Integral( Pred8TeV->GetXaxis()->FindBin(M),  Pred8TeV->GetXaxis()->FindBin(2000.0));
-         double Perr = 0; for(int i=Pred8TeV->GetXaxis()->FindBin(M);i<Pred8TeV->GetXaxis()->FindBin(2000.0);i++){ Perr += pow(Pred8TeV->GetBinError(i),2); }  Perr = sqrt(Perr);
+         double D = Data8TeV->Integral( Data8TeV->GetXaxis()->FindBin(M),  Data8TeV->GetXaxis()->FindBin(MassHistoUpperBound));
+         double P = Pred8TeV->Integral( Pred8TeV->GetXaxis()->FindBin(M),  Pred8TeV->GetXaxis()->FindBin(MassHistoUpperBound));
+         double Perr = 0; for(int i=Pred8TeV->GetXaxis()->FindBin(M);i<Pred8TeV->GetXaxis()->FindBin(MassHistoUpperBound);i++){ Perr += pow(Pred8TeV->GetBinError(i),2); }  Perr = sqrt(Perr);
          printf("%4.0f<M<2000 --> Obs=%9.3f Data-Pred = %9.3f +- %8.3f(syst+stat) %9.3f (syst) %9.3f (stat)\n", M, D, P, sqrt(Perr*Perr + pow(P*SystError,2)), P*SystError, Perr);
       }
    }
@@ -3929,7 +3994,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2, bool GPeriodF
    string Da = !GPeriodFlag?"Data13TeV16":"Data13TeV16G";
    string outName = !GPeriodFlag?"2DPlotsS":"2DPlotsSG";
 
-   if (GPeriodFlag) SQRTS = 13167.0;
+   if (GPeriodFlag) SQRTS = 131677.0;
 
    int S1i   = JobIdToIndex(S1,samples);    if(S1i<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  } 
    int S2i   = JobIdToIndex(S2,samples);    if(S2i<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  }                
