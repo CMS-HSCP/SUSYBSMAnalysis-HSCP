@@ -29,7 +29,8 @@ Jobs_Seed	  = 0
 Jobs_NEvent	  =-1
 Jobs_Skip         = 0
 Jobs_Queue        = '2nd'
-Jobs_LSFRequirement = '"type==SLC6_64&&pool>30000"'
+#Jobs_LSFRequirement = '"type==SLC6_64&&pool>30000"'
+Jobs_LSFRequirement = '"type==SLC7_64&&pool>30000"'
 Jobs_Inputs	  = []
 Jobs_InitCmds     = []
 Jobs_FinalCmds    = []
@@ -162,8 +163,10 @@ def CreateTheShellFile(argv):
             shell_file.write('source /cvmfs/cms.cern.ch/cmsset_default.sh\n')
             shell_file.write('source /grp/cms/tools/glite/setup.sh\n')
 
-	shell_file.write('export SCRAM_ARCH='+os.getenv("SCRAM_ARCH","slc5_amd64_gcc462")+'\n')
-        shell_file.write('export BUILD_ARCH='+os.getenv("BUILD_ARCH","slc5_amd64_gcc462")+'\n')
+	    #shell_file.write('export SCRAM_ARCH='+os.getenv("SCRAM_ARCH","slc5_amd64_gcc462")+'\n')
+        #shell_file.write('export BUILD_ARCH='+os.getenv("BUILD_ARCH","slc5_amd64_gcc462")+'\n')
+	    shell_file.write('export SCRAM_ARCH='+os.getenv("SCRAM_ARCH","slc7_amd64_gcc820")+'\n')
+        shell_file.write('export BUILD_ARCH='+os.getenv("BUILD_ARCH","slc7_amd64_gcc820")+'\n')
 
         if 'purdue.edu' in hostname:
             shell_file.write('export VO_CMS_SW_DIR=/apps/osg/cmssoft/cms\n')
@@ -322,7 +325,7 @@ def CreateTheCmdFile():
 	if subTool=='condor':
            cmd_file.write('Universe                = vanilla\n')
 	   cmd_file.write('Environment             = CONDORJOBID=$(Process)\n')
-           cmd_file.write('requirements            = (OpSysAndVer =?= "SLCern6")\n')
+#           cmd_file.write('requirements            = (OpSysAndVer =?= "SLCern6")\n')
 	   cmd_file.write('notification            = Error\n')
 	   cmd_file.write('Proxy_filename          = x509_proxy\n')
 	   cmd_file.write('Proxy_path              = '+os.path.expanduser('~/private/')+'$(Proxy_filename)\n')

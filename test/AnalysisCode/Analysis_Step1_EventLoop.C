@@ -307,8 +307,17 @@ TVector3 getOuterHitPos(const DeDxHitInfo* dedxHits){
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic, L1BugEmulator* emul)
 {
-   edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
-   if(!tr.isValid())         tr = ev.triggerResultsByName("MergeHLT");
+   
+    fwlite::Handle<edm::TriggerResults> hTriggerResultsHLT;
+    fwlite::Handle<edm::TriggerResults> hTriggerResultsMergeHLT;
+
+    hTriggerResultsHLT.getByLabel(ev,"TriggerResults","","HLT");
+    
+    edm::TriggerResultsByName tr = ev.triggerResultsByName(*hTriggerResultsHLT);
+   if(!tr.isValid()){
+       hTriggerResultsMergeHLT.getByLabel(ev,"TriggerResults","","MergeHLT");
+       tr = ev.triggerResultsByName(*hTriggerResultsMergeHLT);
+   }
    if(!tr.isValid())return false;
 
    if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*") || passTriggerPatterns(tr, "HLT_PFMET170_HBHECleaned_v*"))return true;
@@ -1866,7 +1875,7 @@ double SegSep(const susybsm::HSCParticle& hscp, const fwlite::ChainEvent& ev, do
 //Counts the number of muon stations used in track fit only counting DT and CSC stations.
 int  muonStations(const reco::HitPattern& hitPattern) {
   int stations[4] = { 0,0,0,0 };
-  for (int i=0; i<hitPattern.numberOfHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
+  for (int i=0; i<hitPattern.numberOfAllHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
     uint32_t pattern = hitPattern.getHitPattern(reco::HitPattern::HitCategory::TRACK_HITS, i );
     if(pattern == 0) break;
     if(hitPattern.muonHitFilter(pattern) && (int(hitPattern.getSubStructure(pattern)) == 1 || int(hitPattern.getSubStructure(pattern)) == 2) && hitPattern.getHitType(pattern) == 0){

@@ -1,7 +1,6 @@
 #include <exception>
 #include <vector>
 #include <fstream>
-#include <sstream>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -28,9 +27,8 @@
 #include "FWCore/FWLite/interface/FWLiteEnabler.h"
 
 using namespace std;
-double minValue = 0.9;
-double maxValue = 1.3;
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = minValue, double MaxRange = maxValue, double MassCenter = 1.875, double LeftMassMargin = 0.1, double RightMassMargin = 0.4); // by default use protons
+
+void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8); // by default use protons --> here it's deuterons 
 double GetMass(double P, double I, double* K, double* C);
 
 typedef struct dEdxPlotObj
@@ -71,7 +69,7 @@ typedef struct dEdxPlotObj
    dEdxPlotObj (string FileName_, string LegEntry_, string SavePrefix_,
          vector<string> HitObjName_, vector<string> StdObjName_, vector<string> HitObjLegend_, vector<string> StdObjLegend_,
          unsigned short type_,
-         double K_ = 2.3, double Kerr_ = 0.001, double C_ = 3.5, double Cerr_ = 0.001){
+         double K_ = 2.26949, double Kerr_ = 0.001, double C_ = 3.32082, double Cerr_ = 0.001){
 
       // Initialize all the variables
       FileName    = FileName_;
@@ -145,6 +143,7 @@ typedef struct dEdxPlotObj
             if (type != 2){
 
                double Ktmp = K_; double Ctmp = C_; double KerrTmp = Kerr_; double CerrTmp = Cerr_;
+               //ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp,1.0,1.6,0.938);
                ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp);
                K [StdObjName[i]] = Ktmp;  Kerr[StdObjName[i]] = KerrTmp;
                C [StdObjName[i]] = Ctmp;  Cerr[StdObjName[i]] = CerrTmp;
@@ -211,8 +210,6 @@ TF1* GetMassLine(double M, dEdxPlotObj* plotObj, string ObjName, bool left=false
    return MassLine;
 }
 
-
-
 TF1* GetMassLine(double M, double K, double C, bool left=false)
 {  
    double BetaMax = 0.9;
@@ -253,32 +250,96 @@ void MakePlot()
 
    vector<string> HitObjName;                         vector<string> HitObjLegend;
    HitObjName.push_back("hit_PO");                    HitObjLegend.push_back("Pixel");
+//   HitObjName.push_back("hit_PO_noHIP");              HitObjLegend.push_back("Pixel w/o HIP");
    HitObjName.push_back("hit_SO_in_noC_CCC");         HitObjLegend.push_back("Strip");
+//   HitObjName.push_back("hit_SO_in_noC_CCC_noHIP");   HitObjLegend.push_back("Strip w/o HIP, new CC");
+//   HitObjName.push_back("hit_SO_in_noC_newCCC");      HitObjLegend.push_back("Strip, new CC");
+//   HitObjName.push_back("hit_SO_in_noC_newCCC_noHIP");HitObjLegend.push_back("Strip w/o HIP, new CC");
+//   HitObjName.push_back("hit_SP");                    HitObjLegend.push_back("Strip+Pixel charges, untrimmed");
+//   HitObjName.push_back("hit_SP_in_noC");
+//   HitObjName.push_back("hit_SP_in_noC_CI");
+//   HitObjName.push_back("hit_SP_in_noC_CC");
    HitObjName.push_back("hit_SP_in_noC_CCC");         HitObjLegend.push_back("Strip+Pixel charges"); //questo forse serve..
-
+//   HitObjName.push_back("hit_SP_in_noC_newCCC");      HitObjLegend.push_back("Strip+Pixel charges, new CC");
    vector<string> StdObjName;                         vector<string> StdObjLegend;
+//   StdObjName.push_back("harm2_SO");
+//   StdObjName.push_back("harm2_SO_in");
+//   StdObjName.push_back("harm2_SO_in_noC");
+//   StdObjName.push_back("harm2_SP");
+//   StdObjName.push_back("harm2_SP_in");
+//   StdObjName.push_back("harm2_SP_in_noC");
+//   StdObjName.push_back("harm2_SP_in_noC_CI");
+//   StdObjName.push_back("harm2_SP_in_noC_CC");
+//   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, old CC");
+//   StdObjName.push_back("harm2_SP_in_noC_newCCC");    StdObjLegend.push_back("harm-2, new CC");
+
+//   StdObjName.push_back("harm2_PO_raw");                StdObjLegend.push_back("harm-2, PO");
+//   StdObjName.push_back("Hybr2005_PO_raw");             StdObjLegend.push_back("Hybr-2-05, PO");
+//   StdObjName.push_back("Hybr2010_PO_raw");             StdObjLegend.push_back("Hybr-2-10, PO");
+//   StdObjName.push_back("Hybr2015_PO_raw");             StdObjLegend.push_back("Hybr-2-15, PO");
+
+//   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, SO");
+///    StdObjName.push_back("Hybr2005_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-05, SO");
+//   StdObjName.push_back("Hybr2010_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-10, SO");
+//   StdObjName.push_back("Hybr2015_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-15, SO");  // those were uncommented before, but this is not what I want....
+//   StdObjName.push_back("harm2_SO_in_noC_CCC");
+//   StdObjName.push_back("hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-10, SP");
    StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");  // i think that is the one to keep
- 
-     StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
-     StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
-     StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
+
+//   StdObjName.push_back("hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-20, SP");
+//   StdObjName.push_back("hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-25, SP");
+//   StdObjName.push_back("hybr203_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-30, SP");
+//   StdObjName.push_back("hybr2035_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-35, SP");
+//   StdObjName.push_back("hybr204_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-40, SP");
+//   StdObjName.push_back("harm2_SO_in_noC_CCC");       StdObjLegend.push_back("harm-2, SO");
+//   StdObjName.push_back("Hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-10, SP");
+//   StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-15");
+//   StdObjName.push_back("Hybr2015_SP_in_noC_newCCC"); StdObjLegend.push_back("Hybrid2-15, new CC");
+//   StdObjName.push_back("Hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-20, SP");
+//   StdObjName.push_back("Hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-25, SP");
+//   StdObjName.push_back("Hybr203_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-30, SP");
+//   StdObjName.push_back("Hybr2035_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-35, SP");
+//   StdObjName.push_back("Hybr204_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-40, SP");
+//   StdObjName.push_back("hybr201_SO_in_noC_CCC");
+//   StdObjName.push_back("hybr202_SO_in_noC_CCC");
+//   StdObjName.push_back("hybr203_SO_in_noC_CCC");
+//   StdObjName.push_back("hybr204_SO_in_noC_CCC");
+//   StdObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
+//   StdObjName.push_back("Ias_PO");
+//   StdObjName.push_back("Ias_SO_inc");
+//   StdObjName.push_back("Ias_SO");
+//   StdObjName.push_back("Ias_SO_in");
+//   StdObjName.push_back("Ias_SO_in_noC");
+//   StdObjName.push_back("Ias_SO_in_noC_CI");
+//   StdObjName.push_back("Ias_SO_in_noC_CC");
+//   StdObjName.push_back("Ias_SO_in_noC_CCC");
+//   StdObjName.push_back("Ias_SP_inc");
+//   StdObjName.push_back("Ias_SP");
+//   StdObjName.push_back("Ias_SP_in");
+//   StdObjName.push_back("Ias_SP_in_noC");
+//   StdObjName.push_back("Ias_SP_in_noC_CI");
+//   StdObjName.push_back("Ias_SP_in_noC_CC");
+//   StdObjName.push_back("Ias_SP_in_noC_CCC");           StdObjLegend.push_back("Ias (2015)");
+//   StdObjName.push_back("Ias_SP_in_noC_CCC16");         StdObjLegend.push_back("Ias (2016)");
+//   StdObjName.push_back("Ias_SP_in_noC_newCCC");      StdObjLegend.push_back("Ias, new CC");
+   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
+   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
+   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
 
 
    vector <dEdxPlotObj*> plotObj;
  //  plotObj.push_back(new dEdxPlotObj("Histos_MCMinBias.root", "MC (MinBias)", "MCMinBias", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 1));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Data2015.root", "Data 2015",   "Data", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-//   plotObj.push_back(new dEdxPlotObj("Histos_Data2016.root", "Data 2016",   "Data", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_Data2016.root", "Dat,prescalea 2016",   "Data", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run273158.root", "Run 273158",   "Run273158", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run273502.root", "Run 273502",   "Run273502", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //////   plotObj.push_back(new dEdxPlotObj("Histos_Run278018.root", "Run 278018",   "Run278018", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //////   plotObj.push_back(new dEdxPlotObj("Histos_Run278308.root", "Run 278308",   "Run278308", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 /////   plotObj.push_back(new dEdxPlotObj("Histos_Run279931.root", "Run 279931",   "Run279931", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-plotObj.push_back(new dEdxPlotObj("Histos_RunPreG.root", "Run PreG",   "RunPreG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-/////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Runs PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-//plotObj.push_back(new dEdxPlotObj("Histos_Region1.root", "Region1",   "Region1", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-//plotObj.push_back(new dEdxPlotObj("Histos_Region2.root", "Region2",   "Region2", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-//plotObj.push_back(new dEdxPlotObj("Histos_Region3.root", "Region3",   "Region3", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-//plotObj.push_back(new dEdxPlotObj("Histos_Region4.root", "Region4",   "Region4", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Run PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Runs PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_Run305040.root", "Runs 305040",   "Run305040", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017F.root", "2017F",   "2017F", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run280385.root", "Run 280385",   "Run280385", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCDYM2600Q2.root",        "DY, Q = 2, M = 2.6TeV",    "DYM2600Q2",        HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCGluino_M1000_f10.root", "Gluino, f=10, M = 1TeV",   "Gluino_M1000_f10", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
@@ -529,30 +590,20 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
        for(unsigned int loop=0;loop<5 and !hasConverged; loop++){
 	      TH2D* inputnew = (TH2D*)input->Clone("tempTH2D");
 	      TH2D* inputnewPion = (TH2D*)input->Clone("tempTH2D");
-	      //inputnew->Rebin2D(5,10);
-	      inputnew->Rebin2D(4,6);
-	      inputnewPion->Rebin2D(4,6);
-	      for(int x=1;x<=inputnew->GetNbinsX()+1;x++){
-	      for(int y=1;y<=inputnew->GetNbinsY()+1;y++){
-		//double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
-		//if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
-		float x_val = inputnew->GetXaxis()->GetBinCenter(x);
-		float y_val = inputnew->GetYaxis()->GetBinCenter(y);
-		//float y_low = -5.03120943515188* x_val + 14.0895660192897;
-		float y_low = -5.155511078012* x_val + 13.824632031125;
-		float y_high = -9.3956418177081* x_val + 24.4014853860585;
-		if(x_val<minValue || x_val>maxValue || y_val<y_low || y_val>y_high || y_val>14){
+	      inputnew->Rebin2D(5,10);
+	      inputnewPion->Rebin2D(5,10);
+	      for(int x=1;x<=inputnew->GetNbinsX();x++){
+	      for(int y=1;y<=inputnew->GetNbinsY();y++){
+		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
+		if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
 		  inputnew->SetBinContent(x,y,0);        
 		  //cout<<x<<"   "<<y<<endl;
 		}
-
+		if (inputnew->GetYaxis()->GetBinCenter(y)<2 || inputnew->GetYaxis()->GetBinCenter(y)>4.2) inputnewPion->SetBinContent(x,y,0);
+		//cout<< inputnewPion->GetBinContent(x,y)<<endl;
 	      }}
 
-	      for(int x=1;x<=inputnewPion->GetNbinsX()+1;x++){
-		for(int y=1;y<=inputnewPion->GetNbinsY()+1;y++){
-		  if (inputnewPion->GetYaxis()->GetBinCenter(y)<2.5 || inputnewPion->GetYaxis()->GetBinCenter(y)>4.2) inputnewPion->SetBinContent(x,y,0);
-		  // else std::cout<<"abbiamo eventi"<<std::endl;
-		}}
+	      
 
 	      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
 	      c1->SetLogz(true);
@@ -565,16 +616,11 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 
 	      
 
-	//      KaonLine->Draw("same");
-	//      ProtonLine->Draw("same");
-	//      DeuteronLine->Draw("same");
-	//      TritonLine->Draw("same");
+//	      KaonLine->Draw("same");
+//	      ProtonLine->Draw("same");
+//	      DeuteronLine->Draw("same");
+//	      TritonLine->Draw("same");
 	      SaveCanvas(c1, "fit/", "dedxVsP");
-	      // TFile f2("AFile2.root");
-	      TFile f("fit/dedxP.root","recreate");
-	      inputnew->Write();
-	      f.Write();
-	      f.Close();
 	      delete c1;
 
 
@@ -594,22 +640,17 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
                FitResultPion->GetYaxis()->SetTitleOffset(1.20);
                FitResultPion->Reset();
 
-	       int idx=0;
-
 	       for(int x=1;x<inputnew->GetXaxis()->FindBin(5);x++){
 		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
-		  idx++;
-		  std::ostringstream oss;
-		  oss << "proj_" << idx;
-
-		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY(oss.str().c_str(),x,x))->Clone();
-		  if(Projection->Integral()<100)continue; 
-		  Projection->SetAxisRange(0.1,25,"X"); //0.1 , 25
+	    
+		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
+		  if(Projection->Integral()<100)continue;
+		  Projection->SetAxisRange(0.1,25,"X");
 		  Projection->Sumw2();
 		  Projection->Scale(1.0/Projection->Integral());
 
 
-		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15); 
+		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
 		  Projection->Fit("mygaus","Q0 RME");
 		  double chiFromFit  = (mygaus->GetChisquare())/(mygaus->GetNDF());
 		  FitResult->SetBinContent(x, mygaus->GetParameter(1));
@@ -618,7 +659,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		  mygaus->SetLineColor(2);
 		  mygaus->SetLineWidth(2);
 
-		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("projPi",x,x))->Clone();
+		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
                   if(ProjectionPion->Integral()<100)continue;
                   ProjectionPion->SetAxisRange(0.1,25,"X");
                   ProjectionPion->Sumw2();
@@ -646,8 +687,8 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		  TPaveText* stt = new TPaveText(0.55,0.82,0.79,0.92, "NDC");
 		  stt->SetFillColor(0);
 		  stt->SetTextAlign(31);
-		  sprintf(buffer,"Deuteron  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
-		  sprintf(buffer,"Deuteron  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
+		  sprintf(buffer,"Proton  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
+		  sprintf(buffer,"Proton  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
 		  stt->Draw("same");
 
 		  //std::cout << "P = " << P << "  --> Proton dE/dx = " << mygaus->GetParameter(1) << endl;
@@ -655,39 +696,28 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 		  c1->SetLogy(true);
 		  sprintf(buffer,"%sProjectionFit_P%03i_%03i","fit/",(int)(100*FitResult->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResult->GetXaxis()->GetBinUpEdge(x)) );
 		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"../DeDxStudy/",buffer);}
-
-
-		  TCanvas* c1Pion  = new TCanvas("canvasPion", "canvasPion", 600,600);
-                  ProjectionPion->Draw();
-                  ProjectionPion->SetTitle("");
-                  ProjectionPion->SetStats(kFALSE);
-                  ProjectionPion->GetXaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
-                  ProjectionPion->GetYaxis()->SetTitle("#Entries");
-                  ProjectionPion->GetYaxis()->SetTitleOffset(1.30);
-                  ProjectionPion->SetAxisRange(1E-5,1.0,"Y");
-
-                  mygausPion->Draw("same");
-
-
-                  c1Pion->SetLogy(true);
-		  sprintf(buffer,"%sProjectionFitPion_P%03i_%03i","fit/",(int)(100*FitResultPion->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResultPion->GetXaxis()->GetBinUpEdge(x)) );
-		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1Pion,"../DeDxStudy/",buffer);}
-                  //sprintf(buffer,"%sProjectionFitPion_P%03i_%03i","fit/",(int)(100*FitResultPion->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResultPion->GetXaxis()->GetBinUpEdge(x)) );
-
 		  delete c1;
-		  delete c1Pion;
                   delete Projection;
                   delete mygaus;
                   delete stt;
 	       }
 
-	       TCanvas * c1Pion  = new TCanvas("canvasPion", "canvasPion", 600,600);
-	       FitResultPion->SetAxisRange(0,4.,"X");
-	       FitResultPion->SetAxisRange(0,15,"Y");
-	       FitResultPion->Draw("");
+	       c1  = new TCanvas("canvas", "canvas", 600,600);
+	       FitResult->SetAxisRange(0,2.5,"X");
+	       FitResult->SetAxisRange(0,15,"Y");
+	       FitResult->Draw("");
+
+	       TLine* line1 = new TLine(MinRange, FitResult->GetMinimum(), MinRange, FitResult->GetMaximum());
+	       line1->SetLineWidth(2);
+	       line1->SetLineStyle(2);
+	       line1->Draw();
+
+	       TLine* line2 = new TLine(MaxRange, FitResult->GetMinimum(), MaxRange, FitResult->GetMaximum());
+	       line2->SetLineWidth(2);
+	       line2->SetLineStyle(2);
+	       line2->Draw();
 
 
-	      
 	       double prevConstants [] = {*K, *Kerr, *C, *Cerr};
 
 	       TF1* fitC =  new TF1("fitC","[0]", 1,4);
@@ -699,41 +729,24 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       cout<<"prima del fit"<<endl;
                FitResultPion->Fit("fitC", "M R E I 0");
 	       cout<<"dopo il fit"<<endl;
-               fitC->SetRange(1,5);
+               fitC->SetRange(1,4);
                fitC->Draw("same");
 	       cout<<"ha fatto il fit"<<endl;
 	       *C    = fitC->GetParameter(0);
 	       *Cerr = fitC->GetParError(0);
 	       cout<< "il valore e`: "<<*C<<"   " <<*Cerr<< endl;
-	       fitC->SetRange(1,4);
-               fitC->Draw("same");
-	       sprintf(buffer,"%sFitPion","fit/");
-               SaveCanvas(c1Pion,"../DeDxStudy/",buffer);
 
 
-	       c1  = new TCanvas("canvas", "canvas", 600,600);
-               FitResult->SetAxisRange(0,2.5,"X");
-               FitResult->SetAxisRange(0,15,"Y");
-               FitResult->Draw("");
 
-	       
-               TLine* line1 = new TLine(MinRange, FitResult->GetMinimum(), MinRange, FitResult->GetMaximum());
-               line1->SetLineWidth(2);
-               line1->SetLineStyle(2);
-               line1->Draw();
 
-               TLine* line2 = new TLine(MaxRange, FitResult->GetMinimum(), MaxRange, FitResult->GetMaximum());
-               line2->SetLineWidth(2);
-               line2->SetLineStyle(2);
-               line2->Draw();
-
-	       // TF1* myfit = new TF1("myfit","[1]+(pow(1.8756,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
-	       TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass
+	       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange); 
+	       //   TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass //938.27 MeV proton mass
+	          TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass //938.27 MeV proton mass
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
-	       myfit->SetParameter(0, 1.2);
+	       myfit->SetParameter(0, 1.8);
 	       myfit->SetParameter(1, *C);
-	       myfit->SetParLimits(0, 1.1,2.3); //
+	       myfit->SetParLimits(0, 1.3,3.0); //
 	       myfit->SetParLimits(1, *C,*C);
 	       // myfit->SetParLimits(1, 3.8,3.8); // 
 	       myfit->SetLineWidth(2);
@@ -753,19 +766,18 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       printf("C Constant changed from %6.4f+-%6.4f to %6.4f+-%6.4f    (diff = %6.3f%%)\n",
                 prevConstants[2], prevConstants[3], *C, *Cerr, 100.0*((*C)-prevConstants[2])/(*C));
 
-	       if(std::max(fabs(100.0*((*K)-prevConstants[0])/(*K)), fabs(100.0*((*C)-prevConstants[2])/(*C)))<0.05) // before < 1.0
+          if(std::max(fabs(100.0*((*K)-prevConstants[0])/(*K)), fabs(100.0*((*C)-prevConstants[2])/(*C)))<1.0)
              hasConverged=true;  //<1% variation of the constant --> converged
 
 	       TPaveText* st = new TPaveText(0.40,0.78,0.79,0.89, "NDC");
 	       st->SetFillColor(0);
 	       sprintf(buffer,"K = %4.3f +- %6.4f",myfit->GetParameter(0), myfit->GetParError(0));
 	       st->AddText(buffer);
-	       sprintf(buffer,"C = %4.3f +- %6.4f",myfit->GetParameter(1), *Cerr);
+	       sprintf(buffer,"C = %4.3f +- %6.4f",myfit->GetParameter(1), myfit->GetParError(1));
 	       st->AddText(buffer);
 	       st->Draw("same");
 	       sprintf(buffer,"%sFit","fit/");
 	       SaveCanvas(c1,"../DeDxStudy/",buffer);              
-	       
 	       delete c1;
 
           delete line1;
@@ -773,14 +785,13 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
           delete myfit;
           delete FitResult;
           delete inputnew;
-	  delete inputnewPion;
        }
 }
 
 
 void SystStudy(string SaveDir, vector<dEdxPlotObj*> plotObj, bool createTable, bool showChi2){
-   double MinRange = minValue;
-   double MaxRange = maxValue;
+   double MinRange = 0.8;
+   double MaxRange = 1.8;
    char buffer[2048];
    for (size_t j = 0; j < plotObj[0]->StdObjName.size(); j++){
       bool isEstim = (plotObj[0]->StdObjName[j].find("Ias")==string::npos);
@@ -2001,8 +2012,6 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          TF1* DeuteronLine  = NULL;
          TF1* DeuteronLineFit = NULL;
 
-	 TF1* PionLineOld = NULL;
-	 TF1* DeuteronLineOld = NULL;
 /*
             plotObj[i]->HdedxVsP[j]->SetStats(kFALSE);
             plotObj[i]->HdedxVsP[j]->GetXaxis()->SetTitle("p (GeV)");
@@ -2017,12 +2026,7 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             PionLine->SetLineColor(1);
             PionLine->SetLineWidth(2);
             PionLine->SetRange(PionLine->GetX(15),1 );//PionLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
-	    
-	    TF1* PionLineOld = GetMassLine(0.140,2.21, 3.29);
-            PionLineOld->SetLineColor(7);
-            PionLineOld->SetLineWidth(2);
-	    PionLineOld->SetRange(1,4);
-	    
+
 	    TF1* PionLineFit = GetMassLine(0.140, plotObj[i], plotObj[i]->StdObjName[j]);
             PionLineFit->SetLineColor(8);
 	    PionLineFit->SetLineWidth(2);
@@ -2043,16 +2047,11 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             DeuteronLine->SetLineColor(1);
             DeuteronLine->SetLineWidth(2);
             DeuteronLine->SetRange(DeuteronLine->GetX(15), DeuteronLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
-	    
-	    TF1* DeuteronLineOld = GetMassLine(1.88,2.21, 3.29);
-	    DeuteronLineOld->SetLineColor(7);
-            DeuteronLineOld->SetLineWidth(2);
-            DeuteronLineOld->SetRange(0.8,1.6);
 
             TF1* DeuteronLineFit = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
             DeuteronLineFit->SetLineColor(2);
             DeuteronLineFit->SetLineWidth(2);
-            DeuteronLineFit->SetRange(minValue,maxValue); //range to fix
+            DeuteronLineFit->SetRange(1.0,1.6); //range to fix
 
             PionLine->Draw("same");
 	    PionLineFit->Draw("same");
@@ -2060,9 +2059,6 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             ProtonLine->Draw("same");
             DeuteronLine->Draw("same");
             DeuteronLineFit->Draw("same");
-	    //DeuteronLineOld->Draw("same");
-	    //PionLineOld->Draw("same");
-
          }
          DrawPreliminary ("", 13.0, plotObj[i]->LegEntry);
          SaveCanvas(c1, SaveDir, plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP", true);

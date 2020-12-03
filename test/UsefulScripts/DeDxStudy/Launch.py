@@ -28,25 +28,26 @@ def IsGoodLumi(R, L):
    return False
 
 
-def IsFileWithGoodLumi(F):  
+def IsFileWithGoodLumi(f):  
    #check if the file contains at least one good lumi section using DAS_CLIENT --> commented out because VERY SLOW!
-   #print 'das_client.py --limit=0 --query "lumi file='+f+' |  grep lumi.run_number,lumi.number"'      
-   #containsGoodLumi = False
-   #for run in commands.getstatusoutput('das_client.py --limit=0 --query "run file='+f+'"')[1].replace('[','').replace(']','').split(','):
-   #   if(not IsGoodRun(int(run))):continue
-   #   for lumi in commands.getstatusoutput('das_client.py --limit=0 --query "lumi file='+f+'"')[1].replace('[','').replace(']','').split(','):
-   #      if(IsGoodLumi(run, lumi)):return True
+   print 'das_client --limit=0 --query "lumi file='+f+' |  grep lumi.run_number,lumi.number"'      
+   containsGoodLumi = False
+   for run in commands.getstatusoutput('das_client --limit=0 --query "run file='+f+'"')[1].replace('[','').replace(']','').split(','):
+      if(not IsGoodRun(int(run))):continue
+      for lumi in commands.getstatusoutput('das_client --limit=0 --query "lumi file='+f+'"')[1].replace('[','').replace(']','').split(','):
+         if(IsGoodLumi(run, lumi)):return True
 
    #FASTER technique only based on run number and file name parsing
-   run = int(F.split('/')[8])*1000+int(F.split('/')[9])
-   if(IsGoodRun(run)):return True
-   return False
+   #run = int(F.split('/')[8])*1000+int(F.split('/')[9])
+   #if(IsGoodRun(run)):return True
+   #return False
 
    
 def getChunksFromList(MyList, n):
   return [MyList[x:x+n] for x in range(0, len(MyList), n)]
 
-JSON = 'Calib.json'
+#JSON = 'Calib.json'
+JSON = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt'
 #JSON = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/DCSOnly/json_DCSONLY_Run2015B.txt'#/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/DCSOnly/json_DCSONLY.txt'   
 LOCALTIER   = 'T2_CH_CERN'
 #DATASETMASK = '/StreamExpress/Run2015B-SiStripCalMinBias-Express-v1/ALCARECO'
@@ -54,9 +55,10 @@ LOCALTIER   = 'T2_CH_CERN'
 #DATASETMASK = '/StreamExpress/Run2015B-SiStripCalMinBias-Express-v1/ALCARECO'
 #DATASETMASK = '/ZeroBias/Run2015B-PromptReco-v1/RECO'
 ####DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
-DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
+#DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
 #DATASETMASK = ['/ZeroBias/Run2016C-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016D-SiStripCalMinBias-18Apr2017-v1/ALCARECO','/ZeroBias/Run2016E-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
-EndPath     = "/storage/data/cms/store/user/jpriscia/dEdxCalib"
+DATASETMASK = ['/SingleMuon/Run2017F-09Aug2019_UL2017-v1/AOD']
+EndPath     = "/eos/user/d/dapparu/thesis/hscp/DeDxCalib"
 ISLOCAL     = False
 TransferDirectlyToStorage = False
 LoadJson(JSON)
@@ -64,24 +66,28 @@ LoadJson(JSON)
 def initProxy():
    if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
-      os.system('mkdir -p ~/private; voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      os.system('mkdir -p ~/private; voms-proxy-init --voms cms -rfc -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
+      #os.system('mkdir -p ~/private; voms-proxy-init -voms cms -rfc -valid 192:00')
 
 
-
-def filesFromDataset(dataset):
+def filesFromDataset(dataset,nof=100):
    ISLOCAL=False
-   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "site dataset='+dataset+' | grep site.name,site.dataset_fraction"')
+   command_out = commands.getstatusoutput('das_client --limit=0 --query "site dataset='+dataset+' | grep site.name,site.dataset_fraction"')
    for site in command_out[1].split('\n'):
       if(LOCALTIER in site and '100.00%' in site): 
          ISLOCAL=True
          break
 
+   NumberOfFiles = 0
+   maxNofFiles = nof
    Files = []
-   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "file dataset='+dataset+'"')
+   command_out = commands.getstatusoutput('das_client --limit=0 --query "file dataset='+dataset+'"')
    for f in command_out[1].split():
-      if(not IsFileWithGoodLumi(f)):continue
+#      if(not IsFileWithGoodLumi(f)):continue
       if(ISLOCAL): Files += [f]
       else       : Files += ['root://cms-xrd-global.cern.ch/' + f]
+      NumberOfFiles += 1
+      if NumberOfFiles > maxNofFiles: break
    return Files
 
 def filesFromDataset2(dataset):
@@ -91,13 +97,28 @@ def filesFromDataset2(dataset):
    # Runs = ['279931'] #region 4
    #Runs  = ['278018', '278308', '279931', '280385'] #PostG old
    #Runs  = ['275777','275920','276525','276585','276870'] #PreG
-   Runs = [277992,278509,278345]#'278803','278805','278808','278820','278822','278874','278875','278923','278962','278975']
+   #Runs = [277992,278509,278345]#'278803','278805','278808','278820','278822','278874','278875','278923','278962','278975']
+   Runs = [305040]
    for run in Runs:
       output = os.popen('das_client --limit=0 --query \'file run=%s dataset=%s\'' % (run, dataset)).read().split('\n')
       for f in output:
          if len(f)<5: continue
          Files.append([run, 'root://cms-xrd-global.cern.ch//' + f])
    return Files
+
+def sublistFilesFromList(listFiles,segm=5):
+    lR = []
+    subl = []
+    counter=0
+    for inList in listFiles:
+        if counter<segm:
+            subl += [inList]
+        if counter>=segm:
+            counter=0
+            lR += [subl]
+            subl = []
+        counter += 1
+    return lR
 
 
 #get the list of sample to process from das and datasetmask query
@@ -110,33 +131,47 @@ datasetList = DATASETMASK
 #get the list of samples to process from a local file
 #datasetList= open('DatasetList','r')
 JobName = "DEDXSKIMMER"
-FarmDirectory = "FARM_EDM"
+FarmDirectory = "FARM_EDM_2017F_v3"
 LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
-#LaunchOnCondor.Jobs_Queue = '8nh'
+#LaunchOnCondor.Jobs_Queue = '2nd' #2days 
+LaunchOnCondor.Jobs_Queue = '8nm' 
 LaunchOnCondor.subTool = 'condor'
 
 
 if not TransferDirectlyToStorage:
-   os.system("mkdir -p /eos/user/j/jpriscia/out");
+   os.system("mkdir -p /eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/");
 else:
-   os.system('mkdir -p %s/{275777,275920,276525,276585,276870}' % EndPath)
+   #os.system('mkdir -p %s/{275777,275920,276525,276585,276870}' % EndPath)
+   os.system('mkdir -p %s/{Run2017F}' % EndPath)
 for DATASET in datasetList :
    DATASET = DATASET.replace('\n','')
-   FILELIST = filesFromDataset2(DATASET)
+   FILELIST = filesFromDataset(DATASET,100)
    print DATASET + " --> " + str(FILELIST)
 
+   FILELIST2 = sublistFilesFromList(FILELIST)
+
+   counterOfFiles=-1
+
+   print FILELIST2
+
    LaunchOnCondor.Jobs_InitCmds = []
-#      if(not ISLOCAL):LaunchOnCondor.Jobs_InitCmds = ['export X509_USER_PROXY=~/x509_user_proxy/x509_proxy; voms-proxy-init --noregen;']
+   #if(not ISLOCAL):LaunchOnCondor.Jobs_InitCmds = ['export X509_USER_PROXY=~/x509_user_proxy/x509_proxy; voms-proxy-init --noregen;']
    if(not ISLOCAL):LaunchOnCondor.Jobs_InitCmds = ['export X509_USER_PROXY=~/private/x509_proxy']
 
-   for inFileList in getChunksFromList(FILELIST,1):
+   #for inFileList in getChunksFromList(FILELIST2,1):
+   for inFileList in FILELIST2:
       os.system("cp dEdxSkimmer_Template_cfg.py dEdxSkimmer_cfg.py")
       f = open("dEdxSkimmer_cfg.py", "a")
       f.write("\n")
       f.write("process.Out.fileName = cms.untracked.string('dEdxSkim.root')\n")
       f.write("\n")
-      for inFile in inFileList:
-          f.write("process.source.fileNames.extend(['"+inFile[1]+"'])\n")
+      #for inFile in inFileList:
+          #f.write("process.source.fileNames.extend(['"+inFile[1]+"'])\n")
+          #f.write("process.source.fileNames.extend(['"+inFile+"'])\n")
+          #print ("process.source.fileNames.extend(['"+inFile+"'])\n")
+      f.write("process.source.fileNames.extend("+str(inFileList)+")\n")
+      print ("process.source.fileNames.extend("+str(inFileList)+")\n")
+      counterOfFiles+=1
       f.write("\n")
       f.write("#import PhysicsTools.PythonAnalysis.LumiList as LumiList\n")
       f.write("#process.source.lumisToProcess = LumiList.LumiList(filename = '"+JSON+"').getVLuminosityBlockRange()")
@@ -148,11 +183,14 @@ for DATASET in datasetList :
          f.write("\n")
       f.close()   
       if not TransferDirectlyToStorage:
-         LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/j/jpriscia/out/dEdxSkim_%s_%i.root && rm dEdxSkim.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
+         #LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out/dEdxSkim_%s_%i.root && rm dEdxSkim.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
+         #LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/dEdxSkim_%s_%i.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
+         #LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/dEdxSkim_%s_%i.root" % (inFile, LaunchOnCondor.Jobs_Count)]
+         LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/dEdxSkim_%i_%i.root" % (counterOfFiles, LaunchOnCondor.Jobs_Count)]
       else:
          LaunchOnCondor.Jobs_FinalCmds = ["lcg-cp -v -n 10 -D srmv2 -b file://${PWD}/dEdxSkim.root srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2\?SFN=%s/%s/dEdxSkim_%s_%i.root && rm -f dEdxSkim.root" % (EndPath, inFile[0], inFile[0], LaunchOnCondor.Jobs_Count)] # if you do not use zsh, change '\?' to '?'
       LaunchOnCondor.SendCluster_Push  (["CMSSW", "dEdxSkimmer_cfg.py" ])
-      os.system("rm -f dEdxSkimmer_cfg.py")
+#      os.system("rm -f dEdxSkimmer_cfg.py")
 
 LaunchOnCondor.SendCluster_Submit()
 
