@@ -104,7 +104,6 @@ HSCPValidator::HSCPValidator(const edm::ParameterSet& iConfig) :
   token_(consumes<edm::HepMCProduct> (iConfig.getParameter<edm::InputTag>("generatorLabel"))),
   simTracksToken_(consumes<edm::SimTrackContainer>(edm::InputTag("g4SimHits"))),
   trEvToken_(consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD"))),
-  trResToken_(consumes<edm::TriggerResults>(edm::InputTag("TriggerResults"))),
   tkTracksToken_(consumes<reco::TrackCollection>(edm::InputTag("generalTracks"))),
   dEdxTrackToken_(consumes<edm::ValueMap<reco::DeDxData> >(edm::InputTag("dedxHarmonic2"))),
   rpcRecHitsToken_(consumes<RPCRecHitCollection>(edm::InputTag("rpcRecHits"))),
@@ -379,88 +378,85 @@ void HSCPValidator::makeHLTPlots(const edm::Event& iEvent)
   using namespace edm;
   //get HLT infos
 
-  //prima cosa: come funziona questo handle?
-  //sedonda cosa, che e` il Tokn, e perche` posso utilizzare il token di un altro oggetto? 
   edm::Handle< edm::TriggerResults > trResHandle;
   iEvent.getByToken(trResToken_, trResHandle);
   edm::TriggerResultsByName tr = iEvent.triggerResultsByName(*trResHandle);
+  //TriggerResultsByName tr = iEvent.triggerResultsByName("HLT");
+  if(!tr.isValid())
+        std::cout<<"Tirgger Results not available"<<std::endl;
 
-  if(!tr.isValid()){
-    std::cout<<"Tirgger Results not available"<<std::endl;
-  }
-  
-  edm::Handle< trigger::TriggerEvent > trEvHandle;
+  Handle< trigger::TriggerEvent > trEvHandle;
   iEvent.getByToken(trEvToken_, trEvHandle);
   trigger::TriggerEvent trEv = *trEvHandle;
-  
 
-  unsigned int TrIndex_Unknown     = tr.size();
-  
-  
+
+   unsigned int TrIndex_Unknown     = tr.size();
+
+
    // HLT TRIGGER BASED ON 1 MUON!
-  if(TrIndex_Unknown != tr.triggerIndex("HLT_Mu40_v1")){
-    if(tr.accept(tr.triggerIndex("HLT_Mu40_v1"))) hltmu->Fill(1);
-    else {hltmu->Fill(0);}
-  }
-  else{
-    if(TrIndex_Unknown != tr.triggerIndex("HLT_Mu30_v1")){
-      if(IncreasedTreshold(trEv, InputTag("hltSingleMu30L3Filtered30","","HLT"), 40,2.1, 1, false)) hltmu->Fill(1);
-      else hltmu->Fill(0);
+   if(TrIndex_Unknown != tr.triggerIndex("HLT_Mu40_v1")){
+      if(tr.accept(tr.triggerIndex("HLT_Mu40_v1"))) hltmu->Fill(1);
+      else {hltmu->Fill(0);}
+   }
+   else{
+      if(TrIndex_Unknown != tr.triggerIndex("HLT_Mu30_v1")){
+         if(IncreasedTreshold(trEv, InputTag("hltSingleMu30L3Filtered30","","HLT"), 40,2.1, 1, false)) hltmu->Fill(1);
+         else hltmu->Fill(0);
       }else{
-      printf("BUG with HLT_Mu\n");
-      std::cout<<"trigger names are : ";
-      for(unsigned int i=0;i<tr.size();i++){
-	std::cout<<" "<<tr.triggerName(i);
+         printf("BUG with HLT_Mu\n");
+         std::cout<<"trigger names are : ";
+         for(unsigned int i=0;i<tr.size();i++){
+            std::cout<<" "<<tr.triggerName(i);
+         }
+         std::cout<<std::endl;
       }
-      std::cout<<std::endl;
-    }
-  }
-  
-  
-  // HLT TRIGGER BASED ON MET!
-  if(TrIndex_Unknown != tr.triggerIndex("HLT_PFMHT150_v3")){
-    if(tr.accept(tr.triggerIndex("HLT_PFMHT150_v3")))hltmet->Fill(1);
-    else hltmet->Fill(0);
-  }else{
+   }
+
+
+ // HLT TRIGGER BASED ON MET!
+   if(TrIndex_Unknown != tr.triggerIndex("HLT_PFMHT150_v3")){
+      if(tr.accept(tr.triggerIndex("HLT_PFMHT150_v3")))hltmet->Fill(1);
+      else hltmet->Fill(0);
+   }else{
       if(TrIndex_Unknown != tr.triggerIndex("HLT_PFMHT150_v2")){
-	if(tr.accept(tr.triggerIndex("HLT_PFMHT150_v2"))) hltmet->Fill(1);
-	else hltmet->Fill(0);
+          if(tr.accept(tr.triggerIndex("HLT_PFMHT150_v2"))) hltmet->Fill(1);
+          else hltmet->Fill(0);
       }
       else{
-	printf("BUG with HLT_MET\n");
-	
-      }
-  }
-  
-  
-  // HLT TRIGGER BASED ON 1 JET!
-  if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet370_v1")){
-    if(tr.accept(tr.triggerIndex("HLT_Jet370_v1")))hltjet->Fill(1);
-    else   hltjet->Fill(0);
-  }else{
-    if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet100U")){
-      if(IncreasedTreshold(trEv, InputTag("hlt1jet100U","","HLT"), 140, 5.,1, false))hltjet->Fill(1);
-      else   hltjet->Fill(0);
-    }else{
-      if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet70U")){
-	if(IncreasedTreshold(trEv, InputTag("hlt1jet70U","","HLT"), 140, 5.,1, false))hltjet->Fill(1);
-	else   hltjet->Fill(0);
-      }else{
-	if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet50U")){
-	  if(IncreasedTreshold(trEv, InputTag("hlt1jet50U","","HLT"), 140,2.5, 1, false))hltjet->Fill(1);
-	  else   hltjet->Fill(0);
-	}else{
-	  printf("BUG with HLT_Jet\n");
-	  
-	}
-      }
-    }
-  }
-  
-  
-  
+         printf("BUG with HLT_MET\n");
 
-  
+      }
+   }
+
+
+  // HLT TRIGGER BASED ON 1 JET!
+   if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet370_v1")){
+       if(tr.accept(tr.triggerIndex("HLT_Jet370_v1")))hltjet->Fill(1);
+       else   hltjet->Fill(0);
+   }else{
+      if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet100U")){
+         if(IncreasedTreshold(trEv, InputTag("hlt1jet100U","","HLT"), 140, 5.,1, false))hltjet->Fill(1);
+         else   hltjet->Fill(0);
+      }else{
+         if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet70U")){
+            if(IncreasedTreshold(trEv, InputTag("hlt1jet70U","","HLT"), 140, 5.,1, false))hltjet->Fill(1);
+            else   hltjet->Fill(0);
+         }else{
+            if(TrIndex_Unknown != tr.triggerIndex("HLT_Jet50U")){
+               if(IncreasedTreshold(trEv, InputTag("hlt1jet50U","","HLT"), 140,2.5, 1, false))hltjet->Fill(1);
+               else   hltjet->Fill(0);
+            }else{
+               printf("BUG with HLT_Jet\n");
+
+            }
+         }
+      }
+   }
+
+
+
+
+
 }
 
 // ------------- Make simDigi plots ECAL ------------------------------------------------
