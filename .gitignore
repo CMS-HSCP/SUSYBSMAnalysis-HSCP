@@ -2,3 +2,4 @@
 *.png
 *.pdf
 *.pyc
+*_init__.py
