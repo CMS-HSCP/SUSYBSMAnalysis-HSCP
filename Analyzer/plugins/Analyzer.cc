@@ -870,19 +870,19 @@ bool Analyzer::passPreselection(
 
      susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
      if(tuple){tuple->BS_TIsol ->Fill(hscpIso.Get_TK_SumEt(),Event_Weight);}
-//     if(TypeMode!=4){       if(hscpIso.Get_TK_SumEt()>GlobalMaxTIsol)return false;     }
+      //     if(TypeMode!=4){       if(hscpIso.Get_TK_SumEt()>GlobalMaxTIsol)return false;     }
       if(hscpIso.Get_TK_SumEt()>GlobalMaxTIsol)return false;
      if(tuple){tuple->TIsol   ->Fill(0.0,Event_Weight);}
 
      double EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy())/track->p();
      if(tuple){tuple->BS_EIsol ->Fill(EoP,Event_Weight);}
-//     if(TypeMode!=4){       if(EoP>GlobalMaxEIsol)return false;     }
+      //     if(TypeMode!=4){       if(EoP>GlobalMaxEIsol)return false;     }
      if(EoP>GlobalMaxEIsol)return false;
      if(tuple){tuple->EIsol   ->Fill(0.0,Event_Weight);}
      
      // relative tracker isolation
      if (tuple) {  tuple->BS_SumpTOverpT->Fill(hscpIso.Get_TK_SumEt()/track->pt(), Event_Weight); }
-//     if(TypeMode==4) { if(hscpIso.Get_TK_SumEt()/track->pt()>GlobalMaxRelTIsol)return false;   }
+      //     if(TypeMode==4) { if(hscpIso.Get_TK_SumEt()/track->pt()>GlobalMaxRelTIsol)return false;   }
      if(hscpIso.Get_TK_SumEt()/track->pt()>GlobalMaxRelTIsol)return false;
      if (tuple) {  tuple->SumpTOverpT   ->Fill(0.0,Event_Weight);} 
    }
@@ -896,10 +896,10 @@ bool Analyzer::passPreselection(
 
    //Find distance to nearest segment on opposite side of detector
    double minPhi, minEta;
-   double segSep=SegSep(hscp, iEvent, minPhi, minEta);
+   //WAIT//double segSep=SegSep(hscp, iEvent, minPhi, minEta);
 
    if(tuple){
-     tuple->BS_SegSep->Fill(segSep, Event_Weight);
+     //WAIT//tuple->BS_SegSep->Fill(segSep, Event_Weight);
      tuple->BS_SegMinPhiSep->Fill(minPhi, Event_Weight);
      tuple->BS_SegMinEtaSep->Fill(minEta, Event_Weight);
      //Plotting segment separation depending on whether track passed dz cut
@@ -920,7 +920,7 @@ bool Analyzer::passPreselection(
 
    //Now cut Eta separation
    //if(TypeMode==3 && fabs(minEta)<minSegEtaSep) return false;
-   if(tuple){tuple->SegSep->Fill(0.0,Event_Weight);}
+   //WAIT//if(tuple){tuple->SegSep->Fill(0.0,Event_Weight);}
 
    if(tuple) {
      //Plots for tracks in dz control region
@@ -996,10 +996,11 @@ bool Analyzer::passPreselection(
           if(DXYSB && DZSB)tuple->BS_OpenAngle_Cosmic->Fill(OpenAngle,Event_Weight);
 
 
-          TVector3 outerHit = getOuterHitPos(dedxHits);
+          ///WAIT// 
+          /*TVector3 outerHit = getOuterHitPos(dedxHits);
           TVector3 vertex(vertexColl[highestPtGoodVertex].position().x(), vertexColl[highestPtGoodVertex].position().y(), vertexColl[highestPtGoodVertex].position().z());
           tuple->BS_LastHitDXY  ->Fill((outerHit).Perp(),Event_Weight);
-          tuple->BS_LastHitD3D  ->Fill((outerHit).Mag(),Event_Weight);
+          tuple->BS_LastHitD3D  ->Fill((outerHit).Mag(),Event_Weight);*/
 
           tuple->BS_P  ->Fill(track->p(),Event_Weight);
           tuple->BS_Pt ->Fill(track->pt(),Event_Weight);
