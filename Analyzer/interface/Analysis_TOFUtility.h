@@ -521,7 +521,6 @@ class muonTimingCalculator{
          }
 
 
-          //"const edm::Handle<reco::MuonRef>& muon" vs "reco::MuonRef& muon"
          void addCSCMeasurements(reco::MuonRef& muon, int CORRECTION_LEVEL){
               reco::TrackRef muonTrack = muon->standAloneMuon();
               math::XYZPoint  pos=muonTrack->innerPosition();

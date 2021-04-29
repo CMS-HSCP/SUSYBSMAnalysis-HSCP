@@ -165,6 +165,72 @@ class dedxHIPEmulator{
   
 };
 
+
+  //=============================================================
+  //      Common fonction
+  //=============================================================
+
+
+TObject* GetObjectFromPath(TDirectory* File, std::string Path, bool GetACopy=false)
+{
+   size_t pos = Path.find("/");
+   if(pos < 256){
+      std::string firstPart = Path.substr(0,pos);
+      std::string endPart   = Path.substr(pos+1,Path.length());
+      TDirectory* TMP = (TDirectory*)File->Get(firstPart.c_str());
+      if(TMP!=nullptr)return GetObjectFromPath(TMP,endPart,GetACopy);
+
+      printf("ObjectNotFound: %s::%s\n",File->GetName(), Path.c_str());
+      return nullptr;
+   }else{
+      if(GetACopy){
+         return (File->Get(Path.c_str()))->Clone();
+      }else{
+         return File->Get(Path.c_str());
+      }
+   }
+}
+
+// similar to the above code
+TObject* GetObjectFromPath(TDirectory* Container, TDirectory* File, std::string Path, bool GetACopy=false){
+   TObject* toreturn = GetObjectFromPath(File,Path,GetACopy);
+   if(TH1* th1 = dynamic_cast<TH1*>(toreturn))th1->SetDirectory(Container);
+   return toreturn;
+}
+
+
+TH1D* GetProjectionFromPath(TDirectory* File, std::string Path, int CutIndex, std::string Name){
+      TH2D* tmp = (TH2D*)GetObjectFromPath(File, Path, false);
+      if(!tmp)return nullptr;
+      return tmp->ProjectionY(Name.c_str()   ,CutIndex+1,CutIndex+1,"o");
+}
+
+// return the TypeMode from a string inputPattern
+int TypeFromPattern(const std::string& InputPattern){
+   if(InputPattern.find("Type0",0)<std::string::npos){       return 0;
+   }else if(InputPattern.find("Type1",0)<std::string::npos){ return 1;
+   }else if(InputPattern.find("Type2",0)<std::string::npos){ return 2;
+   }else if(InputPattern.find("Type3",0)<std::string::npos){ return 3;
+   }else if(InputPattern.find("Type4",0)<std::string::npos){ return 4;
+   }else if(InputPattern.find("Type5",0)<std::string::npos){ return 5;
+   }else{                                                    return 6;
+   }
+}
+
+// define the legend corresponding to a Type
+std::string LegendFromType(const std::string& InputPattern){
+   switch(TypeFromPattern(InputPattern)){
+      case 0:  return std::string("Tracker - Only"); break;
+      case 1:  return std::string("Tracker + Muon"); break;
+      case 2:  return std::string("Tracker + TOF" ); break;
+      case 3:  return std::string("Muon - Only"); break;
+      case 4:  return std::string("|Q|>1e"); break;
+      case 5:  return std::string("|Q|<1e"); break;
+      default : std::string("unknown");
+   }
+   return std::string("unknown");
+}
+
 std::vector<int> convert(const std::vector<unsigned char>& input)
 {
   std::vector<int> output;
@@ -683,6 +749,30 @@ double GetMass(double P, double I, double dEdxK, double dEdxC){
    return sqrt((I-C)/K)*P;
 }
 
+double GetMassErr (double P, double PErr, double dEdx, double dEdxErr, double M, double dEdxK, double dEdxC){
+   if (M < 0) return -1;
+   double KErr     = 0.2;
+   double CErr     = 0.4;
+   double cErr     = 0.01;
+   double Criteria = dEdx - dEdxC;
+   double Fac1     = P*P/(2*M*dEdxK);
+   double Fac2     = pow(2*M*M*dEdxK/(P*P), 2);
+   double MassErr  = Fac1*sqrt(Fac2*pow(PErr/P, 2) + Criteria*Criteria*pow(KErr/dEdxK,2) + dEdxErr*dEdxErr + dEdxC*dEdxC);
+
+   if (std::isnan(MassErr) || std::isinf(MassErr)) MassErr = -1;
+
+   return MassErr/M;
+}
+
+// pz compute Ick out of dEdx value
+double GetIck(double I, bool MC, double dEdxK, double dEdxC){
+   double& K = dEdxK;
+   double& C = dEdxC;
+
+   return (I-C)/K;
+}
+
+
 // compute mass out of a beta and momentum value
 double GetMassFromBeta(double P, double beta){
    double gamma = 1/sqrt(1-beta*beta);
@@ -721,7 +811,7 @@ double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const 
       }
 
       if(fabs(track1->pt()-track2->pt())<1 && deltaR(track1->eta(), track1->phi(), track2->eta(), track2->phi())<0.1)continue; //Skip same tracks
-//      double dR = deltaR(-1*track1->eta(), M_PI+track1->phi(), track2->eta(), track2->phi());
+      //  double dR = deltaR(-1*track1->eta(), M_PI+track1->phi(), track2->eta(), track2->phi());
       TVector3 v1 = TVector3(track1->momentum().x(), track1->momentum().y(), track1->momentum().z());
       TVector3 v2 = TVector3(track2->momentum().x(), track2->momentum().y(), track2->momentum().z());
       double dR = v1.Angle(v2);

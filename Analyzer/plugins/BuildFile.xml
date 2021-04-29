@@ -3,6 +3,7 @@
 <use name="FWCore/ParameterSet"/>
 <use name="DataFormats/TrackReco"/>
 <use name="PhysicsTools/UtilAlgos"/> <!--accessing TFileService-->
+<use name="FWCore/ServiceRegistry"/> <!--accessing TFileService: Not sure whether really needed...-->
 <use name="AnalysisDataFormats/SUSYBSMObjects"/>
 <use name="DataFormats/MuonReco"/>
 <!--use name="RecoTracker/DeDx"/-->

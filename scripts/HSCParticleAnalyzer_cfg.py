@@ -4,14 +4,14 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 
 # defaults
-options.outputFile = 'output.root'
+options.outputFile = 'AnalysisTuple.root'
 options.maxEvents = -1 # -1 means all events
 
-options.register('sampleTxtFile', 'Analysis_Samples.txt',
-    VarParsing.multiplicity.singleton,
-    VarParsing.varType.string,
-    "Sample text file"
-)
+#options.register('sampleTxtFile', 'Analysis_Samples.txt',
+#    VarParsing.multiplicity.singleton,
+#    VarParsing.varType.string,
+#    "Sample text file"
+#)
 options.parseArguments()
 
 process = cms.Process("Analyzer")
@@ -33,14 +33,14 @@ process.source = cms.Source("PoolSource",
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 ### set your configirattion here (default: python/HSCParticleAnalyzer_cff.py)
 process.analyzer.Debug=False
-process.analyzer.SampleTxtFile=options.sampleTxtFile
-#process.analyzer.TypeMode=0
-#process.analyzer.SampleType=0
+#process.analyzer.SampleTxtFile=options.sampleTxtFile
+process.analyzer.TypeMode=0
+process.analyzer.SampleType=0
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
-
+###process.analyzer.OutputFile = 'Data_2017_UL'
 
 process.p = cms.Path(process.analyzer)
 #process.dump=cms.EDAnalyzer('EventContentAnalyzer')

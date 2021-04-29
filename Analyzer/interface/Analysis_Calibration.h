@@ -1,40 +1,6 @@
 #ifndef SUSYBSMAnalysis_Analyzer_Analysis_Calibration_h
 #define SUSYBSMAnalysis_Analyzer_Analysis_Calibration_h
 
-TObject* GetObjectFromPath(TDirectory* File, std::string Path, bool GetACopy=false)
-{
-   size_t pos = Path.find("/");
-   if(pos < 256){
-      std::string firstPart = Path.substr(0,pos);
-      std::string endPart   = Path.substr(pos+1,Path.length());
-      TDirectory* TMP = (TDirectory*)File->Get(firstPart.c_str());
-      if(TMP!=NULL)return GetObjectFromPath(TMP,endPart,GetACopy);
-
-      printf("ObjectNotFound: %s::%s\n",File->GetName(), Path.c_str());
-      return NULL;
-   }else{
-      if(GetACopy){
-         return (File->Get(Path.c_str()))->Clone();
-      }else{
-         return File->Get(Path.c_str());
-      }
-   }
-}
-
-// similar to the above code
-TObject* GetObjectFromPath(TDirectory* Container, TDirectory* File, std::string Path, bool GetACopy=false){
-   TObject* toreturn = GetObjectFromPath(File,Path,GetACopy);
-   if(TH1* th1 = dynamic_cast<TH1*>(toreturn))th1->SetDirectory(Container);
-   return toreturn;
-}
-
-
-TH1D* GetProjectionFromPath(TDirectory* File, std::string Path, int CutIndex, std::string Name){
-      TH2D* tmp = (TH2D*)GetObjectFromPath(File, Path, false);
-      if(!tmp)return NULL;
-      return tmp->ProjectionY(Name.c_str()   ,CutIndex+1,CutIndex+1,"o");
-}
-
 class dedxGainCorrector{
    private:
       std::map<unsigned int, std::unordered_map<unsigned int, double> > TrackerGainsPerRuns;
