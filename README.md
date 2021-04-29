@@ -53,3 +53,11 @@ Then run crab:
 source /cvmfs/cms.cern.ch/common/crab-setup.sh
 python crabConfig_Data.py
 ```
+
+
+## EDAnalyzer
+
+```bash
+cp scripts/HSCParticleAnalyzer_cfg.py .
+cmsRun HSCParticleAnalyzer_cfg.py inputFiles=file:HSCP.root maxEvents=100
+```
