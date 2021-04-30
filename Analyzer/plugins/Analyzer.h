@@ -108,7 +108,9 @@ class Analyzer : public edm::EDAnalyzer {
          const double& RescaleT, 
          double MassErr);
 
-      int  muonStations(const reco::HitPattern& hitPattern);
+      //void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple);
+
+      //int  muonStations(const reco::HitPattern& hitPattern);
       double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
       TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
       double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
@@ -140,6 +142,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       vector<double>  CutPt,      CutI,       CutTOF;
       vector<double>  CutPt_Flip, CutI_Flip,  CutTOF_Flip;
+      //map<string, vector<double>> VCuts;
 
       map<string, TProfile*>  HCuts;
 
@@ -248,6 +251,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       dedxGainCorrector trackerCorrector;
       string DeDxTemplate;    // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
+      bool enableDeDxCalibration;
       string DeDxCalibration; //"Data13TeVGains_v2.root" if Data
       string Geometry;        //CMS_GeomTree.root
       string TimeOffset;      //MuonTimeOffset.txt
@@ -274,5 +278,7 @@ class Analyzer : public edm::EDAnalyzer {
       TRandom3* RNG = nullptr;
       bool is2016;
       bool is2016G;
+
+      bool isMCglobal = false;
 };
 #endif               

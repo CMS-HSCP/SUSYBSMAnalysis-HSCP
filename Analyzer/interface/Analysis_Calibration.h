@@ -7,11 +7,11 @@ class dedxGainCorrector{
 
    public:
       std::unordered_map<unsigned int, double>* TrackerGains; 
-      dedxGainCorrector(){TrackerGains=NULL;}
+      dedxGainCorrector(){TrackerGains=nullptr;}
       ~dedxGainCorrector(){}
 
       void setRun(unsigned int currentRun){
-         if(TrackerGainsPerRuns.size()<=0){TrackerGains=NULL; return;}
+         if(TrackerGainsPerRuns.size()<=0){TrackerGains=nullptr; return;}
          std::map<unsigned int, std::unordered_map<unsigned int, double> >::iterator it, itPrev=TrackerGainsPerRuns.begin();
          for(it=TrackerGainsPerRuns.begin(); it!=TrackerGainsPerRuns.end(); it++){
             if(it->first>currentRun){TrackerGains = &(itPrev->second); return;}//runs are ordered, so the previous iterator correspond to our run
@@ -39,7 +39,7 @@ class dedxGainCorrector{
                unsigned int  tree_DetId;   t1->SetBranchAddress("DetId"             ,&tree_DetId      );
                unsigned char tree_APVId;   t1->SetBranchAddress("APVId"             ,&tree_APVId      );
                double        tree_Gain;    t1->SetBranchAddress("Gain"              ,&tree_Gain       );
-//               double        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
+               //double        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
 
                TrackerGains = &TrackerGainsPerRuns[FirstRun];
                for (unsigned int ientry = 0; ientry < t1->GetEntries(); ientry++) {

@@ -820,4 +820,24 @@ double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const 
    return maxDr;
 }
 
+
+//=============================================================
+//
+//     Method for Counting the number of muon stations used in track fit only counting DT and CSC stations.
+//
+//=============================================================
+//
+int  muonStations(const reco::HitPattern& hitPattern) {
+  int stations[4] = { 0,0,0,0 };
+  for (int i=0; i<hitPattern.numberOfAllHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
+    uint32_t pattern = hitPattern.getHitPattern(reco::HitPattern::HitCategory::TRACK_HITS, i );
+    if(pattern == 0) break;
+    if(hitPattern.muonHitFilter(pattern) && (int(hitPattern.getSubStructure(pattern)) == 1 || int(hitPattern.getSubStructure(pattern)) == 2) && hitPattern.getHitType(pattern) == 0){
+      stations[hitPattern.getMuonStation(pattern)-1] = 1;
+    }
+  }
+  return stations[0]+stations[1]+stations[2]+stations[3];
+
+}
+
 #endif
