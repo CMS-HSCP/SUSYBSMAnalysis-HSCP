@@ -31,8 +31,9 @@ scram b -j8
 
 Get the scripts first:
 ```bash
-cp scripts/HSCParticleProducer_cfg.py scripts/crabConfig_Data.py .
-cp scripts/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt .
+cp HSCP/test/HSCParticleProducer_cfg.py scripts/crabConfig_Data.py .
+cp HSCP/test/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt .
+cp HSCP/test/crabConfig_Data.py .
 ```
 
 Get proxy:
@@ -58,6 +59,6 @@ python crabConfig_Data.py
 ## EDAnalyzer
 
 ```bash
-cp scripts/HSCParticleAnalyzer_cfg.py .
+cp Analyzer/test/HSCParticleAnalyzer_cfg.py .
 cmsRun HSCParticleAnalyzer_cfg.py inputFiles=file:HSCP.root maxEvents=100
 ```
