@@ -1,5 +1,5 @@
-#ifndef SUSYBSMAnalysis_Analyzer_Analysis_Calibration_h
-#define SUSYBSMAnalysis_Analyzer_Analysis_Calibration_h
+#ifndef SUSYBSMAnalysis_Analyzer_Calibration_h
+#define SUSYBSMAnalysis_Analyzer_Calibration_h
 
 class dedxGainCorrector{
    private:

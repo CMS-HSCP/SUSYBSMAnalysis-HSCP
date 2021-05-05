@@ -29,8 +29,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,offlinePrimaryVerticesToken_(consumes<vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("offlinePrimaryVerticesCollection")))
    ,refittedStandAloneMuonsToken_(consumes<vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("refittedStandAloneMuonsCollection")))
    ,offlineBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("offlineBeamSpotCollection")))
+   ,muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muonCollection")))
+   ,triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults")))
    // =========Analysis parameters================
-   ,Debug(iConfig.getUntrackedParameter<bool>("Debug"))
    ,TypeMode(iConfig.getUntrackedParameter<unsigned int>("TypeMode"))
    ,SampleType(iConfig.getUntrackedParameter<unsigned int>("SampleType"))
    ,SkipSelectionPlot(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot"))
@@ -117,6 +118,12 @@ Analyzer::beginJob()
    //initializeTuple(tuple_saver, dir);
    tuple_saver->initializeTuple(tuple, dir, SkipSelectionPlot, TypeMode, isSignal, CutPt.size(), CutPt_Flip.size(), PtHistoUpperBound, MassHistoUpperBound, MassNBins, IPbound, PredBins, EtaBins, dEdxS_UpLim, dEdxM_UpLim, DzRegions, GlobalMinPt, GlobalMinTOF);
 
+   tof    = nullptr;
+   dttof  = nullptr;
+   csctof = nullptr;
+
+   TrigInfo = 0;
+
    CurrentRun = 0;
    RNG = new TRandom3();
    is2016 = false;
@@ -161,7 +168,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
-   //TO BE TESTED// isData = iEvent.isRealData();
+   passTrigger(iEvent, isData);
 
    if(CurrentRun != iEvent.id().run()){ //removed iEvent.eventAuxiliary().run() call
       CurrentRun  = iEvent.id().run();
@@ -172,33 +179,28 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //===================== Handle For DeDx Hits ==============
    Handle<reco::DeDxHitInfoAss> dedxCollH;
    iEvent.getByToken(dedxToken_,dedxCollH);
-   if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");return;}
 
    //================= Handle For Muon TOF Combined ===============
-   //Handle<ValueMap<reco::MuonTimeExtra>> TOFCollH; Handle<reco::MuonTimeExtraMap> tofMap
-   Handle<reco::MuonTimeExtraMap>     TOFCollH;
-   iEvent.getByToken(muonTimeToken_,  TOFCollH);
-   const reco::MuonTimeExtraMap & tofMap = *TOFCollH;
+   Handle<reco::MuonTimeExtraMap>     tofMap;
+   iEvent.getByToken(muonTimeToken_,  tofMap);
 
    //================= Handle For Muon TOF DT ===============
-   Handle<reco::MuonTimeExtraMap>      TOFDTCollH;
-   iEvent.getByToken(muonDtTimeToken_, TOFDTCollH);
-   const reco::MuonTimeExtraMap & tofDtMap = *TOFDTCollH;
+   Handle<reco::MuonTimeExtraMap>       tofDtMap;
+   iEvent.getByToken(muonDtTimeToken_,  tofDtMap);
 
    //================= Handle For Muon TOF CSC ===============
-   Handle<reco::MuonTimeExtraMap>        TOFCSCCollH;
-   iEvent.getByToken(muonCscTimeToken_,  TOFCSCCollH);
-   const reco::MuonTimeExtraMap & tofCscMap = *TOFCSCCollH;
+   Handle<reco::MuonTimeExtraMap>        tofCscMap;
+   iEvent.getByToken(muonCscTimeToken_,  tofCscMap);
 
    //================= Handle For Muon DT/CSC Segment ===============
    Handle<CSCSegmentCollection> CSCSegmentCollH;
    Handle<DTRecSegment4DCollection> DTSegmentCollH;
    if(!isMC){ //do not recompute TOF on MC background
       iEvent.getByToken(muonCscSegmentToken_, CSCSegmentCollH);
-      if(!CSCSegmentCollH.isValid()){printf("CSC Segment Collection not found!\n"); return;}
+      if(!CSCSegmentCollH.isValid()){LogError("Analyzer") << "CSC Segment Collection not found!"; return;}
 
       iEvent.getByToken(muonDtSegmentToken_, DTSegmentCollH);
-      if(!DTSegmentCollH.isValid()){printf("DT Segment Collection not found!\n"); return;}
+      if(!DTSegmentCollH.isValid()){LogError("Analyzer") << "DT Segment Collection not found!"; return;}
    }
 
    //reinitialize the bookeeping array for each event
@@ -225,11 +227,12 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	//WAIT//HIPTrackLossEmul.SetHIPTrackLossRate(iEvent);
 
+   //compute event weight
    vector<reco::GenParticle> genColl;
-   /*//double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
-   //double HSCPDLength1=-1, HSCPDLength2=-1;
+   //WAIT//double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
+   //WAIT//double HSCPDLength1=-1, HSCPDLength2=-1;
 
-   //if(isSignal){}*/
+   //WAIT//if(isSignal){//get the collection of generated Particles}
 
    //load all event collection that will be used later on (HSCP, dEdx and TOF)
    //====================loop over HSCP candidates===================
@@ -265,30 +268,33 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   //WAIT//if(!isData && is2016 && !HIPTrackLossEmul.TrackSurvivesHIPInefficiency()) continue;
 
       //load quantity associated to this track (TOF and dEdx)
-      const reco::DeDxHitInfo* dedxHits = nullptr;//const reco::DeDxHitInfo* dedxHits = nullptr;
+      const reco::DeDxHitInfo* dedxHits = nullptr;
       if(TypeMode!=3 && !track.isNull()) {
          reco::DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
          if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
       }
-      //bool useTOF = false;
+      
       if(TypeMode>1 && TypeMode!=5 && !hscp.muonRef().isNull()){
-         //useTOF = true;
          if(isMC){
-            /*tof    = &TOFCollH->get(hscp.muonRef().key());
-            dttof  = &_tofDtMap->get(hscp.muonRef().key());  
-            csctof = &_tofCscMap->get(hscp.muonRef().key());*/
-            tof    = tofMap[hscp.muonRef()];
-            dttof  = tofDtMap[hscp.muonRef()];
-            csctof = tofCscMap[hscp.muonRef()];
+            //WAIT//
+            /*tof    = &tofMap[hscp.muonRef()];
+            dttof  = &tofDtMap[hscp.muonRef()];
+            csctof = &tofCscMap[hscp.muonRef()];*/
+            tof    = &(*tofMap)[hscp.muonRef()];
+            dttof  = &(*tofDtMap)[hscp.muonRef()];
+            csctof = &(*tofCscMap)[hscp.muonRef()];
          }else{
             const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
             const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
             //std::cout<<"TESTA\n";
             tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
             //std::cout<<"TESTB\n";
-            tof    = tofCalculator.combinedTOF; 
+            /*tof    = tofCalculator.combinedTOF; 
             dttof  = tofCalculator.dtTOF;  
-            csctof = tofCalculator.cscTOF;
+            csctof = tofCalculator.cscTOF;*/
+            tof    = &tofCalculator.combinedTOF; 
+            dttof  = &tofCalculator.dtTOF;  
+            csctof = &tofCalculator.cscTOF;
             //std::cout<<"TESTC\n";
          }
       }
@@ -300,7 +306,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       unsigned int pdgId = 0;
       if(isSignal){ 
          pdgId = genColl[ClosestGen].pdgId();
-         if (Debug) cout << "GenId  " << pdgId << endl;
+         LogDebug("Analyzer") << "GenId  " << pdgId;
       }
 
       double dEdxErr = 0;
@@ -357,11 +363,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       //check if the canddiate pass the preselection cuts
       /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
-      double MassErr=GetMassErr (track->p(), track->ptError(), dedxMObj?dedxMObj->dEdx():-1, dEdxErr, GetMass(track->p(), dedxMObj?dedxMObj->dEdx():-1, DeDxK,DeDxC), DeDxK,DeDxC);
+      double MassErr = GetMassErr(track->p(), track->ptError(), dedxMObj?dedxMObj->dEdx():-1, dEdxErr, GetMass(track->p(), dedxMObj?dedxMObj->dEdx():-1, DeDxK,DeDxC), DeDxK,DeDxC);
       if(isMC){
-         passPreselection(  hscp, dedxHits, dedxSObj, dedxMObj, iEvent, tuple, -1, false, 0, 0, MassErr );
+         passPreselection(  hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, tuple, -1, false, 0, 0, MassErr );
       }
-      if(!passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, iEvent, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr) ) continue;
+      if(!passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr) ) continue;
       if(TypeMode==5 && isSemiCosmicSB)continue;//WAIT//
 
       //fill the ABCD histograms and a few other control plots
@@ -377,11 +383,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(isMC || isData) {
          //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
 		   Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
-		   //double MassTOF  = -1; if(useTOF)MassTOF = GetTOFMass(track->p(),(2-1));//GetTOFMass(track->p(),(2-tof.inverseBeta()));
+		   //double MassTOF  = -1; if(useTOF)MassTOF = GetTOFMass(track->p(),(2-1));//GetTOFMass(track->p(),(2-tof->inverseBeta()));
 		   //double MassComb = -1;
-		   ///if(useTOF && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/(2-tof.inverseBeta())))*0.5 ) ;
+		   ///if(useTOF && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/(2-tof->inverseBeta())))*0.5 ) ;
 		   ///if(dedxMObj) MassComb = Mass;
-		   ///if(useTOF)MassComb=GetMassFromBeta(track->p(),(1/(2-tof.inverseBeta())));
+		   ///if(useTOF)MassComb=GetMassFromBeta(track->p(),(1/(2-tof->inverseBeta())));
 
          for(unsigned int CutIndex=0;CutIndex<CutPt_Flip.size();CutIndex++){
             //Background check looking at region with TOF<1
@@ -420,7 +426,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          dedxSObj ? dedxSObj->dEdx() : -1,
          dedxSObj ? dedxMObj->dEdx() : -1,
          dedxMObj ? Ick2 : -99, 
-         tof.inverseBeta(), //tof ? tof.inverseBeta() : -1, 
+         -1,//tof ? tof->inverseBeta() : -1, 
          Mass, TreeDZ, TreeDXY, OpenAngle, 
          track->eta(), track->phi(), track->found(), track->hitPattern().numberOfValidPixelHits(), track->validFraction(), 
          nomh,fovhd, nom, weight,genid,gencharge,genmass,genpt,geneta,genphi
@@ -559,25 +565,6 @@ double Analyzer::scaleFactor(double eta) {
   for (int i=0; i<15; i++) if(eta<etaBins[i]) return scaleBins[i];
   return 0;
 }
-/*
-//=============================================================
-//
-//     Method for Counting the number of muon stations used in track fit only counting DT and CSC stations.
-//
-//=============================================================
-//
-int  Analyzer::muonStations(const reco::HitPattern& hitPattern) {
-  int stations[4] = { 0,0,0,0 };
-  for (int i=0; i<hitPattern.numberOfAllHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
-    uint32_t pattern = hitPattern.getHitPattern(reco::HitPattern::HitCategory::TRACK_HITS, i );
-    if(pattern == 0) break;
-    if(hitPattern.muonHitFilter(pattern) && (int(hitPattern.getSubStructure(pattern)) == 1 || int(hitPattern.getSubStructure(pattern)) == 2) && hitPattern.getHitType(pattern) == 0){
-      stations[hitPattern.getMuonStation(pattern)-1] = 1;
-    }
-  }
-  return stations[0]+stations[1]+stations[2]+stations[3];
-
-}*/
 
 //=============================================================
 //
@@ -626,20 +613,16 @@ double Analyzer::SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEve
   reco::TrackRef  track = muon->standAloneMuon();
   if(track.isNull())return false;
 
-  /*edm::Handle<MuonSegmentCollection> SegCollHandle;
-  SegCollHandle.getByLabel(ev, "MuonSegmentProducer");
-  if(!SegCollHandle.isValid()){printf("Segment Collection Not Found\n"); return -1;}
-  MuonSegmentCollection SegCollection = *SegCollHandle;*/
-
-  susybsm::MuonSegmentCollection SegCollection = iEvent.get(muonSegmentToken_);
 
   double minDr=10;
   minPhi=10;
   minEta=10;
 
   //Look for segment on opposite side of detector from track
-  for (susybsm::MuonSegmentCollection::const_iterator segment = SegCollection.begin(); segment!=SegCollection.end();++segment) {  
-    GlobalPoint gp = segment->getGP();
+  //susybsm::MuonSegmentCollection SegCollection = iEvent.get(muonSegmentToken_);
+  //for (susybsm::MuonSegmentCollection::const_iterator segment = SegCollection.begin(); segment!=SegCollection.end();++segment) {  
+  for( const auto& segment : iEvent.get(muonSegmentToken_) ){
+    GlobalPoint gp = segment.getGP();
 
     //Flip HSCP to opposite side of detector
     double eta_hscp = -1*track->eta();
@@ -676,6 +659,7 @@ bool Analyzer::passPreselection(
    const reco::DeDxHitInfo* dedxHits,  
    const reco::DeDxData* dedxSObj, 
    const reco::DeDxData* dedxMObj,
+   const reco::MuonTimeExtra* tof,
    const edm::Event& iEvent, 
    Tuple* &tuple, 
    const double& GenBeta, 
@@ -714,11 +698,8 @@ bool Analyzer::passPreselection(
    if(tuple) tuple->Stations->Fill(0.0, Event_Weight);
 
    //===================== Handle For vertex ================
-   //Handle<vector<reco::Vertex>> vertexCollH;
-   //iEvent.getByToken(offlinePrimaryVerticesToken_,vertexCollH);
-
    vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
-   if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
+   if(vertexColl.size()<1){edm::LogError("Analyzer") << "NO VERTEX"; return false;}
 
    int highestPtGoodVertex = -1;
    int goodVerts=0;
@@ -781,9 +762,10 @@ bool Analyzer::passPreselection(
    if(dedxSObj) if(dedxSObj->numberOfMeasurements()<GlobalMinNOM)return false;
    if(tuple){tuple->TNOM  ->Fill(0.0,Event_Weight);}
 
-   if(tuple){tuple->BS_nDof->Fill(tof.nDof(),Event_Weight);}
-   if((TypeMode>1  && TypeMode!=5) && tof.nDof()<GlobalMinNDOF && (dttof.nDof()<GlobalMinNDOFDT || csctof.nDof()<GlobalMinNDOFCSC) )return false;
-
+   if(tof){
+      if(tuple){tuple->BS_nDof->Fill(tof->nDof(),Event_Weight);}
+      if((TypeMode>1  && TypeMode!=5) && tof->nDof()<GlobalMinNDOF && (dttof->nDof()<GlobalMinNDOFDT || csctof->nDof()<GlobalMinNDOFCSC) )return false;
+   }
    if(tuple){
       tuple->nDof  ->Fill(0.0,Event_Weight);
       tuple->BS_Qual->Fill(track->qualityMask(),Event_Weight);
@@ -812,16 +794,18 @@ bool Analyzer::passPreselection(
    if(dedxMObj && ((TypeMode!=5 && dedxMObj->dEdx()<GlobalMinIm) || (TypeMode==5 && dedxMObj->dEdx()>GlobalMinIm)) )return false;
    if(tuple){tuple->MI   ->Fill(0.0,Event_Weight);}
 
-   if(tuple){tuple->BS_MTOF ->Fill(tof.inverseBeta(),Event_Weight);}
-   //This cut is no longer applied here but rather in the PassSelection part to use the region
-   //with TOF<GlobalMinTOF as a background check
-   //if(TypeMode>1 && tof.inverseBeta()+RescaleT<GlobalMinTOF)return false;
+   if(tof){
+      if(tuple){tuple->BS_MTOF ->Fill(tof->inverseBeta(),Event_Weight);}
+      //This cut is no longer applied here but rather in the PassSelection part to use the region
+      //with TOF<GlobalMinTOF as a background check
+      //if(TypeMode>1 && tof->inverseBeta()+RescaleT<GlobalMinTOF)return false;
 
-   if(tuple)tuple->BS_TOFError->Fill(tof.inverseBetaErr(),Event_Weight);
-   if((TypeMode>1  && TypeMode!=5) && tof.inverseBetaErr()>GlobalMaxTOFErr)return false;
+      if(tuple)tuple->BS_TOFError->Fill(tof->inverseBetaErr(),Event_Weight);
+      if((TypeMode>1  && TypeMode!=5) && tof->inverseBetaErr()>GlobalMaxTOFErr)return false;
 
-   if(tuple) tuple->BS_TimeAtIP->Fill(tof.timeAtIpInOut(),Event_Weight);
-   if(TypeMode==3 && min(min(fabs(tof.timeAtIpInOut()-100), fabs(tof.timeAtIpInOut()-50)), min(fabs(tof.timeAtIpInOut()+100), fabs(tof.timeAtIpInOut()+50)))<5) return false;
+      if(tuple) tuple->BS_TimeAtIP->Fill(tof->timeAtIpInOut(),Event_Weight);
+      if(TypeMode==3 && min(min(fabs(tof->timeAtIpInOut()-100), fabs(tof->timeAtIpInOut()-50)), min(fabs(tof->timeAtIpInOut()+100), fabs(tof->timeAtIpInOut()+50)))<5) return false;
+   }
 
    if(tuple) tuple->BS_dzMinv3d->Fill(dz,Event_Weight);
    if(tuple) tuple->BS_dxyMinv3d->Fill(dxy,Event_Weight);
@@ -939,13 +923,13 @@ bool Analyzer::passPreselection(
      //Plots for tracks in dz control region
      if(fabs(dz)>CosmicMinDz && fabs(dz)<CosmicMaxDz && !muon->isGlobalMuon()) {
        tuple->BS_Pt_FailDz->Fill(track->pt(), Event_Weight);
-       tuple->BS_TOF_FailDz->Fill(tof.inverseBeta(), Event_Weight);
+       //WAIT//tuple->BS_TOF_FailDz->Fill(tof->inverseBeta(), Event_Weight);
        if(fabs(track->eta())>CSCRegion) {
-	 tuple->BS_TOF_FailDz_CSC->Fill(tof.inverseBeta(), Event_Weight);
+	 //WAIT//tuple->BS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), Event_Weight);
 	 tuple->BS_Pt_FailDz_CSC->Fill(track->pt(), Event_Weight);
        }
        else if(fabs(track->eta())<DTRegion) {
-	 tuple->BS_TOF_FailDz_DT->Fill(tof.inverseBeta(), Event_Weight);
+	 //WAIT//tuple->BS_TOF_FailDz_DT->Fill(tof->inverseBeta(), Event_Weight);
 	 tuple->BS_Pt_FailDz_DT->Fill(track->pt(), Event_Weight);
        }
      }
@@ -959,20 +943,20 @@ bool Analyzer::passPreselection(
 
    //Split into different dz regions, each different region used to predict cosmic background and find systematic
    if(TypeMode==3 && !muon->isGlobalMuon() && tuple) {
-     int DzType=-1;
-     if(fabs(dz)<GlobalMaxDZ) DzType=0;
-     else if(fabs(dz)<30) DzType=1;
-     else if(fabs(dz)<50) DzType=2;
-     else if(fabs(dz)<70) DzType=3;
-     if(fabs(dz)>CosmicMinDz && fabs(dz)<CosmicMaxDz) DzType=4;
-     if(fabs(dz)>CosmicMaxDz) DzType=5;
+     //WAIT//int DzType=-1;
+     //WAIT//if(fabs(dz)<GlobalMaxDZ) DzType=0;
+     //WAIT//else if(fabs(dz)<30) DzType=1;
+     //WAIT//else if(fabs(dz)<50) DzType=2;
+     //WAIT//else if(fabs(dz)<70) DzType=3;
+     //WAIT//if(fabs(dz)>CosmicMinDz && fabs(dz)<CosmicMaxDz) DzType=4;
+     //WAIT//if(fabs(dz)>CosmicMaxDz) DzType=5;
 
      //Count number of tracks in dz sidebands passing the TOF cut
      //The pt cut is not applied to increase statistics
      for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){
-       if(tof.inverseBeta()>=CutTOF[CutIndex]) {
-	 tuple->H_D_DzSidebands->Fill(CutIndex, DzType);
-       }
+       //WAIT//if(tof->inverseBeta()>=CutTOF[CutIndex]) {
+	 //WAIT//tuple->H_D_DzSidebands->Fill(CutIndex, DzType);
+       //WAIT//}
      }
    }
 
@@ -1000,7 +984,7 @@ bool Analyzer::passPreselection(
           if(dedxMObj) tuple->BS_EtaIm->Fill(track->eta(),dedxMObj->dEdx(),Event_Weight);
           tuple->BS_EtaP ->Fill(track->eta(),track->p(),Event_Weight);
           tuple->BS_EtaPt->Fill(track->eta(),track->pt(),Event_Weight);
-          tuple->BS_EtaTOF->Fill(track->eta(),tof.inverseBeta(),Event_Weight);
+          //WAIT//tuple->BS_EtaTOF->Fill(track->eta(),tof->inverseBeta(),Event_Weight);
    }
 
    if(tuple){if(GenBeta>=0)tuple->Beta_PreselectedC->Fill(GenBeta, Event_Weight);
@@ -1038,12 +1022,12 @@ bool Analyzer::passPreselection(
           if(dedxSObj && PUA) tuple->BS_Im_PUA ->Fill(dedxMObj->dEdx(),Event_Weight);
           if(dedxSObj && PUB) tuple->BS_Im_PUB ->Fill(dedxMObj->dEdx(),Event_Weight);
 
-	    tuple->BS_TOF->Fill(tof.inverseBeta(),Event_Weight);
-            if(PUA)tuple->BS_TOF_PUA->Fill(tof.inverseBeta(),Event_Weight);
-            if(PUB)tuple->BS_TOF_PUB->Fill(tof.inverseBeta(),Event_Weight);
-	    if(dttof.nDof()>6) tuple->BS_TOF_DT->Fill(dttof.inverseBeta(),Event_Weight);
-            if(csctof.nDof()>6) tuple->BS_TOF_CSC->Fill(csctof.inverseBeta(),Event_Weight);
-            tuple->BS_PtTOF->Fill(track->pt() ,tof.inverseBeta(),Event_Weight);
+	    //WAIT//tuple->BS_TOF->Fill(tof->inverseBeta(),Event_Weight);
+            //WAIT//if(PUA)tuple->BS_TOF_PUA->Fill(tof->inverseBeta(),Event_Weight);
+            //WAIT//if(PUB)tuple->BS_TOF_PUB->Fill(tof->inverseBeta(),Event_Weight);
+	    //WAIT//if(dttof->nDof()>6) tuple->BS_TOF_DT->Fill(dttof->inverseBeta(),Event_Weight);
+            //WAIT//if(csctof->nDof()>6) tuple->BS_TOF_CSC->Fill(csctof->inverseBeta(),Event_Weight);
+            //WAIT//tuple->BS_PtTOF->Fill(track->pt() ,tof->inverseBeta(),Event_Weight);
 
           if(dedxSObj) {
 	    tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
@@ -1052,8 +1036,8 @@ bool Analyzer::passPreselection(
             tuple->BS_PtIs ->Fill(track->pt() ,dedxSObj->dEdx(),Event_Weight);
             tuple->BS_PtIm ->Fill(track->pt() ,dedxMObj->dEdx(),Event_Weight);
 	  }
-          if(dedxSObj)tuple->BS_TOFIs->Fill(tof.inverseBeta(),dedxSObj->dEdx(),Event_Weight);
-          if(dedxSObj)tuple->BS_TOFIm->Fill(tof.inverseBeta(),dedxMObj->dEdx(),Event_Weight);
+          //WAIT//if(dedxSObj)tuple->BS_TOFIs->Fill(tof->inverseBeta(),dedxSObj->dEdx(),Event_Weight);
+          //WAIT//if(dedxSObj)tuple->BS_TOFIm->Fill(tof->inverseBeta(),dedxMObj->dEdx(),Event_Weight);
 
 	  //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
 	  //Binning not used for other analyses
@@ -1062,7 +1046,7 @@ bool Analyzer::passPreselection(
 	    if(fabs(track->eta())<DTRegion) bin=muonStations(track->hitPattern())-2;
 	    else bin=muonStations(track->hitPattern())+1;
 	    tuple->BS_Pt_Binned[to_string(bin)] ->Fill(track->pt(),Event_Weight);
-	    tuple->BS_TOF_Binned[to_string(bin)]->Fill(tof.inverseBeta(),Event_Weight);
+	    //WAIT//tuple->BS_TOF_Binned[to_string(bin)]->Fill(tof->inverseBeta(),Event_Weight);
 	  }
    }
    if(tuple){tuple->Basic  ->Fill(0.0,Event_Weight);}
@@ -1070,237 +1054,201 @@ bool Analyzer::passPreselection(
    return true;
 }
 
-/*
-// all code for the filling of the ABCD related histograms --> this information will be used later in Step4 for the actual datadriven prediction
-void Analyzer::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple){
-	 reco::TrackRef   track;
-         if(TypeMode!=3) track = hscp.trackRef();
-         else {
-	   reco::MuonRef muon = hscp.muonRef();
-           if(muon.isNull()) return;
-           track = muon->standAloneMuon();
-         }
+//=============================================================
+//
+//     Pre-Selection
+//
+//=============================================================
+bool Analyzer::passSelection(
+         const susybsm::HSCParticle& hscp,  
+         const reco::DeDxData* dedxSObj, 
+         const reco::DeDxData* dedxMObj, 
+         const reco::MuonTimeExtra* tof, 
+         const edm::Event& iEvent,
+         const int& CutIndex, 
+         Tuple* &tuple, 
+         const bool isFlip, 
+         const double& GenBeta, 
+         bool RescaleP, 
+         const double& RescaleI, 
+         const double& RescaleT)
+{
+   reco::TrackRef   track;
+   if(TypeMode!=3) track = hscp.trackRef();
+   else {
+     reco::MuonRef muon = hscp.muonRef();
+     if(muon.isNull()) return false;
+     track = muon->standAloneMuon();
+   }
+   if(track.isNull())return false;
 
-         double MuonTOF = GlobalMinTOF;
-         if(tof){MuonTOF = tof->inverseBeta(); }
+   double MuonTOF = GlobalMinTOF;
+   if(tof){
+      MuonTOF = tof->inverseBeta();
+   }
 
-	 double Is=0; 	 if(dedxSObj) Is=dedxSObj->dEdx();
-	 double Ih=0;	 if(dedxMObj) Ih=dedxMObj->dEdx();
+   double Is=0;   if(dedxSObj) Is=dedxSObj->dEdx();
+   double Ih=0;   if(dedxMObj) Ih=dedxMObj->dEdx();
+   double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
 
-         if(!isCosmicSB){
-	 tuple->Hist_Pt->Fill(track->pt(),Event_Weight);
-         tuple->Hist_Is->Fill(Is,Event_Weight);
-         tuple->Hist_TOF->Fill(MuonTOF,Event_Weight);
-         }
+   double PtCut=CutPt[CutIndex];
+   double ICut=CutI[CutIndex];
+   double TOFCut=CutTOF[CutIndex];
+   if(isFlip) {
+     PtCut=CutPt_Flip[CutIndex];
+     ICut=CutI_Flip[CutIndex];
+     TOFCut=CutTOF_Flip[CutIndex];
+   }
 
-//          /\ I
-//       /\  |----------------------------
-//        |  |   |           |             |
-//        |  |   |           |             |
-//        |  |   |    B      |     D       |
-//        |  |   |           |             |
-//        |  ------------------------------
-//        |  |   |           |             |
-//        |  |   |    A      |     C       |
-//        |  |   |           |             |
-//        |  |---|-----------|-------------|
-//        |  |   |           |             |
-//        |  /--------------------------------> PT
-//        | /       E       /    G  
-//         /------------------------------->
-//        /
-//      TOF
+   if(RescaleP){
+     if(RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())<PtCut)return false;
+     //if(std::max(0.0,RescaledPt(track->pt() - track->ptError(),track->eta(),track->phi(),track->charge()))<CutPt[CutIndex])return false;
+   }else{
+     if(track->pt()<PtCut)return false;
+     //if(std::max(0.0,(track->pt() - track->ptError()))<CutPt[CutIndex])return false;
+   } 
+   if(tuple){tuple->Pt    ->Fill(CutIndex,Event_Weight);
+          if(GenBeta>=0)tuple->Beta_SelectedP->Fill(CutIndex,GenBeta, Event_Weight);
+   }
 
-         //Use different pt regions if using momentum from Stand Alone Muons
-	 std::vector<double> PtLimits;
-	 if(TypeMode!=3) {
-	   PtLimits.push_back(100);
-           PtLimits.push_back(80);
-           PtLimits.push_back(60);
-	 }
-	 else {
-           PtLimits.push_back(240);
-           PtLimits.push_back(170);
-           PtLimits.push_back(120);
-	 }
+   if(TypeMode!=3 && Is+RescaleI<ICut)return false;
 
-	    //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
-	    //Binning not used for other analyses
-	    int bin=-1;
-	    if(TypeMode==3) {
-	      if(fabs(track->eta())<DTRegion) bin=muonStations(track->hitPattern())-2;
-	      else bin=muonStations(track->hitPattern())+1;
-	    }
+   if(tuple){tuple->I    ->Fill(CutIndex,Event_Weight);
+          if(GenBeta>=0)tuple->Beta_SelectedI->Fill(CutIndex, GenBeta, Event_Weight);
+   }
 
-         if(!isCosmicSB){
-            if(track->pt()>PtLimits[0]){
-               tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S4_Im->Fill(Ih, Event_Weight);
-               if(tof)tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }else if(track->pt()>PtLimits[1]){
-               tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S3_Im->Fill(Ih, Event_Weight);
-               if(tof)tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }else if(track->pt()>PtLimits[2]){
-               tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S2_Im->Fill(Ih, Event_Weight);
-               if(tof)tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }else{
-               tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S1_Im->Fill(Ih, Event_Weight);
-               if(tof)tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+   if((TypeMode>1  && TypeMode!=5) && !isFlip && MuonTOF+RescaleT<TOFCut)return false;
+   if((TypeMode>1  && TypeMode!=5) && isFlip && MuonTOF+RescaleT>TOFCut)return false;
+
+   if(tuple){tuple->TOF  ->Fill(CutIndex,Event_Weight);
+          if(GenBeta>=0)tuple->Beta_SelectedT->Fill(CutIndex, GenBeta, Event_Weight);
+          tuple->AS_P  ->Fill(CutIndex,track->p(),Event_Weight);
+          tuple->AS_Pt ->Fill(CutIndex,track->pt(),Event_Weight);
+          tuple->AS_Is ->Fill(CutIndex,Is,Event_Weight);
+          tuple->AS_Im ->Fill(CutIndex,Ih,Event_Weight);
+          tuple->AS_TOF->Fill(CutIndex,MuonTOF,Event_Weight);
+          //tuple->AS_EtaIs->Fill(CutIndex,track->eta(),Is,Event_Weight);
+          //tuple->AS_EtaIm->Fill(CutIndex,track->eta(),Ih,Event_Weight);
+          //tuple->AS_EtaP ->Fill(CutIndex,track->eta(),track->p(),Event_Weight);
+          //tuple->AS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),Event_Weight);
+          tuple->AS_PIs  ->Fill(CutIndex,track->p()  ,Is,Event_Weight);
+          tuple->AS_PIm  ->Fill(CutIndex,track->p()  ,Ih,Event_Weight);
+          tuple->AS_PtIs ->Fill(CutIndex,track->pt() ,Is,Event_Weight);
+          tuple->AS_PtIm ->Fill(CutIndex,track->pt() ,Ih,Event_Weight);
+          tuple->AS_TOFIs->Fill(CutIndex,MuonTOF     ,Is,Event_Weight);
+          tuple->AS_TOFIm->Fill(CutIndex,MuonTOF     ,Ih,Event_Weight);
+   }
+   return true;      
+}
+
+//=============================================================
+//
+//     Trigger-Selection
+//
+//=============================================================
+bool Analyzer::passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic, L1BugEmulator* emul){
+
+   //edm::LogDebug("Analyzer") << "Processing trigger info...";
+
+   edm::Handle<edm::TriggerResults> triggerH;
+   iEvent.getByToken(triggerResultsToken_,triggerH); 
+   bool valid = triggerH.isValid(); 
+   if (not valid){
+      cout << "HLT TriggerResults not found!" << endl;
+      return false;
+   }
+
+   const edm::TriggerNames& triggerNames = iEvent.triggerNames(*triggerH);
+   //"HLT_PFMETTypeOne110_PFMHT110_IDTight_v*"
+   bool metTrig = PassTriggerPatterns(triggerH, triggerNames, "HLT_PFMET170_NoiseCleaned_v*") || PassTriggerPatterns(triggerH, triggerNames, "HLT_PFMET170_NoiseCleaned_v*");
+   bool muTrig = PassTriggerPatterns(triggerH, triggerNames, "HLT_Mu45_eta2p1_v*") || PassTriggerPatterns(triggerH, triggerNames, "HLT_Mu50_v*");
+
+   if (!metTrig && muTrig) TrigInfo = 1; // mu only
+   if (metTrig && !muTrig) TrigInfo = 2; // met only
+   if (metTrig && muTrig)  TrigInfo = 3; // mu and met*/
+   
+
+   /*edm::TriggerResultsByName tr = iEvent.triggerResultsByName("HLT");
+   if(!tr.isValid())         tr = iEvent.triggerResultsByName("MergeHLT");
+   if(!tr.isValid())return false;*/
+
+   //mk TrigInfo - as global var
+   //WAIT//TrigInfo=0;
+   
+   /*bool metTrig = false;
+   bool muTrig = false;
+   
+
+   if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*") || passTriggerPatterns(tr, "HLT_PFMET170_HBHECleaned_v*")) metTrig = true;
+   if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*") || passTriggerPatterns(tr, "HLT_Mu50_v*")) muTrig = true;
+
+   if (!metTrig && muTrig) TrigInfo = 1;
+   if (metTrig && !muTrig) TrigInfo = 2;
+   if (metTrig && muTrig)  TrigInfo = 3;
+   //unsigned int TrigInfo =0; //1 -mu only, 2- met only, 3 mu and met 
+
+
+
+   if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*") || passTriggerPatterns(tr, "HLT_PFMET170_HBHECleaned_v*"))return true;*/
+   /*if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*") || passTriggerPatterns(tr, "HLT_Mu50_v*")){
+      if (!isData && emul){
+         //vector<reco::Muon>
+         fwlite::Handle < std::vector<reco::Muon> > muonCollHandle;
+         muonCollHandle.getByLabel(ev, "muons");
+         if (!muonCollHandle.isValid()) return false;
+         else{
+            bool KeepEvent=false;
+            for (unsigned int c=0;c<muonCollHandle->size();c++){
+               reco::MuonRef muon = reco::MuonRef(muonCollHandle.product(), c);
+               if (muon.isNull()) continue;
+               if (muon->track().isNull()) continue;
+               if (emul->PassesL1Inefficiency(muon->track()->pt(), std::fabs(muon->track()->eta()))){
+                  KeepEvent=true;
+                  break;
+               }
             }
-
-            if(Is>0.2){           if(tof)tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Is>0.1){     if(tof)tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Is>0.05){    if(tof)tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
-            }else{                if(tof)tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
-            }
-
-            if(Ih>4.4){           if(tof)tuple->CtrlIm_S4_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Ih>4.1){     if(tof)tuple->CtrlIm_S3_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Ih>3.8){     if(tof)tuple->CtrlIm_S2_TOF->Fill(MuonTOF, Event_Weight);
-            }else{                if(tof)tuple->CtrlIm_S1_TOF->Fill(MuonTOF, Event_Weight);
-            }
+            return KeepEvent;
          }
-
-
-
-	 //	 if(dedxMObj) Ih=dedxMObj->dEdx();
-	 double Ick=0;  if(dedxMObj) Ick=GetIck(Ih,isMCglobal, DeDxK,DeDxC); //GetIck(double I, bool MC, double dEdxK, double dEdxC)
-
-
-         for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){
- 	    if(MuonTOF<GlobalMinTOF) continue;
-            if(TypeMode==5 && isCosmicSB)continue;
-            bool PassPtCut  = track->pt()>=CutPt[CutIndex];
-            bool PassICut   = (Is>=CutI[CutIndex]);
-            bool PassTOFCut = MuonTOF>=CutTOF[CutIndex];
-
-            if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
-               tuple->H_D      ->Fill(CutIndex,                Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               tuple->RegionD_P  ->Fill(CutIndex,track->p(),     Event_Weight);
-               tuple->RegionD_I  ->Fill(CutIndex,Ih,Event_Weight);
-	       tuple->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
-               tuple->RegionD_TOF->Fill(CutIndex,MuonTOF,        Event_Weight);
-	       tuple->AS_Eta_RegionD->Fill(CutIndex,track->eta());
-            }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
-               tuple->H_C     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
-               tuple->PDF_C_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-               //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
-               tuple->AS_Eta_RegionC->Fill(CutIndex,track->eta());
-            }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
-               tuple->H_B     ->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode<2)tuple->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
-	       tuple->PDF_B_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-               //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
-               tuple->AS_Eta_RegionB->Fill(CutIndex,track->eta());
-            }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
-               tuple->H_A     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS2->Fill(CutIndex,track->eta(),        Event_Weight);
-               tuple->AS_Eta_RegionA->Fill(CutIndex,track->eta());
-	       tuple->PDF_A_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
-
-            }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
-               tuple->H_H   ->Fill(CutIndex,          Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_H_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-	       tuple->RegionH_Ias->Fill(CutIndex,Is,Event_Weight);
-	       if(TypeMode==2 && Ick>0)tuple->PDF_H_EtaMass ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
-               //Pred_P->Fill(CutIndex,track->p(),        Event_Weight);
-               //Pred_I->Fill(CutIndex,Ih,   Event_Weight);
-               if(TypeMode==2)tuple->AS_Eta_RegionH->Fill(CutIndex,track->eta());
-            }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
-               tuple->H_G     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
-               tuple->AS_Eta_RegionG->Fill(CutIndex,track->eta());
-               if(TypeMode==2)tuple->PDF_G_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-            }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
-               tuple->H_F     ->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_F_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode==2)tuple->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
-               tuple->AS_Eta_RegionF->Fill(CutIndex,track->eta());
-	       if(TypeMode==2)tuple->PDF_F_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-
-            }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
-               tuple->H_E     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
-               tuple->AS_Eta_RegionE->Fill(CutIndex,track->eta());
-	       if(TypeMode==2)tuple->PDF_E_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
-
+      }
+      else return true;
+   }*/
+   /*if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*") || passTriggerPatterns(tr, "HLT_Mu50_v*")){
+      if (!isData && emul){
+         bool KeepEvent=false;
+         for(const auto& muon : iEvent.get(muonToken_)){ //for (unsigned int c=0;c<muonCollHandle->size();c++){
+            if (muon->track().isNull()) continue;
+            if (emul->PassesL1Inefficiency(muon->track()->pt(), std::fabs(muon->track()->eta()))){
+               KeepEvent=true;
+               break;
             }
          }
+         return KeepEvent;
+      }
+      else return true;
+   }
+   //   if(passTriggerPatterns(tr, "HLT_Mu50_v*"))return true;
 
-	 //Use events with low TOF to check accuracy of background prediction
-         for(unsigned int CutIndex=0;CutIndex<CutPt_Flip.size();CutIndex++){
-            if(TypeMode!=5 && MuonTOF>=GlobalMinTOF) continue;
-            if(TypeMode==5 && !isCosmicSB)continue;
+   return false; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
 
-            bool PassPtCut  = track->pt()>=CutPt_Flip[CutIndex];
-            bool PassICut   = (Is>=CutI_Flip[CutIndex]);
-            bool PassTOFCut = MuonTOF<=CutTOF_Flip[CutIndex]; 
+   //for(unsigned int i=0;i<tr.size();i++){
+   //printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
+   //}fflush(stdout);
 
+   //if(tr.accept("HSCPHLTTriggerMetDeDxFilter"))return true;
+   //if(tr.accept("HSCPHLTTriggerMuDeDxFilter"))return true;
+   if(tr.accept("HSCPHLTTriggerMuFilter"))return true;
+   if(tr.accept("HSCPHLTTriggerPFMetFilter"))return true;
 
-            if(TypeMode==5)PassTOFCut=true;
+   //Could probably use this trigger for the other analyses as well
+   if(TypeMode==3){
+      if(tr.size()== tr.triggerIndex("HSCPHLTTriggerL2MuFilter")) return false;
+      if(tr.accept(tr.triggerIndex("HSCPHLTTriggerL2MuFilter")))  return true;
 
-            if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
-	      tuple->RegionD_P_Flip  ->Fill(CutIndex,track->p(),     Event_Weight);
-	      tuple->RegionD_I_Flip  ->Fill(CutIndex,Ih,Event_Weight);
-	      tuple->RegionD_Ias_Flip  ->Fill(CutIndex,Is,Event_Weight);
-	      tuple->RegionD_TOF_Flip->Fill(CutIndex,MuonTOF,        Event_Weight);
-               tuple->H_D_Flip->Fill(CutIndex,                Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-            }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
-               tuple->H_C_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaP_Flip->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
-               tuple->PDF_C_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-               //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
-            }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
-               tuple->H_B_Flip->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode<2)tuple->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-	       tuple->PDF_B_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-               //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
-            }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
-               tuple->H_A_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS2_Flip->Fill(CutIndex,track->eta(),        Event_Weight);
-	       tuple->PDF_A_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
-            }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
-               tuple->H_H_Flip->Fill(CutIndex,          Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_H_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-	       tuple->RegionH_Ias_Flip  ->Fill(CutIndex,Is,Event_Weight);
-	       if(TypeMode==2 && Ick>0)tuple->PDF_H_EtaMass_Flip ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
-
-	       //Pred_P_Flip->Fill(CutIndex,track->p(),        Event_Weight);
-	       //Pred_I_Flip->Fill(CutIndex,Ih,   Event_Weight);
-            }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
-               tuple->H_G_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaP_Flip->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
-               if(TypeMode==2)tuple->PDF_G_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-
-            }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
-               tuple->H_F_Flip->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_F_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode==2)tuple->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-	       if(TypeMode==2)tuple->PDF_F_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-            }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
-               tuple->H_E_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-	       if(TypeMode==2)tuple->PDF_E_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
-            }
-         }
-}*/
+      //Only accepted if looking for cosmic events
+      if(isCosmic) {
+         if(tr.size()== tr.triggerIndex("HSCPHLTTriggerCosmicFilter")) return false;
+         if(tr.accept(tr.triggerIndex("HSCPHLTTriggerCosmicFilter"))) return true;
+      }
+   }*/
+   return false;
+}

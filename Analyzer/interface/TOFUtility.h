@@ -1,7 +1,7 @@
 // Original Author:  Loic Quertenmont
 
-#ifndef SUSYBSMAnalysis_Analyzer_Analysis_TOFUtility_h
-#define SUSYBSMAnalysis_Analyzer_Analysis_TOFUtility_h 
+#ifndef SUSYBSMAnalysis_Analyzer_TOFUtility_h
+#define SUSYBSMAnalysis_Analyzer_TOFUtility_h 
 
 class Muon;
 class moduleGeom{

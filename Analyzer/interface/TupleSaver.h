@@ -11,7 +11,7 @@ class TupleSaver{
 
       void fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi);
 
-      void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip);
+      void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip);
 };
 
 //=============================================================
@@ -504,7 +504,7 @@ void TupleSaver::fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int
 //     -> this information will be used later in Step4 for the actual datadriven prediction
 //
 //=============================================================
-void TupleSaver::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip){
+void TupleSaver::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip){
     using namespace std;
 	 reco::TrackRef   track;
          if(TypeMode!=3) track = hscp.trackRef();
@@ -515,7 +515,7 @@ void TupleSaver::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, 
          }
 
          double MuonTOF = GlobalMinTOF;
-         //if(tof){MuonTOF = tof->inverseBeta(); }
+         if(tof){MuonTOF = tof->inverseBeta(); }
 
 	 double Is=0; 	 if(dedxSObj) Is=dedxSObj->dEdx();
 	 double Ih=0;	 if(dedxMObj) Ih=dedxMObj->dEdx();
@@ -569,35 +569,35 @@ void TupleSaver::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, 
             if(track->pt()>PtLimits[0]){
                tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
                tuple->CtrlPt_S4_Im->Fill(Ih, Event_Weight);
-               /*if(tof)*/tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
-               if(/*tof &&*/ bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+               if(tof) tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
+               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
             }else if(track->pt()>PtLimits[1]){
                tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
                tuple->CtrlPt_S3_Im->Fill(Ih, Event_Weight);
-               /*if(tof)*/tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
-               if(/*tof &&*/ bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+               if(tof) tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
+               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
             }else if(track->pt()>PtLimits[2]){
                tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
                tuple->CtrlPt_S2_Im->Fill(Ih, Event_Weight);
-               /*if(tof)*/tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
-               if(/*tof &&*/ bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+               if(tof) tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
+               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
             }else{
                tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
                tuple->CtrlPt_S1_Im->Fill(Ih, Event_Weight);
-               /*if(tof)*/tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
-               if(/*tof &&*/ bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+               if(tof) tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
+               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
             }
 
-            if(Is>0.2){           /*if(tof)*/tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Is>0.1){     /*if(tof)*/tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Is>0.05){    /*if(tof)*/tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
-            }else{                /*if(tof)*/tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
+            if(Is>0.2){           if(tof) tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
+            }else if(Is>0.1){     if(tof) tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
+            }else if(Is>0.05){    if(tof) tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
+            }else{                if(tof) tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
             }
 
-            if(Ih>4.4){           /*if(tof)*/tuple->CtrlIm_S4_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Ih>4.1){     /*if(tof)*/tuple->CtrlIm_S3_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Ih>3.8){     /*if(tof)*/tuple->CtrlIm_S2_TOF->Fill(MuonTOF, Event_Weight);
-            }else{                /*if(tof)*/tuple->CtrlIm_S1_TOF->Fill(MuonTOF, Event_Weight);
+            if(Ih>4.4){           if(tof) tuple->CtrlIm_S4_TOF->Fill(MuonTOF, Event_Weight);
+            }else if(Ih>4.1){     if(tof) tuple->CtrlIm_S3_TOF->Fill(MuonTOF, Event_Weight);
+            }else if(Ih>3.8){     if(tof) tuple->CtrlIm_S2_TOF->Fill(MuonTOF, Event_Weight);
+            }else{                if(tof) tuple->CtrlIm_S1_TOF->Fill(MuonTOF, Event_Weight);
             }
          }
 

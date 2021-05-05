@@ -1,9 +1,8 @@
-#ifndef SUSYBSMAnalysis_Analyzer_Analysis_Tool_h
-#define SUSYBSMAnalysis_Analyzer_Analysis_Tool_h
+#ifndef SUSYBSMAnalysis_Analyzer_CommonFunction_h
+#define SUSYBSMAnalysis_Analyzer_CommonFunction_h
 
 struct HitDeDx{double dedx; double dx; bool isSat; bool passClusterCleaning; bool isInside; unsigned char subDet;};
 typedef std::vector<HitDeDx> HitDeDxCollection;
-
 
 class dedxHIPEmulator{
    private:
@@ -165,9 +164,149 @@ class dedxHIPEmulator{
   
 };
 
+class L1BugEmulator{
+   private:
+      TH2D* h1;
+      TH2D* h2;
+      double Weight;
+   public:
+      L1BugEmulator(double preTrackingChangeL1IntLumi=1., double IntegratedLuminosity=1.){
+         //UNUSED//double Weight    = preTrackingChangeL1IntLumi/IntegratedLuminosity; 
+         /*?maybe*/ Weight    = preTrackingChangeL1IntLumi/IntegratedLuminosity;
+         double pTBins[]  = {0.0, 52, 80, 120, 200, 500, 999999};
+         double EtaBins[] = {0.0, 0.9, 1.2, 2.1, 2.4, 999999};
+
+         unsigned int NumPtBins  = static_cast<unsigned int> (sizeof(pTBins)/sizeof(double))  -1;
+         unsigned int NumEtaBins = static_cast<unsigned int> (sizeof(EtaBins)/sizeof(double)) -1;
+
+         // first period
+         h1 = new TH2D ("Inefficiency_Run273158_274093", "Inefficiency_Run273158_274093", NumPtBins, pTBins, NumEtaBins, EtaBins);
+         // eta<0.9 -> pass
+         h1->SetBinContent(h1->FindBin( 25.0, 0.5), 0.00); // we do not trigger on muons with pT<50
+         h1->SetBinContent(h1->FindBin( 55.0, 0.5), 0.92);
+         h1->SetBinContent(h1->FindBin( 85.0, 0.5), 0.92);
+         h1->SetBinContent(h1->FindBin(125.0, 0.5), 0.92);
+         h1->SetBinContent(h1->FindBin(255.0, 0.5), 0.88);
+         h1->SetBinContent(h1->FindBin(555.0, 0.5), 0.86);
+         // 0.9<eta<1.2 -> depends on pT, pT>500 GeV get rejected
+         h1->SetBinContent(h1->FindBin( 25.0, 1.0), 0.00); // we do not trigger on muons with pT<50
+         h1->SetBinContent(h1->FindBin( 55.0, 1.0), 0.70);
+         h1->SetBinContent(h1->FindBin( 85.0, 1.0), 0.68);
+         h1->SetBinContent(h1->FindBin(125.0, 1.0), 0.65);
+         h1->SetBinContent(h1->FindBin(255.0, 1.0), 0.68);
+         h1->SetBinContent(h1->FindBin(555.0, 1.0), 0.00);
+         // 1.2<eta<2.1
+         h1->SetBinContent(h1->FindBin( 25.0, 1.5), 0.00); // we do not trigger on muons with pT<50
+         h1->SetBinContent(h1->FindBin( 55.0, 1.5), 0.86);
+         h1->SetBinContent(h1->FindBin( 85.0, 1.5), 0.87);
+         h1->SetBinContent(h1->FindBin(125.0, 1.5), 0.78);
+         h1->SetBinContent(h1->FindBin(255.0, 1.5), 0.69);
+         h1->SetBinContent(h1->FindBin(555.0, 1.5), 0.00);
+         // 2.1<eta<2.4
+         h1->SetBinContent(h1->FindBin( 25.0, 2.2), 0.00); // we do not trigger on muons with pT<50
+         h1->SetBinContent(h1->FindBin( 55.0, 2.2), 0.75);
+         h1->SetBinContent(h1->FindBin( 85.0, 2.2), 0.80);
+         h1->SetBinContent(h1->FindBin(125.0, 2.2), 0.68);
+         h1->SetBinContent(h1->FindBin(255.0, 2.2), 0.00);
+         h1->SetBinContent(h1->FindBin(555.0, 2.2), 0.00);
+         // 2.4<eta is impossible -> remove muon
+         h1->SetBinContent(h1->FindBin( 25.0, 3.2), 0.00);
+         h1->SetBinContent(h1->FindBin( 55.0, 3.2), 0.00);
+         h1->SetBinContent(h1->FindBin( 85.0, 3.2), 0.00);
+         h1->SetBinContent(h1->FindBin(125.0, 3.2), 0.00);
+         h1->SetBinContent(h1->FindBin(255.0, 3.2), 0.00);
+         h1->SetBinContent(h1->FindBin(555.0, 3.2), 0.00);
+
+         // second period
+         h2 = new TH2D ("Inefficiency_274094_", "Inefficiency_Run_274094_", NumPtBins, pTBins, NumEtaBins, EtaBins);
+         // eta<0.9 -> pass
+         h2->SetBinContent(h2->FindBin( 25.0, 0.5), 0.00); // we do not trigger on muons with pT<50
+         h2->SetBinContent(h2->FindBin( 55.0, 0.5), 0.92);
+         h2->SetBinContent(h2->FindBin( 85.0, 0.5), 0.92);
+         h2->SetBinContent(h2->FindBin(125.0, 0.5), 0.92);
+         h2->SetBinContent(h2->FindBin(255.0, 0.5), 0.92);
+         h2->SetBinContent(h2->FindBin(555.0, 0.5), 0.92);
+         // 0.9<eta<1.2 -> depends on pT, pT>500 GeV get rejected
+         h2->SetBinContent(h2->FindBin( 25.0, 1.0), 0.00); // we do not trigger on muons with pT<50
+         h2->SetBinContent(h2->FindBin( 55.0, 1.0), 0.88);
+         h2->SetBinContent(h2->FindBin( 85.0, 1.0), 0.88);
+         h2->SetBinContent(h2->FindBin(125.0, 1.0), 0.89);
+         h2->SetBinContent(h2->FindBin(255.0, 1.0), 0.84);
+         h2->SetBinContent(h2->FindBin(555.0, 1.0), 0.00);
+         // 1.2<eta<2.1
+         h2->SetBinContent(h2->FindBin( 25.0, 1.5), 0.00); // we do not trigger on muons with pT<50
+         h2->SetBinContent(h2->FindBin( 55.0, 1.5), 0.84);
+         h2->SetBinContent(h2->FindBin( 85.0, 1.5), 0.84);
+         h2->SetBinContent(h2->FindBin(125.0, 1.5), 0.76);
+         h2->SetBinContent(h2->FindBin(255.0, 1.5), 0.63);
+         h2->SetBinContent(h2->FindBin(555.0, 1.5), 0.00);
+         // 2.1<eta<2.4
+         h2->SetBinContent(h2->FindBin( 25.0, 2.2), 0.00); // we do not trigger on muons with pT<50
+         h2->SetBinContent(h2->FindBin( 55.0, 2.2), 0.72);
+         h2->SetBinContent(h2->FindBin( 85.0, 2.2), 0.76);
+         h2->SetBinContent(h2->FindBin(125.0, 2.2), 0.78);
+         h2->SetBinContent(h2->FindBin(255.0, 2.2), 0.66);
+         h2->SetBinContent(h2->FindBin(555.0, 2.2), 0.00);
+         // 2.4<eta is impossible -> remove muon
+         h2->SetBinContent(h2->FindBin( 25.0, 3.2), 0.00);
+         h2->SetBinContent(h2->FindBin( 55.0, 3.2), 0.00);
+         h2->SetBinContent(h2->FindBin( 85.0, 3.2), 0.00);
+         h2->SetBinContent(h2->FindBin(125.0, 3.2), 0.00);
+         h2->SetBinContent(h2->FindBin(255.0, 3.2), 0.00);
+         h2->SetBinContent(h2->FindBin(555.0, 3.2), 0.00);
+      }
+
+      ~L1BugEmulator(){
+         // delete h1;
+         // delete h2;
+      }
+
+      bool PassesL1Inefficiency(double pT, double Eta){
+         if ((rand()%9999*1.0)/10000 < Weight)
+            return (((rand()%9999)*1.0/10000) < h1->GetBinContent(h1->FindBin(pT, Eta)));
+         else
+            return (((rand()%9999)*1.0/10000) < h2->GetBinContent(h2->FindBin(pT, Eta)));
+      }
+};
+
+class HIPTrackLossEmulator{
+  private:
+     TH1D*  h;
+     double lossRate;
+  public:
+     HIPTrackLossEmulator(){
+        double NVertexBins[] = {0, 5, 10, 15, 22, 28, 35, 9999};
+        h = new TH1D("TrackLoss_vs_NVertex", "TrackLoss_vs_NVertex", static_cast<unsigned int> (sizeof(NVertexBins)/sizeof(double)) -1, NVertexBins);
+        h->SetBinContent(h->FindBin( 2.5), 1.000);
+        h->SetBinContent(h->FindBin( 7.5), 0.998);
+        h->SetBinContent(h->FindBin(12.5), 0.995);
+        h->SetBinContent(h->FindBin(17.5), 0.992);
+        h->SetBinContent(h->FindBin(24.5), 0.985);
+        h->SetBinContent(h->FindBin(30.0), 0.980);
+        h->SetBinContent(h->FindBin(37.0), 0.970);
+
+        lossRate = 0.0;
+     }
+
+     ~HIPTrackLossEmulator(){
+//        delete h;
+     }
+
+     void SetHIPTrackLossRate(const edm::Event& iEvent, edm::EDGetTokenT<std::vector<reco::Vertex>> offlinePrimaryVerticesToken){
+        std::vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken);
+        if(vertexColl.size()<1){lossRate = 1.0; return;}
+        else lossRate = 1.0 - h->GetBinContent(h->FindBin(vertexColl.size()));
+     }
+
+     bool TrackSurvivesHIPInefficiency(){
+        return (((rand()%999999)*1.0/1000000) > lossRate);
+     }
+};
+
+
 
   //=============================================================
-  //      Common fonction
+  //      Common functions
   //=============================================================
 
 
@@ -779,7 +918,7 @@ double GetMassFromBeta(double P, double beta){
    return P/(beta*gamma);
 } 
 
-// compute mass out of a momentum and tof value
+// compute mass out of a momentum and TOF value
 double GetTOFMass(double P, double TOF){
    return GetMassFromBeta(P, 1/TOF);
 }
@@ -826,7 +965,6 @@ double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const 
 //     Method for Counting the number of muon stations used in track fit only counting DT and CSC stations.
 //
 //=============================================================
-//
 int  muonStations(const reco::HitPattern& hitPattern) {
   int stations[4] = { 0,0,0,0 };
   for (int i=0; i<hitPattern.numberOfAllHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
@@ -838,6 +976,27 @@ int  muonStations(const reco::HitPattern& hitPattern) {
   }
   return stations[0]+stations[1]+stations[2]+stations[3];
 
+}
+
+//=============================================================
+//
+//     Trigger patters
+//
+//=============================================================
+#include "FWCore/Utilities/interface/RegexMatch.h"
+bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger, const edm::TriggerNames triggerNames, std::string pattern){
+   if(edm::is_glob(pattern)){
+      std::vector< std::vector<std::string>::const_iterator > matches = edm::regexMatch(triggerNames.triggerNames(), pattern);
+      for(size_t t=0;t<matches.size();t++){
+         unsigned int index = triggerNames.triggerIndex(matches[t]->c_str());
+         if(trigger->accept( index ) )return true;
+      }
+   }
+   else{
+      unsigned int index = triggerNames.triggerIndex(pattern.c_str());
+      if(trigger->accept( index ) ) return true;
+   }
+   return false;
 }
 
 #endif

@@ -6,7 +6,7 @@ PATH_TO_DATA = "{}/src/SUSYBSMAnalysis/HSCP/data".format(os.getenv('CMSSW_BASE')
 analyzer = cms.EDAnalyzer('Analyzer'
     # collections
     ,hscpCollection   = cms.InputTag("HSCParticleProducer")
-    ,hscpIsoCollection = cms.InputTag("HSCPIsolation", "R03") #New format used for data since 17-07-2015, old ("HSCPIsolation03")
+    ,hscpIsoCollection = cms.InputTag("HSCPIsolation", "R03") #New format used for data since 17-07-2015, old: ("HSCPIsolation03")
     ,dedxCollection   = cms.InputTag("dedxHitInfo")
     ,muonTimeCollection    = cms.InputTag("muons","combined")
     ,muonDtTimeCollection  = cms.InputTag("muons","dt")
@@ -17,8 +17,9 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,refittedStandAloneMuonsCollection = cms.InputTag("refittedStandAloneMuons")
     ,offlineBeamSpotCollection = cms.InputTag("offlineBeamSpot")
     ,muonSegmentCollection = cms.InputTag("MuonSegmentProducer")
+    ,muonCollection = cms.InputTag("muons")
+    ,triggerResults = cms.InputTag("TriggerResults","","HLT")
     # analysis parameters
-    ,Debug           = cms.untracked.bool(False)
     ,TypeMode        = cms.untracked.uint32(0) # 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
     ,SampleType      = cms.untracked.uint32(0) # 0:Data, 1:MC, >=2:Signal
     # skip some distribution and trees

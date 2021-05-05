@@ -72,10 +72,13 @@
 
 #include "DataFormats/Common/interface/ValueMap.h"
 
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+
 // ~~~~~~~~~ user include files ~~~~~~~~~
-#include "SUSYBSMAnalysis/Analyzer/interface/Analysis_Tool.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/Analysis_Calibration.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/Analysis_TOFUtility.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/Calibration.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TupleSaver.h"
 
 using namespace std;
@@ -93,6 +96,8 @@ class Analyzer : public edm::EDAnalyzer {
 
       void initializeCuts(edm::Service<TFileService> &fs);
 
+      bool PassTrigger(const edm::Event& iEvent, bool isData, bool isCosmic=false, L1BugEmulator* emul=nullptr);
+
       //bool PassPreselection(const susybsm::HSCParticle& hscp, const reco::DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const edm::Event&, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr);
 
       bool passPreselection(
@@ -100,6 +105,7 @@ class Analyzer : public edm::EDAnalyzer {
          const reco::DeDxHitInfo* dedxHits,  
          const reco::DeDxData* dedxSObj, 
          const reco::DeDxData* dedxMObj,
+         const reco::MuonTimeExtra* tof,
          const edm::Event& iEvent, 
          Tuple* &tuple, 
          const double& GenBeta, 
@@ -108,7 +114,21 @@ class Analyzer : public edm::EDAnalyzer {
          const double& RescaleT, 
          double MassErr);
 
-      //void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple);
+      bool passSelection(
+         const susybsm::HSCParticle& hscp,  
+         const reco::DeDxData* dedxSObj, 
+         const reco::DeDxData* dedxMObj, 
+         const reco::MuonTimeExtra* tof, 
+         const edm::Event& iEvent,
+         const int& CutIndex, 
+         Tuple* &tuple, 
+         const bool isFlip, 
+         const double& GenBeta, 
+         bool RescaleP, 
+         const double& RescaleI, 
+         const double& RescaleT);
+
+      bool passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic=false, L1BugEmulator* emul=nullptr);
 
       //int  muonStations(const reco::HitPattern& hitPattern);
       double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
@@ -121,13 +141,12 @@ class Analyzer : public edm::EDAnalyzer {
       virtual void endJob() override;
       
       // ----------member data ---------------------------
-      edm::InputTag theInput;
       // HSCP, dEdx and TOF collections
-      edm::EDGetTokenT<vector<susybsm::HSCParticle>>   hscpToken_;
+      edm::EDGetTokenT<vector<susybsm::HSCParticle>>           hscpToken_;
       edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>>  hscpIsoToken_;
-      edm::EDGetTokenT<susybsm::MuonSegmentCollection>    muonSegmentToken_;
+      edm::EDGetTokenT<susybsm::MuonSegmentCollection>         muonSegmentToken_;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>      _dedxToken;
-      edm::EDGetTokenT<reco::DeDxHitInfoAss>   dedxToken_;
+      edm::EDGetTokenT<reco::DeDxHitInfoAss>     dedxToken_;
       edm::EDGetTokenT<reco::MuonTimeExtraMap>   muonTimeToken_; // for reading inverse beta
       edm::EDGetTokenT<reco::MuonTimeExtraMap>   muonDtTimeToken_;
       edm::EDGetTokenT<reco::MuonTimeExtraMap>   muonCscTimeToken_;
@@ -136,6 +155,8 @@ class Analyzer : public edm::EDAnalyzer {
       edm::EDGetTokenT<vector<reco::Vertex>>     offlinePrimaryVerticesToken_;
       edm::EDGetTokenT<vector<reco::Track>>      refittedStandAloneMuonsToken_;
       edm::EDGetTokenT<reco::BeamSpot>           offlineBeamSpotToken_;
+      edm::EDGetTokenT<vector<reco::Muon>>       muonToken_;
+      edm::EDGetTokenT<edm::TriggerResults>      triggerResultsToken_;
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
@@ -163,17 +184,15 @@ class Analyzer : public edm::EDAnalyzer {
       double* MaxMass_SystHUp   ;
       double* MaxMass_SystHDown ;
 
-      reco::MuonTimeExtra tof;
-      reco::MuonTimeExtra dttof;
-      reco::MuonTimeExtra csctof;
+      const reco::MuonTimeExtra* tof;
+      const reco::MuonTimeExtra* dttof;
+      const reco::MuonTimeExtra* csctof;
 
       double OpenAngle = -1; //global variable needed by PassPreselection... Ugly isn't it?!
       double TreeDXY = -1;
       double TreeDZ = -1;
       bool isCosmicSB = false;
       bool isSemiCosmicSB = false;
-
-      bool Debug;
 
       int                TypeMode           =   0;      // 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
       int                SampleType         =   0;      // 0:Data, 1:MC, >=2:Signal
@@ -257,11 +276,11 @@ class Analyzer : public edm::EDAnalyzer {
       string TimeOffset;      //MuonTimeOffset.txt
       muonTimingCalculator tofCalculator;
 
-      // classes from Analysis_CommonFunction.h
-      /*dedxHIPEmulator HIPemulator;
-      dedxHIPEmulator HIPemulatorUp;
-      dedxHIPEmulator HIPemulatorDown;*/
-      /*L1BugEmulator        L1Emul;
+      // Emulators
+      /*dedxHIPEmulator      HIPemulator;
+      dedxHIPEmulator      HIPemulatorUp;
+      dedxHIPEmulator      HIPemulatorDown;
+      L1BugEmulator        L1Emul;
       HIPTrackLossEmulator HIPTrackLossEmul;*/
 
       bool useClusterCleaning;
@@ -280,5 +299,9 @@ class Analyzer : public edm::EDAnalyzer {
       bool is2016G;
 
       bool isMCglobal = false;
+
+      double preTrackingChangeL1IntLumi       = 29679.982; // pb
+      double IntegratedLuminosity             = 33676.4; //13TeV16
+
 };
 #endif               
