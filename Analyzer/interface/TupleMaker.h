@@ -2,14 +2,16 @@
 
 struct Tuple;
 
-class TupleSaver{
+class TupleMaker{
    public:
-      TupleSaver();
-      ~TupleSaver();
+      TupleMaker();
+      ~TupleMaker();
 
       void initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF);
 
       void fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi);
+
+      void fillGenTreeBranches(Tuple* &tuple,  unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi);
 
       void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip);
 };
@@ -21,7 +23,7 @@ class TupleSaver{
 //=============================================================
 
 
-void TupleSaver::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF){
+void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF){
 
    std::string Name;
 
@@ -461,7 +463,7 @@ void TupleSaver::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSe
 //
 //=============================================================
 
-void TupleSaver::fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi){
+void TupleMaker::fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi){
    tuple->Tree_Trig   = Trig;
    tuple->Tree_Run   = Run;
    tuple->Tree_Event = Event;
@@ -495,7 +497,26 @@ void TupleSaver::fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int
    tuple->Tree_GenPhi   = genphi;
 
    // Save in the tree
-   //tuple->Tree->Fill();
+   tuple->Tree->Fill();
+   //if (!SkipSelectionPlot_) tuple->Tree->Fill();
+}
+
+void TupleMaker::fillGenTreeBranches(Tuple* &tuple,  unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi){
+   
+   tuple->GenTree_Run       = Run;
+   tuple->GenTree_Event     = Event;
+   tuple->GenTree_Lumi      = Lumi;
+   tuple->GenTree_Hscp      = Hscp;
+   tuple->GenTree_Weight    = weight;
+   tuple->GenTree_GenId     = genid;
+   tuple->GenTree_GenCharge = gencharge;
+   tuple->GenTree_GenMass   = genmass;
+   tuple->GenTree_GenPt     = genpt;
+   tuple->GenTree_GenEta    = geneta;
+   tuple->GenTree_GenPhi    = genphi;
+   
+   // Save in the tree
+   tuple->GenTree->Fill();
 }
 
 //=============================================================
@@ -504,7 +525,7 @@ void TupleSaver::fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int
 //     -> this information will be used later in Step4 for the actual datadriven prediction
 //
 //=============================================================
-void TupleSaver::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip){
+void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip){
     using namespace std;
 	 reco::TrackRef   track;
          if(TypeMode!=3) track = hscp.trackRef();

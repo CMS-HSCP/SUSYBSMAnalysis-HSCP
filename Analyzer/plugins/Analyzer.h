@@ -77,13 +77,13 @@
 
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/Calibration.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TupleSaver.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
 
 using namespace std;
 
-class TupleSaver;
+class TupleMaker;
 
 class Analyzer : public edm::EDAnalyzer {
    public:
@@ -94,11 +94,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       double scaleFactor(double eta);
 
-      void initializeCuts(edm::Service<TFileService> &fs);
-
-      bool PassTrigger(const edm::Event& iEvent, bool isData, bool isCosmic=false, L1BugEmulator* emul=nullptr);
-
-      //bool PassPreselection(const susybsm::HSCParticle& hscp, const reco::DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const edm::Event&, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr);
+      void initializeCuts(edm::Service<TFileService> &fs, vector<double>  &CutPt, vector<double>  &CutI, vector<double>  &CutTOF, vector<double>  &CutPt_Flip, vector<double>  &CutI_Flip, vector<double>  &CutTOF_Flip);
 
       bool passPreselection(
          const susybsm::HSCParticle& hscp, 
@@ -107,6 +103,7 @@ class Analyzer : public edm::EDAnalyzer {
          const reco::DeDxData* dedxMObj,
          const reco::MuonTimeExtra* tof,
          const edm::Event& iEvent, 
+         float Event_Weight,
          Tuple* &tuple, 
          const double& GenBeta, 
          bool RescaleP, 
@@ -120,6 +117,7 @@ class Analyzer : public edm::EDAnalyzer {
          const reco::DeDxData* dedxMObj, 
          const reco::MuonTimeExtra* tof, 
          const edm::Event& iEvent,
+         float Event_Weight,
          const int& CutIndex, 
          Tuple* &tuple, 
          const bool isFlip, 
@@ -161,8 +159,10 @@ class Analyzer : public edm::EDAnalyzer {
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
 
-      vector<double>  CutPt,      CutI,       CutTOF;
-      vector<double>  CutPt_Flip, CutI_Flip,  CutTOF_Flip;
+      vector<string> trigger_met_, trigger_mu_;
+
+      vector<double>  CutPt_,      CutI_,       CutTOF_;
+      vector<double>  CutPt_Flip_, CutI_Flip_,  CutTOF_Flip_;
       //map<string, vector<double>> VCuts;
 
       map<string, TProfile*>  HCuts;
@@ -194,10 +194,10 @@ class Analyzer : public edm::EDAnalyzer {
       bool isCosmicSB = false;
       bool isSemiCosmicSB = false;
 
-      int                TypeMode           =   0;      // 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
-      int                SampleType         =   0;      // 0:Data, 1:MC, >=2:Signal
+      int                TypeMode_;
+      int                SampleType_;
 
-      bool SkipSelectionPlot                = false;
+      bool SkipSelectionPlot_;
 
       // binning for the pT, mass, IP distributions
       double             PtHistoUpperBound   = 4000;
@@ -255,7 +255,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       //=============================================================
       Tuple* tuple;
-      TupleSaver* tuple_saver;
+      TupleMaker* tuple_maker;
       //=============================================================
 
       TH3F* dEdxTemplates = nullptr;
@@ -288,11 +288,13 @@ class Analyzer : public edm::EDAnalyzer {
       bool isMC;
       bool isSignal;
 
-      unsigned int CurrentRun = 0;
+      unsigned int CurrentRun_ = 0;
 
-      float Event_Weight = 1;
+      float EventWeight_   = 1;
+      double SampleWeight_ = 1.0;
+      double PUSystFactor_ =1.0;
 
-      unsigned int TrigInfo =0; //1 -mu only, 2- met only, 3 mu and met 
+      unsigned int TrigInfo_ =0; //1 -mu only, 2- met only, 3 mu and met 
 
       TRandom3* RNG = nullptr;
       bool is2016;
@@ -300,8 +302,8 @@ class Analyzer : public edm::EDAnalyzer {
 
       bool isMCglobal = false;
 
-      double preTrackingChangeL1IntLumi       = 29679.982; // pb
-      double IntegratedLuminosity             = 33676.4; //13TeV16
+      double preTrackingChangeL1IntLumi_       = 29679.982; // pb
+      double IntegratedLuminosity_             = 33676.4; //13TeV16
 
 };
 #endif               

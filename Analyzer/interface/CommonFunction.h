@@ -980,23 +980,116 @@ int  muonStations(const reco::HitPattern& hitPattern) {
 
 //=============================================================
 //
-//     Trigger patters
+//     Trigger patterns
 //
 //=============================================================
-#include "FWCore/Utilities/interface/RegexMatch.h"
-bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger, const edm::TriggerNames triggerNames, std::string pattern){
-   if(edm::is_glob(pattern)){
-      std::vector< std::vector<std::string>::const_iterator > matches = edm::regexMatch(triggerNames.triggerNames(), pattern);
-      for(size_t t=0;t<matches.size();t++){
-         unsigned int index = triggerNames.triggerIndex(matches[t]->c_str());
-         if(trigger->accept( index ) )return true;
+bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,const edm::TriggerNames triggerNames, std::vector<std::string> patterns){
+   for(unsigned int i=0; i<triggerNames.triggerNames().size();i++){
+      TString name = triggerNames.triggerNames()[i];
+      for(TString const &pattern : patterns){
+         if( name.Contains(pattern) && trigger->accept(i) ) return true;
       }
    }
-   else{
-      unsigned int index = triggerNames.triggerIndex(pattern.c_str());
-      if(trigger->accept( index ) ) return true;
-   }
    return false;
+}
+
+//=============================================================
+//
+//     selection of gen HSCP
+//
+//=============================================================
+bool isGoodGenHSCP(const reco::GenParticle& gen, bool onlyCharged){
+   if(gen.status()!=1)return false;
+   if(gen.pt()<5)return false;
+   int AbsPdg=abs(gen.pdgId());
+   if(AbsPdg<1000000 && AbsPdg!=17)return false;
+   if(onlyCharged && (AbsPdg==1000993 || AbsPdg==1009313 || AbsPdg==1009113 || AbsPdg==1009223 || AbsPdg==1009333 || AbsPdg==1092114 || AbsPdg==1093214 || AbsPdg==1093324))return false; //Skip neutral gluino RHadrons
+   if(onlyCharged && (AbsPdg==1000622 || AbsPdg==1000642 || AbsPdg==1006113 || AbsPdg==1006311 || AbsPdg==1006313 || AbsPdg==1006333))return false;  //skip neutral stop RHadrons
+   if(onlyCharged && AbsPdg==1000022)return false; //skip neutralino
+   return true;
+}
+
+//=============================================================
+//
+//     Count Number of Charged HSCP
+//
+//=============================================================
+int HowManyChargedHSCP(const std::vector<reco::GenParticle>& genColl){
+   int toReturn = 0;
+   for(unsigned int g=0;g<genColl.size();g++){
+      if(isGoodGenHSCP(genColl[g], true))toReturn++;
+   }
+   return toReturn;
+}
+
+//=============================================================
+//
+//     Compute Decay length of generated HSCP
+//
+//=============================================================
+void  GetGenHSCPDecayLength(const std::vector<reco::GenParticle>& genColl, double& length1, double& length2, bool onlyCharged){
+   length1=-1; length2=-1;
+   for(auto const &mcParticle : genColl){
+      if(!isGoodGenHSCP(mcParticle, onlyCharged))continue;
+
+      //code below copied from disapearing track source code.  FIXME we should make sure that the logic is ok.
+      //https://raw.githubusercontent.com/OSU-CMS/DisappTrks/master/SignalMC/plugins/DecayAnalyzer.cc  
+      const reco::Candidate* mother   = &mcParticle;
+      const reco::Candidate* daughter = mother; // FIXME
+
+      // Descend the decay chain until no daughters have the same PDG ID as mcParticle.
+      while (true) {
+         bool foundDauSamePdgId = false;
+         for (uint i=0; i<daughter->numberOfDaughters(); i++) {
+            if (daughter->daughter(i)->pdgId() == mcParticle.pdgId()) {
+               foundDauSamePdgId = true;
+               mother = daughter;
+               daughter = daughter->daughter(i);
+               break;
+            }
+         }
+         if (!foundDauSamePdgId) break;
+      }
+
+      // Now daughter has no daughters with the same PDG ID as mcParticle.
+      // Next choose the daughter with the outermost production vertex, in case there are multiple vertices
+      // (e.g., an electron delta ray can produce a vertex before the decay vertex)
+      double radiusLastVtx = -99;
+      int idxDauLastVtx = -99;
+      for(uint i=0; i<daughter->numberOfDaughters(); i++) {
+         double radius = daughter->daughter(i)->vertex().R();
+         if (radius > radiusLastVtx) {
+            radiusLastVtx = radius;
+            idxDauLastVtx = i;
+         }
+      }
+      if(idxDauLastVtx<0)continue;
+ 
+      mother = daughter;
+      daughter = daughter->daughter(idxDauLastVtx);
+
+      TVector3 source (mcParticle.vx (), mcParticle.vy (), mcParticle.vz ());
+      TVector3 decay  (daughter->vx (), daughter->vy (), daughter->vz ()); 
+      double ctau = (decay - source).Mag () / (mcParticle.p4 ().Beta () * mcParticle.p4 ().Gamma ());
+
+      if(length1<0){length1=ctau;}else if(length2<0){length2=ctau;return;}
+   }
+   if(length1<0){length1=9999;}
+   if(length2<0){length2=9999;}
+}
+
+//=============================================================
+//
+//     Returns the generated beta of the two firsts HSCP in the events
+//
+//=============================================================
+void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged){
+   beta1=-1; beta2=-1;
+   for(auto const &mcParticle : genColl){
+      if(!isGoodGenHSCP(mcParticle, onlyCharged))continue;
+      if(beta1<0){beta1=mcParticle.p()/mcParticle.energy();}
+      else if(beta2<0){beta2=mcParticle.p()/mcParticle.energy();return;}
+   }
 }
 
 #endif
