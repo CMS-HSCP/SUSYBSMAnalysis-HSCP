@@ -387,9 +387,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             //std::cout<<"TESTA\n";
             tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
             //std::cout<<"TESTB\n";
-            /*tof    = tofCalculator.combinedTOF; 
-            dttof  = tofCalculator.dtTOF;  
-            csctof = tofCalculator.cscTOF;*/
             tof    = &tofCalculator.combinedTOF; 
             dttof  = &tofCalculator.dtTOF;  
             csctof = &tofCalculator.cscTOF;
@@ -424,8 +421,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //compute systematic uncertainties on signal
       if(isSignal){
          //FIXME to be measured on 2015 data, currently assume 2012
-         /*bool   PRescale = true;
-         double IRescale =-0.05; // added to the Ias value
+         bool   PRescale = true;
+         /*double IRescale =-0.05; // added to the Ias value
          double MRescale = 0.95;
 		   double TRescale =-0.015; //-0.005 (used in 2012); // added to the 1/beta value*/
 		  
@@ -445,6 +442,28 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
          // compute systematic due to momentum scale
          //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){..}
+         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_,  tuple, -1,   PRescale, 0, 0, 0)){//WAIT//
+            double RescalingFactor = RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())/track->pt();
+
+            if(TypeMode_==5 && isSemiCosmicSB)continue;
+            double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p()*RescalingFactor,dedxMObj->dEdx(), DeDxK, DeDxC);
+            double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p()*RescalingFactor,tof->inverseBeta());
+            double MassComb = -1;
+		      if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*RescalingFactor, (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1/tof->inverseBeta()))*0.5);
+		      else if(dedxMObj) MassComb = Mass;
+		      if(tof) MassComb=MassTOF;
+
+            for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
+		         if(passSelection(hscp,  dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1,   PRescale, 0, 0)){//WAIT//
+                  HSCPTk_SystP[CutIndex] = true;
+                  if(Mass>MaxMass_SystP[CutIndex]) MaxMass_SystP[CutIndex]=Mass;
+                  tuple->Mass_SystP->Fill(CutIndex, Mass,EventWeight_);
+                  if(tof)
+                     {tuple->MassTOF_SystP ->Fill(CutIndex, MassTOF , EventWeight_);}
+                     tuple->MassComb_SystP->Fill(CutIndex, MassComb, EventWeight_);
+               }
+            }
+         }
 
          // compute systematic due to dEdx (both Ias and Ih)
          //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0)){...}
@@ -477,15 +496,15 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(TypeMode_==5 && isCosmicSB)continue; 
 
       //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
-      double Mass = -1;
+      //double Mass = -1;
       if(isMC || isData) {
          //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
-		   Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
-		   //double MassTOF  = -1; if(useTOF)MassTOF = GetTOFMass(track->p(),(2-1));//GetTOFMass(track->p(),(2-tof->inverseBeta()));
-		   //double MassComb = -1;
-		   ///if(useTOF && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/(2-tof->inverseBeta())))*0.5 ) ;
-		   ///if(dedxMObj) MassComb = Mass;
-		   ///if(useTOF)MassComb=GetMassFromBeta(track->p(),(1/(2-tof->inverseBeta())));
+		   double Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
+		   double MassTOF  = -1; if(tof) MassTOF = GetTOFMass(track->p(),(2-tof->inverseBeta()));
+		   double MassComb = -1;
+		   if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/(2-tof->inverseBeta())))*0.5 ) ;
+		   if(dedxMObj) MassComb = Mass;
+		   if(tof) MassComb=GetMassFromBeta(track->p(),(1/(2-tof->inverseBeta())));
 
          for(unsigned int CutIndex=0;CutIndex<CutPt_Flip_.size();CutIndex++){
             //Background check looking at region with TOF<1
@@ -493,13 +512,64 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             //Fill Mass Histograms
             tuple->Mass_Flip->Fill(CutIndex, Mass,EventWeight_);
-            ///if(tof){
-            ///   MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
-            ///}
-            ///MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
+            if(tof) tuple->MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
+            tuple->MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
 		   }
 
       }
+
+      //compute the mass of the candidate
+      double Mass     = -1; if(dedxMObj) Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
+      double MassTOF  = -1; if(tof) MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
+      double MassComb = -1;
+      if(tof && dedxMObj) MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/tof->inverseBeta()))*0.5 ) ;
+      if(dedxMObj) MassComb = Mass;
+      if(tof) MassComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
+      double MassUp    = -1; if(dedxMUpObj) MassUp=GetMass(track->p(),dedxMUpObj->dEdx(),DeDxK,DeDxC);
+      double MassUpComb = -1;
+      if(tof && dedxMUpObj) MassUpComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMUpObj->dEdx(),DeDxK,DeDxC) + (1/tof->inverseBeta()))*0.5 ) ;
+      if(dedxMUpObj) MassUpComb = MassUp;
+      if(tof) MassUpComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
+      double MassDown    = -1; if(dedxMDownObj) MassDown=GetMass(track->p(),dedxMDownObj->dEdx(),DeDxK,DeDxC);
+      double MassDownComb = -1;
+      if(tof && dedxMDownObj) MassDownComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMDownObj->dEdx(),DeDxK,DeDxC) + (1/tof->inverseBeta()))*0.5 ) ;
+      if(dedxMDownObj) MassDownComb = MassDown;
+      if(tof) MassDownComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
+      bool PassNonTrivialSelection=false;
+
+      //==========================================================
+      // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
+      for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
+         //Full Selection
+         //if(isMC)passSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, MCTrPlots);
+         if(isMC) passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, false, 0, 0);
+         if(     !passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0) ) continue;
+
+         if(CutIndex!=0)PassNonTrivialSelection=true;
+         HSCPTk[CutIndex] = true;
+         HSCPTk_SystHUp[CutIndex] = true;
+         HSCPTk_SystHDown[CutIndex] = true;
+
+         if(Mass>MaxMass[CutIndex]) MaxMass[CutIndex]=Mass;
+         if(MassUp>MaxMass_SystHUp[CutIndex]) MaxMass_SystHUp[CutIndex]=Mass;
+         if(MassDown>MaxMass_SystHDown[CutIndex]) MaxMass_SystHDown[CutIndex]=Mass;
+
+         //Fill Mass Histograms
+         tuple->Mass->Fill(CutIndex, Mass,EventWeight_);
+         if(tof) tuple->MassTOF->Fill(CutIndex, MassTOF, EventWeight_);
+         if(isMC) tuple->MassComb->Fill(CutIndex, MassComb, EventWeight_);
+
+         //Fill Mass Histograms for different Ih syst
+         tuple->Mass_SystHUp  ->Fill(CutIndex, MassUp,EventWeight_);
+         tuple->Mass_SystHDown->Fill(CutIndex, MassDown,EventWeight_);
+         if(tof) tuple->MassTOF_SystH ->Fill(CutIndex, MassTOF, EventWeight_);
+         tuple->MassComb_SystHUp  ->Fill(CutIndex, MassUpComb, EventWeight_);
+         tuple->MassComb_SystHDown->Fill(CutIndex, MassDownComb, EventWeight_);
+
+      }//end of Cut loop
 
       double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),isMC,DeDxK,DeDxC);
       int nomh= 0;nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
@@ -518,27 +588,59 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          genphi = genColl[ClosestGen].phi();
       }
 
-      tuple_maker->fillTreeBranches(tuple,
-         TrigInfo_, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), 
-         count, track->charge(), track->pt(),track->ptError(), 
-         dedxSObj ? dedxSObj->dEdx() : -1,
-         dedxSObj ? dedxMObj->dEdx() : -1,
-         dedxMObj ? Ick2 : -99, 
-         -1,//tof ? tof->inverseBeta() : -1, 
-         Mass, TreeDZ, TreeDXY, OpenAngle, 
-         track->eta(), track->phi(), track->found(), track->hitPattern().numberOfValidPixelHits(), track->validFraction(), 
-         nomh,fovhd, nom, weight,genid,gencharge,genmass,genpt,geneta,genphi
-      );
+      if(PassNonTrivialSelection||(dedxSObj && dedxSObj->dEdx()> 0. && track->pt()>60.))
+         tuple_maker->fillTreeBranches(tuple,
+            TrigInfo_, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), 
+            count, track->charge(), track->pt(),track->ptError(), 
+            dedxSObj ? dedxSObj->dEdx() : -1,
+            dedxSObj ? dedxMObj->dEdx() : -1,
+            dedxMObj ? Ick2 : -99, 
+            tof ? tof->inverseBeta() : -1, 
+            Mass, TreeDZ, TreeDXY, OpenAngle, 
+            track->eta(), track->phi(), track->found(), track->hitPattern().numberOfValidPixelHits(), track->validFraction(), 
+            nomh,fovhd, nom, weight,genid,gencharge,genmass,genpt,geneta,genphi
+         );
    count++;
    } //END loop over HSCP candidates
 
    //save event dependent information thanks to the bookkeeping
    for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
       if(HSCPTk[CutIndex]){
-         tuple->HSCPE             ->Fill(CutIndex,EventWeight_);
-         tuple->MaxEventMass      ->Fill(CutIndex,MaxMass[CutIndex], EventWeight_);
+         tuple->HSCPE->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass->Fill(CutIndex,MaxMass[CutIndex], EventWeight_);
+         if(isMC){
+            tuple->HSCPE->Fill(CutIndex,EventWeight_);
+            tuple->MaxEventMass->Fill(CutIndex,MaxMass[CutIndex], EventWeight_);
+         }
       }
-
+      if(HSCPTk_SystP[CutIndex]){
+         tuple->HSCPE_SystP       ->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass_SystP->Fill(CutIndex,MaxMass_SystP[CutIndex], EventWeight_);
+      }
+      if(HSCPTk_SystI[CutIndex]){
+         tuple->HSCPE_SystI       ->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass_SystI->Fill(CutIndex,MaxMass_SystI[CutIndex], EventWeight_);
+      }
+      if(HSCPTk_SystM[CutIndex]){
+         tuple->HSCPE_SystM       ->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass_SystM->Fill(CutIndex,MaxMass_SystM[CutIndex], EventWeight_);
+      }
+      if(HSCPTk_SystT[CutIndex]){
+         tuple->HSCPE_SystT       ->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass_SystT->Fill(CutIndex,MaxMass_SystT[CutIndex], EventWeight_);
+      }
+      if(HSCPTk_SystPU[CutIndex]){
+         tuple->HSCPE_SystPU       ->Fill(CutIndex,EventWeight_*PUSystFactor_);
+         tuple->MaxEventMass_SystPU->Fill(CutIndex,MaxMass_SystPU[CutIndex], EventWeight_*PUSystFactor_);
+      }
+      if(HSCPTk_SystHUp[CutIndex]){
+         tuple->HSCPE_SystHUp     ->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass_SystHUp   ->Fill(CutIndex,MaxMass_SystHUp   [CutIndex], EventWeight_);
+      }
+      if(HSCPTk_SystHDown[CutIndex]){
+         tuple->HSCPE_SystHDown   ->Fill(CutIndex,EventWeight_);
+         tuple->MaxEventMass_SystHDown ->Fill(CutIndex,MaxMass_SystHDown [CutIndex], EventWeight_);
+      }
    }
 
 #ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
@@ -550,7 +652,25 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // ------------ method called once each job just after ending the event loop  ------------
 void
 Analyzer::endJob()
-{}
+{
+   delete RNG;
+   delete [] HSCPTk;
+   delete [] HSCPTk_SystP;
+   delete [] HSCPTk_SystI;
+   delete [] HSCPTk_SystT;
+   delete [] HSCPTk_SystM;
+   delete [] HSCPTk_SystPU;
+   delete [] HSCPTk_SystHUp;
+   delete [] HSCPTk_SystHDown;
+   delete [] MaxMass;
+   delete [] MaxMass_SystP;
+   delete [] MaxMass_SystI;
+   delete [] MaxMass_SystT;
+   delete [] MaxMass_SystM;
+   delete [] MaxMass_SystPU;
+   delete [] MaxMass_SystHUp;
+   delete [] MaxMass_SystHDown;
+}
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
