@@ -269,6 +269,7 @@ class L1BugEmulator{
       }
 };
 
+#ifdef FWCORE
 class HIPTrackLossEmulator{
   private:
      TH1D*  h;
@@ -302,7 +303,7 @@ class HIPTrackLossEmulator{
         return (((rand()%999999)*1.0/1000000) > lossRate);
      }
 };
-
+#endif
 
 
   //=============================================================
@@ -379,6 +380,7 @@ std::vector<int> convert(const std::vector<unsigned char>& input)
   return output;
 }
 
+#ifdef FWCORE
 // compute deltaR between two point (eta,phi) (eta,phi)
 double deltaR(double eta1, double phi1, double eta2, double phi2) {
    double deta = eta1 - eta2;
@@ -724,8 +726,6 @@ HitDeDxCollection getHitDeDx(const reco::DeDxHitInfo* dedxHits, double* scaleFac
 }
 
 
-/*reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator,double* dEdxErr, unsigned int pdgId){*/
-
 reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=nullptr, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=nullptr, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=nullptr, double* dEdxErr = nullptr, unsigned int pdgId=0){
 
    bool isStrangePdgId = false;
@@ -877,7 +877,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
    }
    return reco::DeDxData(result, NSat, size);
 }
-
+#endif  //FWCORE
 
 // compute mass out of a momentum and dEdx value
 double GetMass(double P, double I, double dEdxK, double dEdxC){
@@ -934,7 +934,7 @@ double GetIBeta(double I, double dEdxK, double dEdxC){
    return sqrt(b2);
 }
 
-
+#ifdef FWCORE
 double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp){
    reco::TrackRef track1=hscp.trackRef();
 
@@ -984,11 +984,18 @@ int  muonStations(const reco::HitPattern& hitPattern) {
 //
 //=============================================================
 bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,const edm::TriggerNames triggerNames, std::vector<std::string> patterns){
-   for(unsigned int i=0; i<triggerNames.triggerNames().size();i++){
+   for(uint i=0; i<triggerNames.triggerNames().size();i++){
       TString name = triggerNames.triggerNames()[i];
-      for(TString const &pattern : patterns){
+      for(auto const &pattern : patterns){
          if( name.Contains(pattern) && trigger->accept(i) ) return true;
       }
+   }
+   return false;
+}
+bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,const edm::TriggerNames triggerNames, std::string pattern){
+   for(uint i=0; i<triggerNames.triggerNames().size();i++){
+      TString name = triggerNames.triggerNames()[i];
+      if( name.Contains(pattern) && trigger->accept(i) ) return true;
    }
    return false;
 }
@@ -1091,5 +1098,6 @@ void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& bet
       else if(beta2<0){beta2=mcParticle.p()/mcParticle.energy();return;}
    }
 }
+#endif //FWCORE
 
 #endif

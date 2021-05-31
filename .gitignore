@@ -3,3 +3,4 @@
 *.pdf
 *.pyc
 *_init__.py
+build/

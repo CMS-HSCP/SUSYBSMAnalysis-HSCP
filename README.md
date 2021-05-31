@@ -62,3 +62,15 @@ python crabConfig_Data.py
 cp Analyzer/test/HSCParticleAnalyzer_cfg.py .
 cmsRun HSCParticleAnalyzer_cfg.py inputFiles=file:HSCP.root maxEvents=100
 ```
+
+## Background prediction
+
+First compile: 
+```bash
+make
+```
+
+Then run
+```
+./RunBackgroundPrediction -h # for help
+```
