@@ -76,7 +76,6 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 
 // ~~~~~~~~~ user include files ~~~~~~~~~
-#define FWCORE
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
@@ -127,7 +126,7 @@ class Analyzer : public edm::EDAnalyzer {
          const double& RescaleI, 
          const double& RescaleT);
 
-      bool passTrigger(const edm::Event& iEvent, bool isData, L1BugEmulator* emul=nullptr, bool isCosmic=false);
+      bool passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic=false, L1BugEmulator* emul=nullptr);
 
       //int  muonStations(const reco::HitPattern& hitPattern);
       double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
@@ -197,7 +196,6 @@ class Analyzer : public edm::EDAnalyzer {
 
       int                TypeMode_;
       int                SampleType_;
-      string             BaseName_;
 
       bool SkipSelectionPlot_;
 
@@ -247,6 +245,9 @@ class Analyzer : public edm::EDAnalyzer {
       double             GlobalMinIm        =   0.0;    // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
       double             GlobalMinTOF       =   1.0;    // cut on TOF   at PRE-SELECTION
 
+      bool               skipPixel          = true;
+      bool               useTemplateLayer   = false;
+
       const int          MaxPredBins        =   6;      // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
       
 
@@ -286,7 +287,7 @@ class Analyzer : public edm::EDAnalyzer {
       HIPTrackLossEmulator HIPTrackLossEmul;*/
 
       bool useClusterCleaning;
-      bool isData_;
+      bool isData;
       bool isMC;
       bool isSignal;
 
