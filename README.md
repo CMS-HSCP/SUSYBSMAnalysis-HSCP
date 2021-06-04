@@ -12,7 +12,7 @@ cmsenv
 For the following step you should have a ssh key associated to your GitLab account
 
 ```bash
-git clone -b dev git@github.com:enibigir/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
+git clone -b dev git@github.com:dapparu/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
 ```
 <!--
 # Before compile, hide BigNTuplizer 
@@ -56,9 +56,32 @@ python crabConfig_Data.py
 ```
 
 
-## EDAnalyzer
+## EDAnalyzer on top of EDM files (created during the previous step)
 
 ```bash
 cp Analyzer/test/HSCParticleAnalyzer_cfg.py .
 cmsRun HSCParticleAnalyzer_cfg.py inputFiles=file:HSCP.root maxEvents=100
+```
+
+## Production of EDM files (on-fly) and run of the EDAnalyzer
+
+```bash
+cp  Analyzer/test/HSCParticleProducerAnalyzer_cfg.py .
+#just like previously...
+cmsRun HSCParticleProducerAnalyzer_cfg.py LUMITOPROCESS=Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt inputFiles=root://cms-xrd-global.cern.ch//store/data/Run2017B/MET/AOD/09Aug2019_UL2017_rsb-v1/00000/AA1FC1E6-1E88-204D-B867-4637AEAC4BEA.root
+```
+Then run crab:
+```bash
+cp Analyzer/test/crabConfigProdAnalyzer.py
+python crabConfigProdAnalyzer_cfg.py
+```
+
+## Check of the EDAnalyzer (comparison with the old workflow)
+Use the script:
+```bash
+Analyzer/test/compareRootFiles.py
+```
+This script takes two root files (to set in the file) and compares their histograms with a Kolmogorov test. Any difference is saved in:
+```bash
+Analyzer/test/differences.txt
 ```

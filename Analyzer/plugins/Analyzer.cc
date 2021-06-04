@@ -47,8 +47,11 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,dEdxS_UpLim(iConfig.getUntrackedParameter<double>("dEdxS_UpLim"))
    ,dEdxM_UpLim(iConfig.getUntrackedParameter<double>("dEdxM_UpLim"))
    ,DzRegions(iConfig.getUntrackedParameter<unsigned int>("DzRegions"))
+   ,GlobalMaxPterr(iConfig.getUntrackedParameter<double>("GlobalMaxPterr"))
    ,GlobalMinPt(iConfig.getUntrackedParameter<double>("GlobalMinPt"))
    ,GlobalMinTOF(iConfig.getUntrackedParameter<double>("GlobalMinTOF"))
+   ,skipPixel(iConfig.getUntrackedParameter<bool>("skipPixel")) 
+   ,useTemplateLayer(iConfig.getUntrackedParameter<bool>("useTemplateLayer"))
    //,DeDxSF_0(iConfig.getUntrackedParameter<double>("DeDxSF_0"))
    //,DeDxSF_1(iConfig.getUntrackedParameter<double>("DeDxSF_1"))
    //,DeDxK(iConfig.getUntrackedParameter<double>("DeDxK"))
@@ -256,7 +259,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    tuple->TotalEPU->Fill(0.0,EventWeight_*PUSystFactor_);
    //See if event passed signal triggers
    //WAIT//if(!PassTrigger(iEvent, isData, false, (is2016&&!is2016G)?&L1Emul:nullptr) ) {
-   if(!passTrigger(iEvent, isData)){
+   if(!passTrigger(iEvent, isData)){ return;
       //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
       //If not TOF only then move to next event
       //WAIT//if(TypeMode_!=3) continue;
@@ -405,10 +408,10 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
 
       double dEdxErr = 0;
-      reco::DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode_==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, nullptr,0,pdgId);
-      reco::DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr, &dEdxErr,pdgId);
-      reco::DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr,0,pdgId);
-      reco::DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr,0,pdgId);
+      reco::DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode_==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, nullptr,0,pdgId,skipPixel,useTemplateLayer);
+      reco::DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr, &dEdxErr,pdgId,skipPixel,useTemplateLayer);
+      reco::DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr,0,pdgId,skipPixel,useTemplateLayer);
+      reco::DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr,0,pdgId,skipPixel,useTemplateLayer);
       /*reco::DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulator:nullptr, &dEdxErr,pdgId);
       reco::DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorUp:nullptr,0,pdgId);
       reco::DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorDown:nullptr,0,pdgId);*/
@@ -1275,7 +1278,7 @@ bool Analyzer::passPreselection(
 
 //=============================================================
 //
-//     Pre-Selection
+//     Selection
 //
 //=============================================================
 bool Analyzer::passSelection(
@@ -1322,7 +1325,7 @@ bool Analyzer::passSelection(
 
    if(RescaleP){
      if(RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())<PtCut)return false;
-     //if(std::max(0.0,RescaledPt(track->pt() - track->ptError(),track->eta(),track->phi(),track->charge()))<CutPt_[CutIndex])return false;
+     //if(std::max(0.0,RescaledPt(track->pt() - track->ptError(),track->eta(),track->phi(),track->charge()))<CutPt_[CutIndex])return false; 
    }else{
      if(track->pt()<PtCut)return false;
      //if(std::max(0.0,(track->pt() - track->ptError()))<CutPt_[CutIndex])return false;

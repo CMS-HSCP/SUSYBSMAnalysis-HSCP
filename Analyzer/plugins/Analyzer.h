@@ -245,6 +245,9 @@ class Analyzer : public edm::EDAnalyzer {
       double             GlobalMinIm        =   0.0;    // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
       double             GlobalMinTOF       =   1.0;    // cut on TOF   at PRE-SELECTION
 
+      bool               skipPixel          = true;
+      bool               useTemplateLayer   = false;
+
       const int          MaxPredBins        =   6;      // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
       
 
