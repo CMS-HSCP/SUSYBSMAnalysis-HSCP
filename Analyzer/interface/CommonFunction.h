@@ -1,6 +1,14 @@
 #ifndef SUSYBSMAnalysis_Analyzer_CommonFunction_h
 #define SUSYBSMAnalysis_Analyzer_CommonFunction_h
 
+bool startsWith(string s, string sub){
+        return s.find(sub)==0?1:0;
+}
+
+bool endsWith(string s,string sub){
+        return s.rfind(sub)==(s.length()-sub.length())?1:0;
+}
+
 struct HitDeDx{double dedx; double dx; bool isSat; bool passClusterCleaning; bool isInside; unsigned char subDet;};
 typedef std::vector<HitDeDx> HitDeDxCollection;
 
@@ -269,6 +277,7 @@ class L1BugEmulator{
       }
 };
 
+#ifdef FWCORE
 class HIPTrackLossEmulator{
   private:
      TH1D*  h;
@@ -302,7 +311,7 @@ class HIPTrackLossEmulator{
         return (((rand()%999999)*1.0/1000000) > lossRate);
      }
 };
-
+#endif //FWCORE
 
 
   //=============================================================
@@ -388,6 +397,7 @@ double deltaR(double eta1, double phi1, double eta2, double phi2) {
    return sqrt(deta*deta + dphi*dphi);
 }
 
+#ifdef FWCORE
 // compute the distance between a "reconstructed" HSCP candidate and the closest generated HSCP
 double DistToHSCP (const susybsm::HSCParticle& hscp, const std::vector<reco::GenParticle>& genColl, int& IndexOfClosest, int TypeMode){
    reco::TrackRef   track;
@@ -410,6 +420,7 @@ double DistToHSCP (const susybsm::HSCParticle& hscp, const std::vector<reco::Gen
    }
    return RMin;
 }
+#endif //FWCORE
 
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25,bool isClusterCleaning=false) {
    const unsigned N=Q.size();
@@ -472,6 +483,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, c
    return QII;
 }
 
+#ifdef FWCORE
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=nullptr)
 {
    if(!cluster) return true;
@@ -897,7 +909,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
    }
    return reco::DeDxData(result, NSat, size);
 }
-
+#endif //FWCORE
 
 // compute mass out of a momentum and dEdx value
 double GetMass(double P, double I, double dEdxK, double dEdxC){
@@ -954,7 +966,7 @@ double GetIBeta(double I, double dEdxK, double dEdxC){
    return sqrt(b2);
 }
 
-
+#ifdef FWCORE
 double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp){
    reco::TrackRef track1=hscp.trackRef();
 
@@ -1009,6 +1021,13 @@ bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,const edm::Tri
       for(TString const &pattern : patterns){
          if( name.Contains(pattern) && trigger->accept(i) ) return true;
       }
+   }
+   return false;
+}
+bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,const edm::TriggerNames triggerNames, std::string pattern){
+   for(uint i=0; i<triggerNames.triggerNames().size();i++){
+      TString name = triggerNames.triggerNames()[i];
+      if( name.Contains(pattern) && trigger->accept(i) ) return true;
    }
    return false;
 }
@@ -1111,5 +1130,6 @@ void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& bet
       else if(beta2<0){beta2=mcParticle.p()/mcParticle.energy();return;}
    }
 }
+#endif //FWCORE
 
 #endif

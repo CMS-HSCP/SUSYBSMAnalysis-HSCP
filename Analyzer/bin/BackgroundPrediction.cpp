@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 #include <exception>
@@ -843,12 +844,12 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
     }//End of loop on two predictions
 }
 
-
 int main(int argc, char* argv[]) {
 
-    string usage = "Usage: ./RunBackgroundPrediction --inputFiles <files> [--mode <value>]";
+    string usage = "Usage: ./RunBackgroundPrediction --inputFiles <file.txt> [--mode <value>]\n";
+    usage       += "Or   : ./RunBackgroundPrediction --inputFiles <file1 file2 ...> [--mode <value>]";
 
-    vector<string> inputFiles;
+    vector<string> input;
     int typeMode = 0;
 
     ArgumentParser parser(argc,argv);
@@ -857,7 +858,7 @@ int main(int argc, char* argv[]) {
         cout << usage << endl;
         return 0;
     }
-    if( parser.findOption("--inputFiles") ) parser.getArgument("--inputFiles", inputFiles);
+    if( parser.findOption("--inputFiles") ) parser.getArgument("--inputFiles", input);
     else {
         cout << usage << endl;
         return 0;
@@ -882,6 +883,20 @@ int main(int argc, char* argv[]) {
 
     TBenchmark clock;
     clock.Start("BackgroundPrediction");
+
+    vector<string> inputFiles;
+    if (endsWith(input[0],".txt")){
+        ifstream fin(input[0], std::ios::binary);
+        if (not fin.is_open()) {
+            cout << "Failed to open " << input[0] << endl;
+            return 0;
+        }
+        string rootfile;
+        while (fin >> rootfile)
+            inputFiles.push_back(rootfile);
+    }
+    else
+        inputFiles = input;
 
     for(auto const &inputFile : inputFiles){
     

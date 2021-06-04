@@ -17,8 +17,8 @@ void symmetrizeHisto (TH1D* histo, int mode){
          histo->SetBinContent (histo->GetNbinsX() - x, histo->GetBinContent(x));
       }
    } else if (mode>0){
-      int left  = histo->Integral(0, limit),
-	  right = histo->Integral(limit+shift, histo->GetNbinsX()+1);
+      int left  = histo->Integral(0, limit);
+	   int right = histo->Integral(limit+shift, histo->GetNbinsX()+1);
       if (mode == 1){ // take the larger half only
          if (right > left){
             for (int x = 0; x <= limit; x++)
@@ -72,8 +72,8 @@ void symmetrizeHisto (TH2D* histo, int mode){
          }
       }
    } else if (mode > 0){
-      int left  = histo->Integral(0, limit),
-	  right = histo->Integral(limit+shift, histo->GetNbinsX()+1);
+      int left  = histo->Integral(0, limit, 0, histo->GetNbinsY()+1);
+      int right = histo->Integral(limit+shift, histo->GetNbinsX()+1, 0, histo->GetNbinsY()+1);
       if (mode == 1){ // take the larger half only
          if (right > left){
             for (int y=0; y <= histo->GetNbinsY()+1; y++){ // transform the overflow as well
