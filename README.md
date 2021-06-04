@@ -31,7 +31,7 @@ scram b -j8
 
 Get the scripts first:
 ```bash
-cp HSCP/test/HSCParticleProducer_cfg.py scripts/crabConfig_Data.py .
+cp HSCP/test/HSCParticleProducer_cfg.py .
 cp HSCP/test/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt .
 cp HSCP/test/crabConfig_Data.py .
 ```
