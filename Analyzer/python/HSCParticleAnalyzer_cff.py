@@ -20,12 +20,12 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,muonCollection = cms.InputTag("muons")
     ,triggerResults = cms.InputTag("TriggerResults","","HLT")
     #HLT triggers
-    ,Trigger_MET  = cms.untracked.vstring("HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFMET170_NoiseCleaned")
-    ,Trigger_Mu   = cms.untracked.vstring("HLT_Mu45_eta2p1","HLT_Mu50_v") #"HLT_OldMu100_","HLT_TkMu100_","HLT_TkMu50_v"
+    ,Trigger_Mu = cms.untracked.vstring("HLT_Mu45_eta2p1","HLT_Mu50_v") #"HLT_OldMu100_","HLT_TkMu100_","HLT_TkMu50_v"
+    ,Trigger_MET  = cms.untracked.vstring("HLT_PFMET170_HBHECleaned_v","HLT_PFMET170_NoiseCleaned")
+    #,Trigger_MET  = cms.untracked.vstring("HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFMET170_NoiseCleaned")
     # analysis parameters
     ,TypeMode        = cms.untracked.uint32(0) # 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
     ,SampleType      = cms.untracked.uint32(0) # 0:Data, 1:MC, >=2:Signal
-    ,BaseName        = cms.untracked.string("Data")
     # skip some distribution and trees
     ,SkipSelectionPlot   = cms.untracked.bool(False)
     # histogram bounds
@@ -38,17 +38,21 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,dEdxS_UpLim         = cms.untracked.double(1.0)
     ,dEdxM_UpLim         = cms.untracked.double(30.0)
     ,DzRegions           = cms.untracked.uint32(6)
+    ,GlobalMaxPterr      = cms.untracked.double(0.25)
     ,GlobalMinPt         = cms.untracked.double(55.00)
     ,GlobalMinTOF        = cms.untracked.double(1.0)
-    # scale factor and K & C
-    #,DeDxSF_0        = cms.untracked.double(1.00000) #=1 if data
+    ,skipPixel           = cms.untracked.bool(True)
+    ,useTemplateLayer    = cms.untracked.bool(False)
+    # scale factor and K & C -- values obtained with harm-2 and 15% low values drop 
+    ,DeDxSF_0        = cms.untracked.double(1.00000) #=1 if data
+    ,DeDxSF_1        = cms.untracked.double(1.6107*1.0448500) #SF for run > 279479
     #,DeDxSF_1        = cms.untracked.double(1.41822)
-    #,DeDxK           = cms.untracked.double(2.275)
-    #,DeDxC           = cms.untracked.double(3.675)
+    ,DeDxK           = cms.untracked.double(2.37) 
+    ,DeDxC           = cms.untracked.double(2.93)
     # calibration
     ,enableDeDxCalibration = cms.untracked.bool(False)
     ,DeDxCalibration       = cms.untracked.string("{}/Data13TeVGains_v2.root".format(PATH_TO_DATA))
-    ,DeDxTemplate          = cms.untracked.string("{}/Data13TeV16_dEdxTemplate.root".format(PATH_TO_DATA))
+    ,DeDxTemplate          = cms.untracked.string("{}/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root".format(PATH_TO_DATA))
     ,Geometry              = cms.untracked.string("{}/CMS_GeomTree.root".format(PATH_TO_DATA))
     ,TimeOffset            = cms.untracked.string("{}/MuonTimeOffset.txt".format(PATH_TO_DATA))
 )
