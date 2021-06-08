@@ -1,11 +1,11 @@
 #ifndef SUSYBSMAnalysis_Analyzer_CommonFunction_h
 #define SUSYBSMAnalysis_Analyzer_CommonFunction_h
 
-bool startsWith(string s, string sub){
+bool startsWith(std::string s, std::string sub){
         return s.find(sub)==0?1:0;
 }
 
-bool endsWith(string s,string sub){
+bool endsWith(std::string s,std::string sub){
         return s.rfind(sub)==(s.length()-sub.length())?1:0;
 }
 
