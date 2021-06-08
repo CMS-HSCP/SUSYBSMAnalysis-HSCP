@@ -76,6 +76,7 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 
 // ~~~~~~~~~ user include files ~~~~~~~~~
+#define FWCORE
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
