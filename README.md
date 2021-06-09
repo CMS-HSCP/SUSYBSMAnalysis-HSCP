@@ -88,12 +88,33 @@ Analyzer/test/differences.txt
 
 ## Background prediction
 
+```bash
+cp Analyzer/test/RunBackgroundPrediction.sh .
+```
+List your root files in a single text file, e.g `input.txt`
+
+### Run locally
+
 First compile: 
 ```bash
-make
+source RunBackgroundPrediction.sh
 ```
 
 Then run
-```
+```bash
 ./RunBackgroundPrediction -h # for help
+```
+
+### Run on HTCondor
+
+Uncomment and change the commented line in `RunBackgroundPrediction.sh`
+
+Get submit file:
+```bash
+cp Analyzer/test/batch.sub .
+```
+
+Run:
+```bash
+condor_submit batch.sub
 ```
