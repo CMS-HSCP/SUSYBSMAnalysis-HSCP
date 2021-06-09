@@ -103,6 +103,8 @@ source RunBackgroundPrediction.sh
 Then run
 ```bash
 ./RunBackgroundPrediction -h # for help
+# e.g: ./RunBackgroundPrediction --inputFiles input.txt
+# alternatively you can run: source RunBackgroundPrediction.sh input.txt
 ```
 
 ### Run on HTCondor
