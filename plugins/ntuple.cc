@@ -56,6 +56,7 @@
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
 #include "SimDataFormats/TrackerDigiSimLink/interface/StripDigiSimLink.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
+#include "SimTracker/TrackerHitAssociation/interface/TrackerHitAssociator.h"
 //#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
@@ -74,6 +75,14 @@
 
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPIsolation.h"
+
+#include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
+#include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
+#include "TrackingTools/PatternTools/interface/Trajectory.h"
+#include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
+#include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 
 #include "TH1.h"
 #include <TTree.h>
@@ -111,6 +120,7 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       virtual void beginJob() override;
       virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
       virtual void endJob() override;
+      virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory> > &, bool &, bool & );
 
       // ----------member data ---------------------------
        std::string m_format;
@@ -136,6 +146,8 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        edm::EDGetTokenT<LumiScalersCollection> m_lumiScalerTag;
        edm::EDGetTokenT<CSCSegmentCollection>  m_cscSegments;
        edm::EDGetTokenT<DTRecSegment4DCollection>  m_dt4DSegments;
+       edm::EDGetTokenT<TrajTrackAssociationCollection>  m_trajTag;
+       TrackerHitAssociator::Config trackerHitAssociatorConfig_;
 
 
 //       edm::EDGetTokenT< edm::ValueMap<reco::DeDxData> > dEdxTrackToken_;
@@ -165,7 +177,7 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //       TH1D * histo; 
        TTree *smalltree;
        int      tree_runNumber ;
-       uint32_t      tree_event ;
+       uint32_t tree_event ;
        int      tree_npv;
        int      tree_ngoodpv;
 
@@ -214,6 +226,8 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        float    tree_track_ih_ampl_corr[nMaxTrack];
        float    tree_track_ias_ampl[nMaxTrack];
        float    tree_track_ias_ampl_corr[nMaxTrack];
+       float    tree_track_probQ[nMaxTrack];
+       float    tree_track_probXY[nMaxTrack];
 
        int      tree_dedxhits ;
        uint32_t tree_dedx_detid[nMaxDeDxH];
@@ -341,6 +355,8 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
 
 {
 */
+ :
+trackerHitAssociatorConfig_(iConfig, consumesCollector()) 
 {
    m_format   = iConfig.getParameter<std::string>("format_file");
    m_isdata = iConfig.getParameter<bool>("isdata");
@@ -372,18 +388,19 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
 
    //loadDeDxTemplates
    dEdxTemplatesUncorr = loadDeDxTemplate ("minbias_template_uncorr_iter1.root", true);
-   dEdxTemplatesCorr = loadDeDxTemplate ("minbias_template_corr_iter1.root", true);
+   dEdxTemplatesCorr   = loadDeDxTemplate ("minbias_template_corr_iter1.root", true);
 //   dEdxTemplatesUncorr = loadDeDxTemplate ("/opt/sbg/cms/safe1/cms/ccollard/HSCP/CMSSW_9_4_3/src/stage/ntuple/test/minbias_template_uncorr_iter1.root", true);
 //   dEdxTemplatesCorr = loadDeDxTemplate ("/opt/sbg/cms/safe1/cms/ccollard/HSCP/CMSSW_9_4_3/src/stage/ntuple/test/minbias_template_corr_iter1.root", true);
-   m_muonTag = consumes<reco::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"));
-   m_muontimecb = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTOF"));
-   m_muontimedt = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTDT"));
-   m_muontimecsc = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTCSC"));
-   triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("HLT")));
-   m_lumiScalerTag = consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("lumiScalerTag"));
+   m_muonTag           = consumes<reco::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"));
+   m_muontimecb        = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTOF"));
+   m_muontimedt        = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTDT"));
+   m_muontimecsc       = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTCSC"));
+   triggerBits_        = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("HLT")));
+   m_lumiScalerTag     = consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("lumiScalerTag"));
    m_doRecomputeMuTim  = iConfig.getParameter<bool>("doRecomputeMuTim");
-   m_cscSegments = consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("cscSegments"));
-   m_dt4DSegments = consumes<DTRecSegment4DCollection>(iConfig.getParameter<edm::InputTag>("dt4DSegments"));
+   m_cscSegments       = consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("cscSegments"));
+   m_dt4DSegments      = consumes<DTRecSegment4DCollection>(iConfig.getParameter<edm::InputTag>("dt4DSegments"));
+   m_trajTag           = consumes<TrajTrackAssociationCollection> (iConfig.getUntrackedParameter<edm::InputTag>("trajInputLabel"));
 
 
    if (m_doRecomputeMuTim) {
@@ -448,6 +465,8 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "track_ih_ampl_corr",   tree_track_ih_ampl_corr,   "track_ih_ampl_corr[ntracks]/F" );
    smalltree -> Branch ( "track_ias_ampl",       tree_track_ias_ampl,       "track_ias_ampl[ntracks]/F" );
    smalltree -> Branch ( "track_ias_ampl_corr",  tree_track_ias_ampl_corr,  "track_ias_ampl_corr[ntracks]/F" );
+    smalltree -> Branch ( "track_probQ",             tree_track_probQ,             "track_probQ[ntracks]/F" );
+    smalltree -> Branch ( "track_probXY",             tree_track_probXY,             "track_probXY[ntracks]/F" );
 
    smalltree -> Branch ( "ndedxhits",        &tree_dedxhits ) ;
    smalltree -> Branch ( "dedx_detid",       tree_dedx_detid,      "dedx_detid[ndedxhits]/i" );
@@ -577,7 +596,12 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     using namespace reco;
 
     using reco::TrackCollection;
-
+    
+    int factorial(int);
+    
+    std::vector<PSimHit> vec_simhits_assoc;
+    TrackerHitAssociator *associate(0);
+    associate = new TrackerHitAssociator(iEvent,trackerHitAssociatorConfig_);
 
     EventID myEvId = iEvent.id();
     tree_runNumber = myEvId.run();
@@ -783,7 +807,7 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                    << ", Hit count = " << Nhits << ", " << sizeof(SimHitCollMap_)
                                    << " bytes" << std::endl;
      }
-    }
+    } // end of loop on simHits
 
 
     // inspired by SUSYBSMAnalysis-HSCP/plugins/HSCPValidator.cc
@@ -1368,6 +1392,74 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       } // end if MaxMuon
     } // end loop MuonCollectoon
     } // end if AOD
+    
+    // Loop on track trajectory association map // Tav
+    edm::Handle<TrajTrackAssociationCollection> hTTAC;
+    iEvent.getByToken(m_trajTag, hTTAC);
+    if (m_format != "miniAOD" && hTTAC.isValid())  {
+        const TrajTrackAssociationCollection ttac = *(hTTAC.product());
+        for (TrajTrackAssociationCollection::const_iterator it = ttac.begin(); it !=  ttac.end(); ++it){
+            const edm::Ref<std::vector<Trajectory> > refTraj = it->key;
+            // -- Check whether it is a pixel track
+            bool isBpixTrack(false), isFpixTrack(false);
+            isPixelTrack(refTraj, isBpixTrack, isFpixTrack);
+            if (!isBpixTrack && !isFpixTrack) { continue; }
+            
+            // -- Clusters associated with a track
+            float probQonTrackWMulti = 1;
+            float probXYonTrackWMulti = 1;
+            std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
+            int numRecHits = 0;
+            for (auto const& tmeasIt : tmeasColl) {
+                if (!tmeasIt.updatedState().isValid()) continue;
+                const TrackingRecHit* hit = tmeasIt.recHit()->hit();
+                const SiPixelRecHit* pixhit = dynamic_cast<const SiPixelRecHit*>(hit);
+                const SiPixelRecHit *pixhit_v2 = dynamic_cast<const SiPixelRecHit*>(hit->hit());
+                if (hit->geographicalId().det() != DetId::Tracker) continue;
+                if (pixhit == nullptr) continue;
+                if (!pixhit->isValid()) continue;
+                float probQ         = pixhit->probabilityQ();
+                float probXY        = pixhit->probabilityXY();
+                numRecHits++;
+                probQonTrackWMulti *= probQ; // \alpha_n in formula
+                probXYonTrackWMulti *= probXY; // \alpha_n in formula
+//              LocalPoint lp = pixhit->localPosition();
+//              float rechit_x = lp.x();
+//              float rechit_y = lp.y();
+//              std::cout << "rechit_x: " << rechit_x << " and " << "rechit_y" << rechit_y << std::endl;
+//                std::cout << "probQ: " << probQ << " and " << "probXY " << probXY << std::endl;
+                
+                // associate simhits to the rechit so we can learn the particleType
+                vec_simhits_assoc.clear();
+                vec_simhits_assoc = associate->associateHit(*pixhit_v2);
+                
+                for (std::vector<PSimHit>::const_iterator m = vec_simhits_assoc.begin();  m < vec_simhits_assoc.end(); ++m) {
+                    cout << "PDG-id: " << m->particleType();
+                }
+            } // end loop on on-track-clusters
+            float logprobQonTrackWMulti = log(probQonTrackWMulti);
+            float logprobXYonTrackWMulti = log(probXYonTrackWMulti);
+            std::cout << "numRecHits: " << numRecHits << std::endl;
+            float probQonTrackTerm = 0;
+            float probXYonTrackTerm = 0;
+            for(int iTkCl = 0; iTkCl < numRecHits; ++iTkCl) {
+                        probQonTrackTerm += ((pow(-logprobQonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+                        probXYonTrackTerm += ((pow(-logprobXYonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+                        cout << "For cluster " << iTkCl << " the probQonTrackTerm is " << probQonTrackTerm << " the probXYonTrackTerm is " << probXYonTrackTerm <<  endl;
+                    }
+            
+            float probQonTrack = probQonTrackWMulti*probQonTrackTerm;
+            float probXYonTrack = probXYonTrackWMulti*probXYonTrackTerm;
+            cout << "For this track probQonTrack is " << probQonTrack << " and probXYonTrack is  " << probXYonTrack << endl;
+            
+            tree_track_probQ[tree_ntracks]= probQonTrack;
+            tree_track_probXY[tree_ntracks]= probXYonTrack;
+            
+
+        } // end loop TrajTrackAssociationCollection
+    } else {
+        std::cout << "hTTAC is invalid" << std::endl;
+    } // end if AOD
 
 
      //loop on HSCP candidates
@@ -1572,6 +1664,27 @@ ntuple::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //ParameterSetDescription desc;
   //desc.addUntracked<edm::InputTag>("tracks","ctfWithMaterialTracks");
   //descriptions.addDefault(desc);
+}
+    
+void
+ntuple::isPixelTrack(const edm::Ref<std::vector<Trajectory> > &refTraj, bool &isBpixtrack, bool &isFpixtrack) {
+      // Used in analyze() to see if it is pixel track
+    std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
+    std::vector<TrajectoryMeasurement>::const_iterator tmeasIt;
+    for (tmeasIt = tmeasColl.begin(); tmeasIt != tmeasColl.end(); tmeasIt++) {
+        if (!tmeasIt->updatedState().isValid()) continue;
+        TransientTrackingRecHit::ConstRecHitPointer testhit = tmeasIt->recHit();
+        if (!testhit->isValid() || testhit->geographicalId().det() != DetId::Tracker) continue;
+        uint testSubDetID = (testhit->geographicalId().subdetId());
+        if (testSubDetID==PixelSubdetector::PixelBarrel) isBpixtrack = true;
+        if (testSubDetID==PixelSubdetector::PixelEndcap) isFpixtrack = true;
+        if (isBpixtrack && isFpixtrack) break;
+    }
+}
+
+int
+factorial(int n) {
+  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
 
 //define this as a plug-in
