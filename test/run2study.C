@@ -43,6 +43,17 @@ void run2study::Loop(int year, TString Letter)
 
 // histograms
 
+    
+//    TH1D* HSCPGen_probQ_wCuts = new TH1D("HSCPGen_probQ_wCuts", "Combined ProbQ on tracks for gen HSCP w/ cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* HSCPGen_probXY_wCuts = new TH1D("HSCPGen_probXY_wCuts", "Combined ProbXY on tracks for gen HSCP w/ cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* HSCPGen_probQ_wNoCuts = new TH1D("HSCPGen_probQ_wNoCuts", "Combined ProbQ on tracks  for gen HSCP w/ no cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* HSCPGen_probXY_wNoCuts = new TH1D("HSCPGen_probXY_wNoCuts", "Combined ProbXY on tracks for gen HSCP w/ no cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* BckgGen_probQ_wCuts = new TH1D("BckgGen_probQ_wCuts", "Combined ProbQ on tracks for gen background w/ cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* BckgGen_probXY_wCuts = new TH1D("BckgGen_probXY_wCuts", "Combined ProbXY on tracks for gen background w/ cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* BckgGen_probQ_wNoCuts = new TH1D("BckgGen_probQ_wNoCuts", "Combined ProbQ on tracks for gen background w/ no cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+//    TH1D* BckgGen_probXY_wNoCuts = new TH1D("BckgGen_probXY_wNoCuts", "Combined ProbXY on tracks  for gen background w/ no cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+    
+    
    TH1D* HNtracks = new TH1D("HNtracks", "HNtracks", 50, -0.5,49.5);
    TH1D* HNtracks1 = new TH1D("HNtracks1", "Ntracks with pT>1", 40, -0.5,39.5);
    TH1D* HNtracks20 = new TH1D("HNtracks20", "Ntracks with pT>20", 30, -0.5,29.5);
@@ -226,6 +237,10 @@ void run2study::Loop(int year, TString Letter)
    TH1D* HSCP_invBDT = new TH1D("HSCP_invBDT", "invBeta(DT)",  90,-1,2);
    TH1D* HSCP_invBCSC = new TH1D("HSCP_invBCSC", "invBeta(CSC)",  90,-1,2);
    TH1D* HSCP_time = new TH1D("HSCP_time", "VertexTiming",  200,-100,100);
+   TH1D* HSCP_probQ_stdAna = new TH1D("HSCP_probQ_stdAna", "Combined ProbQ on tracks in std analysis;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+   TH1D* HSCP_probXY_stdAna = new TH1D("HSCP_probXY_stdAna", "Combined ProbXY on tracks in std analysis;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+   TH1D* HSCPCandidateMatchedGenID_probQ = new TH1D("HSCPCandidateMatchedGenID_probQ", "Combined ProbQ on tracks for matched gen HSCPs;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+   TH1D* HSCPCandidateMatchedGenID_probXY = new TH1D("HSCPCandidateMatchedGenID_probXY", "Combined ProbXY on tracks for matched gen HSCPs;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
 
 
    TH2D* dEdXVsRun = new TH2D("dEdXVsRun", "dEdX:Run", 545, 271000,325500, 60, 0.,15.);
@@ -294,6 +309,16 @@ void run2study::Loop(int year, TString Letter)
    TH2D* R3_LumiVsEvent = new TH2D("R3_LumiVsEvent", "Lumi:Event",500,0.,2000000000,80,0.,16000); 
    TH2D* R3_nPVVsEvent = new TH2D("R3_nPVVsEvent", "nPV:Event",500,0.,2000000000,40, 0.,80.); 
    TH1D* R3_CandVsEvent = new TH1D("R3_CandVsEvent", "Cand per 4M events vs Event", 500,0.,2000000000);
+    
+    
+//   HSCPGen_probQ_wCuts->Sumw2();
+//   HSCPGen_probXY_wCuts->Sumw2();
+//   HSCPGen_probQ_wNoCuts->Sumw2();
+//   HSCPGen_probXY_wNoCuts->Sumw2();
+//   BckgGen_probQ_wCuts->Sumw2();
+//   BckgGen_probXY_wCuts->Sumw2();
+//   BckgGen_probQ_wNoCuts->Sumw2();
+//   BckgGen_probXY_wNoCuts->Sumw2();
 
    HNtracks->Sumw2();
    HNtracks1->Sumw2();
@@ -509,14 +534,18 @@ void run2study::Loop(int year, TString Letter)
    HSCP_FMIP4->Sumw2(); 
    HSCP_FMIP3p5->Sumw2(); 
    HSCP_FMIP3p2->Sumw2(); 
-   HSCP_pt->Sumw2(); 
+   HSCP_pt->Sumw2();
    HSCP_iso_eop->Sumw2(); 
    nPV->Sumw2(); 
    HSCP_invB->Sumw2(); 
    HSCP_errinvB->Sumw2(); 
    HSCP_invBDT->Sumw2(); 
    HSCP_invBCSC->Sumw2(); 
-   HSCP_time->Sumw2(); 
+   HSCP_time->Sumw2();
+   HSCP_probQ_stdAna->Sumw2();
+   HSCP_probXY_stdAna->Sumw2();
+   HSCPCandidateMatchedGenID_probQ->Sumw2();
+   HSCPCandidateMatchedGenID_probXY->Sumw2();
 
    R1_StdEdXVsEvent->Sumw2();
    R1_StdEdXVsLumi->Sumw2();
@@ -544,65 +573,146 @@ void run2study::Loop(int year, TString Letter)
 
 
    loadSFPixelCalib();
+    
+   
 
-//   nentries = 20000;
+//   nentries = 100;
    cout << "run on  " << nentries << " entries " << endl;
 
-
+//    for (Long64_t jentry=89; jentry<90;jentry++) { // this is good for testing
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
 
-      if(jentry%5000000 ==0 && jentry!=0) cout << " number of processed events is " << jentry <<  " = " << (100.*jentry)/(1.*nentries) << "%" <<endl;
+      if(jentry%10000 ==0 && jentry!=0) cout << " number of processed events is " << jentry <<  " = " << (100.*jentry)/(1.*nentries) << "%" <<endl;
 
 //      if (runNumber<305150 || runNumber>305300) continue;
 
+     
+       
+//       for (int igenpart=0; igenpart<ngenpart; igenpart++) {
+//           bool selection=true;
+//           if (gen_pt[igenpart]<55) selection=false;
+//           if (abs(gen_eta[ngenpart])>2.1) selection=false;
+//           if (!hlt_mu50 && !hlt_tkmu100 && !hlt_oldmu100) selection=false;
+//
+//           bool isHSCPBasedOnGenPDGIDs=false;
+//           int PDGid = gen_pdg[ngenpart];
+//
+//           isHSCPBasedOnGenPDGIDs = (PDGid==17||PDGid==1000993||PDGid==1009213||PDGid==1009313||PDGid==1009323||PDGid==1009113||PDGid==1009223||PDGid==1009333||PDGid==1091114||PDGid==1092114||PDGid==1092214||PDGid==1092224||PDGid==1093114||PDGid==1093214||PDGid==1093224||PDGid==1093314||PDGid==1093324||PDGid==1093334);
+//
+//           cout << "Filling HSCP gen plots at the index " << track_index_hit[igenpart] << " where igenpart is " << igenpart << endl;
+//           if (isHSCPBasedOnGenPDGIDs) {
+//               if (selection) {
+//                   HSCPGen_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   HSCPGen_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//               } else {
+//                   HSCPGen_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   HSCPGen_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//               }
+//           } else {
+//               if (selection) {
+//                   BckgGen_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   BckgGen_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//               } else {
+//                   BckgGen_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   BckgGen_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//               }
+//           }
+//       } // end loop on gen part
+       
       if (!hlt_mu50 && !hlt_tkmu100 && !hlt_oldmu100) continue;
-
-
+       
       nPVVsRun->Fill(runNumber,npv);
       nPV->Fill(npv);
+       
+       // start loop on tracks
+       for (int iTrack=0; iTrack<ntracks; iTrack++) {
+           bool selection=true;
+           bool isHSCPBasedOnGenPDGIDs=false;
+
+           if (track_pt[iTrack]<55) selection=false;
+           if (track_nvalidhits[iTrack]<8) selection=false;
+           if (track_chi2[iTrack]>5) selection=false;
+           if (abs(track_eta[iTrack])>2.1) selection=false;
+           if (track_npixhits[iTrack]<2) selection=false;
+           if (track_qual[iTrack]<2) selection=false;
+           if (track_pterr[iTrack]/track_pt[iTrack]>0.25) selection=false;
+
+//           cout << "----------------------------------------" << endl;
+//           cout << "Lookin at track index iTrack=" << iTrack << endl;
+//           cout << "track_probQ[iTrack] before selection: " << track_probQ[1] << track_probQ[2] << track_probQ[3] << track_probQ[4] << endl;
+
+           for (int ihs=0; ihs<nhscp; ihs++) {
+               int PDGid = hscp_gen_id[ihs];
+               isHSCPBasedOnGenPDGIDs = (PDGid==17||PDGid==1000993||PDGid==1009213||PDGid==1009313||PDGid==1009323||PDGid==1009113||PDGid==1009223||PDGid==1009333||PDGid==1091114||PDGid==1092114||PDGid==1092214||PDGid==1092224||PDGid==1093114||PDGid==1093214||PDGid==1093224||PDGid==1093314||PDGid==1093324||PDGid==1093334);
+
+//               cout << "Looking at HSCP candidate ihs=" << ihs << endl;
+//               cout << "on the track index hscp_track_idx=" << hscp_track_idx << endl;
+//               cout << "The HSCP PDGid is " << PDGid << endl;
+//               cout << "out of the total " << nhscp << " HSCP candidates on this track" << endl;
+           } // end loop on HSCP candidates inside each track
+
+           if (selection) {
+               cout << "track_probQ[iTrack] after selection: " << track_probQ[iTrack] << endl;
+           }
+       } // end loop on tracks
+       
+      // start loop on HSCP candidates
       for (int ihs=0; ihs<nhscp; ihs++) {
           if (hscp_track_idx[ihs]>-1) { 
              // une trace existe pour le candidat HSCP
              bool selection=true;
+             bool isHSCPBasedOnGenPDGIDs=false;
+             int PDGid = hscp_gen_id[ihs];
+             isHSCPBasedOnGenPDGIDs = (PDGid==17||PDGid==1000993||PDGid==1009213||PDGid==1009313||PDGid==1009323||PDGid==1009113||PDGid==1009223||PDGid==1009333||PDGid==1091114||PDGid==1092114||PDGid==1092214||PDGid==1092224||PDGid==1093114||PDGid==1093214||PDGid==1093224||PDGid==1093314||PDGid==1093324||PDGid==1093334);
+              
              if (track_pt[hscp_track_idx[ihs]]<55) selection=false;
-//             if (track_pt[hscp_track_idx[ihs]]<5) selection=false;
              if (track_nvalidhits[hscp_track_idx[ihs]]<8) selection=false;
              if (track_chi2[hscp_track_idx[ihs]]>5) selection=false;
              if (abs(track_eta[hscp_track_idx[ihs]])>2.1) selection=false;
              if (track_npixhits[hscp_track_idx[ihs]]<2) selection=false;
-             // no cut on GlobalMinNOM       =   6;
              if (track_qual[hscp_track_idx[ihs]]<2) selection=false;
              float eop=(hscp_iso2_ecal[ihs] + hscp_iso2_hcal[ihs])/track_p[hscp_track_idx[ihs]];
-             // if (eop>0.3) selection=false;
              if (track_pterr[hscp_track_idx[ihs]]/track_pt[hscp_track_idx[ihs]]>0.25) selection=false;
+              
+             
+//             cout << "[hscp_track_idx[ihs]] before selection: " << hscp_track_idx[ihs] << endl;
+//             cout << "track_probQ[hscp_track_idx[ihs]] before selection: " << track_probQ[hscp_track_idx[ihs]] << endl;
             
              if (selection) {
                 ptVsRun->Fill(runNumber,track_pt[hscp_track_idx[ihs]]);
                 HSCP_pt->Fill(track_pt[hscp_track_idx[ihs]]);
                 HSCP_iso_eop->Fill(eop);
+                HSCP_probQ_stdAna->Fill(track_probQ[hscp_track_idx[ihs]]);
+                HSCP_probXY_stdAna->Fill(track_probXY[hscp_track_idx[ihs]]);
+                 
+//                 cout << "[hscp_track_idx[ihs]] after selection: " << hscp_track_idx[ihs] << endl;
+//                 cout << "track_probQ[hscp_track_idx[ihs]] after selection: " << track_probQ[hscp_track_idx[ihs]] << endl;
+                 
+                 if (isHSCPBasedOnGenPDGIDs) {
+                     HSCPCandidateMatchedGenID_probQ->Fill(track_probQ[hscp_track_idx[ihs]]);
+                     HSCPCandidateMatchedGenID_probXY->Fill(track_probXY[hscp_track_idx[ihs]]);
+                 }
+                 
 
                 if (boolILumi) lumiVsRun->Fill(runNumber,InstLumi);
 
+                std::vector <float>  charge_uncorr;
+                std::vector <float>  pathlength;
+                std::vector <int>    subdetId;
+                std::vector <int>    moduleGeometry;
+                std::vector <bool>   bool_cleaning;
+                std::vector <bool>   mustBeInside;
 
-
-
-                std::vector <float> charge_uncorr;
-                std::vector <float> pathlength;
-                std::vector <int> subdetId;
-                std::vector <int> moduleGeometry;
-                std::vector <bool> bool_cleaning;
-                std::vector <bool> mustBeInside;
-
-                std::vector <float> charge_uncorr1;
-                std::vector <float> pathlength1;
-                std::vector <int> subdetId1;
+                std::vector <float>  charge_uncorr1;
+                std::vector <float>  pathlength1;
+                std::vector <int>    subdetId1;
                 std::vector <UInt_t> detId1;
-                std::vector <int> moduleGeometry1;
-                std::vector <bool> bool_cleaning1;
-                std::vector <bool> mustBeInside1;
+                std::vector <int>    moduleGeometry1;
+                std::vector <bool>   bool_cleaning1;
+                std::vector <bool>   mustBeInside1;
 
                 std::vector <float> charge_uncorr2;
                 std::vector <float> pathlength2;
@@ -809,7 +919,7 @@ void run2study::Loop(int year, TString Letter)
              }
           }
 
-      }
+      } // end loop HSCP candidates
 
       int ntracks1=0;
       int ntracks20=0;
@@ -1123,15 +1233,27 @@ void run2study::Loop(int year, TString Letter)
          Htrackih_reco->Fill(ih_uncor);
          Htrackih_pix->Fill(ih_pix);
          Htrackih_strip->Fill(ih_strip);
-      }
+      } // end loop tracks
       HNtracks->Fill(ntracks);
       HNtracks1->Fill(ntracks1);
       HNtracks20->Fill(ntracks20);
       HNtracks50->Fill(ntracks50);
       HNtracks100->Fill(ntracks100);
 
-   }
+   } // end loop num entries
    OutputHisto->cd();
+    
+    
+//   HSCPGen_probQ_wCuts->Write();
+//   HSCPGen_probXY_wCuts->Write();
+//   HSCPGen_probQ_wNoCuts->Write();
+//   HSCPGen_probXY_wNoCuts->Write();
+//   BckgGen_probQ_wCuts->Write();
+//   BckgGen_probXY_wCuts->Write();
+//   BckgGen_probQ_wNoCuts->Write();
+//   BckgGen_probXY_wNoCuts->Write();
+    
+    
    HNtracks->Write();
    HNtracks1->Write();
    HNtracks20->Write();
@@ -1358,7 +1480,11 @@ void run2study::Loop(int year, TString Letter)
    HSCP_errinvB->Write(); 
    HSCP_invBDT->Write(); 
    HSCP_invBCSC->Write(); 
-   HSCP_time->Write(); 
+   HSCP_time->Write();
+   HSCP_probQ_stdAna->Write();
+   HSCP_probXY_stdAna->Write();
+   HSCPCandidateMatchedGenID_probQ->Write();
+   HSCPCandidateMatchedGenID_probXY->Write();
 
    R1_StdEdXVsEvent->Write();
    R1_StdEdXVsLumi->Write();

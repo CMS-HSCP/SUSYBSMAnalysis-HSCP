@@ -72,6 +72,8 @@ public :
    Float_t         track_ih_ampl_corr[nmax_tr];   //[ntracks]
    Float_t         track_ias_ampl[nmax_tr];   //[ntracks]
    Float_t         track_ias_ampl_corr[nmax_tr];   //[ntracks]
+   Float_t         track_probQ[nmax_tr];   //[ntracks]
+   Float_t         track_probXY[nmax_tr];   //[ntracks]
    Int_t           ndedxhits;
    UInt_t          dedx_detid[nmax_cl];   //[ndedxhits]
    Int_t           dedx_subdetid[nmax_cl];   //[ndedxhits]
@@ -212,6 +214,8 @@ public :
    TBranch        *b_track_ih_ampl_corr;   //!
    TBranch        *b_track_ias_ampl;   //!
    TBranch        *b_track_ias_ampl_corr;   //!
+   TBranch        *b_track_probQ;   //!
+   TBranch        *b_track_probXY;   //!
    TBranch        *b_ndedxhits;   //!
    TBranch        *b_dedx_detid;   //!
    TBranch        *b_dedx_subdetid;   //!
@@ -447,6 +451,8 @@ void run2study::Init(TTree *tree)
    fChain->SetBranchAddress("track_ih_ampl_corr", track_ih_ampl_corr, &b_track_ih_ampl_corr);
    fChain->SetBranchAddress("track_ias_ampl", track_ias_ampl, &b_track_ias_ampl);
    fChain->SetBranchAddress("track_ias_ampl_corr", track_ias_ampl_corr, &b_track_ias_ampl_corr);
+   fChain->SetBranchAddress("track_probQ", track_probQ, &b_track_probQ);
+   fChain->SetBranchAddress("track_probXY", track_probXY, &b_track_probXY);
    fChain->SetBranchAddress("ndedxhits", &ndedxhits, &b_ndedxhits);
    fChain->SetBranchAddress("dedx_detid", dedx_detid, &b_dedx_detid);
    fChain->SetBranchAddress("dedx_subdetid", dedx_subdetid, &b_dedx_subdetid);
