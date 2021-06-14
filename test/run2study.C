@@ -44,14 +44,14 @@ void run2study::Loop(int year, TString Letter)
 // histograms
 
     
-//    TH1D* HSCPGen_probQ_wCuts = new TH1D("HSCPGen_probQ_wCuts", "Combined ProbQ on tracks for gen HSCP w/ cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* HSCPGen_probXY_wCuts = new TH1D("HSCPGen_probXY_wCuts", "Combined ProbXY on tracks for gen HSCP w/ cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* HSCPGen_probQ_wNoCuts = new TH1D("HSCPGen_probQ_wNoCuts", "Combined ProbQ on tracks  for gen HSCP w/ no cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* HSCPGen_probXY_wNoCuts = new TH1D("HSCPGen_probXY_wNoCuts", "Combined ProbXY on tracks for gen HSCP w/ no cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* BckgGen_probQ_wCuts = new TH1D("BckgGen_probQ_wCuts", "Combined ProbQ on tracks for gen background w/ cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* BckgGen_probXY_wCuts = new TH1D("BckgGen_probXY_wCuts", "Combined ProbXY on tracks for gen background w/ cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* BckgGen_probQ_wNoCuts = new TH1D("BckgGen_probQ_wNoCuts", "Combined ProbQ on tracks for gen background w/ no cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
-//    TH1D* BckgGen_probXY_wNoCuts = new TH1D("BckgGen_probXY_wNoCuts", "Combined ProbXY on tracks  for gen background w/ no cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenHSCP_probQ_wCuts = new TH1D("GenHSCP_probQ_wCuts", "Combined ProbQ on tracks for gen HSCP w/ cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenHSCP_probXY_wCuts = new TH1D("GenHSCP_probXY_wCuts", "Combined ProbXY on tracks for gen HSCP w/ cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenHSCP_probQ_wNoCuts = new TH1D("GenHSCP_probQ_wNoCuts", "Combined ProbQ on tracks  for gen HSCP w/ no cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenHSCP_probXY_wNoCuts = new TH1D("GenHSCP_probXY_wNoCuts", "Combined ProbXY on tracks for gen HSCP w/ no cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenBckg_probQ_wCuts = new TH1D("GenBckg_probQ_wCuts", "Combined ProbQ on tracks for gen background w/ cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenBckg_probXY_wCuts = new TH1D("GenBckg_probXY_wCuts", "Combined ProbXY on tracks for gen background w/ cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenBckg_probQ_wNoCuts = new TH1D("GenBckg_probQ_wNoCuts", "Combined ProbQ on tracks for gen background w/ no cuts;Combined on-track charge probability;Entries (1/bin)",100,0.,1.);
+    TH1D* GenBckg_probXY_wNoCuts = new TH1D("GenBckg_probXY_wNoCuts", "Combined ProbXY on tracks  for gen background w/ no cuts;Combined on-track shape probability;Entries (1/bin)",100,0.,1.);
     
     
    TH1D* HNtracks = new TH1D("HNtracks", "HNtracks", 50, -0.5,49.5);
@@ -311,14 +311,14 @@ void run2study::Loop(int year, TString Letter)
    TH1D* R3_CandVsEvent = new TH1D("R3_CandVsEvent", "Cand per 4M events vs Event", 500,0.,2000000000);
     
     
-//   HSCPGen_probQ_wCuts->Sumw2();
-//   HSCPGen_probXY_wCuts->Sumw2();
-//   HSCPGen_probQ_wNoCuts->Sumw2();
-//   HSCPGen_probXY_wNoCuts->Sumw2();
-//   BckgGen_probQ_wCuts->Sumw2();
-//   BckgGen_probXY_wCuts->Sumw2();
-//   BckgGen_probQ_wNoCuts->Sumw2();
-//   BckgGen_probXY_wNoCuts->Sumw2();
+   GenHSCP_probQ_wCuts->Sumw2();
+   GenHSCP_probXY_wCuts->Sumw2();
+   GenHSCP_probQ_wNoCuts->Sumw2();
+   GenHSCP_probXY_wNoCuts->Sumw2();
+   GenBckg_probQ_wCuts->Sumw2();
+   GenBckg_probXY_wCuts->Sumw2();
+   GenBckg_probQ_wNoCuts->Sumw2();
+   GenBckg_probXY_wNoCuts->Sumw2();
 
    HNtracks->Sumw2();
    HNtracks1->Sumw2();
@@ -605,19 +605,19 @@ void run2study::Loop(int year, TString Letter)
 //           cout << "Filling HSCP gen plots at the index " << track_index_hit[igenpart] << " where igenpart is " << igenpart << endl;
 //           if (isHSCPBasedOnGenPDGIDs) {
 //               if (selection) {
-//                   HSCPGen_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   HSCPGen_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//                   GenHSCP_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   GenHSCP_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
 //               } else {
-//                   HSCPGen_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   HSCPGen_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//                   GenHSCP_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   GenHSCP_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
 //               }
 //           } else {
 //               if (selection) {
-//                   BckgGen_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   BckgGen_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//                   GenBckg_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   GenBckg_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
 //               } else {
-//                   BckgGen_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   BckgGen_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
+//                   GenBckg_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
+//                   GenBckg_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
 //               }
 //           }
 //       } // end loop on gen part
@@ -643,20 +643,35 @@ void run2study::Loop(int year, TString Letter)
 //           cout << "----------------------------------------" << endl;
 //           cout << "Lookin at track index iTrack=" << iTrack << endl;
 //           cout << "track_probQ[iTrack] before selection: " << track_probQ[1] << track_probQ[2] << track_probQ[3] << track_probQ[4] << endl;
+           
+           int numOfClusOnTrack = track_nclus[iTrack];
 
-           for (int ihs=0; ihs<nhscp; ihs++) {
-               int PDGid = hscp_gen_id[ihs];
+           for (int ihs=0; ihs<numOfClusOnTrack; ihs++) {
+               int PDGid = track_clus_PID[iTrack][ihs];
                isHSCPBasedOnGenPDGIDs = (PDGid==17||PDGid==1000993||PDGid==1009213||PDGid==1009313||PDGid==1009323||PDGid==1009113||PDGid==1009223||PDGid==1009333||PDGid==1091114||PDGid==1092114||PDGid==1092214||PDGid==1092224||PDGid==1093114||PDGid==1093214||PDGid==1093224||PDGid==1093314||PDGid==1093324||PDGid==1093334);
 
 //               cout << "Looking at HSCP candidate ihs=" << ihs << endl;
 //               cout << "on the track index hscp_track_idx=" << hscp_track_idx << endl;
 //               cout << "The HSCP PDGid is " << PDGid << endl;
 //               cout << "out of the total " << nhscp << " HSCP candidates on this track" << endl;
-           } // end loop on HSCP candidates inside each track
-
-           if (selection) {
-               cout << "track_probQ[iTrack] after selection: " << track_probQ[iTrack] << endl;
-           }
+               if (isHSCPBasedOnGenPDGIDs) {
+                   if (selection) {
+                       GenHSCP_probQ_wCuts->Fill(track_probQ[iTrack]);
+                       GenHSCP_probXY_wCuts->Fill(track_probXY[iTrack]);
+                   } else {
+                       GenHSCP_probQ_wNoCuts->Fill(track_probQ[iTrack]);
+                       GenHSCP_probXY_wNoCuts->Fill(track_probXY[iTrack]);
+                   }
+               } else {
+                   if (selection) {
+                       GenBckg_probQ_wCuts->Fill(track_probQ[iTrack]);
+                       GenBckg_probXY_wCuts->Fill(track_probXY[iTrack]);
+                   } else {
+                       GenBckg_probQ_wNoCuts->Fill(track_probQ[iTrack]);
+                       GenBckg_probXY_wNoCuts->Fill(track_probXY[iTrack]);
+                   }
+               }
+           } // end loop on rechtis on each track
        } // end loop on tracks
        
       // start loop on HSCP candidates
@@ -1244,14 +1259,14 @@ void run2study::Loop(int year, TString Letter)
    OutputHisto->cd();
     
     
-//   HSCPGen_probQ_wCuts->Write();
-//   HSCPGen_probXY_wCuts->Write();
-//   HSCPGen_probQ_wNoCuts->Write();
-//   HSCPGen_probXY_wNoCuts->Write();
-//   BckgGen_probQ_wCuts->Write();
-//   BckgGen_probXY_wCuts->Write();
-//   BckgGen_probQ_wNoCuts->Write();
-//   BckgGen_probXY_wNoCuts->Write();
+   GenHSCP_probQ_wCuts->Write();
+   GenHSCP_probXY_wCuts->Write();
+   GenHSCP_probQ_wNoCuts->Write();
+   GenHSCP_probXY_wNoCuts->Write();
+   GenBckg_probQ_wCuts->Write();
+   GenBckg_probXY_wCuts->Write();
+   GenBckg_probQ_wNoCuts->Write();
+   GenBckg_probXY_wNoCuts->Write();
     
     
    HNtracks->Write();
