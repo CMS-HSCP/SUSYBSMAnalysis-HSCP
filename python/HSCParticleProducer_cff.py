@@ -19,9 +19,9 @@ TrackAssociatorParametersForHSCPIsol.HORecHitCollectionLabel       = cms.InputTa
 
 HSCPIsolation = cms.EDProducer("ProduceIsolationMap",
       inputCollection  = cms.InputTag("generalTracks"),
-      IsolationConeDR  = cms.vdouble(0.1, 0.3, 0.5),
-      TkIsolationPtCut = cms.vdouble(10, 10, 10),
-      Label            = cms.vstring('R01', 'R03', 'R05'),
+      IsolationConeDR  = cms.vdouble(0.05, 0.1, 0.3, 0.5),
+      TkIsolationPtCut = cms.vdouble(10, 10, 10, 10),
+      Label            = cms.vstring('R005', 'R01', 'R03', 'R05'),
       TKLabel          = cms.InputTag("generalTracks"),
       TrackAssociatorParameters=TrackAssociatorParametersForHSCPIsol,
       CandidateMinPt   = cms.double(10),
