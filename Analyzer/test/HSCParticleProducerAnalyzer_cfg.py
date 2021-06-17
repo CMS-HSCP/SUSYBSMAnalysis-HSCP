@@ -195,7 +195,7 @@ else:
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 ### set your configirattion here (default: python/HSCParticleAnalyzer_cff.py)
 #process.analyzer.SampleTxtFile=options.sampleTxtFile
-process.analyzer.TypeMode=0
+process.analyzer.TypeMode=2
 process.analyzer.SampleType=0
 process.analyzer.DeDxCalibration="Data13TeVGains_v2.root"
 process.analyzer.DeDxTemplate="dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root"
