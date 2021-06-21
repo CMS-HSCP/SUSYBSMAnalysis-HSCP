@@ -388,11 +388,19 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
             const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
             //std::cout<<"TESTA\n";
-            tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
+            //tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
+            tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
             //std::cout<<"TESTB\n";
             tof    = &tofCalculator.combinedTOF; 
             dttof  = &tofCalculator.dtTOF;  
             csctof = &tofCalculator.cscTOF;
+
+            //tof    = &(*tofMap)[hscp.muonRef()];
+            
+            //std::cout << "run: " << iEvent.id().run()  << " event: " << iEvent.id().event() << " tof: " << tof->inverseBeta() << " ndof: " << tof->nDof() << " muon pt: " << muon->pt() << " dttof: " << dttof->inverseBeta() << " dtdof: " << dttof->nDof() << " csc: " << csctof->inverseBeta() << " cscdof: " << csctof->nDof() << std::endl;//imprimer dttof et csctof//regarder coupure de remplissage //print CSCSegm DTSegm //+print dans le calcul DT et CSC
+
+            //std::cout << "cscnrechits: " << CSCSegmentColl->
+
             //std::cout<<"TESTC\n";
          }
       }
@@ -1145,13 +1153,13 @@ bool Analyzer::passPreselection(
      //Plots for tracks in dz control region
      if(fabs(dz)>CosmicMinDz && fabs(dz)<CosmicMaxDz && !muon->isGlobalMuon()) {
        tuple->BS_Pt_FailDz->Fill(track->pt(), Event_Weight);
-       //WAIT//tuple->BS_TOF_FailDz->Fill(tof->inverseBeta(), Event_Weight);
+       tuple->BS_TOF_FailDz->Fill(tof->inverseBeta(), Event_Weight);
        if(fabs(track->eta())>CSCRegion) {
-	 //WAIT//tuple->BS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), Event_Weight);
+	 tuple->BS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), Event_Weight);
 	 tuple->BS_Pt_FailDz_CSC->Fill(track->pt(), Event_Weight);
        }
        else if(fabs(track->eta())<DTRegion) {
-	 //WAIT//tuple->BS_TOF_FailDz_DT->Fill(tof->inverseBeta(), Event_Weight);
+	 tuple->BS_TOF_FailDz_DT->Fill(tof->inverseBeta(), Event_Weight);
 	 tuple->BS_Pt_FailDz_DT->Fill(track->pt(), Event_Weight);
        }
      }
@@ -1176,8 +1184,8 @@ bool Analyzer::passPreselection(
      //Count number of tracks in dz sidebands passing the TOF cut
      //The pt cut is not applied to increase statistics
      for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
-       //WAIT//if(tof->inverseBeta()>=CutTOF[CutIndex]) {
-	 //WAIT//tuple->H_D_DzSidebands->Fill(CutIndex, DzType);
+       //WAIT//if(tof->inverseBeta()>=CutTOF_[CutIndex]) {
+	    //WAIT//tuple->H_D_DzSidebands->Fill(CutIndex, DzType);
        //WAIT//}
      }
    }
@@ -1206,7 +1214,7 @@ bool Analyzer::passPreselection(
           if(dedxMObj) tuple->BS_EtaIm->Fill(track->eta(),dedxMObj->dEdx(),Event_Weight);
           tuple->BS_EtaP ->Fill(track->eta(),track->p(),Event_Weight);
           tuple->BS_EtaPt->Fill(track->eta(),track->pt(),Event_Weight);
-          //WAIT//tuple->BS_EtaTOF->Fill(track->eta(),tof->inverseBeta(),Event_Weight);
+          tuple->BS_EtaTOF->Fill(track->eta(),tof->inverseBeta(),Event_Weight);
    }
 
    if(tuple){if(GenBeta>=0)tuple->Beta_PreselectedC->Fill(GenBeta, Event_Weight);
@@ -1244,12 +1252,12 @@ bool Analyzer::passPreselection(
           if(dedxSObj && PUA) tuple->BS_Im_PUA ->Fill(dedxMObj->dEdx(),Event_Weight);
           if(dedxSObj && PUB) tuple->BS_Im_PUB ->Fill(dedxMObj->dEdx(),Event_Weight);
 
-	    //WAIT//tuple->BS_TOF->Fill(tof->inverseBeta(),Event_Weight);
-            //WAIT//if(PUA)tuple->BS_TOF_PUA->Fill(tof->inverseBeta(),Event_Weight);
-            //WAIT//if(PUB)tuple->BS_TOF_PUB->Fill(tof->inverseBeta(),Event_Weight);
-	    //WAIT//if(dttof->nDof()>6) tuple->BS_TOF_DT->Fill(dttof->inverseBeta(),Event_Weight);
-            //WAIT//if(csctof->nDof()>6) tuple->BS_TOF_CSC->Fill(csctof->inverseBeta(),Event_Weight);
-            //WAIT//tuple->BS_PtTOF->Fill(track->pt() ,tof->inverseBeta(),Event_Weight);
+	        tuple->BS_TOF->Fill(tof->inverseBeta(),Event_Weight);
+            if(PUA)tuple->BS_TOF_PUA->Fill(tof->inverseBeta(),Event_Weight);
+            if(PUB)tuple->BS_TOF_PUB->Fill(tof->inverseBeta(),Event_Weight);
+	        if(dttof->nDof()>6) tuple->BS_TOF_DT->Fill(dttof->inverseBeta(),Event_Weight);
+            if(csctof->nDof()>6) tuple->BS_TOF_CSC->Fill(csctof->inverseBeta(),Event_Weight);
+            tuple->BS_PtTOF->Fill(track->pt() ,tof->inverseBeta(),Event_Weight);
 
           if(dedxSObj) {
 	    tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
@@ -1258,8 +1266,8 @@ bool Analyzer::passPreselection(
             tuple->BS_PtIs ->Fill(track->pt() ,dedxSObj->dEdx(),Event_Weight);
             tuple->BS_PtIm ->Fill(track->pt() ,dedxMObj->dEdx(),Event_Weight);
 	  }
-          //WAIT//if(dedxSObj)tuple->BS_TOFIs->Fill(tof->inverseBeta(),dedxSObj->dEdx(),Event_Weight);
-          //WAIT//if(dedxSObj)tuple->BS_TOFIm->Fill(tof->inverseBeta(),dedxMObj->dEdx(),Event_Weight);
+          if(dedxSObj)tuple->BS_TOFIs->Fill(tof->inverseBeta(),dedxSObj->dEdx(),Event_Weight);
+          if(dedxSObj)tuple->BS_TOFIm->Fill(tof->inverseBeta(),dedxMObj->dEdx(),Event_Weight);
 
 	  //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
 	  //Binning not used for other analyses
@@ -1268,7 +1276,6 @@ bool Analyzer::passPreselection(
 	    if(fabs(track->eta())<DTRegion) bin=muonStations(track->hitPattern())-2;
 	    else bin=muonStations(track->hitPattern())+1;
 	    tuple->BS_Pt_Binned[to_string(bin)] ->Fill(track->pt(),Event_Weight);
-	    //WAIT//tuple->BS_TOF_Binned[to_string(bin)]->Fill(tof->inverseBeta(),Event_Weight);
 	  }
    }
    if(tuple){tuple->Basic  ->Fill(0.0,Event_Weight);}

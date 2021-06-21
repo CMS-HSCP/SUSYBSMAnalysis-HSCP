@@ -12,7 +12,7 @@ cmsenv
 For the following step you should have a ssh key associated to your GitLab account
 
 ```bash
-git clone -b dev git@github.com:enibigir/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
+git clone -b dev git@github.com:dapparu/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
 ```
 <!--
 # Before compile, hide BigNTuplizer 
