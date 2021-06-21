@@ -72,8 +72,8 @@ cmsRun HSCParticleProducerAnalyzer_cfg.py LUMITOPROCESS=Cert_294927-306462_13TeV
 ```
 Then run crab:
 ```bash
-cp Analyzer/test/crabConfigProdAnalyzer.py
-python crabConfigProdAnalyzer_cfg.py
+cp Analyzer/test/crabConfigProdAnalyzer_Data.py .
+python crabConfigProdAnalyzer_Data.py
 ```
 
 ## Check of the EDAnalyzer (comparison with the old workflow)
