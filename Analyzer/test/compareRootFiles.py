@@ -30,7 +30,7 @@ def getall(d, basepath="/"):
 
 ROOT.gROOT.SetBatch(True)
 
-ifile1 = TFile("HistosEDAnalyzer.root") # /analyzer/Data/histograms... format to use -> hardcoded @ line 54
+ifile1 = TFile("HistosEDAnalyzer.root") # /analyzer/Data/histograms... format to use -> hardcoded @ line 45
 ifile2 = TFile("HistosStep1.root") # don't care about folders -> it is the file of reference  
 
 ofile = open("differences.txt","w") # outputfile where are saved the differences observed  
@@ -40,6 +40,8 @@ for i,j,k,l in getall(ifile2):
     counter+=1
 
 ofile.write("Number of object other than TTree: "+str(counter)+"\n"+"\n") # count & save the number of objects in the root file
+
+counter2=0
 
 for i,j,k,l in getall(ifile2): # loop under all the entries of the root file
             y = ifile1.Get("analyzer/Data/"+str(j))
@@ -61,6 +63,10 @@ for i,j,k,l in getall(ifile2): # loop under all the entries of the root file
                 test = y.KolmogorovTest(l)
             if test!=1:
                 ofile.write(j+'\t entries1: '+str(entries1)+'\t mean1: '+str(mean1)+'\t dev1: '+str(dev1)+'\t entries2: '+str(entries2)+'\t mean2: '+str(mean2)+'\t dev2: '+str(dev2)+'\t'+"kolomogorov_test: "+str(test)+'\n')
+                counter2+=1
+
+ofile.write('\n')
+ofile.write('Number of diff. objects: '+str(counter2)+' ratio: '+str(float(counter2)/counter)+'\n')
 
 ofile.close()
                 
