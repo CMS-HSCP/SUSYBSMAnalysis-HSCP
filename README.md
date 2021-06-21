@@ -72,8 +72,8 @@ cmsRun HSCParticleProducerAnalyzer_cfg.py LUMITOPROCESS=Cert_294927-306462_13TeV
 ```
 Then run crab:
 ```bash
-cp Analyzer/test/crabConfigProdAnalyzer.py
-python crabConfigProdAnalyzer_cfg.py
+cp Analyzer/test/crabConfigProdAnalyzer_Data.py .
+python crabConfigProdAnalyzer_Data.py
 ```
 
 ## Check of the EDAnalyzer (comparison with the old workflow)
@@ -84,4 +84,39 @@ Analyzer/test/compareRootFiles.py
 This script takes two root files (to set in the file) and compares their histograms with a Kolmogorov test. Any difference is saved in:
 ```bash
 Analyzer/test/differences.txt
+```
+
+## Background prediction
+
+```bash
+cp Analyzer/test/RunBackgroundPrediction.sh .
+```
+List your root files in a single text file, e.g `input.txt`
+
+### Run locally
+
+First compile: 
+```bash
+source RunBackgroundPrediction.sh
+```
+
+Then run
+```bash
+./RunBackgroundPrediction -h # for help
+# e.g: ./RunBackgroundPrediction --inputFiles input.txt
+# alternatively you can run: source RunBackgroundPrediction.sh input.txt
+```
+
+### Run on HTCondor
+
+Uncomment and change the commented line in `RunBackgroundPrediction.sh`
+
+Get submit file:
+```bash
+cp Analyzer/test/batch.sub .
+```
+
+Run:
+```bash
+condor_submit batch.sub
 ```
