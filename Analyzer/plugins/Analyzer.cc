@@ -202,7 +202,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          else LogError("Analyzer") << "GenParticle Collection NotFound";
       }
       genColl = *genCollH;
-      int NChargedHSCP=HowManyChargedHSCP(genColl);
+      //WAIT//int NChargedHSCP=HowManyChargedHSCP(genColl);
       //WAIT//EventWeight_*=samples[s].GetFGluinoWeight(NChargedHSCP);
 
       GetGenHSCPDecayLength(genColl,HSCPDLength1,HSCPDLength2,true);
@@ -582,7 +582,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       }//end of Cut loop
 
-      double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),isMC,DeDxK,DeDxC);
+      double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),DeDxK,DeDxC);
       int nomh= 0;nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
       double fovhd = track->found()<=0?-1:track->found() / float(track->found() + nomh);
       unsigned int nom=0; if(dedxSObj) nom=dedxSObj->numberOfMeasurements();
@@ -819,10 +819,10 @@ double Analyzer::RescaledPt(const double& pt, const double& eta, const double& p
 TVector3 Analyzer::getOuterHitPos(const reco::DeDxHitInfo* dedxHits){
      TVector3 point(0,0,0);
      if(!dedxHits)return point;
-     double outerDistance=-1;
+     //WAIT//double outerDistance=-1;
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
-        moduleGeom* geomDet = moduleGeom::get(detid.rawId());
+        //WAIT//moduleGeom* geomDet = moduleGeom::get(detid.rawId());
         //WAIT//TVector3 hitPos = geomDet->toGlobal(TVector3(dedxHits->pos(h).x(), dedxHits->pos(h).y(), dedxHits->pos(h).z())); 
         //WAIT//if(hitPos.Mag()>outerDistance){outerDistance=hitPos.Mag();  point=hitPos;}
      }
@@ -1319,7 +1319,7 @@ bool Analyzer::passSelection(
 
    double Is=0;   if(dedxSObj) Is=dedxSObj->dEdx();
    double Ih=0;   if(dedxMObj) Ih=dedxMObj->dEdx();
-   double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
+   //WAIT//double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
 
    double PtCut=CutPt_[CutIndex];
    double ICut=CutI_[CutIndex];

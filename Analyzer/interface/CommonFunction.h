@@ -764,8 +764,8 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
 
    unsigned int NSat=0;
    unsigned int SiStripNOM = 0;
-   double lowerStripDeDx=1000;
-   int lowerStripDeDxIndex=-1;
+   //double lowerStripDeDx=1000; UNUSED
+   //int lowerStripDeDxIndex=-1; UNUSED
    for(unsigned int h=0;h<dedxHits->size();h++){
       DetId detid(dedxHits->detId(h));  
       if(!usePixel && detid.subdetId()<3)continue; // skip pixels
@@ -923,8 +923,8 @@ double GetMass(double P, double I, double dEdxK, double dEdxC){
 double GetMassErr (double P, double PErr, double dEdx, double dEdxErr, double M, double dEdxK, double dEdxC){
    if (M < 0) return -1;
    double KErr     = 0.2;
-   double CErr     = 0.4;
-   double cErr     = 0.01;
+   //double CErr     = 0.4; UNUSED
+   //double cErr     = 0.01; UNUSED
    double Criteria = dEdx - dEdxC;
    double Fac1     = P*P/(2*M*dEdxK);
    double Fac2     = pow(2*M*M*dEdxK/(P*P), 2);
@@ -936,7 +936,7 @@ double GetMassErr (double P, double PErr, double dEdx, double dEdxErr, double M,
 }
 
 // pz compute Ick out of dEdx value
-double GetIck(double I, bool MC, double dEdxK, double dEdxC){
+double GetIck(double I, double dEdxK, double dEdxC){
    double& K = dEdxK;
    double& C = dEdxC;
 

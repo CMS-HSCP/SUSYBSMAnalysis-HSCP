@@ -625,7 +625,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, 
 
 
 	 //	 if(dedxMObj) Ih=dedxMObj->dEdx();
-	 double Ick=0;  if(dedxMObj) Ick=GetIck(Ih,isMCglobal, DeDxK,DeDxC); //GetIck(double I, bool MC, double dEdxK, double dEdxC)
+	 double Ick=0;  if(dedxMObj) Ick=GetIck(Ih,DeDxK,DeDxC); //GetIck(double I, bool MC, double dEdxK, double dEdxC)
 
 
          for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){
