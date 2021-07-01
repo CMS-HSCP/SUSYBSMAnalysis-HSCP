@@ -55,7 +55,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
    gStyle->SetPalette(1);
    gStyle->SetNdivisions(505);*/
 
-   unsigned int NPseudoExp = 100; //Number of PseudoExperiment to run
+   unsigned int NPseudoExp = 1; //Number of PseudoExperiment to run
 
    //7TeV DXY/DZ/ANGLE 85/326  86/327   10/251
    double CosmicVetoInEfficiency7TeV    = 0.26 * 0.26 * 0.04 ; 
@@ -902,7 +902,8 @@ int main(int argc, char* argv[]) {
     
         cout << "opening file " << inputFile << endl;
         //TFile* inFile = TFile::Open(inputFile.c_str(),"UPDATE");
-        TFile* tfile = TFile::Open(inputFile.c_str());
+        TFile* tfile = TFile::Open(inputFile.c_str(),"UPDATE");
+        //TFile* tfile = TFile::Open(inputFile.c_str());
         if(not tfile){
             cout << "Failed to open " << inputFile << endl;
             return 0;

@@ -27,10 +27,14 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,muonDtSegmentToken_(consumes<DTRecSegment4DCollection>(iConfig.getParameter<edm::InputTag>("muonDtSegmentCollection")))
    ,muonCscSegmentToken_(consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("muonCscSegmentCollection")))
    ,offlinePrimaryVerticesToken_(consumes<vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("offlinePrimaryVerticesCollection")))
+   ,lumiScalersToken_(consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("lumiScalers")))
    ,refittedStandAloneMuonsToken_(consumes<vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("refittedStandAloneMuonsCollection")))
    ,offlineBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("offlineBeamSpotCollection")))
    ,muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muonCollection")))
    ,triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults")))
+   ,pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET")))
+   ,pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet")))
+   ,CaloMETToken_(consumes<reco::CaloMET>(iConfig.getParameter<edm::InputTag>("CaloMET")))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
@@ -61,7 +65,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,DeDxCalibration(iConfig.getUntrackedParameter<string>("DeDxCalibration"))
    ,Geometry(iConfig.getUntrackedParameter<string>("Geometry"))
    ,TimeOffset(iConfig.getUntrackedParameter<string>("TimeOffset"))
-
+   ,FMIPX(iConfig.getUntrackedParameter<double>("FMIPX"))
 {
    //now do what ever initialization is needed
    // define the selection to be considered later for the optimization
@@ -202,7 +206,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          else LogError("Analyzer") << "GenParticle Collection NotFound";
       }
       genColl = *genCollH;
-      int NChargedHSCP=HowManyChargedHSCP(genColl);
+      //WAIT//int NChargedHSCP=HowManyChargedHSCP(genColl);
       //WAIT//EventWeight_*=samples[s].GetFGluinoWeight(NChargedHSCP);
 
       GetGenHSCPDecayLength(genColl,HSCPDLength1,HSCPDLength2,true);
@@ -248,11 +252,27 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       nrha++;
       //mk rhadron ntuple
-      if(isSignal)
-		   tuple_maker->fillGenTreeBranches(tuple, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), nrha, EventWeight_,genColl[g].pdgId(),genColl[g].charge(),genColl[g].mass(),genColl[g].pt(),genColl[g].eta(),genColl[g].phi());
+      //if(isSignal)
+		  //tuple_maker->fillGenTreeBranches(tuple, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), nrha, EventWeight_,genColl[g].pdgId(),genColl[g].charge(),genColl[g].mass(),genColl[g].pt(),genColl[g].eta(),genColl[g].phi());
 
    }
 	nrha=0;
+
+   edm::Handle<edm::TriggerResults> triggerH;
+   iEvent.getByToken(triggerResultsToken_,triggerH); 
+   const edm::TriggerNames& triggerNames = iEvent.triggerNames(*triggerH);
+
+   bool HLT_Mu50=false;
+   bool HLT_PFMET120_PFMHT120_IDTight=false;
+   bool HLT_PFHT500_PFMET100_PFMHT100_IDTight=false;
+
+   for(unsigned int i=0; i<triggerH->size(); i++)
+   {
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_Mu50") && triggerH->accept(i)) HLT_Mu50=true;
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_PFMET120_PFMHT120_IDTight") && triggerH->accept(i)) HLT_PFMET120_PFMHT120_IDTight=true;
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_PFHT500_PFMET100_PFMHT100_IDTight") && triggerH->accept(i)) HLT_PFHT500_PFMET100_PFMHT100_IDTight=true;
+   }
+
 
    //check if the event is passing trigger
    tuple->TotalE  ->Fill(0.0,EventWeight_);
@@ -333,11 +353,125 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	//WAIT//HIPTrackLossEmul.SetHIPTrackLossRate(iEvent);
 
+    //===================== Handle For PileUp ================
+   unsigned int pileup_fromLumi = 0;
+   edm::Handle<LumiScalersCollection> lumiScalers;
+   iEvent.getByToken(lumiScalersToken_, lumiScalers);
+   if(lumiScalers.isValid() && !lumiScalers->empty())
+   {
+       LumiScalersCollection::const_iterator scalit = lumiScalers->begin();
+       pileup_fromLumi = scalit->pileup(); 
+   }
+    //===================== Handle For vertices ================ 
+   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
+
    
+   float CaloMET=-1, RecoPFMET=-1, RecoPFMHT=-1, HLTPFMET=-1, HLTPFMHT=-1;
+
+    //===================== Handle For PFMET ===================
+   edm::Handle<std::vector<reco::PFMET>> pfMETHandle;
+   iEvent.getByToken(pfMETToken_, pfMETHandle);
+   if(pfMETHandle.isValid() && !pfMETHandle->empty())
+   {
+   for(unsigned int i=0; i<pfMETHandle->size(); i++)
+   {
+       const reco::PFMET* pfMet = &(*pfMETHandle)[i];
+       RecoPFMET = pfMet->et();
+   }
+   }
+    
+    //===================== Handle For PFJet ===================
+   edm::Handle<reco::PFJetCollection> pfJetHandle;
+   iEvent.getByToken(pfJetToken_, pfJetHandle);
+   if(pfJetHandle.isValid() && !pfJetHandle->empty())
+   {
+   const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
+   TLorentzVector pMHT;
+   for(unsigned int i=0; i<pfJetColl->size(); i++)
+   {
+       const reco::PFJet* jet = &(*pfJetColl)[i];
+       if(jet->pt() < 20 || abs(jet->eta()) > 5 || jet->chargedEmEnergyFraction()+jet->neutralEmEnergyFraction() > 0.9) continue;
+       TLorentzVector p4(jet->pt()*cos(jet->phi()),jet->pt()*sin(jet->phi()),0,jet->et());
+       pMHT += p4;
+   }
+   RecoPFMHT = pMHT.Pt();
+   }
+    
+    //===================== Handle For CaloMET ===================
+   edm::Handle<reco::CaloMET> CaloMETHandle;
+   iEvent.getByToken(CaloMETToken_, CaloMETHandle);
+   if(CaloMETHandle.isValid())
+   {
+   const reco::CaloMET* caloMet = CaloMETHandle.product();
+   CaloMET = caloMet->et();
+   }
 
    //load all event collection that will be used later on (HSCP, dEdx and TOF)
-   //====================loop over HSCP candidates===================
    unsigned int count = 0;
+
+   std::vector<bool>         HSCP_passCutPt55;
+   std::vector<bool>         HSCP_passPreselection_noIsolation_noIh;
+   std::vector<bool>         HSCP_passPreselection;
+   std::vector<bool>         HSCP_passSelection;
+   std::vector<float>        HSCP_Charge;
+   std::vector<float>        HSCP_Pt;
+   std::vector<float>        HSCP_PtErr;
+   std::vector<float>        HSCP_Ias;
+   std::vector<float>        HSCP_Ih;
+   std::vector<float>        HSCP_Ick; //return (Ih-C)/K
+   std::vector<float>        HSCP_Fmip;
+   std::vector<float>        HSCP_ProbQ;
+   std::vector<float>        HSCP_TOF;
+   std::vector<float>        HSCP_TOFErr;
+   std::vector<unsigned int> HSCP_TOF_ndof;
+   std::vector<float>        HSCP_DTTOF;
+   std::vector<float>        HSCP_DTTOFErr;
+   std::vector<unsigned int> HSCP_DTTOF_ndof;
+   std::vector<float>        HSCP_CSCTOF;
+   std::vector<float>        HSCP_CSCTOFErr;
+   std::vector<unsigned int> HSCP_CSCTOF_ndof;
+   std::vector<float>        HSCP_Mass;
+   std::vector<float>        HSCP_MassErr;
+   std::vector<float>        HSCP_dZ;
+   std::vector<float>        HSCP_dXY;
+   std::vector<float>        HSCP_dR;
+   std::vector<float>        HSCP_eta;
+   std::vector<float>        HSCP_phi;
+   std::vector<unsigned int> HSCP_NOH; //number of (valid) track pixel+strip hits 
+   std::vector<unsigned int> HSCP_NOPH;//number of (valid) track pixel hits
+   std::vector<float>        HSCP_FOVH;//fraction of valid track hits
+   std::vector<unsigned int> HSCP_NOMH;//number of missing hits from IP till last hit (excluding hits behind the last hit)
+   std::vector<float>        HSCP_FOVHD;//fraction of valid hits divided by total expected hits until the last one
+   std::vector<unsigned int> HSCP_NOM;//number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+   std::vector<float>        HSCP_iso_TK;
+   std::vector<float>        HSCP_iso_ECAL;
+   std::vector<float>        HSCP_iso_HCAL;   
+   std::vector<float>        HSCP_PFIsolationR03_sumChargedHadronPt;
+   std::vector<float>        HSCP_PFIsolationR03_sumNeutralHadronPt;
+   std::vector<float>        HSCP_PFIsolationR03_sumPhotonPt;
+   std::vector<float>        HSCP_PFIsolationR03_sumPUPt;
+   std::vector<float>        HSCP_Ih_noL1;
+   std::vector<float>        HSCP_Ih_15drop;
+   std::vector<float>        HSCP_Ih_StripOnly;
+   std::vector<float>        HSCP_Ih_StripOnly_15drop;
+   std::vector<float>        HSCP_Ih_SaturationCorrectionFromFits;
+   std::vector<std::vector<float>>      HSCP_clust_charge; //dedx charge -> either strip or pixel 
+   std::vector<std::vector<float>>      HSCP_clust_pathlength;
+   std::vector<std::vector<bool>>       HSCP_clust_ClusterCleaning;
+   std::vector<std::vector<unsigned int>>        HSCP_clust_nstrip;
+   std::vector<std::vector<bool>>       HSCP_clust_sat254;
+   std::vector<std::vector<bool>>       HSCP_clust_sat255;
+   std::vector<std::vector<uint32_t>>   HSCP_clust_detid;
+   std::vector<std::vector<bool>>       HSCP_clust_isStrip; //is it a SiStrip cluster?
+   std::vector<std::vector<bool>>       HSCP_clust_isPixel; //is it a Pixel hit?
+   std::vector<float>        HSCP_GenId;
+   std::vector<float>        HSCP_GenCharge;
+   std::vector<float>        HSCP_GenMass;
+   std::vector<float>        HSCP_GenPt;
+   std::vector<float>        HSCP_GenEta;
+   std::vector<float>        HSCP_GenPhi;
+
+   //====================loop over HSCP candidates===================
    for(const auto& hscp : iEvent.get(hscpToken_)){
       reco::MuonRef  muon  = hscp.muonRef();//const reco::MuonRef& muon = hscp.muonRef();
 
@@ -360,6 +494,19 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //Apply a scale factor to muon only analysis to account for differences seen in data/MC preselection efficiency
       //For eta regions where Data > MC no correction to be conservative
       if(!isData && TypeMode_==3 && scaleFactor(track->eta())<RNG->Uniform(0, 1)) continue;
+   
+
+      count++;
+      std::vector<float> clust_charge;
+      std::vector<float> clust_pathlength;
+      std::vector<bool> clust_ClusterCleaning;
+      std::vector<unsigned int> clust_nstrip;
+      std::vector<bool> clust_sat254;
+      std::vector<bool> clust_sat255;
+      std::vector<uint32_t> clust_detid;
+      std::vector<bool> clust_isStrip;
+      std::vector<bool> clust_isPixel;
+
 
       //for signal only, make sure that the candidate is associated to a true HSCP
       int ClosestGen;
@@ -377,35 +524,52 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       
       if(TypeMode_>1 && TypeMode_!=5 && !hscp.muonRef().isNull()){
          if(isMC){
-            //WAIT//
-            /*tof    = &tofMap[hscp.muonRef()];
-            dttof  = &tofDtMap[hscp.muonRef()];
-            csctof = &tofCscMap[hscp.muonRef()];*/
             tof    = &(*tofMap)[hscp.muonRef()];
             dttof  = &(*tofDtMap)[hscp.muonRef()];
             csctof = &(*tofCscMap)[hscp.muonRef()];
          }else{
             const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
             const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
-            //std::cout<<"TESTA\n";
             //tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
             tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
-            //std::cout<<"TESTB\n";
             tof    = &tofCalculator.combinedTOF; 
             dttof  = &tofCalculator.dtTOF;  
             csctof = &tofCalculator.cscTOF;
 
-            //tof    = &(*tofMap)[hscp.muonRef()];
-            
-            //std::cout << "run: " << iEvent.id().run()  << " event: " << iEvent.id().event() << " tof: " << tof->inverseBeta() << " ndof: " << tof->nDof() << " muon pt: " << muon->pt() << " dttof: " << dttof->inverseBeta() << " dtdof: " << dttof->nDof() << " csc: " << csctof->inverseBeta() << " cscdof: " << csctof->nDof() << std::endl;//imprimer dttof et csctof//regarder coupure de remplissage //print CSCSegm DTSegm //+print dans le calcul DT et CSC
-
-            //std::cout << "cscnrechits: " << CSCSegmentColl->
-
-            //std::cout<<"TESTC\n";
          }
       }
 
       if(!dedxHits) continue; // skip tracks without hits otherwise there will be a crash
+
+
+      int nofClust_dEdxLowerThan=0;
+      float factorChargeToE = 3.61*pow(10,-6)*247;
+      for(unsigned int i=0; i<dedxHits->size(); i++)
+      {          
+          clust_charge.push_back(dedxHits->charge(i));
+          clust_pathlength.push_back(dedxHits->pathlength(i));
+          clust_isStrip.push_back(dedxHits->detId(i)>=3?true:false);
+          clust_isPixel.push_back(dedxHits->detId(i)>=3?false:true);
+          clust_detid.push_back(dedxHits->detId(i));
+          DetId detid(dedxHits->detId(i));
+          if(detid.subdetId()<3) continue;
+          const SiStripCluster* cluster = dedxHits->stripCluster(i);
+          std::vector<int> ampl = convert(cluster->amplitudes());
+          bool sat254=false, sat255=false;
+          for(unsigned int s=0; s<ampl.size(); s++)
+          {
+              if(ampl[s]>=254) sat254=true;
+              if(ampl[s]==255) sat255=true;
+          }
+          ampl = CrossTalkInv(ampl,0.10,0.04,true);
+          clust_ClusterCleaning.push_back(clusterCleaning(dedxHits->stripCluster(i),1));
+          clust_nstrip.push_back(ampl.size());
+          clust_sat254.push_back(sat254);
+          clust_sat255.push_back(sat255);
+          if(dedxHits->charge(i)*factorChargeToE/dedxHits->pathlength(i)<FMIPX) nofClust_dEdxLowerThan++; 
+      }
+      float Fmip = (float)nofClust_dEdxLowerThan/(float)dedxHits->size(); 
+
 
       HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
 
@@ -427,6 +591,28 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       reco::DeDxData* dedxMObj  = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:nullptr;
       reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements()>0?&dedxMUpObjTmp:nullptr;
       reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements()>0?&dedxMDownObjTmp:nullptr;
+
+    
+      reco::DeDxData dedxIh_noL1_Tmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, nullptr, &dEdxErr,pdgId,skipPixel,useTemplateLayer,true);
+      reco::DeDxData dedxIh_15drop_Tmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr, &dEdxErr,pdgId,skipPixel,useTemplateLayer);
+      reco::DeDxData dedxIh_StripOnly_Tmp = computedEdx(dedxHits, dEdxSF, nullptr,          false, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, nullptr, &dEdxErr,pdgId,skipPixel,useTemplateLayer);
+      reco::DeDxData dedxIh_StripOnly_15drop_Tmp = computedEdx(dedxHits, dEdxSF, nullptr,          false, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, nullptr, &dEdxErr,pdgId,skipPixel,useTemplateLayer,true);
+      reco::DeDxData dedxIh_SaturationCorrectionFromFits_Tmp = computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains, true, true, 99, false, 2, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer, true);
+
+
+      reco::DeDxData* dedxIh_noL1               = dedxIh_noL1_Tmp.numberOfMeasurements()>0?&dedxIh_noL1_Tmp:nullptr;
+      reco::DeDxData* dedxIh_15drop             = dedxIh_15drop_Tmp.numberOfMeasurements()>0?&dedxIh_15drop_Tmp:nullptr;
+      reco::DeDxData* dedxIh_StripOnly          = dedxIh_StripOnly_Tmp.numberOfMeasurements()>0?&dedxIh_StripOnly_Tmp:nullptr;
+      reco::DeDxData* dedxIh_StripOnly_15drop   = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements()>0?&dedxIh_StripOnly_15drop_Tmp:nullptr;
+      reco::DeDxData* dedxIh_SaturationCorrectionFromFits   = dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements()>0?&dedxIh_SaturationCorrectionFromFits_Tmp:nullptr;
+
+      reco::DeDxData dedx_probQ_Tmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, nullptr,0,pdgId,skipPixel,useTemplateLayer,true);
+
+      reco::DeDxData* dedx_probQ                = dedx_probQ_Tmp.numberOfMeasurements()>0?&dedx_probQ_Tmp:nullptr;
+
+
+
+
       if(TypeMode_==5)OpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
       //compute systematic uncertainties on signal
@@ -476,6 +662,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
          }
 
+
          // compute systematic due to dEdx (both Ias and Ih)
          //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0)){...}
 
@@ -491,20 +678,31 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       //check if the canddiate pass the preselection cuts
       /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
+
+
       double MassErr = GetMassErr(track->p(), track->ptError(), dedxMObj?dedxMObj->dEdx():-1, dEdxErr, GetMass(track->p(), dedxMObj?dedxMObj->dEdx():-1, DeDxK,DeDxC), DeDxK,DeDxC);
+
+      bool passPre = true;
+      bool passPre_noIh_noIso = true;
+
       if(isMC){
          passPreselection(  hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, -1, false, 0, 0, MassErr );
       }
-      if(!passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr) ) continue;
+      if(!passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr) ) passPre=false;
+      
+      if(!passPreselection( hscp, dedxHits, NULL, NULL, tof, iEvent, EventWeight_, NULL, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr, false) ) passPre_noIh_noIso=false;
+
       if(TypeMode_==5 && isSemiCosmicSB)continue;//WAIT//
 
       //fill the ABCD histograms and a few other control plots
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
       //WAIT//else if(isMC) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
-      tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, isMCglobal, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
+      if(passPre) tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, isMCglobal, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
 
       if(TypeMode_==5 && isCosmicSB)continue; 
+
+
 
       //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
       //double Mass = -1;
@@ -517,6 +715,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		   if(dedxMObj) MassComb = Mass;
 		   if(tof) MassComb=GetMassFromBeta(track->p(),(1/(2-tof->inverseBeta())));
 
+           if(passPre)
+           {
          for(unsigned int CutIndex=0;CutIndex<CutPt_Flip_.size();CutIndex++){
             //Background check looking at region with TOF<1
             //WAIT//if(!PassSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, NULL, true)) continue;
@@ -526,6 +726,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             if(tof) tuple->MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
             tuple->MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
 		   }
+           }
 
       }
 
@@ -550,6 +751,9 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(tof) MassDownComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
 
       bool PassNonTrivialSelection=false;
+
+      if(passPre)
+      {
 
       //==========================================================
       // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
@@ -581,14 +785,15 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          tuple->MassComb_SystHDown->Fill(CutIndex, MassDownComb, EventWeight_);
 
       }//end of Cut loop
+      }
 
-      double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),isMC,DeDxK,DeDxC);
+
+      double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),DeDxK,DeDxC);
       int nomh= 0;nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
       double fovhd = track->found()<=0?-1:track->found() / float(track->found() + nomh);
       unsigned int nom=0; if(dedxSObj) nom=dedxSObj->numberOfMeasurements();
 
-      double weight=0,genid=0,gencharge=-99,genmass=-99,genpt=-99,geneta=-99,genphi=-99;
-      weight = EventWeight_;
+      double genid=0,gencharge=-99,genmass=-99,genpt=-99,geneta=-99,genphi=-99;
   
       if(isSignal){
          genid = genColl[ClosestGen].pdgId();
@@ -598,21 +803,181 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          geneta = genColl[ClosestGen].eta();
          genphi = genColl[ClosestGen].phi();
       }
+    
+      
+      
+      float iso_TK = -1;
+      float iso_ECAL = -1;
+      float iso_HCAL = -1;
 
-      if(PassNonTrivialSelection||(dedxSObj && dedxSObj->dEdx()> 0. && track->pt()>60.))
-         tuple_maker->fillTreeBranches(tuple,
-            TrigInfo_, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), 
-            count, track->charge(), track->pt(),track->ptError(), 
-            dedxSObj ? dedxSObj->dEdx() : -1,
-            dedxSObj ? dedxMObj->dEdx() : -1,
-            dedxMObj ? Ick2 : -99, 
-            tof ? tof->inverseBeta() : -1, 
-            Mass, TreeDZ, TreeDXY, OpenAngle, 
-            track->eta(), track->phi(), track->found(), track->hitPattern().numberOfValidPixelHits(), track->validFraction(), 
-            nomh,fovhd, nom, weight,genid,gencharge,genmass,genpt,geneta,genphi
-         );
-   count++;
+      if(TypeMode_!=3) {
+        const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
+        susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
+        iso_TK = hscpIso.Get_TK_SumEt();
+        iso_ECAL = hscpIso.Get_ECAL_Energy();
+        iso_HCAL = hscpIso.Get_HCAL_Energy();
+      }
+
+      float PFIso03_sumCharHadPt = -1;
+      float PFIso03_sumNeutHadPt = -1;
+      float PFIso03_sumPhotonPt = -1;
+      float PFIso03_sumPUPt = -1;
+
+      if(TypeMode_==2 && !muon.isNull())
+      {
+          PFIso03_sumCharHadPt = muon->pfIsolationR03().sumChargedHadronPt;
+          PFIso03_sumNeutHadPt = muon->pfIsolationR03().sumNeutralHadronEt;
+          PFIso03_sumPhotonPt = muon->pfIsolationR03().sumPhotonEt;
+          PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
+      }
+
+
+      HSCP_passCutPt55.push_back(track->pt()>55?true:false);
+      HSCP_passPreselection_noIsolation_noIh.push_back(passPre_noIh_noIso);
+      HSCP_passPreselection.push_back(passPre);
+      HSCP_passSelection.push_back(PassNonTrivialSelection);
+      HSCP_Charge.push_back(track->charge());
+      HSCP_Pt.push_back(track->pt());
+      HSCP_PtErr.push_back(track->ptError());
+      HSCP_Ias.push_back(dedxSObj?dedxSObj->dEdx():-1);
+      HSCP_Ih.push_back(dedxMObj?dedxMObj->dEdx():-1);
+      HSCP_Ick.push_back(dedxMObj?Ick2:-99);
+      HSCP_Fmip.push_back(Fmip);
+      HSCP_ProbQ.push_back(dedx_probQ?dedx_probQ->dEdx():-1);
+      HSCP_TOF.push_back(tof?tof->inverseBeta():-99);
+      HSCP_TOFErr.push_back(tof?tof->inverseBetaErr():-99);
+      HSCP_TOF_ndof.push_back(tof?tof->nDof():-99);
+      HSCP_DTTOF.push_back(dttof?dttof->inverseBeta():-99);
+      HSCP_DTTOFErr.push_back(dttof?dttof->inverseBetaErr():-99);
+      HSCP_DTTOF_ndof.push_back(dttof?dttof->nDof():-99);
+      HSCP_CSCTOF.push_back(csctof?csctof->inverseBeta():-99);
+      HSCP_CSCTOFErr.push_back(csctof?csctof->inverseBetaErr():-99);
+      HSCP_CSCTOF_ndof.push_back(csctof?csctof->nDof():-99);
+      HSCP_Mass.push_back(Mass);
+      HSCP_MassErr.push_back(MassErr);
+      HSCP_dZ.push_back(TreeDZ);
+      HSCP_dXY.push_back(TreeDXY);
+      HSCP_dR.push_back(OpenAngle);
+      HSCP_eta.push_back(track->eta());
+      HSCP_phi.push_back(track->phi());
+      HSCP_NOH.push_back(track->found());
+      HSCP_NOPH.push_back(track->hitPattern().numberOfValidPixelHits());
+      HSCP_FOVH.push_back(track->validFraction());
+      HSCP_NOMH.push_back(nomh);
+      HSCP_FOVHD.push_back(fovhd);
+      HSCP_NOM.push_back(nom);
+      HSCP_iso_TK.push_back(iso_TK);
+      HSCP_iso_ECAL.push_back(iso_ECAL);
+      HSCP_iso_HCAL.push_back(iso_HCAL);
+      HSCP_PFIsolationR03_sumChargedHadronPt.push_back(PFIso03_sumCharHadPt);
+      HSCP_PFIsolationR03_sumNeutralHadronPt.push_back(PFIso03_sumNeutHadPt);
+      HSCP_PFIsolationR03_sumPhotonPt.push_back(PFIso03_sumPhotonPt);
+      HSCP_PFIsolationR03_sumPUPt.push_back(PFIso03_sumPUPt);
+      HSCP_Ih_noL1.push_back(dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1);
+      HSCP_Ih_15drop.push_back(dedxIh_15drop ? dedxIh_15drop->dEdx() : -1);
+      HSCP_Ih_StripOnly.push_back(dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1);
+      HSCP_Ih_StripOnly_15drop.push_back(dedxIh_StripOnly_15drop ? dedxIh_StripOnly_15drop->dEdx() : -1);
+      HSCP_Ih_SaturationCorrectionFromFits.push_back(dedxIh_SaturationCorrectionFromFits ? dedxIh_SaturationCorrectionFromFits->dEdx() : -1);
+      HSCP_clust_charge.push_back(clust_charge);
+      HSCP_clust_pathlength.push_back(clust_pathlength);
+      HSCP_clust_ClusterCleaning.push_back(clust_ClusterCleaning);
+      HSCP_clust_nstrip.push_back(clust_nstrip);
+      HSCP_clust_sat254.push_back(clust_sat254);
+      HSCP_clust_sat255.push_back(clust_sat255);
+      HSCP_clust_detid.push_back(clust_detid);
+      HSCP_clust_isStrip.push_back(clust_isStrip);
+      HSCP_clust_isPixel.push_back(clust_isPixel);
+      HSCP_GenId.push_back(genid);
+      HSCP_GenCharge.push_back(gencharge);
+      HSCP_GenMass.push_back(genmass);
+      HSCP_GenPt.push_back(genpt);
+      HSCP_GenEta.push_back(geneta);
+      HSCP_GenPhi.push_back(genphi);
+
+      
    } //END loop over HSCP candidates
+
+
+   tuple_maker->fillTreeBranches(tuple,
+           TrigInfo_,
+           iEvent.id().run(),
+           iEvent.id().event(),
+           iEvent.id().luminosityBlock(),
+           pileup_fromLumi,
+           vertexColl.size(),
+           count,
+           EventWeight_,
+           HLT_Mu50,
+           HLT_PFMET120_PFMHT120_IDTight,
+           HLT_PFHT500_PFMET100_PFMHT100_IDTight,
+           CaloMET,
+           RecoPFMET,
+           RecoPFMHT,
+           HLTPFMET,
+           HLTPFMHT,
+           HSCP_passCutPt55,
+           HSCP_passPreselection_noIsolation_noIh,
+           HSCP_passPreselection,
+           HSCP_passSelection,
+           HSCP_Charge,
+           HSCP_Pt,
+           HSCP_PtErr,
+           HSCP_Ias,
+           HSCP_Ih,
+           HSCP_Ick,
+           HSCP_Fmip,
+           HSCP_ProbQ,
+           HSCP_TOF,
+           HSCP_TOFErr,
+           HSCP_TOF_ndof,
+           HSCP_DTTOF,
+           HSCP_DTTOFErr,
+           HSCP_DTTOF_ndof,
+           HSCP_CSCTOF,
+           HSCP_CSCTOFErr,
+           HSCP_CSCTOF_ndof,
+           HSCP_Mass,
+           HSCP_MassErr,
+           HSCP_dZ,
+           HSCP_dXY,
+           HSCP_dR,
+           HSCP_eta,
+           HSCP_phi,
+           HSCP_NOH,
+           HSCP_NOPH,
+           HSCP_FOVH,
+           HSCP_NOMH,
+           HSCP_FOVHD,
+           HSCP_NOM,
+           HSCP_iso_TK,
+           HSCP_iso_ECAL,
+           HSCP_iso_HCAL,
+           HSCP_PFIsolationR03_sumChargedHadronPt,
+           HSCP_PFIsolationR03_sumNeutralHadronPt,
+           HSCP_PFIsolationR03_sumPhotonPt,
+           HSCP_PFIsolationR03_sumPUPt,
+           HSCP_Ih_noL1,
+           HSCP_Ih_15drop,
+           HSCP_Ih_StripOnly,
+           HSCP_Ih_StripOnly_15drop,
+           HSCP_Ih_SaturationCorrectionFromFits,
+           HSCP_clust_charge,
+           HSCP_clust_pathlength,
+           HSCP_clust_ClusterCleaning,
+           HSCP_clust_nstrip,
+           HSCP_clust_sat254,
+           HSCP_clust_sat255,
+           HSCP_clust_detid,
+           HSCP_clust_isStrip,
+           HSCP_clust_isPixel,
+           HSCP_GenId,
+           HSCP_GenCharge,
+           HSCP_GenMass,
+           HSCP_GenPt,
+           HSCP_GenEta,
+           HSCP_GenPhi
+    );
+
 
    //save event dependent information thanks to the bookkeeping
    for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
@@ -819,10 +1184,10 @@ double Analyzer::RescaledPt(const double& pt, const double& eta, const double& p
 TVector3 Analyzer::getOuterHitPos(const reco::DeDxHitInfo* dedxHits){
      TVector3 point(0,0,0);
      if(!dedxHits)return point;
-     double outerDistance=-1;
+     //WAIT//double outerDistance=-1;
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
-        moduleGeom* geomDet = moduleGeom::get(detid.rawId());
+        //WAIT//moduleGeom* geomDet = moduleGeom::get(detid.rawId());
         //WAIT//TVector3 hitPos = geomDet->toGlobal(TVector3(dedxHits->pos(h).x(), dedxHits->pos(h).y(), dedxHits->pos(h).z())); 
         //WAIT//if(hitPos.Mag()>outerDistance){outerDistance=hitPos.Mag();  point=hitPos;}
      }
@@ -891,17 +1256,17 @@ bool Analyzer::passPreselection(
    const reco::MuonTimeExtra* tof,
    const edm::Event& iEvent, 
    float Event_Weight,
-   Tuple* &tuple, 
+   Tuple* tuple, 
    const double& GenBeta, 
    bool RescaleP, 
    const double& RescaleI, 
    const double& RescaleT, 
-   double MassErr)
+   double MassErr,
+   bool Ih_Iso_cut)
 {
 
    if(TypeMode_==1 && !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon))return false;
    if( (TypeMode_==2 || TypeMode_==4) && hscp.type() != susybsm::HSCParticleType::globalMuon)return false;
-
    reco::TrackRef   track;
    reco::MuonRef muon = hscp.muonRef();
 
@@ -926,6 +1291,8 @@ bool Analyzer::passPreselection(
    }
    if(TypeMode_==3 && count<minMuStations) return false;
    if(tuple) tuple->Stations->Fill(0.0, Event_Weight);
+
+   
 
    //===================== Handle For vertex ================
    vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
@@ -1020,8 +1387,8 @@ bool Analyzer::passPreselection(
      if(dedxMObj) tuple->BS_MIm->Fill(dedxMObj->dEdx(),Event_Weight);
    }
 
-   if(dedxSObj && dedxSObj->dEdx()+RescaleI<GlobalMinIs)return false;
-   if(dedxMObj && ((TypeMode_!=5 && dedxMObj->dEdx()<GlobalMinIm) || (TypeMode_==5 && dedxMObj->dEdx()>GlobalMinIm)) )return false;
+   if(dedxSObj) {if(dedxSObj->dEdx()+RescaleI<GlobalMinIs)return false;}
+   if(dedxMObj){if((TypeMode_!=5 && dedxMObj->dEdx()<GlobalMinIm) || (TypeMode_==5 && dedxMObj->dEdx()>GlobalMinIm)) return false;}
    if(tuple){tuple->MI   ->Fill(0.0,Event_Weight);}
 
    if(tof){
@@ -1092,7 +1459,7 @@ bool Analyzer::passPreselection(
 
    if(tuple){tuple->Dxy  ->Fill(0.0,Event_Weight);}
 
-   if(TypeMode_!=3) {
+   if(TypeMode_!=3 && Ih_Iso_cut) {
      const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
 
      susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
@@ -1149,7 +1516,7 @@ bool Analyzer::passPreselection(
    //if(TypeMode_==3 && fabs(minEta)<minSegEtaSep) return false;
    //WAIT//if(tuple){tuple->SegSep->Fill(0.0,Event_Weight);}
 
-   if(tuple) {
+   if(tuple && tof) {
      //Plots for tracks in dz control region
      if(fabs(dz)>CosmicMinDz && fabs(dz)<CosmicMaxDz && !muon->isGlobalMuon()) {
        tuple->BS_Pt_FailDz->Fill(track->pt(), Event_Weight);
@@ -1214,7 +1581,7 @@ bool Analyzer::passPreselection(
           if(dedxMObj) tuple->BS_EtaIm->Fill(track->eta(),dedxMObj->dEdx(),Event_Weight);
           tuple->BS_EtaP ->Fill(track->eta(),track->p(),Event_Weight);
           tuple->BS_EtaPt->Fill(track->eta(),track->pt(),Event_Weight);
-          tuple->BS_EtaTOF->Fill(track->eta(),tof->inverseBeta(),Event_Weight);
+          if(tof) tuple->BS_EtaTOF->Fill(track->eta(),tof->inverseBeta(),Event_Weight);
    }
 
    if(tuple){if(GenBeta>=0)tuple->Beta_PreselectedC->Fill(GenBeta, Event_Weight);
@@ -1248,26 +1615,28 @@ bool Analyzer::passPreselection(
           if(dedxSObj && PUA) tuple->BS_Is_PUA ->Fill(dedxSObj->dEdx(),Event_Weight);
           if(dedxSObj && PUB) tuple->BS_Is_PUB ->Fill(dedxSObj->dEdx(),Event_Weight);
           if(dedxSObj && DXYSB && DZSB && OASB) tuple->BS_Is_Cosmic->Fill(dedxSObj->dEdx(),Event_Weight);
-          if(dedxSObj) tuple->BS_Im ->Fill(dedxMObj->dEdx(),Event_Weight);
-          if(dedxSObj && PUA) tuple->BS_Im_PUA ->Fill(dedxMObj->dEdx(),Event_Weight);
-          if(dedxSObj && PUB) tuple->BS_Im_PUB ->Fill(dedxMObj->dEdx(),Event_Weight);
+          if(dedxMObj) tuple->BS_Im ->Fill(dedxMObj->dEdx(),Event_Weight);
+          if(dedxMObj && PUA) tuple->BS_Im_PUA ->Fill(dedxMObj->dEdx(),Event_Weight);
+          if(dedxMObj && PUB) tuple->BS_Im_PUB ->Fill(dedxMObj->dEdx(),Event_Weight);
 
+          if(tof)
+          {
 	        tuple->BS_TOF->Fill(tof->inverseBeta(),Event_Weight);
             if(PUA)tuple->BS_TOF_PUA->Fill(tof->inverseBeta(),Event_Weight);
             if(PUB)tuple->BS_TOF_PUB->Fill(tof->inverseBeta(),Event_Weight);
 	        if(dttof->nDof()>6) tuple->BS_TOF_DT->Fill(dttof->inverseBeta(),Event_Weight);
             if(csctof->nDof()>6) tuple->BS_TOF_CSC->Fill(csctof->inverseBeta(),Event_Weight);
             tuple->BS_PtTOF->Fill(track->pt() ,tof->inverseBeta(),Event_Weight);
-
-          if(dedxSObj) {
+          }
+          if(dedxSObj && dedxMObj) {
 	    tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
             tuple->BS_PImHD->Fill(track->p()  ,dedxMObj->dEdx(),Event_Weight);
             tuple->BS_PIm  ->Fill(track->p()  ,dedxMObj->dEdx(),Event_Weight);
             tuple->BS_PtIs ->Fill(track->pt() ,dedxSObj->dEdx(),Event_Weight);
             tuple->BS_PtIm ->Fill(track->pt() ,dedxMObj->dEdx(),Event_Weight);
 	  }
-          if(dedxSObj)tuple->BS_TOFIs->Fill(tof->inverseBeta(),dedxSObj->dEdx(),Event_Weight);
-          if(dedxSObj)tuple->BS_TOFIm->Fill(tof->inverseBeta(),dedxMObj->dEdx(),Event_Weight);
+          if(dedxSObj && tof)tuple->BS_TOFIs->Fill(tof->inverseBeta(),dedxSObj->dEdx(),Event_Weight);
+          if(dedxMObj && tof)tuple->BS_TOFIm->Fill(tof->inverseBeta(),dedxMObj->dEdx(),Event_Weight);
 
 	  //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
 	  //Binning not used for other analyses
@@ -1319,7 +1688,7 @@ bool Analyzer::passSelection(
 
    double Is=0;   if(dedxSObj) Is=dedxSObj->dEdx();
    double Ih=0;   if(dedxMObj) Ih=dedxMObj->dEdx();
-   double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
+   //WAIT//double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
 
    double PtCut=CutPt_[CutIndex];
    double ICut=CutI_[CutIndex];
@@ -1439,4 +1808,20 @@ bool Analyzer::passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic,
       }
    }*/
    return false;
+}
+
+void 
+Analyzer::isPixelTrack(const edm::Ref<std::vector<Trajectory> > &refTraj, bool &isBpixtrack, bool &isFpixtrack) {
+    // Used in analyze() to see if it is pixel track
+    std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
+    std::vector<TrajectoryMeasurement>::const_iterator tmeasIt;
+    for (tmeasIt = tmeasColl.begin(); tmeasIt != tmeasColl.end(); tmeasIt++) {
+        if (!tmeasIt->updatedState().isValid()) continue;
+        TransientTrackingRecHit::ConstRecHitPointer testhit = tmeasIt->recHit();
+        if (!testhit->isValid() || testhit->geographicalId().det() != DetId::Tracker) continue;
+        uint testSubDetID = (testhit->geographicalId().subdetId());
+        if (testSubDetID==PixelSubdetector::PixelBarrel) isBpixtrack = true;
+        if (testSubDetID==PixelSubdetector::PixelEndcap) isFpixtrack = true;
+        if (isBpixtrack && isFpixtrack) break;
+    }
 }

@@ -14,11 +14,15 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,muonDtSegmentCollection  = cms.InputTag("dt4DSegments")
     ,muonCscSegmentCollection = cms.InputTag("cscSegments")
     ,offlinePrimaryVerticesCollection = cms.InputTag("offlinePrimaryVertices")
+    ,lumiScalers    = cms.InputTag("scalersRawToDigi")
     ,refittedStandAloneMuonsCollection = cms.InputTag("refittedStandAloneMuons")
     ,offlineBeamSpotCollection = cms.InputTag("offlineBeamSpot")
     ,muonSegmentCollection = cms.InputTag("MuonSegmentProducer")
     ,muonCollection = cms.InputTag("muons")
     ,triggerResults = cms.InputTag("TriggerResults","","HLT")
+    ,pfMET = cms.InputTag("pfMet", "", "RECO")
+    ,pfJet = cms.InputTag("ak4PFJetsCHS", "", "RECO")
+    ,CaloMET = cms.InputTag("caloMet", "", "RECO")
     #HLT triggers
     ,Trigger_Mu = cms.untracked.vstring("HLT_Mu45_eta2p1","HLT_Mu50_v") #"HLT_OldMu100_","HLT_TkMu100_","HLT_TkMu50_v"
     ,Trigger_MET  = cms.untracked.vstring("HLT_PFMET170_HBHECleaned_v","HLT_PFMET170_NoiseCleaned")
@@ -49,6 +53,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     #,DeDxSF_1        = cms.untracked.double(1.41822)
     ,DeDxK           = cms.untracked.double(2.37) 
     ,DeDxC           = cms.untracked.double(2.93)
+    ,FMIPX           = cms.untracked.double(4)
     # calibration
     ,enableDeDxCalibration = cms.untracked.bool(False)
     ,DeDxCalibration       = cms.untracked.string("{}/Data13TeVGains_v2.root".format(PATH_TO_DATA))
