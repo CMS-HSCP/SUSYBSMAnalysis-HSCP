@@ -307,6 +307,10 @@ class Analyzer : public edm::EDAnalyzer {
 
       double FMIPX      = 4;
 
+
+      unsigned int STree = 0;
+      unsigned int SGTree = 0;
+
       // Emulators
       /*dedxHIPEmulator      HIPemulator;
       dedxHIPEmulator      HIPemulatorUp;

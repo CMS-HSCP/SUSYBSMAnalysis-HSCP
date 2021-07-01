@@ -66,11 +66,13 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,Geometry(iConfig.getUntrackedParameter<string>("Geometry"))
    ,TimeOffset(iConfig.getUntrackedParameter<string>("TimeOffset"))
    ,FMIPX(iConfig.getUntrackedParameter<double>("FMIPX"))
+   ,STree(iConfig.getUntrackedParameter<unsigned int>("saveTree"))
+   ,SGTree(iConfig.getUntrackedParameter<unsigned int>("saveGenTree"))
 {
    //now do what ever initialization is needed
    // define the selection to be considered later for the optimization
    // WARNING: recall that this has a huge impact on the analysis time AND on the output file size --> be carefull with your choice
-   
+  
    useClusterCleaning = true;
    if(TypeMode_==4) {
       useClusterCleaning = false; //switch off cluster cleaning for mCHAMPs
@@ -120,7 +122,10 @@ Analyzer::beginJob()
 
    // create histograms & trees
    initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
-   tuple_maker->initializeTuple(tuple, dir, SkipSelectionPlot_, TypeMode_, isSignal, CutPt_.size(), CutPt_Flip_.size(), PtHistoUpperBound, MassHistoUpperBound, MassNBins, IPbound, PredBins, EtaBins, dEdxS_UpLim, dEdxM_UpLim, DzRegions, GlobalMinPt, GlobalMinTOF);
+   tuple_maker->initializeTuple(tuple, dir, STree, SGTree, SkipSelectionPlot_, TypeMode_, isSignal, CutPt_.size(), CutPt_Flip_.size(), PtHistoUpperBound, MassHistoUpperBound, MassNBins, IPbound, PredBins, EtaBins, dEdxS_UpLim, dEdxM_UpLim, DzRegions, GlobalMinPt, GlobalMinTOF);
+
+   //saveTree = STree;
+   //saveGenTree = SGTree;
 
    tuple->IntLumi->Fill(0.0,IntegratedLuminosity_);
 

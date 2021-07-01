@@ -2,14 +2,16 @@
 
 #ifndef SUSYBSMAnalysis_Analyzer_Tuple_h
 #define SUSYBSMAnalysis_Analyzer_Tuple_h
+    
 
-unsigned short saveTree = 6;
-unsigned short saveGenTree = 1;
+
 
 struct Tuple {
   //=============================================================
   //      Declare Trees & Branches
   //=============================================================
+
+    
    TTree*       Tree;
    unsigned int NCuts;
    unsigned int Tree_Trig;

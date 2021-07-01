@@ -7,7 +7,7 @@ class TupleMaker{
       TupleMaker();
       ~TupleMaker();
 
-      void initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF);
+      void initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned int saveTree, unsigned int saveGenTree, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF);
 
 
       void fillTreeBranches(Tuple* &tuple, 
@@ -115,7 +115,7 @@ class TupleMaker{
 //=============================================================
 
 
-void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF){
+void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned int saveTree, unsigned int saveGenTree, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF){
 
    std::string Name;
 
@@ -508,10 +508,11 @@ void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSe
 //
 //===================================================
 
-if(saveTree>0)
-{
+
    tuple->Tree = dir.make<TTree>("HscpCandidates", "HscpCandidates");
    ///tuple->Tree->SetDirectory(0);
+if(saveTree>0)
+{
    tuple->Tree->Branch("Trig"    ,&tuple->Tree_Trig      ,"Trig/i");
    tuple->Tree->Branch("Run"     ,&tuple->Tree_Run       ,"Run/i");
    tuple->Tree->Branch("Event"   ,&tuple->Tree_Event     ,"Event/l");
@@ -604,11 +605,10 @@ if(saveTree>3)
 }
 }
 
-if(saveGenTree>0)
-{
-
    tuple->GenTree = dir.make<TTree>("GenHscpCandidates", "GenHscpCandidates");
    ////tuple->GenTree->SetDirectory(0);
+if(saveGenTree>0)
+{
    tuple->GenTree->Branch("Run"     ,&tuple->GenTree_Run       ,"Run/i");
    tuple->GenTree->Branch("Event"   ,&tuple->GenTree_Event     ,"Event/l");
    tuple->GenTree->Branch("Lumi"    ,&tuple->GenTree_Lumi      ,"Lumi/i");

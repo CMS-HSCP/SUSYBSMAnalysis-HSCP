@@ -54,6 +54,8 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,DeDxK           = cms.untracked.double(2.37) 
     ,DeDxC           = cms.untracked.double(2.93)
     ,FMIPX           = cms.untracked.double(4)
+    ,saveTree        = cms.untracked.uint32(0) #0: tree not saved
+    ,saveGenTree     = cms.untracked.uint32(0) #0: tree not saved
     # calibration
     ,enableDeDxCalibration = cms.untracked.bool(False)
     ,DeDxCalibration       = cms.untracked.string("{}/Data13TeVGains_v2.root".format(PATH_TO_DATA))
