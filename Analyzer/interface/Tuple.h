@@ -2,44 +2,99 @@
 
 #ifndef SUSYBSMAnalysis_Analyzer_Tuple_h
 #define SUSYBSMAnalysis_Analyzer_Tuple_h
+    
+
+
 
 struct Tuple {
   //=============================================================
   //      Declare Trees & Branches
   //=============================================================
+
+    
    TTree*       Tree;
    unsigned int NCuts;
    unsigned int Tree_Trig;
    unsigned int Tree_Run;
-   unsigned int Tree_Event;
+   unsigned long Tree_Event;
    unsigned int Tree_Lumi;
+   unsigned int Tree_PileUp;  
+   unsigned int Tree_nofVertices;
    unsigned int Tree_Hscp;
-   float        Tree_Charge;
-   float        Tree_Pt;
-   float        Tree_PtErr;
-   float        Tree_I;
-   float        Tree_Ih;
-   float        Tree_Ick;
-   float        Tree_TOF;
-   float        Tree_Mass;
-   float        Tree_dZ;
-   float        Tree_dXY;
-   float        Tree_dR;
-   float        Tree_eta;
-   float        Tree_phi;
-   unsigned int Tree_NOH; //number of (valid) track pixel+strip hits 
-   unsigned int Tree_NOPH;//number of (valid) track pixel hits
-   float        Tree_FOVH;//fraction of valid track hits
-   unsigned int Tree_NOMH;//number of missing hits from IP till last hit (excluding hits behind the last hit)
-   float        Tree_FOVHD;//fraction of valid hits divided by total expected hits until the last one
-   unsigned int Tree_NOM;//number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
    float        Tree_Weight;
-   float        Tree_GenId;
-   float        Tree_GenCharge;
-   float        Tree_GenMass;
-   float        Tree_GenPt;
-   float        Tree_GenEta;
-   float        Tree_GenPhi;
+   bool         Tree_HLT_Mu50;
+   bool         Tree_HLT_PFMET120_PFMHT120_IDTight;
+   bool         Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
+   float        Tree_CaloMET;
+   float        Tree_RecoPFMET;
+   float        Tree_RecoPFMHT;
+   float        Tree_HLTPFMET;
+   float        Tree_HLTPFMHT;
+
+   std::vector<bool>         Tree_passCutPt55;
+   std::vector<bool>         Tree_passPreselection_noIsolation_noIh;
+   std::vector<bool>         Tree_passPreselection;
+   std::vector<bool>         Tree_passSelection;
+   std::vector<float>        Tree_Charge;
+   std::vector<float>        Tree_Pt;
+   std::vector<float>        Tree_PtErr;
+   std::vector<float>        Tree_Ias;
+   std::vector<float>        Tree_Ih;
+   std::vector<float>        Tree_Ick; //return (Ih-C)/K
+   std::vector<float>        Tree_Fmip;
+   std::vector<float>        Tree_ProbQ;
+   std::vector<float>        Tree_TOF;
+   std::vector<float>        Tree_TOFErr;
+   std::vector<unsigned int> Tree_TOF_ndof;
+   std::vector<float>        Tree_DTTOF;
+   std::vector<float>        Tree_DTTOFErr;
+   std::vector<unsigned int> Tree_DTTOF_ndof;
+   std::vector<float>        Tree_CSCTOF;
+   std::vector<float>        Tree_CSCTOFErr;
+   std::vector<unsigned int> Tree_CSCTOF_ndof;
+   std::vector<float>        Tree_Mass;
+   std::vector<float>        Tree_MassErr;
+   std::vector<float>        Tree_dZ;
+   std::vector<float>        Tree_dXY;
+   std::vector<float>        Tree_dR;
+   std::vector<float>        Tree_eta;
+   std::vector<float>        Tree_phi;
+   std::vector<unsigned int> Tree_NOH; //number of (valid) track pixel+strip hits 
+   std::vector<unsigned int> Tree_NOPH;//number of (valid) track pixel hits
+   std::vector<float>        Tree_FOVH;//fraction of valid track hits
+   std::vector<unsigned int> Tree_NOMH;//number of missing hits from IP till last hit (excluding hits behind the last hit)
+   std::vector<float>        Tree_FOVHD;//fraction of valid hits divided by total expected hits until the last one
+   std::vector<unsigned int> Tree_NOM;//number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+   std::vector<float>        Tree_iso_TK;
+   std::vector<float>        Tree_iso_ECAL;
+   std::vector<float>        Tree_iso_HCAL;   
+   std::vector<float>        Tree_PFIsolationR03_sumChargedHadronPt;
+   std::vector<float>        Tree_PFIsolationR03_sumNeutralHadronPt;
+   std::vector<float>        Tree_PFIsolationR03_sumPhotonPt;
+   std::vector<float>        Tree_PFIsolationR03_sumPUPt;
+   std::vector<float>        Tree_Ih_noL1;
+   std::vector<float>        Tree_Ih_15drop;
+   std::vector<float>        Tree_Ih_StripOnly;
+   std::vector<float>        Tree_Ih_StripOnly_15drop;
+   std::vector<float>        Tree_Ih_SaturationCorrectionFromFits;
+   std::vector<std::vector<float>>      Tree_clust_charge; //dedx charge -> either strip or pixel 
+   std::vector<std::vector<float>>      Tree_clust_pathlength;
+   std::vector<std::vector<bool>>       Tree_clust_ClusterCleaning;
+   std::vector<std::vector<unsigned int>>        Tree_clust_nstrip;
+   std::vector<std::vector<bool>>       Tree_clust_sat254;
+   std::vector<std::vector<bool>>       Tree_clust_sat255;
+   std::vector<std::vector<uint32_t>>   Tree_clust_detid;
+   std::vector<std::vector<bool>>       Tree_clust_isStrip; //is it a SiStrip cluster?
+   std::vector<std::vector<bool>>       Tree_clust_isPixel; //is it a Pixel hit?
+   std::vector<float>        Tree_GenId;
+   std::vector<float>        Tree_GenCharge;
+   std::vector<float>        Tree_GenMass;
+   std::vector<float>        Tree_GenPt;
+   std::vector<float>        Tree_GenEta;
+   std::vector<float>        Tree_GenPhi;
+
+
+
  
    TTree*       GenTree;
    unsigned int GenTree_Run;
@@ -47,17 +102,19 @@ struct Tuple {
    unsigned int GenTree_Lumi;
    unsigned int GenTree_Hscp;
    float        GenTree_Weight;
-   float        GenTree_GenId;
-   float        GenTree_GenCharge;
-   float        GenTree_GenMass;
-   float        GenTree_GenPt;
-   float        GenTree_GenEta;
-   float        GenTree_GenPhi;
+   std::vector<float>        GenTree_GenId;
+   std::vector<float>        GenTree_GenCharge;
+   std::vector<float>        GenTree_GenMass;
+   std::vector<float>        GenTree_GenPt;
+   std::vector<float>        GenTree_GenEta;
+   std::vector<float>        GenTree_GenPhi;
 
   //=============================================================
   //      Declare Histograms
   //=============================================================
 
+   TH1F*  CutFlow_nHSCP;
+   
    TH2F*  Mass;
    TH2F*  MassTOF;
    TH2F*  MassComb;

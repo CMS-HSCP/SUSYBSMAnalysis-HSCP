@@ -35,6 +35,7 @@
 #include "TRandom3.h"
 #include "TTree.h"
 #include "TProfile.h"
+#include "TLorentzVector.h"
 //#include "TCanvas.h"
 
 // ~~~~~~~~~ CMSSW include files ~~~~~~~~~
@@ -63,6 +64,7 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/Scalers/interface/LumiScalers.h"
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -75,12 +77,29 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 
+#include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
+#include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
+#include "TrackingTools/PatternTools/interface/Trajectory.h"
+#include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
+#include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
+
+#include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHit.h"
+
+#include "DataFormats/METReco/interface/CaloMET.h"
+#include "DataFormats/METReco/interface/PFMET.h"
+#include "DataFormats/METReco/interface/PFMETFwd.h"
+#include "DataFormats/JetReco/interface/PFJet.h"
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
+
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #define FWCORE
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 
 using namespace std;
 
@@ -105,12 +124,13 @@ class Analyzer : public edm::EDAnalyzer {
          const reco::MuonTimeExtra* tof,
          const edm::Event& iEvent, 
          float Event_Weight,
-         Tuple* &tuple, 
+         Tuple* tuple, 
          const double& GenBeta, 
          bool RescaleP, 
          const double& RescaleI, 
          const double& RescaleT, 
-         double MassErr);
+         double MassErr,
+         bool Ih_Iso_cut = true);
 
       bool passSelection(
          const susybsm::HSCParticle& hscp,  
@@ -138,6 +158,7 @@ class Analyzer : public edm::EDAnalyzer {
       virtual void beginJob() override;
       virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
       virtual void endJob() override;
+      virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory> > &, bool &, bool & );
       
       // ----------member data ---------------------------
       // HSCP, dEdx and TOF collections
@@ -152,10 +173,14 @@ class Analyzer : public edm::EDAnalyzer {
       edm::EDGetTokenT<DTRecSegment4DCollection> muonDtSegmentToken_;
       edm::EDGetTokenT<CSCSegmentCollection>     muonCscSegmentToken_;
       edm::EDGetTokenT<vector<reco::Vertex>>     offlinePrimaryVerticesToken_;
+      edm::EDGetTokenT<LumiScalersCollection>    lumiScalersToken_;
       edm::EDGetTokenT<vector<reco::Track>>      refittedStandAloneMuonsToken_;
       edm::EDGetTokenT<reco::BeamSpot>           offlineBeamSpotToken_;
       edm::EDGetTokenT<vector<reco::Muon>>       muonToken_;
       edm::EDGetTokenT<edm::TriggerResults>      triggerResultsToken_;
+      edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
+      edm::EDGetTokenT<reco::PFJetCollection>    pfJetToken_;
+      edm::EDGetTokenT<reco::CaloMET>            CaloMETToken_;
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
@@ -279,6 +304,12 @@ class Analyzer : public edm::EDAnalyzer {
       string Geometry;        //CMS_GeomTree.root
       string TimeOffset;      //MuonTimeOffset.txt
       muonTimingCalculator tofCalculator;
+
+      double FMIPX      = 4;
+
+
+      unsigned int STree = 0;
+      unsigned int SGTree = 0;
 
       // Emulators
       /*dedxHIPEmulator      HIPemulator;

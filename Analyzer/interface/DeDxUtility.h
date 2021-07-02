@@ -62,19 +62,22 @@ TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType){
    Prob_ChargePath->Reset();
    Prob_ChargePath->SetDirectory(0); 
 
+   //FIXME is it still relevant with pixels?
    if(!splitByModuleType){
       Prob_ChargePath->RebinX(Prob_ChargePath->GetNbinsX()-1); // <-- do not include pixel in the inclusive
    }
 
-   for(int i=0;i<=Prob_ChargePath->GetXaxis()->GetNbins()+1;i++){
-      for(int j=0;j<=Prob_ChargePath->GetYaxis()->GetNbins()+1;j++){
+   for(int i=0;i<=Prob_ChargePath->GetXaxis()->GetNbins()+1;i++){ // loop over geometry/layer 
+      for(int j=0;j<=Prob_ChargePath->GetYaxis()->GetNbins()+1;j++){ // loop over pathlength
          double Ni = 0;
-         for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){Ni+=DeDxMap_->GetBinContent(i,j,k);}
-
-         for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){
+         for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){ // loop over ChargeOverPathlength 
+             Ni+=DeDxMap_->GetBinContent(i,j,k);
+         }
+         for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){ // loop over ChargeOverPathlength
             double tmp = 0;
-            for(int l=0;l<=k;l++){ tmp+=DeDxMap_->GetBinContent(i,j,l);}
-
+            for(int l=0;l<=k;l++){ 
+                tmp+=DeDxMap_->GetBinContent(i,j,l);
+            }
             if(Ni>0){
                Prob_ChargePath->SetBinContent (i, j, k, tmp/Ni);
             }else{

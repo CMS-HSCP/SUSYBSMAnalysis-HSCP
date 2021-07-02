@@ -7,11 +7,103 @@ class TupleMaker{
       TupleMaker();
       ~TupleMaker();
 
-      void initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF);
+      void initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned int saveTree, unsigned int saveGenTree, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF);
 
-      void fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi);
 
-      void fillGenTreeBranches(Tuple* &tuple,  unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi);
+      void fillTreeBranches(Tuple* &tuple, 
+        const unsigned int &Trig, 
+        const unsigned int &Run, 
+        const unsigned long &Event,
+        const unsigned int &Lumi, 
+        const unsigned int &PileUp, 
+        const unsigned int &nofVertices, 
+        const unsigned int &Hscp, 
+        const float &weight, 
+        const bool &HLT_Mu50, 
+        const bool &HLT_PFMET120_PFMHT120_IDTight, 
+        const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,       
+        const float &CaloMET,
+        const float &RecoPFMET,
+        const float &RecoPFMHT,
+        const float &HLTPFMET,
+        const float &HLTPFMHT,
+        const std::vector<bool>  &passCutPt55,
+        const std::vector<bool>  &passPreselection_noIsolation_noIh,
+        const std::vector<bool>  &passPreselection,
+        const std::vector<bool>  &passSelection,
+        const std::vector<float> &Charge, 
+        const std::vector<float> &Pt,
+        const std::vector<float> &PtErr, 
+        const std::vector<float> &Ias, 
+        const std::vector<float> &Ih, 
+        const std::vector<float> &Ick, 
+        const std::vector<float> &Fmip,
+        const std::vector<float> &ProbQ,
+        const std::vector<float> &TOF, 
+        const std::vector<float> &TOFErr,
+        const std::vector<unsigned int> &TOF_ndof,
+        const std::vector<float> &DTTOF,
+        const std::vector<float> &DTTOFErr,
+        const std::vector<unsigned int> &DTTOF_ndof,
+        const std::vector<float> &CSCTOF,
+        const std::vector<float> &CSCTOFErr,
+        const std::vector<unsigned int> &CSCTOF_ndof,
+        const std::vector<float> &Mass, 
+        const std::vector<float> &MassErr, 
+        const std::vector<float> &dZ, 
+        const std::vector<float> &dXY, 
+        const std::vector<float> &dR, 
+        const std::vector<float> &eta, 
+        const std::vector<float> &phi, 
+        const std::vector<unsigned int> &noh, 
+        const std::vector<unsigned int> &noph,
+        const std::vector<float> &fovh,
+        const std::vector<unsigned int> &nomh,
+        const std::vector<float> &fovhd, 
+        const std::vector<unsigned int> &nom, 
+        const std::vector<float> &iso_TK, 
+        const std::vector<float> &iso_ECAL, 
+        const std::vector<float> &iso_HCAL, 
+        const std::vector<float> &PFIsolationR03_sumChargedHadronPt,
+        const std::vector<float> &PFIsolationR03_sumNeutralHadronPt,
+        const std::vector<float> &PFIsolationR03_sumPhotonPt,
+        const std::vector<float> &PFIsolationR03_sumPUPt,
+        const std::vector<float> &Ih_noL1, 
+        const std::vector<float> &Ih_15drop, 
+        const std::vector<float> &Ih_StripOnly, 
+        const std::vector<float> &Ih_StripOnly_15drop,
+        const std::vector<float> &Ih_SaturationCorrectionFromFits,
+        const std::vector<std::vector<float>> &clust_charge, 
+        const std::vector<std::vector<float>> &clust_pathlength,
+        const std::vector<std::vector<bool>> &clust_ClusterCleaning,
+        const std::vector<std::vector<unsigned int>> &clust_nstrip,
+        const std::vector<std::vector<bool>> &clust_sat254,
+        const std::vector<std::vector<bool>> &clust_sat255,
+        const std::vector<std::vector<uint32_t>> &clust_detid,
+        const std::vector<std::vector<bool>> &clust_isStrip,
+        const std::vector<std::vector<bool>> &clust_isPixel,
+        const std::vector<float> &genid, 
+        const std::vector<float> &gencharge, 
+        const std::vector<float> &genmass, 
+        const std::vector<float> &genpt, 
+        const std::vector<float> &geneta, 
+        const std::vector<float> &genphi
+
+        );
+
+
+      void fillGenTreeBranches(Tuple* &tuple,  
+        const unsigned int &Run, 
+        const unsigned long &Event,
+        const unsigned int &Lumi, 
+        const unsigned int &Hscp, 
+        const float &weight, 
+        const std::vector<float> &genid, 
+        const std::vector<float> &gencharge, 
+        const std::vector<float> &genmass, 
+        const std::vector<float> &genpt, 
+        const std::vector<float> &geneta, 
+        const std::vector<float> &genphi);
 
       void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip);
 };
@@ -23,7 +115,7 @@ class TupleMaker{
 //=============================================================
 
 
-void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF){
+void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned int saveTree, unsigned int saveGenTree, bool SkipSelectionPlot, int TypeMode, bool isSignal, unsigned int NCuts, unsigned int NCuts_Flip, double PtHistoUpperBound, double MassHistoUpperBound, int MassNBins, double IPbound, int PredBins, int EtaBins, double dEdxS_UpLim, double dEdxM_UpLim, int DzRegions, double GlobalMinPt, double GlobalMinTOF){
 
    std::string Name;
 
@@ -406,54 +498,129 @@ void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSe
       }
    }
 
+
+      
+        Name = "CutFlow_nHSCP"; tuple->CutFlow_nHSCP = dir.make<TH1F>(Name.c_str(), Name.c_str(),5,0,5); tuple->CutFlow_nHSCP->Sumw2();
+
+//===================================================
+//
+//  HSCPCandidates ttree: different saving-levels 
+//
+//===================================================
+
+
    tuple->Tree = dir.make<TTree>("HscpCandidates", "HscpCandidates");
    ///tuple->Tree->SetDirectory(0);
+if(saveTree>0)
+{
    tuple->Tree->Branch("Trig"    ,&tuple->Tree_Trig      ,"Trig/i");
    tuple->Tree->Branch("Run"     ,&tuple->Tree_Run       ,"Run/i");
-   tuple->Tree->Branch("Event"   ,&tuple->Tree_Event     ,"Event/i");
-   tuple->Tree->Branch("Lumi"    ,&tuple->Tree_Lumi      ,"Lumi/i");
-   tuple->Tree->Branch("Hscp"    ,&tuple->Tree_Hscp      ,"Hscp/i");
-   tuple->Tree->Branch("Charge"  ,&tuple->Tree_Charge    ,"Charge/F");
-   tuple->Tree->Branch("Pt"      ,&tuple->Tree_Pt        ,"Pt/F");
-   tuple->Tree->Branch("PtErr"   ,&tuple->Tree_PtErr     ,"PtErr/F");
-   tuple->Tree->Branch("I"       ,&tuple->Tree_I         ,"I/F");
-   tuple->Tree->Branch("Ih"      ,&tuple->Tree_Ih        ,"Ih/F");
-   tuple->Tree->Branch("Ick"     ,&tuple->Tree_Ick       ,"Ick/F");
-   tuple->Tree->Branch("TOF"     ,&tuple->Tree_TOF       ,"TOF/F");
-   tuple->Tree->Branch("Mass"    ,&tuple->Tree_Mass      ,"Mass/F");
-   tuple->Tree->Branch("dZ"      ,&tuple->Tree_dZ        ,"dZ/F");
-   tuple->Tree->Branch("dXY"     ,&tuple->Tree_dXY       ,"dXY/F");
-   tuple->Tree->Branch("dR"      ,&tuple->Tree_dR        ,"dR/F");
-   tuple->Tree->Branch("eta"     ,&tuple->Tree_eta       ,"eta/F");
-   tuple->Tree->Branch("phi"     ,&tuple->Tree_phi       ,"phi/F");
-   tuple->Tree->Branch("NOH"     ,&tuple->Tree_NOH       ,"NOH/i");
-   tuple->Tree->Branch("NOPH"    ,&tuple->Tree_NOPH      ,"NOPH/i");
-   tuple->Tree->Branch("FOVH"    ,&tuple->Tree_FOVH      ,"FOVH/F");
-   tuple->Tree->Branch("NOMH"    ,&tuple->Tree_NOMH      ,"NOMH/i");
-   tuple->Tree->Branch("FOVHD"   ,&tuple->Tree_FOVHD     ,"FOVHD/F");
-   tuple->Tree->Branch("NOM"     ,&tuple->Tree_NOM       ,"NOM/i");
+   tuple->Tree->Branch("Event"   ,&tuple->Tree_Event     ,"Event/l");
+   tuple->Tree->Branch("Lumi"    ,&tuple->Tree_Lumi      ,"Lumi/i");   
+   tuple->Tree->Branch("PileUp"  ,&tuple->Tree_PileUp    ,"PileUp/i");
+   tuple->Tree->Branch("nofVtx"  ,&tuple->Tree_nofVertices,"nofVtx/i");
+   tuple->Tree->Branch("Hscp"    ,&tuple->Tree_Hscp      ,"Hscp/i");   
    tuple->Tree->Branch("Weight"  ,&tuple->Tree_Weight    ,"Weight/F");
-   tuple->Tree->Branch("GenId"   ,&tuple->Tree_GenId     ,"GenId/F");
-   tuple->Tree->Branch("GenCharge",&tuple->Tree_GenCharge,"GenCharge/F");
-   tuple->Tree->Branch("GenMass" ,&tuple->Tree_GenMass   ,"GenMass/F");
-   tuple->Tree->Branch("GenPt"   ,&tuple->Tree_GenPt     ,"GenPt/F");
-   tuple->Tree->Branch("GenEta"  ,&tuple->Tree_GenEta    ,"GenEta/F");
-   tuple->Tree->Branch("GenPhi"  ,&tuple->Tree_GenPhi    ,"GenPhi/F");
+   tuple->Tree->Branch("HLT_Mu50",&tuple->Tree_HLT_Mu50  ,"HLT_Mu50/O");
+   tuple->Tree->Branch("HLT_PFMET120_PFMHT120_IDTight", &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight  ,"HLT_PFMET120_PFMHT120_IDTight/O");
+   tuple->Tree->Branch("HLT_PFHT500_PFMET100_PFMHT100_IDTight", &tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight  ,"HLT_PFHT500_PFMET100_PFMHT100_IDTight/O");   
+   tuple->Tree->Branch("CaloMET"    ,&tuple->Tree_CaloMET       ,"CaloMET/F");
+   tuple->Tree->Branch("RecoPFMET"  ,&tuple->Tree_RecoPFMET     ,"RecoPFMET/F");
+   tuple->Tree->Branch("RecoPFMHT"  ,&tuple->Tree_RecoPFMHT     ,"RecoPFMHT/F");
+   tuple->Tree->Branch("HLTPFMET"   ,&tuple->Tree_HLTPFMET       ,"HLTPFMET/F");
+   tuple->Tree->Branch("HLTPFMHT"   ,&tuple->Tree_HLTPFMHT       ,"HLTPFMHT/F");
+if(saveTree>1)
+{
+   tuple->Tree->Branch("passCutPt55",   &tuple->Tree_passCutPt55    );
+   tuple->Tree->Branch("passPreselection_noIsolation_noIh",   &tuple->Tree_passPreselection_noIsolation_noIh    );
+   tuple->Tree->Branch("passPreselection",   &tuple->Tree_passPreselection    );
+   tuple->Tree->Branch("passSelection",   &tuple->Tree_passSelection    );
+}
+   tuple->Tree->Branch("Charge"  ,&tuple->Tree_Charge    );
+   tuple->Tree->Branch("Pt"      ,&tuple->Tree_Pt        );
+   tuple->Tree->Branch("PtErr"   ,&tuple->Tree_PtErr     );
+   tuple->Tree->Branch("Ias"       ,&tuple->Tree_Ias         );
+   tuple->Tree->Branch("Ih"      ,&tuple->Tree_Ih        );
+   tuple->Tree->Branch("Ick"     ,&tuple->Tree_Ick       );
+   tuple->Tree->Branch("Fmip"   ,&tuple->Tree_Fmip     );
+   tuple->Tree->Branch("ProbQ"   ,&tuple->Tree_ProbQ     );
+   tuple->Tree->Branch("TOF"     ,&tuple->Tree_TOF       );
+   tuple->Tree->Branch("TOFErr"  ,&tuple->Tree_TOFErr    );
+   tuple->Tree->Branch("TOF_ndof"  ,&tuple->Tree_TOF_ndof    );
+   tuple->Tree->Branch("DTTOF"   ,&tuple->Tree_DTTOF     );
+   tuple->Tree->Branch("DTTOFErr",&tuple->Tree_DTTOFErr     );
+   tuple->Tree->Branch("DTTOF_ndof"  ,&tuple->Tree_DTTOF_ndof    );
+   tuple->Tree->Branch("CSCTOF"  ,&tuple->Tree_CSCTOF     );
+   tuple->Tree->Branch("CSCTOFErr",&tuple->Tree_CSCTOFErr     );
+   tuple->Tree->Branch("CSCTOF_ndof"  ,&tuple->Tree_CSCTOF_ndof    );
+   tuple->Tree->Branch("Mass"    ,&tuple->Tree_Mass      );
+   tuple->Tree->Branch("MassErr" ,&tuple->Tree_MassErr   );
+   tuple->Tree->Branch("dZ"      ,&tuple->Tree_dZ        );
+   tuple->Tree->Branch("dXY"     ,&tuple->Tree_dXY       );
+   tuple->Tree->Branch("dR"      ,&tuple->Tree_dR        );
+   tuple->Tree->Branch("eta"     ,&tuple->Tree_eta       );
+   tuple->Tree->Branch("phi"     ,&tuple->Tree_phi       );
+   tuple->Tree->Branch("NOH"     ,&tuple->Tree_NOH       );
+   tuple->Tree->Branch("NOPH"    ,&tuple->Tree_NOPH      );
+   tuple->Tree->Branch("FOVH"    ,&tuple->Tree_FOVH      );
+   tuple->Tree->Branch("NOMH"    ,&tuple->Tree_NOMH      );
+   tuple->Tree->Branch("FOVHD"   ,&tuple->Tree_FOVHD     );
+   tuple->Tree->Branch("NOM"     ,&tuple->Tree_NOM       );
+   tuple->Tree->Branch("iso_TK"  ,&tuple->Tree_iso_TK    );
+   tuple->Tree->Branch("iso_ECAL",&tuple->Tree_iso_ECAL  );
+   tuple->Tree->Branch("iso_HCAL",&tuple->Tree_iso_HCAL  );   
+if(saveTree>1)
+{
+   tuple->Tree->Branch("MuonPFIsolationR03_sumChargedHadronPt"   ,&tuple->Tree_PFIsolationR03_sumChargedHadronPt     );
+   tuple->Tree->Branch("MuonPFIsolationR03_sumNeutralHadronPt"   ,&tuple->Tree_PFIsolationR03_sumNeutralHadronPt     );
+   tuple->Tree->Branch("MuonPFIsolationR03_sumPhotonPt"   ,&tuple->Tree_PFIsolationR03_sumPhotonPt     );
+   tuple->Tree->Branch("MuonPFIsolationR03_sumPUPt"   ,&tuple->Tree_PFIsolationR03_sumPUPt     );
+   tuple->Tree->Branch("Ih_noL1" ,&tuple->Tree_Ih_noL1   );
+   tuple->Tree->Branch("Ih_15drop" ,&tuple->Tree_Ih_15drop   );
+   tuple->Tree->Branch("Ih_StripOnly" ,&tuple->Tree_Ih_StripOnly   );
+   tuple->Tree->Branch("Ih_StripOnly_15drop" ,&tuple->Tree_Ih_StripOnly_15drop   );
+   tuple->Tree->Branch("Ih_SaturationCorrectionFromFits"   ,&tuple->Tree_Ih_SaturationCorrectionFromFits     );
 
+}
+if(saveTree>2)
+{
+   tuple->Tree->Branch("clust_charge"   ,&tuple->Tree_clust_charge     );
+   tuple->Tree->Branch("clust_pathlength"   ,&tuple->Tree_clust_pathlength     );
+   tuple->Tree->Branch("clust_ClusterCleaning"   ,&tuple->Tree_clust_ClusterCleaning     );
+   tuple->Tree->Branch("clust_nstrip"   ,&tuple->Tree_clust_nstrip     );
+   tuple->Tree->Branch("clust_sat254"   ,&tuple->Tree_clust_sat254     );
+   tuple->Tree->Branch("clust_sat255"   ,&tuple->Tree_clust_sat255     );
+   tuple->Tree->Branch("clust_detid"    ,&tuple->Tree_clust_detid      );
+   tuple->Tree->Branch("clust_isStrip"    ,&tuple->Tree_clust_isStrip      );
+   tuple->Tree->Branch("clust_isPixel"    ,&tuple->Tree_clust_isPixel      );
+}
+if(saveTree>3)
+{
+   tuple->Tree->Branch("GenId"   ,&tuple->Tree_GenId     );
+   tuple->Tree->Branch("GenCharge",&tuple->Tree_GenCharge);
+   tuple->Tree->Branch("GenMass" ,&tuple->Tree_GenMass   );
+   tuple->Tree->Branch("GenPt"   ,&tuple->Tree_GenPt     );
+   tuple->Tree->Branch("GenEta"  ,&tuple->Tree_GenEta    );
+   tuple->Tree->Branch("GenPhi"  ,&tuple->Tree_GenPhi    );
+}
+}
 
    tuple->GenTree = dir.make<TTree>("GenHscpCandidates", "GenHscpCandidates");
    ////tuple->GenTree->SetDirectory(0);
+if(saveGenTree>0)
+{
    tuple->GenTree->Branch("Run"     ,&tuple->GenTree_Run       ,"Run/i");
-   tuple->GenTree->Branch("Event"   ,&tuple->GenTree_Event     ,"Event/i");
+   tuple->GenTree->Branch("Event"   ,&tuple->GenTree_Event     ,"Event/l");
    tuple->GenTree->Branch("Lumi"    ,&tuple->GenTree_Lumi      ,"Lumi/i");
    tuple->GenTree->Branch("Hscp"    ,&tuple->GenTree_Hscp      ,"Hscp/i");
    tuple->GenTree->Branch("Weight"  ,&tuple->GenTree_Weight    ,"Weight/F");
-   tuple->GenTree->Branch("GenId"   ,&tuple->GenTree_GenId     ,"GenId/F");
-   tuple->GenTree->Branch("GenCharge",&tuple->GenTree_GenCharge,"GenCharge/F");
-   tuple->GenTree->Branch("GenMass" ,&tuple->GenTree_GenMass   ,"GenMass/F");
-   tuple->GenTree->Branch("GenPt"   ,&tuple->GenTree_GenPt     ,"GenPt/F");
-   tuple->GenTree->Branch("GenEta"  ,&tuple->GenTree_GenEta    ,"GenEta/F");
-   tuple->GenTree->Branch("GenPhi"  ,&tuple->GenTree_GenPhi    ,"GenPhi/F");
+   tuple->GenTree->Branch("GenId"   ,&tuple->GenTree_GenId     );
+   tuple->GenTree->Branch("GenCharge",&tuple->GenTree_GenCharge);
+   tuple->GenTree->Branch("GenMass" ,&tuple->GenTree_GenMass   );
+   tuple->GenTree->Branch("GenPt"   ,&tuple->GenTree_GenPt     );
+   tuple->GenTree->Branch("GenEta"  ,&tuple->GenTree_GenEta    );
+   tuple->GenTree->Branch("GenPhi"  ,&tuple->GenTree_GenPhi    );
+}
    
 }
 
@@ -463,45 +630,183 @@ void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, bool SkipSe
 //
 //=============================================================
 
-void TupleMaker::fillTreeBranches(Tuple* &tuple, unsigned int Trig, unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double Charge, double Pt,double PtErr, double I, double Ih, double Ick, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, unsigned int noh, int noph,double fovh,unsigned int nomh,double fovhd, unsigned int nom, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi){
-   tuple->Tree_Trig   = Trig;
-   tuple->Tree_Run   = Run;
-   tuple->Tree_Event = Event;
-   tuple->Tree_Lumi = Lumi;
-   tuple->Tree_Hscp  = Hscp;
-   tuple->Tree_Charge = Charge;
-   tuple->Tree_Pt    = Pt;
-   tuple->Tree_PtErr = PtErr;
-   tuple->Tree_I     = I;
-   tuple->Tree_Ih    = Ih;
-   tuple->Tree_Ick   = Ick;
-   tuple->Tree_TOF   = TOF;
-   tuple->Tree_Mass  = Mass;
-   tuple->Tree_dZ    = dZ;
-   tuple->Tree_dXY   = dXY;
-   tuple->Tree_dR    = dR;
-   tuple->Tree_eta   = eta;
-   tuple->Tree_phi   = phi;
-   tuple->Tree_NOH   = noh;
-   tuple->Tree_NOPH  = noph;
-   tuple->Tree_FOVH  = fovh;
-   tuple->Tree_NOMH  = nomh;
-   tuple->Tree_FOVHD = fovhd;
-   tuple->Tree_NOM   = nom;
-   tuple->Tree_Weight   = weight;
-   tuple->Tree_GenId    = genid;
-   tuple->Tree_GenCharge = gencharge;
-   tuple->Tree_GenMass  = genmass;
-   tuple->Tree_GenPt    = genpt;
-   tuple->Tree_GenEta   = geneta;
-   tuple->Tree_GenPhi   = genphi;
+void TupleMaker::fillTreeBranches(Tuple* &tuple, 
+        const unsigned int &Trig, 
+        const unsigned int &Run, 
+        const unsigned long &Event,
+        const unsigned int &Lumi, 
+        const unsigned int &PileUp, 
+        const unsigned int &nofVertices, 
+        const unsigned int &Hscp, 
+        const float &weight, 
+        const bool &HLT_Mu50, 
+        const bool &HLT_PFMET120_PFMHT120_IDTight, 
+        const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,        
+        const float &CaloMET,
+        const float &RecoPFMET,
+        const float &RecoPFMHT,
+        const float &HLTPFMET,
+        const float &HLTPFMHT,
+        const std::vector<bool>  &passCutPt55,
+        const std::vector<bool>  &passPreselection_noIsolation_noIh,
+        const std::vector<bool>  &passPreselection,
+        const std::vector<bool>  &passSelection,
+        const std::vector<float> &Charge, 
+        const std::vector<float> &Pt,
+        const std::vector<float> &PtErr, 
+        const std::vector<float> &Ias, 
+        const std::vector<float> &Ih, 
+        const std::vector<float> &Ick, 
+        const std::vector<float> &Fmip,
+        const std::vector<float> &ProbQ,
+        const std::vector<float> &TOF, //equal to invBeta 
+        const std::vector<float> &TOFErr,
+        const std::vector<unsigned int> &TOF_ndof,
+        const std::vector<float> &DTTOF,
+        const std::vector<float> &DTTOFErr,
+        const std::vector<unsigned int> &DTTOF_ndof,
+        const std::vector<float> &CSCTOF,
+        const std::vector<float> &CSCTOFErr,
+        const std::vector<unsigned int> &CSCTOF_ndof,
+        const std::vector<float> &Mass, 
+        const std::vector<float> &MassErr, 
+        const std::vector<float> &dZ, 
+        const std::vector<float> &dXY, 
+        const std::vector<float> &dR, 
+        const std::vector<float> &eta, 
+        const std::vector<float> &phi, 
+        const std::vector<unsigned int> &noh, 
+        const std::vector<unsigned int> &noph,
+        const std::vector<float> &fovh,
+        const std::vector<unsigned int> &nomh,
+        const std::vector<float> &fovhd, 
+        const std::vector<unsigned int> &nom, 
+        const std::vector<float> &iso_TK, 
+        const std::vector<float> &iso_ECAL, 
+        const std::vector<float> &iso_HCAL, 
+        const std::vector<float> &PFIsolationR03_sumChargedHadronPt,
+        const std::vector<float> &PFIsolationR03_sumNeutralHadronPt,
+        const std::vector<float> &PFIsolationR03_sumPhotonPt,
+        const std::vector<float> &PFIsolationR03_sumPUPt,
+        const std::vector<float> &Ih_noL1, 
+        const std::vector<float> &Ih_15drop, 
+        const std::vector<float> &Ih_StripOnly, 
+        const std::vector<float> &Ih_StripOnly_15drop,
+        const std::vector<float> &Ih_SaturationCorrectionFromFits,
+        const std::vector<std::vector<float>> &clust_charge, 
+        const std::vector<std::vector<float>> &clust_pathlength,
+        const std::vector<std::vector<bool>> &clust_ClusterCleaning,
+        const std::vector<std::vector<unsigned int>> &clust_nstrip,
+        const std::vector<std::vector<bool>> &clust_sat254,
+        const std::vector<std::vector<bool>> &clust_sat255,
+        const std::vector<std::vector<uint32_t>> &clust_detid,
+        const std::vector<std::vector<bool>> &clust_isStrip,
+        const std::vector<std::vector<bool>> &clust_isPixel,
+        const std::vector<float> &genid, 
+        const std::vector<float> &gencharge, 
+        const std::vector<float> &genmass, 
+        const std::vector<float> &genpt, 
+        const std::vector<float> &geneta, 
+        const std::vector<float> &genphi
+        ){
+   
+   
+   tuple->Tree_Trig                                     = Trig;
+   tuple->Tree_Run                                      = Run;
+   tuple->Tree_Event                                    = Event;
+   tuple->Tree_Lumi                                     = Lumi;
+   tuple->Tree_PileUp                                   = PileUp;
+   tuple->Tree_nofVertices                              = nofVertices;
+   tuple->Tree_Hscp                                     = Hscp;
+   tuple->Tree_Weight                                   = weight;
+   tuple->Tree_HLT_Mu50                                 = HLT_Mu50;
+   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight            = HLT_PFMET120_PFMHT120_IDTight;
+   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight    = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
+   tuple->Tree_CaloMET                                  = CaloMET;
+   tuple->Tree_RecoPFMET                                = RecoPFMET;
+   tuple->Tree_RecoPFMHT                                = RecoPFMHT;
+   tuple->Tree_HLTPFMET                                 = HLTPFMET;
+   tuple->Tree_HLTPFMHT                                 = HLTPFMHT;
+   tuple->Tree_passCutPt55                              = passCutPt55;
+   tuple->Tree_passPreselection_noIsolation_noIh        = passPreselection_noIsolation_noIh;
+   tuple->Tree_passPreselection                         = passPreselection;
+   tuple->Tree_passSelection                            = passSelection;
+   tuple->Tree_Charge                                   = Charge;
+   tuple->Tree_Pt                                       = Pt;
+   tuple->Tree_PtErr                                    = PtErr;
+   tuple->Tree_Ias                                      = Ias;
+   tuple->Tree_Ih                                       = Ih;
+   tuple->Tree_Ick                                      = Ick;
+   tuple->Tree_Fmip                                     = Fmip;
+   tuple->Tree_ProbQ                                    = ProbQ;
+   tuple->Tree_TOF                                      = TOF;
+   tuple->Tree_TOFErr                                   = TOFErr;
+   tuple->Tree_TOF_ndof                                 = TOF_ndof;
+   tuple->Tree_DTTOF                                    = DTTOF;
+   tuple->Tree_DTTOFErr                                 = DTTOFErr;
+   tuple->Tree_DTTOF_ndof                               = DTTOF_ndof;
+   tuple->Tree_CSCTOF                                   = CSCTOF;
+   tuple->Tree_CSCTOFErr                                = CSCTOFErr;
+   tuple->Tree_CSCTOF_ndof                              = CSCTOF_ndof;
+   tuple->Tree_Mass                                     = Mass;
+   tuple->Tree_MassErr                                  = MassErr;
+   tuple->Tree_dZ                                       = dZ;
+   tuple->Tree_dXY                                      = dXY;
+   tuple->Tree_dR                                       = dR;
+   tuple->Tree_eta                                      = eta;
+   tuple->Tree_phi                                      = phi;
+   tuple->Tree_NOH                                      = noh;
+   tuple->Tree_NOPH                                     = noph;
+   tuple->Tree_FOVH                                     = fovh;
+   tuple->Tree_NOMH                                     = nomh;
+   tuple->Tree_FOVHD                                    = fovhd;
+   tuple->Tree_NOM                                      = nom;
+   tuple->Tree_iso_TK                                   = iso_TK;
+   tuple->Tree_iso_ECAL                                 = iso_ECAL;
+   tuple->Tree_iso_HCAL                                 = iso_HCAL;
+   tuple->Tree_PFIsolationR03_sumChargedHadronPt        = PFIsolationR03_sumChargedHadronPt;
+   tuple->Tree_PFIsolationR03_sumNeutralHadronPt        = PFIsolationR03_sumNeutralHadronPt;
+   tuple->Tree_PFIsolationR03_sumPhotonPt               = PFIsolationR03_sumPhotonPt;
+   tuple->Tree_PFIsolationR03_sumPUPt                   = PFIsolationR03_sumPUPt;
+   tuple->Tree_Ih_noL1                                  = Ih_noL1;
+   tuple->Tree_Ih_15drop                                = Ih_15drop;
+   tuple->Tree_Ih_StripOnly                             = Ih_StripOnly;
+   tuple->Tree_Ih_StripOnly_15drop                      = Ih_StripOnly_15drop;
+   tuple->Tree_Ih_SaturationCorrectionFromFits          = Ih_SaturationCorrectionFromFits;
+   tuple->Tree_clust_charge                             = clust_charge;
+   tuple->Tree_clust_pathlength                         = clust_pathlength;
+   tuple->Tree_clust_ClusterCleaning                    = clust_ClusterCleaning;
+   tuple->Tree_clust_nstrip                             = clust_nstrip;
+   tuple->Tree_clust_sat254                             = clust_sat254;
+   tuple->Tree_clust_sat255                             = clust_sat255;
+   tuple->Tree_clust_detid                              = clust_detid; 
+   tuple->Tree_clust_isStrip                            = clust_isStrip;
+   tuple->Tree_clust_isPixel                            = clust_isPixel;
+   tuple->Tree_GenId                                    = genid;
+   tuple->Tree_GenCharge                                = gencharge;
+   tuple->Tree_GenMass                                  = genmass;
+   tuple->Tree_GenPt                                    = genpt;
+   tuple->Tree_GenEta                                   = geneta;
+   tuple->Tree_GenPhi                                   = genphi;
+
 
    // Save in the tree
    tuple->Tree->Fill();
    //if (!SkipSelectionPlot_) tuple->Tree->Fill();
 }
 
-void TupleMaker::fillGenTreeBranches(Tuple* &tuple,  unsigned int Run, unsigned int Event,unsigned int Lumi, unsigned int Hscp, double weight, double genid, double gencharge, double genmass, double genpt, double geneta, double genphi){
+void TupleMaker::fillGenTreeBranches(Tuple* &tuple,  
+        const unsigned int &Run, 
+        const unsigned long &Event,
+        const unsigned int &Lumi, 
+        const unsigned int &Hscp, 
+        const float &weight, 
+        const std::vector<float> &genid, 
+        const std::vector<float> &gencharge, 
+        const std::vector<float> &genmass, 
+        const std::vector<float> &genpt, 
+        const std::vector<float> &geneta, 
+        const std::vector<float> &genphi){
    
    tuple->GenTree_Run       = Run;
    tuple->GenTree_Event     = Event;

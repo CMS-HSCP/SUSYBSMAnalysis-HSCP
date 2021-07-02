@@ -35,6 +35,8 @@ process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 #process.analyzer.SampleTxtFile=options.sampleTxtFile
 process.analyzer.TypeMode=0
 process.analyzer.SampleType=0
+process.analyzer.saveTree=6 #all saved
+process.analyzer.saveGenTree=0
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)

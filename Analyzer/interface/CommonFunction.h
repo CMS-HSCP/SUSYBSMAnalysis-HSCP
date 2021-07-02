@@ -1,6 +1,32 @@
 #ifndef SUSYBSMAnalysis_Analyzer_CommonFunction_h
 #define SUSYBSMAnalysis_Analyzer_CommonFunction_h
 
+//=======================================================================================
+//
+// Global use of the SaturationCorrection class 
+// Need to have the class in Analysis_CommonFunction.h & in Analysis_Step1_EventLoop.C 
+// Step1 uses the functions in CommonFunction.h
+// Need to load the correction parameters from a file
+//
+//=======================================================================================
+#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h" // New procedure for the correction of the saturation phenomena 
+SaturationCorrection sc;
+void LoadCorrectionParameters()
+{
+    char PathToParameters[2048];
+    sprintf(PathToParameters,"%s/src/SUSYBSMAnalysis/HSCP/data/CorrectionParameters.root", getenv("CMSSW_BASE"));
+    TFile* fileparameters = TFile::Open(PathToParameters);
+    TTree* treeparameters = (TTree*) fileparameters->Get("tree");
+    sc.SetTree(*treeparameters);
+    sc.ReadParameters();
+}
+
+//====================================================================
+//
+//  General purpose code
+//
+//====================================================================
+
 bool startsWith(std::string s, std::string sub){
         return s.find(sub)==0?1:0;
 }
@@ -8,6 +34,15 @@ bool startsWith(std::string s, std::string sub){
 bool endsWith(std::string s,std::string sub){
         return s.rfind(sub)==(s.length()-sub.length())?1:0;
 }
+
+//=============================================================
+//
+//    factorial function used to compute probQ 
+//
+//=============================================================
+
+int factorial(int n){return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;}
+
 
 struct HitDeDx{double dedx; double dx; bool isSat; bool passClusterCleaning; bool isInside; unsigned char subDet;};
 typedef std::vector<HitDeDx> HitDeDxCollection;
@@ -422,6 +457,62 @@ double DistToHSCP (const susybsm::HSCParticle& hscp, const std::vector<reco::Gen
 }
 #endif //FWCORE
 
+std::vector<int> Correction(const std::vector<int>& Q,const int &label,const float &rsat,const float &thresholdSat,const float &thresholdDeltaQ,const float &thresholdrsat) {
+        const unsigned N=Q.size();
+        if(N<3) return Q;
+        std::vector<int> Qcorr;
+        int total_charge=0;
+        int nsat=0;
+        float Qmin=0.;
+        float Qplus=0.;
+        bool testQmin=true;
+        for(unsigned int i=0;i<N;i++){
+            total_charge+=Q[i];
+            if(Q[i]>253) nsat++;
+            if(Q[i]>253 && testQmin && i>1)
+            {
+                testQmin=false;
+                Qmin=Q[i-1];
+            }
+            if(Q[i]>253)
+            {
+                Qplus=Q[i+1];
+            }
+            Qcorr.push_back(Q[i]);
+        }
+        float DeltaQ=abs(Qmin-Qplus);
+        float charge_corr=sc.ChargeCorrected(total_charge,label,N,nsat);
+        float DeltaChargeCorr = charge_corr-total_charge;
+        if(rsat>=thresholdrsat && Qmin>=thresholdSat && Qplus>=thresholdSat && DeltaQ<=thresholdDeltaQ)
+        {
+            if(N==1)
+            {
+                vector<int>::iterator maxQ = max_element(Qcorr.begin(),Qcorr.end());
+                Qcorr[std::distance(Qcorr.begin(),maxQ)]+=DeltaChargeCorr;
+            }
+            if(N==2 && label<5)
+            {
+                vector<int>::iterator maxQ = max_element(Qcorr.begin(),Qcorr.end());
+                if(Qcorr[std::distance(Qcorr.begin(),maxQ+1)]<254) return Qcorr;
+                Qcorr[std::distance(Qcorr.begin(),maxQ)]+=DeltaChargeCorr/2;
+                Qcorr[std::distance(Qcorr.begin(),maxQ+1)]+=DeltaChargeCorr/2;
+            }
+        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////
+        //// if a no saturated strip is between two saturated strips the method return the cluster without correction
+        ////
+        //// if more than one saturated strip the correction method is only used in the barrel (cut on label<5)
+        ////
+        //// the difference between the charge & the corrected charge is shared with the saturated strips
+        ////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        
+        return Qcorr;
+}
+
+
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25,bool isClusterCleaning=false) {
    const unsigned N=Q.size();
    std::vector<int> QII;
@@ -750,10 +841,11 @@ HitDeDxCollection getHitDeDx(const reco::DeDxHitInfo* dedxHits, double* scaleFac
 
 /*reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator,double* dEdxErr, unsigned int pdgId){*/
 
-reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=nullptr, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=nullptr, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=nullptr, double* dEdxErr = nullptr, unsigned int pdgId=0, bool skipPixel=true, bool useTemplateLayer=false, bool skipPixelL1=false){
+reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=nullptr, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=nullptr, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=nullptr, double* dEdxErr = nullptr, unsigned int pdgId=0, bool skipPixel=true, bool useTemplateLayer=false, bool skipPixelL1=false, bool probQ=false){
 
-   bool isStrangePdgId = false;
-   if(pdgId==1092214|| pdgId==1000612) isStrangePdgId= true;
+    //FIXME still necessary ? 
+   //bool isStrangePdgId = false;
+   //if(pdgId==1092214|| pdgId==1000612) isStrangePdgId= true;
 
    if(!dedxHits) return reco::DeDxData(-1, -1, -1);
    //     if(templateHisto)usePixel=false; //never use pixel for discriminator
@@ -762,12 +854,28 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
    std::vector<double> vectStrip;
    std::vector<double> vectPixel;
 
+   // loop in order to have the number of saturated clusters in a track
+   unsigned int nsatclust=0;
+   for(unsigned int t=0;t<dedxHits->size();t++){
+      DetId detid(dedxHits->detId(t));
+      bool test_sat=false;
+      if(detid.subdetId()<3) continue;
+      const SiStripCluster* cluster = dedxHits->stripCluster(t);
+      std::vector<int> amplitudes = convert(cluster->amplitudes());
+      for(unsigned int s=0;s<amplitudes.size();s++)
+      {
+         if(amplitudes[s]>253) test_sat=true;
+      }
+      if(test_sat) nsatclust++;
+   }
+   float rsat = (float)nsatclust/(float)dedxHits->size();
+
    unsigned int NSat=0;
    unsigned int SiStripNOM = 0;
    //double lowerStripDeDx=1000; UNUSED
    //int lowerStripDeDxIndex=-1; UNUSED
    for(unsigned int h=0;h<dedxHits->size();h++){
-      DetId detid(dedxHits->detId(h));  
+      DetId detid(dedxHits->detId(h));
       if(!usePixel && detid.subdetId()<3)continue; // skip pixels
       if(!useStrip && detid.subdetId()>=3)continue; // skip strips        
       if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo))continue;
@@ -781,9 +889,27 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
       if(skipPixelL1 && detid.subdetId()==1 && ((detid>>16)&0xF)==1) continue;
 
       if(detid.subdetId()>=3){//for strip only
+    
+         SiStripDetId Sdetid(dedxHits->detId(h));
          const SiStripCluster* cluster = dedxHits->stripCluster(h);
          std::vector<int> amplitudes = convert(cluster->amplitudes());
-         if (crossTalkInvAlgo>0) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+
+         //////////////////////////////////////////////////////////////
+         //
+         //     0: no correction & no cross-talk inversion
+         //     1: standard correction & use of cross-talk inversion
+         //     2: correction from fits & no cross-talk inversion
+         //     3: correction from fits & use of cross-talk inversion (no recorrection -- see bool=false)
+         //
+         //////////////////////////////////////////////////////////////
+
+         //if (crossTalkInvAlgo>0) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+
+         if(crossTalkInvAlgo==1) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+         if(crossTalkInvAlgo==2) amplitudes = Correction(amplitudes,Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
+         if(crossTalkInvAlgo==3) amplitudes = CrossTalkInv(Correction(amplitudes,Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
+
+
          int firstStrip = cluster->firstStrip();
          int prevAPV = -1;
          double gain = 1.0;
@@ -818,7 +944,8 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
          //          if(fakeHIP && detid.subdetId()>=3 && rand()%1000<35)ChargeOverPathlength = ( 0.5 + ((rand()%15000)/10000.0) ) / (3.61e-06*265*10);
          //           if(fakeHIP && detid.subdetId() <3 && rand()%1000<20)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) ) / (3.61e-06*265*10*265);
 
-         if(isStrangePdgId) ChargeOverPathlength /= 2; 
+         //FIXME still relevant? 
+         //if(isStrangePdgId) ChargeOverPathlength /= 2; 
 
          int moduleGeometry = 0; // underflow for debug
          int layer=0;
@@ -841,8 +968,9 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
             double ChargeOverPathlength = scaleFactor*Norm*ClusterCharge/dedxHits->pathlength(h);
             if(hipEmulator) ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
 
+            //FIXME still relevant? 
             // mk change
-            if(isStrangePdgId) ChargeOverPathlength /= 2;
+            //if(isStrangePdgId) ChargeOverPathlength /= 2;
 
             vect.push_back(ChargeOverPathlength); //save charge
             if(detid.subdetId()< 3)vectPixel.push_back(ChargeOverPathlength);
@@ -872,13 +1000,30 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
          //   else               {result *= pow(vect[i], 1.0/size);}
          //}
 
-         //Ias discriminator
-         result = 1.0/(12*size);
-         std::sort(vect.begin(), vect.end(), std::less<double>() );
-         for(int i=1;i<=size;i++){
-            result += vect[i-1] * pow(vect[i-1] - ((2.0*i-1.0)/(2.0*size)),2);
-         }
-         result *= (3.0/size);
+          //probQ discriminator
+          if(probQ){
+                float alpha=1;
+                for(int i=0;i<size;i++)
+                {
+                    alpha *= vect[i];
+                }
+                float logAlpha = log(alpha);
+                float probQm=0;
+                for(int i=0;i<size;i++)
+                {
+                    probQm += ((pow(-logAlpha,i))/(factorial(i)));   
+                }
+                result = alpha * probQm;
+          }else{
+
+                //Ias discriminator
+                result = 1.0/(12*size);
+                std::sort(vect.begin(), vect.end(), std::less<double>() );
+                for(int i=1;i<=size;i++){
+                    result += vect[i-1] * pow(vect[i-1] - ((2.0*i-1.0)/(2.0*size)),2);
+                }
+                result *= (3.0/size);
+          }
       }else{  //dEdx estimator
          if(useTruncated){
             //truncated40 estimator
@@ -1130,6 +1275,30 @@ void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& bet
       else if(beta2<0){beta2=mcParticle.p()/mcParticle.energy();return;}
    }
 }
+
+//============================================================
+//
+//      Return tk-based isolation with a PV constrain
+//
+//============================================================
+double TkBasedIsolationWithPVConstrain(const std::vector<reco::Track>& tkTracks, const reco::Vertex& PV, reco::TrackRef TkRef, const float& dRmax, const float& dxyMax, const float& dzMax,const float& trackSelection=0)
+{
+
+    if(TkRef->pt() < 10) return -1;
+    float SumPt=0.;
+    for(unsigned int i=0;i<tkTracks.size();i++){
+        reco::Track itTrack = tkTracks[i];
+        if(itTrack.pt()<trackSelection) continue;
+        if(fabs(itTrack.pt()-TkRef->pt())<0.1 && fabs(itTrack.eta()-TkRef->eta())<0.05)continue;
+        float dR = deltaR(itTrack.eta(),itTrack.phi(), TkRef->eta(), TkRef->phi());
+        if(dR > dRmax) continue;
+        if(itTrack.dxy(PV.position()) > dxyMax || itTrack.dz(PV.position()) > dzMax) continue;
+        SumPt+=itTrack.pt();
+    }
+    return SumPt;
+}
+      
+
 #endif //FWCORE
 
 #endif
