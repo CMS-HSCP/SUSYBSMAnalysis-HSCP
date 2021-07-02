@@ -98,12 +98,18 @@ if(not options.isSkimmedSample):
       process.HSCPTrigger.HLTPaths = [ #check triggers
           "HLT_PFMET120_PFMHT120_IDTight_v*",
           "HLT_Mu50_v*",
+          "HLT_PFHT500_PFMET100_PFMHT100_IDTight_v*",
+          "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v*",
+          "HLT_MET105_IsoTrk50_v*",
       ]
    elif(options.SAMPLE=='isBckg'):
       #to be updated to Run2 Triggers, in the meanwhile keep all of them to study trigger efficiency
       process.HSCPTrigger.HLTPaths = [
           "HLT_PFMET120_PFMHT120_IDTight_v*", #check triggers  
           "HLT_Mu50_v*",
+          "HLT_PFHT500_PFMET100_PFMHT100_IDTight_v*",
+          "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v*",
+          "HLT_MET105_IsoTrk50_v*",
       ]
    else:
       #do not apply trigger filter on signal

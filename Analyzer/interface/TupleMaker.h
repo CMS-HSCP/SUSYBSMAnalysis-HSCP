@@ -21,7 +21,9 @@ class TupleMaker{
         const float &weight, 
         const bool &HLT_Mu50, 
         const bool &HLT_PFMET120_PFMHT120_IDTight, 
-        const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,       
+        const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
+        const bool &HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
+        const bool &HLT_MET105_IsoTrk50,
         const float &CaloMET,
         const float &RecoPFMET,
         const float &RecoPFMHT,
@@ -523,7 +525,9 @@ if(saveTree>0)
    tuple->Tree->Branch("Weight"  ,&tuple->Tree_Weight    ,"Weight/F");
    tuple->Tree->Branch("HLT_Mu50",&tuple->Tree_HLT_Mu50  ,"HLT_Mu50/O");
    tuple->Tree->Branch("HLT_PFMET120_PFMHT120_IDTight", &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight  ,"HLT_PFMET120_PFMHT120_IDTight/O");
-   tuple->Tree->Branch("HLT_PFHT500_PFMET100_PFMHT100_IDTight", &tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight  ,"HLT_PFHT500_PFMET100_PFMHT100_IDTight/O");   
+   tuple->Tree->Branch("HLT_PFHT500_PFMET100_PFMHT100_IDTight", &tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight  ,"HLT_PFHT500_PFMET100_PFMHT100_IDTight/O");  
+   tuple->Tree->Branch("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60", &tuple->Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60, "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60/O");
+   tuple->Tree->Branch("HLT_MET105_IsoTrk50", &tuple->Tree_HLT_MET105_IsoTrk50, "HLT_MET105_IsoTrk50/O");
    tuple->Tree->Branch("CaloMET"    ,&tuple->Tree_CaloMET       ,"CaloMET/F");
    tuple->Tree->Branch("RecoPFMET"  ,&tuple->Tree_RecoPFMET     ,"RecoPFMET/F");
    tuple->Tree->Branch("RecoPFMHT"  ,&tuple->Tree_RecoPFMHT     ,"RecoPFMHT/F");
@@ -641,7 +645,9 @@ void TupleMaker::fillTreeBranches(Tuple* &tuple,
         const float &weight, 
         const bool &HLT_Mu50, 
         const bool &HLT_PFMET120_PFMHT120_IDTight, 
-        const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,        
+        const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,      
+        const bool &HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
+        const bool &HLT_MET105_IsoTrk50,
         const float &CaloMET,
         const float &RecoPFMET,
         const float &RecoPFMHT,
@@ -722,6 +728,8 @@ void TupleMaker::fillTreeBranches(Tuple* &tuple,
    tuple->Tree_HLT_Mu50                                 = HLT_Mu50;
    tuple->Tree_HLT_PFMET120_PFMHT120_IDTight            = HLT_PFMET120_PFMHT120_IDTight;
    tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight    = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
+   tuple->Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60;
+   tuple->Tree_HLT_MET105_IsoTrk50                      = HLT_MET105_IsoTrk50;
    tuple->Tree_CaloMET                                  = CaloMET;
    tuple->Tree_RecoPFMET                                = RecoPFMET;
    tuple->Tree_RecoPFMHT                                = RecoPFMHT;

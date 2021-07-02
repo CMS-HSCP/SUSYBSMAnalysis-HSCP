@@ -34,7 +34,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults")))
    ,pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET")))
    ,pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet")))
-   ,CaloMETToken_(consumes<reco::CaloMET>(iConfig.getParameter<edm::InputTag>("CaloMET")))
+   ,CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET")))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
@@ -270,12 +270,16 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool HLT_Mu50=false;
    bool HLT_PFMET120_PFMHT120_IDTight=false;
    bool HLT_PFHT500_PFMET100_PFMHT100_IDTight=false;
+   bool HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60=false;
+   bool HLT_MET105_IsoTrk50=false;
 
    for(unsigned int i=0; i<triggerH->size(); i++)
    {
         if(TString(triggerNames.triggerName(i)).Contains("HLT_Mu50") && triggerH->accept(i)) HLT_Mu50=true;
         if(TString(triggerNames.triggerName(i)).Contains("HLT_PFMET120_PFMHT120_IDTight") && triggerH->accept(i)) HLT_PFMET120_PFMHT120_IDTight=true;
         if(TString(triggerNames.triggerName(i)).Contains("HLT_PFHT500_PFMET100_PFMHT100_IDTight") && triggerH->accept(i)) HLT_PFHT500_PFMET100_PFMHT100_IDTight=true;
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60") && triggerH->accept(i)) HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60=true;
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50") && triggerH->accept(i)) HLT_MET105_IsoTrk50=true;
    }
 
 
@@ -384,6 +388,18 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        RecoPFMET = pfMet->et();
    }
    }
+   
+    //===================== Handle For CaloMET ===================
+   edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle;
+   iEvent.getByToken(CaloMETToken_, CaloMETHandle);
+   if(CaloMETHandle.isValid() && !CaloMETHandle->empty())
+   {
+   for(unsigned int i=0; i<CaloMETHandle->size(); i++)
+   {
+       const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
+       CaloMET = calomet->et();
+   }
+   }
     
     //===================== Handle For PFJet ===================
    edm::Handle<reco::PFJetCollection> pfJetHandle;
@@ -402,14 +418,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    RecoPFMHT = pMHT.Pt();
    }
     
-    //===================== Handle For CaloMET ===================
-   edm::Handle<reco::CaloMET> CaloMETHandle;
-   iEvent.getByToken(CaloMETToken_, CaloMETHandle);
-   if(CaloMETHandle.isValid())
-   {
-   const reco::CaloMET* caloMet = CaloMETHandle.product();
-   CaloMET = caloMet->et();
-   }
+    
 
    //load all event collection that will be used later on (HSCP, dEdx and TOF)
    unsigned int count = 0;
@@ -914,6 +923,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
            HLT_Mu50,
            HLT_PFMET120_PFMHT120_IDTight,
            HLT_PFHT500_PFMET100_PFMHT100_IDTight,
+           HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
+           HLT_MET105_IsoTrk50,
            CaloMET,
            RecoPFMET,
            RecoPFMHT,

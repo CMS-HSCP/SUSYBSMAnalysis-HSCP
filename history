@@ -1,0 +1,7 @@
+tag v1.1 
+    year: 2017
+    analysis: tk-only
+    dataset: MET
+    triggers: OR 
+    complexity of ttree: all information stored 
+    comment: first run 
