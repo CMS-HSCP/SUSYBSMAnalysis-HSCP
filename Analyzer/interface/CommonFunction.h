@@ -854,6 +854,22 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
    std::vector<double> vectStrip;
    std::vector<double> vectPixel;
 
+   // loop in order to have the number of saturated clusters in a track
+   unsigned int nsatclust=0;
+   for(unsigned int t=0;t<dedxHits->size();t++){
+      DetId detid(dedxHits->detId(t));
+      bool test_sat=false;
+      if(detid.subdetId()<3) continue;
+      const SiStripCluster* cluster = dedxHits->stripCluster(t);
+      std::vector<int> amplitudes = convert(cluster->amplitudes());
+      for(unsigned int s=0;s<amplitudes.size();s++)
+      {
+         if(amplitudes[s]>253) test_sat=true;
+      }
+      if(test_sat) nsatclust++;
+   }
+   float rsat = (float)nsatclust/(float)dedxHits->size();
+
    unsigned int NSat=0;
    unsigned int SiStripNOM = 0;
    //double lowerStripDeDx=1000; UNUSED
