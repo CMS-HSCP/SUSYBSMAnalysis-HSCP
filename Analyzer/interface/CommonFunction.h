@@ -860,8 +860,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
    //int lowerStripDeDxIndex=-1; UNUSED
    // loop in order to have the number of saturated clusters in a track
    unsigned int nsatclust=0;
-   for(unsigned int h=0; h<dedxHits->size(); h++)
-   {
+   for(unsigned int h=0; h<dedxHits->size(); h++){
        DetId detid(dedxHits->detId(h));
        bool test_sat=false;
        if(detid.subdetId()<3) continue;

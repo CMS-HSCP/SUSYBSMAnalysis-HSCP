@@ -792,7 +792,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }//end of Cut loop
       }
 
-
       double Ick2=0;  if(dedxMObj) Ick2=GetIck(dedxMObj->dEdx(),DeDxK,DeDxC);
       int nomh= 0;nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
       double fovhd = track->found()<=0?-1:track->found() / float(track->found() + nomh);
