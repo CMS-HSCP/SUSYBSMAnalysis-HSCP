@@ -870,12 +870,11 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFacto
       {
          if(amplitudes[s]>253) test_sat=true;
       }
-      if(test_sat) nsatclust++;    
+      if(test_sat) nsatclust++;
    }
    float rsat = (float)nsatclust/(float)dedxHits->size();
-
    for(unsigned int h=0;h<dedxHits->size();h++){
-      DetId detid(dedxHits->detId(h)); 
+      DetId detid(dedxHits->detId(h));
       if(!usePixel && detid.subdetId()<3)continue; // skip pixels
       if(!useStrip && detid.subdetId()>=3)continue; // skip strips        
       if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo))continue;
