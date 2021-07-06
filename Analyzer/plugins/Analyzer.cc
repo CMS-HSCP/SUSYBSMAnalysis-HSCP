@@ -625,8 +625,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       reco::DeDxData* dedx_probQ                = dedx_probQ_Tmp.numberOfMeasurements()>0?&dedx_probQ_Tmp:nullptr;
 
 
-
-
       if(TypeMode_==5)OpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
       //compute systematic uncertainties on signal
@@ -716,13 +714,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if(TypeMode_==5 && isCosmicSB)continue; 
 
-
-
       //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
       //double Mass = -1;
       if(isMC || isData) {
          //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
-		   double Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
+		   double Mass = -1; if(dedxMObj) Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
 		   double MassTOF  = -1; if(tof) MassTOF = GetTOFMass(track->p(),(2-tof->inverseBeta()));
 		   double MassComb = -1;
 		   if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/(2-tof->inverseBeta())))*0.5 ) ;
@@ -844,7 +840,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
       }
 
-
       HSCP_passCutPt55.push_back(track->pt()>55?true:false);
       HSCP_passPreselection_noIsolation_noIh.push_back(passPre_noIh_noIso);
       HSCP_passPreselection.push_back(passPre);
@@ -909,7 +904,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       
    } //END loop over HSCP candidates
-
 
    tuple_maker->fillTreeBranches(tuple,
            TrigInfo_,
@@ -1644,7 +1638,7 @@ bool Analyzer::passPreselection(
             tuple->BS_PtTOF->Fill(track->pt() ,tof->inverseBeta(),Event_Weight);
           }
           if(dedxSObj && dedxMObj) {
-	    tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
+	        tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
             tuple->BS_PImHD->Fill(track->p()  ,dedxMObj->dEdx(),Event_Weight);
             tuple->BS_PIm  ->Fill(track->p()  ,dedxMObj->dEdx(),Event_Weight);
             tuple->BS_PtIs ->Fill(track->pt() ,dedxSObj->dEdx(),Event_Weight);
