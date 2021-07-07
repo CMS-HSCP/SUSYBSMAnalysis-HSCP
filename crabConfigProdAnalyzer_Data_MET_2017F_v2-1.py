@@ -6,7 +6,7 @@ config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'HSCParticleProducerAnalyzer_cfg.py'
+config.JobType.psetName = 'HSCParticleProducerAnalyzer_2017F_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 
 config.JobType.inputFiles = ['HSCP/data/Data13TeVGains_v2.root','HSCP/data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017F.root','HSCP/data/CMS_GeomTree.root','HSCP/data/MuonTimeOffset.txt']
