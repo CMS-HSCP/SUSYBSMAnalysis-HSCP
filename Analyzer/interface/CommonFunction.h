@@ -9,7 +9,7 @@
 // Need to load the correction parameters from a file
 //
 //=======================================================================================
-#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h" // New procedure for the correction of the saturation phenomena 
+#include "SaturationCorrection.h" // New procedure for the correction of the saturation phenomena 
 SaturationCorrection sc;
 void LoadCorrectionParameters()
 {
