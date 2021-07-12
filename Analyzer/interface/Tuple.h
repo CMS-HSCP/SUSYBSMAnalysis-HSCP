@@ -25,6 +25,8 @@ struct Tuple {
    bool         Tree_HLT_Mu50;
    bool         Tree_HLT_PFMET120_PFMHT120_IDTight;
    bool         Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
+   bool         Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60;
+   bool         Tree_HLT_MET105_IsoTrk50;
    float        Tree_CaloMET;
    float        Tree_RecoPFMET;
    float        Tree_RecoPFMHT;

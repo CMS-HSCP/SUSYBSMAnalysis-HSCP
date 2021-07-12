@@ -127,7 +127,7 @@ void symmetrizeHisto (TH2D* histo, int mode){
 void compareForwardToBackwardWeights (TH1D* EtaS, TH1D* EtaB){
    int limit = EtaS->GetNbinsX(),
        bins  = limit,
-       shift = 1;
+       shift = 1; 
    if (limit%2==0) limit = (limit+2) / 2;
    else {limit /= 2; shift = 2;}
    std::vector <double> eta;              // x value

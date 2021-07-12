@@ -180,7 +180,7 @@ class Analyzer : public edm::EDAnalyzer {
       edm::EDGetTokenT<edm::TriggerResults>      triggerResultsToken_;
       edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
       edm::EDGetTokenT<reco::PFJetCollection>    pfJetToken_;
-      edm::EDGetTokenT<reco::CaloMET>            CaloMETToken_;
+      edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h

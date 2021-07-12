@@ -34,7 +34,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults")))
    ,pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET")))
    ,pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet")))
-   ,CaloMETToken_(consumes<reco::CaloMET>(iConfig.getParameter<edm::InputTag>("CaloMET")))
+   ,CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET")))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
@@ -270,12 +270,16 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool HLT_Mu50=false;
    bool HLT_PFMET120_PFMHT120_IDTight=false;
    bool HLT_PFHT500_PFMET100_PFMHT100_IDTight=false;
+   bool HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60=false;
+   bool HLT_MET105_IsoTrk50=false;
 
    for(unsigned int i=0; i<triggerH->size(); i++)
    {
         if(TString(triggerNames.triggerName(i)).Contains("HLT_Mu50") && triggerH->accept(i)) HLT_Mu50=true;
         if(TString(triggerNames.triggerName(i)).Contains("HLT_PFMET120_PFMHT120_IDTight") && triggerH->accept(i)) HLT_PFMET120_PFMHT120_IDTight=true;
         if(TString(triggerNames.triggerName(i)).Contains("HLT_PFHT500_PFMET100_PFMHT100_IDTight") && triggerH->accept(i)) HLT_PFHT500_PFMET100_PFMHT100_IDTight=true;
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60") && triggerH->accept(i)) HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60=true;
+        if(TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50") && triggerH->accept(i)) HLT_MET105_IsoTrk50=true;
    }
 
 
@@ -384,6 +388,18 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        RecoPFMET = pfMet->et();
    }
    }
+   
+    //===================== Handle For CaloMET ===================
+   edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle;
+   iEvent.getByToken(CaloMETToken_, CaloMETHandle);
+   if(CaloMETHandle.isValid() && !CaloMETHandle->empty())
+   {
+   for(unsigned int i=0; i<CaloMETHandle->size(); i++)
+   {
+       const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
+       CaloMET = calomet->et();
+   }
+   }
     
     //===================== Handle For PFJet ===================
    edm::Handle<reco::PFJetCollection> pfJetHandle;
@@ -402,14 +418,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    RecoPFMHT = pMHT.Pt();
    }
     
-    //===================== Handle For CaloMET ===================
-   edm::Handle<reco::CaloMET> CaloMETHandle;
-   iEvent.getByToken(CaloMETToken_, CaloMETHandle);
-   if(CaloMETHandle.isValid())
-   {
-   const reco::CaloMET* caloMet = CaloMETHandle.product();
-   CaloMET = caloMet->et();
-   }
+    
 
    //load all event collection that will be used later on (HSCP, dEdx and TOF)
    unsigned int count = 0;
@@ -616,8 +625,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       reco::DeDxData* dedx_probQ                = dedx_probQ_Tmp.numberOfMeasurements()>0?&dedx_probQ_Tmp:nullptr;
 
 
-
-
       if(TypeMode_==5)OpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
       //compute systematic uncertainties on signal
@@ -707,13 +714,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if(TypeMode_==5 && isCosmicSB)continue; 
 
-
-
       //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
       //double Mass = -1;
       if(isMC || isData) {
          //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
-		   double Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
+		   double Mass = -1; if(dedxMObj) Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
 		   double MassTOF  = -1; if(tof) MassTOF = GetTOFMass(track->p(),(2-tof->inverseBeta()));
 		   double MassComb = -1;
 		   if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK,DeDxC) + (1/(2-tof->inverseBeta())))*0.5 ) ;
@@ -835,7 +840,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
       }
 
-
       HSCP_passCutPt55.push_back(track->pt()>55?true:false);
       HSCP_passPreselection_noIsolation_noIh.push_back(passPre_noIh_noIso);
       HSCP_passPreselection.push_back(passPre);
@@ -901,7 +905,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       
    } //END loop over HSCP candidates
 
-
    tuple_maker->fillTreeBranches(tuple,
            TrigInfo_,
            iEvent.id().run(),
@@ -914,6 +917,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
            HLT_Mu50,
            HLT_PFMET120_PFMHT120_IDTight,
            HLT_PFHT500_PFMET100_PFMHT100_IDTight,
+           HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
+           HLT_MET105_IsoTrk50,
            CaloMET,
            RecoPFMET,
            RecoPFMHT,
@@ -1633,7 +1638,7 @@ bool Analyzer::passPreselection(
             tuple->BS_PtTOF->Fill(track->pt() ,tof->inverseBeta(),Event_Weight);
           }
           if(dedxSObj && dedxMObj) {
-	    tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
+	        tuple->BS_PIs  ->Fill(track->p()  ,dedxSObj->dEdx(),Event_Weight);
             tuple->BS_PImHD->Fill(track->p()  ,dedxMObj->dEdx(),Event_Weight);
             tuple->BS_PIm  ->Fill(track->p()  ,dedxMObj->dEdx(),Event_Weight);
             tuple->BS_PtIs ->Fill(track->pt() ,dedxSObj->dEdx(),Event_Weight);
