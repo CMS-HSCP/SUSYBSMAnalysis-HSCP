@@ -59,7 +59,7 @@
 #include "DataFormats/MuonReco/interface/MuonTimeExtraMap.h"
 // Muons CSC segments
 //#include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
-#include <DataFormats/CSCRecHit/interface/CSCSegment.h>
+#include "DataFormats/CSCRecHit/interface/CSCSegment.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
@@ -93,6 +93,8 @@
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #define FWCORE
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
@@ -100,10 +102,12 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 
 using namespace std;
 
 class TupleMaker;
+//class MCWeight;
 
 class Analyzer : public edm::EDAnalyzer {
    public:
@@ -181,6 +185,7 @@ class Analyzer : public edm::EDAnalyzer {
       edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
       edm::EDGetTokenT<reco::PFJetCollection>    pfJetToken_;
       edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
+      edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
@@ -324,6 +329,8 @@ class Analyzer : public edm::EDAnalyzer {
       bool isSignal;
 
       unsigned int CurrentRun_ = 0;
+
+      MCWeight *mcWeight;
 
       float EventWeight_   = 1;
       double SampleWeight_ = 1.0;

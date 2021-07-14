@@ -98,7 +98,7 @@ class TupleMaker{
         const unsigned int &Run, 
         const unsigned long &Event,
         const unsigned int &Lumi, 
-        const unsigned int &Hscp, 
+        /*const unsigned int &Hscp,*/
         const float &weight, 
         const std::vector<float> &genid, 
         const std::vector<float> &gencharge, 
@@ -616,7 +616,7 @@ if(saveGenTree>0)
    tuple->GenTree->Branch("Run"     ,&tuple->GenTree_Run       ,"Run/i");
    tuple->GenTree->Branch("Event"   ,&tuple->GenTree_Event     ,"Event/l");
    tuple->GenTree->Branch("Lumi"    ,&tuple->GenTree_Lumi      ,"Lumi/i");
-   tuple->GenTree->Branch("Hscp"    ,&tuple->GenTree_Hscp      ,"Hscp/i");
+   /*tuple->GenTree->Branch("Hscp"    ,&tuple->GenTree_Hscp      ,"Hscp/i");*/
    tuple->GenTree->Branch("Weight"  ,&tuple->GenTree_Weight    ,"Weight/F");
    tuple->GenTree->Branch("GenId"   ,&tuple->GenTree_GenId     );
    tuple->GenTree->Branch("GenCharge",&tuple->GenTree_GenCharge);
@@ -807,7 +807,7 @@ void TupleMaker::fillGenTreeBranches(Tuple* &tuple,
         const unsigned int &Run, 
         const unsigned long &Event,
         const unsigned int &Lumi, 
-        const unsigned int &Hscp, 
+        /*const unsigned int &Hscp,*/ 
         const float &weight, 
         const std::vector<float> &genid, 
         const std::vector<float> &gencharge, 
@@ -819,7 +819,7 @@ void TupleMaker::fillGenTreeBranches(Tuple* &tuple,
    tuple->GenTree_Run       = Run;
    tuple->GenTree_Event     = Event;
    tuple->GenTree_Lumi      = Lumi;
-   tuple->GenTree_Hscp      = Hscp;
+   /*tuple->GenTree_Hscp      = Hscp;*/
    tuple->GenTree_Weight    = weight;
    tuple->GenTree_GenId     = genid;
    tuple->GenTree_GenCharge = gencharge;

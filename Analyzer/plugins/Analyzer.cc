@@ -35,6 +35,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET")))
    ,pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet")))
    ,CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET")))
+   ,pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo")))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
@@ -127,6 +128,8 @@ Analyzer::beginJob()
    //saveTree = STree;
    //saveGenTree = SGTree;
 
+   SampleWeight_ = mcWeight->getNormWeight(IntegratedLuminosity_,1,1);
+
    tuple->IntLumi->Fill(0.0,IntegratedLuminosity_);
 
    tof    = nullptr;
@@ -193,10 +196,16 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    //WAIT////compute event weight
-   /*if(SampleType>0)
-      EventWeight_ = SampleWeight * GetPUWeight(ev, samples[s].Pileup, PUSystFactor, LumiWeightsMC, LumiWeightsMCSyst);
+   if(SampleType_>0){
+      double PUWeight = 1.;
+      Handle<vector<PileupSummaryInfo> > pileupInfo; 
+      iEvent.getByToken(pileupInfoToken_, pileupInfo);
+      //if(pileupInfo.isValid())
+      //PUWeight = mcWeight->getPUWeight(iEvent, samples[s].Pileup, PUSystFactor_, LumiWeightsMC, LumiWeightsMCSyst)
+      EventWeight_ = SampleWeight_ * PUWeight;
+   }
    else
-      EventWeight_ = 1;*/
+      EventWeight_ = 1;
    
    vector<reco::GenParticle> genColl;
    double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
@@ -211,24 +220,30 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          else LogError("Analyzer") << "GenParticle Collection NotFound";
       }
       genColl = *genCollH;
-      //WAIT//int NChargedHSCP=HowManyChargedHSCP(genColl);
-      //WAIT//EventWeight_*=samples[s].GetFGluinoWeight(NChargedHSCP);
+      int NChargedHSCP=HowManyChargedHSCP(genColl);
+      float SignalEventWeight = mcWeight->getFGluinoWeight(NChargedHSCP, TypeMode_);
 
       GetGenHSCPDecayLength(genColl,HSCPDLength1,HSCPDLength2,true);
-      tuple->Gen_DecayLength->Fill(HSCPDLength1, EventWeight_); //????
-      tuple->Gen_DecayLength->Fill(HSCPDLength2, EventWeight_);
+      tuple->Gen_DecayLength->Fill(HSCPDLength1, SignalEventWeight); //????
+      tuple->Gen_DecayLength->Fill(HSCPDLength2, SignalEventWeight);
 
       GetGenHSCPBeta(genColl,HSCPGenBeta1,HSCPGenBeta2,false);
-      if(HSCPGenBeta1>=0)tuple->Beta_Gen->Fill(HSCPGenBeta1, EventWeight_);  
-      if(HSCPGenBeta2>=0)tuple->Beta_Gen->Fill(HSCPGenBeta2, EventWeight_);
+      if(HSCPGenBeta1>=0)tuple->Beta_Gen->Fill(HSCPGenBeta1, SignalEventWeight);  
+      if(HSCPGenBeta2>=0)tuple->Beta_Gen->Fill(HSCPGenBeta2, SignalEventWeight);
 
       GetGenHSCPBeta(genColl,HSCPGenBeta1,HSCPGenBeta2,true);
-      if(HSCPGenBeta1>=0)tuple->Beta_GenCharged->Fill(HSCPGenBeta1, EventWeight_); 
-      if(HSCPGenBeta2>=0)tuple->Beta_GenCharged->Fill(HSCPGenBeta2, EventWeight_);
+      if(HSCPGenBeta1>=0)tuple->Beta_GenCharged->Fill(HSCPGenBeta1, SignalEventWeight); 
+      if(HSCPGenBeta2>=0)tuple->Beta_GenCharged->Fill(HSCPGenBeta2, SignalEventWeight);
 
       // R-hadron wights needed due to wrong GenId---------------------------------BEGIN
-      // ... missing
+      double  Wa=1.0, Wad=1.0, Waa=1.0, Wan=1.0; // Wa is additional weight for single other, Wad for other+double_charged,
+                                                 // Waa for the event with 2 other R-hadron, Wan for other+neutral
+      bool Rhadron=0; // default value - not R-hadron (not need to weight)
+      string sample_name = "";
+      mcWeight->getRHadronWeights(sample_name, Rhadron, Wa, Wad, Waa, Wan);
       // R-hadron wights needed due to wrong GenId---------------------------------END
+
+      unsigned int nw=0, na=0, nd=0, nn=0; //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
 
       for(unsigned int g=0;g<genColl.size();g++) {
          if(genColl[g].pt()<5)continue;
@@ -237,31 +252,62 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          if(AbsPdg<1000000 && AbsPdg!=17)continue;
 
          // categorise event with R-hadrons for additional weighting-----------------------BEGIN
-         // ... missing
+         int GenId=genColl[g].pdgId();
+         if        (    GenId ==1000612||    GenId ==1092214)  { nw+=1;  // count wrong
+         } else if (abs(GenId)==1006223||abs(GenId)==1092224)  { nd+=1;  // count doble charged
+         } else if (abs(GenId)==1006113.||
+                    abs(GenId)==1006333.||
+                    abs(GenId)==1006313.||
+                    abs(GenId)==1000622.||
+                    abs(GenId)==1092114.||
+                    abs(GenId)==1093324.||
+                    abs(GenId)==1093214.||
+                    abs(GenId)==1009333.||
+                    abs(GenId)==1009223.||
+                    abs(GenId)==1009113.||
+                    abs(GenId)==1009313.||
+                    abs(GenId)==1000993.){ nn+=1;  // count neutral
+         } else if (AbsPdg>1000000)                            { na+=1;} // count other R-hadrons
          // categorise event with R-hadrons for additional weighting-----------------------BEGIN
 
-         tuple->genlevelpT->Fill(genColl[g].pt(), EventWeight_);
-         tuple->genleveleta->Fill(genColl[g].eta(), EventWeight_);
-         tuple->genlevelbeta->Fill(genColl[g].p()/genColl[g].energy(), EventWeight_);
+         tuple->genlevelpT->Fill(genColl[g].pt(), SignalEventWeight);
+         tuple->genleveleta->Fill(genColl[g].eta(), SignalEventWeight);
+         tuple->genlevelbeta->Fill(genColl[g].p()/genColl[g].energy(), SignalEventWeight);
       }
 
    } //End of isSignal
 
    // new genHSCP ntuple after correcting weights
-   int nrha=0; 
-   for(unsigned int g=0;g<genColl.size();g++) {
-      if(genColl[g].pt()<5)continue;
-      if(genColl[g].status()!=1)continue;
-      int AbsPdg=abs(genColl[g].pdgId());
+   int nrha=0;
+   vector<float> genid; 
+   vector<float> gencharge; 
+   vector<float> genmass;
+   vector<float> genpt; 
+   vector<float> geneta; 
+   vector<float> genphi;
+   for(auto const &gen : genColl) {
+      if(gen.pt()<5)continue;
+      if(gen.status()!=1)continue;
+      int AbsPdg=abs(gen.pdgId());
       if(AbsPdg<1000000 && AbsPdg!=17)continue;
-
+   
       nrha++;
       //mk rhadron ntuple
-      //if(isSignal)
-		  //tuple_maker->fillGenTreeBranches(tuple, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), nrha, EventWeight_,genColl[g].pdgId(),genColl[g].charge(),genColl[g].mass(),genColl[g].pt(),genColl[g].eta(),genColl[g].phi());
+      if(isSignal){
+        genid.push_back(gen.pdgId());
+        gencharge.push_back(gen.charge());
+        genmass.push_back(gen.mass());
+        genpt.push_back(gen.pt());
+        geneta.push_back(gen.eta());
+        genphi.push_back(gen.phi());
+      }
 
    }
 	nrha=0;
+
+
+	if (isSignal)
+     tuple_maker->fillGenTreeBranches(tuple, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), EventWeight_,genid,gencharge,genmass,genpt,geneta,genphi);
 
    edm::Handle<edm::TriggerResults> triggerH;
    iEvent.getByToken(triggerResultsToken_,triggerH); 
@@ -291,9 +337,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    if(!passTrigger(iEvent, isData)){ return;
       //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
       //If not TOF only then move to next event
-      //WAIT//if(TypeMode_!=3) continue;
-      //WAIT//if(!PassTrigger(ev, isData, true, (is2016&&!is2016G)?&L1Emul:NULL)) continue;
-      //WAIT//if(!passTrigger(iEvent, isData, true)) continue;
+      /*if(TypeMode_!=3) continue;
+      if(!passTrigger(iEvent, isData, true, (is2016&&!is2016G)?&L1Emul:NULL)) continue;*/
 
       //If is cosmic event then switch plots to use to the ones for cosmics
 	   //WAIT//SamplePlots=&plotsMap[CosmicName];
@@ -631,27 +676,27 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(isSignal){
          //FIXME to be measured on 2015 data, currently assume 2012
          bool   PRescale = true;
-         /*double IRescale =-0.05; // added to the Ias value
+         double IRescale =-0.05; // added to the Ias value
          double MRescale = 0.95;
-		   double TRescale =-0.015; //-0.005 (used in 2012); // added to the 1/beta value*/
+		   double TRescale =-0.015; //-0.005 (used in 2012); // added to the 1/beta value
 		  
 		   double genpT = -1.0;
-		   for(unsigned int g=0;g<genColl.size();g++) {
-            if(genColl[g].pt()<5)continue;
-            if(genColl[g].status()!=1)continue;
-            int AbsPdg=abs(genColl[g].pdgId());
+		   for(auto const gen : genColl) {
+            if(gen.pt()<5)continue;
+            if(gen.status()!=1)continue;
+            int AbsPdg=abs(gen.pdgId());
             if(AbsPdg!=17)continue;
             
-            double separation = deltaR(track->eta(), track->phi(), genColl[g].eta(), genColl[g].phi());
+            double separation = deltaR(track->eta(), track->phi(), gen.eta(), gen.phi());
             if (separation > 0.03) continue;
-            genpT = genColl[g].pt();
+            genpT = gen.pt();
             break;
          }
          if (genpT>0) {  tuple->genrecopT->Fill(genpT, track->pt()); }
 
          // compute systematic due to momentum scale
          //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){..}
-         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_,  tuple, -1,   PRescale, 0, 0, 0)){//WAIT//
+         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1,   PRescale, 0, 0, 0)){//WAIT//
             double RescalingFactor = RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())/track->pt();
 
             if(TypeMode_==5 && isSemiCosmicSB)continue;
@@ -676,23 +721,97 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
          // compute systematic due to dEdx (both Ias and Ih)
-         //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0)){...}
+         //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0))
+         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_,  nullptr, -1,   0, 0, IRescale, 0)){
+            //if(TypeMode==5 && isSemiCosmicSB)continue;
+            double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale, DeDxK, DeDxC);
+            double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
+            double MassComb = -1;
+            if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1/tof->inverseBeta()))*0.5);
+            else if(dedxMObj) MassComb = Mass;
+            if(tof) MassComb=MassTOF;
+            for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
+               if(passSelection(hscp,  dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1,   0, IRescale, 0)){
+                  HSCPTk_SystI[CutIndex] = true;
+                  if(Mass>MaxMass_SystI[CutIndex]) MaxMass_SystI[CutIndex]=Mass;
+                  tuple->Mass_SystI->Fill(CutIndex, Mass, EventWeight_);
+                  if(tof) tuple->MassTOF_SystI ->Fill(CutIndex, MassTOF , EventWeight_);
+                  tuple->MassComb_SystI->Fill(CutIndex, MassComb, EventWeight_);
+               }
+            }
+         }
 
-         // compute systematic due to Mass shift
-         //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){...}
+         // compute systematic due to Mass shift ??????????
+         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1,   0, 0, 0, 0)){
+            /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
+            double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,DeDxK, DeDxC);
+            double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
+            double MassComb = -1;
+            if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx()*MRescale,DeDxK, DeDxC) + (1/tof->inverseBeta()))*0.5);
+            else if(dedxMObj) MassComb = Mass;
+            if(tof) MassComb=MassTOF;
+
+            for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
+               if(passSelection(hscp,  dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1,   0, 0, 0)){
+                  HSCPTk_SystM[CutIndex] = true;
+                  if(Mass>MaxMass_SystM[CutIndex]) MaxMass_SystM[CutIndex]=Mass;
+                  tuple->Mass_SystM->Fill(CutIndex, Mass,EventWeight_);
+                  if(tof) tuple->MassTOF_SystM ->Fill(CutIndex, MassTOF , EventWeight_);
+                  tuple->MassComb_SystM->Fill(CutIndex, MassComb, EventWeight_);
+               }
+            }
+         }
 
          // compute systematic due to TOF
-         //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, TRescale)){...}
+         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1,   0, 0, TRescale, 0)){
+            /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
+            double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(), DeDxK, DeDxC);
+            double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),(tof->inverseBeta()+TRescale));
+            double MassComb = -1;
+            if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK, DeDxC) + (1/(tof->inverseBeta()+TRescale)))*0.5);
+            else if(dedxMObj) MassComb = Mass;
+            if(tof) MassComb=MassTOF;
+
+            for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
+               if(passSelection(hscp,  dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1,   0, 0, TRescale)){
+                  HSCPTk_SystT[CutIndex] = true;
+                  if(Mass>MaxMass_SystT[CutIndex]) MaxMass_SystT[CutIndex]=Mass;
+                  tuple->Mass_SystT->Fill(CutIndex, Mass,EventWeight_);
+                  if(tof) tuple->MassTOF_SystT ->Fill(CutIndex, MassTOF , EventWeight_);
+                  tuple->MassComb_SystT->Fill(CutIndex, MassComb, EventWeight_);
+               }
+            }
+         }
 
          // compute systematics due to PU
+         if(passPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1,   0, 0, 0, 0)){
+            /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
+            double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),DeDxK, DeDxC);
+            double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
+            double MassComb = -1;
+            if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),DeDxK, DeDxC) + (1/tof->inverseBeta()))*0.5);
+            else if(dedxMObj) MassComb = Mass;
+            if(tof) MassComb=MassTOF;
+
+            for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
+               if(passSelection(hscp,  dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1,   0, 0, 0)){
+                  HSCPTk_SystPU[CutIndex] = true;
+                  if(Mass>MaxMass_SystPU[CutIndex]) MaxMass_SystPU[CutIndex]=Mass;
+                  tuple->Mass_SystPU->Fill(CutIndex, Mass,EventWeight_*PUSystFactor_);
+                  if(tof) tuple->MassTOF_SystPU ->Fill(CutIndex, MassTOF , EventWeight_*PUSystFactor_);
+                  tuple->MassComb_SystPU->Fill(CutIndex, MassComb, EventWeight_*PUSystFactor_);
+               }
+            }
+         }
 
       }//End of systematic computation for signal
 
       //check if the canddiate pass the preselection cuts
       /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
-
-
       double MassErr = GetMassErr(track->p(), track->ptError(), dedxMObj?dedxMObj->dEdx():-1, dEdxErr, GetMass(track->p(), dedxMObj?dedxMObj->dEdx():-1, DeDxK,DeDxC), DeDxK,DeDxC);
+      if(isMC)passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple  , -1, false, 0, 0, MassErr);
+      if(    !passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr)) continue;
+      /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
 
       bool passPre = true;
       bool passPre_noIh_noIso = true;
@@ -1819,6 +1938,11 @@ bool Analyzer::passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic,
    return false;
 }
 
+//=============================================================
+//
+//     Check if track is from pixel
+//
+//=============================================================
 void 
 Analyzer::isPixelTrack(const edm::Ref<std::vector<Trajectory> > &refTraj, bool &isBpixtrack, bool &isFpixtrack) {
     // Used in analyze() to see if it is pixel track
