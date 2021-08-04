@@ -107,7 +107,7 @@ class TupleMaker{
         const std::vector<float> &geneta, 
         const std::vector<float> &genphi);
 
-      void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip);
+      void fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip);
 };
 
 //=============================================================
@@ -838,236 +838,234 @@ void TupleMaker::fillGenTreeBranches(Tuple* &tuple,
 //     -> this information will be used later in Step4 for the actual datadriven prediction
 //
 //=============================================================
-void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, bool isMCglobal, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip){
-    using namespace std;
-	 reco::TrackRef   track;
-         if(TypeMode!=3) track = hscp.trackRef();
-         else {
+void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, Tuple* &tuple, int TypeMode, double GlobalMinTOF,float Event_Weight, bool isCosmicSB, float DTRegion, const int MaxPredBins, double DeDxK, double DeDxC, std::vector<double> CutPt, std::vector<double> CutI, std::vector<double> CutTOF, std::vector<double> CutPt_Flip, std::vector<double> CutI_Flip, std::vector<double>CutTOF_Flip){
+   using namespace std;
+	reco::TrackRef   track;
+   if(TypeMode!=3) track = hscp.trackRef();
+   else {
 	   reco::MuonRef muon = hscp.muonRef();
-           if(muon.isNull()) return;
-           track = muon->standAloneMuon();
-         }
+      if(muon.isNull()) return;
+      track = muon->standAloneMuon();
+   }
 
-         double MuonTOF = GlobalMinTOF;
-         if(tof){MuonTOF = tof->inverseBeta(); }
+   double MuonTOF = tof?tof->inverseBeta():GlobalMinTOF;
 
-	 double Is=0; 	 if(dedxSObj) Is=dedxSObj->dEdx();
-	 double Ih=0;	 if(dedxMObj) Ih=dedxMObj->dEdx();
+   double Is=0;  if(dedxSObj) Is=dedxSObj->dEdx();
+   double Ih=0;  if(dedxMObj) Ih=dedxMObj->dEdx();
 
-         if(!isCosmicSB){
-	 tuple->Hist_Pt->Fill(track->pt(),Event_Weight);
-         tuple->Hist_Is->Fill(Is,Event_Weight);
-         tuple->Hist_TOF->Fill(MuonTOF,Event_Weight);
-         }
+   if(!isCosmicSB){
+      tuple->Hist_Pt->Fill(track->pt(),Event_Weight);
+      tuple->Hist_Is->Fill(Is,Event_Weight);
+      tuple->Hist_TOF->Fill(MuonTOF,Event_Weight);
+   }
 
-//          /\ I
-//       /\  |----------------------------
-//        |  |   |           |             |
-//        |  |   |           |             |
-//        |  |   |    B      |     D       |
-//        |  |   |           |             |
-//        |  ------------------------------
-//        |  |   |           |             |
-//        |  |   |    A      |     C       |
-//        |  |   |           |             |
-//        |  |---|-----------|-------------|
-//        |  |   |           |             |
-//        |  /--------------------------------> PT
-//        | /       E       /    G  
-//         /------------------------------->
-//        /
-//      TOF
+   //          /\ I
+   //       /\  |----------------------------
+   //        |  |   |           |             |
+   //        |  |   |           |             |
+   //        |  |   |    B      |     D       |
+   //        |  |   |           |             |
+   //        |  ------------------------------
+   //        |  |   |           |             |
+   //        |  |   |    A      |     C       |
+   //        |  |   |           |             |
+   //        |  |---|-----------|-------------|
+   //        |  |   |           |             |
+   //        |  /--------------------------------> PT
+   //        | /       E       /    G  
+   //         /------------------------------->
+   //        /
+   //      TOF
 
-         //Use different pt regions if using momentum from Stand Alone Muons
-	 std::vector<double> PtLimits;
-	 if(TypeMode!=3) {
+   //Use different pt regions if using momentum from Stand Alone Muons
+   std::vector<double> PtLimits;
+   if(TypeMode!=3) {
 	   PtLimits.push_back(100);
-           PtLimits.push_back(80);
-           PtLimits.push_back(60);
+      PtLimits.push_back(80);
+      PtLimits.push_back(60);
+   }
+   else {
+      PtLimits.push_back(240);
+      PtLimits.push_back(170);
+      PtLimits.push_back(120);
 	 }
-	 else {
-           PtLimits.push_back(240);
-           PtLimits.push_back(170);
-           PtLimits.push_back(120);
-	 }
 
-	    //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
-	    //Binning not used for other analyses
-	    int bin=-1;
-	    if(TypeMode==3) {
-	      if(fabs(track->eta())<DTRegion) bin=muonStations(track->hitPattern())-2;
-	      else bin=muonStations(track->hitPattern())+1;
-	    }
+   //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
+   //Binning not used for other analyses
+   int bin=-1;
+   if(TypeMode==3) {
+      if(fabs(track->eta())<DTRegion) bin=muonStations(track->hitPattern())-2;
+      else bin=muonStations(track->hitPattern())+1;
+   }
 
-         if(!isCosmicSB){
-            if(track->pt()>PtLimits[0]){
-               tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S4_Im->Fill(Ih, Event_Weight);
-               if(tof) tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }else if(track->pt()>PtLimits[1]){
-               tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S3_Im->Fill(Ih, Event_Weight);
-               if(tof) tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }else if(track->pt()>PtLimits[2]){
-               tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S2_Im->Fill(Ih, Event_Weight);
-               if(tof) tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }else{
-               tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
-               tuple->CtrlPt_S1_Im->Fill(Ih, Event_Weight);
-               if(tof) tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
-               if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-            }
+   if(!isCosmicSB){
+      if(track->pt()>PtLimits[0]){
+         tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
+         tuple->CtrlPt_S4_Im->Fill(Ih, Event_Weight);
+         if(tof) tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
+         if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+      }else if(track->pt()>PtLimits[1]){
+         tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
+         tuple->CtrlPt_S3_Im->Fill(Ih, Event_Weight);
+         if(tof) tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
+         if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+      }else if(track->pt()>PtLimits[2]){
+         tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
+         tuple->CtrlPt_S2_Im->Fill(Ih, Event_Weight);
+         if(tof) tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
+         if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+      }else{
+         tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
+         tuple->CtrlPt_S1_Im->Fill(Ih, Event_Weight);
+         if(tof) tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
+         if(tof && bin>=0 && bin<MaxPredBins)tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+      }
 
-            if(Is>0.2){           if(tof) tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Is>0.1){     if(tof) tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Is>0.05){    if(tof) tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
-            }else{                if(tof) tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
-            }
+      if(Is>0.2){           if(tof) tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
+      }else if(Is>0.1){     if(tof) tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
+      }else if(Is>0.05){    if(tof) tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
+      }else{                if(tof) tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
+      }
 
-            if(Ih>4.4){           if(tof) tuple->CtrlIm_S4_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Ih>4.1){     if(tof) tuple->CtrlIm_S3_TOF->Fill(MuonTOF, Event_Weight);
-            }else if(Ih>3.8){     if(tof) tuple->CtrlIm_S2_TOF->Fill(MuonTOF, Event_Weight);
-            }else{                if(tof) tuple->CtrlIm_S1_TOF->Fill(MuonTOF, Event_Weight);
-            }
-         }
+      if(Ih>4.4){           if(tof) tuple->CtrlIm_S4_TOF->Fill(MuonTOF, Event_Weight);
+      }else if(Ih>4.1){     if(tof) tuple->CtrlIm_S3_TOF->Fill(MuonTOF, Event_Weight);
+      }else if(Ih>3.8){     if(tof) tuple->CtrlIm_S2_TOF->Fill(MuonTOF, Event_Weight);
+      }else{                if(tof) tuple->CtrlIm_S1_TOF->Fill(MuonTOF, Event_Weight);
+      }
+   }
 
 
 
-	 //	 if(dedxMObj) Ih=dedxMObj->dEdx();
-	 double Ick=0;  if(dedxMObj) Ick=GetIck(Ih,DeDxK,DeDxC); //GetIck(double I, bool MC, double dEdxK, double dEdxC)
+   //	 if(dedxMObj) Ih=dedxMObj->dEdx();
+   double Ick=0;  if(dedxMObj) Ick=GetIck(Ih,DeDxK,DeDxC); //GetIck(double I, bool MC, double dEdxK, double dEdxC)
 
 
-         for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){
- 	    if(MuonTOF<GlobalMinTOF) continue;
-            if(TypeMode==5 && isCosmicSB)continue;
-            bool PassPtCut  = track->pt()>=CutPt[CutIndex];
-            bool PassICut   = (Is>=CutI[CutIndex]);
-            bool PassTOFCut = MuonTOF>=CutTOF[CutIndex];
+   for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){
+      if(MuonTOF<GlobalMinTOF) continue;
+      if(TypeMode==5 && isCosmicSB)continue;
+      bool PassPtCut  = track->pt()>=CutPt[CutIndex];
+      bool PassICut   = (Is>=CutI[CutIndex]);
+      bool PassTOFCut = MuonTOF>=CutTOF[CutIndex];
 
-            if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
-               tuple->H_D      ->Fill(CutIndex,                Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               tuple->RegionD_P  ->Fill(CutIndex,track->p(),     Event_Weight);
-               tuple->RegionD_I  ->Fill(CutIndex,Ih,Event_Weight);
-	       tuple->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
-               tuple->RegionD_TOF->Fill(CutIndex,MuonTOF,        Event_Weight);
-	       tuple->AS_Eta_RegionD->Fill(CutIndex,track->eta());
-            }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
-               tuple->H_C     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
-               tuple->PDF_C_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-               //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
-               tuple->AS_Eta_RegionC->Fill(CutIndex,track->eta());
-            }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
-               tuple->H_B     ->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode<2)tuple->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
-	       tuple->PDF_B_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-               //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
-               tuple->AS_Eta_RegionB->Fill(CutIndex,track->eta());
-            }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
-               tuple->H_A     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS2->Fill(CutIndex,track->eta(),        Event_Weight);
-               tuple->AS_Eta_RegionA->Fill(CutIndex,track->eta());
-	       tuple->PDF_A_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+      if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
+         tuple->H_D      ->Fill(CutIndex,                Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         tuple->RegionD_P  ->Fill(CutIndex,track->p(),     Event_Weight);
+         tuple->RegionD_I  ->Fill(CutIndex,Ih,Event_Weight);
+         tuple->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
+         tuple->RegionD_TOF->Fill(CutIndex,MuonTOF,        Event_Weight);
+         tuple->AS_Eta_RegionD->Fill(CutIndex,track->eta());
+      }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
+         tuple->H_C     ->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode<2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
+         tuple->PDF_C_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
+         //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
+         tuple->AS_Eta_RegionC->Fill(CutIndex,track->eta());
+      }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
+         tuple->H_B     ->Fill(CutIndex,                 Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         if(TypeMode<2)tuple->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
+         if(TypeMode<2)tuple->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
+         tuple->PDF_B_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
+         //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
+         tuple->AS_Eta_RegionB->Fill(CutIndex,track->eta());
+      }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
+         tuple->H_A     ->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode==2)tuple->Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
+         if(TypeMode<2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaS2->Fill(CutIndex,track->eta(),        Event_Weight);
+         tuple->AS_Eta_RegionA->Fill(CutIndex,track->eta());
+         tuple->PDF_A_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
 
-            }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
-               tuple->H_H   ->Fill(CutIndex,          Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_H_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-	       tuple->RegionH_Ias->Fill(CutIndex,Is,Event_Weight);
-	       if(TypeMode==2 && Ick>0)tuple->PDF_H_EtaMass ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
-               //Pred_P->Fill(CutIndex,track->p(),        Event_Weight);
-               //Pred_I->Fill(CutIndex,Ih,   Event_Weight);
-               if(TypeMode==2)tuple->AS_Eta_RegionH->Fill(CutIndex,track->eta());
-            }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
-               tuple->H_G     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
-               tuple->AS_Eta_RegionG->Fill(CutIndex,track->eta());
-               if(TypeMode==2)tuple->PDF_G_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-            }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
-               tuple->H_F     ->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_F_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode==2)tuple->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
-               tuple->AS_Eta_RegionF->Fill(CutIndex,track->eta());
-	       if(TypeMode==2)tuple->PDF_F_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
+      }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
+         tuple->H_H   ->Fill(CutIndex,          Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_H_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         tuple->RegionH_Ias->Fill(CutIndex,Is,Event_Weight);
+         if(TypeMode==2 && Ick>0)tuple->PDF_H_EtaMass ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
+         //Pred_P->Fill(CutIndex,track->p(),        Event_Weight);
+         //Pred_I->Fill(CutIndex,Ih,   Event_Weight);
+         if(TypeMode==2)tuple->AS_Eta_RegionH->Fill(CutIndex,track->eta());
+      }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
+         tuple->H_G     ->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
+         tuple->AS_Eta_RegionG->Fill(CutIndex,track->eta());
+         if(TypeMode==2)tuple->PDF_G_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
+      }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
+         tuple->H_F     ->Fill(CutIndex,                 Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_F_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         if(TypeMode==2)tuple->Pred_I  ->Fill(CutIndex,Ih, Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaS->Fill(CutIndex,track->eta(),         Event_Weight);
+         tuple->AS_Eta_RegionF->Fill(CutIndex,track->eta());
+         if(TypeMode==2)tuple->PDF_F_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
 
-            }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
-               tuple->H_E     ->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
-               tuple->AS_Eta_RegionE->Fill(CutIndex,track->eta());
-	       if(TypeMode==2)tuple->PDF_E_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+      }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
+         tuple->H_E     ->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
+         tuple->AS_Eta_RegionE->Fill(CutIndex,track->eta());
+         if(TypeMode==2)tuple->PDF_E_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+      }
+   }
 
-            }
-         }
+   //Use events with low TOF to check accuracy of background prediction
+   for(unsigned int CutIndex=0;CutIndex<CutPt_Flip.size();CutIndex++){
+      if(TypeMode!=5 && MuonTOF>=GlobalMinTOF) continue;
+      if(TypeMode==5 && !isCosmicSB)continue;
 
-	 //Use events with low TOF to check accuracy of background prediction
-         for(unsigned int CutIndex=0;CutIndex<CutPt_Flip.size();CutIndex++){
-            if(TypeMode!=5 && MuonTOF>=GlobalMinTOF) continue;
-            if(TypeMode==5 && !isCosmicSB)continue;
-
-            bool PassPtCut  = track->pt()>=CutPt_Flip[CutIndex];
-            bool PassICut   = (Is>=CutI_Flip[CutIndex]);
-            bool PassTOFCut = MuonTOF<=CutTOF_Flip[CutIndex]; 
+      bool PassPtCut  = track->pt()>=CutPt_Flip[CutIndex];
+      bool PassICut   = (Is>=CutI_Flip[CutIndex]);
+      bool PassTOFCut = MuonTOF<=CutTOF_Flip[CutIndex]; 
 
 
-            if(TypeMode==5)PassTOFCut=true;
+      if(TypeMode==5)PassTOFCut=true;
 
-            if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
+      if(       PassTOFCut &&  PassPtCut &&  PassICut){   //Region D
 	      tuple->RegionD_P_Flip  ->Fill(CutIndex,track->p(),     Event_Weight);
 	      tuple->RegionD_I_Flip  ->Fill(CutIndex,Ih,Event_Weight);
 	      tuple->RegionD_Ias_Flip  ->Fill(CutIndex,Is,Event_Weight);
 	      tuple->RegionD_TOF_Flip->Fill(CutIndex,MuonTOF,        Event_Weight);
-               tuple->H_D_Flip->Fill(CutIndex,                Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-            }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
-               tuple->H_C_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaP_Flip->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
-               tuple->PDF_C_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
-               //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
-            }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
-               tuple->H_B_Flip->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode<2)tuple->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-	       tuple->PDF_B_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-               //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
-            }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
-               tuple->H_A_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
-               if(TypeMode<2)tuple->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS2_Flip->Fill(CutIndex,track->eta(),        Event_Weight);
-	       tuple->PDF_A_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
-            }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
-               tuple->H_H_Flip->Fill(CutIndex,          Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_H_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-	       tuple->RegionH_Ias_Flip  ->Fill(CutIndex,Is,Event_Weight);
-	       if(TypeMode==2 && Ick>0)tuple->PDF_H_EtaMass_Flip ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
+         tuple->H_D_Flip->Fill(CutIndex,                Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+      }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
+         tuple->H_C_Flip->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode<2)tuple->Pred_EtaP_Flip->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
+         tuple->PDF_C_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
+         //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
+      }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
+         tuple->H_B_Flip->Fill(CutIndex,                 Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         if(TypeMode<2)tuple->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
+         if(TypeMode<2)tuple->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+         tuple->PDF_B_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
+         //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
+      }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
+         tuple->H_A_Flip->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode==2)tuple->Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
+         if(TypeMode<2)tuple->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaS2_Flip->Fill(CutIndex,track->eta(),        Event_Weight);
+         tuple->PDF_A_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+      }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
+         tuple->H_H_Flip->Fill(CutIndex,          Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_H_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         tuple->RegionH_Ias_Flip  ->Fill(CutIndex,Is,Event_Weight);
+         if(TypeMode==2 && Ick>0)tuple->PDF_H_EtaMass_Flip ->Fill(CutIndex,track->eta(),track->p()*sqrt(Ick), Event_Weight); //pz
 
-	       //Pred_P_Flip->Fill(CutIndex,track->p(),        Event_Weight);
-	       //Pred_I_Flip->Fill(CutIndex,Ih,   Event_Weight);
-            }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
-               tuple->H_G_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaP_Flip->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
-               if(TypeMode==2)tuple->PDF_G_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
+         //Pred_P_Flip->Fill(CutIndex,track->p(),        Event_Weight);
+         //Pred_I_Flip->Fill(CutIndex,Ih,   Event_Weight);
+      }else if(!PassTOFCut &&  PassPtCut && !PassICut){   //Region G
+         tuple->H_G_Flip->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaP_Flip->Fill(CutIndex,track->eta(),track->p(),     Event_Weight);
+         if(TypeMode==2)tuple->PDF_G_EtaP_Flip ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
 
-            }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
-               tuple->H_F_Flip->Fill(CutIndex,                 Event_Weight);
-               if(bin>-1 && bin<MaxPredBins) tuple->H_F_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
-               if(TypeMode==2)tuple->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-	       if(TypeMode==2)tuple->PDF_F_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
-            }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
-               tuple->H_E_Flip->Fill(CutIndex,                 Event_Weight);
-               if(TypeMode==2)tuple->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
-	       if(TypeMode==2)tuple->PDF_E_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
-            }
-         }
+      }else if(!PassTOFCut && !PassPtCut &&  PassICut){   //Region F
+         tuple->H_F_Flip->Fill(CutIndex,                 Event_Weight);
+         if(bin>-1 && bin<MaxPredBins) tuple->H_F_Binned_Flip[to_string(bin)]->Fill(CutIndex,                Event_Weight);
+         if(TypeMode==2)tuple->Pred_I_Flip->Fill(CutIndex,Ih, Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaS_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+         if(TypeMode==2)tuple->PDF_F_EtaICK_Flip ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
+      }else if(!PassTOFCut && !PassPtCut && !PassICut){   //Region E
+         tuple->H_E_Flip->Fill(CutIndex,                 Event_Weight);
+         if(TypeMode==2)tuple->Pred_EtaB_Flip->Fill(CutIndex,track->eta(),         Event_Weight);
+         if(TypeMode==2)tuple->PDF_E_Eta_Flip->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+      }
+   }
 }

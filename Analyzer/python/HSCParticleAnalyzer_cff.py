@@ -24,6 +24,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,pfJet = cms.InputTag("ak4PFJetsCHS", "", "RECO")
     ,CaloMET = cms.InputTag("caloMet", "", "RECO")
     ,pileupInfo = cms.InputTag("addPileupInfo")
+    ,genParticleCollection = cms.InputTag("genParticlesSkimmed")
     #HLT triggers
     ,Trigger_Mu = cms.untracked.vstring("HLT_Mu45_eta2p1","HLT_Mu50_v") #"HLT_OldMu100_","HLT_TkMu100_","HLT_TkMu50_v"
     #,Trigger_MET  = cms.untracked.vstring("HLT_PFMET170_HBHECleaned_v","HLT_PFMET170_NoiseCleaned")
@@ -31,6 +32,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     # analysis parameters
     ,TypeMode        = cms.untracked.uint32(0) # 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
     ,SampleType      = cms.untracked.uint32(0) # 0:Data, 1:Background, 2:Signal, 3:Signal Systematics
+    ,SampleName      = cms.untracked.string("BaseName")
     # skip some distribution and trees
     ,SkipSelectionPlot   = cms.untracked.bool(False)
     # histogram bounds

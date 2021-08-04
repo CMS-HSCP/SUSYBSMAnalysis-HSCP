@@ -186,6 +186,7 @@ class Analyzer : public edm::EDAnalyzer {
       edm::EDGetTokenT<reco::PFJetCollection>    pfJetToken_;
       edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
       edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
+      edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
@@ -227,6 +228,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       int                TypeMode_;
       int                SampleType_;
+      string             SampleName_;
 
       bool SkipSelectionPlot_;
 

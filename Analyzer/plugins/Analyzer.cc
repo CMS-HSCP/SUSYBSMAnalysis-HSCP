@@ -36,12 +36,14 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet")))
    ,CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET")))
    ,pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo")))
+   ,genParticleToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection")))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
    // =========Analysis parameters================
    ,TypeMode_(iConfig.getUntrackedParameter<unsigned int>("TypeMode"))
    ,SampleType_(iConfig.getUntrackedParameter<unsigned int>("SampleType"))
+   ,SampleName_(iConfig.getUntrackedParameter<string>("SampleName"))
    ,SkipSelectionPlot_(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot"))
    ,PtHistoUpperBound(iConfig.getUntrackedParameter<double>("PtHistoUpperBound"))
    ,MassHistoUpperBound(iConfig.getUntrackedParameter<double>("MassHistoUpperBound"))
@@ -114,12 +116,12 @@ Analyzer::beginJob()
    edm::Service<TFileService> fs;
    tuple = new Tuple();
    
-   string BaseName;
+   /*string BaseName;
    if(isData)
         BaseName = "Data";
-   else BaseName = "MC";
+   else BaseName = "MC";*/
 
-   TFileDirectory dir = fs->mkdir( BaseName.c_str(), BaseName.c_str() );
+   TFileDirectory dir = fs->mkdir( SampleName_.c_str(), SampleName_.c_str() );
 
    // create histograms & trees
    initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
@@ -192,13 +194,13 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       dEdxSF [0] = DeDxSF_0;
       dEdxSF [1] = DeDxSF_1;
 
-      LogInfo("Analyzer") <<"------> dEdx parameters SF for run = "<<CurrentRun_<< "  "<< dEdxSF[1];
+      LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
    }
 
    //WAIT////compute event weight
    if(SampleType_>0){
       double PUWeight = 1.;
-      Handle<vector<PileupSummaryInfo> > pileupInfo; 
+      Handle<vector<PileupSummaryInfo> >  pileupInfo; 
       iEvent.getByToken(pileupInfoToken_, pileupInfo);
       //if(pileupInfo.isValid())
       //PUWeight = mcWeight->getPUWeight(iEvent, samples[s].Pileup, PUSystFactor_, LumiWeightsMC, LumiWeightsMCSyst)
@@ -212,14 +214,12 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    double HSCPDLength1=-1, HSCPDLength2=-1;
    if(isSignal){
       //get the collection of generated Particles
-      Handle< vector<reco::GenParticle> > genCollH;
-      iEvent.getByLabel("genParticlePlusGeant", genCollH);
-      if(!genCollH.isValid()) {
-         iEvent.getByLabel("genParticlesSkimmed", genCollH);
-         if(!genCollH.isValid()) iEvent.getByLabel("genParticles", genCollH);
-         else LogError("Analyzer") << "GenParticle Collection NotFound";
-      }
+      Handle< vector<reco::GenParticle> >  genCollH;
+      iEvent.getByToken(genParticleToken_, genCollH);
+      if(!genCollH.isValid()) {LogWarning("Analyzer") << "Invalid GenParticle!!, this event will be ignored"; return;}
+
       genColl = *genCollH;
+
       int NChargedHSCP=HowManyChargedHSCP(genColl);
       float SignalEventWeight = mcWeight->getFGluinoWeight(NChargedHSCP, TypeMode_);
 
@@ -245,14 +245,14 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       unsigned int nw=0, na=0, nd=0, nn=0; //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
 
-      for(unsigned int g=0;g<genColl.size();g++) {
-         if(genColl[g].pt()<5)continue;
-         if(genColl[g].status()!=1)continue;
-         int AbsPdg=abs(genColl[g].pdgId());
+      for(unsigned int g=0;g<genColl.size();g++) for(auto const &gen : genColl){
+         if(gen.pt()<5)continue;
+         if(gen.status()!=1)continue;
+         int AbsPdg=abs(gen.pdgId());
          if(AbsPdg<1000000 && AbsPdg!=17)continue;
 
          // categorise event with R-hadrons for additional weighting-----------------------BEGIN
-         int GenId=genColl[g].pdgId();
+         int GenId=gen.pdgId();
          if        (    GenId ==1000612||    GenId ==1092214)  { nw+=1;  // count wrong
          } else if (abs(GenId)==1006223||abs(GenId)==1092224)  { nd+=1;  // count doble charged
          } else if (abs(GenId)==1006113.||
@@ -270,9 +270,9 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          } else if (AbsPdg>1000000)                            { na+=1;} // count other R-hadrons
          // categorise event with R-hadrons for additional weighting-----------------------BEGIN
 
-         tuple->genlevelpT->Fill(genColl[g].pt(), SignalEventWeight);
-         tuple->genleveleta->Fill(genColl[g].eta(), SignalEventWeight);
-         tuple->genlevelbeta->Fill(genColl[g].p()/genColl[g].energy(), SignalEventWeight);
+         tuple->genlevelpT->Fill(gen.pt(), SignalEventWeight);
+         tuple->genleveleta->Fill(gen.eta(), SignalEventWeight);
+         tuple->genlevelbeta->Fill(gen.p()/gen.energy(), SignalEventWeight);
       }
 
    } //End of isSignal
@@ -829,7 +829,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
       //WAIT//else if(isMC) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
-      if(passPre) tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, isMCglobal, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
+      if(passPre && !isSignal) tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
 
       if(TypeMode_==5 && isCosmicSB)continue; 
 
