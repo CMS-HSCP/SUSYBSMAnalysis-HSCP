@@ -40,7 +40,84 @@ class ArgumentParser;
 
 using namespace std;
 
-void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
+void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0);
+
+int main(int argc, char* argv[]) {
+
+    string usage = "Usage: BackgroundPrediction --inputFiles <file.txt> [--mode <value>]\n";
+    usage       += "Or   : BackgroundPrediction --inputFiles <file1 file2 ...> [--mode <value>]";
+
+    vector<string> input;
+    int typeMode = 0;
+
+    ArgumentParser parser(argc,argv);
+
+    if( parser.findOption("-h") ){
+        cout << usage << endl;
+        return 0;
+    }
+    if( parser.findOption("--inputFiles") ) parser.getArgument("--inputFiles", input);
+    else {
+        cout << usage << endl;
+        return 0;
+    }
+    if( parser.findOption("--mode") ) parser.getArgument("--mode", typeMode);
+
+
+    cout << "======================" << endl;
+    cout << " BackgroundPrediction " << endl;
+    cout << "======================\n" << endl;
+
+    setTDRStyle();
+    /*gStyle->SetPadTopMargin   (0.06);
+    gStyle->SetPadBottomMargin(0.12);
+    gStyle->SetPadRightMargin (0.16);
+    gStyle->SetPadLeftMargin  (0.14);
+    gStyle->SetTitleSize(0.04, "XYZ");
+    gStyle->SetTitleXOffset(1.1);
+    gStyle->SetTitleYOffset(1.45);
+    gStyle->SetPalette(1);
+    gStyle->SetNdivisions(505);*/
+
+    TBenchmark clock;
+    clock.Start("BackgroundPrediction");
+
+    vector<string> inputFiles;
+    if (endsWith(input[0],".txt")){
+        ifstream fin(input[0], std::ios::binary);
+        if (not fin.is_open()) {
+            cout << "Failed to open " << input[0] << endl;
+            return 0;
+        }
+        string rootfile;
+        while (fin >> rootfile)
+            inputFiles.push_back(rootfile);
+    }
+    else
+        inputFiles = input;
+
+    for(auto const &inputFile : inputFiles){
+    
+        cout << "opening file " << inputFile << endl;
+        //TFile* inFile = TFile::Open(inputFile.c_str(),"UPDATE");
+        TFile* tfile = TFile::Open(inputFile.c_str(),"UPDATE");
+        //TFile* tfile = TFile::Open(inputFile.c_str());
+        if(not tfile){
+            cout << "Failed to open " << inputFile << endl;
+            return 0;
+        }
+        Analysis_Step2_BackgroundPrediction(tfile, typeMode);
+    }
+
+    cout << "" << endl;
+    clock.Show("BackgroundPrediction");
+    cout << "" << endl;
+
+    return 0;
+}
+
+
+void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode)
 {
    bool symmetrizeHistos = false;
    ////if(InputPattern=="COMPILE")return;
@@ -843,78 +920,4 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
 
         }//End loop on sub directories
     }//End of loop on two predictions
-}
-
-int main(int argc, char* argv[]) {
-
-    string usage = "Usage: ./RunBackgroundPrediction --inputFiles <file.txt> [--mode <value>]\n";
-    usage       += "Or   : ./RunBackgroundPrediction --inputFiles <file1 file2 ...> [--mode <value>]";
-
-    vector<string> input;
-    int typeMode = 0;
-
-    ArgumentParser parser(argc,argv);
-
-    if( parser.findOption("-h") ){
-        cout << usage << endl;
-        return 0;
-    }
-    if( parser.findOption("--inputFiles") ) parser.getArgument("--inputFiles", input);
-    else {
-        cout << usage << endl;
-        return 0;
-    }
-    if( parser.findOption("--mode") ) parser.getArgument("--mode", typeMode);
-
-
-    cout << "======================" << endl;
-    cout << " BackgroundPrediction " << endl;
-    cout << "======================\n" << endl;
-
-    setTDRStyle();
-    /*gStyle->SetPadTopMargin   (0.06);
-    gStyle->SetPadBottomMargin(0.12);
-    gStyle->SetPadRightMargin (0.16);
-    gStyle->SetPadLeftMargin  (0.14);
-    gStyle->SetTitleSize(0.04, "XYZ");
-    gStyle->SetTitleXOffset(1.1);
-    gStyle->SetTitleYOffset(1.45);
-    gStyle->SetPalette(1);
-    gStyle->SetNdivisions(505);*/
-
-    TBenchmark clock;
-    clock.Start("BackgroundPrediction");
-
-    vector<string> inputFiles;
-    if (endsWith(input[0],".txt")){
-        ifstream fin(input[0], std::ios::binary);
-        if (not fin.is_open()) {
-            cout << "Failed to open " << input[0] << endl;
-            return 0;
-        }
-        string rootfile;
-        while (fin >> rootfile)
-            inputFiles.push_back(rootfile);
-    }
-    else
-        inputFiles = input;
-
-    for(auto const &inputFile : inputFiles){
-    
-        cout << "opening file " << inputFile << endl;
-        //TFile* inFile = TFile::Open(inputFile.c_str(),"UPDATE");
-        TFile* tfile = TFile::Open(inputFile.c_str(),"UPDATE");
-        //TFile* tfile = TFile::Open(inputFile.c_str());
-        if(not tfile){
-            cout << "Failed to open " << inputFile << endl;
-            return 0;
-        }
-        Analysis_Step2_BackgroundPrediction(tfile, typeMode);
-    }
-
-    cout << "" << endl;
-    clock.Show("BackgroundPrediction");
-    cout << "" << endl;
-
-    return 0;
 }

@@ -107,7 +107,7 @@
 using namespace std;
 
 class TupleMaker;
-//class MCWeight;
+class MCWeight;
 
 class Analyzer : public edm::EDAnalyzer {
    public:
@@ -327,7 +327,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       bool useClusterCleaning;
       bool isData;
-      bool isMC;
+      bool isBckg;
       bool isSignal;
 
       unsigned int CurrentRun_ = 0;

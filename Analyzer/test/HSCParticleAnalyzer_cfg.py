@@ -7,11 +7,6 @@ options = VarParsing('analysis')
 options.outputFile = 'AnalysisTuple.root'
 options.maxEvents = -1 # -1 means all events
 
-#options.register('sampleTxtFile', 'Analysis_Samples.txt',
-#    VarParsing.multiplicity.singleton,
-#    VarParsing.varType.string,
-#    "Sample text file"
-#)
 options.parseArguments()
 
 process = cms.Process("Analyzer")
@@ -32,11 +27,11 @@ process.source = cms.Source("PoolSource",
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 ### set your configirattion here (default: python/HSCParticleAnalyzer_cff.py)
-#process.analyzer.SampleTxtFile=options.sampleTxtFile
 process.analyzer.TypeMode=0
-process.analyzer.SampleType=0
-process.analyzer.saveTree=6 #all saved
-process.analyzer.saveGenTree=0
+process.analyzer.SampleType=2
+process.analyzer.SampleName="Gluino_13TeV_M2400"
+process.analyzer.saveTree=1
+process.analyzer.saveGenTree=1
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)

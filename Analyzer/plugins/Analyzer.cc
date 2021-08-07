@@ -82,7 +82,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    }
    
    isData   = (SampleType_==0);
-   isMC     = (SampleType_==1);
+   isBckg   = (SampleType_==1);
    isSignal = (SampleType_>=2);
 
    //dEdxSF [0] = DeDxSF_0;
@@ -130,7 +130,11 @@ Analyzer::beginJob()
    //saveTree = STree;
    //saveGenTree = SGTree;
 
-   SampleWeight_ = mcWeight->getNormWeight(IntegratedLuminosity_,1,1);
+   if(!isData){
+      mcWeight = new MCWeight();
+      //mcWeight->loadPileupHistogram("");
+      SampleWeight_ = mcWeight->getNormWeight(IntegratedLuminosity_,1,1);
+   }
 
    tuple->IntLumi->Fill(0.0,IntegratedLuminosity_);
 
@@ -198,12 +202,15 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    //WAIT////compute event weight
-   if(SampleType_>0){
+   //vector<PileupSummaryInfo> pileupInfo;
+   if(!isData){
       double PUWeight = 1.;
-      Handle<vector<PileupSummaryInfo> >  pileupInfo; 
-      iEvent.getByToken(pileupInfoToken_, pileupInfo);
-      //if(pileupInfo.isValid())
-      //PUWeight = mcWeight->getPUWeight(iEvent, samples[s].Pileup, PUSystFactor_, LumiWeightsMC, LumiWeightsMCSyst)
+      Handle<vector<PileupSummaryInfo> >  pileupInfoH; 
+      iEvent.getByToken(pileupInfoToken_, pileupInfoH);
+      if(pileupInfoH.isValid()){
+         //PUWeight = mcWeight->getEventPUWeight(pileupInfoH, PUSystFactor_);
+      }
+      else {LogWarning("Analyzer") << "PileupSummaryInfo Collection NotFound";}
       EventWeight_ = SampleWeight_ * PUWeight;
    }
    else
@@ -245,7 +252,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       unsigned int nw=0, na=0, nd=0, nn=0; //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
 
-      for(unsigned int g=0;g<genColl.size();g++) for(auto const &gen : genColl){
+      for(auto const &gen : genColl){
          if(gen.pt()<5)continue;
          if(gen.status()!=1)continue;
          int AbsPdg=abs(gen.pdgId());
@@ -375,7 +382,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //================= Handle For Muon DT/CSC Segment ===============
    Handle<CSCSegmentCollection> CSCSegmentCollH;
    Handle<DTRecSegment4DCollection> DTSegmentCollH;
-   if(!isMC){ //do not recompute TOF on MC background
+   if(!isBckg){ //do not recompute TOF on MC background
       iEvent.getByToken(muonCscSegmentToken_, CSCSegmentCollH);
       if(!CSCSegmentCollH.isValid()){LogError("Analyzer") << "CSC Segment Collection not found!"; return;}
 
@@ -582,7 +589,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
       
       if(TypeMode_>1 && TypeMode_!=5 && !hscp.muonRef().isNull()){
-         if(isMC){
+         if(isBckg){
             tof    = &(*tofMap)[hscp.muonRef()];
             dttof  = &(*tofDtMap)[hscp.muonRef()];
             csctof = &(*tofCscMap)[hscp.muonRef()];
@@ -809,14 +816,14 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //check if the canddiate pass the preselection cuts
       /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
       double MassErr = GetMassErr(track->p(), track->ptError(), dedxMObj?dedxMObj->dEdx():-1, dEdxErr, GetMass(track->p(), dedxMObj?dedxMObj->dEdx():-1, DeDxK,DeDxC), DeDxK,DeDxC);
-      if(isMC)passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple  , -1, false, 0, 0, MassErr);
+      if(isBckg)passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple  , -1, false, 0, 0, MassErr);
       if(    !passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr)) continue;
       /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
 
       bool passPre = true;
       bool passPre_noIh_noIso = true;
 
-      if(isMC){
+      if(isBckg){
          passPreselection(  hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, -1, false, 0, 0, MassErr );
       }
       if(!passPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr) ) passPre=false;
@@ -827,7 +834,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       //fill the ABCD histograms and a few other control plots
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
-      //WAIT//else if(isMC) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
+      //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
       if(passPre && !isSignal) tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
 
@@ -835,7 +842,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
       //double Mass = -1;
-      if(isMC || isData) {
+      if(isBckg || isData) {
          //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
 		   double Mass = -1; if(dedxMObj) Mass = GetMass(track->p(),dedxMObj->dEdx(),DeDxK,DeDxC);
 		   double MassTOF  = -1; if(tof) MassTOF = GetTOFMass(track->p(),(2-tof->inverseBeta()));
@@ -888,8 +895,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
       for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){
          //Full Selection
-         //if(isMC)passSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, MCTrPlots);
-         if(isMC) passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, false, 0, 0);
+         //if(isBckg)passSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, MCTrPlots);
+         if(isBckg) passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, false, 0, 0);
          if(     !passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0) ) continue;
 
          if(CutIndex!=0)PassNonTrivialSelection=true;
@@ -904,7 +911,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          //Fill Mass Histograms
          tuple->Mass->Fill(CutIndex, Mass,EventWeight_);
          if(tof) tuple->MassTOF->Fill(CutIndex, MassTOF, EventWeight_);
-         if(isMC) tuple->MassComb->Fill(CutIndex, MassComb, EventWeight_);
+         if(isBckg) tuple->MassComb->Fill(CutIndex, MassComb, EventWeight_);
 
          //Fill Mass Histograms for different Ih syst
          tuple->Mass_SystHUp  ->Fill(CutIndex, MassUp,EventWeight_);
@@ -1112,7 +1119,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(HSCPTk[CutIndex]){
          tuple->HSCPE->Fill(CutIndex,EventWeight_);
          tuple->MaxEventMass->Fill(CutIndex,MaxMass[CutIndex], EventWeight_);
-         if(isMC){
+         if(isBckg){
             tuple->HSCPE->Fill(CutIndex,EventWeight_);
             tuple->MaxEventMass->Fill(CutIndex,MaxMass[CutIndex], EventWeight_);
          }
@@ -1816,7 +1823,7 @@ bool Analyzer::passSelection(
 
    double Is=0;   if(dedxSObj) Is=dedxSObj->dEdx();
    double Ih=0;   if(dedxMObj) Ih=dedxMObj->dEdx();
-   //WAIT//double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isMC);
+   //WAIT//double Ick=0; // if(dedxMObj) Ick=GetIck(Ih,isBckg);
 
    double PtCut=CutPt_[CutIndex];
    double ICut=CutI_[CutIndex];

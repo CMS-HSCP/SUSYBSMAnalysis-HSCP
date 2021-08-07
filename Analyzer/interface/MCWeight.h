@@ -3,16 +3,18 @@
 #ifndef SUSYBSMAnalysis_Analyzer_MCWeight_h
 #define SUSYBSMAnalysis_Analyzer_MCWeight_h
 
+#include "TSystem.h"
+
 class MCWeight{
   public:
     MCWeight();
     ~MCWeight();
 
+    void loadPileupHistogram(TString pileupFile);
     double getNormWeight(double IntegratedLuminosityInPb, double CrossSection, double NMCEvents);
     double getFGluinoWeight(int NChargedHSCP, int TypeMode);
     void getRHadronWeights(std::string sample_name, bool Rhadron, double  &Wa, double  &Wad, double  &Waa, double  &Wan);
-    float  getPUWeight(unsigned int ntrupv_mean, int type);
-
+    double getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor);
     float getCrossSection(const TString pattern);
     //void signalCrossSection(int mass, double &xsec, double &xsec_unc);
     //float fractionNegWeights(const TString pattern);
@@ -20,9 +22,37 @@ class MCWeight{
     double       WNC0;//weight for signal event with 0 Charged HSCP
     double       WNC1;//weight for signal event with 1 Charged HSCP
     double       WNC2;//weight for signal event with 2 Charged HSCP
+    //
+    std::vector<double> pileup_weights;
 };
 
-MCWeight::MCWeight(){}
+//=============================================================
+//
+//     Initialisation: Constructor/Destructor
+//
+//=============================================================
+MCWeight::MCWeight() {}
+
+MCWeight::~MCWeight() {}
+
+//=============================================================
+//
+//     Initialisation: Constructor/Destructor
+//
+//=============================================================
+void MCWeight::loadPileupHistogram(TString pileupFile){
+  //save pileup into vector:
+  if(gSystem->AccessPathName(pileupFile)){
+    edm::LogError("Pileup reweighting") << pileupFile << " Not Found";
+  }
+  TFile* tfile = TFile::Open(pileupFile);
+  TH1D *h_pu = (TH1D*)tfile->Get("pileup");
+  tfile->Close();
+  pileup_weights.clear();
+  for(int i=1; i<h_pu->GetNbinsX();i++){
+    pileup_weights.push_back(h_pu->GetBinContent(i));
+  }
+}
 
 //=============================================================
 //
@@ -51,76 +81,32 @@ float MCWeight::getCrossSection(const TString pattern){
   return xsec;
 }
 
-//=============================================================
+//======================================================================
 //
-// compute a weight to correct the pileup distribution in Signal/Background MC
+// compute a weight to correct the pileup distribution in MC simulation
 //
-//=============================================================
-/*double MCWeight::GetPUWeight(const edm::Event& iEvent, const std::string& pileup, double &PUSystFactor, edm::LumiReWeighting& LumiWeightsMC, reweight::PoissonMeanShifter& PShift){
+//======================================================================
+double MCWeight::getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor){
   
   double PUEventWeight=1.0;
 
-  int npv    = -1;     //nb of PU vertices
-  int BX     =  0;     //PU Bunch Crossing;
-  float Tnpv = -1;     //True nb of verticesHandle<vector<PileupSummaryInfo> > pileupInfo;
+  //int npv    = -1;     //nb of PU vertices
+  int Tnpv = -1;     //True nb of vertices ?unsigned int
 
-  
-  PupInfo.getByLabel(ev, "addPileupInfo");
-  if(!PupInfo.isValid()){printf("PileupSummaryInfo Collection NotFound\n");return 1.0;}
+  for(size_t i=0; i<PupInfo->size();i++){
+    int BX = PupInfo->at(i).getBunchCrossing();
+    if(BX == 0) {
+      //npv = PupInfo->at(i).getPU_NumInteractions();
+      Tnpv = PupInfo->at(i).getTrueNumInteractions();
+      break;
+    }
+  }
 
-  //USED//std::vector<PileupSummaryInfo>::const_iterator PVI;
+  PUEventWeight = pileup_weights.at(Tnpv);
+  PUSystFactor = 1.0;
 
-  if(pileup=="NoPU"){
-    PUEventWeight = 1.0;
-    PUSystFactor = 1.0;
-  }
-  else if(pileup=="S4"){
-    float sum_nvtx = 0;
-    for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
-      npv = PVI->getPU_NumInteractions();
-      sum_nvtx += float(npv);
-    }
-    float ave_nvtx = sum_nvtx/3.;
-    PUEventWeight = LumiWeightsMC.weight( ave_nvtx );
-    PUSystFactor = PShift.ShiftWeight( ave_nvtx );
-  }
-  else if(pileup=="S3"){
-    for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
-      BX = PVI->getBunchCrossing();
-      if(BX == 0) {
-        npv = PVI->getPU_NumInteractions();
-        continue;
-      }
-    }
-    PUEventWeight = LumiWeightsMC.weight( npv );
-    PUSystFactor = PShift.ShiftWeight( npv );
-  }
-  else if(pileup=="S10"){
-    for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
-      int BX = PVI->getBunchCrossing();
-      if(BX == 0) {
-	      Tnpv = PVI->getTrueNumInteractions();
-	      continue;
-      }
-    }
-    PUEventWeight = LumiWeightsMC.weight( Tnpv );
-    PUSystFactor = PShift.ShiftWeight( Tnpv );   
-  }else if(pileup=="S15"){
-    for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
-      int BX = PVI->getBunchCrossing();
-      if(BX == 0) {
-        Tnpv = PVI->getTrueNumInteractions();
-        continue;
-      }
-    }
-    PUEventWeight = LumiWeightsMC.weight( Tnpv );
-    PUSystFactor = PShift.ShiftWeight( Tnpv );
-  }
-  else {
-    printf("Can not find pile up scenario: %s", pileup.c_str());
-  }
   return PUEventWeight;
-}*/
+}
 
 //=============================================================
 //

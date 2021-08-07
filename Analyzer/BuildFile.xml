@@ -6,6 +6,8 @@
 <use name="FWCore/ServiceRegistry"/> <!--accessing TFileService: Not sure whether really needed...-->
 <use name="AnalysisDataFormats/SUSYBSMObjects"/>
 <use name="DataFormats/MuonReco"/>
+<use name="DataFormats/Math"/>
+<!--use name="CommonTools/Utils"/-->
 <!--use name="RecoTracker/DeDx"/-->
 <!--<flags EDM_PLUGIN="1"/>-->
 <export>

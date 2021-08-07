@@ -1,3 +1,8 @@
+int Color [] = {1,4,2,8,6,9,3,7,5,46,42};
+int Marker[] = {20,22,21,23,29,27,2,30,24,25};
+int Style [] = {1,2,5,7,9,10,11,12, 13, 14};
+int GraphStyle [] = {20, 21, 22, 23, 24, 25, 26, 27};
+
 //=============================================================
 //
 //     Symmetrize TH1D Histogram
@@ -173,6 +178,109 @@ void compareForwardToBackwardWeights (TH1D* EtaS, TH1D* EtaB){
 
 //=============================================================
 //
-//     
+//     Draw a list of TH1 and superimposed them
 //
 //=============================================================
+void DrawSuperposedHistos(TH1** Histos, std::vector<std::string> legend, std::string Style_,  std::string Xlegend, std::string Ylegend, double xmin, double xmax, double ymin, double ymax, bool Normalize=false, bool same=false, bool lastBinOverflow=false, bool firstBinOverflow=false)
+{
+   int    N             = legend.size();
+
+   double HistoMax      = -1;
+   int    HistoHeighest = -1;
+
+   for(int i=0;i<N;i++){
+      if(!Histos[i])continue;
+      if(Normalize && Histos[i]->Integral()!=0)Histos[i]->Scale(1.0/Histos[i]->Integral());
+      Histos[i]->SetTitle("");
+      Histos[i]->SetStats(kFALSE);
+      Histos[i]->GetXaxis()->SetTitle(Xlegend.c_str());
+      Histos[i]->GetYaxis()->SetTitle(Ylegend.c_str());
+      Histos[i]->GetXaxis()->SetTitleOffset(1.1);
+      Histos[i]->GetYaxis()->SetTitleOffset(1.40);
+      Histos[i]->GetXaxis()->SetNdivisions(505);
+      Histos[i]->GetYaxis()->SetNdivisions(505);
+	   Histos[i]->GetXaxis()->SetTitleSize(0.05);
+      if(xmin!=xmax)Histos[i]->SetAxisRange(xmin,xmax,"X");
+      if(ymin!=ymax)Histos[i]->SetAxisRange(ymin,ymax,"Y");
+      if(ymin==ymax && ymin<0)Histos[i]->SetMaximum(Histos[i]->GetMaximum()*fabs(ymax));
+      Histos[i]->SetFillColor(0);
+      Histos[i]->SetMarkerStyle(Marker[i]);
+      Histos[i]->SetMarkerColor(Color[i]);
+      Histos[i]->SetMarkerSize(1.5);
+      Histos[i]->SetLineColor(Color[i]);
+      Histos[i]->SetLineWidth(2);
+      if(lastBinOverflow) {
+         if(xmin!=xmax) {
+            int lastBin=Histos[i]->GetXaxis()->FindBin(xmax);
+            double sum=0;
+            double error=0;
+            for(int b=lastBin; b<Histos[i]->GetNbinsX()+2; b++) {sum+=Histos[i]->GetBinContent(b); error+=Histos[i]->GetBinError(b)*Histos[i]->GetBinError(b);}
+            Histos[i]->SetBinContent(lastBin, sum);
+            Histos[i]->SetBinError(lastBin, sqrt(error));
+         }
+         else {
+            Histos[i]->SetBinContent(Histos[i]->GetNbinsX(), Histos[i]->GetBinContent(Histos[i]->GetNbinsX())+Histos[i]->GetBinContent(Histos[i]->GetNbinsX()+1));
+            double error=sqrt(pow(Histos[i]->GetBinError(Histos[i]->GetNbinsX()),2)+pow(Histos[i]->GetBinError(Histos[i]->GetNbinsX()+1),2));
+            Histos[i]->SetBinError(Histos[i]->GetNbinsX(), error);
+         }
+      }
+      if(firstBinOverflow) {
+         if(xmin!=xmax) {
+            int firstBin=Histos[i]->GetXaxis()->FindBin(xmin);
+            double sum=0;
+            double error=0;
+            for(int b=0; b<firstBin; b++) {sum+=Histos[i]->GetBinContent(b); error+=Histos[i]->GetBinError(b)*Histos[i]->GetBinError(b);}
+            Histos[i]->SetBinContent(firstBin, sum);
+            Histos[i]->SetBinError(firstBin, sqrt(error));
+         }
+         else {
+            Histos[i]->SetBinContent(1, Histos[i]->GetBinContent(1)+Histos[i]->GetBinContent(0));
+            double error=sqrt(pow(Histos[i]->GetBinError(1),2)+pow(Histos[i]->GetBinError(0),2));
+            Histos[i]->SetBinError(1, error);
+         }
+      }
+      if(Style_=="DataMC" && i==0){
+         Histos[i]->SetFillColor(0);
+         Histos[i]->SetMarkerStyle(20);
+         Histos[i]->SetMarkerColor(1);
+         Histos[i]->SetMarkerSize(1);
+         Histos[i]->SetLineColor(1);
+         Histos[i]->SetLineWidth(2);
+      }
+
+      if(Histos[i]->GetMaximum() >= HistoMax){
+         HistoMax      = Histos[i]->GetMaximum();
+         HistoHeighest = i;
+      }
+   }
+
+   char Buffer[256];
+   if(Style_=="DataMC"){
+      if(HistoHeighest==0){
+         Histos[HistoHeighest]->Draw("E1");
+      }else{
+         Histos[HistoHeighest]->Draw("HIST");
+      }
+      for(int i=0;i<N;i++){
+           if(i==HistoHeighest)continue;
+           if(i==0){
+              Histos[i]->Draw("same E1");
+           }else{
+              Histos[i]->Draw("same");
+           }
+      }
+   }else{
+     if(same) {sprintf(Buffer,"same %s",Style_.c_str());
+       Histos[HistoHeighest]->Draw(Buffer);}
+     else Histos[HistoHeighest]->Draw(Style_.c_str());
+      for(int i=0;i<N;i++){
+           if(i==HistoHeighest)continue;
+           if(Style_!=""){
+	     sprintf(Buffer,"same %s",Style_.c_str());
+           }else{
+              sprintf(Buffer,"same");
+           }
+           Histos[i]->Draw(Buffer);
+      }
+   }
+}
