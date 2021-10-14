@@ -77,6 +77,15 @@ python crabConfig_Data.py
 
 ### Step 1
 
+|Analysis Type:  | |
+|:---    |:------  |
+|Type 0  |  Tk only |
+|Type 1  |  Tk+Muon |
+|Type 2  |  Tk+TOF  |
+|Type 3  |  TOF only | 
+|Type 4  |  Q>1 | 
+|Type 5  |  Q>1 | 
+
 #### EDAnalyzer on top of EDM files (created during the previous step)
 
 ```bash
