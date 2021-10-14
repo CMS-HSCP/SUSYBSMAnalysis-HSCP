@@ -44,6 +44,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,TypeMode_(iConfig.getUntrackedParameter<unsigned int>("TypeMode"))
    ,SampleType_(iConfig.getUntrackedParameter<unsigned int>("SampleType"))
    ,SampleName_(iConfig.getUntrackedParameter<string>("SampleName"))
+   ,Period_(iConfig.getUntrackedParameter<string>("Period"))
    ,SkipSelectionPlot_(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot"))
    ,PtHistoUpperBound(iConfig.getUntrackedParameter<double>("PtHistoUpperBound"))
    ,MassHistoUpperBound(iConfig.getUntrackedParameter<double>("MassHistoUpperBound"))
@@ -115,11 +116,6 @@ Analyzer::beginJob()
    // Book histograms
    edm::Service<TFileService> fs;
    tuple = new Tuple();
-   
-   /*string BaseName;
-   if(isData)
-        BaseName = "Data";
-   else BaseName = "MC";*/
 
    TFileDirectory dir = fs->mkdir( SampleName_.c_str(), SampleName_.c_str() );
 
@@ -127,16 +123,14 @@ Analyzer::beginJob()
    initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
    tuple_maker->initializeTuple(tuple, dir, STree, SGTree, SkipSelectionPlot_, TypeMode_, isSignal, CutPt_.size(), CutPt_Flip_.size(), PtHistoUpperBound, MassHistoUpperBound, MassNBins, IPbound, PredBins, EtaBins, dEdxS_UpLim, dEdxM_UpLim, DzRegions, GlobalMinPt, GlobalMinTOF);
 
-   //saveTree = STree;
-   //saveGenTree = SGTree;
-
+   // Re-weighting
+   mcWeight = new MCWeight();
    if(!isData){
-      mcWeight = new MCWeight();
-      //mcWeight->loadPileupHistogram("");
-      SampleWeight_ = mcWeight->getNormWeight(IntegratedLuminosity_,1,1);
+      mcWeight->loadPileupWeights(Period_);
    }
-
+   mcWeight->getSampleWeights(Period_, SampleName_.c_str(), IntegratedLuminosity_, CrossSection_);
    tuple->IntLumi->Fill(0.0,IntegratedLuminosity_);
+   tuple->XSection->Fill(0.0,CrossSection_);
 
    tof    = nullptr;
    dttof  = nullptr;
@@ -149,8 +143,9 @@ Analyzer::beginJob()
    is2016 = false;
    is2016G = false;
 
-   
-
+   //PUSystFactor_.clear();
+   PUSystFactor_.resize(2, 1.);
+   PUSystFactor_[0]=PUSystFactor_[1]=0.;
 
    HSCPTk              = new bool[CutPt_.size()];
    HSCPTk_SystP        = new bool[CutPt_.size()];
@@ -188,6 +183,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
+   tuple->EventsTotal->Fill(0.0,EventWeight_);
+
    //if run change, update conditions
    if(CurrentRun_ != iEvent.id().run()){
       CurrentRun_  = iEvent.id().run();
@@ -198,23 +195,24 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       dEdxSF [0] = DeDxSF_0;
       dEdxSF [1] = DeDxSF_1;
 
-      LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
+      //LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
    }
 
    //WAIT////compute event weight
    //vector<PileupSummaryInfo> pileupInfo;
    if(!isData){
-      double PUWeight = 1.;
+      /*double PUWeight = 1.;
       Handle<vector<PileupSummaryInfo> >  pileupInfoH; 
       iEvent.getByToken(pileupInfoToken_, pileupInfoH);
       if(pileupInfoH.isValid()){
-         //PUWeight = mcWeight->getEventPUWeight(pileupInfoH, PUSystFactor_);
+         PUWeight = mcWeight->getEventPUWeight(pileupInfoH, PUSystFactor_);
       }
-      else {LogWarning("Analyzer") << "PileupSummaryInfo Collection NotFound";}
-      EventWeight_ = SampleWeight_ * PUWeight;
+      else {LogWarning("Analyzer") << "PileupSummaryInfo Collection NotFound";}*/
+      double PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_,PUSystFactor_);
+      EventWeight_ = PUWeight; // 1. : unweighted w.r.t pileup
    }
    else
-      EventWeight_ = 1;
+      EventWeight_ = 1.;
    
    vector<reco::GenParticle> genColl;
    double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
@@ -338,7 +336,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    //check if the event is passing trigger
    tuple->TotalE  ->Fill(0.0,EventWeight_);
-   tuple->TotalEPU->Fill(0.0,EventWeight_*PUSystFactor_);
+   tuple->TotalEPU->Fill(0.0,EventWeight_*PUSystFactor_[0]);
    //See if event passed signal triggers
    //WAIT//if(!PassTrigger(iEvent, isData, false, (is2016&&!is2016G)?&L1Emul:nullptr) ) {
    if(!passTrigger(iEvent, isData)){ return;
@@ -473,7 +471,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
 
    //load all event collection that will be used later on (HSCP, dEdx and TOF)
-   unsigned int count = 0;
+   unsigned int HSCP_count = 0;
 
    std::vector<bool>         HSCP_passCutPt55;
    std::vector<bool>         HSCP_passPreselection_noIsolation_noIh;
@@ -562,7 +560,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(!isData && TypeMode_==3 && scaleFactor(track->eta())<RNG->Uniform(0, 1)) continue;
    
 
-      count++;
+      HSCP_count++;
       std::vector<float> clust_charge;
       std::vector<float> clust_pathlength;
       std::vector<bool> clust_ClusterCleaning;
@@ -804,9 +802,9 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                if(passSelection(hscp,  dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1,   0, 0, 0)){
                   HSCPTk_SystPU[CutIndex] = true;
                   if(Mass>MaxMass_SystPU[CutIndex]) MaxMass_SystPU[CutIndex]=Mass;
-                  tuple->Mass_SystPU->Fill(CutIndex, Mass,EventWeight_*PUSystFactor_);
-                  if(tof) tuple->MassTOF_SystPU ->Fill(CutIndex, MassTOF , EventWeight_*PUSystFactor_);
-                  tuple->MassComb_SystPU->Fill(CutIndex, MassComb, EventWeight_*PUSystFactor_);
+                  tuple->Mass_SystPU->Fill(CutIndex, Mass,EventWeight_*PUSystFactor_[0]);
+                  if(tof) tuple->MassTOF_SystPU ->Fill(CutIndex, MassTOF , EventWeight_*PUSystFactor_[0]);
+                  tuple->MassComb_SystPU->Fill(CutIndex, MassComb, EventWeight_*PUSystFactor_[0]);
                }
             }
          }
@@ -1038,7 +1036,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
            iEvent.id().luminosityBlock(),
            pileup_fromLumi,
            vertexColl.size(),
-           count,
+           HSCP_count,
            EventWeight_,
            HLT_Mu50,
            HLT_PFMET120_PFMHT120_IDTight,
@@ -1141,8 +1139,8 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          tuple->MaxEventMass_SystT->Fill(CutIndex,MaxMass_SystT[CutIndex], EventWeight_);
       }
       if(HSCPTk_SystPU[CutIndex]){
-         tuple->HSCPE_SystPU       ->Fill(CutIndex,EventWeight_*PUSystFactor_);
-         tuple->MaxEventMass_SystPU->Fill(CutIndex,MaxMass_SystPU[CutIndex], EventWeight_*PUSystFactor_);
+         tuple->HSCPE_SystPU       ->Fill(CutIndex,EventWeight_*PUSystFactor_[0]);
+         tuple->MaxEventMass_SystPU->Fill(CutIndex,MaxMass_SystPU[CutIndex], EventWeight_*PUSystFactor_[0]);
       }
       if(HSCPTk_SystHUp[CutIndex]){
          tuple->HSCPE_SystHUp     ->Fill(CutIndex,EventWeight_);

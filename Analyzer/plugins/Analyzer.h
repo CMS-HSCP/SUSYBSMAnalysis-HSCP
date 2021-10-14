@@ -229,6 +229,7 @@ class Analyzer : public edm::EDAnalyzer {
       int                TypeMode_;
       int                SampleType_;
       string             SampleName_;
+      string             Period_;
 
       bool SkipSelectionPlot_;
 
@@ -334,9 +335,10 @@ class Analyzer : public edm::EDAnalyzer {
 
       MCWeight *mcWeight;
 
-      float EventWeight_   = 1;
-      double SampleWeight_ = 1.0;
-      double PUSystFactor_ =1.0;
+      float EventWeight_   = 1.;
+      //double SampleWeight_ = 1.;
+      double CrossSection_ = 1.;
+      vector<float> PUSystFactor_;
 
       unsigned int TrigInfo_ =0; //1 -mu only, 2- met only, 3 mu and met 
 

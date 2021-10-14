@@ -33,6 +33,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,TypeMode        = cms.untracked.uint32(0) # 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
     ,SampleType      = cms.untracked.uint32(0) # 0:Data, 1:Background, 2:Signal, 3:Signal Systematics
     ,SampleName      = cms.untracked.string("BaseName")
+    ,Period          = cms.untracked.string("2016")
     # skip some distribution and trees
     ,SkipSelectionPlot   = cms.untracked.bool(False)
     # histogram bounds

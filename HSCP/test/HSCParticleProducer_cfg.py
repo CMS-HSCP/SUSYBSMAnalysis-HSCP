@@ -1,4 +1,4 @@
-import sys, os
+import os
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
@@ -8,7 +8,7 @@ options = VarParsing('analysis')
 options.outputFile = 'HSCP.root'
 options.maxEvents = -1 # -1 means all events
 
-options.register('GTAG', '106X_dataRun2_v20',
+options.register('GTAG', '106X_dataRun2_v20', #106X_dataRun2_v32
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
@@ -23,7 +23,7 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt',
+options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -43,7 +43,8 @@ process = cms.Process("HSCPAnalysis")
 #GTAG = 'START72_V1::All'
 
 ## print configuration:
-print('\nCMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
+print('\n')
+print('CMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
 print('Global Tag    : {}'.format(options.GTAG))
 if options.SAMPLE=='isData':
    print('Lumi File     : {}'.format(options.LUMITOPROCESS))

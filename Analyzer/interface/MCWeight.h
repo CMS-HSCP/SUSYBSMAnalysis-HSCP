@@ -3,27 +3,35 @@
 #ifndef SUSYBSMAnalysis_Analyzer_MCWeight_h
 #define SUSYBSMAnalysis_Analyzer_MCWeight_h
 
-#include "TSystem.h"
+#include "PhysicsTools/Utilities/interface/LumiReweightingStandAlone.h"
+
+
+//#include "TSystem.h"
+
 
 class MCWeight{
   public:
     MCWeight();
     ~MCWeight();
 
-    void loadPileupHistogram(TString pileupFile);
-    double getNormWeight(double IntegratedLuminosityInPb, double CrossSection, double NMCEvents);
+    void loadPileupWeights(TString period);
+    void getSampleWeights(TString period, const TString pattern, double &IntegratedLuminosity, double &CrossSection);
     double getFGluinoWeight(int NChargedHSCP, int TypeMode);
     void getRHadronWeights(std::string sample_name, bool Rhadron, double  &Wa, double  &Wad, double  &Waa, double  &Wan);
-    double getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor);
-    float getCrossSection(const TString pattern);
+    //double getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor);
+    double getEventPUWeight(const edm::Event& event, edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfo, std::vector<float> &PUSystFactor);
     //void signalCrossSection(int mass, double &xsec, double &xsec_unc);
     //float fractionNegWeights(const TString pattern);
   private:
     double       WNC0;//weight for signal event with 0 Charged HSCP
     double       WNC1;//weight for signal event with 1 Charged HSCP
     double       WNC2;//weight for signal event with 2 Charged HSCP
-    //
-    std::vector<double> pileup_weights;
+    
+    void getPileupEvents(TString period, std::string &MCDist, std::string &TrueDist, std::string &TrueDist_XSecShiftUp, std::string &TrueDist_XSecShiftDown);
+
+    reweight::LumiReWeighting LumiWeights_;
+    reweight::LumiReWeighting LumiWeightsUp_;
+    reweight::LumiReWeighting LumiWeightsDown_;
 };
 
 //=============================================================
@@ -37,21 +45,124 @@ MCWeight::~MCWeight() {}
 
 //=============================================================
 //
-//     Initialisation: Constructor/Destructor
+//     Load Pile-up Histogram
 //
 //=============================================================
-void MCWeight::loadPileupHistogram(TString pileupFile){
-  //save pileup into vector:
-  if(gSystem->AccessPathName(pileupFile)){
-    edm::LogError("Pileup reweighting") << pileupFile << " Not Found";
+void MCWeight::loadPileupWeights(TString period){
+
+  std::string TrueDist, TrueDist_XSecShiftUp, TrueDist_XSecShiftDown;
+  std::string MCDist;
+
+  getPileupEvents(period, MCDist,TrueDist, TrueDist_XSecShiftUp, TrueDist_XSecShiftDown);
+
+  LumiWeights_ = reweight::LumiReWeighting(MCDist, TrueDist,"pileup","pileup");
+  LumiWeightsUp_ = reweight::LumiReWeighting(MCDist, TrueDist_XSecShiftUp,"pileup","pileup");
+  LumiWeightsDown_ = reweight::LumiReWeighting(MCDist, TrueDist_XSecShiftDown,"pileup","pileup");
+
+}
+
+//======================================================================
+//
+// compute a weight to correct the pileup distribution in MC simulation
+//
+//======================================================================
+//double MCWeight::getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor){
+double MCWeight::getEventPUWeight(const edm::Event& event, edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfo, std::vector<float> &PUSystFactor){
+  
+  double weight=1.0;
+  int npv = -1;
+
+  edm::Handle<std::vector<PileupSummaryInfo> >  PupInfo; 
+  event.getByToken(pileupInfo, PupInfo);
+  if(PupInfo.isValid()){
+    std::vector<PileupSummaryInfo>::const_iterator PVI;
+    for (PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
+      if(PVI->getBunchCrossing() == 0) {
+        //npv = PVI->getPU_NumInteractions(); //     nb of pile-up vertices
+        npv = PVI->getTrueNumInteractions();  //True nb of primary vertices
+        break;
+      }
+    }
   }
-  TFile* tfile = TFile::Open(pileupFile);
-  TH1D *h_pu = (TH1D*)tfile->Get("pileup");
-  tfile->Close();
-  pileup_weights.clear();
-  for(int i=1; i<h_pu->GetNbinsX();i++){
-    pileup_weights.push_back(h_pu->GetBinContent(i));
+  //else edm::LogWarning("MCWeight") << "PileupSummaryInfo Collection Not Found";
+
+  weight = LumiWeights_.weight(npv);
+  PUSystFactor.resize(2, 1.);
+  if(weight==0) PUSystFactor[0]=PUSystFactor[1]=1.;
+  else{
+    PUSystFactor[0] = LumiWeightsUp_.weight( npv )/weight;
+    PUSystFactor[1] = LumiWeightsDown_.weight( npv )/weight;
   }
+  return weight;
+}
+
+//=============================================================
+//
+//     Fill Pile-up events: Ultra Legacy
+//                          MC: SimGeneral/MixingModule/python/mix_201X_25ns_UltraLegacy_PoissonOOTPU_cfi.py
+//                          Data: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions1X/13TeV/PileUp/UltraLegacy
+//
+//=============================================================
+void MCWeight::getPileupEvents(TString period, std::string &MCDist, std::string &TrueDist, std::string &TrueDist_XSecShiftUp, std::string &TrueDist_XSecShiftDown){
+
+  std::string prefix = std::string(std::getenv( "CMSSW_BASE" ))+"/src/SUSYBSMAnalysis/Analyzer/data/";
+  MCDist = prefix;
+  TrueDist  = prefix;
+  TrueDist_XSecShiftUp  = prefix;
+  TrueDist_XSecShiftDown  = prefix;
+
+  if (period.Contains("2016")){
+    MCDist += "mix_2016_25ns_UltraLegacy_PoissonOOTPU_cfi-99bins.root";
+    TrueDist  += "PileupHistogram-goldenJSON-13tev-2016-69200ub-99bins.root";
+    TrueDist_XSecShiftUp  += "PileupHistogram-goldenJSON-13tev-2016-66000ub-99bins.root";
+    TrueDist_XSecShiftDown  += "PileupHistogram-goldenJSON-13tev-2016-72400ub-99bins.root";
+
+  }
+  else if (period.Contains("2017")){
+    MCDist += "mix_2017_25ns_UltraLegacy_PoissonOOTPU_cfi-99bins.root";
+    TrueDist  += "PileupHistogram-goldenJSON-13tev-2017-69200ub-99bins.root";
+    TrueDist_XSecShiftUp  += "PileupHistogram-goldenJSON-13tev-2017-66000ub-99bins.root";
+    TrueDist_XSecShiftDown  += "PileupHistogram-goldenJSON-13tev-2017-72400ub-99bins.root";
+
+  }
+  else if (period.Contains("2018")){
+    MCDist += "mix_2018_25ns_UltraLegacy_PoissonOOTPU_cfi-99bins.root";
+    TrueDist  += "PileupHistogram-goldenJSON-13tev-2018-69200ub-99bins.root";
+    TrueDist_XSecShiftUp  += "PileupHistogram-goldenJSON-13tev-2018-66000ub-99bins.root";
+    TrueDist_XSecShiftDown  += "PileupHistogram-goldenJSON-13tev-2018-72400ub-99bins.root";
+  }
+  else{
+    MCDist = "";
+    TrueDist = "";
+    TrueDist_XSecShiftUp = "";
+    TrueDist_XSecShiftDown = "";
+  }
+}
+
+//=============================================================
+//
+//     set cross-sections in pb: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
+//
+//=============================================================
+double getCrossSection(const TString pattern){
+  double xsec(1.)/*, xsec_unc(1.)*/;
+
+  //NLO Gluino@13TeV
+  std::vector<double> THXSEC13TeV_Gluino_Mass = {100.0,120.0,140.0,160.0,180.0,200.0,220.0,240.0,260.0,280.0,300.0,320.0,340.0,360.0,380.0,400.0,420.0,440.0,460.0,480.0,500.0,520.0,540.0,560.0,580.0,600.0,620.0,640.0,660.0,680.0,700.0,720.0,740.0,760.0,780.0,800.0,820.0,840.0,860.0,880.0,900.0,920.0,940.0,960.0,980.0,1000.0,1020.0,1040.0,1060.0,1080.0,1100.0,1120.0,1140.0,1160.0,1180.0,1200.0,1220.0,1240.0,1260.0,1280.0,1300.0,1320.0,1340.0,1360.0,1380.0,1400.0,1420.0,1440.0,1460.0,1480.0,1500.0,1520.0,1540.0,1560.0,1580.0,1600.0,1620.0,1640.0,1660.0,1680.0,1700.0,1720.0,1740.0,1760.0,1780.0,1800.0,1820.0,1840.0,1860.0,1880.0,1900.0,1920.0,1940.0,1960.0,1980.0,2000.0,2020.0,2040.0,2060.0,2080.0,2100.0,2120.0,2140.0,2160.0,2180.0,2200.0,2220.0,2240.0,2260.0,2280.0,2300.0,2320.0,2340.0,2360.0,2380.0,2400.0,2420.0,2440.0,2460.0,2480.0,2500.0,2520.0,2540.0,2560.0,2580.0,2600.0,2620.0,2640.0,2660.0,2680.0,2700.0,2720.0,2740.0,2760.0,2780.0,2800.0,2820.0,2840.0,2860.0,2880.0,2900.0,2920.0,2940.0,2960.0,2980.0,3000.0};
+  std::vector<double> THXSEC13TeV_Gluino_Cen = {81700.0,38300.0,19200.0,10200.0,5740.0,3400.0,2110.0,1360.0,911.0,628.0,444.0,316.0,228.0,168.0,125.0,94.8,72.2,55.6,43.2,33.9,26.8,21.3,17.1,13.7,11.1,9.07,7.43,6.11,5.05,4.19,3.49,2.92,2.45,2.06,1.74,1.47,1.25,1.06,0.908,0.777,0.667,0.574,0.494,0.427,0.369,0.32,0.278,0.241,0.21,0.183,0.16,0.14,0.123,0.108,0.0949,0.0836,0.0737,0.065,0.0574,0.0507,0.0449,0.0398,0.0353,0.0313,0.0278,0.0247,0.022,0.0196,0.0175,0.0156,0.0139,0.0124,0.0111,0.00993,0.00889,0.00796,0.00713,0.0064,0.00574,0.00515,0.00463,0.00416,0.00374,0.00337,0.00303,0.00273,0.00246,0.00221,0.00199,0.0018,0.00162,0.00146,0.00132,0.00119,0.00108,0.000974,0.00088,0.000796,0.00072,0.000651,0.000589,0.000533,0.000482,0.000437,0.000395,0.000358,0.000324,0.000294,0.000266,0.000242,0.000219,0.000198,0.00018,0.000163,0.000148,0.000134,0.000121,0.00011,9.99e-05,9.05e-05,8.21e-05,7.44e-05,6.75e-05,6.12e-05,5.55e-05,5.03e-05,4.56e-05,4.14e-05,3.76e-05,3.41e-05,3.09e-05,2.8e-05,2.54e-05,2.3e-05,2.09e-05,1.89e-05,1.71e-05,1.56e-05,1.41e-05,1.28e-05,1.16e-05,1.05e-05,9.52e-06,8.62e-06,7.79e-06,7.04e-06};
+
+  if(pattern.Contains("Gluino")) {
+    for(uint i=0; i< THXSEC13TeV_Gluino_Mass.size();i++){
+      TString _m = (TString) to_string( (int) THXSEC13TeV_Gluino_Mass[i] );
+      if(pattern.Contains("M"+_m)) { // to be carefully used
+        xsec = THXSEC13TeV_Gluino_Cen[i];
+      }
+    }
+  }
+  else if(pattern.Contains("Stop")){
+    // To be implemented!
+  }
+  return xsec;
 }
 
 //=============================================================
@@ -60,53 +171,20 @@ void MCWeight::loadPileupHistogram(TString pileupFile){
 //     number of events, cross section and intergated luminosity
 //
 //=============================================================
-double MCWeight::getNormWeight(double IntegratedLuminosityInPb, double CrossSection, double NMCEvents){
-  double Weight = 1.0;
-  if(IntegratedLuminosityInPb>0){
-      Weight = (CrossSection * IntegratedLuminosityInPb) / NMCEvents;
+void MCWeight::getSampleWeights(TString period, const TString pattern, double &IntegratedLuminosity, double &CrossSection){
+  IntegratedLuminosity = 1.;  // inverse fb
+  if      (period.Contains("2018")) IntegratedLuminosity = 59.74;
+  else if (period.Contains("2017")) IntegratedLuminosity = 41.53;
+  else if (period.Contains("2016")) IntegratedLuminosity = 36.33;
+  else {
+    edm::LogError("Lumi reweighting") << "Could not find Lumi period";
+    //if (!isData) return;
   }
-  return Weight;
+  CrossSection = 1.;
+  CrossSection = getCrossSection(pattern) ;
 }
 
-//=============================================================
-//
-//     set cross-sections in pb: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/SUSYCrossSections
-//
-//=============================================================
-float MCWeight::getCrossSection(const TString pattern){
-  float xsec(1.)/*, xsec_unc(1.)*/;
 
-  if(pattern.Contains("Gluino_13TeV_M100")) xsec = 8.1700000000E+04;
-
-  return xsec;
-}
-
-//======================================================================
-//
-// compute a weight to correct the pileup distribution in MC simulation
-//
-//======================================================================
-double MCWeight::getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor){
-  
-  double PUEventWeight=1.0;
-
-  //int npv    = -1;     //nb of PU vertices
-  int Tnpv = -1;     //True nb of vertices ?unsigned int
-
-  for(size_t i=0; i<PupInfo->size();i++){
-    int BX = PupInfo->at(i).getBunchCrossing();
-    if(BX == 0) {
-      //npv = PupInfo->at(i).getPU_NumInteractions();
-      Tnpv = PupInfo->at(i).getTrueNumInteractions();
-      break;
-    }
-  }
-
-  PUEventWeight = pileup_weights.at(Tnpv);
-  PUSystFactor = 1.0;
-
-  return PUEventWeight;
-}
 
 //=============================================================
 //

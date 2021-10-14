@@ -122,6 +122,8 @@ void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned in
    std::string Name;
 
    Name = "IntLumi";  tuple->IntLumi = dir.make<TProfile>(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "XSection"; tuple->XSection= dir.make<TProfile>(Name.c_str(), Name.c_str(),  1    , 0,  1);
+   Name = "EventsTotal"; tuple->EventsTotal= dir.make<TH1F>(Name.c_str(), Name.c_str(),  1    , 0,  1);
    Name = "TotalE";   tuple->TotalE  = dir.make<TH1F>(Name.c_str(), Name.c_str(),  1    , 0,  1);     
    Name = "TotalEPU"; tuple->TotalEPU= dir.make<TH1F>(Name.c_str(), Name.c_str(),  1    , 0,  1);
    Name = "TotalTE";  tuple->TotalTE = dir.make<TH1F>(Name.c_str(), Name.c_str(),  1    , 0,  1);     
