@@ -7,6 +7,7 @@
     * [Step 0](#step-0)
     * [Step 1](#step-1)
     * [Step 2](#step-2)
+1.  [Pileup reweighting](#pileup-reweighting)
 
 ## Setup working area
 
@@ -139,3 +140,5 @@ Run:
 condor_submit batch.sub
 ```
 -->
+
+## Pileup reweighting
