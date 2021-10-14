@@ -1,5 +1,13 @@
 # Heavy Stable Charged Particle
 
+## Table of Contents
+
+1.  [Setup working area](#setup-working-area)
+1.  [Run the code](#run-the-code)
+    * [Step 0](#step-0)
+    * [Step 1](#step-1)
+    * [Step 2](#step-2)
+
 ## Setup working area
 
 ```bash
@@ -9,7 +17,7 @@ cd CMSSW_10_6_20/src/
 cmsenv
 ```
 
-For the following step you should have a ssh key associated to your GitLab account
+For the following step you should have a ssh key associated to your GitHub account
 
 ```bash
 git clone -b dev git@github.com:enibigir/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
@@ -28,6 +36,16 @@ scram b -j8
 ```
 
 ## Run the code
+
+|Steps:  |                                                             |
+|:---    |:------                                                      |
+|Step 0  |  Produce edm files from AOD                                 |
+|Step 1  |  Produce histograms and trees from step 0                   |
+|Step 2  |  Estimate Background using Step 1 histograms                |
+|Step 3  |  Make plots                                                 | 
+|Step 4  |  Compute Limits                                             | 
+
+### Step 0
 
 Get the scripts first:
 ```bash
@@ -56,14 +74,16 @@ python crabConfig_Data.py
 ```
 
 
-## EDAnalyzer on top of EDM files (created during the previous step)
+### Step 1
+
+#### EDAnalyzer on top of EDM files (created during the previous step)
 
 ```bash
 cp Analyzer/test/HSCParticleAnalyzer_cfg.py .
 cmsRun HSCParticleAnalyzer_cfg.py inputFiles=file:HSCP.root maxEvents=100
 ```
 
-## Production of EDM files (on-fly) and run of the EDAnalyzer
+#### Production of EDM files (on-fly) and run of the EDAnalyzer
 
 ```bash
 cp  Analyzer/test/HSCParticleProducerAnalyzer_cfg.py .
@@ -76,7 +96,7 @@ cp Analyzer/test/crabConfigProdAnalyzer_Data.py .
 python crabConfigProdAnalyzer_Data.py
 ```
 
-## Check of the EDAnalyzer (comparison with the old workflow)
+#### Check of the EDAnalyzer (comparison with the old workflow)
 Use the script:
 ```bash
 Analyzer/test/compareRootFiles.py
@@ -86,29 +106,27 @@ This script takes two root files (to set in the file) and compares their histogr
 Analyzer/test/differences.txt
 ```
 
-## Background prediction
+### Step 2
 
+#### Background prediction
+
+<!--
 ```bash
 cp Analyzer/test/RunBackgroundPrediction.sh .
 ```
+-->
 List your root files in a single text file, e.g `input.txt`
 
-### Run locally
+#### Run locally
 
-First compile: 
 ```bash
-source RunBackgroundPrediction.sh
+BackgroundPrediction -h # for help
+BackgroundPrediction -f input.txt
 ```
 
-Then run
-```bash
-./RunBackgroundPrediction -h # for help
-# e.g: ./RunBackgroundPrediction --inputFiles input.txt
-# alternatively you can run: source RunBackgroundPrediction.sh input.txt
-```
+#### Run on HTCondor
 
-### Run on HTCondor
-
+<!--
 Uncomment and change the commented line in `RunBackgroundPrediction.sh`
 
 Get submit file:
@@ -120,3 +138,4 @@ Run:
 ```bash
 condor_submit batch.sub
 ```
+-->
