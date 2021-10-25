@@ -63,6 +63,11 @@ void split(std::string s,char delim,std::vector<std::string> &v){
     if (t!="") v.push_back(t); //include last word
 }
 
+// create a directory/subdirectory on disk
+void MakeDirectories(std::string path){
+   system( (std::string("mkdir -p ") + path).c_str());
+}
+
 //=============================================================
 //
 //    factorial function used to compute probQ 
