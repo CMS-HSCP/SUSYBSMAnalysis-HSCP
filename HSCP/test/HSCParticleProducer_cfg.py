@@ -1,4 +1,4 @@
-import sys, os
+import os
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
@@ -23,7 +23,7 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt',
+options.register('LUMITOPROCESS', '',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -33,19 +33,11 @@ options.parseArguments()
 
 process = cms.Process("HSCPAnalysis")
 
-#diventano var parsing
-#The following parameters need to be provided
-#isSignal, isBckg, isData, isSkimmedSample, GTAG, InputFileList
-#isSignal = True
-#isBckg = False
-#isData = False
-#isSkimmedSample = False
-#GTAG = 'START72_V1::All'
-
 ## print configuration:
-print('\nCMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
+print('\n')
+print('CMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
 print('Global Tag    : {}'.format(options.GTAG))
-if options.SAMPLE=='isData':
+if options.LUMITOPROCESS:
    print('Lumi File     : {}'.format(options.LUMITOPROCESS))
 print('Sample Type   : {}'.format(options.SAMPLE))
 print('is skimmed    : {}'.format(options.isSkimmedSample))
@@ -177,7 +169,6 @@ process.Out = cms.OutputModule("PoolOutputModule",
 if(options.SAMPLE=='isData' and len(options.LUMITOPROCESS)>0):
    import FWCore.PythonUtilities.LumiList as LumiList
    process.source.lumisToProcess = LumiList.LumiList(filename = options.LUMITOPROCESS).getVLuminosityBlockRange()
-   #process.source.lumisToProcess = LumiList.LumiList(url = https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt).getVLuminosityBlockRange()
 
 if(options.SAMPLE=='isBckg' or options.SAMPLE=='isData'):
    process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')  #take just the skimmed ones

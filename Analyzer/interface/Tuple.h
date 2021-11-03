@@ -163,6 +163,8 @@ struct Tuple {
    TH2F*  MassComb_Flip;
 
    TProfile* IntLumi;
+   TProfile* XSection;
+   TH1F* EventsTotal;
    TH1F* TotalE;
    TH1F* TotalEPU; 
    TH1F* TotalTE;

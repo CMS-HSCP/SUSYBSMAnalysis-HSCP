@@ -12,3 +12,8 @@
   <use name="SUSYBSMAnalysis/HSCP"/>
   <use name="SUSYBSMAnalysis/Analyzer"/>
 </bin>
+
+<bin file="GeneratePileup.cpp">
+  <use name="SUSYBSMAnalysis/HSCP"/>
+  <use name="SUSYBSMAnalysis/Analyzer"/>
+</bin>

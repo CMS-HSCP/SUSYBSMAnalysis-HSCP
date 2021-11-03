@@ -32,11 +32,13 @@ class ArgumentParser{
         }
         
         void getArgument(const std::string &option, std::vector<std::string> &args) const{
-            args.clear();
             std::vector<std::string>::const_iterator itr;
             itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
-            if (itr != this->tokens.end() && ++itr != this->tokens.end()){
-                args.push_back(*itr);
+            for (itr != this->tokens.end(); itr != this->tokens.end(); ++itr){
+                string s = *itr;
+                if(s==option) continue;
+                if(s.find("-")==0) break;
+                args.push_back(s);
             }
         }
 };

@@ -35,6 +35,39 @@ bool endsWith(std::string s,std::string sub){
         return s.rfind(sub)==(s.length()-sub.length())?1:0;
 }
 
+void split(std::string s,char delim,std::vector<float> &v){
+    std::string t;
+    for(uint i=0;i<s.length();i++){
+        if(s[i]==delim){
+            v.push_back(stof(t));
+            t = "";
+        }
+        else{
+            t += s[i];
+        }
+    }
+    if (t!="") v.push_back(stof(t)); //include last word
+}
+
+void split(std::string s,char delim,std::vector<std::string> &v){
+    std::string t;
+    for(uint i=0;i<s.length();i++){
+        if(s[i]==delim){
+            v.push_back(t);
+            t = "";
+        }
+        else{
+            t += s[i];
+        }
+    }
+    if (t!="") v.push_back(t); //include last word
+}
+
+// create a directory/subdirectory on disk
+void MakeDirectories(std::string path){
+   system( (std::string("mkdir -p ") + path).c_str());
+}
+
 //=============================================================
 //
 //    factorial function used to compute probQ 

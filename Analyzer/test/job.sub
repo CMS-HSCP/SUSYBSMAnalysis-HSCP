@@ -1,8 +1,0 @@
-universe   = vanilla
-executable = RunBackgroundPrediction.sh
-arguments  = input.txt
-output     = log/job_$(ClusterId).out
-error      = log/job_$(ClusterId).err
-log        = log/job_$(ClusterId).log
-
-queue 1

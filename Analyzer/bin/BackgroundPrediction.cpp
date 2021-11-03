@@ -36,16 +36,20 @@
 #include "HistoTools.h"
 #include "ArgumentParser.h"
 
+#include <boost/filesystem.hpp>
+boost::filesystem::path BASE(__FILE__);
+#define __FILENAME__ BASE.stem().c_str()
+
 class ArgumentParser;
 
 using namespace std;
 
-void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0);
+void Analysis_Step2_BackgroundPrediction(string RootFile, int TypeMode = 0);
 
 int main(int argc, char* argv[]) {
 
-    string usage = "Usage: BackgroundPrediction --inputFiles <file.txt> [--mode <value>]\n";
-    usage       += "Or   : BackgroundPrediction --inputFiles <file1 file2 ...> [--mode <value>]";
+    string usage = "Usage: "+(string)__FILENAME__+" -f file.txt [--type AnalysisType]\n";
+    usage       += "Or   : "+(string)__FILENAME__+" -f file1 file2 fileN [--type AnalysisType]";
 
     vector<string> input;
     int typeMode = 0;
@@ -56,16 +60,16 @@ int main(int argc, char* argv[]) {
         cout << usage << endl;
         return 0;
     }
-    if( parser.findOption("--inputFiles") ) parser.getArgument("--inputFiles", input);
+    if( parser.findOption("-f") ) parser.getArgument("-f", input);
     else {
         cout << usage << endl;
         return 0;
     }
-    if( parser.findOption("--mode") ) parser.getArgument("--mode", typeMode);
+    if( parser.findOption("--type") ) parser.getArgument("--type", typeMode);
 
 
     cout << "======================" << endl;
-    cout << " BackgroundPrediction " << endl;
+    cout << " "<<__FILENAME__<<" " << endl;
     cout << "======================\n" << endl;
 
     setTDRStyle();
@@ -80,7 +84,7 @@ int main(int argc, char* argv[]) {
     gStyle->SetNdivisions(505);*/
 
     TBenchmark clock;
-    clock.Start("BackgroundPrediction");
+    clock.Start(__FILENAME__);
 
     vector<string> inputFiles;
     if (endsWith(input[0],".txt")){
@@ -97,27 +101,18 @@ int main(int argc, char* argv[]) {
         inputFiles = input;
 
     for(auto const &inputFile : inputFiles){
-    
-        cout << "opening file " << inputFile << endl;
-        //TFile* inFile = TFile::Open(inputFile.c_str(),"UPDATE");
-        TFile* tfile = TFile::Open(inputFile.c_str(),"UPDATE");
-        //TFile* tfile = TFile::Open(inputFile.c_str());
-        if(not tfile){
-            cout << "Failed to open " << inputFile << endl;
-            return 0;
-        }
-        Analysis_Step2_BackgroundPrediction(tfile, typeMode);
+        Analysis_Step2_BackgroundPrediction(inputFile, typeMode);
     }
 
     cout << "" << endl;
-    clock.Show("BackgroundPrediction");
+    clock.Show(__FILENAME__);
     cout << "" << endl;
 
     return 0;
 }
 
 
-void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode)
+void Analysis_Step2_BackgroundPrediction(string RootFile, int TypeMode)
 {
    bool symmetrizeHistos = false;
    ////if(InputPattern=="COMPILE")return;
@@ -155,6 +150,12 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode)
     //string Input     = InputPattern + "Histos.root";
     //TFile* InputFile = new TFile(Input.c_str(), "UPDATE");
     //WAIT//TypeMode = TypeFromPattern(InputPattern);
+    TFile* InputFile = TFile::Open(RootFile.c_str(),"UPDATE");
+    if(not InputFile){
+        cout << "Failed to open " << RootFile << endl;
+        return;
+    }
+    cout << "Reading file " << RootFile << endl;
     
     int PredBins=0;
     const int MaxPredBins =   6;
@@ -182,7 +183,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode)
             TObject *key = list->At(d);
             if(!key->IsFolder()) continue;
 	        string DirName;
-	        DirName = key->GetName();
+	        DirName = key->GetName(); if(S==0) cout << "Find Directory: " <<DirName<< endl;
             //if (DirName.find("Data13TeV16")==string::npos) continue;
             //if (DirName.find("Data13TeV16G")!=string::npos) continue;
 	        if(DirName.find("Cosmic")!=string::npos) continue;
@@ -222,7 +223,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode)
             
 	        directory->cd();
 
-            TH1D*  H_A            = (TH1D*)GetObjectFromPath(directory, ("H_A" + Suffix).c_str());      if(!H_A)continue; //ABCD INFO NOT SAVED IN THIS DIRECTORY --> Skip it
+            TH1D*  H_A            = (TH1D*)GetObjectFromPath(directory, ("H_A" + Suffix).c_str());      if(!H_A){if(S==0) cout<<"ERROR: ABDC info not saved in this directory"<<endl;continue;} //ABCD INFO NOT SAVED IN THIS DIRECTORY --> Skip it
             TH1D*  H_B            = (TH1D*)GetObjectFromPath(directory, ("H_B" + Suffix).c_str());
             TH1D*  H_C            = (TH1D*)GetObjectFromPath(directory, ("H_C" + Suffix).c_str());
             TH1D*  H_D            = (TH1D*)GetObjectFromPath(directory, ("H_D" + Suffix).c_str());
