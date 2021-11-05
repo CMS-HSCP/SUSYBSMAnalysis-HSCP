@@ -842,7 +842,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	    // track is defined in line546 as track = hscp.trackRef();
 	    // so if this track doesnt belong to the HSCP in question let's skip it
-            if (track != refTraj) continue;
+            if (track != trackReference) continue;
 
             // -- Check whether it is a pixel track
             bool isBpixTrack(false), isFpixTrack(false);
