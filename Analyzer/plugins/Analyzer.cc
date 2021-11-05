@@ -37,6 +37,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET")))
    ,pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo")))
    ,genParticleToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection")))
+   ,m_trajTag        ( consumes<TrajTrackAssociationCollection> (iConfig.getUntrackedParameter<edm::InputTag>("trajInputLabel")))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
@@ -829,6 +830,67 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(!passPreselection( hscp, dedxHits, NULL, NULL, tof, iEvent, EventWeight_, NULL, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1, false, 0, 0, MassErr, false) ) passPre_noIh_noIso=false;
 
       if(TypeMode_==5 && isSemiCosmicSB)continue;//WAIT//
+
+// Loop on track trajectory association map // Tav
+    edm::Handle<TrajTrackAssociationCollection> hTTAC;
+    iEvent.getByToken(m_trajTag, hTTAC);
+    if (hTTAC.isValid())  {
+      const TrajTrackAssociationCollection ttac = *(hTTAC.product());
+        for (TrajTrackAssociationCollection::const_iterator it = ttac.begin(); it !=  ttac.end(); ++it){
+            const edm::Ref<std::vector<Trajectory> > refTraj = it->key;
+            const reco::TrackRef trackReference = it->val;
+            // -- Check whether it is a pixel track
+            bool isBpixTrack(false), isFpixTrack(false);
+            isPixelTrack(refTraj, isBpixTrack, isFpixTrack);
+            if (!isBpixTrack && !isFpixTrack) { continue; }
+            
+            // -- Clusters associated with a track
+            float probQonTrackWMulti = 1;
+            float probXYonTrackWMulti = 1;
+            std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
+            int numRecHits = 0;
+            for (auto const& tmeasIt : tmeasColl) {
+                if (!tmeasIt.updatedState().isValid()) continue;
+                const TrackingRecHit* hit = tmeasIt.recHit()->hit();
+                const SiPixelRecHit* pixhit = dynamic_cast<const SiPixelRecHit*>(hit);
+                if (hit->geographicalId().det() != DetId::Tracker) continue;
+                if (pixhit == nullptr) continue;
+                if (!pixhit->isValid()) continue;
+                float probQ         = pixhit->probabilityQ();
+                float probXY        = pixhit->probabilityXY();
+                numRecHits++;
+                probQonTrackWMulti *= probQ; // \alpha_n in formula
+                probXYonTrackWMulti *= probXY; // \alpha_n in formula
+//              LocalPoint lp = pixhit->localPosition();
+//              float rechit_x = lp.x();
+//              float rechit_y = lp.y();
+//              std::cout << "rechit_x: " << rechit_x << " and " << "rechit_y" << rechit_y << std::endl;
+//              std::cout << "probQ: " << probQ << " and " << "probXY " << probXY << std::endl;
+                
+
+            } // end loop on on-track-clusters
+            float logprobQonTrackWMulti = log(probQonTrackWMulti);
+            float logprobXYonTrackWMulti = log(probXYonTrackWMulti);
+//            std::cout << "numRecHits: " << numRecHits << std::endl;
+            float probQonTrackTerm = 0;
+            float probXYonTrackTerm = 0;
+            for(int iTkCl = 0; iTkCl < numRecHits; ++iTkCl) {
+                        probQonTrackTerm += ((pow(-logprobQonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+                        probXYonTrackTerm += ((pow(-logprobXYonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+//                        cout << "For cluster " << iTkCl << " the probQonTrackTerm is " << probQonTrackTerm << " the probXYonTrackTerm is " << probXYonTrackTerm <<  endl;
+            }
+            
+            float probQonTrack = probQonTrackWMulti*probQonTrackTerm;
+            float probXYonTrack = probXYonTrackWMulti*probXYonTrackTerm;
+            std::cout << "For this track probQonTrack is " << probQonTrack << " and probXYonTrack is  " << probXYonTrack << endl;
+            
+        } // end loop TrajTrackAssociationCollection
+    } else {
+        std::cout << "hTTAC is invalid" << std::endl;
+    }
+
+//std::cout << "track is " << std::endl << std::endl;
+//std::cout << track << std::endl << std::endl;
 
       //fill the ABCD histograms and a few other control plots
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
