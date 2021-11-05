@@ -839,6 +839,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         for (TrajTrackAssociationCollection::const_iterator it = ttac.begin(); it !=  ttac.end(); ++it){
             const edm::Ref<std::vector<Trajectory> > refTraj = it->key;
             const reco::TrackRef trackReference = it->val;
+
+	    // track is defined in line546 as track = hscp.trackRef();
+	    // so if this track doesnt belong to the HSCP in question let's skip it
+            if (track != refTraj) continue;
+
             // -- Check whether it is a pixel track
             bool isBpixTrack(false), isFpixTrack(false);
             isPixelTrack(refTraj, isBpixTrack, isFpixTrack);
