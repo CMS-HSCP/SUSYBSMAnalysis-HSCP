@@ -572,7 +572,6 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::vector<bool> clust_isStrip;
       std::vector<bool> clust_isPixel;
 
-
       //for signal only, make sure that the candidate is associated to a true HSCP
       int ClosestGen;
       if(isSignal && DistToHSCP(hscp, genColl, ClosestGen, TypeMode_)>0.03)continue;
@@ -831,18 +830,31 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if(TypeMode_==5 && isSemiCosmicSB)continue;//WAIT//
 
+
+    float probQonTrack = 0.0;
 // Loop on track trajectory association map // Tav
     edm::Handle<TrajTrackAssociationCollection> hTTAC;
     iEvent.getByToken(m_trajTag, hTTAC);
+int numTracks = 0;
     if (hTTAC.isValid())  {
       const TrajTrackAssociationCollection ttac = *(hTTAC.product());
         for (TrajTrackAssociationCollection::const_iterator it = ttac.begin(); it !=  ttac.end(); ++it){
             const edm::Ref<std::vector<Trajectory> > refTraj = it->key;
             const reco::TrackRef trackReference = it->val;
+	    numTracks++;
 
 	    // track is defined in line546 as track = hscp.trackRef();
 	    // so if this track doesnt belong to the HSCP in question let's skip it
-            if (track != trackReference) continue;
+	    //std::cout << "numTracks is " << numTracks << std::endl; 
+	    //std::cout << " Track p is " << track->p() << " and trackReference p is  " << trackReference->p() << std::endl;
+            //std::cout << " Track phi is " << track->phi() << " and trackReference phi is  " << trackReference->phi() << std::endl;
+            //std::cout << " Track eta is " << track->eta() << " and trackReference eta is  " << trackReference->eta() << std::endl;
+	    //std::cout << " dR separation is " << deltaR(track->eta(), track->phi(), trackReference->eta(), trackReference->phi())  << std::endl; 
+            if (deltaR(track->eta(), track->phi(), trackReference->eta(), trackReference->phi()) > 0.03) {
+              continue;
+	    }
+	    else {
+	      std::cout << "This track is a HSCP track" << std::endl;
 
             // -- Check whether it is a pixel track
             bool isBpixTrack(false), isFpixTrack(false);
@@ -885,18 +897,17 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 //                        cout << "For cluster " << iTkCl << " the probQonTrackTerm is " << probQonTrackTerm << " the probXYonTrackTerm is " << probXYonTrackTerm <<  endl;
             }
             
-            float probQonTrack = probQonTrackWMulti*probQonTrackTerm;
+            probQonTrack = probQonTrackWMulti*probQonTrackTerm;
             float probXYonTrack = probXYonTrackWMulti*probXYonTrackTerm;
             std::cout << "For this track probQonTrack is " << probQonTrack << " and probXYonTrack is  " << probXYonTrack << endl;
-            
+            break;
+            }
         } // end loop TrajTrackAssociationCollection
     } else {
         std::cout << "hTTAC is invalid" << std::endl;
     }
 
-//std::cout << "track is " << std::endl << std::endl;
-//std::cout << track << std::endl << std::endl;
-
+      (probQonTrack!=0.0 && probQonTrack<0.1) ? (passPre=true) :  (passPre=false);
       //fill the ABCD histograms and a few other control plots
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
       //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
