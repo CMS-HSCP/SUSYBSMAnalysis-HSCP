@@ -73,6 +73,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,FMIPX(iConfig.getUntrackedParameter<double>("FMIPX"))
    ,STree(iConfig.getUntrackedParameter<unsigned int>("saveTree"))
    ,SGTree(iConfig.getUntrackedParameter<unsigned int>("saveGenTree"))
+   ,probQCut(iConfig.getUntrackedParameter<double>("probQCut"))
 {
    //now do what ever initialization is needed
    // define the selection to be considered later for the optimization
@@ -222,7 +223,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //get the collection of generated Particles
       Handle< vector<reco::GenParticle> >  genCollH;
       iEvent.getByToken(genParticleToken_, genCollH);
-      if(!genCollH.isValid()) {LogWarning("Analyzer") << "Invalid GenParticle!!, this event will be ignored"; return;}
+      if(!genCollH.isValid()) {
+       std::cout << "Invalid GenParticle!!, this event will be ignored";
+//     LogWarning("Analyzer") << "Invalid GenParticle!!, this event will be ignored";
+        return;
+      }
 
       genColl = *genCollH;
 
@@ -252,10 +257,11 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       unsigned int nw=0, na=0, nd=0, nn=0; //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
 
       for(auto const &gen : genColl){
+         int AbsPdg=abs(gen.pdgId());
          if(gen.pt()<5)continue;
          if(gen.status()!=1)continue;
-         int AbsPdg=abs(gen.pdgId());
          if(AbsPdg<1000000 && AbsPdg!=17)continue;
+         //std::cout << "PDG ID for stable ptarticle: " << AbsPdg << std::endl;
 
          // categorise event with R-hadrons for additional weighting-----------------------BEGIN
          int GenId=gen.pdgId();
@@ -309,10 +315,10 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
 
    }
-	nrha=0;
+   //std::cout << "Number of R-hadrons after selection: " << nrha << std::endl;
 
-
-	if (isSignal)
+   if (isSignal) 
+   //std::cout << " isSignal for fillGenTreeBranches " << std::endl; 
      tuple_maker->fillGenTreeBranches(tuple, iEvent.id().run(),iEvent.id().event(),iEvent.id().luminosityBlock(), EventWeight_,genid,gencharge,genmass,genpt,geneta,genphi);
 
    edm::Handle<edm::TriggerResults> triggerH;
@@ -339,8 +345,12 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    tuple->TotalE  ->Fill(0.0,EventWeight_);
    tuple->TotalEPU->Fill(0.0,EventWeight_*PUSystFactor_[0]);
    //See if event passed signal triggers
+   //std::cout << "See if event passed signal triggers" << std::endl;
    //WAIT//if(!PassTrigger(iEvent, isData, false, (is2016&&!is2016G)?&L1Emul:nullptr) ) {
-   if(!passTrigger(iEvent, isData)){ return;
+   if (!isSignal) {
+     if(!passTrigger(iEvent, isData)) {
+       return;
+       std::cout << "The event has not passed signal triggers" << std::endl;
       //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
       //If not TOF only then move to next event
       /*if(TypeMode_!=3) continue;
@@ -349,6 +359,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       //If is cosmic event then switch plots to use to the ones for cosmics
 	   //WAIT//SamplePlots=&plotsMap[CosmicName];
 	}
+    }
    //WAIT//else if(TypeMode==3) {
 	   //WAIT//SamplePlots = &plotsMap[samples[s].Name];
    //WAIT//}
@@ -537,21 +548,27 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::vector<float>        HSCP_GenPhi;
 
    //====================loop over HSCP candidates===================
+   //std::cout << "====================loop over HSCP candidates===================" << std::endl;
    for(const auto& hscp : iEvent.get(hscpToken_)){
       reco::MuonRef  muon  = hscp.muonRef();//const reco::MuonRef& muon = hscp.muonRef();
 
-      //For TOF only analysis use updated stand alone muon track.
-	   //Otherwise use inner tracker track
-	   reco::TrackRef track;
-      if(TypeMode_!=3) track = hscp.trackRef();
+     //For TOF only analysis use updated stand alone muon track.
+     //Otherwise use inner tracker track
+      reco::TrackRef track;
+      if(TypeMode_!=3) {
+        track = hscp.trackRef();
+      }
       else {
-		   if(muon.isNull()) continue;
-		   track = muon->standAloneMuon();
+        if(muon.isNull()) continue;
+        track = muon->standAloneMuon();
       }
       //skip events without track
-	   if(track.isNull())continue;
+      if(track.isNull()) {
+        continue;
+        std::cout << "skip this event without track" << std::endl;
+      }
       // FIXME jozze skip events with |Eta| > 0.9 (out of the barrel)
-	   //if(track->eta()>0.9 || track->eta() < -0.9) continue;
+     //if(track->eta()>0.9 || track->eta() < -0.9) continue;
 
       //require a track segment in the muon system
       if(TypeMode_>1 && TypeMode_!=5 && (muon.isNull() || !muon->isStandAloneMuon()))continue;
@@ -572,12 +589,16 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::vector<bool> clust_isStrip;
       std::vector<bool> clust_isPixel;
 
+      //std::cout << "HSCP_count: " << HSCP_count << std::endl;
+
+
       //for signal only, make sure that the candidate is associated to a true HSCP
       int ClosestGen;
+      //std::cout << "DistToHSCP: " << DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) << std::endl;
       if(isSignal && DistToHSCP(hscp, genColl, ClosestGen, TypeMode_)>0.03)continue;
 
       // we are losing some tracks due to HIP
-	   //WAIT//if(!isData && is2016 && !HIPTrackLossEmul.TrackSurvivesHIPInefficiency()) continue;
+      //WAIT//if(!isData && is2016 && !HIPTrackLossEmul.TrackSurvivesHIPInefficiency()) continue;
 
       //load quantity associated to this track (TOF and dEdx)
       const reco::DeDxHitInfo* dedxHits = nullptr;
@@ -835,7 +856,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 // Loop on track trajectory association map // Tav
     edm::Handle<TrajTrackAssociationCollection> hTTAC;
     iEvent.getByToken(m_trajTag, hTTAC);
-int numTracks = 0;
+    int numTracks = 0;
     if (hTTAC.isValid())  {
       const TrajTrackAssociationCollection ttac = *(hTTAC.product());
         for (TrajTrackAssociationCollection::const_iterator it = ttac.begin(); it !=  ttac.end(); ++it){
@@ -892,9 +913,9 @@ int numTracks = 0;
             float probQonTrackTerm = 0;
             float probXYonTrackTerm = 0;
             for(int iTkCl = 0; iTkCl < numRecHits; ++iTkCl) {
-                        probQonTrackTerm += ((pow(-logprobQonTrackWMulti,iTkCl))/(factorial(iTkCl)));
-                        probXYonTrackTerm += ((pow(-logprobXYonTrackWMulti,iTkCl))/(factorial(iTkCl)));
-//                        cout << "For cluster " << iTkCl << " the probQonTrackTerm is " << probQonTrackTerm << " the probXYonTrackTerm is " << probXYonTrackTerm <<  endl;
+               probQonTrackTerm += ((pow(-logprobQonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+               probXYonTrackTerm += ((pow(-logprobXYonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+//             cout << "For cluster " << iTkCl << " the probQonTrackTerm is " << probQonTrackTerm << " the probXYonTrackTerm is " << probXYonTrackTerm <<  endl;
             }
             
             probQonTrack = probQonTrackWMulti*probQonTrackTerm;
@@ -907,12 +928,14 @@ int numTracks = 0;
         std::cout << "hTTAC is invalid" << std::endl;
     }
 
-      (probQonTrack!=0.0 && probQonTrack<0.1) ? (passPre=true) :  (passPre=false);
+      (probQonTrack!=0.0 && probQonTrack<probQCut) ? (passPre=true) :  (passPre=false);
       //fill the ABCD histograms and a few other control plots
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
       //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
-
-      if(passPre && !isSignal) tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
+      if(passPre && !isSignal) {
+        tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
+        std::cout << "fillControlAndPredictionHist" << std::endl; // Tav
+      }
 
       if(TypeMode_==5 && isCosmicSB)continue; 
 

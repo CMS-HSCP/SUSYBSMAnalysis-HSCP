@@ -328,6 +328,9 @@ class Analyzer : public edm::EDAnalyzer {
       unsigned int STree = 0;
       unsigned int SGTree = 0;
 
+      double  probQCut   = 1.0;
+
+
       // Emulators
       /*dedxHIPEmulator      HIPemulator;
       dedxHIPEmulator      HIPemulatorUp;
