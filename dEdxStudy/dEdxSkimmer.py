@@ -21,7 +21,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring("file:AE1745A-368D-DA47-8662-232E2E74429F.root"),
+   fileNames = cms.untracked.vstring("file:CAE1745A-368D-DA47-8662-232E2E74429F.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 

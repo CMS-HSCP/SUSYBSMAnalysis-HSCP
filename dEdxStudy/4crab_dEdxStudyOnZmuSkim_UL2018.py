@@ -19,7 +19,7 @@ config.Data.inputDataset = '/SingleMuon/Run2018C-ZMu-12Nov2019_UL2018-v2/RAW-REC
 #config.Data.unitsPerJob = 1 #20
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 3
-config.Data.publication = False
+config.Data.publication = True 
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 
