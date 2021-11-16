@@ -38,6 +38,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
    ,pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo")))
    ,genParticleToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection")))
    ,m_trajTag        ( consumes<TrajTrackAssociationCollection> (iConfig.getUntrackedParameter<edm::InputTag>("trajInputLabel")))
+   ,datatier_(iConfig.getParameter<std::string>("DataTier"))
    // HLT triggers
    ,trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET"))
    ,trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
@@ -851,9 +852,9 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if(TypeMode_==5 && isSemiCosmicSB)continue;//WAIT//
 
-
+  if (datatier_ == "AOD_new" || datatier_ == "MiniAOD_new") {
     float probQonTrack = 0.0;
-// Loop on track trajectory association map // Tav
+    // Loop on track trajectory association map // Tav
     edm::Handle<TrajTrackAssociationCollection> hTTAC;
     iEvent.getByToken(m_trajTag, hTTAC);
     int numTracks = 0;
@@ -929,12 +930,13 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
 
       (probQonTrack!=0.0 && probQonTrack<probQCut) ? (passPre=true) :  (passPre=false);
+  }
       //fill the ABCD histograms and a few other control plots
       //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
       //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
       if(passPre && !isSignal) {
         tuple_maker->fillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, tuple, TypeMode_, GlobalMinTOF, EventWeight_,isCosmicSB, DTRegion, MaxPredBins, DeDxK, DeDxC, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
-        std::cout << "fillControlAndPredictionHist" << std::endl; // Tav
+        std::cout << "fillControlAndPredictionHist" << std::endl;
       }
 
       if(TypeMode_==5 && isCosmicSB)continue; 

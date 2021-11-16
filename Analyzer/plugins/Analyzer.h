@@ -199,7 +199,7 @@ class Analyzer : public edm::EDAnalyzer {
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
-
+      std::string datatier_;
       vector<string> trigger_met_, trigger_mu_;
 
       vector<double>  CutPt_,      CutI_,       CutTOF_;
