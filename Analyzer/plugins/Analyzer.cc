@@ -373,26 +373,23 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(HSCPGenBeta2>=0) tuple->Beta_Triggered->Fill(HSCPGenBeta2, EventWeight_);
    }
    
-
-   //===================== Handle For DeDx Hits ==============
+   // Handle definitions
    Handle<reco::DeDxHitInfoAss> dedxCollH;
-   iEvent.getByToken(dedxToken_,dedxCollH);
-
-   //================= Handle For Muon TOF Combined ===============
    Handle<reco::MuonTimeExtraMap>     tofMap;
-   iEvent.getByToken(muonTimeToken_,  tofMap);
-
-   //================= Handle For Muon TOF DT ===============
    Handle<reco::MuonTimeExtraMap>       tofDtMap;
-   iEvent.getByToken(muonDtTimeToken_,  tofDtMap);
-
-   //================= Handle For Muon TOF CSC ===============
    Handle<reco::MuonTimeExtraMap>        tofCscMap;
-   iEvent.getByToken(muonCscTimeToken_,  tofCscMap);
-
-   //================= Handle For Muon DT/CSC Segment ===============
    Handle<CSCSegmentCollection> CSCSegmentCollH;
    Handle<DTRecSegment4DCollection> DTSegmentCollH;
+   
+
+   //===================== Handle For DeDx Hits ==============
+   iEvent.getByToken(dedxToken_,dedxCollH);
+
+  if (datatier_ == "AOD" || datatier_ == "AOD_new") {
+   iEvent.getByToken(muonTimeToken_,  tofMap);
+   iEvent.getByToken(muonDtTimeToken_,  tofDtMap);
+   iEvent.getByToken(muonCscTimeToken_,  tofCscMap);
+
    if(!isBckg){ //do not recompute TOF on MC background
       iEvent.getByToken(muonCscSegmentToken_, CSCSegmentCollH);
       if(!CSCSegmentCollH.isValid()){LogError("Analyzer") << "CSC Segment Collection not found!"; return;}
@@ -400,7 +397,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       iEvent.getByToken(muonDtSegmentToken_, DTSegmentCollH);
       if(!DTSegmentCollH.isValid()){LogError("Analyzer") << "DT Segment Collection not found!"; return;}
    }
-
+  }
    //reinitialize the bookeeping array for each event
    for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){  HSCPTk        [CutIndex] = false;   }
    for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){  HSCPTk_SystP  [CutIndex] = false;   }
@@ -607,7 +604,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          reco::DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
          if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
       }
-      
+   if (datatier_ == "AOD" || datatier_ == "AOD_new") {   
       if(TypeMode_>1 && TypeMode_!=5 && !hscp.muonRef().isNull()){
          if(isBckg){
             tof    = &(*tofMap)[hscp.muonRef()];
@@ -624,6 +621,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
          }
       }
+   }
 
       if(!dedxHits) continue; // skip tracks without hits otherwise there will be a crash
 
@@ -1725,8 +1723,8 @@ bool Analyzer::passPreselection(
    if(tuple){tuple->Pterr   ->Fill(0.0,Event_Weight);}
 
    //Find distance to nearest segment on opposite side of detector
-   double minPhi=0.0, minEta=0.0;
-   double segSep=SegSep(hscp, iEvent, minPhi, minEta);
+   double minPhi=0.0, minEta=0.0,segSep=9999.9;
+   if (datatier_ == "AOD" || datatier_ == "AOD_new") segSep=SegSep(hscp, iEvent, minPhi, minEta);
 
    if(tuple){
      tuple->BS_SegSep->Fill(segSep, Event_Weight);
