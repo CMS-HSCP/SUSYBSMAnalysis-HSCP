@@ -23,7 +23,9 @@ For the following step you should have a ssh key associated to your GitHub accou
 For more information, see [connecting-to-github-with-ssh-key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
 
 ```bash
-git clone -b dev git@github.com:enibigir/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
+
+git clone https://github.com/CMS-HSCP/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
+
 ```
 <!--
 # Before compile, hide BigNTuplizer 

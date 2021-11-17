@@ -330,7 +330,6 @@ class Analyzer : public edm::EDAnalyzer {
 
       double  probQCut   = 1.0;
 
-
       // Emulators
       /*dedxHIPEmulator      HIPemulator;
       dedxHIPEmulator      HIPemulatorUp;

@@ -225,8 +225,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       Handle< vector<reco::GenParticle> >  genCollH;
       iEvent.getByToken(genParticleToken_, genCollH);
       if(!genCollH.isValid()) {
-       std::cout << "Invalid GenParticle!!, this event will be ignored";
-//     LogWarning("Analyzer") << "Invalid GenParticle!!, this event will be ignored";
+       LogWarning("Analyzer") << "Invalid GenParticle!!, this event will be ignored";
         return;
       }
 
@@ -316,6 +315,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
 
    }
+
    //std::cout << "Number of R-hadrons after selection: " << nrha << std::endl;
 
    if (isSignal) 
@@ -398,6 +398,7 @@ Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(!DTSegmentCollH.isValid()){LogError("Analyzer") << "DT Segment Collection not found!"; return;}
    }
   }
+
    //reinitialize the bookeeping array for each event
    for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){  HSCPTk        [CutIndex] = false;   }
    for(unsigned int CutIndex=0;CutIndex<CutPt_.size();CutIndex++){  HSCPTk_SystP  [CutIndex] = false;   }
