@@ -104,6 +104,14 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 
+#include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
+#include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
+#include "TrackingTools/PatternTools/interface/Trajectory.h"
+#include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
+#include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
+
 using namespace std;
 
 class TupleMaker;
@@ -187,10 +195,11 @@ class Analyzer : public edm::EDAnalyzer {
       edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
       edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
+      edm::EDGetTokenT<TrajTrackAssociationCollection>  m_trajTag;
 
       //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
       //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
-
+      std::string datatier_;
       vector<string> trigger_met_, trigger_mu_;
 
       vector<double>  CutPt_,      CutI_,       CutTOF_;
@@ -318,6 +327,8 @@ class Analyzer : public edm::EDAnalyzer {
 
       unsigned int STree = 0;
       unsigned int SGTree = 0;
+
+      double  probQCut   = 1.0;
 
       // Emulators
       /*dedxHIPEmulator      HIPemulator;

@@ -356,12 +356,12 @@ void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned in
    //   Name = "AS_EtaP" ; AS_EtaP  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
    //   Name = "AS_EtaPt"; AS_EtaPt = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
    //   Name = "AS_EtaTOF"; AS_EtaTOF = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, 3);
-   Name = "AS_PIs"  ; tuple->AS_PIs   = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
-   Name = "AS_PIm"  ; tuple->AS_PIm   = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound,100, 0, dEdxM_UpLim);
-   Name = "AS_PtIs" ; tuple->AS_PtIs  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
-   Name = "AS_PtIm" ; tuple->AS_PtIm  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, PtHistoUpperBound,100, 0, dEdxM_UpLim);
-   Name = "AS_TOFIs"; tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, 5, 50, 0, dEdxS_UpLim);
-   Name = "AS_TOFIm"; tuple->AS_TOFIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50, 0, 5,100, 0, dEdxM_UpLim);
+   Name = "AS_PIs"  ; tuple->AS_PIs   = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 250, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+   Name = "AS_PIm"  ; tuple->AS_PIm   = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 250, 0, PtHistoUpperBound,100, 0, dEdxM_UpLim);
+   Name = "AS_PtIs" ; tuple->AS_PtIs  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 250, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+   Name = "AS_PtIm" ; tuple->AS_PtIm  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 250, 0, PtHistoUpperBound,100, 0, dEdxM_UpLim);
+   Name = "AS_TOFIs"; tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 100, 0, 5, 50, 0, dEdxS_UpLim);
+   Name = "AS_TOFIm"; tuple->AS_TOFIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 100, 0, 5,100, 0, dEdxM_UpLim);
 
    Name = "H_D_DzSidebands"; tuple->H_D_DzSidebands = dir.make<TH2D>(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, DzRegions, 0, DzRegions); tuple->H_D_DzSidebands->Sumw2();
 

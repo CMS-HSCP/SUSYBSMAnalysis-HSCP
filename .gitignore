@@ -1,7 +1,8 @@
 *.*~
+.*
 *.png
 *.pdf
 *.pyc
 *_init__.py
 build/
-RunBackgroundPrediction
+*__*
