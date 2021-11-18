@@ -730,14 +730,14 @@ class dedxHIPEmulator{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL, double* dEdxErr = NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL, double* dEdxErr = NULL, bool skipPixelL1=false);
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId, bool crossTalkInvAlgo);
 void printClusterCleaningMessage (uint8_t exitCode);
 std::vector<int> convert(const vector<unsigned char>& input);
-std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
+std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25,bool isClusterCleaning=false);
 
 
 class dedxGainCorrector{
@@ -932,7 +932,7 @@ HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, 
 
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator, double* dEdxErr){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator, double* dEdxErr, bool skipPixelL1){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -956,10 +956,12 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
 
         int ClusterCharge = dedxHits->charge(h);
 
+        if(skipPixelL1 && detid.subdetId()==1 && ((detid>>16)&0xF)==1) continue;
+
         if(detid.subdetId()>=3){//for strip only
            const SiStripCluster* cluster = dedxHits->stripCluster(h);
            vector<int> amplitudes = convert(cluster->amplitudes());
-           if (crossTalkInvAlgo) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+           if (crossTalkInvAlgo>0) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
            int firstStrip = cluster->firstStrip();
            int prevAPV = -1;
            double gain = 1.0;
@@ -996,9 +998,15 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
 //           if(fakeHIP && detid.subdetId() <3 && rand()%1000<20)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) ) / (3.61e-06*265*10*265);
 
            int moduleGeometry = 0; // underflow for debug
-           if (detid.subdetId()<3) moduleGeometry = 15; // 15 == pixel
+           int layer = 0;
+           if (detid.subdetId()<3) {moduleGeometry = 15; continue;}// 15 == pixel
            else {SiStripDetId SSdetId(detid); moduleGeometry = SSdetId.moduleGeometry();}
+           if(detid.subdetId()==3){layer=((detid>>14)&0x7);} //TIB 
+           if(detid.subdetId()==4){layer=((detid>>9)&0x3)+10;} //TID
+           if(detid.subdetId()==5){layer=((detid>>14)&0x7)+4;} //TOB
+           if(detid.subdetId()==6){layer=((detid>>5)&0x7)+13;} //TEC
            int    BinX   = templateHisto->GetXaxis()->FindBin(moduleGeometry);
+           //int    BinX   = templateHisto->GetXaxis()->FindBin(layer);
            int    BinY   = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h)*10.0); //*10 because of cm-->mm
            int    BinZ   = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
            double Prob   = templateHisto->GetBinContent(BinX,BinY,BinZ);
@@ -1106,7 +1114,7 @@ std::vector<int> convert(const vector<unsigned char>& input)
 }
 
 
-std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat) {
+std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat,bool isClusterCleaning) {
   const unsigned N=Q.size();
   std::vector<int> QII;
   std::vector<float> QI(N,0);
@@ -1121,13 +1129,24 @@ std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1, const 
   	}
 	return QII;
   }
- if(way){ 
+ if(way && !isClusterCleaning){ 
 	  vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())	;
 	  if(*mQ>253){
 	 	 if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
 	 	 if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
 		     QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
 	  }
+      else{
+          return Q; // no saturation --> no x-talk inversion 
+      }
+  }
+  if(way && isClusterCleaning){ 
+	  vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())	;
+	  if(*mQ>253){
+	 	 if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
+	 	 if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
+		     QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
+	  } 
   }
 //---
 
@@ -1160,7 +1179,7 @@ bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t
 {
    if(!cluster) return true;
    vector<int>  ampls = convert(cluster->amplitudes());
-   if(crosstalkInv==1)ampls = CrossTalkInv(ampls,0.10,0.04, true);
+   if(crosstalkInv==1)ampls = CrossTalkInv(ampls,0.10,0.04, true, true);
       
 
   // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------

@@ -40,6 +40,7 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep LumiSummary_*_*_*",
          "keep *_generalTracks_*_*",
          "keep *_dedxHitInfo_*_*",
+         "keep *_muons_*_*",
     ),
     fileName = cms.untracked.string("dEdxSkim.root"),
     SelectEvents = cms.untracked.PSet(

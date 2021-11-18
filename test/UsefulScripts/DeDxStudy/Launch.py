@@ -57,7 +57,14 @@ LOCALTIER   = 'T2_CH_CERN'
 ####DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016G-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
 #DATASETMASK = ['/ZeroBias/Run2016F-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
 #DATASETMASK = ['/ZeroBias/Run2016C-SiStripCalMinBias-18Apr2017-v1/ALCARECO', '/ZeroBias/Run2016D-SiStripCalMinBias-18Apr2017-v1/ALCARECO','/ZeroBias/Run2016E-SiStripCalMinBias-18Apr2017-v1/ALCARECO']
-DATASETMASK = ['/SingleMuon/Run2017F-09Aug2019_UL2017-v1/AOD']
+
+#DATASETMASK = ['/SingleMuon/Run2017B-09Aug2019_UL2017-v1/AOD'] #2017B SingleMuon
+#DATASETMASK = ['/SingleMuon/Run2017D-09Aug2019_UL2017-v1/AOD'] #2017D SingleMuon
+#DATASETMASK = ['/SingleMuon/Run2017F-09Aug2019_UL2017-v1/AOD'] #2017F SingleMuon
+
+DATASETMASK = ['/ZeroBias/Run2017B-09Aug2019_UL2017-v1/AOD'] #2017B ZeroBias
+
+
 EndPath     = "/eos/user/d/dapparu/thesis/hscp/DeDxCalib"
 ISLOCAL     = False
 TransferDirectlyToStorage = False
@@ -131,7 +138,7 @@ datasetList = DATASETMASK
 #get the list of samples to process from a local file
 #datasetList= open('DatasetList','r')
 JobName = "DEDXSKIMMER"
-FarmDirectory = "FARM_EDM_2017F_v3"
+FarmDirectory = "FARM_EDM_2017B_ZeroBias"
 LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 #LaunchOnCondor.Jobs_Queue = '2nd' #2days 
 LaunchOnCondor.Jobs_Queue = '8nm' 
@@ -139,16 +146,16 @@ LaunchOnCondor.subTool = 'condor'
 
 
 if not TransferDirectlyToStorage:
-   os.system("mkdir -p /eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/");
+   os.system("mkdir -p /eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017B_ZeroBias/");
 else:
    #os.system('mkdir -p %s/{275777,275920,276525,276585,276870}' % EndPath)
-   os.system('mkdir -p %s/{Run2017F}' % EndPath)
+   os.system('mkdir -p %s/{Run2017B_ZeroBias}' % EndPath)
 for DATASET in datasetList :
    DATASET = DATASET.replace('\n','')
    FILELIST = filesFromDataset(DATASET,100)
    print DATASET + " --> " + str(FILELIST)
 
-   FILELIST2 = sublistFilesFromList(FILELIST)
+   FILELIST2 = sublistFilesFromList(FILELIST,5)
 
    counterOfFiles=-1
 
@@ -186,7 +193,7 @@ for DATASET in datasetList :
          #LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out/dEdxSkim_%s_%i.root && rm dEdxSkim.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
          #LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/dEdxSkim_%s_%i.root" % (inFile[0], LaunchOnCondor.Jobs_Count)]
          #LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/dEdxSkim_%s_%i.root" % (inFile, LaunchOnCondor.Jobs_Count)]
-         LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017F/dEdxSkim_%i_%i.root" % (counterOfFiles, LaunchOnCondor.Jobs_Count)]
+         LaunchOnCondor.Jobs_FinalCmds = ["cp dEdxSkim.root " + "/eos/user/d/dapparu/thesis/hscp/DeDxCalib/out2017B_ZeroBias/dEdxSkim_%i_%i.root" % (counterOfFiles, LaunchOnCondor.Jobs_Count)]
       else:
          LaunchOnCondor.Jobs_FinalCmds = ["lcg-cp -v -n 10 -D srmv2 -b file://${PWD}/dEdxSkim.root srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2\?SFN=%s/%s/dEdxSkim_%s_%i.root && rm -f dEdxSkim.root" % (EndPath, inFile[0], inFile[0], LaunchOnCondor.Jobs_Count)] # if you do not use zsh, change '\?' to '?'
       LaunchOnCondor.SendCluster_Push  (["CMSSW", "dEdxSkimmer_cfg.py" ])

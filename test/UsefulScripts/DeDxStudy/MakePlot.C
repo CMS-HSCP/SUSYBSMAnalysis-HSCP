@@ -26,10 +26,13 @@
 #include "../../AnalysisCode/Analysis_PlotFunction.h"
 #include "FWCore/FWLite/interface/FWLiteEnabler.h"
 
+
 using namespace std;
 
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8); // by default use protons --> here it's deuterons 
+TH1D* ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8); // by default use protons --> here it's deuterons 
 double GetMass(double P, double I, double* K, double* C);
+
+TFile* outputfile = new TFile("output.root","RECREATE");
 
 typedef struct dEdxPlotObj
 { // one such object per file
@@ -60,10 +63,14 @@ typedef struct dEdxPlotObj
    TH1D**       HProtonHitSO;
    TH1D**       HProtonHitPO;
    TH2D**       HdedxVsP;
+   TH2D**       HdedxVsP_PUlower20;
+   TH2D**       HdedxVsP_PUhigher35;
    TH2D**       HdedxVsPSyst;
    TProfile**   HdedxVsPProfile;
    TH2D**       HdedxVsEta;
    TProfile**   HdedxVsEtaProfile;
+
+   TH1D* fit_points = NULL;
 
    // constructor
    dEdxPlotObj (string FileName_, string LegEntry_, string SavePrefix_,
@@ -126,6 +133,18 @@ typedef struct dEdxPlotObj
       for (unsigned int i = 0; i < StdObjName.size(); i++){
          HdedxMIP          [i] = (TH1D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_MIP"         ).c_str() );
          HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP"     ).c_str() );
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_Eta0p91"     ).c_str() );
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_0p91Eta1p74"     ).c_str() );
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_1p74Eta"     ).c_str() );
+         
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_0p7Eta1p4"     ).c_str() );
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_1p4Eta2p1"     ).c_str() );
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_PUlower20"     ).c_str() );
+         //HdedxVsP          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_PUhigher35"     ).c_str() );
+        
+         //HdedxVsP_PUlower20          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_PUlower20"     ).c_str() );
+         //HdedxVsP_PUhigher35          [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsP_PUhigher35"     ).c_str() );
+         
          HdedxVsPSyst      [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_dedxVsPSyst" ).c_str() );
          HdedxVsPProfile   [i] = (TProfile*) GetObjectFromPath (InputFile, (StdObjName[i] + "_Profile"     ).c_str() );
          HdedxVsEta        [i] = (TH2D*)     GetObjectFromPath (InputFile, (StdObjName[i] + "_Eta2D"       ).c_str() );
@@ -134,7 +153,6 @@ typedef struct dEdxPlotObj
          if (StdObjName[i].find("Ias")==string::npos){
 
             HMass        [i]  = (TH1D*) GetObjectFromPath(InputFile, (StdObjName[i] + "_Mass").c_str() );
-            HProtonHitSO [i]  = (TH1D*) GetObjectFromPath(InputFile, (StdObjName[i] + "_ProtonHitSO").c_str() );
             HProtonHitPO [i]  = (TH1D*) GetObjectFromPath(InputFile, (StdObjName[i] + "_ProtonHitPO").c_str() );
             K [StdObjName[i]] = K_;  Kerr[StdObjName[i]] = Kerr_;
             C [StdObjName[i]] = C_;  Cerr[StdObjName[i]] = Cerr_;
@@ -143,8 +161,8 @@ typedef struct dEdxPlotObj
             if (type != 2){
 
                double Ktmp = K_; double Ctmp = C_; double KerrTmp = Kerr_; double CerrTmp = Cerr_;
-               //ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp,1.0,1.6,0.938);
-               ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp);
+               fit_points = ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp,0.4,1.5,0.938,0.2,0.5); //proton base : 0.6<p<1.5
+               //fit_points = ExtractConstants (HdedxVsP[i], &Ktmp, &Ctmp, &KerrTmp, &CerrTmp,1,1.9,1.875,0.2,0.8); //deuteron
                K [StdObjName[i]] = Ktmp;  Kerr[StdObjName[i]] = KerrTmp;
                C [StdObjName[i]] = Ctmp;  Cerr[StdObjName[i]] = CerrTmp;
                printf ("FINAL %s :: %s :: K = %.3lf\tC = %.3lf\n", LegEntry.c_str(), StdObjLegend[i].c_str(), Ktmp, Ctmp);
@@ -249,9 +267,11 @@ void MakePlot()
 
 
    vector<string> HitObjName;                         vector<string> HitObjLegend;
-   HitObjName.push_back("hit_PO");                    HitObjLegend.push_back("Pixel");
+////   HitObjName.push_back("harm2_SO_in_noC_CCC_MG");                    HitObjLegend.push_back("Strip - Module geometry");
+////   HitObjName.push_back("harm2_SO_in_noC_CCC_L");                    HitObjLegend.push_back("Strip - Layers");
+//   HitObjName.push_back("hit_PO");                    HitObjLegend.push_back("Pixel");
 //   HitObjName.push_back("hit_PO_noHIP");              HitObjLegend.push_back("Pixel w/o HIP");
-   HitObjName.push_back("hit_SO_in_noC_CCC");         HitObjLegend.push_back("Strip");
+//   HitObjName.push_back("hit_SO_in_noC_CCC");         HitObjLegend.push_back("Strip");
 //   HitObjName.push_back("hit_SO_in_noC_CCC_noHIP");   HitObjLegend.push_back("Strip w/o HIP, new CC");
 //   HitObjName.push_back("hit_SO_in_noC_newCCC");      HitObjLegend.push_back("Strip, new CC");
 //   HitObjName.push_back("hit_SO_in_noC_newCCC_noHIP");HitObjLegend.push_back("Strip w/o HIP, new CC");
@@ -259,18 +279,19 @@ void MakePlot()
 //   HitObjName.push_back("hit_SP_in_noC");
 //   HitObjName.push_back("hit_SP_in_noC_CI");
 //   HitObjName.push_back("hit_SP_in_noC_CC");
-   HitObjName.push_back("hit_SP_in_noC_CCC");         HitObjLegend.push_back("Strip+Pixel charges"); //questo forse serve..
+//   HitObjName.push_back("hit_SP_in_noC_CCC");         HitObjLegend.push_back("Strip+Pixel charges"); //questo forse serve..
 //   HitObjName.push_back("hit_SP_in_noC_newCCC");      HitObjLegend.push_back("Strip+Pixel charges, new CC");
    vector<string> StdObjName;                         vector<string> StdObjLegend;
 //   StdObjName.push_back("harm2_SO");
 //   StdObjName.push_back("harm2_SO_in");
-//   StdObjName.push_back("harm2_SO_in_noC");
+//   StdObjName.push_back("harm2_SO_in_noC");         StdObjLegend.push_back("harm-2, SO");
 //   StdObjName.push_back("harm2_SP");
 //   StdObjName.push_back("harm2_SP_in");
-//   StdObjName.push_back("harm2_SP_in_noC");
+//   StdObjName.push_back("harm2_SP_in_noC");         StdObjLegend.push_back("harm-2, SP");
 //   StdObjName.push_back("harm2_SP_in_noC_CI");
 //   StdObjName.push_back("harm2_SP_in_noC_CC");
-//   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, old CC");
+//   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, SP, old CC");
+////   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, Strip+Pixel (2017)");
 //   StdObjName.push_back("harm2_SP_in_noC_newCCC");    StdObjLegend.push_back("harm-2, new CC");
 
 //   StdObjName.push_back("harm2_PO_raw");                StdObjLegend.push_back("harm-2, PO");
@@ -278,13 +299,14 @@ void MakePlot()
 //   StdObjName.push_back("Hybr2010_PO_raw");             StdObjLegend.push_back("Hybr-2-10, PO");
 //   StdObjName.push_back("Hybr2015_PO_raw");             StdObjLegend.push_back("Hybr-2-15, PO");
 
-//   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, SO");
-///    StdObjName.push_back("Hybr2005_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-05, SO");
-//   StdObjName.push_back("Hybr2010_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-10, SO");
-//   StdObjName.push_back("Hybr2015_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-15, SO");  // those were uncommented before, but this is not what I want....
+//   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, SO, CCC");
+   StdObjName.push_back("harm2_SO_in_noC_CCC");         StdObjLegend.push_back("harm-2, Strip-Only (2017)");
+//    StdObjName.push_back("Hybr2005_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-05, SO");
+   StdObjName.push_back("Hybr201_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-10, SO");
+   StdObjName.push_back("Hybr2015_SO_in_noC_CCC");      StdObjLegend.push_back("Hybr-2-15, SO");  // those were uncommented before, but this is not what I want....
 //   StdObjName.push_back("harm2_SO_in_noC_CCC");
 //   StdObjName.push_back("hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-10, SP");
-   StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");  // i think that is the one to keep
+   StdObjName.push_back("hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-15, SP");  // i think that is the one to keep
 
 //   StdObjName.push_back("hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-20, SP");
 //   StdObjName.push_back("hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-25, SP");
@@ -292,9 +314,15 @@ void MakePlot()
 //   StdObjName.push_back("hybr2035_SP_in_noC_CCC");    StdObjLegend.push_back("hybrid2-35, SP");
 //   StdObjName.push_back("hybr204_SP_in_noC_CCC");     StdObjLegend.push_back("hybrid2-40, SP");
 //   StdObjName.push_back("harm2_SO_in_noC_CCC");       StdObjLegend.push_back("harm-2, SO");
+   StdObjName.push_back("harm2_SP_in_noC_CCC");       StdObjLegend.push_back("harm-2, SP");
 //   StdObjName.push_back("Hybr201_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-10, SP");
 //   StdObjName.push_back("Hybr2015_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-15");
 //   StdObjName.push_back("Hybr2015_SP_in_noC_newCCC"); StdObjLegend.push_back("Hybrid2-15, new CC");
+   StdObjName.push_back("Hybr2020_SO_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-20, SO");
+   StdObjName.push_back("Hybr2025_SO_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-25, SO");
+   StdObjName.push_back("Hybr2030_SO_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-30, SO");
+   StdObjName.push_back("Hybr2035_SO_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-35, SO");
+   StdObjName.push_back("Hybr2040_SO_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-40, SO");
 //   StdObjName.push_back("Hybr202_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-20, SP");
 //   StdObjName.push_back("Hybr2025_SP_in_noC_CCC");    StdObjLegend.push_back("Hybrid2-25, SP");
 //   StdObjName.push_back("Hybr203_SP_in_noC_CCC");     StdObjLegend.push_back("Hybrid2-30, SP");
@@ -321,13 +349,39 @@ void MakePlot()
 //   StdObjName.push_back("Ias_SP_in_noC_CC");
 //   StdObjName.push_back("Ias_SP_in_noC_CCC");           StdObjLegend.push_back("Ias (2015)");
 //   StdObjName.push_back("Ias_SP_in_noC_CCC16");         StdObjLegend.push_back("Ias (2016)");
+////   StdObjName.push_back("Ias_SP_in_noC_CCC16");         StdObjLegend.push_back("Ias Strip+Pixel (2017)");
 //   StdObjName.push_back("Ias_SP_in_noC_newCCC");      StdObjLegend.push_back("Ias, new CC");
-   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
-   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only");  // to uncomment second step 
-   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
+//   StdObjName.push_back("Ias_SP_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip+Pixel");  // to uncomment second step
+////   StdObjName.push_back("Ias_SO_in_noC_CCC16");      StdObjLegend.push_back("Ias Strip-Only (2017)");  // to uncomment second step 
+//   StdObjName.push_back("Ias_PO_in_noC_CCC16");      StdObjLegend.push_back("Ias Pixel-Only");   // to uncomment second step 
 
 
    vector <dEdxPlotObj*> plotObj;
+
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017B_all_janv21_1000jobs.root", "2017B",   "2017B", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017C_all_janv21_500jobs.root", "2017C",   "2017C", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017D_all_janv21_500jobs.root", "2017D",   "2017D", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017E_all_janv21_500jobs.root", "2017E",   "2017E", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_all_janv21_500jobs.root", "2017F",   "2017F", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   
+   
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017B_500files_march21_50jobs.root", "2017B",   "2017B", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017B_all_march21_500jobs.root", "2017B",   "2017B", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017_all_march21.root", "2017",   "2017", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017B_all_march21_500jobs_0320.root", "2017B",   "2017B", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017C_all_march21_500jobs_0320.root", "2017C",   "2017C", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017D_all_march21_500jobs_0320.root", "2017D",   "2017D", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017E_all_march21_500jobs_0320.root", "2017E",   "2017E", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+   plotObj.push_back(new dEdxPlotObj("Histos_2017F_all_march21_500jobs_0320.root", "2017F",   "2017F", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+
+   //   plotObj.push_back(new dEdxPlotObj("Histos_2017B_500files_janv21.root", "2017B",   "2017B", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017C_500files_janv21.root", "2017C",   "2017C", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017D_500files_janv21.root", "2017D",   "2017D", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017E_500files_janv21.root", "2017E",   "2017E", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_500files_janv21.root", "2017F",   "2017F", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+
+
  //  plotObj.push_back(new dEdxPlotObj("Histos_MCMinBias.root", "MC (MinBias)", "MCMinBias", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 1));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Data2015.root", "Data 2015",   "Data", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Data2016.root", "Dat,prescalea 2016",   "Data", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
@@ -339,7 +393,13 @@ void MakePlot()
 ////   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Run PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_RunPostG.root", "Runs PostG",   "RunPostG", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run305040.root", "Runs 305040",   "Run305040", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
-   plotObj.push_back(new dEdxPlotObj("Histos_2017F.root", "2017F",   "2017F", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_40files_0_40.root", "2017F_40files",   "2017F_40files", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_100files_0_100.root", "2017F_100files-1",   "2017F_100files-1", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+ //  plotObj.push_back(new dEdxPlotObj("Histos_2017F_100files_100_200.root", "2017F_100files-2",   "2017F_100files-2", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_100files_200_300.root", "2017F_100files-3",   "2017F_100files-3", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_100files_300_400.root", "2017F_100files-4",   "2017F_100files-4", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017F_400files_0_400.root", "2017F_400files",   "2017F_400files", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
+//   plotObj.push_back(new dEdxPlotObj("Histos_2017G.root", "2017G",   "2017G", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_Run280385.root", "Run 280385",   "Run280385", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 0));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCDYM2600Q2.root",        "DY, Q = 2, M = 2.6TeV",    "DYM2600Q2",        HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCGluino_M1000_f10.root", "Gluino, f=10, M = 1TeV",   "Gluino_M1000_f10", HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
@@ -348,6 +408,7 @@ void MakePlot()
 //   plotObj.push_back(new dEdxPlotObj("Histos_MCGMStau_M494.root",      "GMStau, M = 494GeV",       "GMStau_M494",      HitObjName, StdObjName, HitObjLegend, StdObjLegend, 2));
 
    string SaveDir = "pictures_FAST/";
+//string SaveDir = "/afs/cern.ch/work/d/dapparu/thesis/hscp/pictures_FAST/";
    system (string("rm -rf "+SaveDir+" && mkdir "+SaveDir).c_str());
    system ("rm -rf systematics && mkdir systematics");
    SaveKC (plotObj, SaveDir+"ConstantReport.txt");
@@ -373,12 +434,14 @@ void MakePlot()
    // HitPlots (SaveDir, plotObj);
 
    cerr << "====== TESTC :: Cross-compare estimators ======" << endl;
-   //   CrossCompareAndControlPlots (SaveDir, plotObj, "SO", "Hybr");
+   //CrossCompareAndControlPlots (SaveDir, plotObj, "SO", "Hybr");
    
    cerr << "====== TESTD :: Systematics study ======" << endl;
    //SystStudy (SaveDir, plotObj);
 
+   return;
    cerr << "====== TESTE :: Scale Factors ======" << endl;
+
    double SFMip, SFProfile;
    FILE* fout = fopen ((SaveDir+"ScaleFactors.txt").c_str(), "w");
    fprintf (fout, "=================\n >>> Old CCC >>>\n=================\n");
@@ -581,24 +644,31 @@ void getScaleFactor_new(TFile* InputFile1, TFile* InputFile2, string ObjName1, s
 }
 
 
-void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr,
+TH1D* ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* Cerr,
       double MinRange, double MaxRange, double MassCenter, double LeftMassMargin, double RightMassMargin)
 {
        char buffer[2048];
        bool hasConverged = false;
+       TH1D* FitResult;
 
        for(unsigned int loop=0;loop<5 and !hasConverged; loop++){
 	      TH2D* inputnew = (TH2D*)input->Clone("tempTH2D");
 	      TH2D* inputnewPion = (TH2D*)input->Clone("tempTH2D");
-	      inputnew->Rebin2D(5,10);
+	      inputnew->Rebin2D(5,10); //HERE rebin
 	      inputnewPion->Rebin2D(5,10);
 	      for(int x=1;x<=inputnew->GetNbinsX();x++){
 	      for(int y=1;y<=inputnew->GetNbinsY();y++){
-		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
-		if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
+        double p = inputnew->GetXaxis()->GetBinCenter(x);
+        //*C = 2.2;
+        //if(p>1 && p<=1.5) *C=2.5;
+        //if(p>1.5) *C=2.0;
+        double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
+        //std::cout << "p: " << p << " m: " << Mass << " C: " << *C <<std::endl;
+		if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+(RightMassMargin)){
 		  inputnew->SetBinContent(x,y,0);        
-		  //cout<<x<<"   "<<y<<endl;
-		}
+		  //cout<<x<<"   "<<y<<"    "<<p<<endl;
+    	}
+ 
 		if (inputnew->GetYaxis()->GetBinCenter(y)<2 || inputnew->GetYaxis()->GetBinCenter(y)>4.2) inputnewPion->SetBinContent(x,y,0);
 		//cout<< inputnewPion->GetBinContent(x,y)<<endl;
 	      }}
@@ -606,7 +676,7 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	      
 
 	      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
-	      c1->SetLogz(true);
+	     /* c1->SetLogz(true);
 	      inputnew->SetStats(kFALSE);
 	      inputnew->GetXaxis()->SetTitle("track momentum (GeV)");
 	      inputnew->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
@@ -624,7 +694,10 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	      delete c1;
 
 
-	       TH1D* FitResult = new TH1D("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
+          */
+
+
+	       FitResult = new TH1D("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
 	       FitResult->SetTitle("");
 	       FitResult->SetStats(kFALSE);  
 	       FitResult->GetXaxis()->SetTitle("P [GeV]");
@@ -635,31 +708,18 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       TH1D* FitResultPion = new TH1D("FitResultPion", "FitResultPion" ,inputnewPion->GetXaxis()->GetNbins(),inputnewPion->GetXaxis()->GetXmin(),inputnewPion->GetXaxis()->GetXmax());
                FitResultPion->SetTitle("");
                FitResultPion->SetStats(kFALSE);
-               FitResultPion->GetXaxis()->SetTitle("P [GeV]");
+               FitResultPion->GetXaxis()->SetTitle("P [GeV/c]");
                FitResultPion->GetYaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
                FitResultPion->GetYaxis()->SetTitleOffset(1.20);
                FitResultPion->Reset();
 
 	       for(int x=1;x<inputnew->GetXaxis()->FindBin(5);x++){
 		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
-	    
-		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
-		  if(Projection->Integral()<100)continue;
-		  Projection->SetAxisRange(0.1,25,"X");
-		  Projection->Sumw2();
-		  Projection->Scale(1.0/Projection->Integral());
 
-
-		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
-		  Projection->Fit("mygaus","Q0 RME");
-		  double chiFromFit  = (mygaus->GetChisquare())/(mygaus->GetNDF());
-		  FitResult->SetBinContent(x, mygaus->GetParameter(1));
-		  //cout<<x<<"  "<<mygaus->GetParameter(1)<<endl;
-		  FitResult->SetBinError  (x, mygaus->GetParError (1));
-		  mygaus->SetLineColor(2);
-		  mygaus->SetLineWidth(2);
-
-		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
+          //if(P<MinRange) continue;
+          //if(P>MaxRange) continue;
+          //if(P>1.5) continue;
+          TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
                   if(ProjectionPion->Integral()<100)continue;
                   ProjectionPion->SetAxisRange(0.1,25,"X");
                   ProjectionPion->Sumw2();
@@ -671,6 +731,31 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
                   FitResultPion->SetBinContent(x, mygausPion->GetParameter(1));
 		  //cout<<x<<"  "<<mygausPion->GetParameter(1)<<endl;
                   FitResultPion->SetBinError  (x, mygausPion->GetParError (1));
+
+          if(P<MinRange) continue;
+          if(P>MaxRange) continue;
+
+
+		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
+		  if(Projection->Integral()<100)continue;
+		  Projection->SetAxisRange(0.1,25,"X");
+		  Projection->Sumw2();
+		  Projection->Scale(1.0/Projection->Integral());
+
+
+		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
+          if(P<1) mygaus = new TF1("mygaus","gaus", Projection->GetMean()-Projection->GetStdDev(), Projection->GetMean()+Projection->GetStdDev());
+		  Projection->Fit("mygaus","Q0 RME");
+		  double chiFromFit  = (mygaus->GetChisquare())/(mygaus->GetNDF());
+		  FitResult->SetBinContent(x, mygaus->GetParameter(1));
+          //if(P>1)FitResult->SetBinContent(x,mygaus->GetParameter(1)-0.1); 
+          //if(P>2)FitResult->SetBinContent(x,mygaus->GetParameter(1)-0.2); 
+		  //cout<<x<<"  "<<mygaus->GetParameter(1)<<endl;
+		  FitResult->SetBinError  (x, mygaus->GetParError (1));
+		  mygaus->SetLineColor(2);
+		  mygaus->SetLineWidth(2);
+
+		  
 
 		  c1  = new TCanvas("canvas", "canvas", 600,600);
 		  Projection->Draw();
@@ -726,27 +811,23 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       fitC->SetParLimits(0, 2,4);
 	       fitC->SetLineWidth(2);
                fitC->SetLineColor(2);
-	       cout<<"prima del fit"<<endl;
                FitResultPion->Fit("fitC", "M R E I 0");
-	       cout<<"dopo il fit"<<endl;
                fitC->SetRange(1,4);
                fitC->Draw("same");
-	       cout<<"ha fatto il fit"<<endl;
 	       *C    = fitC->GetParameter(0);
 	       *Cerr = fitC->GetParError(0);
-	       cout<< "il valore e`: "<<*C<<"   " <<*Cerr<< endl;
 
 
 
 
 	       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange); 
-	       //   TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass //938.27 MeV proton mass
-	          TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass //938.27 MeV proton mass
+	          TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange); //938.27 MeV proton mass //FIXME
+	       //   TF1* myfit = new TF1("myfit","[0]*pow(1.8756/x,2) + [1]", MinRange, MaxRange); //1875.6 MeV  deuteron mass 
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
 	       myfit->SetParameter(0, 1.8);
 	       myfit->SetParameter(1, *C);
-	       myfit->SetParLimits(0, 1.3,3.0); //
+	       myfit->SetParLimits(0, 1.3,4.0); //
 	       myfit->SetParLimits(1, *C,*C);
 	       // myfit->SetParLimits(1, 3.8,3.8); // 
 	       myfit->SetLineWidth(2);
@@ -780,12 +861,34 @@ void ExtractConstants(TH2D* input, double* K, double* C, double* Kerr, double* C
 	       SaveCanvas(c1,"../DeDxStudy/",buffer);              
 	       delete c1;
 
+          c1 = new TCanvas("c1", "c1", 600,600);
+	      c1->SetLogz(true);
+	      inputnew->SetStats(kFALSE);
+	      inputnew->GetXaxis()->SetTitle("track momentum (GeV)");
+	      inputnew->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
+	      inputnew->SetAxisRange(0,5,"X");
+	      inputnew->SetAxisRange(0,15,"Y");
+	      inputnew->Draw("COLZ");
+          FitResult->Draw("same");
+	      
+
+//	      KaonLine->Draw("same");
+//	      ProtonLine->Draw("same");
+//	      DeuteronLine->Draw("same");
+//	      TritonLine->Draw("same");
+	      SaveCanvas(c1, "fit/", "dedxVsP");
+	      delete c1;
+
+          std::cout << "LOOP: " << loop << std::endl;
+
           delete line1;
           delete line2;
           delete myfit;
-          delete FitResult;
+          //delete FitResult;
           delete inputnew;
        }
+          return FitResult;
+       
 }
 
 
@@ -1411,6 +1514,144 @@ void MakeMapPlots(TH3F* Charge_Vs_Path3D, string ObjName, string SaveDir, string
       SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_TH2", true);
       delete c0;
 
+/*
+      //TProfile ChargeVsPath
+      TProfile* Profile_ChargePath = (TProfile*) Charge_Vs_Path2D->ProfileX();
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Profile_ChargePath->SetTitle("");
+      Profile_ChargePath->SetStats(kFALSE);
+      Profile_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Profile_ChargePath->GetYaxis()->SetTitle("mean #Delta E/#Delta x (ADC/mm)");
+      Profile_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Profile_ChargePath->Draw();
+     
+      Profile_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Profile").c_str());
+      outputfile->cd();
+      Profile_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Profile");
+      delete c0;
+
+      //50% quantile
+      TH1D* Quantile50_ChargePath = (TH1D*) Charge_Vs_Path2D->QuantilesX(0.5);
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Quantile50_ChargePath->SetTitle("");
+      Quantile50_ChargePath->SetStats(kFALSE);
+      Quantile50_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Quantile50_ChargePath->GetYaxis()->SetTitle("median #Delta E/#Delta x (ADC/mm)");
+      Quantile50_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Quantile50_ChargePath->Draw();
+
+      Quantile50_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Quantile50").c_str());
+      outputfile->cd();
+      Quantile50_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Quantile50");
+      delete c0;
+
+      //60% quantile
+      TH1D* Quantile60_ChargePath = (TH1D*) Charge_Vs_Path2D->QuantilesX(0.6);
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Quantile60_ChargePath->SetTitle("");
+      Quantile60_ChargePath->SetStats(kFALSE);
+      Quantile60_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Quantile60_ChargePath->GetYaxis()->SetTitle("0.6-quantile #Delta E/#Delta x (ADC/mm)");
+      Quantile60_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Quantile60_ChargePath->Draw();
+
+      Quantile60_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Quantile60").c_str());
+      outputfile->cd();
+      Quantile60_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Quantile60");
+      delete c0;
+      
+      //75% quantile
+      TH1D* Quantile75_ChargePath = (TH1D*) Charge_Vs_Path2D->QuantilesX(0.75);
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Quantile75_ChargePath->SetTitle("");
+      Quantile75_ChargePath->SetStats(kFALSE);
+      Quantile75_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Quantile75_ChargePath->GetYaxis()->SetTitle("0.75-quantile #Delta E/#Delta x (ADC/mm)");
+      Quantile75_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Quantile75_ChargePath->Draw();
+
+      Quantile75_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Quantile75").c_str());
+      outputfile->cd();
+      Quantile75_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Quantile75");
+      delete c0;
+
+      //90% quantile
+      TH1D* Quantile90_ChargePath = (TH1D*) Charge_Vs_Path2D->QuantilesX(0.90);
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Quantile90_ChargePath->SetTitle("");
+      Quantile90_ChargePath->SetStats(kFALSE);
+      Quantile90_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Quantile90_ChargePath->GetYaxis()->SetTitle("0.90-quantile #Delta E/#Delta x (ADC/mm)");
+      Quantile90_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Quantile90_ChargePath->Draw();
+
+      Quantile90_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Quantile90").c_str());
+      outputfile->cd();
+      Quantile90_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Quantile90");
+      delete c0;
+
+      //95% quantile
+      TH1D* Quantile95_ChargePath = (TH1D*) Charge_Vs_Path2D->QuantilesX(0.95);
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Quantile95_ChargePath->SetTitle("");
+      Quantile95_ChargePath->SetStats(kFALSE);
+      Quantile95_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Quantile95_ChargePath->GetYaxis()->SetTitle("0.95-quantile #Delta E/#Delta x (ADC/mm)");
+      Quantile95_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Quantile95_ChargePath->Draw();
+
+      Quantile95_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Quantile95").c_str());
+      outputfile->cd();
+      Quantile95_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Quantile95");
+      delete c0;
+
+      //99% quantile
+      TH1D* Quantile99_ChargePath = (TH1D*) Charge_Vs_Path2D->QuantilesX(0.99);
+      c0 = new TCanvas("c0","c0", 600, 600);
+      Quantile99_ChargePath->SetTitle("");
+      Quantile99_ChargePath->SetStats(kFALSE);
+      Quantile99_ChargePath->GetXaxis()->SetTitle("pathlength (mm)");
+      Quantile99_ChargePath->GetYaxis()->SetTitle("0.99-quantile #Delta E/#Delta x (ADC/mm)");
+      Quantile99_ChargePath->GetYaxis()->SetTitleOffset(1.80);
+      Quantile99_ChargePath->Draw();
+
+      Quantile99_ChargePath->SetName((Prefix + "_" + ObjName+xProjName + "_Quantile99").c_str());
+      outputfile->cd();
+      Quantile99_ChargePath->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_Quantile99");
+      delete c0;
+
+      //Pathlength distribution
+      TH1D* ProjectionX_path = (TH1D*) Charge_Vs_Path2D->ProjectionX();
+      c0 = new TCanvas("c0","c0", 600, 600);
+      ProjectionX_path->SetTitle(";pathlength (mm);");
+      ProjectionX_path->SetStats(kFALSE);
+      ProjectionX_path->Draw();
+
+      ProjectionX_path->SetName((Prefix + "_" + ObjName+xProjName + "_projXpath").c_str());
+      outputfile->cd();
+      ProjectionX_path->Write();
+
+      SaveCanvas(c0, SaveDir, Prefix + "_" + ObjName+xProjName + "_projXpath");
+      delete c0;
+*/
+
+
+
+
 
       //Compute Probability Map.
       TH2D* Prob_ChargePath  = new TH2D ("Prob_ChargePath"     , "Prob_ChargePath" , Charge_Vs_Path2D->GetXaxis()->GetNbins(), Charge_Vs_Path2D->GetXaxis()->GetXmin(), Charge_Vs_Path2D->GetXaxis()->GetXmax(), Charge_Vs_Path2D->GetYaxis()->GetNbins(), Charge_Vs_Path2D->GetYaxis()->GetXmin(), Charge_Vs_Path2D->GetYaxis()->GetXmax());
@@ -1473,7 +1714,7 @@ void MakeMapPlots(TH3F* Charge_Vs_Path3D, string ObjName, string SaveDir, string
       if(Histos[2]->Integral()>=1)Histos[2]->Scale(1.0/Histos[2]->Integral());
       if(Histos[3]->Integral()>=1)Histos[3]->Scale(1.0/Histos[3]->Integral());
       DrawSuperposedHistos((TH1**)Histos, legend, "",  "Normalized Cluster Charge (ADC/mm)", "u.a.", 0,3000, 0,0);
-//      DrawLegend((TObject**)Histos,legend,"PathLength (mm):","L");
+      DrawLegend((TObject**)Histos,legend,"PathLength (mm):","L"); //FIXME uncomment in order to have legend 
       c0->SetLogy(true);
       SaveCanvas(c0, SaveDir, Prefix + "_"+ObjName+xProjName+"_TH1");
       delete c0;
@@ -1988,8 +2229,8 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          TH2D h2 ("tmp", "tmp", 1, 0, 5, 1, 0, (plotObj[i]->StdObjName[j].find("Ias")==string::npos)?17:1.2);
          h2.SetStats(kFALSE);
          h2.SetStats(kFALSE);
-         h2.GetXaxis()->SetTitle("p (GeV)");
-         h2.GetYaxis()->SetTitle(plotObj[i]->StdObjName[j].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
+         h2.GetXaxis()->SetTitle("p [GeV/c]");
+         h2.GetYaxis()->SetTitle(plotObj[i]->StdObjName[j].find("Ias")!=std::string::npos?"I_{as}":"dE/dx Estimator [MeV/cm]");
          if (plotObj[i]->type != 2){
             h2.SetAxisRange(0,5,"X");
             h2.SetAxisRange(0,(plotObj[i]->StdObjName[j].find("Ias")==string::npos)?17:1.2,"Y");
@@ -2002,8 +2243,10 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             h2.GetYaxis()->SetRangeUser(0,(plotObj[i]->StdObjName[j].find("Ias")==string::npos)?30:1.2);
             h2.GetXaxis()->SetRangeUser(0, 1200.0);
          }
-         h2.Draw("COLZ");
-         plotObj[i]->HdedxVsP[j]->Draw("same COLZ");
+        // h2.Draw("COLZ");
+
+         //plotObj[i]->HdedxVsP[j]->Draw("same COLZ");
+         plotObj[i]->HdedxVsP[j]->Draw("COLZ");
 
          TF1* PionLine      = NULL;
 	 TF1* PionLineFit      = NULL;
@@ -2012,23 +2255,23 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          TF1* DeuteronLine  = NULL;
          TF1* DeuteronLineFit = NULL;
 
-/*
+
             plotObj[i]->HdedxVsP[j]->SetStats(kFALSE);
-            plotObj[i]->HdedxVsP[j]->GetXaxis()->SetTitle("p (GeV)");
-            plotObj[i]->HdedxVsP[j]->GetYaxis()->SetTitle(plotObj[i]->StdObjName[j].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
+            plotObj[i]->HdedxVsP[j]->GetXaxis()->SetTitle("p [GeV/c]");
+            plotObj[i]->HdedxVsP[j]->GetYaxis()->SetTitle(plotObj[i]->StdObjName[j].find("Ias")!=std::string::npos?"I_{as}":"dE/dx Estimator [MeV/cm]");
             plotObj[i]->HdedxVsP[j]->SetAxisRange(0,5,"X");
             plotObj[i]->HdedxVsP[j]->SetAxisRange(0,17,"Y");
             plotObj[i]->HdedxVsP[j]->GetYaxis()->SetRangeUser(0,17);
             plotObj[i]->HdedxVsP[j]->Draw("COLZ");
-*/
+
          if (plotObj[i]->type != 2 && plotObj[i]->StdObjName[j].find("Ias")==string::npos){
             TF1* PionLine = GetMassLine(0.140, plotObj[i], plotObj[i]->StdObjName[j]);
             PionLine->SetLineColor(1);
             PionLine->SetLineWidth(2);
-            PionLine->SetRange(PionLine->GetX(15),1 );//PionLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
+            PionLine->SetRange(PionLine->GetX(15),5 );//PionLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
 
 	    TF1* PionLineFit = GetMassLine(0.140, plotObj[i], plotObj[i]->StdObjName[j]);
-            PionLineFit->SetLineColor(8);
+            PionLineFit->SetLineColor(7);
 	    PionLineFit->SetLineWidth(2);
             //PionLine->SetRange(PionLine->GetX(15), PionLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
 	    PionLineFit->SetRange(1,4);
@@ -2036,31 +2279,43 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             TF1* KaonLine = GetMassLine(0.494, plotObj[i], plotObj[i]->StdObjName[j]);
             KaonLine->SetLineColor(1);
             KaonLine->SetLineWidth(2);
-            KaonLine->SetRange(KaonLine->GetX(15), KaonLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
+            KaonLine->SetRange(KaonLine->GetX(15), 5);//KaonLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
 
             TF1* ProtonLine = GetMassLine(0.938, plotObj[i], plotObj[i]->StdObjName[j]);
             ProtonLine->SetLineColor(1);
             ProtonLine->SetLineWidth(2);
-            ProtonLine->SetRange(ProtonLine->GetX(15), ProtonLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
+            ProtonLine->SetRange(ProtonLine->GetX(15), 5);// ProtonLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
+
+            TF1* ProtonLineFit = GetMassLine(0.938, plotObj[i], plotObj[i]->StdObjName[j]);
+            ProtonLineFit->SetLineColor(2);
+            ProtonLineFit->SetLineWidth(2);
+            ProtonLineFit->SetRange(0.7,1.5);
 
             TF1* DeuteronLine = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
             DeuteronLine->SetLineColor(1);
             DeuteronLine->SetLineWidth(2);
-            DeuteronLine->SetRange(DeuteronLine->GetX(15), DeuteronLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
+            DeuteronLine->SetRange(DeuteronLine->GetX(15), 5);//DeuteronLine->GetX(plotObj[i]->C[plotObj[i]->StdObjName[j]]+0.1));
 
             TF1* DeuteronLineFit = GetMassLine(1.88, plotObj[i], plotObj[i]->StdObjName[j]);
             DeuteronLineFit->SetLineColor(2);
             DeuteronLineFit->SetLineWidth(2);
-            DeuteronLineFit->SetRange(1.0,1.6); //range to fix
+            DeuteronLineFit->SetRange(1.0,1.9); //range to fix //FIXME
 
+            
             PionLine->Draw("same");
-	    PionLineFit->Draw("same");
+	        PionLineFit->Draw("same");
             KaonLine->Draw("same");
             ProtonLine->Draw("same");
             DeuteronLine->Draw("same");
-            DeuteronLineFit->Draw("same");
+            ProtonLineFit->Draw("same");
+            //DeuteronLineFit->Draw("same");
+            plotObj[i]->fit_points->Draw("same");
          }
          DrawPreliminary ("", 13.0, plotObj[i]->LegEntry);
+         //TFile ofile((plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP_inline"+".root").c_str(),"RECREATE");
+         //plotObj[i]->HdedxVsP[j]->Write();
+         //c1->Write();
+         //ofile.Close();
          SaveCanvas(c1, SaveDir, plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP", true);
          if (PionLine){ delete PionLine; delete KaonLine; delete ProtonLine; delete DeuteronLine; delete DeuteronLineFit; }
          delete c1;
@@ -2138,6 +2393,7 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
             ProtonLine->Draw("same");
             DeuteronLine->Draw("same");
             DeuteronLineFit->Draw("same");
+            plotObj[i]->fit_points->Draw("same");
          }
          DrawPreliminary ("", 13.0, plotObj[i]->LegEntry);
          SaveCanvas(c1, SaveDir, plotObj[i]->StdObjName[j] + "_" + plotObj[i]->SavePrefix + "_dedxVsP_KCData", true);
@@ -2156,20 +2412,16 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
          delete c1;
       }
 
-      cout<<"qui arriva"<<endl;
       for (size_t j=0; j < plotObj[i]->HitObjName.size(); j++){
 	cout <<(plotObj[i]->HitObjName[j]).c_str()<<endl;
-         if (plotObj[i]->HitObjName[j].find("SP")==string::npos) continue;
-	 cout<<"e` qui il problema"<<endl;
+         //if (plotObj[i]->HitObjName[j].find("SP")==string::npos) continue;
 	 cout<<plotObj[i]<<endl;
 	 cout<<plotObj[i]->dEdxTemplate[j]<<endl;
 	 if (plotObj[i]->dEdxTemplate[j]){
-	   cout<<"abbiamo il template"<<endl;
 	   plotObj[i]->dEdxTemplate[j]->SetName("Charge_Vs_Path");
 	   plotObj[i]->dEdxTemplate[j]->SaveAs (("dEdxTemplate_" + plotObj[i]->HitObjName[j] + "_" + plotObj[i]->SavePrefix + ".root").c_str());
-	   cout<<"qui anche"<<endl;
 	   MakeMapPlots (plotObj[i]->dEdxTemplate[j], plotObj[i]->HitObjName[j], SaveDir, "Map" + plotObj[i]->SavePrefix);
-	   cout <<"qui pure"<<endl;}
+     }
 /*         
          TH1D* hit_MIP = (TH1D*) GetObjectFromPath (InputFiles[fileIndex], (ObjName[i]+"_Hit").c_str());
 
@@ -2187,8 +2439,8 @@ void Draw2D (string SaveDir, vector<dEdxPlotObj*> plotObj){
 
 
 	 
-	 cout<<"qui pure"<<endl;
          string topologies [] = {"IB1", "IB2", "OB1", "OB2", "W1A", "W2A", "W3A", "W1B", "W2B", "W3B", "W4", "W5", "W6", "W7", "Pixel"};
+         string topologies_layer [] = {"TIB L1", "TIB L2", "TIB L3", "TIB L4", "TOB L1", "TOB L2", "TOB L3", "TOB L4", "TOB L5", "TOB L6", "TID R1", "TID R2", "TID R3", "TEC W1", "TEC W2", "TEC W3", "TEC W4", "TEC W5", "TEC W6", "TEC W7", "Pixel"};
 
          for (unsigned int g=0;g<15;g++){
             char Id [255]; sprintf (Id, "%02i", g+1);

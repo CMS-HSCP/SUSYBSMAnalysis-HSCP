@@ -62,6 +62,9 @@ void SaveCanvas(TCanvas* c, std::string path, std::string name, bool OnlyPPNG=fa
    filepath = tmppath +  ".eps"; c->SaveAs(filepath.c_str());
    filepath = tmppath + ".C"  ; c->SaveAs(filepath.c_str());
    filepath = tmppath +  ".pdf"; c->SaveAs(filepath.c_str());
+   TFile ofile((tmppath+".root").c_str(),"RECREATE");
+   c->Write();
+   ofile.Close();
 }
 
 

@@ -106,6 +106,11 @@ edm::LumiReWeighting LumiWeightsMCSyst;
 //reweight::PoissonMeanShifter PShift(0.6);//0.6 for upshift, -0.6 for downshift
 
 TH3F* dEdxTemplates = NULL;
+TH3F* dEdxTemplates2017B = NULL;
+TH3F* dEdxTemplates2017C = NULL;
+TH3F* dEdxTemplates2017D = NULL;
+TH3F* dEdxTemplates2017E = NULL;
+TH3F* dEdxTemplates2017F = NULL;
 dedxGainCorrector trackerCorrector;
 double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
@@ -271,23 +276,23 @@ std::cout<<"A1\n";
    
 std::cout<<"A2\n";
 
-   LumiWeightsMC     = edm::LumiReWeighting(BgLumiMC, TrueDist);
+   //LumiWeightsMC     = edm::LumiReWeighting(BgLumiMC, TrueDist);
 std::cout<<"A3\n";
 
-   LumiWeightsMCSyst = edm::LumiReWeighting(BgLumiMC, TrueDistSyst);
+   //LumiWeightsMCSyst = edm::LumiReWeighting(BgLumiMC, TrueDistSyst);
 
 std::cout<<"B\n";
 
 
    //create histogram file and run the analyis
-   HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+ReplacePartOfString(samples[0].FileName, "/", "_")+".root").c_str(),"RECREATE");
+   HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+ReplacePartOfString(samples[0].FileName, "/", "_")).c_str(),"RECREATE");
 std::cout<<"C\n";
 
    Analysis_Step1_EventLoop(Buffer);
 std::cout<<"Z\n";
 
-   HistoFile->Write();
-   HistoFile->Close();
+   //HistoFile->Write();
+   //HistoFile->Close();
    return;
 }
 
@@ -346,6 +351,7 @@ bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic, L1Bug
 
    return false; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
 
+   /*
    //for(unsigned int i=0;i<tr.size();i++){
    //printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
    //}fflush(stdout);
@@ -365,7 +371,7 @@ bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic, L1Bug
          if(tr.size()== tr.triggerIndex("HSCPHLTTriggerCosmicFilter")) return false;
          if(tr.accept(tr.triggerIndex("HSCPHLTTriggerCosmicFilter"))) return true;
       }
-   }
+   }*/
    return false;
 }
 
@@ -507,7 +513,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
      if(dedxMObj) st->BS_MIm->Fill(dedxMObj->dEdx(),Event_Weight);
    }
 
-   if(dedxSObj && dedxSObj->dEdx()+RescaleI<GlobalMinIs)return false;
+//   if(dedxSObj && dedxSObj->dEdx()+RescaleI<GlobalMinIs)return false;
    if(dedxMObj && ((TypeMode!=5 && dedxMObj->dEdx()<GlobalMinIm) || (TypeMode==5 && dedxMObj->dEdx()>GlobalMinIm)) )return false;
    if(st){st->MI   ->Fill(0.0,Event_Weight);}
 
@@ -612,7 +618,7 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
 
    if(st){st->BS_Pterr ->Fill(track->ptError()/track->pt(),Event_Weight);}
    if(TypeMode!=3 && (track->ptError()/track->pt())>GlobalMaxPterr)return false;
-   if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
+   //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
 
    if(std::max(0.0,track->pt())<GlobalMinPt)return false;
    if(st){st->Pterr   ->Fill(0.0,Event_Weight);}
@@ -719,10 +725,10 @@ bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxH
           if(DXYSB && DZSB)st->BS_OpenAngle_Cosmic->Fill(OpenAngle,Event_Weight);
 
 
-          TVector3 outerHit = getOuterHitPos(dedxHits);
+          //TVector3 outerHit = getOuterHitPos(dedxHits);
           TVector3 vertex(vertexColl[highestPtGoodVertex].position().x(), vertexColl[highestPtGoodVertex].position().y(), vertexColl[highestPtGoodVertex].position().z());
-          st->BS_LastHitDXY  ->Fill((outerHit).Perp(),Event_Weight);
-          st->BS_LastHitD3D  ->Fill((outerHit).Mag(),Event_Weight);
+          //st->BS_LastHitDXY  ->Fill((outerHit).Perp(),Event_Weight);
+          //st->BS_LastHitD3D  ->Fill((outerHit).Mag(),Event_Weight);
 
           st->BS_P  ->Fill(track->p(),Event_Weight);
           st->BS_Pt ->Fill(track->pt(),Event_Weight);
@@ -957,9 +963,9 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
                if(bin>-1 && bin<MaxPredBins) st->H_D_Binned[bin]->Fill(CutIndex,                Event_Weight);
                st->RegionD_P  ->Fill(CutIndex,track->p(),     Event_Weight);
                st->RegionD_I  ->Fill(CutIndex,Ih,Event_Weight);
-	       st->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
+	           st->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
                st->RegionD_TOF->Fill(CutIndex,MuonTOF,        Event_Weight);
-	       st->AS_Eta_RegionD->Fill(CutIndex,track->eta());
+	           st->AS_Eta_RegionD->Fill(CutIndex,track->eta());
             }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
                st->H_C     ->Fill(CutIndex,                 Event_Weight);
                if(TypeMode<2)st->Pred_EtaP  ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
@@ -1077,15 +1083,26 @@ void Analysis_Step1_EventLoop(char* SavePath)
       dEdxK_MC   = is2016?dEdxK_MC16:dEdxK_MC15;
       dEdxC_MC   = is2016?dEdxC_MC16:dEdxC_MC15;
 
+      dEdxK_Data = dEdxK_Data17;
+      dEdxC_Data = dEdxC_Data17;
+
 std::cout<<"D\n";
 
       char basepath [200]; sprintf (basepath, "%s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/", getenv("CMSSW_BASE"));
       string analysis_path (basepath);
       if(isData){ 
          dEdxSF [0] = 1.00000;
+         dEdxSF [1] = 1.00000;
 	 // cc- // dEdxSF[1] = 1.6107 *0.9134500*0.9999500;  //PreG SF
 	 //if (is2016G) dEdxSF[1] = 1.6107*0.9726500*0.9868500;  //PostG - first period  -- change for the other two periods later
-	 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+	 //dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+	 //dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_Strip_ModuleGeometry_2017C.root", true);
+	 dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root", true);
+	 dEdxTemplates2017B = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root", true);
+	 dEdxTemplates2017C = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017C.root", true);
+	 dEdxTemplates2017D = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017D.root", true);
+	 dEdxTemplates2017E = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017E.root", true);
+	 dEdxTemplates2017F = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017F.root", true);
 	 // cc- // dEdxTemplates = loadDeDxTemplate(analysis_path+"../../data/dEdxTemplate_hit_SP_in_noC_CCC_RunPreG.root");
       }else{  
          dEdxSF [0] = 1.09711;
@@ -1095,8 +1112,8 @@ std::cout<<"D\n";
 
 std::cout<<"E\n";
 
- if(isData){    trackerCorrector.LoadDeDxCalibration(analysis_path+"../../data/Data13TeVGains_v2.root");  //Je: those are the correct calib tree to use. I don't know why the default was null, but it was wrong
-	// if(isData){    trackerCorrector.TrackerGains = NULL;
+ //if(isData){    trackerCorrector.LoadDeDxCalibration(analysis_path+"../../data/Data13TeVGains_v2.root");  //Je: those are the correct calib tree to use. I don't know why the default was null, but it was wrong
+      if(isData){    trackerCorrector.TrackerGains = NULL;
       }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
       }
 
@@ -1162,6 +1179,7 @@ std::cout<<"F\n";
          //load the files corresponding to this sample
          std::vector<string> FileName;
 	 GetInputFiles(samples[s], BaseDirectory, FileName, period);
+        std::cout << FileName[0] << std::endl;
          fwlite::ChainEvent ev(FileName);
 
          DuplicatesClass duplicateChecker; 
@@ -1205,10 +1223,12 @@ std::cout<<"G\n";
          int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
 
          for(Long64_t ientry=0;ientry<ev.size();ientry++){
+         //for(Long64_t ientry=0;ientry<100;ientry++){
             ev.to(ientry);
             if(MaxEntry>0 && ientry>MaxEntry)break;
             if(ientry%TreeStep==0){printf(".");fflush(stdout);}
             if(checkDuplicates && duplicateChecker.isDuplicate(ev.eventAuxiliary().run(), ev.eventAuxiliary().event()))continue;
+//std::cout << "entry: " << ientry << std::endl;
 
 	    //Je: once we have the templates we have to update those lines below as well.. 
             //if run change, update conditions
@@ -1220,7 +1240,8 @@ std::cout<<"G\n";
                if(isData){//fix if you want to use 2015
                   //preG
                 dEdxSF [0] = 1.00000;
-               dEdxSF [1] = 1.6107*0.91345;
+               //dEdxSF [1] = 1.6107*0.91345;
+               dEdxSF [1] = 1.00000;
                dEdxK_Data = 2.062;
                dEdxC_Data = 3.430;
 
@@ -1273,12 +1294,14 @@ std::cout<<"G\n";
 
 
               }
+
                }
-              std::cout<<"------> dEdx parameters SF for run = "<<CurrentRun<< "  "<< dEdxSF[1]<<std::endl;
+              //std::cout<<"------> dEdx parameters SF for run = "<<CurrentRun<< "  "<< dEdxSF[1]<<std::endl;
             }
 
             //compute event weight
             if(samples[s].Type>0){Event_Weight = SampleWeight * GetPUWeight(ev, samples[s].Pileup, PUSystFactor, LumiWeightsMC, LumiWeightsMCSyst);}else{Event_Weight = 1;}
+            Event_Weight=1;
             std::vector<reco::GenParticle> genColl;
             double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
             double HSCPDLength1=-1, HSCPDLength2=-1;
@@ -1396,7 +1419,7 @@ std::cout<<"G\n";
             HIPemulatorUp.setEventRate(HIPemulator.getEventRatePixel()*1.25, HIPemulator.getEventRateStrip()*1.80);  // deltaPixel = 3.653981e+02, basePixel = 1.332625e+03; deltaStrip = 4.662832e+02, baseStrip = 5.958308e+02, from Run257805
             HIPemulatorDown.setEventRate(HIPemulator.getEventRatePixel()*0.75, HIPemulator.getEventRateStrip()*0.20); 
 
-	    HIPTrackLossEmul.SetHIPTrackLossRate(ev);
+	    //HIPTrackLossEmul.SetHIPTrackLossRate(ev);
 //           if (HIPemulator.getEventRatePixel()>0 && HIPemulator.getEventRateStrip()>0)
 //              fprintf(stderr, "HIPs: %lf\t%lf\t%lf\t%lf\t%lf\t%lf\n", HIPemulator.getEventRatePixel(), HIPemulatorUp.getEventRatePixel(), HIPemulatorDown.getEventRatePixel(), HIPemulator.getEventRateStrip(), HIPemulatorUp.getEventRateStrip(), HIPemulatorDown.getEventRateStrip());
 
@@ -1449,9 +1472,17 @@ std::cout<<"G\n";
                      const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
                      const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
 //std::cout<<"TESTA\n";
-                     tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
+                     //tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
+                     tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
 //std::cout<<"TESTB\n";
-                     tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
+                     tof  = &tofCalculator.combinedTOF; 
+                     dttof = &tofCalculator.dtTOF;  
+                     csctof = &tofCalculator.cscTOF;
+                     
+                     //tof = &TOFCollH->get(hscp.muonRef().key());
+
+                     //std::cout << "run: " << ev.eventAuxiliary().run() << " event: " << ev.eventAuxiliary().event() << " tof: " << tof->inverseBeta() << " ndof: " << tof->nDof() << " muon pt: " << muon->pt() << " dt: " << dttof->inverseBeta() << " dtdof: " << dttof->nDof() << " csc: " << csctof->inverseBeta() << " cscdof: " << csctof->nDof() << std::endl;
+
 //std::cout<<"TESTC\n";
                   }
                }
@@ -1468,6 +1499,23 @@ std::cout<<"G\n";
                DeDxData* dedxMObj  = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements()>0?&dedxMUpObjTmp:NULL;
                DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements()>0?&dedxMDownObjTmp:NULL;
+
+               DeDxData dedxSObjTmp2017B  = computedEdx(dedxHits, dEdxSF, dEdxTemplates2017B, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
+               DeDxData* dedxSObj2017B  = dedxSObjTmp2017B.numberOfMeasurements()>0?&dedxSObjTmp2017B:NULL;
+               
+               DeDxData dedxSObjTmp2017C  = computedEdx(dedxHits, dEdxSF, dEdxTemplates2017C, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
+               DeDxData* dedxSObj2017C  = dedxSObjTmp2017C.numberOfMeasurements()>0?&dedxSObjTmp2017C:NULL;
+               
+               DeDxData dedxSObjTmp2017D  = computedEdx(dedxHits, dEdxSF, dEdxTemplates2017D, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
+               DeDxData* dedxSObj2017D  = dedxSObjTmp2017D.numberOfMeasurements()>0?&dedxSObjTmp2017D:NULL;
+               
+               DeDxData dedxSObjTmp2017E  = computedEdx(dedxHits, dEdxSF, dEdxTemplates2017E, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
+               DeDxData* dedxSObj2017E  = dedxSObjTmp2017E.numberOfMeasurements()>0?&dedxSObjTmp2017E:NULL;
+               
+               DeDxData dedxSObjTmp2017F  = computedEdx(dedxHits, dEdxSF, dEdxTemplates2017F, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
+               DeDxData* dedxSObj2017F  = dedxSObjTmp2017F.numberOfMeasurements()>0?&dedxSObjTmp2017F:NULL;
+
+
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
                //compute systematic uncertainties on signal
@@ -1699,6 +1747,8 @@ std::cout<<"G\n";
 		 if(isMC)PassSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, MCTrPlots);
 		 if(    !PassSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, SamplePlots, false, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1))continue;
 
+         //std::cout << " cut index: " << CutIndex << std::endl;
+
                   if(CutIndex!=0)PassNonTrivialSelection=true;
                   HSCPTk[CutIndex] = true;
                   HSCPTk_SystHUp[CutIndex] = true;
@@ -1731,7 +1781,7 @@ std::cout<<"G\n";
  
 
                } //end of Cut loop
-               if(PassNonTrivialSelection) stPlots_FillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(), c, track->pt(), dedxSObj ? dedxSObj->dEdx() : -1, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), -1);
+               if(PassNonTrivialSelection) stPlots_FillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(), c, track->pt(), dedxSObj ? dedxSObj->dEdx() : -1, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), dedxSObj2017B ? dedxSObj2017B->dEdx() : -1, dedxSObj2017C ? dedxSObj2017C->dEdx() : -1, dedxSObj2017D ? dedxSObj2017D->dEdx() : -1, dedxSObj2017E ? dedxSObj2017E->dEdx() : -1, dedxSObj2017F ? dedxSObj2017F->dEdx() : -1, -1);
             }// end of Track Loop
 
             //save event dependent information thanks to the bookkeeping

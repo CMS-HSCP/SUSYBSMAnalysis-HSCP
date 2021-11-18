@@ -131,7 +131,8 @@ void GetInputFiles(stSample sample, std::string BaseDirectory_, std::vector<std:
    for(unsigned int f=0;f<fileNames.size();f++){  
       if(fileNames[f].find('/')==0){//full file path is provided)
          if(fileNames[f].find("/store/")==0){
-            inputFiles.push_back(string("root://eoscms//eos/cms") + fileNames[f]);
+            //inputFiles.push_back(string("root://eoscms//eos/cms") + fileNames[f]);
+            inputFiles.push_back(string("root://cms-xrd-global.cern.ch/") + fileNames[f]);
          }else{
             inputFiles.push_back(fileNames[f]);
          }

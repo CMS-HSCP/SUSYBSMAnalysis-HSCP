@@ -64,24 +64,35 @@ void Analysis_Step3_MakePlots()
 
    SQRTS=13.0;
 
+   std::cout << " Make2DPlotSpecial " << std::endl;
    Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
-   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
-   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16_Loose");
-   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16_Tight");
 
-   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose");
-   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight");
+   std::cout << " MassPrediction " << std::endl;
+   InputPattern = "Results/Type0/";   CutIndex = 1; CutIndexTight = 29;
+   //InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV17_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV17_Tight");
 
+//   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV16G_Loose");
+//   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV16G_Tight");
+
+
+/*   std::cout << " CutFlow " << std::endl;
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
    CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
-   
+*/
+
+   std::cout << " SelectionPlot " << std::endl;
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 //   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
+   std::cout << " PredictionAndControl " << std::endl;
+   PredictionAndControlPlot(InputPattern, "MC_EOY2017_ReReco", CutIndex, 0);
 
+   return 
    PredictionAndControlPlot(InputPattern, "Data13TeV16", CutIndex, 0);
 //   return;
    PredictionAndControlPlot(InputPattern, "Data13TeV16G", CutIndex, 0);
@@ -259,18 +270,31 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    else if(DataName.find("13TeV16")!=string::npos){SQRTS=1316.0;}
    else if(DataName.find("13TeV15")!=string::npos){SQRTS=1315.0;}
    else if(DataName.find("13TeV")!=string::npos){SQRTS=1315.0;}
+   else if(DataName.find("13TeV17")!=string::npos){SQRTS=1315.0;}
 
    bool IsTkOnly = (InputPattern.find("Type0",0)<std::string::npos);
    double SystError     = 0.20;
 
-   TH1D  *Pred13TeV16G=NULL, *Data13TeV16G=NULL, *Pred13TeV16=NULL, *Data13TeV16=NULL, *Pred13TeV15=NULL, *Data13TeV15=NULL, *Pred8TeV=NULL, *Data8TeV=NULL, *Pred7TeV=NULL, *Data7TeV=NULL, *MCPred=NULL, *MC=NULL, *Signal=NULL;
+   TH1D  *Pred13TeV17=NULL, *Pred13TeV16G=NULL, *Data13TeV16G=NULL, *Pred13TeV16=NULL, *Data13TeV17=NULL, *Data13TeV16=NULL, *Pred13TeV15=NULL, *Data13TeV15=NULL, *Pred8TeV=NULL, *Data8TeV=NULL, *Pred7TeV=NULL, *Data7TeV=NULL, *MCPred=NULL, *MC=NULL, *Signal=NULL;
    TFile* InputFile = new TFile((InputPattern + "/Histos.root").c_str());
    if(!InputFile || InputFile->IsZombie() || !InputFile->IsOpen() || InputFile->TestBit(TFile::kRecovered) )return;   
 
    string SName,SLeg;
 
    //README: Comments or uncomment lines below in order to decide what you want to see on your plot
-   if(DataName.find("13TeV16G")!=string::npos){
+   if(DataName.find("13TeV17")!=string::npos){
+                    SName="Gluino_13TeV16G_M1000_f10";     SLeg="Gluino (M = 1000 GeV)";
+      if(!IsTkOnly){SName="GMStau_13TeV16G_M494";         SLeg="Stau (M = 494 GeV)";}
+
+//      Pred13TeV15  = GetProjectionFromPath(InputFile, string("Data13TeV/Pred_"  ) + HistoSuffix, CutIndex, "TmpPredMass15");
+//      Data13TeV15  = GetProjectionFromPath(InputFile, string("Data13TeV/"       ) + HistoSuffix, CutIndex, "TmpDataMass15");
+      Pred13TeV17  = GetProjectionFromPath(InputFile, string("analyzer/Data/Pred_") + HistoSuffix, CutIndex, "TmpPredMass16");
+      Data13TeV17  = GetProjectionFromPath(InputFile, string("analyzer/Data/"     ) + HistoSuffix, CutIndex, "TmpDataMass16");
+
+      if(showMC)MCPred    = GetProjectionFromPath(InputFile, string("MCTr_13TeV16G/Pred_"  ) + HistoSuffix,  CutIndex, "TmpMCPred");
+      if(showMC)MC        = GetProjectionFromPath(InputFile, string("MCTr_13TeV16G/"       ) + HistoSuffix,  CutIndex, "TmpMCMass");
+      Signal    = GetProjectionFromPath(InputFile, string(SName+"/"     ) + HistoSuffix, CutIndex, "TmpSignalMass");
+   }else if(DataName.find("13TeV16G")!=string::npos){
                     SName="Gluino_13TeV16G_M1000_f10";     SLeg="Gluino (M = 1000 GeV)";
       if(!IsTkOnly){SName="GMStau_13TeV16G_M494";         SLeg="Stau (M = 494 GeV)";}
 

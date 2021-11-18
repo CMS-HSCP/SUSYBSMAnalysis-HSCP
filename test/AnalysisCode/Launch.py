@@ -13,14 +13,19 @@ LaunchOnCondor.Jobs_InitCmds       = ['ulimit -c 0;']  #disable production of co
 LaunchOnCondor.subTool = 'condor'
 #LaunchOnCondor.Jobs_Queue = '8nh'
 
-UseRemoteSamples          = True
+UseRemoteSamples          = False
 #RemoteStorageDir          = '/storage/data/cms/store/user/jozobec/HSCP2016/'
-#RemoteServer              = 'cms-xrd-global.cern.ch'
-RemoteServer              = 'eoscms.cern.ch'
-RemoteStorageDir          = '//eos/cms/store/group/phys_exotica/hscp/'
+RemoteServer              = 'cms-xrd-global.cern.ch'
+#RemoteServer              = 'eoscms.cern.ch'
+#RemoteStorageDir          = '//eos/cms/store/group/phys_exotica/hscp/signalmc/'
+#RemoteStorageDir          = '//eos/user/e/enibigir/data/HSCP/EOY2017ReReco/'
+#RemoteStorageDir          = '//eos/user/d/dapparu/thesis/hscp/EDM_files_Emery/'
+#RemoteStorageDir          = '//eos/user/d/dapparu/thesis/hscp/EDM_files/'
+RemoteStorageDir           = '/store/user/dapparu/SingleMuon/EDMProd_SingleMuon_UL2017C_299368_300284_reRunJSON/210602_130526/0002/'
 
 #the vector below contains the "TypeMode" of the analyses that should be run
-AnalysesToRun = [0,2]#,4]#,3,5]
+AnalysesToRun = [2]#,2]#,4]#,3,5]
+CorrectionTypeToRun = [1]#,2]
 
 CMSSW_74X_VERSION = '7_4_16'
 base80X = os.environ['CMSSW_BASE']
@@ -62,15 +67,16 @@ def skipSamples(type, name):
    return False
 
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
+   #if(not os.path.isfile(os.path.expanduser('~/private/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/private/x509_proxy')))>600)):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
       os.system('voms-proxy-init --voms cms -valid 192:00 --out ~/private/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
 
 if sys.argv[1]=='1':	
         if UseRemoteSamples:
-	    initProxy()
+	        print 'remote'
+        initProxy()
         print 'ANALYSIS'
-        FarmDirectory = "FARM"
+        FarmDirectory = "FARM_test_EDM_files_2017C_SingleMu_testTkTOF"
         JobName = "HscpAnalysis"
         LaunchOnCondor.Jobs_RunHere = 0
         LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
@@ -81,17 +87,24 @@ if sys.argv[1]=='1':
            if(line.startswith('#')):continue
            vals=line.split(',')
            if((vals[0].replace('"','')) in CMSSW_VERSION):
+              #if "Data" in vals[2]: RemoteStorageDir = '//eos/cms/store/group/phys_exotica/hscp/2016/'
+              #else: RemoteStorageDir = '//eos/cms/store/group/phys_exotica/hscp/signalmc/'
               for Type in AnalysesToRun:
-                 #LaunchOnCondor.Jobs_FinalCmds = ['mv *.root %s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/Results/Type%i/' % (os.environ['CMSSW_BASE'], Type)]
-                 LaunchOnCondor.Jobs_FinalCmds = ['cp -r Results %s/src/SUSYBSMAnalysis/HSCP/test/%s/ && rm -rf Results' % (os.environ['CMSSW_BASE'], os.path.basename(os.getcwd()) if os.getcwd().find('AnalysisCode') > 0 else 'AnalysisCode')]
-                 if(UseRemoteSamples):
+                  #for TypeCorr in CorrectionTypeToRun: 
+                      #LaunchOnCondor.Jobs_FinalCmds = ['mv *.root %s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/Results/Type%i/TypeCorr%i' % (os.environ['CMSSW_BASE'], Type,TypeCorr)]
+                      #LaunchOnCondor.Jobs_FinalCmds = ['mv *.root %s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/ResultsIsoMedium/Type%i/TypeCorr%i' % (os.environ['CMSSW_BASE'], Type,TypeCorr)]
+                      #LaunchOnCondor.Jobs_FinalCmds = ['mv *.root %s/src/SUSYBSMAnalysis/HSCP/test/AnalysisCode/' % (os.environ['CMSSW_BASE'])]
+                      #LaunchOnCondor.Jobs_FinalCmds = ['cp -r Results /eos/user/d/dapparu/thesis/hscp/FMIP_Studies/ && cp -r Results %s/src/SUSYBSMAnalysis/HSCP/test/%s/ && rm -rf Results' % (os.environ['CMSSW_BASE'], os.path.basename(os.getcwd()) if os.getcwd().find('AnalysisCode') > 0 else 'AnalysisCode')]
+                      #LaunchOnCondor.Jobs_FinalCmds = ['cp -r Results %s/src/SUSYBSMAnalysis-HSCP/test/%s/ && rm -rf Results' % (os.environ['CMSSW_BASE'], os.path.basename(os.getcwd()) if os.getcwd().find('AnalysisCode') > 0 else 'AnalysisCode')]
+                      LaunchOnCondor.Jobs_FinalCmds = ['cp -r Results %s/src/SUSYBSMAnalysis/HSCP/test/%s/%s/' % (os.environ['CMSSW_BASE'], os.path.basename(os.getcwd()) if os.getcwd().find('AnalysisCode') > 0 else 'AnalysisCode', FarmDirectory)]
+                      if(UseRemoteSamples):
                     #LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir.replace('/storage/data/cms/store/', '//store/')]
-                    LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir]
-                 else: LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0']
-                 if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
-                 if vals[2].find("13TeV16") < 0: continue # skip everything that is not 2016 -- namely the 2015 samples
-#                 if(int(vals[1])!=1):continue #Skip everything except for background MC
-                 LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , Type, vals[2].rstrip() ])
+                          LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0', 'export X509_USER_PROXY=$1', 'export XRD_NETWORKSTACK=IPv4', 'export REMOTESTORAGESERVER='+RemoteServer, 'export REMOTESTORAGEPATH='+RemoteStorageDir]
+                      else: LaunchOnCondor.Jobs_InitCmds = ['ulimit -c 0','export X509_USER_PROXY=$1','export XRD_NETWORKSTACK=IPv4']
+                      if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
+#                      if vals[2].find("13TeV16") < 0: continue # skip everything that is not 2016 -- namely the 2015 samples
+#                     if(int(vals[1])!=1):continue #Skip everything except for background MC
+                      LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , Type, vals[2].rstrip() ])
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 
@@ -133,7 +146,7 @@ elif sys.argv[1]=='4o':
               if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
 #              if(vals[2].find("8TeV")<0):continue
               Path = "Results/Type"+str(Type)+"/"
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"OPTIMIZE2016"', '"'+Path+'"', vals[2] ])
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"OPTIMIZE"', '"'+Path+'"', vals[2] ])
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 
@@ -186,7 +199,7 @@ elif sys.argv[1]=='4':
               Path = "Results/Type"+str(Type)+"/"
               #LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMPUTELIMIT2016"' if vals[2].find("13TeV16G") == -1 else '"COMPUTELIMIT2016G"', '"'+Path+'"', vals[2] ]) # compute separately 2016 preG and postG
 
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE_2016"', '"'+Path+'"', vals[2] ]) #combine 2016 preG, postG, and combined 2016 in the same job
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE2016"', '"'+Path+'"', vals[2] ]) #combine 2016 preG, postG, and combined 2016 in the same job
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 

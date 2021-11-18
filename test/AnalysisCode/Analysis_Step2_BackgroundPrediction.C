@@ -74,7 +74,7 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
    double CosmicVetoInEfficiencyErr = CosmicVetoInEfficiency7TeVErr;
    
 
-   string Input     = InputPattern + "Histos.root";
+   string Input     = InputPattern + "Histos_J.root";
    TFile* InputFile = new TFile(Input.c_str(), "UPDATE");
    TypeMode = TypeFromPattern(InputPattern);
 
@@ -377,7 +377,7 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
          TH1D* Pred_EtaS2_Proj    = Pred_EtaS2->ProjectionY("ProjEtaS2",CutIndex+1,CutIndex+1);
 	 // here
 
-         if (CutIndex==4) compareForwardToBackwardWeights (Pred_EtaS_Proj, Pred_EtaB_Proj);
+         if (CutIndex==1) compareForwardToBackwardWeights (Pred_EtaS_Proj, Pred_EtaB_Proj);
          if (symmetrizeHistos) symmetrizeHisto(Pred_EtaB_Proj);
          if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS_Proj);
          if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS2_Proj);

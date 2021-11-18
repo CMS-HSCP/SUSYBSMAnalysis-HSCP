@@ -23,6 +23,11 @@ struct stPlots {
    float        Tree_eta;
    float        Tree_phi;
 
+   float Tree_Ias_2017B;
+   float Tree_Ias_2017C;
+   float Tree_Ias_2017D;
+   float Tree_Ias_2017E;
+   float Tree_Ias_2017F;
 
 
    TH2F*  Mass;
@@ -726,6 +731,12 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
    st.Tree->Branch("eta"     ,&st.Tree_eta       ,"eta/F");
    st.Tree->Branch("phi"     ,&st.Tree_phi       ,"phi/F");
 
+   st.Tree->Branch("Ias_2017B",&st.Tree_Ias_2017B,"Ias_2017B/F");
+   st.Tree->Branch("Ias_2017C",&st.Tree_Ias_2017C,"Ias_2017C/F");
+   st.Tree->Branch("Ias_2017D",&st.Tree_Ias_2017D,"Ias_2017D/F");
+   st.Tree->Branch("Ias_2017E",&st.Tree_Ias_2017E,"Ias_2017E/F");
+   st.Tree->Branch("Ias_2017F",&st.Tree_Ias_2017F,"Ias_2017F/F");
+  
 
    HistoFile->cd();
 }
@@ -975,7 +986,7 @@ void stPlots_Clear(stPlots* st, bool WriteFirst=false)
 }
 
 // add one candidate to the bookeeping tree --> the event must be saved in the tree if you want to find it back with the DumpInfo.C code later on
-void stPlots_FillTree(stPlots* st, unsigned int Run, unsigned int Event, unsigned int Hscp, double Pt, double I, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, int MaxEntry=20000){
+void stPlots_FillTree(stPlots* st, unsigned int Run, unsigned int Event, unsigned int Hscp, double Pt, double I, double TOF, double Mass, double dZ, double dXY, double dR, double eta, double phi, float Ias2017B=0, float Ias2017C=0, float Ias2017D=0, float Ias2017E=0, float Ias2017F=0,int MaxEntry=20000){
    if(MaxEntry>0 && st->Tree->GetEntries()>=MaxEntry)return;
    st->Tree_Run   = Run;
    st->Tree_Event = Event;
@@ -989,6 +1000,11 @@ void stPlots_FillTree(stPlots* st, unsigned int Run, unsigned int Event, unsigne
    st->Tree_dR    = dR;
    st->Tree_eta    = eta;
    st->Tree_phi    = phi;
+   st->Tree_Ias_2017B = Ias2017B;
+   st->Tree_Ias_2017C = Ias2017C;
+   st->Tree_Ias_2017D = Ias2017D;
+   st->Tree_Ias_2017E = Ias2017E;
+   st->Tree_Ias_2017F = Ias2017F;
    st->Tree->Fill();
 }
 

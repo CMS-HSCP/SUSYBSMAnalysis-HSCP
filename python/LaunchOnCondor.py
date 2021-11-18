@@ -350,7 +350,7 @@ def CreateTheCmdFile():
 	else:
  	   cmd_file.write(CopyRights + '\n')
 	cmd_file.close()
-
+#jobflavour : testmatch=3d; workday=8h
 def AddJobToCmdFile():
         global subTool
 	global Path_Shell
