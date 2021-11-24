@@ -292,20 +292,24 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
      if(MTmuon->pt()<minMTMuPt )continue;
 
      //Check if matches muon HSCP candidate and add reference
-     float dRMin=1000; int found = -1;
+     float dRMin=1000;
+    // int found = -1;
      for(unsigned int i=0; i<HSCPCollection.size(); i++) {
        if(!HSCPCollection[i].hasMuonRef()) continue;
        reco::MuonRef muon  = HSCPCollection[i].muonRef();
        float dR = deltaR(muon->momentum(), MTmuon->momentum());
   std::cout << "dR " << dR << std::endl;
-       if(dR <= minMTDR && dR < dRMin){ dRMin=dR; found = i;}
+       if(dR <= minMTDR && dR < dRMin){
+         dRMin=dR;
+        // found = i;
+       }
      }
-     if(found>-1) HSCPCollection[found].setMTMuon(MTmuon);
-     else {
-       HSCParticle candidate;
-       candidate.setMTMuon(MTmuon);
-       HSCPCollection.push_back(candidate);
-     }
+//     if(found>-1) HSCPCollection[found].setMTMuon(MTmuon);
+//     else {
+//       HSCParticle candidate;
+//       candidate.setMTMuon(MTmuon);
+//      HSCPCollection.push_back(candidate);
+//    }
    }
 
 /*
