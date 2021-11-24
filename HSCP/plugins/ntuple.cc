@@ -991,7 +991,7 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       
        if (probQonTrack!=0 && probQonTrack!=1) tree_track_probQ[tree_ntracks]= probQonTrack;
-       if (probQonTrack!=0 && probQonTrack!=1) tree_track_probXY[tree_ntracks]= probXYonTrack;
+       if (probXYonTrack!=0 && probXYonTrack!=1) tree_track_probXY[tree_ntracks]= probXYonTrack;
 
 
        //load dEdx informations
