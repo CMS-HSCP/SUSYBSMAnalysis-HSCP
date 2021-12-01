@@ -206,7 +206,6 @@ HSCParticleProducerFromMiniAOD::endJob() {
 std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(edm::Handle<reco::TrackCollection>& trackCollectionHandle,  edm::Handle<pat::MuonCollection>& muonCollectionHandle, edm::Handle<pat::MuonCollection>& MTmuonCollectionHandle)
 {
    std::vector<HSCParticle> HSCPCollection;
-/*
    // Store a local vector of track ref (that can be modified if matching)
    std::vector<reco::TrackRef> tracks;
    for(unsigned int i=0; i<trackCollectionHandle->size(); i++){
@@ -215,7 +214,8 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
       //If track is from muon always keep it
       bool isMuon=false;
       for(unsigned int m=0; m<muonCollectionHandle->size(); m++){
-	reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, m );
+//	reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, m );
+        edm::Ref<std::vector<pat::Muon>>  muon( muonCollectionHandle, m );
 	TrackRef innertrack = muon->innerTrack();
 	if(innertrack.isNull())continue;
 	if( fabs( (1.0/innertrack->pt())-(1.0/track->pt())) > maxInvPtDiff) continue;
@@ -229,7 +229,8 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
 
    // Loop on muons with inner track ref and create Muon HSCP Candidate
    for(unsigned int m=0; m<muonCollectionHandle->size(); m++){
-      reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, m );
+//      reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, m );
+     edm::Ref<std::vector<pat::Muon>>  muon( muonCollectionHandle, m );
       double SApt=-1;
       if(muon->isStandAloneMuon()) SApt=muon->standAloneMuon()->pt();
       if(muon->p()<minMuP && SApt<minSAMuPt)continue;
@@ -258,7 +259,8 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
 
    // Loop on muons without inner tracks and create Muon HSCP Candidate
    for(unsigned int m=0; m<muonCollectionHandle->size(); m++){
-      reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, m );
+//      reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, m );
+      edm::Ref<std::vector<pat::Muon>>  muon( muonCollectionHandle, m );
       double SApt=-1;
       if(muon->isStandAloneMuon()) SApt=muon->standAloneMuon()->pt();
       if(muon->p()<minMuP && SApt<minSAMuPt)continue;
@@ -284,7 +286,6 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
       HSCPCollection.push_back(candidate);
    }
 
-*/
    //Loop on MT muons and add to collection
    for(unsigned int m=0; m<MTmuonCollectionHandle->size(); m++){
 //     reco::MuonRef MTmuon  = reco::MuonRef( MTmuonCollectionHandle, m );
@@ -296,7 +297,8 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
     // int found = -1;
      for(unsigned int i=0; i<HSCPCollection.size(); i++) {
        if(!HSCPCollection[i].hasMuonRef()) continue;
-       reco::MuonRef muon  = HSCPCollection[i].muonRef();
+//       reco::MuonRef muon  = HSCPCollection[i].muonRef();
+       edm::Ref<std::vector<pat::Muon>> muon  = HSCPCollection[i].patMuonRef();
        float dR = deltaR(muon->momentum(), MTmuon->momentum());
   std::cout << "dR " << dR << std::endl;
        if(dR <= minMTDR && dR < dRMin){
@@ -312,14 +314,12 @@ std::vector<HSCParticle> HSCParticleProducerFromMiniAOD::getHSCPSeedCollection(e
 //    }
    }
 
-/*
    // Loop on tracks not matching muon and create Track HSCP Candidate
    for(unsigned int i=0; i<tracks.size(); i++){
       HSCParticle candidate;
       candidate.setTrack(tracks[i]);
       HSCPCollection.push_back(candidate);
    }
-*/
    return HSCPCollection;
 }
 
