@@ -3,6 +3,6 @@
 *.png
 *.pdf
 *.pyc
-*_init__.py
+*_init__.py*
 build/
 *__*
