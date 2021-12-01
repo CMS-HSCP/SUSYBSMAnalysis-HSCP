@@ -43,32 +43,32 @@ using namespace std;
 /////////////////////////// MAIN FUNCTION /////////////////////////////
 
 int main(int argc, char* argv[]) {
+  string usage = "Usage: LimitComputation --inputFiles <file.txt> [--mode <value>]\n";
 
-    string usage = "Usage: LimitComputation --inputFiles <file.txt> [--mode <value>]\n";
+  vector<string> input;
+  int typeMode = 0;
 
-    vector<string> input;
-    int typeMode = 0;
+  ArgumentParser parser(argc, argv);
 
-    ArgumentParser parser(argc,argv);
+  if (parser.findOption("-h")) {
+    cout << usage << endl;
+    return 0;
+  }
+  if (parser.findOption("--inputFiles"))
+    parser.getArgument("--inputFiles", input);
+  else {
+    cout << usage << endl;
+    return 0;
+  }
+  if (parser.findOption("--mode"))
+    parser.getArgument("--mode", typeMode);
 
-    if( parser.findOption("-h") ){
-        cout << usage << endl;
-        return 0;
-    }
-    if( parser.findOption("--inputFiles") ) parser.getArgument("--inputFiles", input);
-    else {
-        cout << usage << endl;
-        return 0;
-    }
-    if( parser.findOption("--mode") ) parser.getArgument("--mode", typeMode);
+  cout << "==================" << endl;
+  cout << " LimitComputation " << endl;
+  cout << "==================\n" << endl;
 
-
-    cout << "==================" << endl;
-    cout << " LimitComputation " << endl;
-    cout << "==================\n" << endl;
-
-    setTDRStyle();
-    /*gStyle->SetPadTopMargin   (0.05);
+  setTDRStyle();
+  /*gStyle->SetPadTopMargin   (0.05);
     gStyle->SetPadBottomMargin(0.12);
     gStyle->SetPadRightMargin (0.05);
     gStyle->SetPadLeftMargin  (0.14);
@@ -79,38 +79,36 @@ int main(int argc, char* argv[]) {
     gStyle->SetNdivisions(505);
     //gStyle->SetTextFont(43);*/
 
-    TBenchmark clock;
-    clock.Start("LimitComputation");
+  TBenchmark clock;
+  clock.Start("LimitComputation");
 
-    vector<string> inputFiles;
-    if (endsWith(input[0],".txt")){
-        ifstream fin(input[0], std::ios::binary);
-        if (not fin.is_open()) {
-            cout << "Failed to open " << input[0] << endl;
-            return 0;
-        }
-        string rootfile;
-        while (fin >> rootfile)
-            inputFiles.push_back(rootfile);
+  vector<string> inputFiles;
+  if (endsWith(input[0], ".txt")) {
+    ifstream fin(input[0], std::ios::binary);
+    if (not fin.is_open()) {
+      cout << "Failed to open " << input[0] << endl;
+      return 0;
     }
-    else
-        inputFiles = input;
+    string rootfile;
+    while (fin >> rootfile)
+      inputFiles.push_back(rootfile);
+  } else
+    inputFiles = input;
 
-    for(auto const &inputFile : inputFiles){
-    
-        cout << "opening file " << inputFile << endl;
-        //TFile* inFile = TFile::Open(inputFile.c_str(),"UPDATE");
-        TFile* tfile = TFile::Open(inputFile.c_str());
-        if(not tfile){
-            cout << "Failed to open " << inputFile << endl;
-            return 0;
-        }
-        //Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern="", string signal="");//(TFile* InputFile, int TypeMode)
+  for (auto const& inputFile : inputFiles) {
+    cout << "opening file " << inputFile << endl;
+    //TFile* inFile = TFile::Open(inputFile.c_str(),"UPDATE");
+    TFile* tfile = TFile::Open(inputFile.c_str());
+    if (not tfile) {
+      cout << "Failed to open " << inputFile << endl;
+      return 0;
     }
+    //Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern="", string signal="");//(TFile* InputFile, int TypeMode)
+  }
 
-    cout << "" << endl;
-    clock.Show("LimitComputation");
-    cout << "" << endl;
+  cout << "" << endl;
+  clock.Show("LimitComputation");
+  cout << "" << endl;
 
-    return 0;
+  return 0;
 }

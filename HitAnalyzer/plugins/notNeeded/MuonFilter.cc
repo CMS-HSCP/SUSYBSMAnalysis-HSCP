@@ -37,8 +37,7 @@
 // class declaration
 //
 
-class MuonFilter : public edm::stream::EDFilter<>
-{
+class MuonFilter : public edm::stream::EDFilter<> {
 public:
   explicit MuonFilter(const edm::ParameterSet &);
   ~MuonFilter();
@@ -72,17 +71,14 @@ private:
 //
 // constructors and destructor
 //
-MuonFilter::MuonFilter(const edm::ParameterSet &iConfig)
-{
+MuonFilter::MuonFilter(const edm::ParameterSet &iConfig) {
   //now do what ever initialization is needed
 
   GenParticlesToken_ = consumes<std::vector<reco::GenParticle>>(edm::InputTag("genParticles"));
   MuonToken_ = consumes<std::vector<reco::Muon>>(edm::InputTag("muons"));
 }
 
-MuonFilter::~MuonFilter()
-{
-
+MuonFilter::~MuonFilter() {
   // do anything here that needs to be done at destruction time
   // (e.g. close files, deallocate resources etc.)
 }
@@ -92,8 +88,7 @@ MuonFilter::~MuonFilter()
 //
 
 // ------------ method called on each new Event  ------------
-bool MuonFilter::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
-{
+bool MuonFilter::filter(edm::Event &iEvent, const edm::EventSetup &iSetup) {
   using namespace edm;
 
   Handle<std::vector<reco::GenParticle>> genPartCollection;
@@ -107,17 +102,13 @@ bool MuonFilter::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
   auto muons = *muonCollection.product();
 
   // loop over gen particles
-  for (std::vector<reco::GenParticle>::const_iterator g = genParticles.begin(); g != genParticles.end(); ++g)
-  {
-
+  for (std::vector<reco::GenParticle>::const_iterator g = genParticles.begin(); g != genParticles.end(); ++g) {
     if (g->pt() < 3.)
       return false;
 
     // loop over reco muons
 
-    for (std::vector<reco::Muon>::const_iterator m = muons.begin(); m != muons.end(); ++m)
-    {
-
+    for (std::vector<reco::Muon>::const_iterator m = muons.begin(); m != muons.end(); ++m) {
       //if(m->eta() < -2.3 || m->eta() > -2.1) return false;
       //if(m->phi() > -2.74) return false;
 
@@ -127,9 +118,7 @@ bool MuonFilter::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
         return false;
 
       float dR = deltaR(g->phi(), m->phi(), g->eta(), m->eta());
-      if (dR < 0.15)
-      {
-
+      if (dR < 0.15) {
         if (m->innerTrack()->normalizedChi2() > 1.5)
           return false;
         if (m->innerTrack()->numberOfValidHits() < 14)
@@ -144,15 +133,10 @@ bool MuonFilter::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
 }
 
 // ------------ method called once each stream before processing any runs, lumis or events  ------------
-void
-    MuonFilter::beginStream(edm::StreamID)
-{
-}
+void MuonFilter::beginStream(edm::StreamID) {}
 
 // ------------ method called once each stream after processing all runs, lumis and events  ------------
-void MuonFilter::endStream()
-{
-}
+void MuonFilter::endStream() {}
 
 // ------------ method called when starting to processes a run  ------------
 /*
@@ -187,8 +171,7 @@ MuonFilter::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup cons
 */
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
-void MuonFilter::fillDescriptions(edm::ConfigurationDescriptions &descriptions)
-{
+void MuonFilter::fillDescriptions(edm::ConfigurationDescriptions &descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
