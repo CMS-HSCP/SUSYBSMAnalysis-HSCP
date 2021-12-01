@@ -341,6 +341,8 @@ process.analyzer.probQCut = cms.untracked.double(1.0)
 process.analyzer.muonDtSegmentCollection  = cms.InputTag("slimmedMuons")
 process.analyzer.DataTier = cms.string('MiniAOD')
 process.analyzer.offlinePrimaryVerticesCollection = cms.InputTag("offlineSlimmedPrimaryVertices")
+process.analyzer.dedxCollection   = cms.InputTag("isolatedTracks")
+process.analyzer.refittedStandAloneMuonsCollection = cms.InputTag("tracksFromMuons")
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
