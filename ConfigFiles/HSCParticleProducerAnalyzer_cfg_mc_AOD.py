@@ -66,7 +66,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring("file:DYJetsToLL_0J_TuneCP5_13TeV.root"),
+   fileNames = cms.untracked.vstring("file:HSCP_Gluino_Mass1800_AOD_1.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 #if(options.SAMPLE=='isSignal'): process.source.duplicateCheckMode = cms.untracked.string("noDuplicateCheck") 

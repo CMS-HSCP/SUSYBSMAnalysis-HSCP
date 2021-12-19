@@ -66,7 +66,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring("file:/afs/cern.ch/work/t/tvami/public/HSCP/NewFrameWork/2018_SingleMuon_AOD_100.root"),
+   fileNames = cms.untracked.vstring("file:/local-scratch/tvami/Run2018C_SingleMuon_319337_RAW.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 #if(options.SAMPLE=='isSignal'): process.source.duplicateCheckMode = cms.untracked.string("noDuplicateCheck") 
