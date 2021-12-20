@@ -18,22 +18,20 @@ void tdrGrid(bool gridOn) {
 
 // fixOverlay: Redraws the axis
 
-void fixOverlay() {
-  gPad->RedrawAxis();
-}
+void fixOverlay() { gPad->RedrawAxis(); }
 
 void setTDRStyle() {
-//   TStyle *tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
+  //   TStyle *tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
 
-// For the canvas:
+  // For the canvas:
   gStyle->SetCanvasBorderMode(0);
   gStyle->SetCanvasColor(kWhite);
-  gStyle->SetCanvasDefH(600); //Height of canvas
-  gStyle->SetCanvasDefW(600); //Width of canvas
-  gStyle->SetCanvasDefX(0);   //POsition on screen
+  gStyle->SetCanvasDefH(600);  //Height of canvas
+  gStyle->SetCanvasDefW(600);  //Width of canvas
+  gStyle->SetCanvasDefX(0);    //POsition on screen
   gStyle->SetCanvasDefY(0);
 
-// For the Pad:
+  // For the Pad:
   gStyle->SetPadBorderMode(0);
   // gStyle->SetPadBorderSize(Width_t size = 1);
   gStyle->SetPadColor(kWhite);
@@ -43,7 +41,7 @@ void setTDRStyle() {
   gStyle->SetGridStyle(3);
   gStyle->SetGridWidth(1);
 
-// For the frame:
+  // For the frame:
   gStyle->SetFrameBorderMode(0);
   gStyle->SetFrameBorderSize(1);
   gStyle->SetFrameFillColor(0);
@@ -52,7 +50,7 @@ void setTDRStyle() {
   gStyle->SetFrameLineStyle(1);
   gStyle->SetFrameLineWidth(1);
 
-// For the histo:
+  // For the histo:
   // gStyle->SetHistFillColor(1);
   // gStyle->SetHistFillStyle(0);
   gStyle->SetHistLineColor(1);
@@ -64,45 +62,45 @@ void setTDRStyle() {
   gStyle->SetEndErrorSize(2);
   //gStyle->SetErrorMarker(20);
   gStyle->SetErrorX(0.);
-  
+
   gStyle->SetMarkerStyle(20);
 
-//For the fit/function:
+  //For the fit/function:
   gStyle->SetOptFit(1);
   gStyle->SetFitFormat("5.4g");
   gStyle->SetFuncColor(2);
   gStyle->SetFuncStyle(1);
   gStyle->SetFuncWidth(1);
 
-//For the date:
+  //For the date:
   gStyle->SetOptDate(0);
   // gStyle->SetDateX(Float_t x = 0.01);
   // gStyle->SetDateY(Float_t y = 0.01);
 
-// For the statistics box:
+  // For the statistics box:
   gStyle->SetOptFile(0);
   //gStyle->SetOptStat(0);
   gStyle->SetOptStat("mr");
   gStyle->SetStatColor(kWhite);
   gStyle->SetStatFont(43);
-  gStyle->SetStatFontSize(20);///---> gStyle->SetStatFontSize(0.025);
+  gStyle->SetStatFontSize(20);  ///---> gStyle->SetStatFontSize(0.025);
   gStyle->SetStatTextColor(1);
   gStyle->SetStatFormat("6.4g");
   gStyle->SetStatBorderSize(1);
   gStyle->SetStatH(0.1);
-  gStyle->SetStatW(0.2);///---> gStyle->SetStatW(0.15);
+  gStyle->SetStatW(0.2);  ///---> gStyle->SetStatW(0.15);
 
   // gStyle->SetStatStyle(Style_t style = 1001);
   // gStyle->SetStatX(Float_t x = 0);
   // gStyle->SetStatY(Float_t y = 0);
 
-// Margins:
+  // Margins:
   gStyle->SetPadTopMargin(0.05);
   gStyle->SetPadBottomMargin(0.13);
   gStyle->SetPadLeftMargin(0.16);
   gStyle->SetPadRightMargin(0.02);
 
-// For the Global title:
+  // For the Global title:
 
   gStyle->SetOptTitle(0);
   gStyle->SetTitleFont(43);
@@ -117,7 +115,7 @@ void setTDRStyle() {
   // gStyle->SetTitleStyle(Style_t style = 1001);
   // gStyle->SetTitleBorderSize(2);
 
-// For the axis titles:
+  // For the axis titles:
 
   gStyle->SetTitleColor(1, "XYZ");
   gStyle->SetTitleFont(42, "XYZ");
@@ -130,14 +128,14 @@ void setTDRStyle() {
 
   // gStyle->SetTitleOffset(1.1, "Y"); // Another way to set the Offset
 
-// For the axis labels:
+  // For the axis labels:
 
   gStyle->SetLabelColor(1, "XYZ");
   gStyle->SetLabelFont(42, "XYZ");
   gStyle->SetLabelOffset(0.007, "XYZ");
   gStyle->SetLabelSize(0.05, "XYZ");
 
-// For the axis:
+  // For the axis:
 
   gStyle->SetAxisColor(1, "XYZ");
   gStyle->SetStripDecimals(kTRUE);
@@ -146,13 +144,13 @@ void setTDRStyle() {
   gStyle->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
   gStyle->SetPadTickY(1);
 
-// Change for log plots:
+  // Change for log plots:
   gStyle->SetOptLogx(0);
   gStyle->SetOptLogy(0);
   gStyle->SetOptLogz(0);
 
-// Postscript options:
-  gStyle->SetPaperSize(20.,20.);
+  // Postscript options:
+  gStyle->SetPaperSize(20., 20.);
   // gStyle->SetLineScalePS(Float_t scale = 3);
   // gStyle->SetLineStyleString(Int_t i, const char* text);
   // gStyle->SetHeaderPS(const char* header);
@@ -165,8 +163,7 @@ void setTDRStyle() {
   // gStyle->SetTimeOffset(Double_t toffset);
   // gStyle->SetHistMinimumZero(kTRUE);
 
-//   gStyle->cd();
+  //   gStyle->cd();
 
   gROOT->ForceStyle();
-
 }
