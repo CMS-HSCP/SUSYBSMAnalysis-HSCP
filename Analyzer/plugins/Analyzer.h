@@ -103,6 +103,12 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
+#include "RecoLocalTracker/ClusterParameterEstimator/interface/PixelClusterParameterEstimator.h"
+#include "Geometry/Records/interface/TrackerTopologyRcd.h"
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+
 using namespace std;
 
 class TupleMaker;
@@ -160,12 +166,14 @@ public:
   double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
   double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
+  float combineProbs(float probOnTrackWMulti, int numRecHits) const;
 
 private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
   virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
+
 
   // ----------member data ---------------------------
   // HSCP, dEdx and TOF collections
@@ -354,5 +362,8 @@ private:
 
   double preTrackingChangeL1IntLumi_ = 29679.982;  // pb
   double IntegratedLuminosity_ = 33676.4;          //13TeV16
+
+  const std::string pixelCPE_;
+  const double trackProbQCut_;
 };
 #endif

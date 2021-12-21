@@ -7,6 +7,9 @@
 <use name="AnalysisDataFormats/SUSYBSMObjects"/>
 <use name="DataFormats/MuonReco"/>
 <use name="DataFormats/Math"/>
+<use name="Geometry/TrackerGeometryBuilder"/>
+<use name="RecoTracker/Record"/>
+<use name="RecoTracker/TrackProducer"/>
 <!--use name="CommonTools/Utils"/-->
 <!--use name="RecoTracker/DeDx"/-->
 <!--<flags EDM_PLUGIN="1"/>-->

@@ -41,13 +41,11 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo"))),
       genParticleToken_(
-          consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection")))
+          consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection"))),
       // HLT triggers
-      ,
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
-      trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu"))
-      // =========Analysis parameters================
-      ,
+      trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
+      // =========Analysis parameters===============
       TypeMode_(iConfig.getUntrackedParameter<unsigned int>("TypeMode")),
       SampleType_(iConfig.getUntrackedParameter<unsigned int>("SampleType")),
       SampleName_(iConfig.getUntrackedParameter<string>("SampleName")),
@@ -66,12 +64,11 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       GlobalMinPt(iConfig.getUntrackedParameter<double>("GlobalMinPt")),
       GlobalMinTOF(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       skipPixel(iConfig.getUntrackedParameter<bool>("skipPixel")),
-      useTemplateLayer(iConfig.getUntrackedParameter<bool>("useTemplateLayer"))
+      useTemplateLayer(iConfig.getUntrackedParameter<bool>("useTemplateLayer")),
       //,DeDxSF_0(iConfig.getUntrackedParameter<double>("DeDxSF_0"))
       //,DeDxSF_1(iConfig.getUntrackedParameter<double>("DeDxSF_1"))
       //,DeDxK(iConfig.getUntrackedParameter<double>("DeDxK"))
       //,DeDxC(iConfig.getUntrackedParameter<double>("DeDxC"))
-      ,
       DeDxTemplate(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
       enableDeDxCalibration(iConfig.getUntrackedParameter<bool>("enableDeDxCalibration")),
       DeDxCalibration(iConfig.getUntrackedParameter<string>("DeDxCalibration")),
@@ -79,7 +76,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       TimeOffset(iConfig.getUntrackedParameter<string>("TimeOffset")),
       FMIPX(iConfig.getUntrackedParameter<double>("FMIPX")),
       STree(iConfig.getUntrackedParameter<unsigned int>("saveTree")),
-      SGTree(iConfig.getUntrackedParameter<unsigned int>("saveGenTree")) {
+      SGTree(iConfig.getUntrackedParameter<unsigned int>("saveGenTree")),
+      pixelCPE_(iConfig.getParameter<std::string>("pixelCPE")),
+      trackProbQCut_(iConfig.getUntrackedParameter<double>("trackProbQCut")) 
+ {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
   // WARNING: recall that this has a huge impact on the analysis time AND on the output file size --> be carefull with your choice
@@ -435,6 +435,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
   }
 
+  // Retrieve tracker topology from geometry
+  edm::ESHandle<TrackerTopology> TopoHandle;
+  iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
+  const TrackerTopology* tTopo = TopoHandle.product();
+
+  edm::ESHandle<TrackerGeometry> tkGeometry;
+  iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
+
+  // Retrieve CPE from the event setup
+  edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
+  iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
+
   //reinitialize the bookeeping array for each event
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk[CutIndex] = false;
@@ -648,6 +660,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_isStrip;
     std::vector<bool> clust_isPixel;
 
+    float probQonTrack = 0.0;
+    float probXYonTrack = 0.0;
+    float probQonTrackNoLayer1 = 0.0;
+    float probXYonTrackNoLayer1 = 0.0;
+    int numRecHits = 0;
+    int numRecHitsNoLayer1 = 0;
+    float probQonTrackWMulti = 1;
+    float probXYonTrackWMulti = 1;
+    float probQonTrackWMultiNoLayer1 = 1;
+    float probXYonTrackWMultiNoLayer1 = 1;
+
     //for signal only, make sure that the candidate is associated to a true HSCP
     int ClosestGen;
     if (isSignal && DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) > 0.03)
@@ -681,11 +704,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
 
-    if (!dedxHits)
-      continue;  // skip tracks without hits otherwise there will be a crash
+    // skip tracks without hits otherwise there will be a crash
+    if (!dedxHits) continue;
 
     int nofClust_dEdxLowerThan = 0;
     float factorChargeToE = 3.61 * pow(10, -6) * 247;
+
+    // Loop through the rechits on the given track
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
@@ -693,25 +718,74 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       clust_isPixel.push_back(dedxHits->detId(i) >= 3 ? false : true);
       clust_detid.push_back(dedxHits->detId(i));
       DetId detid(dedxHits->detId(i));
-      if (detid.subdetId() < 3)
-        continue;
-      const SiStripCluster* cluster = dedxHits->stripCluster(i);
-      std::vector<int> ampl = convert(cluster->amplitudes());
-      bool sat254 = false, sat255 = false;
-      for (unsigned int s = 0; s < ampl.size(); s++) {
-        if (ampl[s] >= 254)
-          sat254 = true;
-        if (ampl[s] == 255)
-          sat255 = true;
-      }
-      ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
-      clust_ClusterCleaning.push_back(clusterCleaning(dedxHits->stripCluster(i), 1));
-      clust_nstrip.push_back(ampl.size());
-      clust_sat254.push_back(sat254);
-      clust_sat255.push_back(sat255);
-      if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < FMIPX)
-        nofClust_dEdxLowerThan++;
-    }
+      if (detid.subdetId() < 3) {
+        // Calculate probQ and probXY for this pixel rechit
+        // Taking the pixel cluster
+        auto const* pixelCluster =  dedxHits->pixelCluster(i);
+        if (pixelCluster == nullptr) continue;
+        // Check on which geometry unit the hit is
+        const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+        // Get the local vector for the track direction
+        LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
+        // Re-run the CPE on this cluster with the lv above
+        auto reCPE = std::get<2>(pixelCPE->getParameters(
+              *pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, track->charge())));
+        // extract probQ and probXY from this 
+        float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+        float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+        if (probQ > 0) {
+          numRecHits++;
+          // Calculate alpha term needed for the combination
+          probQonTrackWMulti *= probQ;
+          probXYonTrackWMulti *= probXY;
+        }
+        // Have a separate variable that excludes Layer 1
+        // Layer 1 was very noisy in 2017/2018
+
+        if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel &&
+          tTopo->pxbLayer(detid) != 1)) {
+          float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+          float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+          if (probQNoLayer1 > 0.f) {  // only save the non-zero rechits
+            numRecHitsNoLayer1++;
+            // Calculate alpha term needed for the combination
+            probQonTrackWMultiNoLayer1 *= probQNoLayer1;
+            probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
+          }
+        }
+      } else if (detid.subdetId() >= 3) {
+        // Taking the strips cluster
+        auto const* stripsCluster = dedxHits->stripCluster(i);
+        if (stripsCluster== nullptr) continue;
+        std::vector<int> ampl = convert(stripsCluster->amplitudes());
+        bool sat254 = false, sat255 = false;
+        for (unsigned int s = 0; s < ampl.size(); s++) {
+          if (ampl[s] >= 254)
+            sat254 = true;
+          if (ampl[s] == 255)
+            sat255 = true;
+        }
+        ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
+        clust_ClusterCleaning.push_back(clusterCleaning(dedxHits->stripCluster(i), 1));
+        clust_nstrip.push_back(ampl.size());
+        clust_sat254.push_back(sat254);
+        clust_sat255.push_back(sat255);
+        if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < FMIPX)
+          nofClust_dEdxLowerThan++;
+      } 
+    } // end loop on rechits on the given track
+
+    // Combine probQ-s into HSCP candidate (track) level quantity
+    probQonTrack = combineProbs(probQonTrackWMulti, numRecHits);
+    probXYonTrack = combineProbs(probXYonTrackWMulti, numRecHits);
+    probQonTrackNoLayer1 = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+    probXYonTrackNoLayer1 = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+    if (probQonTrack > trackProbQCut_) continue;
+if(probQonTrack!=0) {
+    cout << "------------------------------" << endl;
+    cout << "probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack << endl;
+    cout << "probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1 << endl;
+}
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
     HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
@@ -975,7 +1049,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // compute systematic due to momentum scale
       //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){..}
       if (passPreselection(
-              hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, PRescale, 0, 0, 0)) {  //WAIT//
+              hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, PRescale, 0, 0, 0)) {
         double RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
 
         if (TypeMode_ == 5 && isSemiCosmicSB)
@@ -1019,7 +1093,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->MassComb_SystP->Fill(CutIndex, MassComb, EventWeight_);
           }
         }
-      }
+      } // end condition on the preselection
 
       // compute systematic due to dEdx (both Ias and Ih)
       //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0))
@@ -1606,11 +1680,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->MaxEventMass_SystHDown->Fill(CutIndex, MaxMass_SystHDown[CutIndex], EventWeight_);
     }
   }
-
-#ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-  ESHandle<SetupData> pSetup;
-  iSetup.get<SetupRecord>().get(pSetup);
-#endif
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -2639,3 +2708,28 @@ void Analyzer::isPixelTrack(const edm::Ref<std::vector<Trajectory>>& refTraj, bo
       break;
   }
 }
+
+//=============================================================
+//
+//     Combine individual probs into a track level one
+//
+//=============================================================
+float Analyzer::combineProbs(float probOnTrackWMulti, int numRecHits) const {
+  float logprobOnTrackWMulti = probOnTrackWMulti > 0 ? log(probOnTrackWMulti) : 0;
+  float factQ = -logprobOnTrackWMulti;
+  float probOnTrackTerm = 0.f;
+
+  if (numRecHits == 1) {
+    probOnTrackTerm = 1.f;
+  } else if (numRecHits > 1) {
+    probOnTrackTerm = 1.f + factQ;
+    for (int iTkRh = 2; iTkRh < numRecHits; ++iTkRh) {
+      factQ *= -logprobOnTrackWMulti / float(iTkRh);
+      probOnTrackTerm += factQ;
+    }
+  }
+  float probOnTrack = probOnTrackWMulti * probOnTrackTerm;
+
+  return probOnTrack;
+}
+
