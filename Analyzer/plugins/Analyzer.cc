@@ -796,14 +796,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     probXYonTrack = combineProbs(probXYonTrackWMulti, numRecHits);
     probQonTrackNoLayer1 = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
     probXYonTrackNoLayer1 = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
-    if (probQonTrack > trackProbQCut_) {
+
+    // Cut away background events based on the probQ
+    if (probQonTrack > trackProbQCut_ || probQonTrackNoLayer1 > trackProbQCut_) {
       if (debugLevel_ > 3) LogPrint(MOD) << "probQonTrack > trackProbQCut_, skipping it";
       continue;
     }
-if(probQonTrack!=0) {
-    cout << "  >> probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack << endl;
-    cout << "  >> probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1 << endl;
-}
+
+    // Cleaning of tracks that had failed the template CPE (prob = 0.0 and prob = 1.0 cases)
+    if (probQonTrack == 0.0 || probQonTrackNoLayer1 == 0.0 || probQonTrack == 1.0 || probQonTrackNoLayer1 == 1.0) {
+      continue;
+    }
+
+    if (probXYonTrack < 0.01 || probXYonTrack > 0.99) {
+      if (debugLevel_ > 3) LogPrint(MOD) << "probXYonTrack < 0.01 or probXYonTrack > 0.99, skipping it";
+      continue;
+    }
+    if(probQonTrack!=0) {
+       cout << "  >> probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack << endl;
+       cout << "  >> probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1 << endl;
+    }
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
     HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
