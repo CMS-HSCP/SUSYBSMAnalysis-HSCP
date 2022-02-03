@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v1
+// v2
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2122,9 +2122,9 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     tuple->BS_Qual->Fill(track->qualityMask(), Event_Weight);
   }
 
-  if (TypeMode_ != 3 && track->qualityMask() < GlobalMinQual)
-    return false;  // FIXME Tracks with quality > 2 are bad also!
-  //   if(TypeMode_!=3 && track->qualityMask() != FixedQual)return false; // FIXME if this is true, no tracks pass eventually ... so what now?
+  // Select only high purity tracks 
+  if (TypeMode_ != 3 && !track->quality(reco::TrackBase::highPurity))
+    return false;
   if (tuple) {
     tuple->Qual->Fill(0.0, Event_Weight);
     tuple->BS_Chi2->Fill(track->chi2() / track->ndof(), Event_Weight);
