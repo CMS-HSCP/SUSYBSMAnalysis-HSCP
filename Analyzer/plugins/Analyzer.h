@@ -268,7 +268,7 @@ private:
 
   // Thresholds for candidate preselection
   double GlobalMaxEta = 2.1;      // cut on inner tracker track eta
-  double GlobalMaxV3D = 99999;    //0.50;   // cut on 3D distance (cm) to closest vertex
+  double GlobalMaxV3D = 0.5;    //0.50;   // cut on 3D distance (cm) to closest vertex
   double GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
   double GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction
   double GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF

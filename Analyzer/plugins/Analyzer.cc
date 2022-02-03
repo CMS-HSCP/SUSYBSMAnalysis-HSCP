@@ -9,7 +9,8 @@
 // Original Author:  Emery Nibigira
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
-//
+// Modifications by Tamas Almos Vami
+// v1
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2265,6 +2266,9 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   }
 
   if (TypeMode_ != 3 && Ih_Iso_cut) {
+    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+    cout << "Ih_Iso_cut was true here" << endl;
+    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
 
     susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());

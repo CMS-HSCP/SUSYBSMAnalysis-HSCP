@@ -14,7 +14,8 @@
 // Original Author:  Collard Caroline
 //         Created:  Mon, 14 Jan 2019 15:48:08 GMT
 //
-//
+// Modifications: Tamas Almos Vami (tav)
+// v1
 
 
 // system include files
@@ -392,8 +393,8 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    m_muontimecb = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTOF"));
    m_muontimedt = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTDT"));
    m_muontimecsc = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTCSC"));
-   triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("RECO")));
-//   triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("HLT")));
+//   triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("RECO")));
+   triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("HLT")));
    m_lumiScalerTag = consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("lumiScalerTag"));
    m_doRecomputeMuTim  = iConfig.getParameter<bool>("doRecomputeMuTim");
    m_cscSegments = consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("cscSegments"));
