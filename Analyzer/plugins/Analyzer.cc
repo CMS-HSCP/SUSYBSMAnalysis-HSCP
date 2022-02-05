@@ -813,9 +813,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (debugLevel_ > 3) LogPrint(MOD) << "probXYonTrack < 0.01 or probXYonTrack > 0.99, skipping it";
       continue;
     }
-    if(probQonTrack!=0) {
-       cout << "  >> probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack << endl;
-       cout << "  >> probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1 << endl;
+    if(probQonTrack!=0 && debugLevel_> 0) {
+       LogPrint(MOD) << "  >> probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack;
+       LogPrint(MOD) << "  >> probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1;
     }
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
@@ -1285,7 +1285,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           false,
                           0,
                           0,
-                          MassErr)); 
+                          MassErr,
+                          true)); 
 
     passPre_noIh_noIso = (passPreselection(hscp,
                           dedxHits,
@@ -2266,9 +2267,6 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   }
 
   if (TypeMode_ != 3 && Ih_Iso_cut) {
-    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-    cout << "Ih_Iso_cut was true here" << endl;
-    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
 
     susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());

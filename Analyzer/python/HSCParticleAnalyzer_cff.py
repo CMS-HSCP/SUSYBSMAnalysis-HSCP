@@ -68,5 +68,5 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,TimeOffset            = cms.untracked.string("{}/MuonTimeOffset.txt".format(PATH_TO_DATA))
     ,pixelCPE              = cms.string("PixelCPEClusterRepair")
     ,trackProbQCut         = cms.untracked.double(1.0)
-    ,debugLevel            = cms.untracked.uint32(1)
+    ,debugLevel            = cms.untracked.uint32(0)
 )
