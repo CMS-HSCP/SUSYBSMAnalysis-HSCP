@@ -66,4 +66,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,DeDxTemplate          = cms.untracked.string("{}/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root".format(PATH_TO_DATA))
     ,Geometry              = cms.untracked.string("{}/CMS_GeomTree.root".format(PATH_TO_DATA))
     ,TimeOffset            = cms.untracked.string("{}/MuonTimeOffset.txt".format(PATH_TO_DATA))
+    ,pixelCPE              = cms.string("PixelCPEClusterRepair")
+    ,trackProbQCut         = cms.untracked.double(1.0)
+    ,debugLevel            = cms.untracked.uint32(0)
 )
