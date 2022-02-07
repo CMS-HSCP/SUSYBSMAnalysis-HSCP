@@ -794,8 +794,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->H_D_DzSidebands = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, DzRegions, 0, DzRegions);
   tuple->H_D_DzSidebands->Sumw2();
 
-  //Background prediction histograms don't need to be made for signal or individual MC samples
-  if (!isSignal) {
+  // Background prediction histograms don't need to be made for signal or individual MC samples
+  // if (!isSignal) {
+  // Although not needed let's still do it for every input
+  if (true) {
     Name = "H_A";
     tuple->H_A = dir.make<TH1D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
     tuple->H_A->Sumw2();
@@ -1478,6 +1480,9 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
                                               std::vector<double> CutI_Flip,
                                               std::vector<double> CutTOF_Flip) {
   using namespace std;
+  using namespace edm;
+
+
   reco::TrackRef track;
   if (TypeMode != 3)
     track = hscp.trackRef();
@@ -1491,11 +1496,13 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   double MuonTOF = tof ? tof->inverseBeta() : GlobalMinTOF;
 
   double Is = 0;
-  if (dedxSObj)
+  if (dedxSObj) {
     Is = dedxSObj->dEdx();
+  }
   double Ih = 0;
-  if (dedxMObj)
+  if (dedxMObj) {
     Ih = dedxMObj->dEdx();
+  }
 
   if (!isCosmicSB) {
     tuple->Hist_Pt->Fill(track->pt(), Event_Weight);
@@ -1503,7 +1510,8 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     tuple->Hist_TOF->Fill(MuonTOF, Event_Weight);
   }
 
-  //          /\ Ias
+  // std::cout << "After PT, Is and TOF plots are filled" << std::endl;
+  //          /\ Is
   //       /\  |----------------------------
   //        |  |   |           |             |
   //        |  |   |           |             |
@@ -1543,6 +1551,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       bin = muonStations(track->hitPattern()) + 1;
   }
 
+  // std::cout << "Fill out the control plots" << std::endl;
   if (!isCosmicSB) {
     if (track->pt() > PtLimits[0]) {
       tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
@@ -1608,6 +1617,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (dedxMObj)
     Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(double I, bool MC, double dEdxK, double dEdxC)
 
+  // std::cout << "Loop on the cut index for signal region" << std::endl;
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {
     if (MuonTOF < GlobalMinTOF)
       continue;
