@@ -10,7 +10,7 @@
 void loadDeDxParameters(
     int CurrentRun, int SampleType, double& dEdxSF_0, double& dEdxSF_1, double& dEdxK, double& dEdxC) {
   bool isData = (SampleType == 0);
-  bool isMC = (SampleType == 1);
+  bool isMC = (SampleType > 0);
 
   if (isData) {  //fix if you want to use 2015
     //preG

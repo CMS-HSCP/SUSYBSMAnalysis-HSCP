@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v2
+// v3: Changes so we can run the full code on signal MC as well
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -622,14 +622,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debugLevel_> 0) LogPrint(MOD) << "  --------------------------------------------";
     reco::MuonRef muon = hscp.muonRef();
 
-    //For TOF only analysis use updated stand alone muon track.
-    //Otherwise use inner tracker track
+    // For TOF only analysis use updated stand alone muon track.
+    // Otherwise use inner tracker track
     reco::TrackRef track;
     if (TypeMode_ != 3) {
       track = hscp.trackRef();
     } else {
       if (muon.isNull()) {
-      if (debugLevel_> 0) LogPrint(MOD) << "  >> TOF only mode but there is no muon, skipping it";
+        if (debugLevel_> 0) LogPrint(MOD) << "  >> TOF only mode but there is no muon, skipping it";
         continue;
       }
       track = muon->standAloneMuon();
@@ -708,7 +708,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         dttof = &tofCalculator.dtTOF;
         csctof = &tofCalculator.cscTOF;
       }
-    }
+    } // end conditions for TOF including analysis variables
 
     // skip tracks without hits otherwise there will be a crash
     if (!dedxHits) {
@@ -1049,6 +1049,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           iEvent.get(hscpToken_),
           hscp);  //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
+    // ------------------------------------------------------------------------------------
     //compute systematic uncertainties on signal
     if (isSignal) {
       //FIXME to be measured on 2015 data, currently assume 2012
@@ -1076,14 +1077,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       // compute systematic due to momentum scale
       //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){..}
-        if (debugLevel_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
         if (passPreselection(
               hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, PRescale, 0, 0, 0)) {
         double RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
 
         if (TypeMode_ == 5 && isSemiCosmicSB)
           continue;
-        if (debugLevel_ > 2) LogPrint(MOD) << "      >> Get the mass of this HSCP";
         double Mass = -1;
         if (dedxMObj)
           Mass = GetMass(track->p() * RescalingFactor, dedxMObj->dEdx(), DeDxK, DeDxC);
@@ -1122,8 +1121,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             }
             tuple->MassComb_SystP->Fill(CutIndex, MassComb, EventWeight_);
           }
-        }
-      } // end condition on the preselection
+        } // end loop on cut index
+      } // end compute systematic due to momentum scale 
 
       // compute systematic due to dEdx (both Ias and Ih)
       //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0))
@@ -1156,7 +1155,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->MassComb_SystI->Fill(CutIndex, MassComb, EventWeight_);
           }
         }
-      }
+      } // End compute systematic due to dEdx 
 
       // compute systematic due to Mass shift ??????????
       if (passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, 0, 0)) {
@@ -1187,7 +1186,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->MassComb_SystM->Fill(CutIndex, MassComb, EventWeight_);
           }
         }
-      }
+      } // End compute systematic due to Mass shift
 
       // compute systematic due to TOF
       if (passPreselection(
@@ -1220,7 +1219,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->MassComb_SystT->Fill(CutIndex, MassComb, EventWeight_);
           }
         }
-      }
+      } // End condition for compute systematic due to TOF
 
       // compute systematics due to PU
       if (passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, 0, 0)) {
@@ -1251,10 +1250,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->MassComb_SystPU->Fill(CutIndex, MassComb, EventWeight_ * PUSystFactor_[0]);
           }
         }
-      }
+      }  // End compute systematics due to PU
 
     }  //End of systematic computation for signal
 
+
+    std::cout << "DeDxK: " << DeDxK << " DeDxC: " << DeDxC << std::endl;
     //check if the canddiate pass the preselection cuts
     /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
     double MassErr = GetMassErr(track->p(),
@@ -1273,6 +1274,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // tav: what is happening here? it return a bool and then what?
       passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, -1, false, 0, 0, MassErr);
     }
+
+    if (debugLevel_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
     passPre = (passPreselection(hscp,
                           dedxHits,
                           dedxSObj,
@@ -1310,7 +1313,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
-    if (passPre && !isSignal)
+    if (debugLevel_ > 2) LogPrint(MOD) << "      >> Fill control and prediction Histos";
+    if (passPre) // Tav
       tuple_maker->fillControlAndPredictionHist(hscp,
                                                 dedxSObj,
                                                 dedxMObj,
@@ -1410,6 +1414,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool PassNonTrivialSelection = false;
 
     if (passPre) {
+      if (debugLevel_ > 3 ) LogPrint(MOD) << "      >> We passed pre-selection";
       //==========================================================
       // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
       for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
@@ -1417,6 +1422,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         //if(isBckg)passSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, MCTrPlots);
         if (isBckg)
           passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, false, 0, 0);
+        // tav: this is happening again, should this passSelection be a void? 
         if (!passSelection(hscp,
                            dedxSObj,
                            dedxMObj,
@@ -1429,9 +1435,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                            isSignal ? genColl[ClosestGen].p() / genColl[ClosestGen].energy() : -1,
                            false,
                            0,
-                           0))
+                           0)) {
+          if (debugLevel_ > 3 ) LogPrint(MOD) << "Selection failed, skipping the track";
           continue;
-
+        }
         if (CutIndex != 0)
           PassNonTrivialSelection = true;
         HSCPTk[CutIndex] = true;
@@ -1980,23 +1987,50 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
                                 const double& RescaleT,
                                 double MassErr,
                                 bool Ih_Iso_cut) {
+  static constexpr const char* const MOD = "Analyzer";
+  using namespace edm;
+
+  // Tracker only analysis must have either a tracker muon or a global muon
   if (TypeMode_ == 1 &&
-      !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon))
+      !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Tracker only analysis  w/o a tracker muon or a global muon";
     return false;
-  if ((TypeMode_ == 2 || TypeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon)
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for having a tracker muon or a global muon";
+  }
+
+  // Tracker + Muon analysis  must have either a global muon
+  if ((TypeMode_ == 2 || TypeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for having a global muon ";
+  }
+
+  // Define track reference and the muon reference
   reco::TrackRef track;
   reco::MuonRef muon = hscp.muonRef();
 
+  // Assign track value, in case of TOF only track must come from the muons
+  // otherwise take the track from the HSCP candidate track 
   if (TypeMode_ != 3)
     track = hscp.trackRef();
   else {
-    if (muon.isNull())
+    if (muon.isNull()) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: TOF only track w/o a muon";
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for having a muon track";
+    }
     track = muon->standAloneMuon();
   }
-  if (track.isNull())
+
+  // Check if the track collection exists
+  if (track.isNull()) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: track collection is null";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for an existing track collecion";
+  }
 
   if (tuple) {
     tuple->Total->Fill(0.0, Event_Weight);
@@ -2005,10 +2039,15 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     tuple->BS_Eta->Fill(track->eta(), Event_Weight);
   }
 
-  if (fabs(track->eta()) > GlobalMaxEta)
+  // Check if eta is inside the max eta cut
+  if (fabs(track->eta()) > GlobalMaxEta) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: eta is outside the max eta cut";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for eta cut";
+  }
 
-  //Cut on number of matched muon stations
+  // Cut on number of matched muon stations
   int count = muonStations(track->hitPattern());
   if (tuple) {
     tuple->BS_MatchedStations->Fill(count, Event_Weight);
@@ -2021,13 +2060,16 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   //===================== Handle For vertex ================
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
   if (vertexColl.size() < 1) {
-    edm::LogError("Analyzer") << "NO VERTEX";
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: there is no vertex";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for vertex cut";
   }
 
   int highestPtGoodVertex = -1;
   int goodVerts = 0;
   double dzMin = 10000;
+  // Loop on the vertices in the event
   for (unsigned int i = 0; i < vertexColl.size(); i++) {
     if (vertexColl[i].isFake() || fabs(vertexColl[i].z()) > 24 || vertexColl[i].position().rho() > 2 ||
         vertexColl[i].ndof() <= 4)
@@ -2042,7 +2084,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
       dzMin = fabs(track->dz(vertexColl[i].position()));
       highestPtGoodVertex = i;
     }
-  }
+  } // End loop on the vertices in the event
   if (highestPtGoodVertex < 0)
     highestPtGoodVertex = 0;
 
@@ -2050,6 +2092,8 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     tuple->BS_NVertex->Fill(vertexColl.size(), Event_Weight);
     tuple->BS_NVertex_NoEventWeight->Fill(vertexColl.size());
   }
+
+  // Impact paramters dz and dxy
   double dz = track->dz(vertexColl[highestPtGoodVertex].position());
   double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
 
@@ -2066,18 +2110,31 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     tuple->BS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight);
   }
 
-  if (TypeMode_ != 3 && track->found() < GlobalMinNOH)
+  // Check the number of found hits
+  if (TypeMode_ != 3 && track->found() < GlobalMinNOH) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of hits too low";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of hits cut";
+  }
 
-  if (TypeMode_ != 3 && track->hitPattern().numberOfValidPixelHits() < GlobalMinNOPH)
+  // Check the number of pixel hits
+  if (TypeMode_ != 3 && track->hitPattern().numberOfValidPixelHits() < GlobalMinNOPH) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of pixel hits too low";
     return false;
-  if (TypeMode_ != 3 && track->validFraction() < GlobalMinFOVH)
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of pixel hits cut ";
+  }
+  if (TypeMode_ != 3 && track->validFraction() < GlobalMinFOVH) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Valid hit fraction is too low";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for valid hit fraction";
+  }
 
   unsigned int missingHitsTillLast =
       track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
       track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
-  ;
   double validFractionTillLast =
       track->found() <= 0 ? -1 : track->found() / float(track->found() + missingHitsTillLast);
 
@@ -2086,10 +2143,18 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     tuple->BS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
   }
 
-  if (TypeMode_ != 3 && missingHitsTillLast > GlobalMaxNOMHTillLast)
+  if (TypeMode_ != 3 && missingHitsTillLast > GlobalMaxNOMHTillLast) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of missing hits is too high";
     return false;
-  if (TypeMode_ != 3 && validFractionTillLast < GlobalMinFOVHTillLast)
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of missing hits cut";
+  }
+  if (TypeMode_ != 3 && validFractionTillLast < GlobalMinFOVHTillLast) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Valid hit fraction w/ missing hits is too low";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for valid hit fraction w/ missing hits cut";
+  }
 
   if (tuple) {
     tuple->TNOH->Fill(0.0, Event_Weight);
@@ -2103,9 +2168,14 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
         tuple->BS_TNOM_PUB->Fill(dedxSObj->numberOfMeasurements(), Event_Weight);
     }
   }
-  if (dedxSObj)
-    if (dedxSObj->numberOfMeasurements() < GlobalMinNOM)
+  if (dedxSObj) {
+    if (dedxSObj->numberOfMeasurements() < GlobalMinNOM) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of dEdx hits is too low";
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of dEdx hits cut";
+    }
+  }
   if (tuple) {
     tuple->TNOM->Fill(0.0, Event_Weight);
   }
@@ -2124,14 +2194,20 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   }
 
   // Select only high purity tracks 
-  if (TypeMode_ != 3 && !track->quality(reco::TrackBase::highPurity))
+  if (TypeMode_ != 3 && !track->quality(reco::TrackBase::highPurity)) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Not a high purity track";
     return false;
+  }
   if (tuple) {
     tuple->Qual->Fill(0.0, Event_Weight);
     tuple->BS_Chi2->Fill(track->chi2() / track->ndof(), Event_Weight);
   }
-  if (TypeMode_ != 3 && track->chi2() / track->ndof() > GlobalMaxChi2)
+  if (TypeMode_ != 3 && track->chi2() / track->ndof() > GlobalMaxChi2) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Chi2 / ndof is too high";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for chi2 / ndof cut";
+  }
   if (tuple) {
     tuple->Chi2->Fill(0.0, Event_Weight);
   }
@@ -2159,12 +2235,20 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   }
 
   if (dedxSObj) {
-    if (dedxSObj->dEdx() + RescaleI < GlobalMinIs)
+    if (dedxSObj->dEdx() + RescaleI < GlobalMinIs) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Rescaled Ih is too low for fractionally charged"; 
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for rescaled Ih cut";
+    }
   }
   if (dedxMObj) {
-    if ((TypeMode_ != 5 && dedxMObj->dEdx() < GlobalMinIm) || (TypeMode_ == 5 && dedxMObj->dEdx() > GlobalMinIm))
+    if ((TypeMode_ != 5 && dedxMObj->dEdx() < GlobalMinIm) || (TypeMode_ == 5 && dedxMObj->dEdx() > GlobalMinIm)) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Ih is too low OR Ih is too high for fractionally charged";
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for Ih cut ";
+    }
   }
   if (tuple) {
     tuple->MI->Fill(0.0, Event_Weight);
@@ -2231,7 +2315,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     dxy = NVTrack.dxy(beamSpotColl.position());
     if (muonStations(NVTrack.hitPattern()) < minMuStations)
       return false;
-  }
+  } // End condition for TOF only analysis
 
   if (tuple) {
     tuple->MTOF->Fill(0.0, Event_Weight);
@@ -2244,8 +2328,12 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   if (tuple) {
     tuple->BS_V3D->Fill(v3d, Event_Weight);
   }
-  if (v3d > GlobalMaxV3D)
+  if (v3d > GlobalMaxV3D) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: 3D distance from vertex is too high";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for 3D distance cut";
+  }
   if (tuple) {
     tuple->V3D->Fill(0.0, Event_Weight);
   }
@@ -2255,12 +2343,21 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
 
   TreeDXY = dxy;
   bool DXYSB = false;
-  if (TypeMode_ != 5 && fabs(dxy) > GlobalMaxDXY)
+  if (TypeMode_ != 5 && fabs(dxy) > GlobalMaxDXY) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dxy is too high";
     return false;
-  if (TypeMode_ == 5 && fabs(dxy) > 4)
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dxy cut";
+  }
+  if (TypeMode_ == 5 && fabs(dxy) > 4) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dxy is too high";
     return false;
-  if (TypeMode_ == 5 && fabs(dxy) > GlobalMaxDXY)
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dxy cut";
+  }
+  if (TypeMode_ == 5 && fabs(dxy) > GlobalMaxDXY) {
     DXYSB = true;
+  }
 
   if (tuple) {
     tuple->Dxy->Fill(0.0, Event_Weight);
@@ -2274,8 +2371,12 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
       tuple->BS_TIsol->Fill(hscpIso.Get_TK_SumEt(), Event_Weight);
     }
     //     if(TypeMode_!=4){       if(hscpIso.Get_TK_SumEt()>GlobalMaxTIsol)return false;     }
-    if (hscpIso.Get_TK_SumEt() > GlobalMaxTIsol)
+    if (hscpIso.Get_TK_SumEt() > GlobalMaxTIsol) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Tracker based isolation is too high"; 
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for tracker based isolation cut";
+    }
     if (tuple) {
       tuple->TIsol->Fill(0.0, Event_Weight);
     }
@@ -2285,8 +2386,12 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
       tuple->BS_EIsol->Fill(EoP, Event_Weight);
     }
     //     if(TypeMode_!=4){       if(EoP>GlobalMaxEIsol)return false;     }
-    if (EoP > GlobalMaxEIsol)
+    if (EoP > GlobalMaxEIsol) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Calo based isolation is too high"; 
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for calo based isolation cut";
+    }
     if (tuple) {
       tuple->EIsol->Fill(0.0, Event_Weight);
     }
@@ -2296,8 +2401,12 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
       tuple->BS_SumpTOverpT->Fill(hscpIso.Get_TK_SumEt() / track->pt(), Event_Weight);
     }
     //     if(TypeMode_==4) { if(hscpIso.Get_TK_SumEt()/track->pt()>GlobalMaxRelTIsol)return false;   }
-    if (hscpIso.Get_TK_SumEt() / track->pt() > GlobalMaxRelTIsol)
+    if (hscpIso.Get_TK_SumEt() / track->pt() > GlobalMaxRelTIsol) {
+      if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Tracker based relative isolation is too high";
       return false;
+    } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for tracker based relative isolation cut";
+    }
     if (tuple) {
       tuple->SumpTOverpT->Fill(0.0, Event_Weight);
     }
@@ -2306,12 +2415,20 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   if (tuple) {
     tuple->BS_Pterr->Fill(track->ptError() / track->pt(), Event_Weight);
   }
-  if (TypeMode_ != 3 && (track->ptError() / track->pt()) > GlobalMaxPterr)
+  if (TypeMode_ != 3 && (track->ptError() / track->pt()) > GlobalMaxPterr) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: pt error is too high";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for pt error cut";
+  }
   //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
 
-  if (std::max(0.0, track->pt()) < GlobalMinPt)
+  if (std::max(0.0, track->pt()) < GlobalMinPt) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: pt too is low";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for pt cut";
+  }
   if (tuple) {
     tuple->Pterr->Fill(0.0, Event_Weight);
   }
@@ -2384,23 +2501,35 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
 
   TreeDZ = dz;
   bool DZSB = false;
-  if (TypeMode_ != 5 && fabs(dz) > GlobalMaxDZ)
+  if (TypeMode_ != 5 && fabs(dz) > GlobalMaxDZ) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dz it too high";
     return false;
-  if (TypeMode_ == 5 && fabs(dz) > 4)
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dz cut";
+  }
+  if (TypeMode_ == 5 && fabs(dz) > 4) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dz it too high";
     return false;
+  } else {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dz cut";
+  }
   if (TypeMode_ == 5 && fabs(dz) > GlobalMaxDZ)
     DZSB = true;
   if (tuple) {
     tuple->Dz->Fill(0.0, Event_Weight);
   }
 
-  if (TypeMode_ == 3 && fabs(minEta) < minSegEtaSep)
+  if (TypeMode_ == 3 && fabs(minEta) < minSegEtaSep) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, eta is too low";
     return false;
+  } else if (TypeMode_ == 3 && fabs(minEta) > minSegEtaSep) {
+    if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for TOF eta cut";
+  }
   if (tuple)
     tuple->BS_Phi->Fill(track->phi(), Event_Weight);
-  if (TypeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)
+  if (TypeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) {
     return false;
-
+  }
   //skip HSCP that are compatible with cosmics.
   if (tuple)
     tuple->BS_OpenAngle->Fill(OpenAngle, Event_Weight);
