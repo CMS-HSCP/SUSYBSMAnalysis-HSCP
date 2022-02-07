@@ -189,8 +189,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Total = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "V3D";
   tuple->V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "Chi2";
-  tuple->Chi2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  Name = "Chi2PerNdof";
+  tuple->Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Qual";
   tuple->Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "TNOH";
@@ -429,9 +429,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_V3D";
   tuple->BS_V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, 0, IPbound);
   tuple->BS_V3D->Sumw2();
-  Name = "BS_Chi2";
-  tuple->BS_Chi2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
-  tuple->BS_Chi2->Sumw2();
+  Name = "BS_Chi2PerNdof";
+  tuple->BS_Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
+  tuple->BS_Chi2PerNdof->Sumw2();
   Name = "BS_Qual";
   tuple->BS_Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   tuple->BS_Qual->Sumw2();
