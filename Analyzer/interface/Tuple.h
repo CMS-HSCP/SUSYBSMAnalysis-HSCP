@@ -163,7 +163,7 @@ struct Tuple {
   TH1F* TotalTE;
   TH1F* Total;
   TH1F* V3D;
-  TH1F* Chi2;
+  TH1F* Chi2PerNdof;
   TH1F* Qual;
   TH1F* TNOH;
   TH1F* TNOM;
@@ -209,7 +209,7 @@ struct Tuple {
   TH2F* Beta_SelectedT;
 
   TH1F* BS_V3D;
-  TH1F* BS_Chi2;
+  TH1F* BS_Chi2PerNdof;
   TH1F* BS_Qual;
   TH1F* BS_TNOH;
   TH1F* BS_TNOH_PUA;
