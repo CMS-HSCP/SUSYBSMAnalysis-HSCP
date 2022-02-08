@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v4: Fill up empty plots 
+// v4.1: Fill up empty plots, fix boundaries for those plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2376,7 +2376,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   }
 
   if (tuple) {
-    tuple->Dxy->Fill(fabs(dxy), Event_Weight);
+    tuple->Dxy->Fill(dxy, Event_Weight);
   }
 
   if (TypeMode_ != 3 && Ih_Iso_cut) {
@@ -2529,7 +2529,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   } else {
     if (debugLevel_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dz cut";
     if (tuple) {
-      tuple->Dz->Fill(fabs(dz), Event_Weight);
+      tuple->Dz->Fill(dz, Event_Weight);
     }  
   }
   if (TypeMode_ == 5 && fabs(dz) > GlobalMaxDZ)
