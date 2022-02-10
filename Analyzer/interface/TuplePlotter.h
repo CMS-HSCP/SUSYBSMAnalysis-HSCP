@@ -552,72 +552,72 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
   FILE* pFile = fopen(Buffer, "w");
 
   fprintf(pFile, "#################### %20s ####################\n", DirName_.c_str());
-  fprintf(pFile, "#Events                       = %4.2E\n", tuple->TotalE->GetEntries());
+  fprintf(pFile, "#Events                       = %4.2E\n", tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1));
   fprintf(pFile,
           "#Triggered Events             = %4.2E Eff=%4.3E\n",
-          tuple->TotalTE->GetEntries(),
-          tuple->TotalTE->GetEntries() / tuple->TotalE->GetEntries());
-  fprintf(pFile, "#Tracks                       = %4.2E\n", tuple->Total->GetEntries());
+          tuple->TotalTE->Integral(0,tuple->TotalTE->GetNbinsX()+1),
+          tuple->TotalTE->Integral(0,tuple->TotalTE->GetNbinsX()+1) / tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1));
+  fprintf(pFile, "#Tracks                       = %4.2E\n", tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing TNOH   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->TNOH->GetEntries(),
-          tuple->TNOH->GetEntries() / tuple->Total->GetEntries());
+          tuple->TNOH->Integral(0,tuple->TNOH->GetNbinsX()+1),
+          tuple->TNOH->Integral(0,tuple->TNOH->GetNbinsX()+1) / tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing TNOM   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->TNOM->GetEntries(),
-          tuple->TNOM->GetEntries() / tuple->TNOH->GetEntries());
+          tuple->TNOM->Integral(0,tuple->TNOM->GetNbinsX()+1),
+          tuple->TNOM->Integral(0,tuple->TNOM->GetNbinsX()+1) / tuple->TNOH->Integral(0,tuple->TNOH->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing nDof   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->nDof->GetEntries(),
-          tuple->nDof->GetEntries() / tuple->TNOM->GetEntries());
+          tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1),
+          tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1) / tuple->TNOM->Integral(0,tuple->TNOM->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Qual   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Qual->GetEntries(),
-          tuple->Qual->GetEntries() / tuple->nDof->GetEntries());
+          tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1),
+          tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1) / tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Chi2PerNdof   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Chi2PerNdof->GetEntries(),
-          tuple->Chi2PerNdof->GetEntries() / tuple->Qual->GetEntries());
+          tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1),
+          tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1) / tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min Pt cuts   = %4.2E Eff=%4.3E\n",
-          tuple->MPt->GetEntries(),
-          tuple->MPt->GetEntries() / tuple->Chi2PerNdof->GetEntries());
+          tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1),
+          tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1) / tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min I  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->MI->GetEntries(),
-          tuple->MI->GetEntries() / tuple->MPt->GetEntries());
+          tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1),
+          tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1) / tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min TOFcuts   = %4.2E Eff=%4.3E\n",
-          tuple->MTOF->GetEntries(),
-          tuple->MTOF->GetEntries() / tuple->MI->GetEntries());
+          tuple->MTOF->Integral(0,tuple->MTOF->GetNbinsX()+1),
+          tuple->MTOF->Integral(0,tuple->MTOF->GetNbinsX()+1) / tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Dxy    cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Dxy->GetEntries(),
-          tuple->Dxy->GetEntries() / tuple->MTOF->GetEntries());
+          tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1),
+          tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1) / tuple->MTOF->Integral(0,tuple->MTOF->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing TIsol  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->TIsol->GetEntries(),
-          tuple->TIsol->GetEntries() / tuple->Dxy->GetEntries());
+          tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1),
+          tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1) / tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing EIsol  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->EIsol->GetEntries(),
-          tuple->EIsol->GetEntries() / tuple->TIsol->GetEntries());
+          tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1),
+          tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1) / tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing PtErr  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Pterr->GetEntries(),
-          tuple->Pterr->GetEntries() / tuple->EIsol->GetEntries());
+          tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1),
+          tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1) / tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Dz  cuts      = %4.2E Eff=%4.3E\n",
-          tuple->Dz->GetEntries(),
-          tuple->Dz->GetEntries() / tuple->Pterr->GetEntries());
+          tuple->Dz->Integral(0,tuple->Dz->GetNbinsX()+1),
+          tuple->Dz->Integral(0,tuple->Dz->GetNbinsX()+1) / tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Basic  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Basic->GetEntries(),
-          tuple->Basic->GetEntries() / tuple->Total->GetEntries());
+          tuple->Basic->Integral(0,tuple->Basic->GetNbinsX()+1),
+          tuple->Basic->Integral(0,tuple->Basic->GetNbinsX()+1) / tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Pt     cuts   = %4.2E Eff=%4.3E\n",
           tuple->Pt->GetBinContent(CutIndex + 1),
-          tuple->Pt->GetBinContent(CutIndex + 1) / tuple->Pterr->GetEntries());
+          tuple->Pt->GetBinContent(CutIndex + 1) / tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing I      cuts   = %4.2E Eff=%4.3E\n",
           tuple->I->GetBinContent(CutIndex + 1),
@@ -629,20 +629,20 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
   fprintf(pFile,
           "#Tracks passing selection     = %4.2E Eff=%4.3E\n",
           tuple->TOF->GetBinContent(CutIndex + 1),
-          tuple->TOF->GetBinContent(CutIndex + 1) / tuple->Total->GetEntries());
+          tuple->TOF->GetBinContent(CutIndex + 1) / tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile, "--------------------\n");
   fprintf(pFile,
           "HSCP Detection Efficiency Before Trigger                           Eff=%4.3E\n",
-          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalE->GetEntries()));
+          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1)));
   fprintf(pFile,
           "HSCP Detection Efficiency After  Trigger                           Eff=%4.3E\n",
-          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalTE->GetEntries()));
+          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalTE->Integral(0,tuple->TotalTE->GetNbinsX()+1)));
   fprintf(pFile,
           "#HSCPTrack per HSCPEvent (with at least one HSCPTrack)             Eff=%4.3E\n",
           tuple->TOF->GetBinContent(CutIndex + 1) / (tuple->HSCPE->GetBinContent(CutIndex + 1)));
   fprintf(pFile,
           "HSCP Event Efficiency                                              Eff=%4.3E\n",
-          tuple->HSCPE->GetBinContent(CutIndex + 1) / (tuple->TotalE->GetEntries()));
+          tuple->HSCPE->GetBinContent(CutIndex + 1) / (tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1)));
 
   fprintf(pFile, "\n\n");
 

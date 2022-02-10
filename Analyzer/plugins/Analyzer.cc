@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v4.1: Fill up empty plots, fix boundaries for those plots
+// v4.3: Fill up empty plots, fix boundaries for those plots, use Integral() to get the numbers
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2237,6 +2237,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   } else {
     if (track->pt() < GlobalMinPt) {
       return false;
+    } else {
       if (tuple) {
         tuple->MPt->Fill(track->pt(), Event_Weight);
         if (dedxSObj)
