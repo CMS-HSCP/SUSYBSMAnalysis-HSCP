@@ -10,7 +10,8 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v4.3: Fill up empty plots, fix boundaries for those plots, use Integral() to get the numbers
+// v4.6: Move Qual, tof->ndof plot out of the condition, protection for tuple 
+// Revert v5: Signal should go through trigger as well 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -103,7 +104,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   if (enableDeDxCalibration)
     trackerCorrector.LoadDeDxCalibration(DeDxCalibration);
   else
-    trackerCorrector.TrackerGains = nullptr;  //FIXME check gain for MC
+    trackerCorrector.TrackerGains = nullptr;
 
   moduleGeom::loadGeometry(Geometry);
   tofCalculator.loadTimeOffset(TimeOffset);
@@ -294,13 +295,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       } else if (abs(GenId) > 1000000) {
         na += 1;
       }  // count other R-hadrons
-      // categorise event with R-hadrons for additional weighting-----------------------BEGIN
+      // categorise event with R-hadrons for additional weighting-----------------------END
 
+      // Fill up pT, eta, and beta plots for gen-level HSCP particles
       tuple->genlevelpT->Fill(gen.pt(), SignalEventWeight);
       tuple->genleveleta->Fill(gen.eta(), SignalEventWeight);
       tuple->genlevelbeta->Fill(gen.p() / gen.energy(), SignalEventWeight);
+      // TODO: do the same for background
     }
-
   }  //End of isSignal
 
   // new genHSCP ntuple after correcting weights
@@ -371,8 +373,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
   //See if event passed signal triggers
   //WAIT//if(!PassTrigger(iEvent, isData, false, (is2016&&!is2016G)?&L1Emul:nullptr) ) {
-  if (!isSignal) {  
-    if (!passTrigger(iEvent, isData)) {
+  if (!isSignal) {
+  if (!passTrigger(iEvent, isData)) {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
     //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
@@ -382,12 +384,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //If is cosmic event then switch plots to use to the ones for cosmics
     //WAIT//SamplePlots=&plotsMap[CosmicName];
-    }
-   }
+  }
+  }
   //WAIT//else if(TypeMode==3) {
   //WAIT//SamplePlots = &plotsMap[samples[s].Name];
   //WAIT//}
 
+  // Number of events that pass the trigger
   tuple->TotalTE->Fill(0.0, EventWeight_);
 
   //keep beta distribution for signal
@@ -2197,9 +2200,17 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     } else {
       if (tuple) {
         tuple->nDof->Fill(tof->nDof(), Event_Weight);
-        tuple->BS_Qual->Fill(track->qualityMask(), Event_Weight);
       }
     }
+  } else {
+    if (tuple) {
+      tuple->nDof->Fill(0.0, Event_Weight);
+    }
+  } // end of condition whether tof exists or not
+
+  // Fill up before selection track quality variable
+  if (tuple) {
+    tuple->BS_Qual->Fill(track->qualityMask(), Event_Weight);
   }
 
   // Select only high purity tracks 
@@ -2289,7 +2300,12 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     if (TypeMode_ == 3 && min(min(fabs(tof->timeAtIpInOut() - 100), fabs(tof->timeAtIpInOut() - 50)),
                               min(fabs(tof->timeAtIpInOut() + 100), fabs(tof->timeAtIpInOut() + 50))) < 5)
       return false;
-  }
+  } else {
+    if (tuple) {
+      tuple->BS_TOFError->Fill(0.0, Event_Weight);
+      tuple->BS_TimeAtIP->Fill(0.0, Event_Weight);
+    }
+  } // End condition on tof existence or not
 
   if (tuple)
     tuple->BS_dzMinv3d->Fill(dz, Event_Weight);
