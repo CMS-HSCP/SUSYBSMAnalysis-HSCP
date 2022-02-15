@@ -10,8 +10,8 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v4.6: Move Qual, tof->ndof plot out of the condition, protection for tuple 
-// Revert v5: Signal should go through trigger as well 
+// v5.1: Move systematic studies to a diff function
+// v5.2: Remove !isSignal condition for trigger tests
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -373,7 +373,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
   //See if event passed signal triggers
   //WAIT//if(!PassTrigger(iEvent, isData, false, (is2016&&!is2016G)?&L1Emul:nullptr) ) {
-  if (!isSignal) {
   if (!passTrigger(iEvent, isData)) {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
@@ -384,7 +383,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //If is cosmic event then switch plots to use to the ones for cosmics
     //WAIT//SamplePlots=&plotsMap[CosmicName];
-  }
   }
   //WAIT//else if(TypeMode==3) {
   //WAIT//SamplePlots = &plotsMap[samples[s].Name];
@@ -680,7 +678,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //for signal only, make sure that the candidate is associated to a true HSCP
     int ClosestGen;
-    if (isSignal && DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) > 0.03) {
+    if (isSignal && DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) > 0.3) {
       if (debugLevel_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
       DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) << "), skipping it";
       continue;
@@ -1047,220 +1045,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     reco::DeDxData* dedx_probQ = dedx_probQ_Tmp.numberOfMeasurements() > 0 ? &dedx_probQ_Tmp : nullptr;
 
-    if (TypeMode_ == 5)
+    if (TypeMode_ == 5) {
       OpenAngle = deltaROpositeTrack(
           iEvent.get(hscpToken_),
           hscp);  //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
-
-    // ------------------------------------------------------------------------------------
-    //compute systematic uncertainties on signal
-    if (isSignal) {
-      //FIXME to be measured on 2015 data, currently assume 2012
-      bool PRescale = true;
-      double IRescale = -0.05;  // added to the Ias value
-      double MRescale = 0.95;
-      double TRescale = -0.015;  //-0.005 (used in 2012); // added to the 1/beta value
-
-      double genpT = -1.0;
-      for (auto const gen : genColl) {
-        if (!isGoodGenHSCP(gen,false)) continue;
-        double separation = deltaR(track->eta(), track->phi(), gen.eta(), gen.phi());
-        if (separation > 0.03) {
-          if (debugLevel_ > 0) LogPrint(MOD) << "    >> Separation between track and gen is too big (" << separation << "), skipping it";
-          continue;
-        } else {
-          if (debugLevel_ > 0) LogPrint(MOD) << "    >> Matching gen HSCP found!";
-          genpT = gen.pt();
-          break;
-        }
-      }
-      if (genpT > 0) {
-        tuple->genrecopT->Fill(genpT, track->pt());
-      }
-
-      // compute systematic due to momentum scale
-      //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){..}
-        if (passPreselection(
-              hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, PRescale, 0, 0, 0)) {
-        double RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
-
-        if (TypeMode_ == 5 && isSemiCosmicSB)
-          continue;
-        double Mass = -1;
-        if (dedxMObj)
-          Mass = GetMass(track->p() * RescalingFactor, dedxMObj->dEdx(), DeDxK, DeDxC);
-        double MassTOF = -1;
-        if (tof)
-          MassTOF = GetTOFMass(track->p() * RescalingFactor, tof->inverseBeta());
-        double MassComb = -1;
-        if (tof && dedxMObj)
-          MassComb = GetMassFromBeta(track->p() * RescalingFactor,
-                                     (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
-        else if (dedxMObj)
-          MassComb = Mass;
-        if (tof)
-          MassComb = MassTOF;
-
-        for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-          if (passSelection(hscp,
-                            dedxSObj,
-                            dedxMObj,
-                            tof,
-                            iEvent,
-                            EventWeight_,
-                            CutIndex,
-                            tuple,
-                            false,
-                            -1,
-                            PRescale,
-                            0,
-                            0)) {  //WAIT//
-            HSCPTk_SystP[CutIndex] = true;
-            if (Mass > MaxMass_SystP[CutIndex])
-              MaxMass_SystP[CutIndex] = Mass;
-            tuple->Mass_SystP->Fill(CutIndex, Mass, EventWeight_);
-            if (tof) {
-              tuple->MassTOF_SystP->Fill(CutIndex, MassTOF, EventWeight_);
-            }
-            tuple->MassComb_SystP->Fill(CutIndex, MassComb, EventWeight_);
-          }
-        } // end loop on cut index
-      } // end compute systematic due to momentum scale 
-
-      // compute systematic due to dEdx (both Ias and Ih)
-      //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0))
-      if (passPreselection(
-              hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, IRescale, 0)) {
-        //if(TypeMode==5 && isSemiCosmicSB)continue;
-        double Mass = -1;
-        if (dedxMObj)
-          Mass = GetMass(track->p(), dedxMObj->dEdx() * MRescale, DeDxK, DeDxC);
-        double MassTOF = -1;
-        if (tof)
-          MassTOF = GetTOFMass(track->p(), tof->inverseBeta());
-        double MassComb = -1;
-        if (tof && dedxMObj)
-          MassComb =
-              GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
-        else if (dedxMObj)
-          MassComb = Mass;
-        if (tof)
-          MassComb = MassTOF;
-        for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-          if (passSelection(
-                  hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, IRescale, 0)) {
-            HSCPTk_SystI[CutIndex] = true;
-            if (Mass > MaxMass_SystI[CutIndex])
-              MaxMass_SystI[CutIndex] = Mass;
-            tuple->Mass_SystI->Fill(CutIndex, Mass, EventWeight_);
-            if (tof)
-              tuple->MassTOF_SystI->Fill(CutIndex, MassTOF, EventWeight_);
-            tuple->MassComb_SystI->Fill(CutIndex, MassComb, EventWeight_);
-          }
-        }
-      } // End compute systematic due to dEdx 
-
-      // compute systematic due to Mass shift ??????????
-      if (passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, 0, 0)) {
-        /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
-        double Mass = -1;
-        if (dedxMObj)
-          Mass = GetMass(track->p(), dedxMObj->dEdx() * MRescale, DeDxK, DeDxC);
-        double MassTOF = -1;
-        if (tof)
-          MassTOF = GetTOFMass(track->p(), tof->inverseBeta());
-        double MassComb = -1;
-        if (tof && dedxMObj)
-          MassComb = GetMassFromBeta(
-              track->p(), (GetIBeta(dedxMObj->dEdx() * MRescale, DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
-        else if (dedxMObj)
-          MassComb = Mass;
-        if (tof)
-          MassComb = MassTOF;
-
-        for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-          if (passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, 0, 0)) {
-            HSCPTk_SystM[CutIndex] = true;
-            if (Mass > MaxMass_SystM[CutIndex])
-              MaxMass_SystM[CutIndex] = Mass;
-            tuple->Mass_SystM->Fill(CutIndex, Mass, EventWeight_);
-            if (tof)
-              tuple->MassTOF_SystM->Fill(CutIndex, MassTOF, EventWeight_);
-            tuple->MassComb_SystM->Fill(CutIndex, MassComb, EventWeight_);
-          }
-        }
-      } // End compute systematic due to Mass shift
-
-      // compute systematic due to TOF
-      if (passPreselection(
-              hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, TRescale, 0)) {
-        /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
-        double Mass = -1;
-        if (dedxMObj)
-          Mass = GetMass(track->p(), dedxMObj->dEdx(), DeDxK, DeDxC);
-        double MassTOF = -1;
-        if (tof)
-          MassTOF = GetTOFMass(track->p(), (tof->inverseBeta() + TRescale));
-        double MassComb = -1;
-        if (tof && dedxMObj)
-          MassComb = GetMassFromBeta(
-              track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / (tof->inverseBeta() + TRescale))) * 0.5);
-        else if (dedxMObj)
-          MassComb = Mass;
-        if (tof)
-          MassComb = MassTOF;
-
-        for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-          if (passSelection(
-                  hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, 0, TRescale)) {
-            HSCPTk_SystT[CutIndex] = true;
-            if (Mass > MaxMass_SystT[CutIndex])
-              MaxMass_SystT[CutIndex] = Mass;
-            tuple->Mass_SystT->Fill(CutIndex, Mass, EventWeight_);
-            if (tof)
-              tuple->MassTOF_SystT->Fill(CutIndex, MassTOF, EventWeight_);
-            tuple->MassComb_SystT->Fill(CutIndex, MassComb, EventWeight_);
-          }
-        }
-      } // End condition for compute systematic due to TOF
-
-      // compute systematics due to PU
-      if (passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, 0, 0)) {
-        /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
-        double Mass = -1;
-        if (dedxMObj)
-          Mass = GetMass(track->p(), dedxMObj->dEdx(), DeDxK, DeDxC);
-        double MassTOF = -1;
-        if (tof)
-          MassTOF = GetTOFMass(track->p(), tof->inverseBeta());
-        double MassComb = -1;
-        if (tof && dedxMObj)
-          MassComb =
-              GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
-        else if (dedxMObj)
-          MassComb = Mass;
-        if (tof)
-          MassComb = MassTOF;
-
-        for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-          if (passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, 0, 0)) {
-            HSCPTk_SystPU[CutIndex] = true;
-            if (Mass > MaxMass_SystPU[CutIndex])
-              MaxMass_SystPU[CutIndex] = Mass;
-            tuple->Mass_SystPU->Fill(CutIndex, Mass, EventWeight_ * PUSystFactor_[0]);
-            if (tof)
-              tuple->MassTOF_SystPU->Fill(CutIndex, MassTOF, EventWeight_ * PUSystFactor_[0]);
-            tuple->MassComb_SystPU->Fill(CutIndex, MassComb, EventWeight_ * PUSystFactor_[0]);
-          }
-        }
-      }  // End compute systematics due to PU
-
-    }  //End of systematic computation for signal
-
-
-    std::cout << "DeDxK: " << DeDxK << " DeDxC: " << DeDxC << std::endl;
-    //check if the canddiate pass the preselection cuts
-    /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
+    }
+    
+    // TODO: do we really need double here? I'm sure float would be fine too
     double MassErr = GetMassErr(track->p(),
                                 track->ptError(),
                                 dedxMObj ? dedxMObj->dEdx() : -1,
@@ -1268,6 +1059,33 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 GetMass(track->p(), dedxMObj ? dedxMObj->dEdx() : -1, DeDxK, DeDxC),
                                 DeDxK,
                                 DeDxC);
+    
+    // ------------------------------------------------------------------------------------
+    //compute systematic uncertainties on signal
+    if (isSignal) {
+      double genpT = -1.0;
+        // Loop through the gen collection
+      for (auto const gen : genColl) {
+        if (!isGoodGenHSCP(gen,false)) continue;
+        double separation = deltaR(track->eta(), track->phi(), gen.eta(), gen.phi());
+        if (separation > 0.3) {
+          continue;
+        } else {
+          genpT = gen.pt();
+          break;
+        }
+      }
+      if (genpT > 0) {
+        tuple->genrecopT->Fill(genpT, track->pt());
+      }
+      calculateSyst(track, hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, -1, MassErr, true);
+    }  //End of systematic computation for signal
+
+
+    if (debugLevel_ > 5 ) LogPrint(MOD)  << "        >> DeDxK: " << DeDxK << " DeDxC: " << DeDxC;
+    //check if the canddiate pass the preselection cuts
+    /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
+
 
     // Check if we pass the preselection for data / maybe background
     bool passPre = true;
@@ -2911,3 +2729,204 @@ float Analyzer::combineProbs(float probOnTrackWMulti, int numRecHits) const {
   return probOnTrack;
 }
 
+//=============================================================
+//
+//     Calculate systematics on signal
+//
+//=============================================================
+void Analyzer::calculateSyst(reco::TrackRef track,
+                             const susybsm::HSCParticle& hscp,
+                             const reco::DeDxHitInfo* dedxHits,
+                             const reco::DeDxData* dedxSObj,
+                             const reco::DeDxData* dedxMObj,
+                             const reco::MuonTimeExtra* tof,
+                             const edm::Event& iEvent,
+                             float Event_Weight,
+                             Tuple* tuple,
+                             const double& GenBeta,
+                             double MassErr,
+                             bool Ih_Iso_cut) {
+  //FIXME to be measured on 2015 data, currently assume 2012
+bool PRescale = true;
+double IRescale = -0.05;  // added to the Ias value
+double MRescale = 0.95;
+double TRescale = -0.015;  //-0.005 (used in 2012); // added to the 1/beta value
+
+
+
+  // compute systematic due to momentum scale
+  //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){..}
+if (passPreselection(
+                     hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, PRescale, 0, 0, 0)) {
+  double RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
+  
+  double Mass = -1;
+  if (dedxMObj)
+    Mass = GetMass(track->p() * RescalingFactor, dedxMObj->dEdx(), DeDxK, DeDxC);
+  double MassTOF = -1;
+  if (tof)
+    MassTOF = GetTOFMass(track->p() * RescalingFactor, tof->inverseBeta());
+  double MassComb = -1;
+  if (tof && dedxMObj)
+    MassComb = GetMassFromBeta(track->p() * RescalingFactor,
+                               (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
+  else if (dedxMObj)
+    MassComb = Mass;
+  if (tof)
+    MassComb = MassTOF;
+  
+  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
+    if (passSelection(hscp,
+                      dedxSObj,
+                      dedxMObj,
+                      tof,
+                      iEvent,
+                      EventWeight_,
+                      CutIndex,
+                      tuple,
+                      false,
+                      -1,
+                      PRescale,
+                      0,
+                      0)) {  //WAIT//
+      HSCPTk_SystP[CutIndex] = true;
+      if (Mass > MaxMass_SystP[CutIndex])
+        MaxMass_SystP[CutIndex] = Mass;
+      tuple->Mass_SystP->Fill(CutIndex, Mass, EventWeight_);
+      if (tof) {
+        tuple->MassTOF_SystP->Fill(CutIndex, MassTOF, EventWeight_);
+      }
+      tuple->MassComb_SystP->Fill(CutIndex, MassComb, EventWeight_);
+    }
+  } // end loop on cut index
+} // end compute systematic due to momentum scale
+
+  // compute systematic due to dEdx (both Ias and Ih)
+  //WAIT//if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0))
+if (passPreselection(
+                     hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, IRescale, 0)) {
+    //if(TypeMode==5 && isSemiCosmicSB)continue;
+  double Mass = -1;
+  if (dedxMObj)
+    Mass = GetMass(track->p(), dedxMObj->dEdx() * MRescale, DeDxK, DeDxC);
+  double MassTOF = -1;
+  if (tof)
+    MassTOF = GetTOFMass(track->p(), tof->inverseBeta());
+  double MassComb = -1;
+  if (tof && dedxMObj)
+    MassComb =
+    GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
+  else if (dedxMObj)
+    MassComb = Mass;
+  if (tof)
+    MassComb = MassTOF;
+  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
+    if (passSelection(
+                      hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, IRescale, 0)) {
+      HSCPTk_SystI[CutIndex] = true;
+      if (Mass > MaxMass_SystI[CutIndex])
+        MaxMass_SystI[CutIndex] = Mass;
+      tuple->Mass_SystI->Fill(CutIndex, Mass, EventWeight_);
+      if (tof)
+        tuple->MassTOF_SystI->Fill(CutIndex, MassTOF, EventWeight_);
+      tuple->MassComb_SystI->Fill(CutIndex, MassComb, EventWeight_);
+    }
+  }
+} // End compute systematic due to dEdx
+
+  // compute systematic due to Mass shift ??????????
+if (passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, 0, 0)) {
+  /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
+  double Mass = -1;
+  if (dedxMObj)
+    Mass = GetMass(track->p(), dedxMObj->dEdx() * MRescale, DeDxK, DeDxC);
+  double MassTOF = -1;
+  if (tof)
+    MassTOF = GetTOFMass(track->p(), tof->inverseBeta());
+  double MassComb = -1;
+  if (tof && dedxMObj)
+    MassComb = GetMassFromBeta(
+                               track->p(), (GetIBeta(dedxMObj->dEdx() * MRescale, DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
+  else if (dedxMObj)
+    MassComb = Mass;
+  if (tof)
+    MassComb = MassTOF;
+  
+  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
+    if (passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, 0, 0)) {
+      HSCPTk_SystM[CutIndex] = true;
+      if (Mass > MaxMass_SystM[CutIndex])
+        MaxMass_SystM[CutIndex] = Mass;
+      tuple->Mass_SystM->Fill(CutIndex, Mass, EventWeight_);
+      if (tof)
+        tuple->MassTOF_SystM->Fill(CutIndex, MassTOF, EventWeight_);
+      tuple->MassComb_SystM->Fill(CutIndex, MassComb, EventWeight_);
+    }
+  }
+} // End compute systematic due to Mass shift
+
+  // compute systematic due to TOF
+if (passPreselection(
+                     hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, TRescale, 0)) {
+  /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
+  double Mass = -1;
+  if (dedxMObj)
+    Mass = GetMass(track->p(), dedxMObj->dEdx(), DeDxK, DeDxC);
+  double MassTOF = -1;
+  if (tof)
+    MassTOF = GetTOFMass(track->p(), (tof->inverseBeta() + TRescale));
+  double MassComb = -1;
+  if (tof && dedxMObj)
+    MassComb = GetMassFromBeta(
+                               track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / (tof->inverseBeta() + TRescale))) * 0.5);
+  else if (dedxMObj)
+    MassComb = Mass;
+  if (tof)
+    MassComb = MassTOF;
+  
+  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
+    if (passSelection(
+                      hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, 0, TRescale)) {
+      HSCPTk_SystT[CutIndex] = true;
+      if (Mass > MaxMass_SystT[CutIndex])
+        MaxMass_SystT[CutIndex] = Mass;
+      tuple->Mass_SystT->Fill(CutIndex, Mass, EventWeight_);
+      if (tof)
+        tuple->MassTOF_SystT->Fill(CutIndex, MassTOF, EventWeight_);
+      tuple->MassComb_SystT->Fill(CutIndex, MassComb, EventWeight_);
+    }
+  }
+} // End condition for compute systematic due to TOF
+
+  // compute systematics due to PU
+if (passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, nullptr, -1, 0, 0, 0, 0)) {
+  /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
+  double Mass = -1;
+  if (dedxMObj)
+    Mass = GetMass(track->p(), dedxMObj->dEdx(), DeDxK, DeDxC);
+  double MassTOF = -1;
+  if (tof)
+    MassTOF = GetTOFMass(track->p(), tof->inverseBeta());
+  double MassComb = -1;
+  if (tof && dedxMObj)
+    MassComb =
+    GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), DeDxK, DeDxC) + (1 / tof->inverseBeta())) * 0.5);
+  else if (dedxMObj)
+    MassComb = Mass;
+  if (tof)
+    MassComb = MassTOF;
+  
+  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
+    if (passSelection(hscp, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, tuple, false, -1, 0, 0, 0)) {
+      HSCPTk_SystPU[CutIndex] = true;
+      if (Mass > MaxMass_SystPU[CutIndex])
+        MaxMass_SystPU[CutIndex] = Mass;
+      tuple->Mass_SystPU->Fill(CutIndex, Mass, EventWeight_ * PUSystFactor_[0]);
+      if (tof)
+        tuple->MassTOF_SystPU->Fill(CutIndex, MassTOF, EventWeight_ * PUSystFactor_[0]);
+      tuple->MassComb_SystPU->Fill(CutIndex, MassComb, EventWeight_ * PUSystFactor_[0]);
+    }
+  }
+}  // End compute systematics due to PU
+
+}
