@@ -12,6 +12,7 @@
 // Modifications by Tamas Almos Vami
 // v5.1: Move systematic studies to a diff function
 // v5.2: Remove !isSignal condition for trigger tests
+// v5.3 Several comments, and cleanup
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -147,12 +148,22 @@ void Analyzer::beginJob() {
                                GlobalMinTOF);
 
   // Re-weighting
-  mcWeight = new MCWeight();
+  // Functions defined in Analyzer/interface/MCWeight.h
   if (!isData) {
+    mcWeight = new MCWeight();
     mcWeight->loadPileupWeights(Period_);
+    mcWeight->getSampleWeights(Period_, SampleName_.c_str(), IntegratedLuminosity_, CrossSection_);
   }
-  mcWeight->getSampleWeights(Period_, SampleName_.c_str(), IntegratedLuminosity_, CrossSection_);
+
+  // Set in Analyzer/interface/MCWeight.h
+  // 58970.47 for 2018
+  // 41809.45 for 2017
+  // 35552.24 for 2016
+  // TODO: this should be revised
   tuple->IntLumi->Fill(0.0, IntegratedLuminosity_);
+
+  // Get cross section from Analyzer/interface/MCWeight.h file
+  // The SampleName in the config has to contain the HSCP flavor and mass
   tuple->XSection->Fill(0.0, CrossSection_);
 
   tof = nullptr;
@@ -166,9 +177,9 @@ void Analyzer::beginJob() {
   is2016 = false;
   is2016G = false;
 
-  //PUSystFactor_.clear();
-  PUSystFactor_.resize(2, 1.);
-  PUSystFactor_[0] = PUSystFactor_[1] = 0.;
+  ////PUSystFactor_.clear();
+  //PUSystFactor_.resize(2, 1.);
+  //PUSystFactor_[0] = PUSystFactor_[1] = 0.;
 
   HSCPTk = new bool[CutPt_.size()];
   HSCPTk_SystP = new bool[CutPt_.size()];
@@ -195,15 +206,12 @@ void Analyzer::beginJob() {
   //HIPemulatorDown(false, "ratePdfPixel_Down", "ratePdfStrip_Down");
 }
 
-//
-// member functions
-//
-
 // ------------ method called for each event  ------------
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   static constexpr const char* const MOD = "Analyzer";
   using namespace edm;
 
+  // Count the number of (re-weighted) events
   tuple->EventsTotal->Fill(0.0, EventWeight_);
 
   //if run change, update conditions
@@ -219,21 +227,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
   }
 
-  //WAIT////compute event weight
-  //vector<PileupSummaryInfo> pileupInfo;
+  // Compute event weight
   if (!isData) {
-    /*double PUWeight = 1.;
-      Handle<vector<PileupSummaryInfo> >  pileupInfoH; 
-      iEvent.getByToken(pileupInfoToken_, pileupInfoH);
-      if(pileupInfoH.isValid()){
-         PUWeight = mcWeight->getEventPUWeight(pileupInfoH, PUSystFactor_);
-      }
-      else {LogWarning("Analyzer") << "PileupSummaryInfo Collection NotFound";}*/
     double PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_, PUSystFactor_);
     EventWeight_ = PUWeight;  // 1. : unweighted w.r.t pileup
   } else {
     EventWeight_ = 1.;
   }
+
+  if (debugLevel_ > 0 ) LogPrint(MOD) << "Event weight factor applied: " << EventWeight_;
 
   vector<reco::GenParticle> genColl;
   double HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
@@ -368,25 +370,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       HLT_MET105_IsoTrk50 = true;
   }
 
-  //check if the event is passing trigger
+  // Number of (re-weighted) events
   tuple->TotalE->Fill(0.0, EventWeight_);
+  // Number of (re-weighted with PU syst fact) events
   tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
-  //See if event passed signal triggers
-  //WAIT//if(!PassTrigger(iEvent, isData, false, (is2016&&!is2016G)?&L1Emul:nullptr) ) {
-  if (!passTrigger(iEvent, isData)) {
+
+  // Check if the event is passing trigger
+  if (passTrigger(iEvent, isData)) {
+      if (debugLevel_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers!";
+  } else {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
-    //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
-    //If not TOF only then move to next event
-    /*if(TypeMode_!=3) continue;
-      if(!passTrigger(iEvent, isData, true, (is2016&&!is2016G)?&L1Emul:NULL)) continue;*/
-
-    //If is cosmic event then switch plots to use to the ones for cosmics
-    //WAIT//SamplePlots=&plotsMap[CosmicName];
+     //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
   }
-  //WAIT//else if(TypeMode==3) {
-  //WAIT//SamplePlots = &plotsMap[samples[s].Name];
-  //WAIT//}
+  // TODO: Simply this by saying that trigger is passed if HLT_Mu50 or HLT_PFMET120_PFMHT120_IDTight or HLT_PFHT500_PFMET100_PFMHT100_IDTight or HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60
+  // or HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 or HLT_MET105_IsoTrk50 is true
 
   // Number of events that pass the trigger
   tuple->TotalTE->Fill(0.0, EventWeight_);
@@ -1131,7 +1129,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
 
     //fill the ABCD histograms and a few other control plots
-    //WAIT//if(isData)Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, SamplePlots);
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
     if (debugLevel_ > 2) LogPrint(MOD) << "      >> Fill control and prediction Histos";
