@@ -167,6 +167,18 @@ public:
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
   double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
   float combineProbs(float probOnTrackWMulti, int numRecHits) const;
+  void calculateSyst(reco::TrackRef track,
+                     const susybsm::HSCParticle& hscp,
+                     const reco::DeDxHitInfo* dedxHits,
+                     const reco::DeDxData* dedxSObj,
+                     const reco::DeDxData* dedxMObj,
+                     const reco::MuonTimeExtra* tof,
+                     const edm::Event& iEvent,
+                     float Event_Weight,
+                     Tuple* tuple,
+                     const double& GenBeta,
+                     double MassErr,
+                     bool Ih_Iso_cut);
 
 private:
   virtual void beginJob() override;
