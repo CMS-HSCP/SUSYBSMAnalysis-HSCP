@@ -579,14 +579,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_dR;
   std::vector<float> HSCP_eta;
   std::vector<float> HSCP_phi;
-  std::vector<unsigned int> HSCP_NOH;   //number of (valid) track pixel+strip hits
-  std::vector<unsigned int> HSCP_NOPH;  //number of (valid) track pixel hits
-  std::vector<float> HSCP_FOVH;         //fraction of valid track hits
-  std::vector<unsigned int>
-      HSCP_NOMH;                  //number of missing hits from IP till last hit (excluding hits behind the last hit)
-  std::vector<float> HSCP_FOVHD;  //fraction of valid hits divided by total expected hits until the last one
-  std::vector<unsigned int>
-      HSCP_NOM;  //number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+  // Number of (valid) track pixel+strip hits
+  std::vector<unsigned int> HSCP_NOH;
+  // Number of (valid) track pixel hits
+  std::vector<unsigned int> HSCP_NOPH;
+  // Fraction of valid track hits
+  std::vector<float> HSCP_FOVH;
+  // Number of missing hits from IP till last hit (excluding hits behind the last hit)
+  std::vector<unsigned int> HSCP_NOMH;
+  // Fraction of valid hits divided by total expected hits until the last one
+  std::vector<float> HSCP_FOVHD;
+  // Number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+  std::vector<unsigned int> HSCP_NOM;
   std::vector<float> HSCP_iso_TK;
   std::vector<float> HSCP_iso_ECAL;
   std::vector<float> HSCP_iso_HCAL;
