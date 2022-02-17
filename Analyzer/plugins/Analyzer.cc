@@ -10,9 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v5.1: Move systematic studies to a diff function
-// v5.2: Remove !isSignal condition for trigger tests
-// v5.3 Several comments, and cleanup
+// v6: get rid of passTrigger and use passTriggerPatterns instead 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -285,7 +283,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (auto const& gen : genColl) {
       if (!isGoodGenHSCP(gen,false)) continue;
       // categorise event with R-hadrons for additional weighting-----------------------BEGIN
-      int GenId = gen.pdgId();
+      int GenId = abs(gen.pdgId());
       if (GenId == 1000612 || GenId == 1092214) {
         nw += 1;  // count wrong
       } else if (abs(GenId) == 1006223 || abs(GenId) == 1092224) {
@@ -376,15 +374,27 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
 
   // Check if the event is passing trigger
-  if (passTrigger(iEvent, isData)) {
+  bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
+  bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
+
+  if (!metTrig && muTrig) {
+    // mu only
+    TrigInfo_ = 1;
+  } else if (metTrig && !muTrig) {
+    // met only
+    TrigInfo_ = 2;  // met only
+  } else if (metTrig && muTrig) {
+    // mu and met
+    TrigInfo_ = 3;
+  }
+
+  if (metTrig || muTrig) {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers!";
   } else {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
   }
-  // TODO: Simply this by saying that trigger is passed if HLT_Mu50 or HLT_PFMET120_PFMHT120_IDTight or HLT_PFHT500_PFMET100_PFMHT100_IDTight or HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60
-  // or HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 or HLT_MET105_IsoTrk50 is true
 
   // Number of events that pass the trigger
   tuple->TotalTE->Fill(0.0, EventWeight_);
@@ -2603,82 +2613,6 @@ bool Analyzer::passSelection(const susybsm::HSCParticle& hscp,
     tuple->AS_TOFIm->Fill(CutIndex, MuonTOF, Ih, Event_Weight);
   }
   return true;
-}
-
-//=============================================================
-//
-//     Trigger-Selection
-//
-//=============================================================
-bool Analyzer::passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic, L1BugEmulator* emul) {
-  edm::Handle<edm::TriggerResults> triggerH;
-  iEvent.getByToken(triggerResultsToken_, triggerH);
-  bool valid = triggerH.isValid();
-  if (not valid) {
-    edm::LogError("Analyzer") << "HLT TriggerResults not found!";
-    return false;
-  }
-
-  const edm::TriggerNames& triggerNames = iEvent.triggerNames(*triggerH);
-
-  bool metTrig = PassTriggerPatterns(triggerH, triggerNames, trigger_met_);
-  bool muTrig = PassTriggerPatterns(triggerH, triggerNames, trigger_mu_);
-
-  if (!metTrig && muTrig)
-    TrigInfo_ = 1;  // mu only
-  if (metTrig && !muTrig)
-    TrigInfo_ = 2;  // met only
-  if (metTrig && muTrig)
-    TrigInfo_ = 3;  // mu and met*/
-
-  if (metTrig)
-    return true;
-  if (muTrig) {
-    if (!isData && emul) {
-      edm::Handle<vector<reco::Muon>> muonCollH;
-      iEvent.getByToken(muonToken_, muonCollH);
-      if (!muonCollH.isValid())
-        return false;
-      bool KeepEvent = false;
-      for (unsigned int c = 0; c < muonCollH->size(); c++) {
-        reco::MuonRef muon = reco::MuonRef(muonCollH.product(), c);
-        if (muon.isNull())
-          continue;
-        if (muon->track().isNull())
-          continue;
-        if (emul->PassesL1Inefficiency(muon->track()->pt(), std::fabs(muon->track()->eta()))) {
-          KeepEvent = true;
-          break;
-        }
-      }
-      return KeepEvent;
-    } else
-      return true;
-  }
-
-  return false;  //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
-  /*
-   //for(unsigned int i=0;i<tr.size();i++){
-   //printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
-   //}fflush(stdout);
-
-   //if(tr.accept("HSCPHLTTriggerMetDeDxFilter"))return true;
-   //if(tr.accept("HSCPHLTTriggerMuDeDxFilter"))return true;
-   if(tr.accept("HSCPHLTTriggerMuFilter"))return true;
-   if(tr.accept("HSCPHLTTriggerPFMetFilter"))return true;
-
-   //Could probably use this trigger for the other analyses as well
-   if(TypeMode_==3){
-      if(tr.size()== tr.triggerIndex("HSCPHLTTriggerL2MuFilter")) return false;
-      if(tr.accept(tr.triggerIndex("HSCPHLTTriggerL2MuFilter")))  return true;
-
-      //Only accepted if looking for cosmic events
-      if(isCosmic) {
-         if(tr.size()== tr.triggerIndex("HSCPHLTTriggerCosmicFilter")) return false;
-         if(tr.accept(tr.triggerIndex("HSCPHLTTriggerCosmicFilter"))) return true;
-      }
-   }*/
-  return false;
 }
 
 //=============================================================
