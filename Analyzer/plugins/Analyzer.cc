@@ -11,6 +11,7 @@
 //
 // Modifications by Tamas Almos Vami
 // v6: get rid of passTrigger and use passTriggerPatterns instead 
+// v6.1: some technical changes and more comments
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -195,13 +196,6 @@ void Analyzer::beginJob() {
   MaxMass_SystPU = new double[CutPt_.size()];
   MaxMass_SystHUp = new double[CutPt_.size()];
   MaxMass_SystHDown = new double[CutPt_.size()];
-
-  /*HIPemulator.    setPeriodHIPRate(is2016G);
-   HIPemulatorUp.  setPeriodHIPRate(is2016G, "ratePdfPixel_Up", "ratePdfStrip_Up");
-   HIPemulatorDown.setPeriodHIPRate(is2016G, "ratePdfPixel_Up", "ratePdfStrip_Up");*/
-
-  //HIPemulatorUp(false, "ratePdfPixel_Up", "ratePdfStrip_Up");
-  //HIPemulatorDown(false, "ratePdfPixel_Down", "ratePdfStrip_Down");
 }
 
 // ------------ method called for each event  ------------
@@ -344,10 +338,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   // Get trigger results for this event
-  edm::Handle<edm::TriggerResults> triggerH;
-  iEvent.getByToken(triggerResultsToken_, triggerH);
+  //edm::Handle<edm::TriggerResults> triggerH;
+  //iEvent.getByToken(triggerResultsToken_, triggerH);
+  const edm::Handle<edm::TriggerResults> triggerH = iEvent.getHandle(triggerResultsToken_);
   const edm::TriggerNames& triggerNames = iEvent.triggerNames(*triggerH);
 
+  // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
   bool HLT_Mu50 = false;
   bool HLT_PFMET120_PFMHT120_IDTight = false;
   bool HLT_PFHT500_PFMET100_PFMHT100_IDTight = false;
@@ -388,7 +384,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     TrigInfo_ = 3;
   }
 
-  if (metTrig || muTrig) {
+  if (TrigInfo_ > 0) {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers!";
   } else {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";

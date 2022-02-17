@@ -57,9 +57,11 @@ void MCWeight::loadPileupWeights(TString period) {
   std::string MCDist;
 
   getPileupEvents(period, MCDist, TrueDist, TrueDist_XSecShiftUp, TrueDist_XSecShiftDown);
-
+  edm::LogPrint("MCWeight") << "Reweighting for true distribution";
   LumiWeights_ = reweight::LumiReWeighting(MCDist, TrueDist, "pileup", "pileup");
+  edm::LogPrint("MCWeight") << "Reweighting for XSecShiftUp";
   LumiWeightsUp_ = reweight::LumiReWeighting(MCDist, TrueDist_XSecShiftUp, "pileup", "pileup");
+  edm::LogPrint("MCWeight") << "Reweighting for XSecShiftDown";
   LumiWeightsDown_ = reweight::LumiReWeighting(MCDist, TrueDist_XSecShiftDown, "pileup", "pileup");
 }
 
