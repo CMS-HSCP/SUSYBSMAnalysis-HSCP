@@ -146,7 +146,7 @@ public:
                         double MassErr,
                         bool Ih_Iso_cut = true);
 
-  bool passSelection(const susybsm::HSCParticle& hscp,
+  bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
@@ -159,8 +159,6 @@ public:
                      bool RescaleP,
                      const double& RescaleI,
                      const double& RescaleT);
-
-  bool passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic = false, L1BugEmulator* emul = nullptr);
 
   //int  muonStations(const reco::HitPattern& hitPattern);
   double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
