@@ -404,6 +404,33 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "Beta_Triggered";
   tuple->Beta_Triggered = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
   tuple->Beta_Triggered->Sumw2();
+
+  Name = "BS_ProbQ";
+  tuple->BS_ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbQ->Sumw2();
+  Name = "BS_ProbXY";
+  tuple->BS_ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbXY->Sumw2();
+  Name = "BS_ProbQNoL1";
+  tuple->BS_ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbQNoL1->Sumw2();
+  Name = "BS_ProbXYNoL1";
+  tuple->BS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbXYNoL1->Sumw2();
+
+  Name = "ProbQ";
+  tuple->ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbQ->Sumw2();
+  Name = "ProbQNoL1";
+  tuple->ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbQNoL1->Sumw2();
+  Name = "ProbXY";
+  tuple->ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbXY->Sumw2();
+  Name = "ProbXYNoL1";
+  tuple->ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbXYNoL1->Sumw2();
+
   Name = "Beta_Matched";
   tuple->Beta_Matched = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
   tuple->Beta_Matched->Sumw2();

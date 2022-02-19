@@ -202,6 +202,25 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->Beta_GenCharged = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Beta_Triggered";
   tuple->Beta_Triggered = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
+  Name = "BS_ProbQ";
+  tuple->BS_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_ProbXY";
+  tuple->BS_ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_ProbQNoL1";
+  tuple->BS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_ProbXYNoL1";
+  tuple->BS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  
+  Name = "ProbQ";
+  tuple->ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbQNoL1";
+  tuple->ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbXY";
+  tuple->ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbXYNoL1";
+  tuple->ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  
   Name = "Beta_Matched";
   tuple->Beta_Matched = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Beta_PreselectedA";

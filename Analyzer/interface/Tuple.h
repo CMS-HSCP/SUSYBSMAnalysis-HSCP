@@ -200,6 +200,17 @@ struct Tuple {
   TH1F* Beta_Gen;
   TH1F* Beta_GenCharged;
   TH1F* Beta_Triggered;
+
+  TH1F* BS_ProbQ;
+  TH1F* BS_ProbXY;
+  TH1F* BS_ProbQNoL1;
+  TH1F* BS_ProbXYNoL1;
+  
+  TH1F* ProbQ;
+  TH1F* ProbQNoL1;
+  TH1F* ProbXY;
+  TH1F* ProbXYNoL1;
+
   TH1F* Beta_Matched;
   TH1F* Beta_PreselectedA;
   TH1F* Beta_PreselectedB;

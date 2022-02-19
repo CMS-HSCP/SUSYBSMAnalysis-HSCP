@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v7: Rearrange plots for gen, simplify getting handles, other simplifications
+// v7p1: Rearrange plots for gen, simplify getting handles, other simplifications, add probQ plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -797,22 +797,36 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     probQonTrackNoLayer1 = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
     probXYonTrackNoLayer1 = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
 
-    // Cut away background events based on the probQ
-    if (probQonTrack > trackProbQCut_ || probQonTrackNoLayer1 > trackProbQCut_) {
-      if (debugLevel_ > 3) LogPrint(MOD) << "probQonTrack > trackProbQCut_, skipping it";
-      continue;
-    }
-
     // Cleaning of tracks that had failed the template CPE (prob = 0.0 and prob = 1.0 cases)
     if (probQonTrack == 0.0 || probQonTrackNoLayer1 == 0.0 || probQonTrack == 1.0 || probQonTrackNoLayer1 == 1.0) {
       continue;
     }
 
+    // Fill up before selection cut plots
+    tuple->BS_ProbQ->Fill(probQonTrack, Event_Weight_);
+    tuple->BS_ProbXY->Fill(probXYonTrack, Event_Weight_);
+    tuple->BS_ProbQNoL1->Fill(probQonTrackNoLayer1, Event_Weight_);
+    tuple->BS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, Event_Weight_);
+
+    // Cut away background events based on the probQ
+    if (probQonTrack > trackProbQCut_ || probQonTrackNoLayer1 > trackProbQCut_) {
+      if (debugLevel_ > 3) LogPrint(MOD) << "probQonTrack > trackProbQCut_, skipping it";
+      continue;
+    } else {
+      tuple->ProbQ->Fill(probQonTrack, Event_Weight_);
+      tuple->ProbQNoL1->Fill(probQonTrackNoLayer1, Event_Weight_);
+    }
+
+    // Cut away background events based on the probXY
     if (probXYonTrack < 0.01 || probXYonTrack > 0.99) {
       if (debugLevel_ > 3) LogPrint(MOD) << "probXYonTrack < 0.01 or probXYonTrack > 0.99, skipping it";
       continue;
+    } else {
+      tuple->ProbXY->Fill(probXYonTrack, Event_Weight_);
+      tuple->ProbXYNoL1->Fill(probXYonTrackNoLayer1, Event_Weight_);
     }
-    if(probQonTrack!=0 && debugLevel_> 0) {
+
+    if(debugLevel_> 0) {
        LogPrint(MOD) << "  >> probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack;
        LogPrint(MOD) << "  >> probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1;
     }
@@ -822,7 +836,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     unsigned int pdgId = 0;
     if (isSignal) {
-      pdgId = genColl[ClosestGen].pdgId();
+      pdgId = abs(genColl[ClosestGen].pdgId());
       LogPrint(MOD) << "  >> GenId  " << pdgId;
     }
 
@@ -924,6 +938,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         calculateSyst(track, hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, -1, MassErr, true);
       }
     }  //End of systematic computation for signal
+    // ------------------------------------------------------------------------------------
 
 
     if (debugLevel_ > 5 ) LogPrint(MOD)  << "        >> DeDxK: " << DeDxK << " DeDxC: " << DeDxC;
@@ -931,14 +946,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     /*const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT, double MassErr*/
 
 
-    // Check if we pass the preselection for data / maybe background
+    // Check if we pass the preselection
     bool passPre = true;
     bool passPre_noIh_noIso = true;
-
-    if (isBckg) {
-      // tav: what is happening here? it return a bool and then what?
-      passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, tuple, -1, false, 0, 0, MassErr);
-    }
 
     if (debugLevel_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
     passPre = (passPreselection(hscp,
@@ -2176,7 +2186,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
       //WAIT//tuple->H_D_DzSidebands->Fill(CutIndex, DzType);
       //WAIT//}
     }
-  }
+  } // end for typemode 3 with no global muon
 
   TreeDZ = dz;
   bool DZSB = false;
@@ -2206,7 +2216,9 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   }
   if (tuple)
     tuple->BS_Phi->Fill(track->phi(), Event_Weight);
+
   if (TypeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) {
+    if (debugLevel_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, 1.2 < phi < 1.9";
     return false;
   }
   //skip HSCP that are compatible with cosmics.
@@ -2374,7 +2386,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
       return false;
   } else {
     if (track->pt() < PtCut) {
-      if (debugLevel_ > 6) LogPrint(MOD) << "        >> @passSelection: p_T less than p_T cut ( " << PtCut << " )";
+      if (debugLevel_ > 6) LogPrint(MOD) << "        >> @passSelection: p_T less than p_T cut (" << PtCut << ")";
       return false;
     }
   }
@@ -2386,7 +2398,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   }
 
   if (TypeMode_ != 3 && Is + RescaleI < ICut) {
-    if (debugLevel_ > 6) LogPrint(MOD) << "        >> @passSelection: I_s less than I_s cut ( " << ICut << " )";
+    if (debugLevel_ > 6) LogPrint(MOD) << "        >> @passSelection: I_s less than I_s cut (" << ICut << ")";
     return false;
   }
 
