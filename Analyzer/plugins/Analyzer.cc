@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v7p1: Rearrange plots for gen, simplify getting handles, other simplifications, add probQ plots
+// v8: Remove probXY cut
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -803,28 +803,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     // Fill up before selection cut plots
-    tuple->BS_ProbQ->Fill(probQonTrack, Event_Weight_);
-    tuple->BS_ProbXY->Fill(probXYonTrack, Event_Weight_);
-    tuple->BS_ProbQNoL1->Fill(probQonTrackNoLayer1, Event_Weight_);
-    tuple->BS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, Event_Weight_);
+    tuple->BS_ProbQ->Fill(probQonTrack, EventWeight_);
+    tuple->BS_ProbXY->Fill(probXYonTrack, EventWeight_);
+    tuple->BS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
+    tuple->BS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
 
     // Cut away background events based on the probQ
     if (probQonTrack > trackProbQCut_ || probQonTrackNoLayer1 > trackProbQCut_) {
       if (debugLevel_ > 3) LogPrint(MOD) << "probQonTrack > trackProbQCut_, skipping it";
       continue;
-    } else {
-      tuple->ProbQ->Fill(probQonTrack, Event_Weight_);
-      tuple->ProbQNoL1->Fill(probQonTrackNoLayer1, Event_Weight_);
     }
+    tuple->ProbQ->Fill(probQonTrack, EventWeight_);
+    tuple->ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
 
     // Cut away background events based on the probXY
-    if (probXYonTrack < 0.01 || probXYonTrack > 0.99) {
-      if (debugLevel_ > 3) LogPrint(MOD) << "probXYonTrack < 0.01 or probXYonTrack > 0.99, skipping it";
+    // This should be revised, for now switching it off
+    if (probXYonTrack < 0.0 || probXYonTrack > 1.0) {
+      //if (debugLevel_ > 3) LogPrint(MOD) << "probXYonTrack < 0.01 or probXYonTrack > 0.99, skipping it";
+      if (debugLevel_ > 3) LogPrint(MOD) << "probXYonTrack < 0.0 or probXYonTrack > 1.0, skipping it";
       continue;
-    } else {
-      tuple->ProbXY->Fill(probXYonTrack, Event_Weight_);
-      tuple->ProbXYNoL1->Fill(probXYonTrackNoLayer1, Event_Weight_);
-    }
+    } 
+    tuple->ProbXY->Fill(probXYonTrack, EventWeight_);
+    tuple->ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
 
     if(debugLevel_> 0) {
        LogPrint(MOD) << "  >> probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack;
@@ -1096,10 +1096,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                            false,
                            0,
                            0)) {
-          if (debugLevel_ > 3 ) LogPrint(MOD) << "      >> Selection failed, skipping this CutIndex = " << CutIndex;
+          if (debugLevel_ > 3 ) LogPrint(MOD) << "        >> Selection failed, skipping this CutIndex = " << CutIndex;
           continue;
         } else {
-          if (debugLevel_ > 3 ) LogPrint(MOD) << "      >> Selection passed with CutIndex = " << CutIndex;
+          if (debugLevel_ > 3 ) LogPrint(MOD) << "        >> Selection passed with CutIndex = " << CutIndex;
         }
         if (CutIndex != 0)
           PassNonTrivialSelection = true;
