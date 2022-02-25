@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v8: Remove probXY cut
+// v8p1: Introduce min and max eta cuts
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -80,7 +80,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       SGTree(iConfig.getUntrackedParameter<unsigned int>("saveGenTree")),
       pixelCPE_(iConfig.getParameter<std::string>("pixelCPE")),
       trackProbQCut_(iConfig.getUntrackedParameter<double>("trackProbQCut")),
-      debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel"))
+      debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel")),
+      etaMinCut_(iConfig.getUntrackedParameter<double>("EtaMinCut")),
+      etaMaxCut_(iConfig.getUntrackedParameter<double>("EtaMaxCut"))
  {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
@@ -175,9 +177,11 @@ void Analyzer::beginJob() {
   is2016 = false;
   is2016G = false;
 
-  ////PUSystFactor_.clear();
-  //PUSystFactor_.resize(2, 1.);
-  //PUSystFactor_[0] = PUSystFactor_[1] = 0.;
+  // TODO: This is needed when there is no PU reweighting, i.e. data
+  // Should be revised
+  //PUSystFactor_.clear();
+  PUSystFactor_.resize(2, 1.);
+  PUSystFactor_[0] = PUSystFactor_[1] = 0.;
 
   HSCPTk = new bool[CutPt_.size()];
   HSCPTk_SystP = new bool[CutPt_.size()];
@@ -233,13 +237,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   //get the collection of generated Particles
   vector<reco::GenParticle> genColl;
-  const edm::Handle<vector<reco::GenParticle>> genCollH = iEvent.getHandle(genParticleToken_);
-
-  if (!isData && !genCollH.isValid()) {
-    LogWarning("Analyzer") << "Invalid GenParticle collection, this event will be ignored";
-    return;
-  } else {
-    genColl = *genCollH;
+  if (!isData) {
+    const edm::Handle<vector<reco::GenParticle>> genCollH = iEvent.getHandle(genParticleToken_);
+    if (!genCollH.isValid()) {
+      LogWarning("Analyzer") << "Invalid GenParticle collection, this event will be ignored";
+      return;
+    } else {
+      genColl = *genCollH;
+    }
   }
   
   float SignalEventWeight = 1.0;
@@ -286,56 +291,57 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   vector<float> geneta;
   vector<float> genphi;
 
-  for (auto const& gen : genColl) {
-    int GenId = abs(gen.pdgId());
-    if (isSignal && isGoodGenHSCP(gen,false)) {
-      // Categorise event with R-hadrons for additional weighting
-      if (GenId == 1000612 || GenId == 1092214) {
-        nw += 1;  // count wrong
-      } else if (abs(GenId) == 1006223 || abs(GenId) == 1092224) {
-        nd += 1;  // count doble charged
-      } else if (abs(GenId) == 1006113. || abs(GenId) == 1006333. || abs(GenId) == 1006313. || abs(GenId) == 1000622. ||
-                 abs(GenId) == 1092114. || abs(GenId) == 1093324. || abs(GenId) == 1093214. || abs(GenId) == 1009333. ||
-                 abs(GenId) == 1009223. || abs(GenId) == 1009113. || abs(GenId) == 1009313. || abs(GenId) == 1000993.) {
-        nn += 1;  // count neutral
-      } else if (abs(GenId) > 1000000) {
-        na += 1;
-      }  // count other R-hadrons
+  if (!isData) {
+    for (auto const& gen : genColl) {
+      int GenId = abs(gen.pdgId());
+      if (isSignal && isGoodGenHSCP(gen,false)) {
+        // Categorise event with R-hadrons for additional weighting
+        if (GenId == 1000612 || GenId == 1092214) {
+          nw += 1;  // count wrong
+        } else if (abs(GenId) == 1006223 || abs(GenId) == 1092224) {
+           nd += 1;  // count doble charged
+        } else if (abs(GenId) == 1006113. || abs(GenId) == 1006333. || abs(GenId) == 1006313. || abs(GenId) == 1000622. ||
+                   abs(GenId) == 1092114. || abs(GenId) == 1093324. || abs(GenId) == 1093214. || abs(GenId) == 1009333. ||
+                   abs(GenId) == 1009223. || abs(GenId) == 1009113. || abs(GenId) == 1009313. || abs(GenId) == 1000993.) {
+          nn += 1;  // count neutral
+        } else if (abs(GenId) > 1000000) {
+          na += 1;
+        }  // count other R-hadrons
       
-      // Fill up pT, eta, and beta plots for gen-level HSCP particles
-      tuple->genlevelpT->Fill(gen.pt(), SignalEventWeight);
-      tuple->genleveleta->Fill(gen.eta(), SignalEventWeight);
-      tuple->genlevelbeta->Fill(gen.p() / gen.energy(), SignalEventWeight);
+        // Fill up pT, eta, and beta plots for gen-level HSCP particles
+        tuple->genlevelpT->Fill(gen.pt(), SignalEventWeight);
+        tuple->genleveleta->Fill(gen.eta(), SignalEventWeight);
+        tuple->genlevelbeta->Fill(gen.p() / gen.energy(), SignalEventWeight);
       
-      // Variables for the tuple gen tree branch
-      genid.push_back(gen.pdgId());
-      gencharge.push_back(gen.charge());
-      genmass.push_back(gen.mass());
-      genpt.push_back(gen.pt());
-      geneta.push_back(gen.eta());
-      genphi.push_back(gen.phi());
-    } else if (isBckg) {
-      // Fill up pT, eta, and beta plots for gen-level background particles
-      tuple->genlevelpT->Fill(gen.pt(), EventWeight_);
-      tuple->genleveleta->Fill(gen.eta(), EventWeight_);
-      tuple->genlevelbeta->Fill(gen.p() / gen.energy(), EventWeight_);
-      // TODO: I'm not sure if this needs to be weighted
+        // Variables for the tuple gen tree branch
+        genid.push_back(gen.pdgId());
+        gencharge.push_back(gen.charge());
+        genmass.push_back(gen.mass());
+        genpt.push_back(gen.pt());
+        geneta.push_back(gen.eta());
+        genphi.push_back(gen.phi());
+      } else if (isBckg) {
+        // Fill up pT, eta, and beta plots for gen-level background particles
+        tuple->genlevelpT->Fill(gen.pt(), EventWeight_);
+        tuple->genleveleta->Fill(gen.eta(), EventWeight_);
+        tuple->genlevelbeta->Fill(gen.p() / gen.energy(), EventWeight_);
+        // TODO: I'm not sure if this needs to be weighted
 //      tuple->genlevelpT->Fill(gen.pt());
 //      tuple->genleveleta->Fill(gen.eta());
 //      tuple->genlevelbeta->Fill(gen.p() / gen.energy());
       
-      // Variables for the tuple gen tree branch
-      genid.push_back(gen.pdgId());
-      gencharge.push_back(gen.charge());
-      genmass.push_back(gen.mass());
-      genpt.push_back(gen.pt());
-      geneta.push_back(gen.eta());
-      genphi.push_back(gen.phi());
-    }
-  }
-  
-  if (debugLevel_ > 3 ) LogPrint(MOD) << "Fill GenTree with basics gen info";
-  tuple_maker->fillGenTreeBranches(tuple,
+        // Variables for the tuple gen tree branch
+        genid.push_back(gen.pdgId());
+        gencharge.push_back(gen.charge());
+        genmass.push_back(gen.mass());
+        genpt.push_back(gen.pt());
+        geneta.push_back(gen.eta());
+        genphi.push_back(gen.phi());
+      }
+    } 
+
+    if (debugLevel_ > 3 ) LogPrint(MOD) << "Fill GenTree with basics gen info";
+    tuple_maker->fillGenTreeBranches(tuple,
                                      iEvent.id().run(),
                                      iEvent.id().event(),
                                      iEvent.id().luminosityBlock(),
@@ -346,10 +352,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                      genpt,
                                      geneta,
                                      genphi);
+  }
 
   // Get trigger results for this event
   const edm::Handle<edm::TriggerResults> triggerH = iEvent.getHandle(triggerResultsToken_);
-  const edm::TriggerNames& triggerNames = iEvent.triggerNames(*triggerH);
+  const auto triggerNames = iEvent.triggerNames(*triggerH);
 
   // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
   bool HLT_Mu50 = false;
@@ -371,13 +378,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50") && triggerH->accept(i))
       HLT_MET105_IsoTrk50 = true;
   }
-
   // Number of (re-weighted) events
   tuple->TotalE->Fill(0.0, EventWeight_);
   // Number of (re-weighted with PU syst fact) events
   tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
 
   // Check if the event is passing trigger
+  if (debugLevel_ > 0) LogPrint(MOD) << "Check if the event is passing trigger";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
 
@@ -644,6 +651,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (debugLevel_> 0) LogPrint(MOD) << "  >> TypeMode_ > 1 && TypeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
       continue;
     }
+
+    // Cut for a min eta
+    if (abs(track->eta()) < etaMinCut_) {
+      continue;
+    }
+
+    // Cut for a max eta
+    if (abs(track->eta()) > etaMaxCut_) {
+      continue;
+    }
+
     //Apply a scale factor to muon only analysis to account for differences seen in data/MC preselection efficiency
     //For eta regions where Data > MC no correction to be conservative
     if (!isData && TypeMode_ == 3 && scaleFactor(track->eta()) < RNG->Uniform(0, 1)) {
