@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Tamas Almos Vami
-// v8p1: Introduce min and max eta cuts
+// v9: Add gen matching of the track as protection againts fakes
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -43,6 +43,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection"))),
+      trackToGenToken_(consumes<edm::Association<reco::GenParticleCollection>>(
+          iConfig.getParameter<edm::InputTag>("trackToGenAssoc"))),
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
@@ -691,6 +693,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float probXYonTrackWMulti = 1;
     float probQonTrackWMultiNoLayer1 = 1;
     float probXYonTrackWMultiNoLayer1 = 1;
+
+    // Associate gen track to reco track
+    if (!isData) {
+      // Handle for the gen association of the track
+      edm::Handle<edm::Association<reco::GenParticleCollection>>  trackToGenAssocHandle = iEvent.getHandle(trackToGenToken_);
+      if (not trackToGenAssocHandle.isValid()) {
+        LogDebug(MOD) << "trackToGenAssocHandle is invalid -- this should never happen";
+        continue;
+      }
+      const auto& trackToGenAssoc = *trackToGenAssocHandle;
+      reco::GenParticleRef genCollForTrack = trackToGenAssoc[track]; //.key()];
+      if (genCollForTrack.isNull()) {
+        LogPrint(MOD) << "  >> No associated gen track to this candidate"; 
+        continue;
+      }
+      cout << "genCollForTrack pt: " <<genCollForTrack->pt() << endl;
+    }
+
 
     //for signal only, make sure that the candidate is associated to a true HSCP
     int ClosestGen;
