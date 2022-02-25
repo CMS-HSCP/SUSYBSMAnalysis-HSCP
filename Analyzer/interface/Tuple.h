@@ -163,7 +163,7 @@ struct Tuple {
   TH1F* TotalTE;
   TH1F* Total;
   TH1F* V3D;
-  TH1F* Chi2;
+  TH1F* Chi2PerNdof;
   TH1F* Qual;
   TH1F* TNOH;
   TH1F* TNOM;
@@ -200,6 +200,17 @@ struct Tuple {
   TH1F* Beta_Gen;
   TH1F* Beta_GenCharged;
   TH1F* Beta_Triggered;
+
+  TH1F* BS_ProbQ;
+  TH1F* BS_ProbXY;
+  TH1F* BS_ProbQNoL1;
+  TH1F* BS_ProbXYNoL1;
+  
+  TH1F* ProbQ;
+  TH1F* ProbQNoL1;
+  TH1F* ProbXY;
+  TH1F* ProbXYNoL1;
+
   TH1F* Beta_Matched;
   TH1F* Beta_PreselectedA;
   TH1F* Beta_PreselectedB;
@@ -209,7 +220,7 @@ struct Tuple {
   TH2F* Beta_SelectedT;
 
   TH1F* BS_V3D;
-  TH1F* BS_Chi2;
+  TH1F* BS_Chi2PerNdof;
   TH1F* BS_Qual;
   TH1F* BS_TNOH;
   TH1F* BS_TNOH_PUA;

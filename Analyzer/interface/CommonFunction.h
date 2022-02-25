@@ -1541,7 +1541,7 @@ int muonStations(const reco::HitPattern& hitPattern) {
 //     Trigger patterns
 //
 //=============================================================
-bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
+bool passTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
                          const edm::TriggerNames triggerNames,
                          std::vector<std::string> patterns) {
   for (unsigned int i = 0; i < triggerNames.triggerNames().size(); i++) {
@@ -1553,7 +1553,7 @@ bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
   }
   return false;
 }
-bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
+bool passTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
                          const edm::TriggerNames triggerNames,
                          std::string pattern) {
   for (uint i = 0; i < triggerNames.triggerNames().size(); i++) {

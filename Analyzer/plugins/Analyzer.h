@@ -103,13 +103,11 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 
-#include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
-#include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
-#include "TrackingTools/PatternTools/interface/Trajectory.h"
-#include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
-#include "TrackingTools/TrajectoryState/interface/TrajectoryStateTransform.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
-#include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
+#include "RecoLocalTracker/ClusterParameterEstimator/interface/PixelClusterParameterEstimator.h"
+#include "Geometry/Records/interface/TrackerTopologyRcd.h"
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 
 using namespace std;
 
@@ -148,7 +146,7 @@ public:
                         double MassErr,
                         bool Ih_Iso_cut = true);
 
-  bool passSelection(const susybsm::HSCParticle& hscp,
+  bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
@@ -162,18 +160,30 @@ public:
                      const double& RescaleI,
                      const double& RescaleT);
 
-  bool passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic = false, L1BugEmulator* emul = nullptr);
-
   //int  muonStations(const reco::HitPattern& hitPattern);
   double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
   double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
+  float combineProbs(float probOnTrackWMulti, int numRecHits) const;
+  void calculateSyst(reco::TrackRef track,
+                     const susybsm::HSCParticle& hscp,
+                     const reco::DeDxHitInfo* dedxHits,
+                     const reco::DeDxData* dedxSObj,
+                     const reco::DeDxData* dedxMObj,
+                     const reco::MuonTimeExtra* tof,
+                     const edm::Event& iEvent,
+                     float Event_Weight,
+                     Tuple* tuple,
+                     const double& GenBeta,
+                     double MassErr,
+                     bool Ih_Iso_cut);
 
 private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
   virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
+
 
   // ----------member data ---------------------------
   // HSCP, dEdx and TOF collections
@@ -198,11 +208,11 @@ private:
   edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
-  edm::EDGetTokenT<TrajTrackAssociationCollection> m_trajTag;
+  edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
 
   //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
   //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
-  std::string datatier_;
+
   vector<string> trigger_met_, trigger_mu_;
 
   vector<double> CutPt_, CutI_, CutTOF_;
@@ -269,7 +279,7 @@ private:
 
   // Thresholds for candidate preselection
   double GlobalMaxEta = 2.1;      // cut on inner tracker track eta
-  double GlobalMaxV3D = 99999;    //0.50;   // cut on 3D distance (cm) to closest vertex
+  double GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
   double GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
   double GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction
   double GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF
@@ -332,8 +342,6 @@ private:
   unsigned int STree = 0;
   unsigned int SGTree = 0;
 
-  double probQCut = 1.0;
-
   // Emulators
   /*dedxHIPEmulator      HIPemulator;
       dedxHIPEmulator      HIPemulatorUp;
@@ -365,5 +373,11 @@ private:
 
   double preTrackingChangeL1IntLumi_ = 29679.982;  // pb
   double IntegratedLuminosity_ = 33676.4;          //13TeV16
+
+  const std::string pixelCPE_;
+  const double trackProbQCut_;
+  const int debugLevel_;
+  const double etaMinCut_;
+  const double etaMaxCut_;
 };
 #endif

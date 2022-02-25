@@ -188,33 +188,33 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "Total";
   tuple->Total = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "V3D";
-  tuple->V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "Chi2";
-  tuple->Chi2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10); 
+  Name = "Chi2PerNdof";
+  tuple->Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   Name = "Qual";
-  tuple->Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   Name = "TNOH";
-  tuple->TNOH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->TNOH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
   Name = "TNOM";
-  tuple->TNOM = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->TNOM = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
   Name = "nDof";
-  tuple->nDof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->nDof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 40);
   Name = "tofError";
-  tuple->tofError = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->tofError = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 0.25);
   Name = "Pterr";
-  tuple->Pterr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->Pterr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
   Name = "TIsol";
-  tuple->TIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->TIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 100);
   Name = "EIsol";
-  tuple->EIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->EIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 1.5);
   Name = "SumpTOverpT";
-  tuple->SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
   Name = "MPt";
-  tuple->MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   Name = "MI";
-  tuple->MI = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->MI = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
   Name = "MTOF";
-  tuple->MTOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->MTOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2, 5);
   Name = "Pt";
   tuple->Pt = dir.make<TH1F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
   Name = "I";
@@ -230,9 +230,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "Stations";
   tuple->Stations = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Dxy";
-  tuple->Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
   Name = "Dz";
-  tuple->Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  tuple->Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
   Name = "SegSep";
   tuple->SegSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "FailDz";
@@ -404,6 +404,33 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "Beta_Triggered";
   tuple->Beta_Triggered = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
   tuple->Beta_Triggered->Sumw2();
+
+  Name = "BS_ProbQ";
+  tuple->BS_ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbQ->Sumw2();
+  Name = "BS_ProbXY";
+  tuple->BS_ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbXY->Sumw2();
+  Name = "BS_ProbQNoL1";
+  tuple->BS_ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbQNoL1->Sumw2();
+  Name = "BS_ProbXYNoL1";
+  tuple->BS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->BS_ProbXYNoL1->Sumw2();
+
+  Name = "ProbQ";
+  tuple->ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbQ->Sumw2();
+  Name = "ProbQNoL1";
+  tuple->ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbQNoL1->Sumw2();
+  Name = "ProbXY";
+  tuple->ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbXY->Sumw2();
+  Name = "ProbXYNoL1";
+  tuple->ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbXYNoL1->Sumw2();
+
   Name = "Beta_Matched";
   tuple->Beta_Matched = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
   tuple->Beta_Matched->Sumw2();
@@ -429,9 +456,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_V3D";
   tuple->BS_V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, 0, IPbound);
   tuple->BS_V3D->Sumw2();
-  Name = "BS_Chi2";
-  tuple->BS_Chi2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
-  tuple->BS_Chi2->Sumw2();
+  Name = "BS_Chi2PerNdof";
+  tuple->BS_Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
+  tuple->BS_Chi2PerNdof->Sumw2();
   Name = "BS_Qual";
   tuple->BS_Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   tuple->BS_Qual->Sumw2();
@@ -775,27 +802,29 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   //   Name = "AS_EtaTOF"; AS_EtaTOF = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, 3);
   Name = "AS_PIs";
   tuple->AS_PIs =
-      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 250, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
   Name = "AS_PIm";
   tuple->AS_PIm =
-      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 250, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
+      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "AS_PtIs";
   tuple->AS_PtIs =
-      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 250, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
   Name = "AS_PtIm";
   tuple->AS_PtIm =
-      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 250, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
+      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "AS_TOFIs";
-  tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, 5, 50, 0, dEdxS_UpLim);
+  tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 50, 0, dEdxS_UpLim);
   Name = "AS_TOFIm";
-  tuple->AS_TOFIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, 5, 100, 0, dEdxM_UpLim);
+  tuple->AS_TOFIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
 
   Name = "H_D_DzSidebands";
   tuple->H_D_DzSidebands = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, DzRegions, 0, DzRegions);
   tuple->H_D_DzSidebands->Sumw2();
 
-  //Background prediction histograms don't need to be made for signal or individual MC samples
-  if (!isSignal) {
+  // Background prediction histograms don't need to be made for signal or individual MC samples
+  // if (!isSignal) {
+  // Although not needed let's still do it for every input
+  if (true) {
     Name = "H_A";
     tuple->H_A = dir.make<TH1D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
     tuple->H_A->Sumw2();
@@ -1478,6 +1507,9 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
                                               std::vector<double> CutI_Flip,
                                               std::vector<double> CutTOF_Flip) {
   using namespace std;
+  using namespace edm;
+
+
   reco::TrackRef track;
   if (TypeMode != 3)
     track = hscp.trackRef();
@@ -1491,11 +1523,13 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   double MuonTOF = tof ? tof->inverseBeta() : GlobalMinTOF;
 
   double Is = 0;
-  if (dedxSObj)
+  if (dedxSObj) {
     Is = dedxSObj->dEdx();
+  }
   double Ih = 0;
-  if (dedxMObj)
+  if (dedxMObj) {
     Ih = dedxMObj->dEdx();
+  }
 
   if (!isCosmicSB) {
     tuple->Hist_Pt->Fill(track->pt(), Event_Weight);
@@ -1503,7 +1537,8 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     tuple->Hist_TOF->Fill(MuonTOF, Event_Weight);
   }
 
-  //          /\ I
+  // std::cout << "After PT, Is and TOF plots are filled" << std::endl;
+  //          /\ Is
   //       /\  |----------------------------
   //        |  |   |           |             |
   //        |  |   |           |             |
@@ -1543,6 +1578,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       bin = muonStations(track->hitPattern()) + 1;
   }
 
+  // std::cout << "Fill out the control plots" << std::endl;
   if (!isCosmicSB) {
     if (track->pt() > PtLimits[0]) {
       tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
@@ -1608,6 +1644,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (dedxMObj)
     Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(double I, bool MC, double dEdxK, double dEdxC)
 
+  // std::cout << "Loop on the cut index for signal region" << std::endl;
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {
     if (MuonTOF < GlobalMinTOF)
       continue;

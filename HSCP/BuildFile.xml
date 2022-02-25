@@ -35,8 +35,6 @@
 <use   name="SimGeneral/HepPDTRecord"/>
 <use   name="TrackingTools/TrackAssociator"/>
 <use   name="TrackingTools/TransientTrack"/>
-<use   name="SimTracker/TrackerHitAssociation"/>
-<use   name="TrackingTools/PatternTools"/>
 <use   name="hepmc"/>
 <use   name="root"/>
 <use   name="rootcore"/>

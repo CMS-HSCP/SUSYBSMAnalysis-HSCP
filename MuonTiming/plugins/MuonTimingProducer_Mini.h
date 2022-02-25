@@ -5,7 +5,7 @@
 //
 // Package:    MuonTimingProducer_Mini
 // Class:      MuonTimingProducer_Mini
-//
+// 
 /**\class MuonTimingProducer_Mini MuonTimingProducer_Mini.h RecoMuon/MuonIdentification/interface/MuonTimingProducer_Mini.h
 
  Description: <one line class summary>
@@ -18,6 +18,7 @@
 //         Created:  Mon Mar 16 12:27:22 CET 2009
 //
 //
+
 
 // system include files
 #include <memory>
@@ -35,23 +36,25 @@
 #include "DataFormats/MuonReco/interface/MuonTimeExtra.h"
 #include "SUSYBSMAnalysis/MuonTiming/interface/MuonTimingFiller_Mini.h"
 
+
 //
 // class decleration
 //
 
 class MuonTimingProducer_Mini : public edm::stream::EDProducer<> {
-public:
-  explicit MuonTimingProducer_Mini(const edm::ParameterSet&);
-  ~MuonTimingProducer_Mini() override;
+   public:
+      explicit MuonTimingProducer_Mini(const edm::ParameterSet&);
+      ~MuonTimingProducer_Mini() override;
 
-private:
-  void produce(edm::Event&, const edm::EventSetup&) override;
+   private:
+      void produce(edm::Event&, const edm::EventSetup&) override;
+      
+      // ----------member data ---------------------------
+      edm::InputTag m_muonCollection;
+      edm::EDGetTokenT<pat::MuonCollection> muonToken_;
 
-  // ----------member data ---------------------------
-  edm::InputTag m_muonCollection;
-  edm::EDGetTokenT<pat::MuonCollection> muonToken_;
+      MuonTimingFiller_Mini* theTimingFiller_;
 
-  MuonTimingFiller_Mini* theTimingFiller_;
 };
 
 #endif

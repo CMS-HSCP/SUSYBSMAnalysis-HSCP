@@ -50,8 +50,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->Total = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "V3D";
   tuple->V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Chi2";
-  tuple->Chi2 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "Chi2PerNdof";
+  tuple->Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Qual";
   tuple->Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "TNOH";
@@ -202,6 +202,25 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->Beta_GenCharged = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Beta_Triggered";
   tuple->Beta_Triggered = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
+  Name = "BS_ProbQ";
+  tuple->BS_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_ProbXY";
+  tuple->BS_ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_ProbQNoL1";
+  tuple->BS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_ProbXYNoL1";
+  tuple->BS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  
+  Name = "ProbQ";
+  tuple->ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbQNoL1";
+  tuple->ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbXY";
+  tuple->ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbXYNoL1";
+  tuple->ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  
   Name = "Beta_Matched";
   tuple->Beta_Matched = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Beta_PreselectedA";
@@ -219,8 +238,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
 
   Name = "BS_V3D";
   tuple->BS_V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "BS_Chi2";
-  tuple->BS_Chi2 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_Chi2PerNdof";
+  tuple->BS_Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_Qual";
   tuple->BS_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_TNOH";
@@ -552,72 +571,72 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
   FILE* pFile = fopen(Buffer, "w");
 
   fprintf(pFile, "#################### %20s ####################\n", DirName_.c_str());
-  fprintf(pFile, "#Events                       = %4.2E\n", tuple->TotalE->GetBinContent(1));
+  fprintf(pFile, "#Events                       = %4.2E\n", tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1));
   fprintf(pFile,
           "#Triggered Events             = %4.2E Eff=%4.3E\n",
-          tuple->TotalTE->GetBinContent(1),
-          tuple->TotalTE->GetBinContent(1) / tuple->TotalE->GetBinContent(1));
-  fprintf(pFile, "#Tracks                       = %4.2E\n", tuple->Total->GetBinContent(1));
+          tuple->TotalTE->Integral(0,tuple->TotalTE->GetNbinsX()+1),
+          tuple->TotalTE->Integral(0,tuple->TotalTE->GetNbinsX()+1) / tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1));
+  fprintf(pFile, "#Tracks                       = %4.2E\n", tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing TNOH   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->TNOH->GetBinContent(1),
-          tuple->TNOH->GetBinContent(1) / tuple->Total->GetBinContent(1));
+          tuple->TNOH->Integral(0,tuple->TNOH->GetNbinsX()+1),
+          tuple->TNOH->Integral(0,tuple->TNOH->GetNbinsX()+1) / tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing TNOM   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->TNOM->GetBinContent(1),
-          tuple->TNOM->GetBinContent(1) / tuple->TNOH->GetBinContent(1));
+          tuple->TNOM->Integral(0,tuple->TNOM->GetNbinsX()+1),
+          tuple->TNOM->Integral(0,tuple->TNOM->GetNbinsX()+1) / tuple->TNOH->Integral(0,tuple->TNOH->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing nDof   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->nDof->GetBinContent(1),
-          tuple->nDof->GetBinContent(1) / tuple->TNOM->GetBinContent(1));
+          tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1),
+          tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1) / tuple->TNOM->Integral(0,tuple->TNOM->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Qual   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Qual->GetBinContent(1),
-          tuple->Qual->GetBinContent(1) / tuple->nDof->GetBinContent(1));
+          tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1),
+          tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1) / tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1));
   fprintf(pFile,
-          "#Tracks passing Chi2   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Chi2->GetBinContent(1),
-          tuple->Chi2->GetBinContent(1) / tuple->Qual->GetBinContent(1));
+          "#Tracks passing Chi2PerNdof   cuts   = %4.2E Eff=%4.3E\n",
+          tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1),
+          tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1) / tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min Pt cuts   = %4.2E Eff=%4.3E\n",
-          tuple->MPt->GetBinContent(1),
-          tuple->MPt->GetBinContent(1) / tuple->Chi2->GetBinContent(1));
+          tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1),
+          tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1) / tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min I  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->MI->GetBinContent(1),
-          tuple->MI->GetBinContent(1) / tuple->MPt->GetBinContent(1));
+          tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1),
+          tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1) / tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min TOFcuts   = %4.2E Eff=%4.3E\n",
-          tuple->MTOF->GetBinContent(1),
-          tuple->MTOF->GetBinContent(1) / tuple->MI->GetBinContent(1));
+          tuple->MTOF->Integral(0,tuple->MTOF->GetNbinsX()+1),
+          tuple->MTOF->Integral(0,tuple->MTOF->GetNbinsX()+1) / tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Dxy    cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Dxy->GetBinContent(1),
-          tuple->Dxy->GetBinContent(1) / tuple->MTOF->GetBinContent(1));
+          tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1),
+          tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1) / tuple->MTOF->Integral(0,tuple->MTOF->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing TIsol  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->TIsol->GetBinContent(1),
-          tuple->TIsol->GetBinContent(1) / tuple->Dxy->GetBinContent(1));
+          tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1),
+          tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1) / tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing EIsol  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->EIsol->GetBinContent(1),
-          tuple->EIsol->GetBinContent(1) / tuple->TIsol->GetBinContent(1));
+          tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1),
+          tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1) / tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing PtErr  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Pterr->GetBinContent(1),
-          tuple->Pterr->GetBinContent(1) / tuple->EIsol->GetBinContent(1));
+          tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1),
+          tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1) / tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Dz  cuts      = %4.2E Eff=%4.3E\n",
-          tuple->Dz->GetBinContent(1),
-          tuple->Dz->GetBinContent(1) / tuple->Pterr->GetBinContent(1));
+          tuple->Dz->Integral(0,tuple->Dz->GetNbinsX()+1),
+          tuple->Dz->Integral(0,tuple->Dz->GetNbinsX()+1) / tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Basic  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Basic->GetBinContent(1),
-          tuple->Basic->GetBinContent(1) / tuple->Total->GetBinContent(1));
+          tuple->Basic->Integral(0,tuple->Basic->GetNbinsX()+1),
+          tuple->Basic->Integral(0,tuple->Basic->GetNbinsX()+1) / tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Pt     cuts   = %4.2E Eff=%4.3E\n",
           tuple->Pt->GetBinContent(CutIndex + 1),
-          tuple->Pt->GetBinContent(CutIndex + 1) / tuple->Pterr->GetBinContent(1));
+          tuple->Pt->GetBinContent(CutIndex + 1) / tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing I      cuts   = %4.2E Eff=%4.3E\n",
           tuple->I->GetBinContent(CutIndex + 1),
@@ -629,20 +648,20 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
   fprintf(pFile,
           "#Tracks passing selection     = %4.2E Eff=%4.3E\n",
           tuple->TOF->GetBinContent(CutIndex + 1),
-          tuple->TOF->GetBinContent(CutIndex + 1) / tuple->Total->GetBinContent(1));
+          tuple->TOF->GetBinContent(CutIndex + 1) / tuple->Total->Integral(0,tuple->Total->GetNbinsX()+1));
   fprintf(pFile, "--------------------\n");
   fprintf(pFile,
           "HSCP Detection Efficiency Before Trigger                           Eff=%4.3E\n",
-          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalE->GetBinContent(1)));
+          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1)));
   fprintf(pFile,
           "HSCP Detection Efficiency After  Trigger                           Eff=%4.3E\n",
-          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalTE->GetBinContent(1)));
+          tuple->TOF->GetBinContent(CutIndex + 1) / (2 * tuple->TotalTE->Integral(0,tuple->TotalTE->GetNbinsX()+1)));
   fprintf(pFile,
           "#HSCPTrack per HSCPEvent (with at least one HSCPTrack)             Eff=%4.3E\n",
           tuple->TOF->GetBinContent(CutIndex + 1) / (tuple->HSCPE->GetBinContent(CutIndex + 1)));
   fprintf(pFile,
           "HSCP Event Efficiency                                              Eff=%4.3E\n",
-          tuple->HSCPE->GetBinContent(CutIndex + 1) / (tuple->TotalE->GetBinContent(1)));
+          tuple->HSCPE->GetBinContent(CutIndex + 1) / (tuple->TotalE->Integral(0,tuple->TotalE->GetNbinsX()+1)));
 
   fprintf(pFile, "\n\n");
 
