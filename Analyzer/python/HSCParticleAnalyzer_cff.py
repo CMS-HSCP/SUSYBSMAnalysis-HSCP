@@ -25,6 +25,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,CaloMET = cms.InputTag("caloMet", "", "RECO")
     ,pileupInfo = cms.InputTag("addPileupInfo")
     ,genParticleCollection = cms.InputTag("genParticlesSkimmed")
+    ,trackToGenAssoc = cms.InputTag("allTrackMCMatch")
     #HLT triggers
     ,Trigger_Mu = cms.untracked.vstring("HLT_Mu50_v")
     ,Trigger_MET  = cms.untracked.vstring("HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v")
