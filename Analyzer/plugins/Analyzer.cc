@@ -463,50 +463,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //reinitialize the bookeeping array for each event
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystP[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystI[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystT[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystM[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystPU[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystHUp[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk_SystHDown[CutIndex] = false;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystP[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystI[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystT[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystM[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystPU[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystHUp[CutIndex] = -1;
-  }
-  for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     MaxMass_SystHDown[CutIndex] = -1;
   }
 
