@@ -141,6 +141,7 @@ public:
                         const reco::DeDxData* dedxMObj,
                         const reco::MuonTimeExtra* tof,
                         const edm::Event& iEvent,
+                        const edm::EventSetup& iSetup,
                         float Event_Weight,
                         Tuple* tuple,
                         const double& GenBeta,
@@ -176,6 +177,7 @@ public:
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
+                     const edm::EventSetup& iSetup,
                      float Event_Weight,
                      Tuple* tuple,
                      const double& GenBeta,
@@ -250,6 +252,10 @@ private:
   double OpenAngle = -1;  //global variable needed by PassPreselection... Ugly isn't it?!
   double TreeDXY = -1;
   double TreeDZ = -1;
+  double TreeprobQonTrack = -1;
+  double TreeprobQonTracknoL1 = -1;
+  double TreeprobXYonTrack = -1;
+  double TreeprobXYonTracknoL1 = -1;
   bool isCosmicSB = false;
   bool isSemiCosmicSB = false;
 
