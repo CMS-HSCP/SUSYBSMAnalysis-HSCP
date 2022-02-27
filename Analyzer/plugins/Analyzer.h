@@ -317,10 +317,17 @@ private:
   const int MaxPredBins =
       6;  // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
 
-  double dEdxK_Data = 2.580;
+  /*double dEdxK_Data = 2.580;
   double dEdxC_Data = 3.922;
   double dEdxK_MC = 2.935;
-  double dEdxC_MC = 3.197;
+  double dEdxC_MC = 3.197;*/
+
+  //Values determined by Caroline
+  double dEdxK_Data = 2.30;
+  double dEdxC_Data = 3.17;
+  double dEdxK_MC = 2.26;
+  double dEdxC_MC = 3.22;
+
 
   //=============================================================
   Tuple* tuple;
@@ -328,8 +335,15 @@ private:
   //=============================================================
 
   TH3F* dEdxTemplates = nullptr;
+//  double DeDxSF_0 = 1.00000;  // [0]  unchanged
+//  double DeDxSF_1 = 1.41822;  // [1]  Pixel data to SiStrip data
+ 
   double DeDxSF_0 = 1.00000;  // [0]  unchanged
-  double DeDxSF_1 = 1.41822;  // [1]  Pixel data to SiStrip data
+  double DeDxSF_1 = 1.0325;  // [1]  Pixel data to SiStrip data
+ 
+//  double DeDxSF_0 = 1.0079;  // MC 
+//  double DeDxSF_1 = 1.0875;  // 
+
   double dEdxSF[2] = {DeDxSF_0, DeDxSF_1};
   double DeDxK = 0.0;
   double DeDxC = 0.0;

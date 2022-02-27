@@ -26,6 +26,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,pileupInfo = cms.InputTag("addPileupInfo")
     ,genParticleCollection = cms.InputTag("genParticlesSkimmed")
     ,trackToGenAssoc = cms.InputTag("allTrackMCMatch")
+    ,pfCand = cms.InputTag("particleFlow","","RECO")
     #HLT triggers
     ,Trigger_Mu = cms.untracked.vstring("HLT_Mu50_v")
     ,Trigger_MET  = cms.untracked.vstring("HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v")
@@ -33,7 +34,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,TypeMode        = cms.untracked.uint32(0) # 0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1
     ,SampleType      = cms.untracked.uint32(0) # 0:Data, 1:Background, 2:Signal, 3:Signal Systematics
     ,SampleName      = cms.untracked.string("BaseName")
-    ,Period          = cms.untracked.string("2016")
+    ,Period          = cms.untracked.string("2017")
     # skip some distribution and trees
     ,SkipSelectionPlot   = cms.untracked.bool(False)
     # histogram bounds
@@ -51,12 +52,19 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,GlobalMinTOF        = cms.untracked.double(1.0)
     ,skipPixel           = cms.untracked.bool(True)
     ,useTemplateLayer    = cms.untracked.bool(False)
-    # scale factor and K & C -- values obtained with harm-2 and 15% low values drop 
+    # scale factor and K & C -- values obtained with harm-2 and no drop, no pix L1. Determined by Caroline. C determined with 3<p<5 GeV. data : 2017
     ,DeDxSF_0        = cms.untracked.double(1.00000) #=1 if data
-    ,DeDxSF_1        = cms.untracked.double(1.6107*1.0448500) #SF for run > 279479
+    #,DeDxSF_0        = cms.untracked.double(1.0079) #if MC
+    #,DeDxSF_1        = cms.untracked.double(1.6107*1.0448500) #SF for run > 279479
     #,DeDxSF_1        = cms.untracked.double(1.41822)
-    ,DeDxK           = cms.untracked.double(2.37) 
-    ,DeDxC           = cms.untracked.double(2.93)
+    ,DeDxSF_1        = cms.untracked.double(1.0325) #2017 data
+    #,DeDxSF_1        = cms.untracked.double(1.0875) #if MC
+    #,DeDxK           = cms.untracked.double(2.37) #Values determined by Dylan 
+    #,DeDxC           = cms.untracked.double(2.93)
+    ,DeDxK           = cms.untracked.double(2.30) #Values determined by Caroline
+    ,DeDxC           = cms.untracked.double(3.17)
+    #,DeDxK           = cms.untracked.double(2.26) #Values determined by Caroline #if MC
+    #,DeDxC           = cms.untracked.double(3.22)
     ,FMIPX           = cms.untracked.double(4)
     ,saveTree        = cms.untracked.uint32(0) #0: tree not saved
     ,saveGenTree     = cms.untracked.uint32(0) #0: tree not saved
