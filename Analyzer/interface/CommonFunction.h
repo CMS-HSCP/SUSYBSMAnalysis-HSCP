@@ -628,7 +628,18 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
     }
     return QII;
   }
-  if (way && !isClusterCleaning) {
+
+  if(way){ 
+      std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end()) ;
+      if(*mQ>253){
+         if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
+         if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
+             QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
+      }
+   }
+  
+  //FIXME to discuss with Caroline
+/*  if (way && !isClusterCleaning) {
     std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end());
     if (*mQ > 253) {
       if (*mQ == 255 && *(mQ - 1) > 253 && *(mQ + 1) > 253)
@@ -654,6 +665,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
       }
     }
   }
+  */
 
   //---
 
@@ -691,12 +703,17 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
 }
 
 #ifdef FWCORE
-bool clusterCleaning(const SiStripCluster* cluster, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
-  if (!cluster)
+//FIXME to discuss with Caroline
+//bool clusterCleaning(const SiStripCluster* cluster, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
+bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
+
+//FIXME to discuss with Caroline
+/*  if (!cluster)
     return true;
   std::vector<int> ampls = convert(cluster->amplitudes());
   if (crosstalkInv == 1)
     ampls = CrossTalkInv(ampls, 0.10, 0.04, true, true);
+*/
 
   // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------
   //----------------------------------------------------------------------------
@@ -1078,77 +1095,6 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
   return true;
 }
 
-HitDeDxCollection getHitDeDx(const reco::DeDxHitInfo* dedxHits,
-                             double* scaleFactors,
-                             std::unordered_map<unsigned int, double>* TrackerGains,
-                             bool correctFEDSat,
-                             int crossTalkInvAlgo) {
-  HitDeDxCollection toReturn;
-  for (unsigned int h = 0; h < dedxHits->size(); h++) {
-    DetId detid(dedxHits->detId(h));
-
-    HitDeDx hit;
-    hit.subDet = detid.subdetId();
-    hit.passClusterCleaning = clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo);
-    hit.isInside =
-        isHitInsideTkModule(dedxHits->pos(h), detid, detid.subdetId() >= 3 ? dedxHits->stripCluster(h) : NULL);
-    hit.isSat = false;
-
-    int ClusterCharge = dedxHits->charge(h);
-    if (detid.subdetId() >= 3) {  //for strip only
-      const SiStripCluster* cluster = dedxHits->stripCluster(h);
-      std::vector<int> amplitudes = convert(cluster->amplitudes());
-      if (crossTalkInvAlgo)
-        amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
-      int firstStrip = cluster->firstStrip();
-      int prevAPV = -1;
-      double gain = 1.0;
-
-      ClusterCharge = 0;
-      for (unsigned int s = 0; s < amplitudes.size(); s++) {
-        if (TrackerGains != NULL) {  //don't reload the gain if unnecessary  since map access are slow
-          int APV = (firstStrip + s) / 128;
-          if (APV != prevAPV) {
-            gain = TrackerGains->at(detid.rawId() << 3 | APV);
-            prevAPV = APV;
-          }
-        }
-
-        int StripCharge = amplitudes[s];
-        if (StripCharge < 254) {
-          StripCharge = (int)(StripCharge / gain);
-          if (StripCharge >= 1024) {
-            StripCharge = 255;
-          } else if (StripCharge >= 254) {
-            StripCharge = 254;
-          }
-        }
-
-        if (StripCharge >= 254) {
-          hit.isSat = true;
-        }
-        if (StripCharge >= 255 && correctFEDSat) {
-          StripCharge = 512;
-        }
-        ClusterCharge += StripCharge;
-      }
-    }
-
-    double scaleFactor = scaleFactors[0];
-    if (detid.subdetId() < 3)
-      scaleFactor *= scaleFactors[1];  // add pixel scaling
-
-    double Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-    hit.dx = dedxHits->pathlength(h);
-    hit.dedx = (scaleFactor * Norm * ClusterCharge) / hit.dx;
-
-    toReturn.push_back(hit);
-  }
-  return toReturn;
-}
-
-/*reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator,double* dEdxErr, unsigned int pdgId){*/
-
 reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
                            double* scaleFactors,
                            TH3* templateHisto = nullptr,
@@ -1169,14 +1115,11 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
                            bool skipPixel = true,
                            bool useTemplateLayer = false,
                            bool skipPixelL1 = false,
-                           bool probQ = false) {
-  //FIXME still necessary ?
-  //bool isStrangePdgId = false;
-  //if(pdgId==1092214|| pdgId==1000612) isStrangePdgId= true;
+                           bool probQ = false
+                           int  skip_templates_ias = 0) {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
-  //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
   std::vector<double> vect;
   std::vector<double> vectStrip;
@@ -1210,9 +1153,6 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       continue;  // skip pixels
     if (!useStrip && detid.subdetId() >= 3)
       continue;  // skip strips
-    if (useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo))
-      continue;
-    //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
     if (mustBeInside &&
         !isHitInsideTkModule(dedxHits->pos(h), detid, detid.subdetId() >= 3 ? dedxHits->stripCluster(h) : nullptr))
@@ -1230,6 +1170,10 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       SiStripDetId Sdetid(dedxHits->detId(h));
       const SiStripCluster* cluster = dedxHits->stripCluster(h);
       std::vector<int> amplitudes = convert(cluster->amplitudes());
+      
+      if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
+        continue;
+      //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
       //////////////////////////////////////////////////////////////
       //
@@ -1294,11 +1238,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
     if (templateHisto) {  //save discriminator probability
       double ChargeOverPathlength =
           scaleFactor * ClusterCharge / (dedxHits->pathlength(h) * 10.0 * (detid.subdetId() < 3 ? 265 : 1));
-      //          if(fakeHIP && detid.subdetId()>=3 && rand()%1000<35)ChargeOverPathlength = ( 0.5 + ((rand()%15000)/10000.0) ) / (3.61e-06*265*10);
-      //           if(fakeHIP && detid.subdetId() <3 && rand()%1000<20)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) ) / (3.61e-06*265*10*265);
 
-      //FIXME still relevant?
-      //if(isStrangePdgId) ChargeOverPathlength /= 2;
 
       int moduleGeometry = 0;  // underflow for debug
       int layer = 0;
@@ -1323,6 +1263,23 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       if (detid.subdetId() == 6) {
         layer = ((detid >> 5) & 0x7) + 13;
       }  //TEC
+      
+      //skip templates ias = 1 --> skip pixel, TIB, TID, 3 first TEC layers
+      if (skip_templates_ias == 1 && (
+                     detid.subdetId()<5 ||
+                     layer == 14 ||
+                     layer == 15 ||
+                     layer == 16
+                  ) 
+        ){continue;}
+      
+      //skip templates ias = 2 --> pixel only, with pixL1 or not
+      if (skip_templates_ias == 2 && (
+                  detid.subdetId()>2 ||
+                  (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1)
+                  )
+        ){continue;}
+
       int BinX = templateHisto->GetXaxis()->FindBin(moduleGeometry);
       if (useTemplateLayer)
         BinX = templateHisto->GetXaxis()->FindBin(layer);
@@ -1339,9 +1296,6 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       if (hipEmulator)
         ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
 
-      //FIXME still relevant?
-      // mk change
-      //if(isStrangePdgId) ChargeOverPathlength /= 2;
 
       vect.push_back(ChargeOverPathlength);  //save charge
       if (detid.subdetId() < 3)

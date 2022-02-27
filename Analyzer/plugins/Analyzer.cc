@@ -1004,73 +1004,108 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
-    HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, trackerCorrector.TrackerGains, false, 1);
-
     unsigned int pdgId = 0;
     if (isSignal) {
       pdgId = abs(genColl[ClosestGen].pdgId());
       LogPrint(MOD) << "  >> GenId  " << pdgId;
     }
 
+//computedEdx: hits, SF, templates, usePixel, useClusterCleaning, reverseProb, uneTrunc, TrackerGains, 
+//             useStrips, mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, hipEmul, dedxErr, pdgid, skipPix, useTemplateLayer, skipPixelL1, DeDxprobQ, skip_templ_Ias
+//
+//correction inverseXtalk = 0 --> take the raw amplitudes of the cluster
+//correction inverseXtalk = 1 --> modify the amplitudes based on xtalk for non-saturated cluster + correct for saturation
+//
+//skip templates_Ias = 0 --> no skip
+//skip templates_Ias = 1 --> no Pix, no TIB, no TID, no 3 first layers TEC 
+//skip templates_Ias = 2 --> Pixel Only
+
+
+//Ias
     double dEdxErr = 0;
     auto dedxSObjTmp =
         computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode_ == 5, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer);
     
+    reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
+
+//Ih 
     auto dedxMObjTmp =
         computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer);
+                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer);
     
+    reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
+
+//Ih Up    
     auto dedxMUpObjTmp =
         computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.15, nullptr, 0, pdgId, skipPixel, useTemplateLayer);
     
+    reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements() > 0 ? &dedxMUpObjTmp : nullptr;
+
+//Ih Down    
     auto dedxMDownObjTmp =
         computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.15, nullptr, 0, pdgId, skipPixel, useTemplateLayer);
     
-    /*reco::DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulator:nullptr, &dEdxErr,pdgId);
-      reco::DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorUp:nullptr,0,pdgId);
-      reco::DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, nullptr,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData && !is2016G)?&HIPemulatorDown:nullptr,0,pdgId);*/
-    reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
-    reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
-    reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements() > 0 ? &dedxMUpObjTmp : nullptr;
     reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements() > 0 ? &dedxMDownObjTmp : nullptr;
 
+//Ih no pixel L1
     auto dedxIh_noL1_Tmp =
         computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                      true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer, true);
+                      true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, false, useTemplateLayer, true);
     
+    reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
+
+//Ih 0.15 low values drop    
     auto dedxIh_15drop_Tmp =
         computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                       true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer);
+    
+    reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
+
+//Ih Strip only    
     auto dedxIh_StripOnly_Tmp =
         computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer);
-    
+                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, true, useTemplateLayer);
+
+    reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
+
+//Ih Strip only and 0.15 low values drop
     auto dedxIh_StripOnly_15drop_Tmp =
         computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer, true);
-    
+                    true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, true, useTemplateLayer, true);
+   
+    reco::DeDxData* dedxIh_StripOnly_15drop = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
+
+//Ih correct saturation from fits     
     auto dedxIh_SaturationCorrectionFromFits_Tmp =
         computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 2, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer, true);
 
-    reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
-    reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
-    reco::DeDxData* dedxIh_StripOnly =
-        dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
-    reco::DeDxData* dedxIh_StripOnly_15drop =
-        dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
-    reco::DeDxData* dedxIh_SaturationCorrectionFromFits =
-        dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements() > 0 ? &dedxIh_SaturationCorrectionFromFits_Tmp
-                                                                           : nullptr;
+    reco::DeDxData* dedxIh_SaturationCorrectionFromFits = dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements() > 0 ? &dedxIh_SaturationCorrectionFromFits_Tmp : nullptr;
 
+//dEdx probQ discriminator based on templates (same than Ias)
     auto dedx_probQ_Tmp =
         computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer, true);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer, true, true);
 
     reco::DeDxData* dedx_probQ = dedx_probQ_Tmp.numberOfMeasurements() > 0 ? &dedx_probQ_Tmp : nullptr;
+
+//Ias without TIB, TID, and 3 first TEC layers
+    auto dedxIas_noTIBnoTIDno3TEC_Tmp = 
+        computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer, true, false, 1);
+
+    reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
+
+//Ias Pixel only 
+    auto dedxIas_PixelOnly_Tmp = 
+        computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, false, useTemplateLayer, false, false, 2);
+
+    reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
+
 
     if (TypeMode_ == 5) {
       OpenAngle = deltaROpositeTrack(
