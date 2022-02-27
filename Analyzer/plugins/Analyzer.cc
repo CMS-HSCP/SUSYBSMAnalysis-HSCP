@@ -710,6 +710,34 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
 
+  if (vertexColl.size() < 1) {
+      if (debugLevel_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
+      continue;
+  }
+
+  int highestPtGoodVertex = -1;
+  int goodVerts = 0;
+  double dzMin = 10000;
+  // Loop on the vertices in the event
+  for (unsigned int i = 0; i < vertexColl.size(); i++) {
+    if (vertexColl[i].isFake() || fabs(vertexColl[i].z()) > 24 || vertexColl[i].position().rho() > 2 ||
+        vertexColl[i].ndof() <= 4)
+      continue;  //only consider good vertex
+    goodVerts++;
+    if (fabs(track->dz(vertexColl[i].position())) < fabs(dzMin)) {
+      dzMin = fabs(track->dz(vertexColl[i].position()));
+      highestPtGoodVertex = i;
+    }
+  } // End loop on the vertices in the event
+  if (highestPtGoodVertex < 0)
+    highestPtGoodVertex = 0;
+
+
+  // Impact paramters dz and dxy
+  double dz = track->dz(vertexColl[highestPtGoodVertex].position());
+  double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
+  
+
     // save PF informations and isolation 
 
       float pfIsolation_DZ_ = 0.1;
@@ -749,7 +777,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               }
               if(i == idx_pf_RMin) continue; //don't count itself
               float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
-              bool fromPV = (fabs(track->dz()) < pfIsolation_DZ_);
+              bool fromPV = (fabs(dz) < pfIsolation_DZ_);
               int id = std::abs(pfCand->pdgId());
               float pt = pfCand->p4().pt();
               if(dr<0.05){
@@ -1359,8 +1387,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_CSCTOF_ndof.push_back(csctof ? csctof->nDof() : -99);
     HSCP_Mass.push_back(Mass);
     HSCP_MassErr.push_back(MassErr);
-    HSCP_dZ.push_back(TreeDZ);
-    HSCP_dXY.push_back(TreeDXY);
+    HSCP_dZ.push_back(dz);
+    HSCP_dXY.push_back(dxy);
     HSCP_dR.push_back(OpenAngle);
     HSCP_eta.push_back(track->eta());
     HSCP_phi.push_back(track->phi());
