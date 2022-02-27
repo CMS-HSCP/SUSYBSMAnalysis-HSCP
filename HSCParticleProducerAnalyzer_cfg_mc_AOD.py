@@ -330,14 +330,18 @@ process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 #process.analyzer.SampleTxtFile=options.sampleTxtFile
 process.analyzer.TypeMode=1
 process.analyzer.SampleType=0
-process.analyzer.saveTree=0 #all saved
-process.analyzer.saveGenTree=0
+process.analyzer.saveTree=6 #all saved
+process.analyzer.saveGenTree=1
 process.analyzer.DeDxCalibration="Data13TeVGains_v2.root"
-process.analyzer.DeDxTemplate="dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root"
+process.analyzer.DeDxTemplate="templateMC.root"
 process.analyzer.Geometry="CMS_GeomTree.root"
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
 process.analyzer.trajInputLabel    = cms.untracked.InputTag('myRefittedTracks')
 process.analyzer.probQCut = cms.untracked.double(1.0)
+process.analyzer.DeDxK = cms.untracked.double(2.26)
+process.analyzer.DeDxC = cms.untracked.double(3.22)
+process.analyzer.DeDxSF_0 = cms.untracked.double(1.0079)
+process.analyzer.DeDxSF_1 = cms.untracked.double(1.0875)
 process.analyzer.muonDtSegmentCollection  = cms.InputTag("slimmedMuons")
 process.analyzer.DataTier = cms.string('MiniAOD')
 

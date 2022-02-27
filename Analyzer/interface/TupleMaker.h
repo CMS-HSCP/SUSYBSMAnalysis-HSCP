@@ -129,7 +129,6 @@ public:
                         const std::vector<float> &Ih_SaturationCorrectionFromFits,
                         const std::vector<std::vector<float>> &clust_charge,
                         const std::vector<std::vector<float>> &clust_pathlength,
-                        const std::vector<std::vector<bool>> &clust_ClusterCleaning,
                         const std::vector<std::vector<unsigned int>> &clust_nstrip,
                         const std::vector<std::vector<bool>> &clust_sat254,
                         const std::vector<std::vector<bool>> &clust_sat255,
@@ -1315,7 +1314,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     if (saveTree > 2) {
       tuple->Tree->Branch("clust_charge", &tuple->Tree_clust_charge);
       tuple->Tree->Branch("clust_pathlength", &tuple->Tree_clust_pathlength);
-      tuple->Tree->Branch("clust_ClusterCleaning", &tuple->Tree_clust_ClusterCleaning);
       tuple->Tree->Branch("clust_nstrip", &tuple->Tree_clust_nstrip);
       tuple->Tree->Branch("clust_sat254", &tuple->Tree_clust_sat254);
       tuple->Tree->Branch("clust_sat255", &tuple->Tree_clust_sat255);
@@ -1457,7 +1455,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Ih_SaturationCorrectionFromFits,
                                   const std::vector<std::vector<float>> &clust_charge,
                                   const std::vector<std::vector<float>> &clust_pathlength,
-                                  const std::vector<std::vector<bool>> &clust_ClusterCleaning,
                                   const std::vector<std::vector<unsigned int>> &clust_nstrip,
                                   const std::vector<std::vector<bool>> &clust_sat254,
                                   const std::vector<std::vector<bool>> &clust_sat255,
@@ -1570,7 +1567,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Ih_SaturationCorrectionFromFits = Ih_SaturationCorrectionFromFits;
   tuple->Tree_clust_charge = clust_charge;
   tuple->Tree_clust_pathlength = clust_pathlength;
-  tuple->Tree_clust_ClusterCleaning = clust_ClusterCleaning;
   tuple->Tree_clust_nstrip = clust_nstrip;
   tuple->Tree_clust_sat254 = clust_sat254;
   tuple->Tree_clust_sat255 = clust_sat255;

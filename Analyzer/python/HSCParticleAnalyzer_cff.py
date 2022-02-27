@@ -71,7 +71,8 @@ analyzer = cms.EDAnalyzer('Analyzer'
     # calibration
     ,enableDeDxCalibration = cms.untracked.bool(False)
     ,DeDxCalibration       = cms.untracked.string("{}/Data13TeVGains_v2.root".format(PATH_TO_DATA))
-    ,DeDxTemplate          = cms.untracked.string("{}/dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root".format(PATH_TO_DATA))
+    ,DeDxTemplate          = cms.untracked.string("{}/template_2017B.root".format(PATH_TO_DATA))
+    #,DeDxTemplate          = cms.untracked.string("{}/templateMC.root".format(PATH_TO_DATA))
     ,Geometry              = cms.untracked.string("{}/CMS_GeomTree.root".format(PATH_TO_DATA))
     ,TimeOffset            = cms.untracked.string("{}/MuonTimeOffset.txt".format(PATH_TO_DATA))
     ,pixelCPE              = cms.string("PixelCPEClusterRepair")

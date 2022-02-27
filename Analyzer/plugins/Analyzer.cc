@@ -653,7 +653,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ih_SaturationCorrectionFromFits;
   std::vector<std::vector<float>> HSCP_clust_charge;  //dedx charge -> either strip or pixel
   std::vector<std::vector<float>> HSCP_clust_pathlength;
-  std::vector<std::vector<bool>> HSCP_clust_ClusterCleaning;
   std::vector<std::vector<unsigned int>> HSCP_clust_nstrip;
   std::vector<std::vector<bool>> HSCP_clust_sat254;
   std::vector<std::vector<bool>> HSCP_clust_sat255;
@@ -814,7 +813,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debugLevel_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
     std::vector<float> clust_charge;
     std::vector<float> clust_pathlength;
-    std::vector<bool> clust_ClusterCleaning;
     std::vector<unsigned int> clust_nstrip;
     std::vector<bool> clust_sat254;
     std::vector<bool> clust_sat255;
@@ -959,7 +957,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             sat255 = true;
         }
         ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
-        clust_ClusterCleaning.push_back(clusterCleaning(ampl, 1));
         clust_nstrip.push_back(ampl.size());
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
@@ -1470,7 +1467,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         dedxIh_SaturationCorrectionFromFits ? dedxIh_SaturationCorrectionFromFits->dEdx() : -1);
     HSCP_clust_charge.push_back(clust_charge);
     HSCP_clust_pathlength.push_back(clust_pathlength);
-    HSCP_clust_ClusterCleaning.push_back(clust_ClusterCleaning);
     HSCP_clust_nstrip.push_back(clust_nstrip);
     HSCP_clust_sat254.push_back(clust_sat254);
     HSCP_clust_sat255.push_back(clust_sat255);
@@ -1587,7 +1583,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ih_SaturationCorrectionFromFits,
                                 HSCP_clust_charge,
                                 HSCP_clust_pathlength,
-                                HSCP_clust_ClusterCleaning,
                                 HSCP_clust_nstrip,
                                 HSCP_clust_sat254,
                                 HSCP_clust_sat255,

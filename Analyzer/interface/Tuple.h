@@ -121,7 +121,6 @@ struct Tuple {
   std::vector<float> Tree_Ih_SaturationCorrectionFromFits;
   std::vector<std::vector<float>> Tree_clust_charge;  //dedx charge -> either strip or pixel
   std::vector<std::vector<float>> Tree_clust_pathlength;
-  std::vector<std::vector<bool>> Tree_clust_ClusterCleaning;
   std::vector<std::vector<unsigned int>> Tree_clust_nstrip;
   std::vector<std::vector<bool>> Tree_clust_sat254;
   std::vector<std::vector<bool>> Tree_clust_sat255;

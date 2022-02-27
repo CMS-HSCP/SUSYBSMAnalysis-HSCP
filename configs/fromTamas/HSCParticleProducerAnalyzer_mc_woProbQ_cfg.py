@@ -206,9 +206,9 @@ process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 #process.analyzer.SampleTxtFile=options.sampleTxtFile
 process.analyzer.TypeMode = 0 # 0: Tracker only
 process.analyzer.SampleType = SampleType 
-process.analyzer.saveTree = 0 #6 is all saved, 0 is none
-process.analyzer.saveGenTree = 0
-process.analyzer.DeDxTemplate="dEdxTemplate_harm2_SO_in_noC_CCC_MG_2017B.root"
+process.analyzer.saveTree = 6 #6 is all saved, 0 is none
+process.analyzer.saveGenTree = 1
+process.analyzer.DeDxTemplate="templateMC.root"
 process.analyzer.Geometry="CMS_GeomTree.root"
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
 process.analyzer.trackProbQCut = 1
