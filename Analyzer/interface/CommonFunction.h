@@ -1115,7 +1115,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
                            bool skipPixel = true,
                            bool useTemplateLayer = false,
                            bool skipPixelL1 = false,
-                           bool probQ = false
+                           bool probQ = false,
                            int  skip_templates_ias = 0) {
 
   if (!dedxHits)

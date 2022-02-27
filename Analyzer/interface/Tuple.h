@@ -42,6 +42,7 @@ struct Tuple {
   std::vector<float> Tree_Pt;
   std::vector<float> Tree_PtErr;
   std::vector<float> Tree_Ias;
+  std::vector<float> Tree_Ias_noTIBnoTIDno3TEC;
   std::vector<float> Tree_Ias_PixelOnly;
   std::vector<float> Tree_Ih;
   std::vector<float> Tree_Ick;  //return (Ih-C)/K
@@ -89,22 +90,22 @@ struct Tuple {
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
   std::vector<float> Tree_track_PFIsolationR005_sumChargedHadronPt;
-  std::vector<float> Tree_track_PFIsolationR005_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR005_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR005_sumPhotonPt;
   std::vector<float> Tree_track_PFIsolationR005_sumPUPt;
 
   std::vector<float> Tree_track_PFIsolationR01_sumChargedHadronPt;
-  std::vector<float> Tree_track_PFIsolationR01_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR01_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR01_sumPhotonPt;
   std::vector<float> Tree_track_PFIsolationR01_sumPUPt;
  
   std::vector<float> Tree_track_PFIsolationR03_sumChargedHadronPt;
-  std::vector<float> Tree_track_PFIsolationR03_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR03_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR03_sumPhotonPt;
   std::vector<float> Tree_track_PFIsolationR03_sumPUPt;
 
   std::vector<float> Tree_track_PFIsolationR05_sumChargedHadronPt;
-  std::vector<float> Tree_track_PFIsolationR05_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR05_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR05_sumPhotonPt;
   std::vector<float> Tree_track_PFIsolationR05_sumPUPt;
 

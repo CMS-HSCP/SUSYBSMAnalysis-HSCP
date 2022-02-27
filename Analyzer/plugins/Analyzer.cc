@@ -40,12 +40,12 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet"))),
       CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
-      pfCandToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCand"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection"))),
       trackToGenToken_(consumes<edm::Association<reco::GenParticleCollection>>(
           iConfig.getParameter<edm::InputTag>("trackToGenAssoc"))),
+      pfCandToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCand"))),
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
@@ -573,6 +573,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Pt;
   std::vector<float> HSCP_PtErr;
   std::vector<float> HSCP_Ias;
+  std::vector<float> HSCP_Ias_noPix_noTIB_noTID_no3TEC;
   std::vector<float> HSCP_Ias_PixelOnly;
   std::vector<float> HSCP_Ih;
   std::vector<float> HSCP_Ick;  //return (Ih-C)/K
@@ -586,7 +587,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Chi2;
   std::vector<bool>  HSCP_isHighPurity;
   std::vector<bool>  HSCP_isMuon;
-  std::vector<bool>  HSCP_MuonSelector;
+  std::vector<int>   HSCP_MuonSelector;
   std::vector<bool>  HSCP_isElectron;
   std::vector<bool>  HSCP_isJet;
   std::vector<float> HSCP_ECAL_energy;
@@ -755,8 +756,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float pf_ecal_energy = 0, pf_hcal_energy = 0;
 
     if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
-      const reco::PFCandidateCollection* pfCand = pfCandHandle.product();
-      for (unsigned int i = 0; i < pfCand->size(); i++) {
+      const reco::PFCandidateCollection* pf = pfCandHandle.product();
+      for (unsigned int i = 0; i < pf->size(); i++){
           const reco::PFCandidate* pfCand = &(*pf)[i];
           float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
           if(dr < RMin){
@@ -769,7 +770,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               const reco::PFCandidate* pfCand = &(*pf)[i];
               if(i == idx_pf_RMin) {
                   pf_isMuon = pfCand->isMuon();
-                  if(pf_isMuon) pf_muon_selector = pfCand->muonRef()->Selector();
+                  //if(pf_isMuon) pf_muon_selector = pfCand->muonRef()->Selector();
+                  if(pf_isMuon) pf_muon_selector = -1;
                   pf_isElectron = pfCand->isElectron();
                   pf_isJet = pfCand->isJet();
                   pf_ecal_energy = pfCand->ecalEnergy();
@@ -954,7 +956,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             sat255 = true;
         }
         ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
-        clust_ClusterCleaning.push_back(clusterCleaning(dedxHits->stripCluster(i), 1));
+        clust_ClusterCleaning.push_back(clusterCleaning(ampl, 1));
         clust_nstrip.push_back(ampl.size());
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
@@ -1393,7 +1395,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
     HSCP_Ias.push_back(dedxSObj ? dedxSObj->dEdx() : -1);
-    HSCP_Ias_PixelOnly.push_back(dedxSObj ? dedxSObj->dEdx() : -1);
+    HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
+    HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
     HSCP_Ih.push_back(dedxMObj ? dedxMObj->dEdx() : -1);
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
@@ -1403,7 +1406,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_ProbQ_noL1.push_back(probQonTrackNoLayer1);
     HSCP_ProbQ_dEdx.push_back(dedx_probQ ? dedx_probQ->dEdx() : -1);
     HSCP_Ndof.push_back(track->ndof());
-    HSCP_Chi2.push_back(track->chi2);
+    HSCP_Chi2.push_back(track->chi2());
     HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
@@ -1511,6 +1514,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_PtErr,
                                 HSCP_Ias,
                                 HSCP_Ias_PixelOnly,
+                                HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ih,
                                 HSCP_Ick,
                                 HSCP_Fmip,
