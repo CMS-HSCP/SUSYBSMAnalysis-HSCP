@@ -69,10 +69,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       GlobalMinTOF(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       skipPixel(iConfig.getUntrackedParameter<bool>("skipPixel")),
       useTemplateLayer(iConfig.getUntrackedParameter<bool>("useTemplateLayer")),
-      ,DeDxSF_0(iConfig.getUntrackedParameter<double>("DeDxSF_0"))
-      ,DeDxSF_1(iConfig.getUntrackedParameter<double>("DeDxSF_1"))
-      ,DeDxK(iConfig.getUntrackedParameter<double>("DeDxK"))
-      ,DeDxC(iConfig.getUntrackedParameter<double>("DeDxC"))
+      DeDxSF_0(iConfig.getUntrackedParameter<double>("DeDxSF_0")),
+      DeDxSF_1(iConfig.getUntrackedParameter<double>("DeDxSF_1")),
+      DeDxK(iConfig.getUntrackedParameter<double>("DeDxK")),
+      DeDxC(iConfig.getUntrackedParameter<double>("DeDxC")),
       DeDxTemplate(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
       enableDeDxCalibration(iConfig.getUntrackedParameter<bool>("enableDeDxCalibration")),
       DeDxCalibration(iConfig.getUntrackedParameter<string>("DeDxCalibration")),

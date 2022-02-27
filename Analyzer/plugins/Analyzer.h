@@ -338,15 +338,17 @@ private:
 //  double DeDxSF_0 = 1.00000;  // [0]  unchanged
 //  double DeDxSF_1 = 1.41822;  // [1]  Pixel data to SiStrip data
  
-  double DeDxSF_0 = 1.00000;  // [0]  unchanged
-  double DeDxSF_1 = 1.0325;  // [1]  Pixel data to SiStrip data
+  //data 2017 values determined by Caroline
+//  double DeDxSF_0 = 1.00000;  // [0]  unchanged
+//  double DeDxSF_1 = 1.0325;  // [1]  Pixel data to SiStrip data
  
 //  double DeDxSF_0 = 1.0079;  // MC 
 //  double DeDxSF_1 = 1.0875;  // 
 
+  double DeDxSF_0, DeDxSF_1;
   double dEdxSF[2] = {DeDxSF_0, DeDxSF_1};
-  double DeDxK = 0.0;
-  double DeDxC = 0.0;
+  double DeDxK;
+  double DeDxC;
 
   dedxGainCorrector trackerCorrector;
   string DeDxTemplate;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
