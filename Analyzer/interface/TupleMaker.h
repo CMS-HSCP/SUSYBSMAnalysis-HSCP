@@ -47,6 +47,9 @@ public:
                         const float &RecoPFMHT,
                         const float &HLTPFMET,
                         const float &HLTPFMHT,
+                        const float &RecoPFMET_eta,
+                        const float &RecoPFMET_phi,
+                        const float &RecoPFMET_significance,
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection_noIsolation_noIh,
                         const std::vector<bool> &passPreselection,
@@ -55,10 +58,24 @@ public:
                         const std::vector<float> &Pt,
                         const std::vector<float> &PtErr,
                         const std::vector<float> &Ias,
+                        const std::vector<float> &Ias_PixelOnly,
                         const std::vector<float> &Ih,
                         const std::vector<float> &Ick,
                         const std::vector<float> &Fmip,
+                        const std::vector<float> &ProbXY,
+                        const std::vector<float> &ProbXY_noL1,
                         const std::vector<float> &ProbQ,
+                        const std::vector<float> &ProbQ_noL1,
+                        const std::vector<float> &ProbQ_dEdx,
+                        const std::vector<float> &Ndof,
+                        const std::vector<float> &Chi2,
+                        const std::vector<bool>  &isHighPurity,
+                        const std::vector<bool>  &isMuon,
+                        const std::vector<int>   &MuonSelector,
+                        const std::vector<bool>  &isElectron,
+                        const std::vector<bool>  &isJet,
+                        const std::vector<float> &ECAL_energy,
+                        const std::vector<float> &HCAL_energy,
                         const std::vector<float> &TOF,
                         const std::vector<float> &TOFErr,
                         const std::vector<unsigned int> &TOF_ndof,
@@ -84,10 +101,26 @@ public:
                         const std::vector<float> &iso_TK,
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
-                        const std::vector<float> &PFIsolationR03_sumChargedHadronPt,
-                        const std::vector<float> &PFIsolationR03_sumNeutralHadronPt,
-                        const std::vector<float> &PFIsolationR03_sumPhotonPt,
-                        const std::vector<float> &PFIsolationR03_sumPUPt,
+                        const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
+                        const std::vector<float> &track_PFIsolationR005_sumNeutralHadronPt,
+                        const std::vector<float> &track_PFIsolationR005_sumPhotonPt,
+                        const std::vector<float> &track_PFIsolationR005_sumPUPt,
+                        const std::vector<float> &track_PFIsolationR01_sumChargedHadronPt,
+                        const std::vector<float> &track_PFIsolationR01_sumNeutralHadronPt,
+                        const std::vector<float> &track_PFIsolationR01_sumPhotonPt,
+                        const std::vector<float> &track_PFIsolationR01_sumPUPt,
+                        const std::vector<float> &track_PFIsolationR03_sumChargedHadronPt,
+                        const std::vector<float> &track_PFIsolationR03_sumNeutralHadronPt,
+                        const std::vector<float> &track_PFIsolationR03_sumPhotonPt,
+                        const std::vector<float> &track_PFIsolationR03_sumPUPt,
+                        const std::vector<float> &track_PFIsolationR05_sumChargedHadronPt,
+                        const std::vector<float> &track_PFIsolationR05_sumNeutralHadronPt,
+                        const std::vector<float> &track_PFIsolationR05_sumPhotonPt,
+                        const std::vector<float> &track_PFIsolationR05_sumPUPt,
+                        const std::vector<float> &muon_PFIsolationR03_sumChargedHadronPt,
+                        const std::vector<float> &muon_PFIsolationR03_sumNeutralHadronPt,
+                        const std::vector<float> &muon_PFIsolationR03_sumPhotonPt,
+                        const std::vector<float> &muon_PFIsolationR03_sumPUPt,
                         const std::vector<float> &Ih_noL1,
                         const std::vector<float> &Ih_15drop,
                         const std::vector<float> &Ih_StripOnly,
@@ -1194,6 +1227,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("RecoPFMHT", &tuple->Tree_RecoPFMHT, "RecoPFMHT/F");
     tuple->Tree->Branch("HLTPFMET", &tuple->Tree_HLTPFMET, "HLTPFMET/F");
     tuple->Tree->Branch("HLTPFMHT", &tuple->Tree_HLTPFMHT, "HLTPFMHT/F");
+    tuple->Tree->Branch("RecoPFMET_eta", &tuple->Tree_RecoPFMET_eta, "RecoPFMET_eta/F");
+    tuple->Tree->Branch("RecoPFMET_phi", &tuple->Tree_RecoPFMET_phi, "RecoPFMET_phi/F");
+    tuple->Tree->Branch("RecoPFMET_significance", &tuple->Tree_RecoPFMET_significance, "RecoPFMET_significance/F");
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
       tuple->Tree->Branch("passPreselection_noIsolation_noIh", &tuple->Tree_passPreselection_noIsolation_noIh);
@@ -1204,10 +1240,24 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Pt", &tuple->Tree_Pt);
     tuple->Tree->Branch("PtErr", &tuple->Tree_PtErr);
     tuple->Tree->Branch("Ias", &tuple->Tree_Ias);
+    tuple->Tree->Branch("Ias_PixelOnly", &tuple->Tree_Ias_PixelOnly);
     tuple->Tree->Branch("Ih", &tuple->Tree_Ih);
     tuple->Tree->Branch("Ick", &tuple->Tree_Ick);
     tuple->Tree->Branch("Fmip", &tuple->Tree_Fmip);
+    tuple->Tree->Branch("ProbXY", &tuple->Tree_ProbXY);
+    tuple->Tree->Branch("ProbXY_noL1", &tuple->Tree_ProbXY_noL1);
     tuple->Tree->Branch("ProbQ", &tuple->Tree_ProbQ);
+    tuple->Tree->Branch("ProbQ_noL1", &tuple->Tree_ProbQ_noL1);
+    tuple->Tree->Branch("ProbQ_dEdx", &tuple->Tree_ProbQ_dEdx);
+    tuple->Tree->Branch("Ndof", &tuple->Tree_Ndof);
+    tuple->Tree->Branch("Chi2", &tuple->Tree_Chi2);
+    tuple->Tree->Branch("isHighPurity", &tuple->Tree_isHighPurity);
+    tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
+    tuple->Tree->Branch("MuonSelector", &tuple->Tree_Muon_selector);
+    tuple->Tree->Branch("isElectron", &tuple->Tree_isElectron);
+    tuple->Tree->Branch("isJet", &tuple->Tree_isJet);
+    tuple->Tree->Branch("ECAL_energy", &tuple->Tree_ECAL_energy);
+    tuple->Tree->Branch("HCAL_energy", &tuple->Tree_HCAL_energy);
     tuple->Tree->Branch("TOF", &tuple->Tree_TOF);
     tuple->Tree->Branch("TOFErr", &tuple->Tree_TOFErr);
     tuple->Tree->Branch("TOF_ndof", &tuple->Tree_TOF_ndof);
@@ -1234,10 +1284,26 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     if (saveTree > 1) {
-      tuple->Tree->Branch("MuonPFIsolationR03_sumChargedHadronPt", &tuple->Tree_PFIsolationR03_sumChargedHadronPt);
-      tuple->Tree->Branch("MuonPFIsolationR03_sumNeutralHadronPt", &tuple->Tree_PFIsolationR03_sumNeutralHadronPt);
-      tuple->Tree->Branch("MuonPFIsolationR03_sumPhotonPt", &tuple->Tree_PFIsolationR03_sumPhotonPt);
-      tuple->Tree->Branch("MuonPFIsolationR03_sumPUPt", &tuple->Tree_PFIsolationR03_sumPUPt);
+      tuple->Tree->Branch("TrackPFIsolationR005_sumChargedHadronPt", &tuple->Tree_track_PFIsolationR005_sumChargedHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR005_sumNeutralHadronPt", &tuple->Tree_track_PFIsolationR005_sumNeutralHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR005_sumPhotonPt", &tuple->Tree_track_PFIsolationR005_sumPhotonPt);
+      tuple->Tree->Branch("TrackPFIsolationR005_sumPUPt", &tuple->Tree_track_PFIsolationR005_sumPUPt);
+      tuple->Tree->Branch("TrackPFIsolationR01_sumChargedHadronPt", &tuple->Tree_track_PFIsolationR01_sumChargedHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR01_sumNeutralHadronPt", &tuple->Tree_track_PFIsolationR01_sumNeutralHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR01_sumPhotonPt", &tuple->Tree_track_PFIsolationR01_sumPhotonPt);
+      tuple->Tree->Branch("TrackPFIsolationR01_sumPUPt", &tuple->Tree_track_PFIsolationR01_sumPUPt);
+      tuple->Tree->Branch("TrackPFIsolationR03_sumChargedHadronPt", &tuple->Tree_track_PFIsolationR03_sumChargedHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR03_sumNeutralHadronPt", &tuple->Tree_track_PFIsolationR03_sumNeutralHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR03_sumPhotonPt", &tuple->Tree_track_PFIsolationR03_sumPhotonPt);
+      tuple->Tree->Branch("TrackPFIsolationR03_sumPUPt", &tuple->Tree_track_PFIsolationR03_sumPUPt);
+      tuple->Tree->Branch("TrackPFIsolationR05_sumChargedHadronPt", &tuple->Tree_track_PFIsolationR05_sumChargedHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR05_sumNeutralHadronPt", &tuple->Tree_track_PFIsolationR05_sumNeutralHadronPt);
+      tuple->Tree->Branch("TrackPFIsolationR05_sumPhotonPt", &tuple->Tree_track_PFIsolationR05_sumPhotonPt);
+      tuple->Tree->Branch("TrackPFIsolationR05_sumPUPt", &tuple->Tree_track_PFIsolationR05_sumPUPt);
+      tuple->Tree->Branch("MuonPFIsolationR03_sumChargedHadronPt", &tuple->Tree_muon_PFIsolationR03_sumChargedHadronPt);
+      tuple->Tree->Branch("MuonPFIsolationR03_sumNeutralHadronPt", &tuple->Tree_muon_PFIsolationR03_sumNeutralHadronPt);
+      tuple->Tree->Branch("MuonPFIsolationR03_sumPhotonPt", &tuple->Tree_muon_PFIsolationR03_sumPhotonPt);
+      tuple->Tree->Branch("MuonPFIsolationR03_sumPUPt", &tuple->Tree_muon_PFIsolationR03_sumPUPt);
       tuple->Tree->Branch("Ih_noL1", &tuple->Tree_Ih_noL1);
       tuple->Tree->Branch("Ih_15drop", &tuple->Tree_Ih_15drop);
       tuple->Tree->Branch("Ih_StripOnly", &tuple->Tree_Ih_StripOnly);
@@ -1307,6 +1373,9 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &RecoPFMHT,
                                   const float &HLTPFMET,
                                   const float &HLTPFMHT,
+                                  const float &RecoPFMET_eta,
+                                  const float &RecoPFMET_phi,
+                                  const float &RecoPFMET_significance,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection_noIsolation_noIh,
                                   const std::vector<bool> &passPreselection,
@@ -1315,10 +1384,24 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Pt,
                                   const std::vector<float> &PtErr,
                                   const std::vector<float> &Ias,
+                                  const std::vector<float> &Ias_PixelOnly,
                                   const std::vector<float> &Ih,
                                   const std::vector<float> &Ick,
                                   const std::vector<float> &Fmip,
+                                  const std::vector<float> &ProbXY,
+                                  const std::vector<float> &ProbXY_noL1,
                                   const std::vector<float> &ProbQ,
+                                  const std::vector<float> &ProbQ_noL1,
+                                  const std::vector<float> &ProbQ_dEdx,
+                                  const std::vector<float> &Ndof,
+                                  const std::vector<float> &Chi2,
+                                  const std::vector<bool>  &isHighPurity,
+                                  const std::vector<bool>  &isMuon,
+                                  const std::vector<int>   &MuonSelector,
+                                  const std::vector<bool>  &isElectron,
+                                  const std::vector<bool>  &isJet,
+                                  const std::vector<float> &ECAL_energy,
+                                  const std::vector<float> &HCAL_energy,
                                   const std::vector<float> &TOF,  //equal to invBeta
                                   const std::vector<float> &TOFErr,
                                   const std::vector<unsigned int> &TOF_ndof,
@@ -1344,10 +1427,26 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_TK,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
-                                  const std::vector<float> &PFIsolationR03_sumChargedHadronPt,
-                                  const std::vector<float> &PFIsolationR03_sumNeutralHadronPt,
-                                  const std::vector<float> &PFIsolationR03_sumPhotonPt,
-                                  const std::vector<float> &PFIsolationR03_sumPUPt,
+                                  const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
+                                  const std::vector<float> &track_PFIsolationR005_sumNeutralHadronPt,
+                                  const std::vector<float> &track_PFIsolationR005_sumPhotonPt,
+                                  const std::vector<float> &track_PFIsolationR005_sumPUPt,
+                                  const std::vector<float> &track_PFIsolationR01_sumChargedHadronPt,
+                                  const std::vector<float> &track_PFIsolationR01_sumNeutralHadronPt,
+                                  const std::vector<float> &track_PFIsolationR01_sumPhotonPt,
+                                  const std::vector<float> &track_PFIsolationR01_sumPUPt,
+                                  const std::vector<float> &track_PFIsolationR03_sumChargedHadronPt,
+                                  const std::vector<float> &track_PFIsolationR03_sumNeutralHadronPt,
+                                  const std::vector<float> &track_PFIsolationR03_sumPhotonPt,
+                                  const std::vector<float> &track_PFIsolationR03_sumPUPt,
+                                  const std::vector<float> &track_PFIsolationR05_sumChargedHadronPt,
+                                  const std::vector<float> &track_PFIsolationR05_sumNeutralHadronPt,
+                                  const std::vector<float> &track_PFIsolationR05_sumPhotonPt,
+                                  const std::vector<float> &track_PFIsolationR05_sumPUPt,
+                                  const std::vector<float> &muon_PFIsolationR03_sumChargedHadronPt,
+                                  const std::vector<float> &muon_PFIsolationR03_sumNeutralHadronPt,
+                                  const std::vector<float> &muon_PFIsolationR03_sumPhotonPt,
+                                  const std::vector<float> &muon_PFIsolationR03_sumPUPt,
                                   const std::vector<float> &Ih_noL1,
                                   const std::vector<float> &Ih_15drop,
                                   const std::vector<float> &Ih_StripOnly,
@@ -1386,6 +1485,9 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_RecoPFMHT = RecoPFMHT;
   tuple->Tree_HLTPFMET = HLTPFMET;
   tuple->Tree_HLTPFMHT = HLTPFMHT;
+  tuple->Tree_RecoPFMET_eta = RecoPFMET_eta;
+  tuple->Tree_RecoPFMET_phi = RecoPFMET_phi;
+  tuple->Tree_RecoPFMET_significance = RecoPFMET_significance;
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
   tuple->Tree_passPreselection = passPreselection;
@@ -1394,10 +1496,24 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Pt = Pt;
   tuple->Tree_PtErr = PtErr;
   tuple->Tree_Ias = Ias;
+  tuple->Tree_Ias_PixelOnly = Ias_PixelOnly;
   tuple->Tree_Ih = Ih;
   tuple->Tree_Ick = Ick;
   tuple->Tree_Fmip = Fmip;
+  tuple->Tree_ProbXY = ProbXY;
+  tuple->Tree_ProbXY_noL1 = ProbXY_noL1;
   tuple->Tree_ProbQ = ProbQ;
+  tuple->Tree_ProbQ_noL1 = ProbQ_noL1;
+  tuple->Tree_ProbQ = ProbQ_dEdx;
+  tuple->Tree_Ndof = Ndof;
+  tuple->Tree_Chi2 = Chi2;
+  tuple->Tree_isHighPurity = isHighPurity;
+  tuple->Tree_isMuon = isMuon;
+  tuple->Tree_Muon_selector = MuonSelector;
+  tuple->Tree_isElectron = isElectron;
+  tuple->Tree_isJet = isJet;
+  tuple->Tree_ECAL_energy = ECAL_energy;
+  tuple->Tree_HCAL_energy = HCAL_energy;
   tuple->Tree_TOF = TOF;
   tuple->Tree_TOFErr = TOFErr;
   tuple->Tree_TOF_ndof = TOF_ndof;
@@ -1423,10 +1539,26 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_iso_TK = iso_TK;
   tuple->Tree_iso_ECAL = iso_ECAL;
   tuple->Tree_iso_HCAL = iso_HCAL;
-  tuple->Tree_PFIsolationR03_sumChargedHadronPt = PFIsolationR03_sumChargedHadronPt;
-  tuple->Tree_PFIsolationR03_sumNeutralHadronPt = PFIsolationR03_sumNeutralHadronPt;
-  tuple->Tree_PFIsolationR03_sumPhotonPt = PFIsolationR03_sumPhotonPt;
-  tuple->Tree_PFIsolationR03_sumPUPt = PFIsolationR03_sumPUPt;
+  tuple->Tree_track_PFIsolationR005_sumChargedHadronPt = track_PFIsolationR005_sumChargedHadronPt;
+  tuple->Tree_track_PFIsolationR005_sumNeutralHadronPt = track_PFIsolationR005_sumNeutralHadronPt;
+  tuple->Tree_track_PFIsolationR005_sumPhotonPt = track_PFIsolationR005_sumPhotonPt;
+  tuple->Tree_track_PFIsolationR005_sumPUPt = track_PFIsolationR005_sumPUPt;
+  tuple->Tree_track_PFIsolationR01_sumChargedHadronPt = track_PFIsolationR01_sumChargedHadronPt;
+  tuple->Tree_track_PFIsolationR01_sumNeutralHadronPt = track_PFIsolationR01_sumNeutralHadronPt;
+  tuple->Tree_track_PFIsolationR01_sumPhotonPt = track_PFIsolationR01_sumPhotonPt;
+  tuple->Tree_track_PFIsolationR01_sumPUPt = track_PFIsolationR01_sumPUPt;
+  tuple->Tree_track_PFIsolationR03_sumChargedHadronPt = track_PFIsolationR03_sumChargedHadronPt;
+  tuple->Tree_track_PFIsolationR03_sumNeutralHadronPt = track_PFIsolationR03_sumNeutralHadronPt;
+  tuple->Tree_track_PFIsolationR03_sumPhotonPt = track_PFIsolationR03_sumPhotonPt;
+  tuple->Tree_track_PFIsolationR03_sumPUPt = track_PFIsolationR03_sumPUPt;
+  tuple->Tree_track_PFIsolationR05_sumChargedHadronPt = track_PFIsolationR05_sumChargedHadronPt;
+  tuple->Tree_track_PFIsolationR05_sumNeutralHadronPt = track_PFIsolationR05_sumNeutralHadronPt;
+  tuple->Tree_track_PFIsolationR05_sumPhotonPt = track_PFIsolationR05_sumPhotonPt;
+  tuple->Tree_track_PFIsolationR05_sumPUPt = track_PFIsolationR05_sumPUPt;
+  tuple->Tree_muon_PFIsolationR03_sumChargedHadronPt = muon_PFIsolationR03_sumChargedHadronPt;
+  tuple->Tree_muon_PFIsolationR03_sumNeutralHadronPt = muon_PFIsolationR03_sumNeutralHadronPt;
+  tuple->Tree_muon_PFIsolationR03_sumPhotonPt = muon_PFIsolationR03_sumPhotonPt;
+  tuple->Tree_muon_PFIsolationR03_sumPUPt = muon_PFIsolationR03_sumPUPt;
   tuple->Tree_Ih_noL1 = Ih_noL1;
   tuple->Tree_Ih_15drop = Ih_15drop;
   tuple->Tree_Ih_StripOnly = Ih_StripOnly;

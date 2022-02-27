@@ -17,6 +17,8 @@ struct Tuple {
   unsigned int Tree_PileUp;
   unsigned int Tree_nofVertices;
   unsigned int Tree_Hscp;
+  unsigned int Tree_nmuons;
+  unsigned int Tree_njets;
   float Tree_Weight;
   bool Tree_HLT_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
@@ -28,6 +30,9 @@ struct Tuple {
   float Tree_RecoPFMHT;
   float Tree_HLTPFMET;
   float Tree_HLTPFMHT;
+  float Tree_RecoPFMET_eta;
+  float Tree_RecoPFMET_phi;
+  float Tree_RecoPFMET_significance;
 
   std::vector<bool> Tree_passCutPt55;
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
@@ -37,10 +42,25 @@ struct Tuple {
   std::vector<float> Tree_Pt;
   std::vector<float> Tree_PtErr;
   std::vector<float> Tree_Ias;
+  std::vector<float> Tree_Ias_PixelOnly;
   std::vector<float> Tree_Ih;
   std::vector<float> Tree_Ick;  //return (Ih-C)/K
   std::vector<float> Tree_Fmip;
+  std::vector<float> Tree_ProbXY;
+  std::vector<float> Tree_ProbXY_noL1;
   std::vector<float> Tree_ProbQ;
+  std::vector<float> Tree_ProbQ_noL1;
+  std::vector<float> Tree_ProbQ_dEdx;
+  std::vector<float> Tree_Ndof;
+  std::vector<float> Tree_Chi2;
+  std::vector<bool>  Tree_isHighPurity;
+  std::vector<float> Tree_muon_eta;
+  std::vector<bool> Tree_isMuon;
+  std::vector<int>  Tree_Muon_selector;
+  std::vector<bool> Tree_isElectron;
+  std::vector<bool> Tree_isJet;
+  std::vector<float> Tree_ECAL_energy;
+  std::vector<float> Tree_HCAL_energy;
   std::vector<float> Tree_TOF;
   std::vector<float> Tree_TOFErr;
   std::vector<unsigned int> Tree_TOF_ndof;
@@ -68,10 +88,31 @@ struct Tuple {
   std::vector<float> Tree_iso_TK;
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
-  std::vector<float> Tree_PFIsolationR03_sumChargedHadronPt;
-  std::vector<float> Tree_PFIsolationR03_sumNeutralHadronPt;
-  std::vector<float> Tree_PFIsolationR03_sumPhotonPt;
-  std::vector<float> Tree_PFIsolationR03_sumPUPt;
+  std::vector<float> Tree_track_PFIsolationR005_sumChargedHadronPt;
+  std::vector<float> Tree_track_PFIsolationR005_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR005_sumPhotonPt;
+  std::vector<float> Tree_track_PFIsolationR005_sumPUPt;
+
+  std::vector<float> Tree_track_PFIsolationR01_sumChargedHadronPt;
+  std::vector<float> Tree_track_PFIsolationR01_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR01_sumPhotonPt;
+  std::vector<float> Tree_track_PFIsolationR01_sumPUPt;
+ 
+  std::vector<float> Tree_track_PFIsolationR03_sumChargedHadronPt;
+  std::vector<float> Tree_track_PFIsolationR03_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR03_sumPhotonPt;
+  std::vector<float> Tree_track_PFIsolationR03_sumPUPt;
+
+  std::vector<float> Tree_track_PFIsolationR05_sumChargedHadronPt;
+  std::vector<float> Tree_track_PFIsolationR05_sumNeutHadronPt;
+  std::vector<float> Tree_track_PFIsolationR05_sumPhotonPt;
+  std::vector<float> Tree_track_PFIsolationR05_sumPUPt;
+
+  std::vector<float> Tree_muon_PFIsolationR03_sumChargedHadronPt;
+  std::vector<float> Tree_muon_PFIsolationR03_sumNeutralHadronPt;
+  std::vector<float> Tree_muon_PFIsolationR03_sumPhotonPt;
+  std::vector<float> Tree_muon_PFIsolationR03_sumPUPt;
+
   std::vector<float> Tree_Ih_noL1;
   std::vector<float> Tree_Ih_15drop;
   std::vector<float> Tree_Ih_StripOnly;
@@ -105,6 +146,7 @@ struct Tuple {
   std::vector<float> GenTree_GenPt;
   std::vector<float> GenTree_GenEta;
   std::vector<float> GenTree_GenPhi;
+
 
   //=============================================================
   //      Declare Histograms

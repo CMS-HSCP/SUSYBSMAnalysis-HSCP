@@ -56,10 +56,14 @@
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtra.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtraMap.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 // Muons CSC segments
 //#include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
 #include "DataFormats/CSCRecHit/interface/CSCSegment.h"
-
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
+#include "DataFormats/PatCandidates/interface/PFIsolation.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "DataFormats/VertexReco/interface/Vertex.h"
@@ -209,7 +213,8 @@ private:
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
   edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
-
+  edm::EDGetTokenT<reco::PFCandidateCollection> pfCandToken_;
+  
   //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
   //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
 

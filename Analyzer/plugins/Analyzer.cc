@@ -9,8 +9,8 @@
 // Original Author:  Emery Nibigira
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
-// Modifications by Tamas Almos Vami
-// v9: Add gen matching of the track as protection againts fakes
+// Modifications by Dylan Angie Frank Apparu -- 27 feb 2022
+// v11: Sync with IPHC framework (same conditions than Caroline for K&C, high purity tracks, PV definition). Adds in tree: PF isolation, PF informations, Ias pixel only, MET informations, track probQ/probXY informations, chi2, ndof
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -40,6 +40,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet"))),
       CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
+      pfCandToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCand"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("pileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection"))),
@@ -518,6 +519,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
 
   float CaloMET = -1, RecoPFMET = -1, RecoPFMHT = -1, HLTPFMET = -1, HLTPFMHT = -1;
+  float RecoPFMET_eta = -1, RecoPFMET_phi = -1, RecoPFMET_significance = -1;
 
   //===================== Handle For PFMET ===================
   const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
@@ -525,6 +527,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
       const reco::PFMET* pfMet = &(*pfMETHandle)[i];
       RecoPFMET = pfMet->et();
+      RecoPFMET_eta = pfMet->eta();
+      RecoPFMET_phi = pfMet->phi();
+      RecoPFMET_significance = pfMet->significance();
     }
   }
 
@@ -552,6 +557,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     RecoPFMHT = pMHT.Pt();
   }
+  //===================== Handle For PFCandidate ===================
+  const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
+
+
 
   //load all event collection that will be used later on (HSCP, dEdx and TOF)
   unsigned int HSCP_count = 0;
@@ -564,10 +573,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Pt;
   std::vector<float> HSCP_PtErr;
   std::vector<float> HSCP_Ias;
+  std::vector<float> HSCP_Ias_PixelOnly;
   std::vector<float> HSCP_Ih;
   std::vector<float> HSCP_Ick;  //return (Ih-C)/K
   std::vector<float> HSCP_Fmip;
+  std::vector<float> HSCP_ProbXY;
+  std::vector<float> HSCP_ProbXY_noL1;
   std::vector<float> HSCP_ProbQ;
+  std::vector<float> HSCP_ProbQ_noL1;
+  std::vector<float> HSCP_ProbQ_dEdx;
+  std::vector<float> HSCP_Ndof;
+  std::vector<float> HSCP_Chi2;
+  std::vector<bool>  HSCP_isHighPurity;
+  std::vector<bool>  HSCP_isMuon;
+  std::vector<bool>  HSCP_MuonSelector;
+  std::vector<bool>  HSCP_isElectron;
+  std::vector<bool>  HSCP_isJet;
+  std::vector<float> HSCP_ECAL_energy;
+  std::vector<float> HSCP_HCAL_energy;
   std::vector<float> HSCP_TOF;
   std::vector<float> HSCP_TOFErr;
   std::vector<unsigned int> HSCP_TOF_ndof;
@@ -599,10 +622,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_iso_TK;
   std::vector<float> HSCP_iso_ECAL;
   std::vector<float> HSCP_iso_HCAL;
-  std::vector<float> HSCP_PFIsolationR03_sumChargedHadronPt;
-  std::vector<float> HSCP_PFIsolationR03_sumNeutralHadronPt;
-  std::vector<float> HSCP_PFIsolationR03_sumPhotonPt;
-  std::vector<float> HSCP_PFIsolationR03_sumPUPt;
+  std::vector<float> HSCP_track_PFIsolationR005_sumChargedHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR005_sumNeutralHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR005_sumPhotonPt;
+  std::vector<float> HSCP_track_PFIsolationR005_sumPUPt;
+  std::vector<float> HSCP_track_PFIsolationR01_sumChargedHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR01_sumNeutralHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR01_sumPhotonPt;
+  std::vector<float> HSCP_track_PFIsolationR01_sumPUPt;
+  std::vector<float> HSCP_track_PFIsolationR03_sumChargedHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR03_sumNeutralHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR03_sumPhotonPt;
+  std::vector<float> HSCP_track_PFIsolationR03_sumPUPt;
+  std::vector<float> HSCP_track_PFIsolationR05_sumChargedHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR05_sumNeutralHadronPt;
+  std::vector<float> HSCP_track_PFIsolationR05_sumPhotonPt;
+  std::vector<float> HSCP_track_PFIsolationR05_sumPUPt;
+  std::vector<float> HSCP_muon_PFIsolationR03_sumChargedHadronPt;
+  std::vector<float> HSCP_muon_PFIsolationR03_sumNeutralHadronPt;
+  std::vector<float> HSCP_muon_PFIsolationR03_sumPhotonPt;
+  std::vector<float> HSCP_muon_PFIsolationR03_sumPUPt;
   std::vector<float> HSCP_Ih_noL1;
   std::vector<float> HSCP_Ih_15drop;
   std::vector<float> HSCP_Ih_StripOnly;
@@ -669,6 +708,73 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!isData && TypeMode_ == 3 && scaleFactor(track->eta()) < RNG->Uniform(0, 1)) {
       if (debugLevel_> 0) LogPrint(MOD) << "  >> This is a non-data but TOF onlypwd mode where the eta scale factor is non-uniform, skipping it";
       continue;
+    }
+
+    // save PF informations and isolation 
+
+      float pfIsolation_DZ_ = 0.1;
+     
+      float track_PFIso005_sumCharHadPt = 0, track_PFIso005_sumNeutHadPt = 0, track_PFIso005_sumPhotonPt = 0, track_PFIso005_sumPUPt = 0;
+      float track_PFIso01_sumCharHadPt = 0, track_PFIso01_sumNeutHadPt = 0, track_PFIso01_sumPhotonPt = 0, track_PFIso01_sumPUPt = 0;
+      float track_PFIso03_sumCharHadPt = 0, track_PFIso03_sumNeutHadPt = 0, track_PFIso03_sumPhotonPt = 0, track_PFIso03_sumPUPt = 0;
+      float track_PFIso05_sumCharHadPt = 0, track_PFIso05_sumNeutHadPt = 0, track_PFIso05_sumPhotonPt = 0, track_PFIso05_sumPUPt = 0;
+
+      float RMin = 9999.;
+      unsigned int idx_pf_RMin = 9999;
+
+      bool pf_isMuon = false, pf_isElectron = false, pf_isJet = false;
+      int pf_muon_selector = -1;
+      float pf_ecal_energy = 0, pf_hcal_energy = 0;
+
+    if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
+      const reco::PFCandidateCollection* pfCand = pfCandHandle.product();
+      for (unsigned int i = 0; i < pfCand->size(); i++) {
+          const reco::PFCandidate* pfCand = &(*pf)[i];
+          float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
+          if(dr < RMin){
+              RMin = dr;
+              idx_pf_RMin = i;
+           }
+       }//end loop PFCandidates
+
+      for(unsigned int i=0;i<pf->size();i++){
+              const reco::PFCandidate* pfCand = &(*pf)[i];
+              if(i == idx_pf_RMin) {
+                  pf_isMuon = pfCand->isMuon();
+                  if(pf_isMuon) pf_muon_selector = pfCand->muonRef()->Selector();
+                  pf_isElectron = pfCand->isElectron();
+                  pf_isJet = pfCand->isJet();
+                  pf_ecal_energy = pfCand->ecalEnergy();
+                  pf_hcal_energy = pfCand->hcalEnergy();
+              }
+              if(i == idx_pf_RMin) continue; //don't count itself
+              float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
+              bool fromPV = (fabs(track->dz()) < pfIsolation_DZ_);
+              int id = std::abs(pfCand->pdgId());
+              float pt = pfCand->p4().pt();
+              if(dr<0.05){
+                  if(id == 211 && fromPV) track_PFIso005_sumCharHadPt+=pt;
+                  else if(id == 211) track_PFIso005_sumPUPt+=pt;
+                  if(id == 130) track_PFIso005_sumNeutHadPt+=pt;
+                  if(id == 22) track_PFIso005_sumPhotonPt+=pt;
+              }if(dr<0.1){
+                  if(id == 211 && fromPV) track_PFIso01_sumCharHadPt+=pt;
+                  else if(id == 211) track_PFIso01_sumPUPt+=pt;
+                  if(id == 130) track_PFIso01_sumNeutHadPt+=pt;
+                  if(id == 22) track_PFIso01_sumPhotonPt+=pt;
+              }if(dr<0.3){
+                  if(id == 211 && fromPV) track_PFIso03_sumCharHadPt+=pt;
+                  else if(id == 211) track_PFIso03_sumPUPt+=pt;
+                  if(id == 130) track_PFIso03_sumNeutHadPt+=pt;
+                  if(id == 22) track_PFIso03_sumPhotonPt+=pt;
+              }if(dr<0.5){
+                  if(id == 211 && fromPV) track_PFIso05_sumCharHadPt+=pt;
+                  else if(id == 211) track_PFIso05_sumPUPt+=pt;
+                  if(id == 130) track_PFIso05_sumNeutHadPt+=pt;
+                  if(id == 22) track_PFIso05_sumPhotonPt+=pt;
+              }
+          }//end loop PFCandidates
+
     }
 
     HSCP_count++;
@@ -1204,16 +1310,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       iso_HCAL = hscpIso.Get_HCAL_Energy();
     }
 
-    float PFIso03_sumCharHadPt = -1;
-    float PFIso03_sumNeutHadPt = -1;
-    float PFIso03_sumPhotonPt = -1;
-    float PFIso03_sumPUPt = -1;
+    float muon_PFIso03_sumCharHadPt = -1;
+    float muon_PFIso03_sumNeutHadPt = -1;
+    float muon_PFIso03_sumPhotonPt = -1;
+    float muon_PFIso03_sumPUPt = -1;
 
     if (TypeMode_ == 2 && !muon.isNull()) {
-      PFIso03_sumCharHadPt = muon->pfIsolationR03().sumChargedHadronPt;
-      PFIso03_sumNeutHadPt = muon->pfIsolationR03().sumNeutralHadronEt;
-      PFIso03_sumPhotonPt = muon->pfIsolationR03().sumPhotonEt;
-      PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
+      muon_PFIso03_sumCharHadPt = muon->pfIsolationR03().sumChargedHadronPt;
+      muon_PFIso03_sumNeutHadPt = muon->pfIsolationR03().sumNeutralHadronEt;
+      muon_PFIso03_sumPhotonPt = muon->pfIsolationR03().sumPhotonEt;
+      muon_PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
     }
 
     HSCP_passCutPt55.push_back(track->pt() > 55 ? true : false);
@@ -1224,10 +1330,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
     HSCP_Ias.push_back(dedxSObj ? dedxSObj->dEdx() : -1);
+    HSCP_Ias_PixelOnly.push_back(dedxSObj ? dedxSObj->dEdx() : -1);
     HSCP_Ih.push_back(dedxMObj ? dedxMObj->dEdx() : -1);
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
-    HSCP_ProbQ.push_back(dedx_probQ ? dedx_probQ->dEdx() : -1);
+    HSCP_ProbXY.push_back(probXYonTrack);
+    HSCP_ProbXY_noL1.push_back(probXYonTrackNoLayer1);
+    HSCP_ProbQ.push_back(probQonTrack);
+    HSCP_ProbQ_noL1.push_back(probQonTrackNoLayer1);
+    HSCP_ProbQ_dEdx.push_back(dedx_probQ ? dedx_probQ->dEdx() : -1);
+    HSCP_Ndof.push_back(track->ndof());
+    HSCP_Chi2.push_back(track->chi2);
+    HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
+    HSCP_isMuon.push_back(pf_isMuon);
+    HSCP_MuonSelector.push_back(pf_muon_selector);
+    HSCP_isElectron.push_back(pf_isElectron);
+    HSCP_isJet.push_back(pf_isJet);
+    HSCP_ECAL_energy.push_back(pf_ecal_energy);
+    HSCP_HCAL_energy.push_back(pf_hcal_energy);
     HSCP_TOF.push_back(tof ? tof->inverseBeta() : -99);
     HSCP_TOFErr.push_back(tof ? tof->inverseBetaErr() : -99);
     HSCP_TOF_ndof.push_back(tof ? tof->nDof() : -99);
@@ -1253,10 +1373,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_iso_TK.push_back(iso_TK);
     HSCP_iso_ECAL.push_back(iso_ECAL);
     HSCP_iso_HCAL.push_back(iso_HCAL);
-    HSCP_PFIsolationR03_sumChargedHadronPt.push_back(PFIso03_sumCharHadPt);
-    HSCP_PFIsolationR03_sumNeutralHadronPt.push_back(PFIso03_sumNeutHadPt);
-    HSCP_PFIsolationR03_sumPhotonPt.push_back(PFIso03_sumPhotonPt);
-    HSCP_PFIsolationR03_sumPUPt.push_back(PFIso03_sumPUPt);
+    HSCP_track_PFIsolationR005_sumChargedHadronPt.push_back(track_PFIso005_sumCharHadPt);
+    HSCP_track_PFIsolationR005_sumNeutralHadronPt.push_back(track_PFIso005_sumNeutHadPt);
+    HSCP_track_PFIsolationR005_sumPhotonPt.push_back(track_PFIso005_sumPhotonPt);
+    HSCP_track_PFIsolationR005_sumPUPt.push_back(track_PFIso005_sumPUPt);
+    HSCP_track_PFIsolationR01_sumChargedHadronPt.push_back(track_PFIso01_sumCharHadPt);
+    HSCP_track_PFIsolationR01_sumNeutralHadronPt.push_back(track_PFIso01_sumNeutHadPt);
+    HSCP_track_PFIsolationR01_sumPhotonPt.push_back(track_PFIso01_sumPhotonPt);
+    HSCP_track_PFIsolationR01_sumPUPt.push_back(track_PFIso01_sumPUPt);
+    HSCP_track_PFIsolationR03_sumChargedHadronPt.push_back(track_PFIso03_sumCharHadPt);
+    HSCP_track_PFIsolationR03_sumNeutralHadronPt.push_back(track_PFIso03_sumNeutHadPt);
+    HSCP_track_PFIsolationR03_sumPhotonPt.push_back(track_PFIso03_sumPhotonPt);
+    HSCP_track_PFIsolationR03_sumPUPt.push_back(track_PFIso03_sumPUPt);
+    HSCP_track_PFIsolationR05_sumChargedHadronPt.push_back(track_PFIso05_sumCharHadPt);
+    HSCP_track_PFIsolationR05_sumNeutralHadronPt.push_back(track_PFIso05_sumNeutHadPt);
+    HSCP_track_PFIsolationR05_sumPhotonPt.push_back(track_PFIso05_sumPhotonPt);
+    HSCP_track_PFIsolationR05_sumPUPt.push_back(track_PFIso05_sumPUPt);
+    HSCP_muon_PFIsolationR03_sumChargedHadronPt.push_back(muon_PFIso03_sumCharHadPt);
+    HSCP_muon_PFIsolationR03_sumNeutralHadronPt.push_back(muon_PFIso03_sumNeutHadPt);
+    HSCP_muon_PFIsolationR03_sumPhotonPt.push_back(muon_PFIso03_sumPhotonPt);
+    HSCP_muon_PFIsolationR03_sumPUPt.push_back(muon_PFIso03_sumPUPt);
     HSCP_Ih_noL1.push_back(dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1);
     HSCP_Ih_15drop.push_back(dedxIh_15drop ? dedxIh_15drop->dEdx() : -1);
     HSCP_Ih_StripOnly.push_back(dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1);
@@ -1300,6 +1436,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 RecoPFMHT,
                                 HLTPFMET,
                                 HLTPFMHT,
+                                RecoPFMET_eta,
+                                RecoPFMET_phi,
+                                RecoPFMET_significance,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection_noIsolation_noIh,
                                 HSCP_passPreselection,
@@ -1308,10 +1447,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Pt,
                                 HSCP_PtErr,
                                 HSCP_Ias,
+                                HSCP_Ias_PixelOnly,
                                 HSCP_Ih,
                                 HSCP_Ick,
                                 HSCP_Fmip,
+                                HSCP_ProbXY,
+                                HSCP_ProbXY_noL1,
                                 HSCP_ProbQ,
+                                HSCP_ProbQ_noL1,
+                                HSCP_ProbQ_dEdx,
+                                HSCP_Ndof,
+                                HSCP_Chi2,
+                                HSCP_isHighPurity,
+                                HSCP_isMuon,
+                                HSCP_MuonSelector,
+                                HSCP_isElectron,
+                                HSCP_isJet,
+                                HSCP_ECAL_energy,
+                                HSCP_HCAL_energy,
                                 HSCP_TOF,
                                 HSCP_TOFErr,
                                 HSCP_TOF_ndof,
@@ -1337,10 +1490,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_iso_TK,
                                 HSCP_iso_ECAL,
                                 HSCP_iso_HCAL,
-                                HSCP_PFIsolationR03_sumChargedHadronPt,
-                                HSCP_PFIsolationR03_sumNeutralHadronPt,
-                                HSCP_PFIsolationR03_sumPhotonPt,
-                                HSCP_PFIsolationR03_sumPUPt,
+                                HSCP_track_PFIsolationR005_sumChargedHadronPt,
+                                HSCP_track_PFIsolationR005_sumNeutralHadronPt,
+                                HSCP_track_PFIsolationR005_sumPhotonPt,
+                                HSCP_track_PFIsolationR005_sumPUPt,
+                                HSCP_track_PFIsolationR01_sumChargedHadronPt,
+                                HSCP_track_PFIsolationR01_sumNeutralHadronPt,
+                                HSCP_track_PFIsolationR01_sumPhotonPt,
+                                HSCP_track_PFIsolationR01_sumPUPt,
+                                HSCP_track_PFIsolationR03_sumChargedHadronPt,
+                                HSCP_track_PFIsolationR03_sumNeutralHadronPt,
+                                HSCP_track_PFIsolationR03_sumPhotonPt,
+                                HSCP_track_PFIsolationR03_sumPUPt,
+                                HSCP_track_PFIsolationR05_sumChargedHadronPt,
+                                HSCP_track_PFIsolationR05_sumNeutralHadronPt,
+                                HSCP_track_PFIsolationR05_sumPhotonPt,
+                                HSCP_track_PFIsolationR05_sumPUPt,
+                                HSCP_muon_PFIsolationR03_sumChargedHadronPt,
+                                HSCP_muon_PFIsolationR03_sumNeutralHadronPt,
+                                HSCP_muon_PFIsolationR03_sumPhotonPt,
+                                HSCP_muon_PFIsolationR03_sumPUPt,
                                 HSCP_Ih_noL1,
                                 HSCP_Ih_15drop,
                                 HSCP_Ih_StripOnly,
