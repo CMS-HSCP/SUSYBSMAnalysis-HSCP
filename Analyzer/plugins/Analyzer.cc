@@ -9,8 +9,8 @@
 // Original Author:  Emery Nibigira
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
-// Modifications by Dylan Angie Frank Apparu -- 27 feb 2022
-// v11.1: add nmuons, njets, muon infos --> muon1 = muon with highest pT, muon2 = 2nd muon with highest pT
+// Modifications by Dylan Angie Frank Apparu
+// v11.2: use Ih_nodrop_noPixL1 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -1007,6 +1007,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
+
+//Choose of Ih definition - Ih_nodrop_noPixL1
+    dedxMObj = dedxIh_noL1;
 
     if (TypeMode_ == 5) {
       OpenAngle = deltaROpositeTrack(
