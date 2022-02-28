@@ -58,6 +58,7 @@ public:
                         const float &Muon2_Pt,
                         const float &Muon2_eta,
                         const float &Muon2_phi,
+                        const float &mT,
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection_noIsolation_noIh,
                         const std::vector<bool> &passPreselection,
@@ -1246,6 +1247,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Muon2_Pt", &tuple->Tree_Muon2_Pt, "Muon2_Pt/F");
     tuple->Tree->Branch("Muon2_eta", &tuple->Tree_Muon2_eta, "Muon2_eta/F");
     tuple->Tree->Branch("Muon2_phi", &tuple->Tree_Muon2_phi, "Muon2_phi/F");
+    tuple->Tree->Branch("mT", &tuple->Tree_mT, "mT/F");
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
       tuple->Tree->Branch("passPreselection_noIsolation_noIh", &tuple->Tree_passPreselection_noIsolation_noIh);
@@ -1400,6 +1402,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &Muon2_Pt,
                                   const float &Muon2_eta,
                                   const float &Muon2_phi,
+                                  const float &mT,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection_noIsolation_noIh,
                                   const std::vector<bool> &passPreselection,
@@ -1520,6 +1523,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Muon2_Pt = Muon2_Pt;
   tuple->Tree_Muon2_eta = Muon2_eta;
   tuple->Tree_Muon2_phi = Muon2_phi;
+  tuple->Tree_mT = mT;
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
   tuple->Tree_passPreselection = passPreselection;

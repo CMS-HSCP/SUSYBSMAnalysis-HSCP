@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Dylan Angie Frank Apparu
-// v11.3: renamed misleading "muon collection handle"
+// v12: add transverse mass mT
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -479,7 +479,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
 
-  float CaloMET = -1, RecoPFMET = -1, RecoPFMHT = -1, HLTPFMET = -1, HLTPFMHT = -1;
+  float CaloMET = -1, RecoPFMET_et = -1, RecoPFMHT = -1, HLTPFMET = -1, HLTPFMHT = -1;
   float RecoPFMET_eta = -1, RecoPFMET_phi = -1, RecoPFMET_significance = -1;
 
   //===================== Handle For PFMET ===================
@@ -487,7 +487,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
     for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
       const reco::PFMET* pfMet = &(*pfMETHandle)[i];
-      RecoPFMET = pfMet->et();
+      RecoPFMET_et = pfMet->et();
       RecoPFMET_eta = pfMet->eta();
       RecoPFMET_phi = pfMet->phi();
       RecoPFMET_significance = pfMet->significance();
@@ -554,6 +554,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //load all event collection that will be used later on (HSCP, dEdx and TOF)
   unsigned int HSCP_count = 0;
+
+  float mT = 0;
+  float maxHSCPpT = 0;
 
   std::vector<bool> HSCP_passCutPt55;
   std::vector<bool> HSCP_passPreselection_noIsolation_noIh;
@@ -726,6 +729,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Impact paramters dz and dxy
   double dz = track->dz(vertexColl[highestPtGoodVertex].position());
   double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
+
+
+  // Compute transverse mass mT between HSCP with highest pT and MET
+
+  if (track->pt()>maxHSCPpT){
+      maxHSCPpT = track->pt();
+      mT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
+  }
   
 
     // save PF informations and isolation 
@@ -1403,7 +1414,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
                                 HLT_MET105_IsoTrk50,
                                 CaloMET,
-                                RecoPFMET,
+                                RecoPFMET_et,
                                 RecoPFMHT,
                                 HLTPFMET,
                                 HLTPFMHT,
@@ -1416,6 +1427,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 maxPtMuon2,
                                 etaMuon2,
                                 phiMuon2,
+                                mT,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection_noIsolation_noIh,
                                 HSCP_passPreselection,
