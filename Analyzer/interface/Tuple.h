@@ -33,6 +33,13 @@ struct Tuple {
   float Tree_RecoPFMET_eta;
   float Tree_RecoPFMET_phi;
   float Tree_RecoPFMET_significance;
+  float Tree_Muon1_Pt;
+  float Tree_Muon1_eta;
+  float Tree_Muon1_phi;
+  float Tree_Muon2_Pt;
+  float Tree_Muon2_eta;
+  float Tree_Muon2_phi;
+
 
   std::vector<bool> Tree_passCutPt55;
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
