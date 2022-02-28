@@ -10,7 +10,7 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Dylan Angie Frank Apparu
-// v11.2: use Ih_nodrop_noPixL1 
+// v11.3: renamed misleading "muon collection handle"
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -524,15 +524,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
 
   
-  //===================== Handle For Muons ===================
+  //===================== Collection For Muons ===================
   unsigned int Muons_count = 0; 
   float maxPtMuon1 = 0, maxPtMuon2 = 0;
   float etaMuon1 = 0, phiMuon1 = 0;
   float etaMuon2 = 0, phiMuon2 = 0;
   unsigned int muon1 = 0;
-  vector<reco::Muon> muonCollHandle = iEvent.get(muonToken_);
-      for (unsigned int i = 0; i < muonCollHandle.size(); i++) {
-          const reco::Muon* mu = &(muonCollHandle)[i];
+  vector<reco::Muon> muonColl = iEvent.get(muonToken_);
+      for (unsigned int i = 0; i < muonColl.size(); i++) {
+          const reco::Muon* mu = &(muonColl)[i];
           Muons_count++;
           if (mu->pt() > maxPtMuon1) {
               maxPtMuon1 = mu->pt();
@@ -541,9 +541,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               muon1 = i;
           }
       }
-      for (unsigned int i = 0; i < muonCollHandle.size(); i++) {
+      for (unsigned int i = 0; i < muonColl.size(); i++) {
           if (i == muon1) continue;
-          const reco::Muon* mu = &(muonCollHandle)[i];
+          const reco::Muon* mu = &(muonColl)[i];
           if (mu->pt() > maxPtMuon2) {
               maxPtMuon2 = mu->pt();
               etaMuon2 = mu->eta();
