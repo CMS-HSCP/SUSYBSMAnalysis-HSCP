@@ -47,7 +47,7 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/TrackExtra.h"
 #include "DataFormats/TrackReco/interface/TrackExtraFwd.h"
-
+#include "FWCore/Framework/interface/ConsumesCollector.h"
 
 // system include files
 #include <memory>
@@ -75,7 +75,8 @@ CSCTimingExtractor_Mini::CSCTimingExtractor_Mini(const edm::ParameterSet& iConfi
   theWireError_(iConfig.getParameter<double>("CSCWireError")),
   UseWireTime(iConfig.getParameter<bool>("UseWireTime")),
   UseStripTime(iConfig.getParameter<bool>("UseStripTime")),
-  debug(iConfig.getParameter<bool>("debug"))
+  debug(iConfig.getParameter<bool>("debug")),
+  PropagatorToken_(esConsumes<Propagator, TrackingComponentsRecord>())
 {
   edm::ParameterSet serviceParameters = iConfig.getParameter<edm::ParameterSet>("ServiceParameters");
   theService = std::make_unique<MuonServiceProxy>(serviceParameters);
@@ -102,9 +103,10 @@ void CSCTimingExtractor_Mini::fillTiming(TimeMeasurementSequence &tmSequence,
   const GlobalTrackingGeometry *theTrackingGeometry = &*theService->trackingGeometry();
 
   // get the propagator  
-  edm::ESHandle<Propagator> propagator;
+  /*edm::ESHandle<Propagator> propagator;
   iSetup.get<TrackingComponentsRecord>().get("SteppingHelixPropagatorAny", propagator);
-  const Propagator *propag = propagator.product();
+  */
+  const Propagator* propag = &iSetup.getData(PropagatorToken_);
 
   math::XYZPoint  pos = math::XYZPoint(muonTrack->vx(), muonTrack->vy(), muonTrack->vz());
   math::XYZVector mom = math::XYZVector(muonTrack->px(), muonTrack->py(), muonTrack->pz());

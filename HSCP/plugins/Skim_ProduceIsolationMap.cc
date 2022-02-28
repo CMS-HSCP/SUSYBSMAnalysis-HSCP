@@ -52,9 +52,11 @@
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/DetId/interface/DetIdCollection.h"
 
-#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
 #include "Geometry/CaloTopology/interface/CaloSubdetectorTopology.h"
+
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPIsolation.h"
 #include "DataFormats/Common/interface/ValueMap.h"
@@ -83,6 +85,7 @@ class ProduceIsolationMap : public edm::EDProducer {
       TrackDetectorAssociator trackAssociator_;
       TrackAssociatorParameters parameters_;
       // ----------member data ---------------------------
+      const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> bFieldToken_;
 };
 
 //
@@ -97,7 +100,10 @@ class ProduceIsolationMap : public edm::EDProducer {
 //
 // constructors and destructor
 //
-ProduceIsolationMap::ProduceIsolationMap(const edm::ParameterSet& iConfig)
+ProduceIsolationMap::ProduceIsolationMap(const edm::ParameterSet& iConfig) :
+  bFieldToken_(esConsumes<MagneticField, IdealMagneticFieldRecord>())
+
+
 {
    TKToken_          = consumes<reco::TrackCollection>(iConfig.getParameter< edm::InputTag > ("TKLabel"));
    inputCollectionToken_  = consumes<reco::TrackCollection>(iConfig.getParameter< edm::InputTag > ("inputCollection"));
@@ -153,7 +159,7 @@ ProduceIsolationMap::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       std::vector<double> CountHighPt;for(unsigned int i=0;i<Label_.size();i++){CountHighPt.push_back(0);}
 
       if(itTrack->pt()>=candMinPt_){
-         TrackDetMatchInfo info = trackAssociator_.associate(iEvent, iSetup, trackAssociator_.getFreeTrajectoryState(iSetup, *itTrack), parameters_);
+         TrackDetMatchInfo info = trackAssociator_.associate(iEvent, iSetup, trackAssociator_.getFreeTrajectoryState(&iSetup.getData(bFieldToken_), *itTrack), parameters_);
          for(unsigned int i=0;i<Label_.size();i++){
             if(info.ecalRecHits.size()>0){IsolationInfoColl[i][TkIndex].Set_ECAL_Energy(info.coneEnergy(IsolationConeDR_[i], TrackDetMatchInfo::EcalRecHits));}
             if(info.hcalRecHits.size()>0){IsolationInfoColl[i][TkIndex].Set_HCAL_Energy(info.coneEnergy(IsolationConeDR_[i], TrackDetMatchInfo::HcalRecHits));}

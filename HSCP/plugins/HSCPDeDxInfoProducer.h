@@ -13,8 +13,9 @@
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
-#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h" 
 
+
+#include "Geometry/CommonTopologies/interface/PixelGeomDetUnit.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/TrackReco/interface/DeDxData.h"
 #include "DataFormats/TrackReco/interface/TrackDeDxHits.h"
@@ -67,7 +68,7 @@ private:
 
   std::vector< std::vector<float> > calibGains; 
   unsigned int m_off;
-
+  const edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> tkGeomToken_;
   std::string       Reccord;
   std::string       ProbabilityMode;
   TH3F*             Prob_ChargePath;

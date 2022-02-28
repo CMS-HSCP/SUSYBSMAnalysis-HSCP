@@ -55,7 +55,7 @@ class HSCPValidator : public edm::EDAnalyzer {
       void makeGenPlots(const edm::Event& iEvent);
       void makeSimTrackPlots(const edm::Event& iEvent);
       void makeSimDigiPlotsECAL(const edm::Event& iEvent);
-      void makeSimDigiPlotsRPC(const edm::Event& iEvent);
+      void makeSimDigiPlotsRPC(const edm::Event& iEvent,const edm::EventSetup& iSetup);
       void makeHLTPlots(const edm::Event& iEvent);
       void makeRecoPlots(const edm::Event& iEvent);
       bool IncreasedTreshold(const trigger::TriggerEvent& trEv, const edm::InputTag& InputPath, double NewThreshold, double etaCut,int NObjectAboveThreshold, bool averageThreshold);
@@ -104,7 +104,8 @@ class HSCPValidator : public edm::EDAnalyzer {
       edm::EDGetTokenT<edm::SimTrackContainer> simTrackToken_;
       edm::EDGetTokenT<EBDigiCollection> EBDigiCollectionToken_;
       edm::EDGetTokenT<EEDigiCollection> EEDigiCollectionToken_;
-      edm::ESHandle <RPCGeometry> rpcGeo;
+      //edm::ESHandle <RPCGeometry> rpcGeo;
+      const edm::ESGetToken<RPCGeometry, MuonGeometryRecord> rpcGeoToken_;
       // ECAL
       TH1F* simHitsEcalEnergyHistEB_;
       TH1F* simHitsEcalTimeHistEB_;

@@ -39,14 +39,14 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
-#include "DataFormats/SiPixelDetId/interface/PixelBarrelName.h"
+#include "DataFormats/TrackerCommon/interface/PixelBarrelName.h"
 #include "DataFormats/SiPixelDetId/interface/PixelBarrelNameUpgrade.h"
-#include "DataFormats/SiPixelDetId/interface/PixelEndcapName.h"
+#include "DataFormats/TrackerCommon/interface/PixelEndcapName.h"
 #include "DataFormats/SiPixelDetId/interface/PixelEndcapNameUpgrade.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/Records/interface/IdealGeometryRecord.h"
-#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
+#include "Geometry/CommonTopologies/interface/PixelGeomDetUnit.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 
@@ -125,7 +125,7 @@ class calib_ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        edm::EDGetTokenT<reco::TrackCollection>  m_tracksTag;
        edm::EDGetTokenT<reco::DeDxHitInfoAss>   m_dedxTag;
        edm::EDGetTokenT<edm::ValueMap<int>> m_dedxPrescaleTag;
-
+       const edm::ESGetToken<TrackerTopology,TrackerTopologyRcd> tTopoToken_;
 
        int printOut_;
 //
@@ -211,13 +211,14 @@ class calib_ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 // constructors and destructor
 //
-calib_ntuple::calib_ntuple(const edm::ParameterSet& iConfig)
+calib_ntuple::calib_ntuple(const edm::ParameterSet& iConfig) :
 /*
  :
   trackTags_(iConfig.getUntrackedParameter<edm::InputTag>("tracks"))
 
 {
 */
+   tTopoToken_(esConsumes<TrackerTopology,TrackerTopologyRcd>())
 {
 //   m_primaryVertexTag   = consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("primaryVertexColl"));
    m_tracksTag = consumes<reco::TrackCollection>(iConfig.getParameter<edm::InputTag>("tracks"));
@@ -356,10 +357,10 @@ calib_ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(m_dedxPrescaleTag, dedxHitInfoPrescale);
 
 
-    edm::ESHandle<TrackerTopology> tTopoHandle;
-    iSetup.get<TrackerTopologyRcd>().get(tTopoHandle);
-    const TrackerTopology* tTopo = tTopoHandle.product();
-
+    //edm::ESHandle<TrackerTopology> tTopoHandle;
+    //iSetup.get<TrackerTopologyRcd>().get(tTopoHandle);
+    //const TrackerTopology* tTopo = tTopoHandle.product();
+    const TrackerTopology* tTopo = &iSetup.getData(tTopoToken_);
     tree_ntracks=0;
     tree_dedxhits=0;
     tree_nstrips=0;

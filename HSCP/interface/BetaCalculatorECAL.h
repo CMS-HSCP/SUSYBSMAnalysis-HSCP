@@ -20,12 +20,19 @@
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
 
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
 #include "TrackingTools/TrackAssociator/interface/TrackAssociatorParameters.h"
 #include "TrackingTools/TrackAssociator/interface/DetIdAssociator.h"
 #include "TrackingTools/TrajectoryState/interface/FreeTrajectoryState.h"
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+
+#include "TrackingTools/Records/interface/DetIdAssociatorRecord.h"
+#include "TrackingTools/TrackAssociator/plugins/EcalDetIdAssociator.h"
+//added both upper classes
 
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPCaloInfo.h"
@@ -46,7 +53,7 @@ class BetaCalculatorECAL {
            const CaloTopology * theTopology,
            const std::vector<SteppingHelixStateInfo>& neckLace);
        std::vector<SteppingHelixStateInfo> calcEcalDeposit(const FreeTrajectoryState* tkInnerState,
-           const DetIdAssociator& associator);
+           const DetIdAssociator& associator,const MagneticField* bField);
        void addStepToXtal(std::map<int,GlobalPoint>& trackExitPositionMap,
            std::map<int,float>& trackCrossedXtalMap,
            DetId aDetId,
@@ -60,10 +67,12 @@ class BetaCalculatorECAL {
       edm::EDGetTokenT<EBRecHitCollection> EBRecHitCollectionToken_;
       edm::EDGetTokenT<EERecHitCollection> EERecHitCollectionToken_;
 
-      edm::ESHandle<DetIdAssociator> ecalDetIdAssociator_;
-      edm::ESHandle<MagneticField> bField_;
-      edm::ESHandle<CaloGeometry> theCaloGeometry_;
+      const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> bFieldToken_;
+      const edm::ESGetToken<DetIdAssociator, DetIdAssociatorRecord> ecalDetIdAssociator_;
+      const edm::ESGetToken<CaloGeometry, CaloGeometryRecord> theCaloGeometry_;
+      const edm::ESGetToken<CaloTopology, CaloTopologyRecord> CaloTopologyToken_;
+      //edm::ESHandle<DetIdAssociator> ecalDetIdAssociator_;
+      //edm::ESHandle<MagneticField> bField_; //changed for lines above
+      //edm::ESHandle<CaloGeometry> theCaloGeometry_;
 
 };
-
-

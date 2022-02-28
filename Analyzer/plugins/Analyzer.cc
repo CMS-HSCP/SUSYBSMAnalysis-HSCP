@@ -18,7 +18,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
     // Read config file
     : hscpToken_(consumes<vector<susybsm::HSCParticle>>(iConfig.getParameter<edm::InputTag>("hscpCollection"))),
       hscpIsoToken_(
-          consumes<edm::ValueMap<susybsm::HSCPIsolation>>(iConfig.getParameter<edm::InputTag>("hscpIsoCollection"))),
+          consumes<edm::ValueMap<susybsm::HSCPIsolation>>(iConfig.getParameter<edm::InputTag>("hscpIsoCollection"))), 
       muonSegmentToken_(
           consumes<susybsm::MuonSegmentCollection>(iConfig.getParameter<edm::InputTag>("muonSegmentCollection"))),
       dedxToken_(consumes<reco::DeDxHitInfoAss>(iConfig.getParameter<edm::InputTag>("dedxCollection"))),
@@ -80,7 +80,11 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       SGTree(iConfig.getUntrackedParameter<unsigned int>("saveGenTree")),
       pixelCPE_(iConfig.getParameter<std::string>("pixelCPE")),
       trackProbQCut_(iConfig.getUntrackedParameter<double>("trackProbQCut")),
-      debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel"))
+      debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel")),
+      tTopoToken_(esConsumes<TrackerTopology, TrackerTopologyRcd>()),
+      tkGeomToken_(esConsumes<TrackerGeometry,TrackerDigiGeometryRecord>()),
+      pixelCPEToken_(esConsumes<PixelClusterParameterEstimator, TkPixelCPERecord>())
+      
  {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
@@ -432,17 +436,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   // Retrieve tracker topology from geometry
-  edm::ESHandle<TrackerTopology> TopoHandle;
-  iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
-  const TrackerTopology* tTopo = TopoHandle.product();
+  //edm::ESHandle<TrackerTopology> TopoHandle;
+  //iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
+  //const TrackerTopology* tTopo = TopoHandle.product();
 
-  edm::ESHandle<TrackerGeometry> tkGeometry;
-  iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
+  const auto tTopo = &iSetup.getData(tTopoToken_);
+  const auto tkGeometry = &iSetup.getData(tkGeomToken_);
+ 
+  //edm::ESHandle<TrackerGeometry> tkGeometry;
+  //iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
 
   // Retrieve CPE from the event setup
-  edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
-  iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
-
+  //edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
+  //iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
+  const auto pixelCPE = &iSetup.getData(pixelCPEToken_);
   //reinitialize the bookeeping array for each event
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk[CutIndex] = false;

@@ -16,7 +16,7 @@
 //         Created:  Wed Oct 10 12:01:28 CEST 2007
 // $Id: MuonSegmentProducer.cc,v 1.1 2012/04/27 20:49:41 farrell3 Exp $
 //
-//
+//a
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -57,11 +57,17 @@ private:
 
   edm::EDGetTokenT< CSCSegmentCollection > m_cscSegmentToken;
   edm::EDGetTokenT< DTRecSegment4DCollection > m_dtSegmentToken;
+  const edm::ESGetToken<DTGeometry,MuonGeometryRecord> dtGeomToken_; 
+  const edm::ESGetToken<CSCGeometry,MuonGeometryRecord> cscGeomToken_;
 };
 
 using namespace susybsm;
 
-MuonSegmentProducer::MuonSegmentProducer(const edm::ParameterSet& iConfig) {
+MuonSegmentProducer::MuonSegmentProducer(const edm::ParameterSet& iConfig) :
+
+  dtGeomToken_(esConsumes<DTGeometry,MuonGeometryRecord>()),
+  cscGeomToken_(esConsumes<CSCGeometry,MuonGeometryRecord>()) 
+{
   using namespace edm;
   using namespace std;
 
@@ -92,11 +98,12 @@ MuonSegmentProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
   susybsm::MuonSegmentCollection* segments = new susybsm::MuonSegmentCollection;
   std::unique_ptr<susybsm::MuonSegmentCollection> resultSeg(segments);
 
-  edm::ESHandle<DTGeometry> dtGeom;
-  iSetup.get<MuonGeometryRecord>().get(dtGeom);
-
-  edm::ESHandle<CSCGeometry> cscGeom;
-  iSetup.get<MuonGeometryRecord>().get(cscGeom);
+  //edm::ESHandle<DTGeometry> dtGeom;
+  //iSetup.get<MuonGeometryRecord>().get(dtGeom);
+  const auto dtGeom = &iSetup.getData(dtGeomToken_);
+  const auto cscGeom = &iSetup.getData(cscGeomToken_);
+  //edm::ESHandle<CSCGeometry> cscGeom;
+  //iSetup.get<MuonGeometryRecord>().get(cscGeom);
 
   edm::Handle<DTRecSegment4DCollection> dtSegments;
   iEvent.getByToken(m_dtSegmentToken, dtSegments);

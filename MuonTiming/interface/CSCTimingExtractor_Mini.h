@@ -92,7 +92,9 @@ private:
   bool debug;
   
   std::unique_ptr<MuonServiceProxy> theService;
-  MuonSegmentMatcher *theMatcher;  
+  MuonSegmentMatcher *theMatcher;
+
+  edm::ESGetToken<Propagator, TrackingComponentsRecord> PropagatorToken_; 
 };
 
 #endif

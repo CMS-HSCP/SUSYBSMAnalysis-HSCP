@@ -43,8 +43,11 @@ class  BetaCalculatorRPC{
       float etarange(float eta1,float eta2,float eta3);
       float dist(float phi1,float phi2);
       float dist3(float phi1,float phi2,float phi3);
+      
+      const edm::ESGetToken<RPCGeometry, MuonGeometryRecord> RPCGeomToken_;
 
       edm::EDGetTokenT<RPCRecHitCollection> rpcRecHitsToken;
+      
 };
 
 

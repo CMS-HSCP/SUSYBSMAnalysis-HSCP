@@ -42,7 +42,9 @@
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
-#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
+
+
+#include "Geometry/CommonTopologies/interface/PixelGeomDetUnit.h"
 #include "Geometry/TrackerNumberingBuilder/interface/GeometricDet.h"
 #include "Geometry/CommonDetUnit/interface/TrackingGeometry.h"
 
@@ -55,7 +57,7 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit2D.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiStripMatchedRecHit2D.h"
-#include "DataFormats/SiStripDetId/interface/SiStripSubStructure.h"
+#include "DataFormats/TrackerCommon/interface/SiStripSubStructure.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 
@@ -136,6 +138,7 @@ class HSCPTreeBuilder : public edm::EDFilter {
                 EDGetTokenT<reco::VertexCollection> m_recoVertexToken;
                 EDGetTokenT<GenParticleCollection> m_genParticlesToken;
                 EDGetTokenT<susybsm::HSCParticleCollection >       m_HSCPsToken;
+                const edm::ESGetToken<MagneticField,IdealMagneticFieldRecord> bFieldToken_;
                 bool           reccordVertexInfo;
                 bool           reccordGenInfo;
 
@@ -262,7 +265,9 @@ class HSCPTreeBuilder : public edm::EDFilter {
                 float          Gen_mass           [MAX_GENS];
 };
 
-HSCPTreeBuilder::HSCPTreeBuilder(const edm::ParameterSet& iConfig)
+HSCPTreeBuilder::HSCPTreeBuilder(const edm::ParameterSet& iConfig) :
+
+   bFieldToken_(esConsumes<MagneticField,IdealMagneticFieldRecord>())
 {
    m_gtReadoutRecordToken = consumes<L1GlobalTriggerReadoutRecord>(InputTag("gtDigis"));
    m_trToken = consumes<edm::TriggerResults>(InputTag("TriggerResults"));
@@ -442,9 +447,10 @@ HSCPTreeBuilder::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
    Event_Time            = iEvent.eventAuxiliary().time().value();
 
    // BField part:
-   ESHandle<MagneticField> MF;
-   iSetup.get<IdealMagneticFieldRecord>().get(MF);
-   const MagneticField* theMagneticField = MF.product();
+   //ESHandle<MagneticField> MF;
+   //iSetup.get<IdealMagneticFieldRecord>().get(MF);
+   //const MagneticField* theMagneticField = MF.product();
+   const MagneticField* theMagneticField = &iSetup.getData(bFieldToken_);
    Event_BField = fabs(theMagneticField->inTesla(GlobalPoint(0,0,0)).z());
 
    // L1 TRIGGER part:

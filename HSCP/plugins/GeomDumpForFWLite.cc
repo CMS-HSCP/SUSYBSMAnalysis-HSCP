@@ -79,7 +79,8 @@ private:
 
   // ----------member data ---------------------------
 
-  edm::ESHandle<TrackerGeometry> tkGeom;
+  //edm::ESHandle<TrackerGeometry> tkGeom;
+  const edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> tkGeomToken_;
   edm::ESHandle<DTGeometry> DtGeom;
   edm::ESHandle<CSCGeometry> CscGeom;
   edm::ESHandle<RPCGeometry> RpcGeom;
@@ -89,7 +90,11 @@ private:
 //
 // constructors and destructor
 //
-GeomDumpForFWLite::GeomDumpForFWLite(const edm::ParameterSet& iConfig) { isInitialized = false; }
+GeomDumpForFWLite::GeomDumpForFWLite(const edm::ParameterSet& iConfig) :
+  tkGeomToken_(esConsumes<TrackerGeometry,TrackerDigiGeometryRecord>())
+{ 
+	isInitialized = false;
+}
 
 GeomDumpForFWLite::~GeomDumpForFWLite() {}
 
@@ -121,7 +126,8 @@ void GeomDumpForFWLite::analyze(const edm::Event& iEvent, const edm::EventSetup&
   outtree->Branch("length", &lengthV, 32000, 0);
   outtree->Branch("thick", &thickV, 32000, 0);
 
-  iSetup.get<TrackerDigiGeometryRecord>().get(tkGeom);
+  //iSetup.get<TrackerDigiGeometryRecord>().get(tkGeom);
+  const auto tkGeom = &iSetup.getData(tkGeomToken_);
   iSetup.get<MuonGeometryRecord>().get(DtGeom);
   iSetup.get<MuonGeometryRecord>().get(CscGeom);
   iSetup.get<MuonGeometryRecord>().get(RpcGeom);

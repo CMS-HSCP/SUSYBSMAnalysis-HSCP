@@ -1,7 +1,20 @@
+/**_________________________________________________________
+ class : BetaCalculatorECAL.h
+
+ Attempt migration towards CMSSW_12_3_X
+ 
+ All changes can be found https://twiki.cern.ch/twiki/bin/view/Main/HSCPMigrationTo123X
+ 
+ Done by : Raphael Haeberle (raphael.julien.haberle@cern.ch)
+___________________________________________________________**/
+
+
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
+#include "FWCore/Framework/interface/ConsumesCollector.h"
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
 
-#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
 #include "Geometry/CaloGeometry/interface/TruncatedPyramid.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/CaloTopology/interface/CaloSubdetectorTopology.h"
@@ -18,7 +31,25 @@ using namespace susybsm;
 
 BetaCalculatorECAL::BetaCalculatorECAL(const edm::ParameterSet& iConfig, edm::ConsumesCollector&& iC) :
   EBRecHitCollectionToken_(iC.consumes<EBRecHitCollection>(iConfig.getParameter<edm::InputTag>("EBRecHitCollection"))),
-  EERecHitCollectionToken_(iC.consumes<EERecHitCollection>(iConfig.getParameter<edm::InputTag>("EERecHitCollection")))
+  EERecHitCollectionToken_(iC.consumes<EERecHitCollection>(iConfig.getParameter<edm::InputTag>("EERecHitCollection"))),
+  bFieldToken_(iC.esConsumes<MagneticField, IdealMagneticFieldRecord>()),
+  ecalDetIdAssociator_(iC.esConsumes<DetIdAssociator, DetIdAssociatorRecord>()),
+  theCaloGeometry_(iC.esConsumes<CaloGeometry, CaloGeometryRecord>()),
+  CaloTopologyToken_(iC.esConsumes<CaloTopology, CaloTopologyRecord>())
+
+/*
+  bFieldToken_(esConsumes()),
+  ecalDetIdAssociator_(esConsumes()),
+  theCaloGeometry_(esConsumes()),
+  CaloTopologyToken_(esConsumes())
+*/
+
+ /*
+ bFieldToken_(iC.consumes<MagneticField, IdealMagneticFieldRecord>(iConfig.getParameter<edm::InputTag>("MagneticField"))),
+  DetIdAssociatorToken_(iC.consumes<DetIdAssociator, DetIdAssociatorRecord>(iConfig.getParameter<edm::InputTag>("DetIdAssociator"))), 
+  theCaloGeometry_(iC.consumes<CaloGeometry, CaloGeometryRecord>(iConfig.getParameter<edm::InputTag>("CaloGeometry"))),
+  CaloTopologyToken_((iC.consumes<CaloTopology, CaloTopologyRecord>(iConfig.getParameter<edm::InputTag>("CaloTopology")))  
+*/
 {
    edm::ParameterSet trkParameters = iConfig.getParameter<edm::ParameterSet>("TrackAssociatorParameters");
    parameters_.loadParameters( trkParameters, iC );
@@ -32,16 +63,37 @@ void BetaCalculatorECAL::addInfoToCandidate(HSCParticle& candidate, edm::Handle<
    HSCPCaloInfo result;
 
    // EcalDetIdAssociator
-   iSetup.get<DetIdAssociatorRecord>().get("EcalDetIdAssociator", ecalDetIdAssociator_);
+   //iSetup.get<DetIdAssociatorRecord>().get("EcalDetIdAssociator", ecalDetIdAssociator_);
+  
    // Get the Bfield
-   iSetup.get<IdealMagneticFieldRecord>().get(bField_);
+   //
+   //iSetup.get<IdealMagneticFieldRecord>().get(bField_);
+  
+   //iSetup.getData(bField_);
+   
+   /*const MagneticField* bField_ = &iSetup.getData(bFieldToken_);
+   const DetIdAssociator* ecalDetIdAssociator_ = &iSetup.getData(DetIdAssociatorToken_);  
+   const CaloGeometry* theGeometry = &iSetup.getData(theCaloGeometry_);
+   */
+   //auto MagneticField* bField_ = &iSetup.getData(bFieldToken_);
+   const auto bField = &iSetup.getData(bFieldToken_);
+   const auto ecalDetIdAssociator = &iSetup.getData(ecalDetIdAssociator_);
+   //auto DetIdAssociator* ecalDetIdAssociator_ = &iSetup.getData(DetIdAssociatorToken_);
+   const CaloGeometry* theGeometry = &iSetup.getData(theCaloGeometry_);
+   const CaloTopology* theCaloTopology = &iSetup.getData(CaloTopologyToken_); 
    // Geometry
+   
+   /*
    iSetup.get<CaloGeometryRecord>().get(theCaloGeometry_);
    const CaloGeometry* theGeometry = theCaloGeometry_.product();
+   */
+
    // Topology
+   /*   
    edm::ESHandle<CaloTopology> pCaloTopology;
-   iSetup.get<CaloTopologyRecord>().get(pCaloTopology);
+   iSetup.getData<CaloTopologyRecord>().get(pCaloTopology);
    const CaloTopology* theCaloTopology = pCaloTopology.product();
+   */
    // EcalRecHits
    edm::Handle<EBRecHitCollection> ebRecHits;
    iEvent.getByToken(EBRecHitCollectionToken_,ebRecHits);
@@ -64,17 +116,17 @@ void BetaCalculatorECAL::addInfoToCandidate(HSCParticle& candidate, edm::Handle<
 
    // use the track associator to propagate to the calo
    TrackDetMatchInfo info = trackAssociator_.associate( iEvent, iSetup,
-                                                        trackAssociator_.getFreeTrajectoryState(iSetup, track),
+                                                        trackAssociator_.getFreeTrajectoryState(&iSetup.getData(bFieldToken_), track),
                                                         parameters_ );
 
    // do a custom propagation through Ecal
    std::map<int,GlobalPoint> trackExitPositionMap; // rawId to exit position (subtracting cry center)
    std::map<int,float> trackCrossedXtalCurvedMap; // rawId to trackLength
 
-   FreeTrajectoryState tkInnerState = trajectoryStateTransform::innerFreeState(track, &*bField_);
+   FreeTrajectoryState tkInnerState = trajectoryStateTransform::innerFreeState(track,bField);
    // Build set of points in Ecal (necklace) using the propagator
    std::vector<SteppingHelixStateInfo> neckLace;
-   neckLace = calcEcalDeposit(&tkInnerState,*ecalDetIdAssociator_);
+   neckLace = calcEcalDeposit(&tkInnerState,*ecalDetIdAssociator, bField);
    // Initialize variables to be filled by the track-length function
    double totalLengthCurved = 0.;
    GlobalPoint internalPointCurved(0., 0., 0.);
@@ -202,7 +254,7 @@ void BetaCalculatorECAL::addInfoToCandidate(HSCParticle& candidate, edm::Handle<
 }
 
 std::vector<SteppingHelixStateInfo> BetaCalculatorECAL::calcEcalDeposit(const FreeTrajectoryState* tkInnerState,
-            const DetIdAssociator& associator)
+            const DetIdAssociator& associator, const MagneticField* bField)
 {
    // Set some parameters
    double minR = associator.volume().minR () ;
@@ -214,7 +266,7 @@ std::vector<SteppingHelixStateInfo> BetaCalculatorECAL::calcEcalDeposit(const Fr
    SteppingHelixStateInfo trackOrigin(*tkInnerState);
 
    // Define Propagator
-   SteppingHelixPropagator* prop = new SteppingHelixPropagator (&*bField_, alongMomentum);
+   SteppingHelixPropagator* prop = new SteppingHelixPropagator (bField, alongMomentum);
    prop -> setMaterialMode(false);
    prop -> applyRadX0Correction(true);
 
@@ -321,7 +373,6 @@ void BetaCalculatorECAL::addStepToXtal(std::map<int,GlobalPoint>& trackExitPosit
     GlobalPoint point,
     const CaloSubdetectorGeometry* theSubdetGeometry)
 {
-
   /*removed*///const CaloCellGeometry *cell_p = theSubdetGeometry->getGeometry(aDetId);
   /*removed*///GlobalPoint p = (dynamic_cast <const TruncatedPyramid *> (cell_p))->getPosition(23);
   std::shared_ptr<const CaloCellGeometry> cell_p = theSubdetGeometry->getGeometry(aDetId);
@@ -335,11 +386,11 @@ void BetaCalculatorECAL::addStepToXtal(std::map<int,GlobalPoint>& trackExitPosit
     trackExitPositionMap.insert(std::pair<int,GlobalPoint>(aDetId.rawId(),diff));
 
   std::map<int,float>::iterator xtal2 = trackCrossedXtalMap.find(aDetId.rawId());
-  if (xtal2!= trackCrossedXtalMap.end())
+  if (xtal2!= trackCrossedXtalMap.end()){
     ((*xtal2).second)+=step;
-  else
+  }
+  else{
     trackCrossedXtalMap.insert(std::pair<int,float>(aDetId.rawId(),step));
+  }
+
 }
-
-
-

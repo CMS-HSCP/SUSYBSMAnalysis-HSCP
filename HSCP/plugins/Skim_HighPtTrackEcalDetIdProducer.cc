@@ -46,7 +46,7 @@
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/DetId/interface/DetIdCollection.h"
 
-#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
 #include "Geometry/CaloTopology/interface/CaloSubdetectorTopology.h"
 
@@ -63,7 +63,8 @@ class HighPtTrackEcalDetIdProducer : public edm::EDProducer {
    private:
 
       edm::EDGetTokenT<reco::TrackCollection> inputCollectionToken_;
-      const CaloTopology* caloTopology_;
+      const edm::ESGetToken<CaloTopology,CaloTopologyRecord> CaloTopologyToken_;
+      const CaloTopology* caloTopology;
       TrackDetectorAssociator trackAssociator_;
       TrackAssociatorParameters parameters_;
       double  ptcut_;
@@ -82,7 +83,9 @@ class HighPtTrackEcalDetIdProducer : public edm::EDProducer {
 //
 // constructors and destructor
 //
-HighPtTrackEcalDetIdProducer::HighPtTrackEcalDetIdProducer(const edm::ParameterSet& iConfig)
+HighPtTrackEcalDetIdProducer::HighPtTrackEcalDetIdProducer(const edm::ParameterSet& iConfig) :
+  CaloTopologyToken_(esConsumes<CaloTopology,CaloTopologyRecord>())
+  
 {
    inputCollectionToken_ = consumes<reco::TrackCollection>(iConfig.getParameter< edm::InputTag >("inputCollection"));
    ptcut_= iConfig.getParameter< double >("TrackPt");
@@ -113,9 +116,10 @@ HighPtTrackEcalDetIdProducer::~HighPtTrackEcalDetIdProducer()
 void
 HighPtTrackEcalDetIdProducer::beginRun(const edm::Run & run, const edm::EventSetup & iSetup)
 {
-   edm::ESHandle<CaloTopology> theCaloTopology;
-   iSetup.get<CaloTopologyRecord>().get(theCaloTopology);
-   caloTopology_ = &(*theCaloTopology);
+   //edm::ESHandle<CaloTopology> theCaloTopology;
+   const CaloTopology* caloTopology = &iSetup.getData(CaloTopologyToken_);
+   //iSetup.get<CaloTopologyRecord>().get(theCaloTopology);
+   //caloTopology_ = &(*theCaloTopology);
 }
 
 // ------------ method called to produce the data  ------------
@@ -140,7 +144,7 @@ HighPtTrackEcalDetIdProducer::produce(edm::Event& iEvent, const edm::EventSetup&
            if(info.crossedEcalIds.size()>0){
               DetId centerId = info.crossedEcalIds.front();
 
-              const CaloSubdetectorTopology* topology = caloTopology_->getSubdetectorTopology(DetId::Ecal,centerId.subdetId());
+              const CaloSubdetectorTopology* topology = caloTopology->getSubdetectorTopology(DetId::Ecal,centerId.subdetId());
               const std::vector<DetId>& ids = topology->getWindow(centerId, 5, 5);
               for ( std::vector<DetId>::const_iterator id = ids.begin(); id != ids.end(); ++id )
                  if(std::find(interestingDetIdCollection->begin(), interestingDetIdCollection->end(), *id)

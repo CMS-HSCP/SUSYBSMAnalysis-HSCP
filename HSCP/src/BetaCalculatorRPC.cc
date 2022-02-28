@@ -1,9 +1,22 @@
+/**_________________________________________________________
+ class : BetaCalculatorRPC.h
+
+ Attempt migration towards CMSSW_12_3_X
+ 
+ All changes can be found https://twiki.cern.ch/twiki/bin/view/Main/HSCPMigrationTo123X
+ 
+ Done by : Raphael Haeberle (raphael.julien.haberle@cern.ch)
+___________________________________________________________**/
+
 #include "SUSYBSMAnalysis/HSCP/interface/BetaCalculatorRPC.h"
 
 using namespace susybsm;
 
 
-BetaCalculatorRPC::BetaCalculatorRPC(const edm::ParameterSet& iConfig, edm::ConsumesCollector&& iC){
+BetaCalculatorRPC::BetaCalculatorRPC(const edm::ParameterSet& iConfig, edm::ConsumesCollector&& iC) :
+  
+  RPCGeomToken_(iC.esConsumes<RPCGeometry, MuonGeometryRecord>())
+{
 
   rpcRecHitsToken = iC.consumes<RPCRecHitCollection>(iConfig.getParameter<edm::InputTag>("rpcRecHits"));
 
@@ -114,9 +127,10 @@ void BetaCalculatorRPC::algo(const std::vector<susybsm::RPCHit4D>& uHSCPRPCRecHi
 
 
 void BetaCalculatorRPC::addInfoToCandidate(HSCParticle& candidate, const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  edm::ESHandle<RPCGeometry> rpcGeo;
-  iSetup.get<MuonGeometryRecord>().get(rpcGeo);
-
+  //edm::ESHandle<RPCGeometry> rpcGeo;
+  //iSetup.get<MuonGeometryRecord>().get(rpcGeo);
+  const auto rpcGeo = &iSetup.getData(RPCGeomToken_);
+ 
   edm::Handle<RPCRecHitCollection> rpcHits;
   iEvent.getByToken(rpcRecHitsToken,rpcHits);
 

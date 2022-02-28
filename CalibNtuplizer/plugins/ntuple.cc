@@ -57,7 +57,11 @@
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
 #include "SimDataFormats/TrackerDigiSimLink/interface/StripDigiSimLink.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
-//#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenRunInfoProduct.h"
+
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 
@@ -145,6 +149,11 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        edm::EDGetTokenT<LumiScalersCollection> m_lumiScalerTag;
        edm::EDGetTokenT<CSCSegmentCollection>  m_cscSegments;
        edm::EDGetTokenT<DTRecSegment4DCollection>  m_dt4DSegments;
+       
+       const edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> tTopoToken_;
+       const edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> tkGeomToken_;
+       const edm::ESGetToken<PixelClusterParameterEstimator, TkPixelCPERecord> pixelCPEToken_;
+
        std::string pixelCPE_;
        double trackProbQCut_;
 
@@ -348,7 +357,10 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 // constructors and destructor
 //
-ntuple::ntuple(const edm::ParameterSet& iConfig)
+ntuple::ntuple(const edm::ParameterSet& iConfig) :
+  tTopoToken_(esConsumes<TrackerTopology, TrackerTopologyRcd>()),
+  tkGeomToken_(esConsumes<TrackerGeometry,TrackerDigiGeometryRecord>()),
+  pixelCPEToken_(esConsumes<PixelClusterParameterEstimator, TkPixelCPERecord>())
 /*
  :
   trackTags_(iConfig.getUntrackedParameter<edm::InputTag>("tracks"))
@@ -631,16 +643,20 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     tree_ngoodpv = goodVerts;
 
     // Retrieve tracker topology from geometry
-    edm::ESHandle<TrackerTopology> TopoHandle;
-    iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
-    const TrackerTopology* tTopo = TopoHandle.product();
+    //edm::ESHandle<TrackerTopology> TopoHandle;
+    //iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
+    //const TrackerTopology* tTopo = TopoHandle.product();
 
-    edm::ESHandle<TrackerGeometry> tkGeometry;
-    iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
+    const auto TrackerTopology* tTopo = &iSetup.getData(tTopoToken_);
 
+    //edm::ESHandle<TrackerGeometry> tkGeometry;
+    //iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
+    const auto tkGeometry = &iSetup.getData(tkGeomToken_);
+
+    const auto pixelCPE = &iSetup.getData(pixelCPEToken_); 
     // Retrieve CPE from the event setup
-    edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
-    iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
+    //edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
+    //iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
 
     // Triggers
     edm::Handle<edm::TriggerResults> triggerBits;

@@ -27,7 +27,9 @@ using namespace reco;
 using namespace std;
 using namespace edm;
 
-HSCPDeDxInfoProducer::HSCPDeDxInfoProducer(const edm::ParameterSet& iConfig)
+HSCPDeDxInfoProducer::HSCPDeDxInfoProducer(const edm::ParameterSet& iConfig) :
+  tkGeomToken_(esConsumes<TrackerGeometry, TrackerDigiGeometryRecord>()) 
+
 {
 
    produces<ValueMap<susybsm::HSCPDeDxInfo> >();
@@ -68,8 +70,9 @@ HSCPDeDxInfoProducer::~HSCPDeDxInfoProducer(){}
 void  HSCPDeDxInfoProducer::beginRun(edm::Run const& run, const edm::EventSetup& iSetup)
 {
    if(useCalibration && calibGains.size()==0){
-      edm::ESHandle<TrackerGeometry> tkGeom;
-      iSetup.get<TrackerDigiGeometryRecord>().get( tkGeom );
+      //edm::ESHandle<TrackerGeometry> tkGeom;
+      //iSetup.get<TrackerDigiGeometryRecord>().get( tkGeom );
+      const auto tkGeom = &iSetup.getData(tkGeomToken_);
       m_off = tkGeom->offsetDU(GeomDetEnumerators::PixelBarrel); //index start at the first pixel
 
       DeDxTools::makeCalibrationMap(m_calibrationPath, *tkGeom, calibGains, m_off);
