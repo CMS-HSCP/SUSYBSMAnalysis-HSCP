@@ -36,6 +36,8 @@ public:
                         const unsigned int &PileUp,
                         const unsigned int &nofVertices,
                         const unsigned int &Hscp,
+                        const unsigned int &nmuons,
+                        const unsigned int &njets,
                         const float &weight,
                         const bool &HLT_Mu50,
                         const bool &HLT_PFMET120_PFMHT120_IDTight,
@@ -50,6 +52,12 @@ public:
                         const float &RecoPFMET_eta,
                         const float &RecoPFMET_phi,
                         const float &RecoPFMET_significance,
+                        const float &Muon1_Pt,
+                        const float &Muon1_eta,
+                        const float &Muon1_phi,
+                        const float &Muon2_Pt,
+                        const float &Muon2_eta,
+                        const float &Muon2_phi,
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection_noIsolation_noIh,
                         const std::vector<bool> &passPreselection,
@@ -1211,6 +1219,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("PileUp", &tuple->Tree_PileUp, "PileUp/i");
     tuple->Tree->Branch("nofVtx", &tuple->Tree_nofVertices, "nofVtx/i");
     tuple->Tree->Branch("Hscp", &tuple->Tree_Hscp, "Hscp/i");
+    tuple->Tree->Branch("nmuons", &tuple->Tree_nmuons, "nmuons/i");
+    tuple->Tree->Branch("njets", &tuple->Tree_njets, "njets/i");
     tuple->Tree->Branch("Weight", &tuple->Tree_Weight, "Weight/F");
     tuple->Tree->Branch("HLT_Mu50", &tuple->Tree_HLT_Mu50, "HLT_Mu50/O");
     tuple->Tree->Branch(
@@ -1230,6 +1240,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("RecoPFMET_eta", &tuple->Tree_RecoPFMET_eta, "RecoPFMET_eta/F");
     tuple->Tree->Branch("RecoPFMET_phi", &tuple->Tree_RecoPFMET_phi, "RecoPFMET_phi/F");
     tuple->Tree->Branch("RecoPFMET_significance", &tuple->Tree_RecoPFMET_significance, "RecoPFMET_significance/F");
+    tuple->Tree->Branch("Muon1_Pt", &tuple->Tree_Muon1_Pt, "Muon1_Pt/F");
+    tuple->Tree->Branch("Muon1_eta", &tuple->Tree_Muon1_eta, "Muon1_eta/F");
+    tuple->Tree->Branch("Muon1_phi", &tuple->Tree_Muon1_phi, "Muon1_phi/F");
+    tuple->Tree->Branch("Muon2_Pt", &tuple->Tree_Muon2_Pt, "Muon2_Pt/F");
+    tuple->Tree->Branch("Muon2_eta", &tuple->Tree_Muon2_eta, "Muon2_eta/F");
+    tuple->Tree->Branch("Muon2_phi", &tuple->Tree_Muon2_phi, "Muon2_phi/F");
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
       tuple->Tree->Branch("passPreselection_noIsolation_noIh", &tuple->Tree_passPreselection_noIsolation_noIh);
@@ -1362,6 +1378,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const unsigned int &PileUp,
                                   const unsigned int &nofVertices,
                                   const unsigned int &Hscp,
+                                  const unsigned int &nmuons,
+                                  const unsigned int &njets,
                                   const float &weight,
                                   const bool &HLT_Mu50,
                                   const bool &HLT_PFMET120_PFMHT120_IDTight,
@@ -1376,6 +1394,12 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &RecoPFMET_eta,
                                   const float &RecoPFMET_phi,
                                   const float &RecoPFMET_significance,
+                                  const float &Muon1_Pt,
+                                  const float &Muon1_eta,
+                                  const float &Muon1_phi,
+                                  const float &Muon2_Pt,
+                                  const float &Muon2_eta,
+                                  const float &Muon2_phi,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection_noIsolation_noIh,
                                   const std::vector<bool> &passPreselection,
@@ -1474,6 +1498,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_PileUp = PileUp;
   tuple->Tree_nofVertices = nofVertices;
   tuple->Tree_Hscp = Hscp;
+  tuple->Tree_nmuons = nmuons;
+  tuple->Tree_njets = njets;
   tuple->Tree_Weight = weight;
   tuple->Tree_HLT_Mu50 = HLT_Mu50;
   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight = HLT_PFMET120_PFMHT120_IDTight;
@@ -1488,6 +1514,12 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_RecoPFMET_eta = RecoPFMET_eta;
   tuple->Tree_RecoPFMET_phi = RecoPFMET_phi;
   tuple->Tree_RecoPFMET_significance = RecoPFMET_significance;
+  tuple->Tree_Muon1_Pt = Muon1_Pt;
+  tuple->Tree_Muon1_eta = Muon1_eta;
+  tuple->Tree_Muon1_phi = Muon1_phi;
+  tuple->Tree_Muon2_Pt = Muon2_Pt;
+  tuple->Tree_Muon2_eta = Muon2_eta;
+  tuple->Tree_Muon2_phi = Muon2_phi;
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
   tuple->Tree_passPreselection = passPreselection;

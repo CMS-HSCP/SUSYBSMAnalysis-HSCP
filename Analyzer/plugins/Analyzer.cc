@@ -9,8 +9,8 @@
 // Original Author:  Emery Nibigira
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
-// Modifications by Dylan Angie Frank Apparu -- 27 feb 2022
-// v11: remove several cut index loops, track probQ in preselection function
+// Modifications by Dylan Angie Frank Apparu
+// v11.2: use Ih_nodrop_noPixL1 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -504,12 +504,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   //===================== Handle For PFJet ===================
+  unsigned int Jets_count = 0;
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
     TLorentzVector pMHT;
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
+      Jets_count++;
       if (jet->pt() < 20 || abs(jet->eta()) > 5 ||
           jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9)
         continue;
@@ -521,6 +523,33 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
 
+  
+  //===================== Handle For Muons ===================
+  unsigned int Muons_count = 0; 
+  float maxPtMuon1 = 0, maxPtMuon2 = 0;
+  float etaMuon1 = 0, phiMuon1 = 0;
+  float etaMuon2 = 0, phiMuon2 = 0;
+  unsigned int muon1 = 0;
+  vector<reco::Muon> muonCollHandle = iEvent.get(muonToken_);
+      for (unsigned int i = 0; i < muonCollHandle.size(); i++) {
+          const reco::Muon* mu = &(muonCollHandle)[i];
+          Muons_count++;
+          if (mu->pt() > maxPtMuon1) {
+              maxPtMuon1 = mu->pt();
+              etaMuon1 = mu->eta();
+              phiMuon1 = mu->phi();
+              muon1 = i;
+          }
+      }
+      for (unsigned int i = 0; i < muonCollHandle.size(); i++) {
+          if (i == muon1) continue;
+          const reco::Muon* mu = &(muonCollHandle)[i];
+          if (mu->pt() > maxPtMuon2) {
+              maxPtMuon2 = mu->pt();
+              etaMuon2 = mu->eta();
+              phiMuon2 = mu->phi();
+          }
+      }
 
 
   //load all event collection that will be used later on (HSCP, dEdx and TOF)
@@ -979,6 +1008,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
 
+//Choose of Ih definition - Ih_nodrop_noPixL1
+    dedxMObj = dedxIh_noL1;
+
     if (TypeMode_ == 5) {
       OpenAngle = deltaROpositeTrack(
           iEvent.get(hscpToken_),
@@ -1362,6 +1394,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 pileup_fromLumi,
                                 vertexColl.size(),
                                 HSCP_count,
+                                Muons_count,
+                                Jets_count,
                                 EventWeight_,
                                 HLT_Mu50,
                                 HLT_PFMET120_PFMHT120_IDTight,
@@ -1376,6 +1410,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 RecoPFMET_eta,
                                 RecoPFMET_phi,
                                 RecoPFMET_significance,
+                                maxPtMuon1,
+                                etaMuon1,
+                                phiMuon1,
+                                maxPtMuon2,
+                                etaMuon2,
+                                phiMuon2,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection_noIsolation_noIh,
                                 HSCP_passPreselection,
