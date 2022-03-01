@@ -20,6 +20,7 @@ struct Tuple {
   unsigned int Tree_nmuons;
   unsigned int Tree_njets;
   float Tree_Weight;
+  float Tree_GeneratorWeight;
   bool Tree_HLT_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
   bool Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -39,9 +40,8 @@ struct Tuple {
   float Tree_Muon2_Pt;
   float Tree_Muon2_eta;
   float Tree_Muon2_phi;
-  float Tree_mT;
 
-
+  std::vector<float> Tree_vect_mT;
   std::vector<bool> Tree_passCutPt55;
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
   std::vector<bool> Tree_passPreselection;
@@ -67,7 +67,8 @@ struct Tuple {
   std::vector<bool> Tree_isMuon;
   std::vector<int>  Tree_Muon_selector;
   std::vector<bool> Tree_isElectron;
-  std::vector<bool> Tree_isJet;
+  std::vector<bool> Tree_isChHadron;
+  std::vector<bool> Tree_isNeutHadron;
   std::vector<float> Tree_ECAL_energy;
   std::vector<float> Tree_HCAL_energy;
   std::vector<float> Tree_TOF;
@@ -148,6 +149,7 @@ struct Tuple {
   unsigned int GenTree_Lumi;
   unsigned int GenTree_Hscp;
   float GenTree_Weight;
+  float GenTree_GeneratorWeight;
   std::vector<float> GenTree_GenId;
   std::vector<float> GenTree_GenCharge;
   std::vector<float> GenTree_GenMass;

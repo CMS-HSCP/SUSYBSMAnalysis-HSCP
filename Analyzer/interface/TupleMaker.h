@@ -39,6 +39,7 @@ public:
                         const unsigned int &nmuons,
                         const unsigned int &njets,
                         const float &weight,
+                        const float &generator_weight,
                         const bool &HLT_Mu50,
                         const bool &HLT_PFMET120_PFMHT120_IDTight,
                         const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -58,7 +59,7 @@ public:
                         const float &Muon2_Pt,
                         const float &Muon2_eta,
                         const float &Muon2_phi,
-                        const float &mT,
+                        const std::vector<float> &vect_mT,
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection_noIsolation_noIh,
                         const std::vector<bool> &passPreselection,
@@ -83,7 +84,8 @@ public:
                         const std::vector<bool>  &isMuon,
                         const std::vector<int>   &MuonSelector,
                         const std::vector<bool>  &isElectron,
-                        const std::vector<bool>  &isJet,
+                        const std::vector<bool>  &isChHadron,
+                        const std::vector<bool>  &isNeutHadron,
                         const std::vector<float> &ECAL_energy,
                         const std::vector<float> &HCAL_energy,
                         const std::vector<float> &TOF,
@@ -159,6 +161,7 @@ public:
                            const unsigned int &Lumi,
                            /*const unsigned int &Hscp,*/
                            const float &weight,
+                           const float &generator_weight,
                            const std::vector<float> &genid,
                            const std::vector<float> &gencharge,
                            const std::vector<float> &genmass,
@@ -1223,6 +1226,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("nmuons", &tuple->Tree_nmuons, "nmuons/i");
     tuple->Tree->Branch("njets", &tuple->Tree_njets, "njets/i");
     tuple->Tree->Branch("Weight", &tuple->Tree_Weight, "Weight/F");
+    tuple->Tree->Branch("GeneratorWeight", &tuple->Tree_GeneratorWeight, "GeneratorWeight/F");
     tuple->Tree->Branch("HLT_Mu50", &tuple->Tree_HLT_Mu50, "HLT_Mu50/O");
     tuple->Tree->Branch(
         "HLT_PFMET120_PFMHT120_IDTight", &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight, "HLT_PFMET120_PFMHT120_IDTight/O");
@@ -1247,7 +1251,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Muon2_Pt", &tuple->Tree_Muon2_Pt, "Muon2_Pt/F");
     tuple->Tree->Branch("Muon2_eta", &tuple->Tree_Muon2_eta, "Muon2_eta/F");
     tuple->Tree->Branch("Muon2_phi", &tuple->Tree_Muon2_phi, "Muon2_phi/F");
-    tuple->Tree->Branch("mT", &tuple->Tree_mT, "mT/F");
+    tuple->Tree->Branch("mT", &tuple->Tree_vect_mT);
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
       tuple->Tree->Branch("passPreselection_noIsolation_noIh", &tuple->Tree_passPreselection_noIsolation_noIh);
@@ -1274,7 +1278,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
     tuple->Tree->Branch("MuonSelector", &tuple->Tree_Muon_selector);
     tuple->Tree->Branch("isElectron", &tuple->Tree_isElectron);
-    tuple->Tree->Branch("isJet", &tuple->Tree_isJet);
+    tuple->Tree->Branch("isChHadron", &tuple->Tree_isChHadron);
+    tuple->Tree->Branch("isNeutHadron", &tuple->Tree_isNeutHadron);
     tuple->Tree->Branch("ECAL_energy", &tuple->Tree_ECAL_energy);
     tuple->Tree->Branch("HCAL_energy", &tuple->Tree_HCAL_energy);
     tuple->Tree->Branch("TOF", &tuple->Tree_TOF);
@@ -1357,6 +1362,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->GenTree->Branch("Lumi", &tuple->GenTree_Lumi, "Lumi/i");
     /*tuple->GenTree->Branch("Hscp"    ,&tuple->GenTree_Hscp      ,"Hscp/i");*/
     tuple->GenTree->Branch("Weight", &tuple->GenTree_Weight, "Weight/F");
+    tuple->GenTree->Branch("GeneratorWeight", &tuple->GenTree_GeneratorWeight, "GeneratorWeight/F");
     tuple->GenTree->Branch("GenId", &tuple->GenTree_GenId);
     tuple->GenTree->Branch("GenCharge", &tuple->GenTree_GenCharge);
     tuple->GenTree->Branch("GenMass", &tuple->GenTree_GenMass);
@@ -1383,6 +1389,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const unsigned int &nmuons,
                                   const unsigned int &njets,
                                   const float &weight,
+                                  const float &generator_weight,
                                   const bool &HLT_Mu50,
                                   const bool &HLT_PFMET120_PFMHT120_IDTight,
                                   const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1402,7 +1409,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &Muon2_Pt,
                                   const float &Muon2_eta,
                                   const float &Muon2_phi,
-                                  const float &mT,
+                                  const std::vector<float> &vect_mT,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection_noIsolation_noIh,
                                   const std::vector<bool> &passPreselection,
@@ -1427,7 +1434,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<bool>  &isMuon,
                                   const std::vector<int>   &MuonSelector,
                                   const std::vector<bool>  &isElectron,
-                                  const std::vector<bool>  &isJet,
+                                  const std::vector<bool>  &isChHadron,
+                                  const std::vector<bool>  &isNeutHadron,
                                   const std::vector<float> &ECAL_energy,
                                   const std::vector<float> &HCAL_energy,
                                   const std::vector<float> &TOF,  //equal to invBeta
@@ -1504,6 +1512,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_nmuons = nmuons;
   tuple->Tree_njets = njets;
   tuple->Tree_Weight = weight;
+  tuple->Tree_GeneratorWeight = generator_weight;
   tuple->Tree_HLT_Mu50 = HLT_Mu50;
   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight = HLT_PFMET120_PFMHT120_IDTight;
   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -1523,7 +1532,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Muon2_Pt = Muon2_Pt;
   tuple->Tree_Muon2_eta = Muon2_eta;
   tuple->Tree_Muon2_phi = Muon2_phi;
-  tuple->Tree_mT = mT;
+  tuple->Tree_vect_mT = vect_mT;
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
   tuple->Tree_passPreselection = passPreselection;
@@ -1548,7 +1557,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_isMuon = isMuon;
   tuple->Tree_Muon_selector = MuonSelector;
   tuple->Tree_isElectron = isElectron;
-  tuple->Tree_isJet = isJet;
+  tuple->Tree_isChHadron = isChHadron;
+  tuple->Tree_isNeutHadron = isNeutHadron;
   tuple->Tree_ECAL_energy = ECAL_energy;
   tuple->Tree_HCAL_energy = HCAL_energy;
   tuple->Tree_TOF = TOF;
@@ -1627,6 +1637,7 @@ void TupleMaker::fillGenTreeBranches(Tuple *&tuple,
                                      const unsigned int &Lumi,
                                      /*const unsigned int &Hscp,*/
                                      const float &weight,
+                                     const float &generator_weight,
                                      const std::vector<float> &genid,
                                      const std::vector<float> &gencharge,
                                      const std::vector<float> &genmass,
@@ -1638,6 +1649,7 @@ void TupleMaker::fillGenTreeBranches(Tuple *&tuple,
   tuple->GenTree_Lumi = Lumi;
   /*tuple->GenTree_Hscp      = Hscp;*/
   tuple->GenTree_Weight = weight;
+  tuple->GenTree_GeneratorWeight = generator_weight;
   tuple->GenTree_GenId = genid;
   tuple->GenTree_GenCharge = gencharge;
   tuple->GenTree_GenMass = genmass;
