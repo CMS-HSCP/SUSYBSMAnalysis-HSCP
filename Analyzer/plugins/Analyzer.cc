@@ -10,7 +10,12 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Dylan Angie Frank Apparu
-// v12: add transverse mass mT
+// v13:
+// - pdgId PFCandidate
+// - add GeneratorWeight 
+// - remove triggering on MC
+// - remove "Associate gen track to reco track" at line 840 --> doesn't work currently...
+// - remove track probQ calculation in MC cases --> doesn't work 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -46,6 +51,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       trackToGenToken_(consumes<edm::Association<reco::GenParticleCollection>>(
           iConfig.getParameter<edm::InputTag>("trackToGenAssoc"))),
       pfCandToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCand"))),
+      genEventToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genCollection"))),
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
@@ -240,7 +246,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   double HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
-  
+  //get generator weight
+
+  if (!isData){
+      const edm::Handle<GenEventInfoProduct> genEvt = iEvent.getHandle(genEventToken_);
+      if (genEvt.isValid()){
+          GeneratorWeight_ = genEvt->weight();
+      }
+  }
+
   //get the collection of generated Particles
   vector<reco::GenParticle> genColl;
   if (!isData) {
@@ -352,6 +366,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                      iEvent.id().event(),
                                      iEvent.id().luminosityBlock(),
                                      EventWeight_,
+                                     GeneratorWeight_,
                                      genid,
                                      gencharge,
                                      genmass,
@@ -405,12 +420,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     TrigInfo_ = 3;
   }
 
+  if (isData){ //no trigger on MC
   if (TrigInfo_ > 0) {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers!";
   } else {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+  }
   }
 
   // Number of events that pass the trigger
@@ -540,6 +557,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               phiMuon1 = mu->phi();
               muon1 = i;
           }
+
       }
       for (unsigned int i = 0; i < muonColl.size(); i++) {
           if (i == muon1) continue;
@@ -555,9 +573,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //load all event collection that will be used later on (HSCP, dEdx and TOF)
   unsigned int HSCP_count = 0;
 
-  float mT = 0;
-  float maxHSCPpT = 0;
-
+  std::vector<float> HSCP_mT;
   std::vector<bool> HSCP_passCutPt55;
   std::vector<bool> HSCP_passPreselection_noIsolation_noIh;
   std::vector<bool> HSCP_passPreselection;
@@ -582,7 +598,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
   std::vector<bool>  HSCP_isElectron;
-  std::vector<bool>  HSCP_isJet;
+  std::vector<bool>  HSCP_isChHadron;
+  std::vector<bool>  HSCP_isNeutHadron;
   std::vector<float> HSCP_ECAL_energy;
   std::vector<float> HSCP_HCAL_energy;
   std::vector<float> HSCP_TOF;
@@ -731,12 +748,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
 
 
-  // Compute transverse mass mT between HSCP with highest pT and MET
+  // Compute transverse mass mT between HSCP with and MET
 
-  if (track->pt()>maxHSCPpT){
-      maxHSCPpT = track->pt();
-      mT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
-  }
+  HSCP_mT.push_back(sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi))));
   
 
     // save PF informations and isolation 
@@ -751,7 +765,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float RMin = 9999.;
       unsigned int idx_pf_RMin = 9999;
 
-      bool pf_isMuon = false, pf_isElectron = false, pf_isJet = false;
+      bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
       int pf_muon_selector = -1;
       float pf_ecal_energy = 0, pf_hcal_energy = 0;
 
@@ -769,11 +783,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       for(unsigned int i=0;i<pf->size();i++){
               const reco::PFCandidate* pfCand = &(*pf)[i];
               if(i == idx_pf_RMin) {
-                  pf_isMuon = pfCand->isMuon();
-                  //if(pf_isMuon) pf_muon_selector = pfCand->muonRef()->Selector();
-                  if(pf_isMuon) pf_muon_selector = -1;
-                  pf_isElectron = pfCand->isElectron();
-                  pf_isJet = pfCand->isJet();
+                  pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+                  pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+                  pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+                  pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
                   pf_ecal_energy = pfCand->ecalEnergy();
                   pf_hcal_energy = pfCand->hcalEnergy();
               }
@@ -818,12 +831,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_isStrip;
     std::vector<bool> clust_isPixel;
 
+
+//FIXME -- don't use this part which doesn't work --> is it useful? Currently it only displays genCollForTrack pT...
+/*
     // Associate gen track to reco track
-    if (!isData) {
+    if (!isData && ) {
       // Handle for the gen association of the track
       edm::Handle<edm::Association<reco::GenParticleCollection>>  trackToGenAssocHandle = iEvent.getHandle(trackToGenToken_);
-      if (not trackToGenAssocHandle.isValid()) {
-        LogDebug(MOD) << "trackToGenAssocHandle is invalid -- this should never happen";
+      if (!trackToGenAssocHandle.isValid()) {
+        LogPrint(MOD) << "trackToGenAssocHandle is invalid -- this should never happen"; //FIXME -- FALSE it's always invalid... 
         continue;
       }
       const auto& trackToGenAssoc = *trackToGenAssocHandle;
@@ -834,7 +850,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
       cout << "genCollForTrack pt: " <<genCollForTrack->pt() << endl;
     }
-
+*/
 
     //for signal only, make sure that the candidate is associated to a true HSCP
     int ClosestGen;
@@ -1326,7 +1342,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
     HSCP_isElectron.push_back(pf_isElectron);
-    HSCP_isJet.push_back(pf_isJet);
+    HSCP_isChHadron.push_back(pf_isChHadron);
+    HSCP_isNeutHadron.push_back(pf_isNeutHadron);
     HSCP_ECAL_energy.push_back(pf_ecal_energy);
     HSCP_HCAL_energy.push_back(pf_hcal_energy);
     HSCP_TOF.push_back(tof ? tof->inverseBeta() : -99);
@@ -1408,6 +1425,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 Muons_count,
                                 Jets_count,
                                 EventWeight_,
+                                GeneratorWeight_,
                                 HLT_Mu50,
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1427,7 +1445,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 maxPtMuon2,
                                 etaMuon2,
                                 phiMuon2,
-                                mT,
+                                HSCP_mT,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection_noIsolation_noIh,
                                 HSCP_passPreselection,
@@ -1452,7 +1470,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_isMuon,
                                 HSCP_MuonSelector,
                                 HSCP_isElectron,
-                                HSCP_isJet,
+                                HSCP_isChHadron,
+                                HSCP_isNeutHadron,
                                 HSCP_ECAL_energy,
                                 HSCP_HCAL_energy,
                                 HSCP_TOF,
@@ -2045,6 +2064,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     }
   }
 
+  
   // Cut on track probQ
 
   // Retrieve tracker topology from the event setup
@@ -2060,7 +2080,8 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
   edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
   iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
 
-
+  //FIXME this track probQ calculation doesn't work with MC... 
+if(isData)  {
     float probQonTrack = 0.0;
     float probXYonTrack = 0.0;
     float probQonTrackNoLayer1 = 0.0;
@@ -2071,6 +2092,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     float probXYonTrackWMulti = 1;
     float probQonTrackWMultiNoLayer1 = 1;
     float probXYonTrackWMultiNoLayer1 = 1;
+
 
     // Loop through the rechits on the given track
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
@@ -2085,7 +2107,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
            continue;
         }
         // Check on which geometry unit the hit is
-        const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+        const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);//FIXME there is a problem here --> Invalid DetID: no GeomDetUnit associated with raw ID 303058956 of subdet ID 1 
         // Get the local vector for the track direction
         LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
         // Re-run the CPE on this cluster with the lv above
@@ -2167,6 +2189,7 @@ bool Analyzer::passPreselection(const susybsm::HSCParticle& hscp,
     TreeprobQonTracknoL1 = probQonTrackNoLayer1;
     TreeprobXYonTrack = probXYonTrack;
     TreeprobXYonTracknoL1 = probXYonTrackNoLayer1;
+}
 
   // Cut for number of DOF in TOF ana
   if (tof) {

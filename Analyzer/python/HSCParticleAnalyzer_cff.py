@@ -27,6 +27,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,genParticleCollection = cms.InputTag("genParticlesSkimmed")
     ,trackToGenAssoc = cms.InputTag("allTrackMCMatch")
     ,pfCand = cms.InputTag("particleFlow","","RECO")
+    ,genCollection = cms.InputTag("prunedGenParticles")
     #HLT triggers
     ,Trigger_Mu = cms.untracked.vstring("HLT_Mu50_v")
     ,Trigger_MET  = cms.untracked.vstring("HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v")
@@ -48,7 +49,7 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,dEdxM_UpLim         = cms.untracked.double(30.0)
     ,DzRegions           = cms.untracked.uint32(6)
     ,GlobalMaxPterr      = cms.untracked.double(0.25)
-    ,GlobalMinPt         = cms.untracked.double(55.00)
+    ,GlobalMinPt         = cms.untracked.double(55.00)  
     ,GlobalMinTOF        = cms.untracked.double(1.0)
     ,skipPixel           = cms.untracked.bool(True)
     ,useTemplateLayer    = cms.untracked.bool(False)

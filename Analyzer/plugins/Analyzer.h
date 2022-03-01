@@ -98,6 +98,8 @@
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #define FWCORE
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
@@ -216,6 +218,7 @@ private:
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
   edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
   edm::EDGetTokenT<reco::PFCandidateCollection> pfCandToken_;
+  edm::EDGetTokenT<GenEventInfoProduct> genEventToken_; // for reading generator weight
   
   //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
   //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
@@ -386,6 +389,7 @@ private:
   MCWeight* mcWeight;
 
   float EventWeight_ = 1.;
+  float GeneratorWeight_ = 1.;
   //double SampleWeight_ = 1.;
   double CrossSection_ = 1.;
   vector<float> PUSystFactor_;
