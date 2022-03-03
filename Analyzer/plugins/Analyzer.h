@@ -408,7 +408,7 @@ private:
   const std::string pixelCPE_;
   const double trackProbQCut_;
   const int debugLevel_;
-  const double etaMinCut_;
-  const double etaMaxCut_;
+  const bool hasMCMatch_;
+  const bool doTriggering_;
 };
 #endif

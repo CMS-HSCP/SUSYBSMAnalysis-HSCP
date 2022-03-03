@@ -10,12 +10,9 @@
 //         Created:  Thu, 01 Apr 2021 07:04:53 GMT
 //
 // Modifications by Dylan Angie Frank Apparu
-// v13:
-// - pdgId PFCandidate
-// - add GeneratorWeight 
-// - remove triggering on MC
-// - remove "Associate gen track to reco track" at line 840 --> doesn't work currently...
-// - remove track probQ calculation in MC cases --> doesn't work 
+//                  and Tamas Almos Vami
+// v14:
+// - introduce hasMCMatch_ and doTriggering_ 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -90,8 +87,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pixelCPE_(iConfig.getParameter<std::string>("pixelCPE")),
       trackProbQCut_(iConfig.getUntrackedParameter<double>("trackProbQCut")),
       debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel")),
-      etaMinCut_(iConfig.getUntrackedParameter<double>("EtaMinCut")),
-      etaMaxCut_(iConfig.getUntrackedParameter<double>("EtaMaxCut"))
+      hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
+      doTriggering_(iConfig.getUntrackedParameter<bool>("DoTriggering"))
  {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
@@ -420,14 +417,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     TrigInfo_ = 3;
   }
 
-  if (isData){ //no trigger on MC
-  if (TrigInfo_ > 0) {
+  // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
+  if (doTriggering_ && TrigInfo_ > 0) {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers!";
   } else {
       if (debugLevel_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
-  }
   }
 
   // Number of events that pass the trigger
@@ -703,16 +699,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
 
-    // Cut for a min eta
-    if (abs(track->eta()) < etaMinCut_) {
-      continue;
-    }
-
-    // Cut for a max eta
-    if (abs(track->eta()) > etaMaxCut_) {
-      continue;
-    }
-
     //Apply a scale factor to muon only analysis to account for differences seen in data/MC preselection efficiency
     //For eta regions where Data > MC no correction to be conservative
     if (!isData && TypeMode_ == 3 && scaleFactor(track->eta()) < RNG->Uniform(0, 1)) {
@@ -832,25 +818,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_isPixel;
 
 
-//FIXME -- don't use this part which doesn't work --> is it useful? Currently it only displays genCollForTrack pT...
-/*
     // Associate gen track to reco track
-    if (!isData && ) {
+    // If not associate gen track exists that means this is a fake track!
+    // Let's skip the track in that case
+    if (!isData && hasMCMatch_) {
       // Handle for the gen association of the track
       edm::Handle<edm::Association<reco::GenParticleCollection>>  trackToGenAssocHandle = iEvent.getHandle(trackToGenToken_);
       if (!trackToGenAssocHandle.isValid()) {
-        LogPrint(MOD) << "trackToGenAssocHandle is invalid -- this should never happen"; //FIXME -- FALSE it's always invalid... 
+        // This became default from 12_0_X, in 10_6_X it's gated behind the bParking modifier
+        LogPrint(MOD) << "trackToGenAssocHandle is invalid -- this should never happen in the latest AODSIM"
+                      << "Please set hasMCMatch_ to false or move to a newer campaign"; 
         continue;
       }
       const auto& trackToGenAssoc = *trackToGenAssocHandle;
       reco::GenParticleRef genCollForTrack = trackToGenAssoc[track]; //.key()];
       if (genCollForTrack.isNull()) {
-        LogPrint(MOD) << "  >> No associated gen track to this candidate"; 
+        LogPrint(MOD) << "  >> No associated gen track to this candidatei -- this is a fake track, skipping it"; 
         continue;
       }
-      cout << "genCollForTrack pt: " <<genCollForTrack->pt() << endl;
     }
-*/
 
     //for signal only, make sure that the candidate is associated to a true HSCP
     int ClosestGen;
