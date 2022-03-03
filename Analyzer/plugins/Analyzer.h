@@ -137,7 +137,7 @@ public:
                       vector<double>& CutI_Flip,
                       vector<double>& CutTOF_Flip);
 
-  bool passPreselection(const susybsm::HSCParticle& hscp,
+  bool passPreselection(const reco::TrackRef track,
                         const reco::DeDxHitInfo* dedxHits,
                         const reco::DeDxData* dedxSObj,
                         const reco::DeDxData* dedxMObj,
@@ -170,10 +170,9 @@ public:
   //int  muonStations(const reco::HitPattern& hitPattern);
   double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
-  double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
+  float SegSep(const reco::TrackRef track, const edm::Event& iEvent, float& minPhi, float& minEta);
   float combineProbs(float probOnTrackWMulti, int numRecHits) const;
-  void calculateSyst(reco::TrackRef track,
-                     const susybsm::HSCParticle& hscp,
+  void calculateSyst(const reco::TrackRef track,
                      const reco::DeDxHitInfo* dedxHits,
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
@@ -407,9 +406,11 @@ private:
 
   const std::string pixelCPE_;
   const double trackProbQCut_;
-  const int debugLevel_;
+  const int debug_;
   const bool hasMCMatch_;
   const bool doTriggering_;
+
+  static constexpr const char* const MOD = "Analyzer";
 
 };
 #endif

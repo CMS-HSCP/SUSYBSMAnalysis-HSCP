@@ -1,4 +1,5 @@
 // Original Author:  Loic Quertenmont
+// Modification by Tamas Almos Vami
 
 #ifndef SUSYBSMAnalysis_Analyzer_Tuple_h
 #define SUSYBSMAnalysis_Analyzer_Tuple_h
@@ -335,6 +336,8 @@ struct Tuple {
 
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
+
+  TH1F* CutFlow;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;

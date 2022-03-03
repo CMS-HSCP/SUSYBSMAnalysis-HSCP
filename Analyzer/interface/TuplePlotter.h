@@ -99,6 +99,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->FailDz = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Basic";
   tuple->Basic = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "CutFlow";
+  tuple->CutFlow = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "HSCPE_SystP";
   tuple->HSCPE_SystP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

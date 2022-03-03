@@ -284,6 +284,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->FailDz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Basic";
   tuple->Basic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  Name = "CutFlow";
+  tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
+
 
   Name = "HSCPE_SystP";
   tuple->HSCPE_SystP = dir.make<TH1F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
