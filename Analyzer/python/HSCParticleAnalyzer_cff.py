@@ -79,6 +79,6 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,pixelCPE              = cms.string("PixelCPEClusterRepair")
     ,trackProbQCut         = cms.untracked.double(1.0)
     ,debugLevel            = cms.untracked.uint32(0)
-    ,EtaMinCut             = cms.untracked.double(0.0)
-    ,EtaMaxCut             = cms.untracked.double(9.0)
+    ,HasMCMatch            = cms.untracked.bool(False)
+    ,DoTriggering          = cms.untracked.bool(True)
 )
