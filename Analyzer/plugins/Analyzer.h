@@ -143,7 +143,7 @@ public:
                         const reco::DeDxData* dedxMObj,
                         const reco::MuonTimeExtra* tof,
                         const edm::Event& iEvent,
-                        const edm::EventSetup& iSetup,
+                        const float pixelProbs[],
                         float Event_Weight,
                         Tuple* tuple,
                         const double& GenBeta,
@@ -179,7 +179,7 @@ public:
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
-                     const edm::EventSetup& iSetup,
+                     const float pixelProbs[],
                      float Event_Weight,
                      Tuple* tuple,
                      const double& GenBeta,
@@ -410,5 +410,6 @@ private:
   const int debugLevel_;
   const bool hasMCMatch_;
   const bool doTriggering_;
+
 };
 #endif
