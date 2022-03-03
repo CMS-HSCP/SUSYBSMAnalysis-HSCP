@@ -103,8 +103,9 @@ void DTTimingExtractor_Mini::fillTiming(TimeMeasurementSequence &tmSequence,
 				   reco::TrackRef muonTrack,
 				   const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  if (debug) 
+  if (debug) { 
     std::cout << " *** DT Timimng Extractor ***" << std::endl;
+  }
 
   theService->update(iSetup);
 
@@ -133,7 +134,9 @@ void DTTimingExtractor_Mini::fillTiming(TimeMeasurementSequence &tmSequence,
     DetId id = rechit->geographicalId();
     DTChamberId chamberId(id.rawId());
     int station = chamberId.station();
-    if (debug) std::cout << "Matched DT segment in station " << station << std::endl;
+    if (debug) {
+       std::cout << "Matched DT segment in station " << station << std::endl;
+    }
 
     // use only segments with both phi and theta projections present (optional)
     bool bothProjections = ( (rechit->hasPhi()) && (rechit->hasZed()) );
@@ -270,8 +273,9 @@ void DTTimingExtractor_Mini::fillTiming(TimeMeasurementSequence &tmSequence,
 	}
 
 	if (!fitT0(a,b,hitxl,hityl,hitxr,hityr)) {
-	  if (debug)
+	  if (debug) {
 	    std::cout << "     t0 = zero, Left hits: " << hitxl.size() << " Right hits: " << hitxr.size() << std::endl;
+          }
 	  continue;
 	}
 
@@ -376,9 +380,10 @@ DTTimingExtractor_Mini::fillTiming(TimeMeasurementSequence &tmSequence, reco::Tr
   // get the DT segments that were used to construct the muon
   std::vector<const DTRecSegment4D*> range = theMatcher->matchDT(*muonTrack,iEvent);
   
-  if (debug) 
+  if (debug) { 
     std::cout << " The muon track matches " << range.size() << " segments." << std::endl;
-    fillTiming(tmSequence,range,muonTrack,iEvent,iSetup);
+  }
+  fillTiming(tmSequence,range,muonTrack,iEvent,iSetup);
 }
 
 double
