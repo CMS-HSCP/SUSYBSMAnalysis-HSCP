@@ -76,7 +76,7 @@ cmsRun HSCParticleProducer_cfg.py LUMITOPROCESS=HSCP/test/Cert_294927-306462_13T
 You can also use `inputFiles_load=input.txt`, where `input.txt` contains a list of files.
 
 Don't forget to copy needed files:
-````bash
+```bash
 cp HSCP/data/CorrFact*Pix*.txt .
 cp HSCP/data/template*.root .
 cp HSCP/data/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt .
