@@ -11,9 +11,13 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v14p1:
-// - introduce hasMCMatch_ and doTriggering_
-// - put back probQ calculation to the main loop, pass it to preselection as an array
+// v15:
+// - synchronisation with Caroline's framework
+//      > modification cross-talk inversion function
+//      > modification cluster cleaning
+//      > add saturation correction function
+// - add pixel SF correction 
+// - add branch 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -162,6 +166,8 @@ void Analyzer::beginJob() {
     mcWeight->getSampleWeights(Period_, SampleName_.c_str(), IntegratedLuminosity_, CrossSection_);
   }
 
+  loadSFPixel();
+  
   // Set in Analyzer/interface/MCWeight.h
   // 58970.47 for 2018
   // 41809.45 for 2017
@@ -229,6 +235,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     dEdxSF[1] = DeDxSF_1;
     //LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
   }
+    
 
   // Compute event weight
   if (!isData) {
@@ -590,6 +597,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ias;
   std::vector<float> HSCP_Ias_noPix_noTIB_noTID_no3TEC;
   std::vector<float> HSCP_Ias_PixelOnly;
+  std::vector<float> HSCP_Ias_StripOnly;
   std::vector<float> HSCP_Ih;
   std::vector<float> HSCP_Ick;  //return (Ih-C)/K
   std::vector<float> HSCP_Fmip;
@@ -993,7 +1001,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       LogPrint(MOD) << "  >> GenId  " << pdgId;
     }
 
-//computedEdx: hits, SF, templates, usePixel, useClusterCleaning, reverseProb, uneTrunc, TrackerGains, 
+//computedEdx: iEvent, year, hits, SF, templates, usePixel, useClusterCleaning, reverseProb, useTrunc, TrackerGains, 
 //             useStrips, mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, hipEmul, dedxErr, pdgid, skipPix, useTemplateLayer, skipPixelL1, DeDxprobQ, skip_templ_Ias
 //
 //correction inverseXtalk = 0 --> take the raw amplitudes of the cluster
@@ -1003,91 +1011,101 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 //skip templates_Ias = 1 --> no Pix, no TIB, no TID, no 3 first layers TEC 
 //skip templates_Ias = 2 --> Pixel Only
 
+    string year = Period_;
+    if(!isData) year="";
+    int run_number=iEvent.id().run();
 
     //Ias
     double dEdxErr = 0;
     auto dedxSObjTmp =
-        computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode_ == 5, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer);
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode_ == 5, false, trackerCorrector.TrackerGains,
+                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, false, useTemplateLayer);
     
     reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
 
     //Ih
     auto dedxMObjTmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer);
     
     reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
 
     //Ih Up
     auto dedxMUpObjTmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.15, nullptr, 0, pdgId, skipPixel, useTemplateLayer);
     
     reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements() > 0 ? &dedxMUpObjTmp : nullptr;
 
     //Ih Down
     auto dedxMDownObjTmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.15, nullptr, 0, pdgId, skipPixel, useTemplateLayer);
     
     reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements() > 0 ? &dedxMDownObjTmp : nullptr;
 
     //Ih no pixel L1
     auto dedxIh_noL1_Tmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                       true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, false, useTemplateLayer, true);
     
     reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
 
     //Ih 0.15 low values drop
     auto dedxIh_15drop_Tmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                       true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer);
     
     reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
 
     //Ih Strip only
     auto dedxIh_StripOnly_Tmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, true, useTemplateLayer);
 
     reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
 
     //Ih Strip only and 0.15 low values drop
     auto dedxIh_StripOnly_15drop_Tmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, true, useTemplateLayer, true);
    
     reco::DeDxData* dedxIh_StripOnly_15drop = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
 
     //Ih correct saturation from fits
     auto dedxIh_SaturationCorrectionFromFits_Tmp =
-        computedEdx(dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 2, 0.0, nullptr, &dEdxErr, pdgId, skipPixel, useTemplateLayer, true);
 
     reco::DeDxData* dedxIh_SaturationCorrectionFromFits = dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements() > 0 ? &dedxIh_SaturationCorrectionFromFits_Tmp : nullptr;
 
     //dEdx probQ discriminator based on templates (same than Ias)
     auto dedx_probQ_Tmp =
-        computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer, true, true);
 
     reco::DeDxData* dedx_probQ = dedx_probQ_Tmp.numberOfMeasurements() > 0 ? &dedx_probQ_Tmp : nullptr;
 
     //Ias without TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp = 
-        computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer, true, false, 1);
 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
     //Ias Pixel only
     auto dedxIas_PixelOnly_Tmp = 
-        computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, false, useTemplateLayer, false, false, 2);
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
+
+    //Ias Strip only
+    auto dedxIas_StripOnly_Tmp = 
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, true, useTemplateLayer);
+
+    reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
@@ -1382,6 +1400,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ias.push_back(dedxSObj ? dedxSObj->dEdx() : -1);
     HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
+    HSCP_Ias_StripOnly.push_back(dedxIas_StripOnly ? dedxIas_StripOnly->dEdx() : -1);
     HSCP_Ih.push_back(dedxMObj ? dedxMObj->dEdx() : -1);
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
@@ -1509,6 +1528,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_PtErr,
                                 HSCP_Ias,
                                 HSCP_Ias_PixelOnly,
+                                HSCP_Ias_StripOnly,
                                 HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ih,
                                 HSCP_Ick,
@@ -2995,3 +3015,5 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   }  // End compute systematics due to PU
 }
+
+

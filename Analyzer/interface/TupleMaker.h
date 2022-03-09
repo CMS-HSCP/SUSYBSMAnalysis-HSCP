@@ -70,6 +70,7 @@ public:
                         const std::vector<float> &Ias,
                         const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                         const std::vector<float> &Ias_PixelOnly,
+                        const std::vector<float> &Ias_StripOnly,
                         const std::vector<float> &Ih,
                         const std::vector<float> &Ick,
                         const std::vector<float> &Fmip,
@@ -1264,6 +1265,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Ias", &tuple->Tree_Ias);
     tuple->Tree->Branch("Ias_noTIBnoTIDno3TEC", &tuple->Tree_Ias_noTIBnoTIDno3TEC);
     tuple->Tree->Branch("Ias_PixelOnly", &tuple->Tree_Ias_PixelOnly);
+    tuple->Tree->Branch("Ias_StripOnly", &tuple->Tree_Ias_StripOnly);
     tuple->Tree->Branch("Ih", &tuple->Tree_Ih);
     tuple->Tree->Branch("Ick", &tuple->Tree_Ick);
     tuple->Tree->Branch("Fmip", &tuple->Tree_Fmip);
@@ -1420,6 +1422,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Ias,
                                   const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                                   const std::vector<float> &Ias_PixelOnly,
+                                  const std::vector<float> &Ias_StripOnly,
                                   const std::vector<float> &Ih,
                                   const std::vector<float> &Ick,
                                   const std::vector<float> &Fmip,
@@ -1543,6 +1546,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Ias = Ias;
   tuple->Tree_Ias_noTIBnoTIDno3TEC = Ias_noTIBnoTIDno3TEC;
   tuple->Tree_Ias_PixelOnly = Ias_PixelOnly;
+  tuple->Tree_Ias_StripOnly = Ias_StripOnly;
   tuple->Tree_Ih = Ih;
   tuple->Tree_Ick = Ick;
   tuple->Tree_Fmip = Fmip;

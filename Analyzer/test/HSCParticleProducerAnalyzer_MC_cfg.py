@@ -8,12 +8,12 @@ options = VarParsing('analysis')
 options.outputFile = 'Histos.root'
 options.maxEvents = -1 # -1 means all events
 
-options.register('GTAG', '106X_dataRun2_v20',
+options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isData',
+options.register('SAMPLE', 'isBckg',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
@@ -135,7 +135,7 @@ if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
         filter = cms.bool(False),
         src = cms.InputTag("genParticles"),
         cut = cms.string('pt > 5.0'),
-        stableOnly = cms.bool(True)
+        stableOnly = cms.bool(True) #FIXME Commented by Tamas. What is stableOnly ?
    )
 
    process.HSCPTuplePath += process.genParticlesSkimmed
@@ -209,14 +209,14 @@ if options.SAMPLE=='isData' :
        C = 3.17
        SF0 = 1.0
        SF1 = 1.0325
-       IasTemplate = "template_2017C.root" 
+       IasTemplate = "template_2017B.root" 
    
    if options.YEAR=='2018' :
        K = 2.27
        C = 3.16
        SF0 = 1.0
        SF1 = 1.0817
-       IasTemplate = "template_2017C.root" #FIXME template 2018?
+       IasTemplate = "template_2017B.root" #FIXME template 2018?
     #HSCP_minPt = 55
 
 elif options.SAMPLE=='isBckg':
@@ -228,7 +228,7 @@ elif options.SAMPLE=='isBckg':
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
@@ -244,7 +244,7 @@ else :
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
@@ -255,7 +255,7 @@ else :
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 ### set your configirattion here (default: python/HSCParticleAnalyzer_cff.py)
 #process.analyzer.SampleTxtFile=options.sampleTxtFile
-process.analyzer.TypeMode=2 #0: tk-only 2: tk+tof
+process.analyzer.TypeMode=0
 process.analyzer.SampleType=SampleType
 process.analyzer.Period=options.YEAR
 process.analyzer.saveTree=2 #saved up to isolation 0: no tree - 2: up to isolation - 3: all
@@ -264,7 +264,7 @@ process.analyzer.DeDxTemplate=IasTemplate
 process.analyzer.Geometry="CMS_GeomTree.root"
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
 process.analyzer.trackProbQCut = 1
-process.analyzer.debugLevel = 0
+process.analyzer.debugLevel = 2
 process.analyzer.GlobalMinPt = cms.untracked.double(HSCP_minPt)
 process.analyzer.DeDxK = cms.untracked.double(K)
 process.analyzer.DeDxC = cms.untracked.double(C)
