@@ -1,3 +1,4 @@
+
 #ifndef SUSYBSMAnalysis_Analyzer_CommonFunction_h
 #define SUSYBSMAnalysis_Analyzer_CommonFunction_h
 
@@ -19,6 +20,418 @@ void LoadCorrectionParameters() {
   sc.SetTree(*treeparameters);
   sc.ReadParameters();
 }
+
+//=======================================================================================
+//
+//  Global use of some variables used to correct pixel charge
+//
+//=======================================================================================
+
+#define calmax 50000
+
+   int icalibL1;
+   int icalibL1_2017;
+   int icalibL1_2018;
+   int icalibL2;
+   int icalibL2_2017;
+   int icalibL2_2018;
+   int icalibL3;
+   int icalibL3_2017;
+   int icalibL3_2018;
+   int icalibL4;
+   int icalibL4_2017;
+   int icalibL4_2018;
+   int icalibR1;
+   int icalibR1_2017;
+   int icalibR1_2018;
+   int icalibR2;
+   int icalibR2_2017;
+   int icalibR2_2018;
+   int irunMinValL1[calmax];
+   float scaleValL1[calmax];
+   float errorScaleValL1[calmax];
+   int irunMinValL2[calmax];
+   float scaleValL2[calmax];
+   float errorScaleValL2[calmax];
+   int irunMinValL3[calmax];
+   float scaleValL3[calmax];
+   float errorScaleValL3[calmax];
+   int irunMinValL4[calmax];
+   float scaleValL4[calmax];
+   float errorScaleValL4[calmax];
+   int irunMinValR1[calmax];
+   float scaleValR1[calmax];
+   float errorScaleValR1[calmax];
+   int irunMinValR2[calmax];
+   float scaleValR2[calmax];
+   float errorScaleValR2[calmax];
+
+
+//====================================================================
+//
+//  Get pixel scale factors
+//
+//====================================================================
+
+void loadSFPixel() {
+   std::ifstream file_calib1;
+   file_calib1.open("CorrFact2017PixL1.txt");
+   icalibL1=0;
+   if (!file_calib1) { std::cerr << "cannot open file CorrFact2017PixL1.txt " << std::endl; }
+   else
+   {
+      while (!file_calib1.eof () && icalibL1<calmax) {
+       file_calib1 >> irunMinValL1[icalibL1] >> scaleValL1[icalibL1] >> errorScaleValL1[icalibL1] ;
+       icalibL1++;
+      }
+   }
+   file_calib1.close ();
+
+   icalibL1_2017=icalibL1;
+   std::ifstream file_calib2;
+   file_calib2.open("CorrFact2018PixL1.txt");
+   if (!file_calib2) { std::cerr << "cannot open file CorrFact2018PixL1.txt " << std::endl; }
+   else
+   {  
+      while (!file_calib2.eof () && icalibL1<calmax) {
+       file_calib2 >> irunMinValL1[icalibL1] >> scaleValL1[icalibL1] >> errorScaleValL1[icalibL1] ;
+       icalibL1++;
+      }
+   }
+   if (irunMinValL1[icalibL1-1]==0) icalibL1--;
+   icalibL1_2018=icalibL1-icalibL1_2017;
+   file_calib2.close ();
+ 
+
+   std::ifstream file_calib3;
+   file_calib3.open("CorrFact2017PixL2.txt");
+   icalibL2=0;
+   if (!file_calib3) { std::cerr << "cannot open file CorrFact2017PixL2.txt " << std::endl; }
+   else
+   {
+      while (!file_calib3.eof () && icalibL2<calmax) {
+       file_calib3 >> irunMinValL2[icalibL2] >> scaleValL2[icalibL2] >> errorScaleValL2[icalibL2] ;
+       icalibL2++;
+      }
+   }
+   file_calib3.close ();
+
+   icalibL2_2017=icalibL2;
+   std::ifstream file_calib4;
+   file_calib4.open("CorrFact2018PixL2.txt");
+   if (!file_calib4) { std::cerr << "cannot open file CorrFact2018PixL2.txt " << std::endl; }
+   else
+   {  
+      while (!file_calib4.eof () && icalibL2<calmax) {
+       file_calib4 >> irunMinValL2[icalibL2] >> scaleValL2[icalibL2] >> errorScaleValL2[icalibL2] ;
+       icalibL2++;
+      }
+   }
+   if (irunMinValL2[icalibL2-1]==0) icalibL2--;
+   icalibL2_2018=icalibL2-icalibL2_2017;
+   file_calib4.close ();
+ 
+   std::ifstream file_calib5;
+   file_calib5.open("CorrFact2017PixL3.txt");
+   icalibL3=0;
+   if (!file_calib5) { std::cerr << "cannot open file CorrFact2017PixL3.txt " << std::endl; }
+   else
+   {
+      while (!file_calib5.eof () && icalibL3<calmax) {
+       file_calib5 >> irunMinValL3[icalibL3] >> scaleValL3[icalibL3] >> errorScaleValL3[icalibL3] ;
+       icalibL3++;
+      }
+   }
+   file_calib5.close ();
+
+   icalibL3_2017=icalibL3;
+   std::ifstream file_calib6;
+   file_calib6.open("CorrFact2018PixL3.txt");
+   if (!file_calib6) { std::cerr << "cannot open file CorrFact2018PixL3.txt " << std::endl; }
+   else
+   {  
+      while (!file_calib6.eof () && icalibL3<calmax) {
+       file_calib6 >> irunMinValL3[icalibL3] >> scaleValL3[icalibL3] >> errorScaleValL3[icalibL3] ;
+       icalibL3++;
+      }
+   }
+   if (irunMinValL3[icalibL3-1]==0) icalibL3--;
+   icalibL3_2018=icalibL3-icalibL3_2017;
+   file_calib6.close ();
+ 
+   std::ifstream file_calib7;
+   file_calib7.open("CorrFact2017PixL4.txt");
+   icalibL4=0;
+   if (!file_calib7) { std::cerr << "cannot open file CorrFact2017PixL4.txt " << std::endl; }
+   else
+   {
+      while (!file_calib7.eof () && icalibL4<calmax) {
+       file_calib7 >> irunMinValL4[icalibL4] >> scaleValL4[icalibL4] >> errorScaleValL4[icalibL4] ;
+       icalibL4++;
+      }
+   }
+   file_calib7.close ();
+
+   icalibL4_2017=icalibL4;
+   std::ifstream file_calib8;
+   file_calib8.open("CorrFact2018PixL4.txt");
+   if (!file_calib8) { std::cerr << "cannot open file CorrFact2018PixL4.txt " << std::endl; }
+   else
+   {  
+      while (!file_calib8.eof () && icalibL4<calmax) {
+       file_calib8 >> irunMinValL4[icalibL4] >> scaleValL4[icalibL4] >> errorScaleValL4[icalibL4] ;
+       icalibL4++;
+      }
+   }
+   if (irunMinValL4[icalibL4-1]==0) icalibL4--;
+   icalibL4_2018=icalibL4-icalibL4_2017;
+   file_calib8.close ();
+ 
+   std::ifstream file_calib9;
+   file_calib9.open("CorrFact2017PixR1.txt");
+   icalibR1=0;
+   if (!file_calib9) { std::cerr << "cannot open file CorrFact2017PixR1.txt " << std::endl; }
+   else
+   {
+      while (!file_calib9.eof () && icalibR1<calmax) {
+       file_calib9 >> irunMinValR1[icalibR1] >> scaleValR1[icalibR1] >> errorScaleValR1[icalibR1] ;
+       icalibR1++;
+      }
+   }
+   file_calib9.close ();
+
+   icalibR1_2017=icalibR1;
+   std::ifstream file_calib10;
+   file_calib10.open("CorrFact2018PixR1.txt");
+   if (!file_calib10) { std::cerr << "cannot open file CorrFact2018PixR1.txt " << std::endl; }
+   else
+   {  
+      while (!file_calib10.eof () && icalibR1<calmax) {
+       file_calib10 >> irunMinValR1[icalibR1] >> scaleValR1[icalibR1] >> errorScaleValR1[icalibR1] ;
+       icalibR1++;
+      }
+   }
+   if (irunMinValR1[icalibR1-1]==0) icalibR1--;
+   icalibR1_2018=icalibR1-icalibR1_2017;
+   file_calib10.close ();
+ 
+   std::ifstream file_calib11;
+   file_calib11.open("CorrFact2017PixR2.txt");
+   icalibR2=0;
+   if (!file_calib11) { std::cerr << "cannot open file CorrFact2017PixR2.txt " << std::endl; }
+   else
+   {
+      while (!file_calib11.eof () && icalibR2<calmax) {
+       file_calib11 >> irunMinValR2[icalibR2] >> scaleValR2[icalibR2] >> errorScaleValR2[icalibR2] ;
+       icalibR2++;
+      }
+   }
+   file_calib11.close ();
+
+   if (irunMinValR2[icalibR2-1]==0) icalibR2--;
+   icalibR2_2017=icalibR2;
+   std::ifstream file_calib12;
+   file_calib12.open("CorrFact2018PixR2.txt");
+   if (!file_calib12) { std::cerr << "cannot open file CorrFact2018PixR2.txt " << std::endl; }
+   else
+   {  
+      while (!file_calib12.eof () && icalibR2<calmax) {
+       file_calib12 >> irunMinValR2[icalibR2] >> scaleValR2[icalibR2] >> errorScaleValR2[icalibR2] ;
+       icalibR2++;
+      }
+   }
+   icalibR2_2018=icalibR2-icalibR2_2017;
+   file_calib12.close ();
+}
+
+//====================================================================
+//
+//  Get pixel scale factors
+//
+//====================================================================
+float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
+
+    if(year=="") return 1.;
+   int pix = 0;
+   int layerorside = 0;
+
+   if (subdetid_==1) {
+        pix =1 ;
+        if (year=="2016") {
+                layerorside = int((detid_>>16)&0xF);
+        }
+        else {
+                layerorside = int((detid_>>20)&0xF);
+        }
+   }
+   if (subdetid_==2) {
+        pix =2 ;
+        layerorside = int((detid_>>23)&0x3); // 1=FPIX- 2=FPIX+
+   }
+
+   float scale =1 ;
+   if (pix==1) {
+     if (layerorside==1) {
+
+       if (year=="2017") {
+        for (int i=0; i<icalibL1_2017; i++) {
+         if (run >= irunMinValL1[i] && run<irunMinValL1[i+1]) {
+                scale = scaleValL1[i];
+                return scale;
+         }
+        }
+       }
+       else if (year=="2018") {
+        for (int i=icalibL1_2017; i<icalibL1-1; i++) {
+         if (run >= irunMinValL1[i] && run<irunMinValL1[i+1]) {
+                scale = scaleValL1[i];
+                return scale;
+         }
+        }
+        if (run >= irunMinValL1[icalibL1-1]) {
+                scale = scaleValL1[icalibL1-1];
+                return scale;
+        }
+       }
+
+     }
+     else if (layerorside==2) {
+
+       if (year=="2017") {
+        for (int i=0; i<icalibL2_2017; i++) {
+         if (run >= irunMinValL2[i] && run<irunMinValL2[i+1]) {
+                scale = scaleValL2[i];
+                return scale;
+         }
+        }
+       }
+       else if (year=="2018") {
+        for (int i=icalibL2_2017; i<icalibL2-1; i++) {
+         if (run >= irunMinValL2[i] && run<irunMinValL2[i+1]) {
+                scale = scaleValL2[i];
+                return scale;
+         }
+        }
+        if (run >= irunMinValL2[icalibL2-1]) {
+                scale = scaleValL2[icalibL2-1];
+                return scale;
+        }
+       }
+
+     }
+     else if (layerorside==3) {
+     }
+
+       if (year=="2017") {
+        for (int i=0; i<icalibL3_2017; i++) {
+         if (run >= irunMinValL3[i] && run<irunMinValL3[i+1]) {
+                scale = scaleValL3[i];
+                return scale;
+         }
+        }
+       }
+       else if (year=="2018") {
+        for (int i=icalibL3_2017; i<icalibL3-1; i++) {
+         if (run >= irunMinValL3[i] && run<irunMinValL3[i+1]) {
+                scale = scaleValL3[i];
+                return scale;
+         }
+        }
+        if (run >= irunMinValL3[icalibL3-1]) {
+                scale = scaleValL3[icalibL3-1];
+                return scale;
+        }
+       }
+
+     else if (layerorside==4) {
+
+       if (year=="2017") {
+        for (int i=0; i<icalibL4_2017; i++) {
+         if (run >= irunMinValL4[i] && run<irunMinValL4[i+1]) {
+                scale = scaleValL4[i];
+                return scale;
+         }
+        }
+       }
+       else if (year=="2018") {
+        for (int i=icalibL4_2017; i<icalibL4-1; i++) {
+         if (run >= irunMinValL4[i] && run<irunMinValL4[i+1]) {
+                scale = scaleValL4[i];
+                return scale;
+         }
+        }
+        if (run >= irunMinValL4[icalibL4-1]) {
+                scale = scaleValL4[icalibL4-1];
+                return scale;
+        }
+       }
+
+     }
+     else { 
+        std::cout << "unknowm layer number in Barrel Pixel " << layerorside << std::endl; 
+        return 0; 
+     } 
+     
+   }
+   else if (pix==2) {
+     if (layerorside==1) {
+
+       if (year=="2017") {
+        for (int i=0; i<icalibR1_2017; i++) {
+         if (run >= irunMinValR1[i] && run<irunMinValR1[i+1]) {
+                scale = scaleValR1[i];
+                return scale;
+         }
+        }
+       }
+       else if (year=="2018") {
+        for (int i=icalibR1_2017; i<icalibR1-1; i++) {
+         if (run >= irunMinValR1[i] && run<irunMinValR1[i+1]) {
+                scale = scaleValR1[i];
+                return scale;
+         }
+        }
+        if (run >= irunMinValR1[icalibR1-1]) {
+                scale = scaleValR1[icalibR1-1];
+                return scale;
+        }
+       }
+
+     }
+     else if (layerorside==2) {
+
+       if (year=="2017") {
+        for (int i=0; i<icalibR2_2017; i++) {
+         if (run >= irunMinValR2[i] && run<irunMinValR2[i+1]) {
+                scale = scaleValR2[i];
+                return scale;
+         }
+        }
+       }
+       else if (year=="2018") {
+        for (int i=icalibR2_2017; i<icalibR2-1; i++) {
+         if (run >= irunMinValR2[i] && run<irunMinValR2[i+1]) {
+                scale = scaleValR2[i];
+                return scale;
+         }
+        }
+        if (run >= irunMinValR2[icalibR2-1]) {
+                scale = scaleValR2[icalibR2-1];
+                return scale;
+        }
+       }
+
+     }
+     else { 
+        std::cout << "unknowm ring number in EndCap Pixel " << layerorside << std::endl; 
+        return 0; 
+     } 
+   }
+
+   return scale;
+   
+}
+
 
 //====================================================================
 //
@@ -607,6 +1020,36 @@ std::vector<int> Correction(const std::vector<int>& Q,
   return Qcorr;
 }
 
+
+
+std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat) {
+  const unsigned N=Q.size();
+  std::vector<int> QII;
+  std::vector<float> QI(N,0);
+
+//---  que pour 1 max bien net
+ if(Q.size()<2 || Q.size()>8){
+        for (unsigned int i=0;i<Q.size();i++){
+                QII.push_back((int) Q[i]);
+        }
+        return QII;
+  }
+ if(way){
+          vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
+          if(*mQ>253){
+                 if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
+                 if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
+                     QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
+          }
+      else{
+          return Q; // no saturation --> no x-talk inversion
+      }
+  }
+//---
+ // do nothing else
+ return Q; 
+}
+
 std::vector<int> CrossTalkInv(const std::vector<int>& Q,
                               const float x1 = 0.10,
                               const float x2 = 0.04,
@@ -637,36 +1080,6 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
              QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
       }
    }
-  
-  //FIXME to discuss with Caroline
-/*  if (way && !isClusterCleaning) {
-    std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end());
-    if (*mQ > 253) {
-      if (*mQ == 255 && *(mQ - 1) > 253 && *(mQ + 1) > 253)
-        return Q;
-      if (*(mQ - 1) > thresholdSat && *(mQ + 1) > thresholdSat && *(mQ - 1) < 254 && *(mQ + 1) < 254 &&
-          abs(*(mQ - 1) - *(mQ + 1)) < 40) {
-        QII.push_back((10 * (*(mQ - 1)) + 10 * (*(mQ + 1))) / 2);
-        return QII;
-      }
-    } else {
-      return Q;  //no saturation --> no x-talk inversion
-    }
-  }
-  if (way && isClusterCleaning) {
-    std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end());
-    if (*mQ > 253) {
-      if (*mQ == 255 && *(mQ - 1) > 253 && *(mQ + 1) > 253)
-        return Q;
-      if (*(mQ - 1) > thresholdSat && *(mQ + 1) > thresholdSat && *(mQ - 1) < 254 && *(mQ + 1) < 254 &&
-          abs(*(mQ - 1) - *(mQ + 1)) < 40) {
-        QII.push_back((10 * (*(mQ - 1)) + 10 * (*(mQ + 1))) / 2);
-        return QII;
-      }
-    }
-  }
-  */
-
   //---
 
   for (unsigned int i = 0; i < N; i++) {
@@ -703,17 +1116,8 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
 }
 
 #ifdef FWCORE
-//FIXME to discuss with Caroline
-//bool clusterCleaning(const SiStripCluster* cluster, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
 bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
 
-//FIXME to discuss with Caroline
-/*  if (!cluster)
-    return true;
-  std::vector<int> ampls = convert(cluster->amplitudes());
-  if (crosstalkInv == 1)
-    ampls = CrossTalkInv(ampls, 0.10, 0.04, true, true);
-*/
 
   // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------
   //----------------------------------------------------------------------------
@@ -1095,7 +1499,9 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
   return true;
 }
 
-reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
+reco::DeDxData computedEdx(const edm::Event& iEvent,
+                           string year,
+                           const reco::DeDxHitInfo* dedxHits,
                            double* scaleFactors,
                            TH3* templateHisto = nullptr,
                            bool usePixel = false,
@@ -1162,7 +1568,8 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
 
     int ClusterCharge = dedxHits->charge(h);
 
-    if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1)
+    //if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1) //this decoding is for 2016 !
+    if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
       continue;
 
     if (detid.subdetId() >= 3) {  //for strip only
@@ -1170,8 +1577,11 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       SiStripDetId Sdetid(dedxHits->detId(h));
       const SiStripCluster* cluster = dedxHits->stripCluster(h);
       std::vector<int> amplitudes = convert(cluster->amplitudes());
-      
-      if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
+      std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
+
+     
+      //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
+      if (useClusterCleaning && !clusterCleaning(amplitudesPrim, 1))
         continue;
       //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
@@ -1186,8 +1596,11 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
 
       //if (crossTalkInvAlgo>0) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
 
+crossTalkInvAlgo=1;
+
       if (crossTalkInvAlgo == 1)
-        amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+        //amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+        amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
       if (crossTalkInvAlgo == 2)
         amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
       if (crossTalkInvAlgo == 3)
@@ -1209,6 +1622,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
           }
         }
 
+        gain = 1.0;
         int StripCharge = amplitudes[s];
         if (StripCharge < 254) {
           StripCharge = (int)(StripCharge / gain);
@@ -1232,13 +1646,15 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
     }
 
     double scaleFactor = scaleFactors[0];
-    if (detid.subdetId() < 3)
+    if (detid.subdetId() < 3){
       scaleFactor *= scaleFactors[1];  // add pixel scaling
+      double pixelScaling = GetSFPixel(detid.subdetId(), detid, year, iEvent.id().run());
+      scaleFactor *= pixelScaling;
+    }
 
     if (templateHisto) {  //save discriminator probability
       double ChargeOverPathlength =
           scaleFactor * ClusterCharge / (dedxHits->pathlength(h) * 10.0 * (detid.subdetId() < 3 ? 265 : 1));
-
 
       int moduleGeometry = 0;  // underflow for debug
       int layer = 0;
@@ -1293,15 +1709,17 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
     } else {
       double Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
       double ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
-      if (hipEmulator)
-        ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
+      //if (hipEmulator)
+        //ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
 
 
       vect.push_back(ChargeOverPathlength);  //save charge
       if (detid.subdetId() < 3)
         vectPixel.push_back(ChargeOverPathlength);
+        //vectPixel.push_back(ClusterCharge/dedxHits->pathlength(h));
       if (detid.subdetId() >= 3)
         vectStrip.push_back(ChargeOverPathlength);
+        //vectStrip.push_back(ClusterCharge/dedxHits->pathlength(h));
       //           printf("%i - %f / %f = %f\n", h, scaleFactor*Norm*dedxHits->charge(h), dedxHits->pathlength(h), ChargeOverPathlength);
     }
   }

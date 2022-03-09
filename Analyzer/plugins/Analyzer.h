@@ -295,7 +295,7 @@ private:
   double GlobalMaxEta = 2.1;      // cut on inner tracker track eta
   double GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
   double GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
-  double GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction
+  double GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction //proposal: 0.05
   double GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF
   int GlobalMinQual = 2;          // cut on track quality (2 meaning HighPurity tracks)
   unsigned int GlobalMinNOH = 8;  //7AMSB;      // cut on number of (valid) track pixel+strip hits
@@ -410,6 +410,8 @@ private:
   const int debugLevel_;
   const bool hasMCMatch_;
   const bool doTriggering_;
+
+   
 
 };
 #endif
