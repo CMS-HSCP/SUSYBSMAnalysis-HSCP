@@ -1,17 +1,18 @@
 #ifndef SUSYBSMAnalysis_Analyzer_Analyzer_h
 #define SUSYBSMAnalysis_Analyzer_Analyzer_h
+
 // -*- C++ -*-
-//
-// Package:    SUSYBSMAnalysis/Analyzer
-// Class:      Analyzer
-//
-/**\class Analyzer Analyzer.cc SUSYBSMAnalysis/Analyzer/plugins/Analyzer.cc
-*/
-//
-// Original Author:  Emery Nibigira
-//         Created:  Thu, 01 Apr 2021 07:04:53 GMT
-//
-//
+// 
+// 
+//  Class : Analyzer
+// 
+// 
+//  Inspired by class Analyzer SUSYBSMAnalysis/Analyzer/plugins/Analyzer.cc
+// 
+//  Author : Raphael Haeberle
+//        Created : Wed, 23 February 2022 16:12:48 GMT+1
+// 
+// 
 
 // ~~~~~~~~~c++ include files ~~~~~~~~~
 #include <memory>
@@ -20,7 +21,7 @@
 #include <map>
 #include <exception>
 #include <unordered_map>
-
+#include <iostream>
 // ~~~~~~~~~ ROOT include files ~~~~~~~~~
 #include "TH1.h"
 #include "TH2.h"
@@ -35,10 +36,8 @@
 #include "TTree.h"
 #include "TProfile.h"
 #include "TLorentzVector.h"
-//#include "TCanvas.h"
 
 // ~~~~~~~~~ CMSSW include files ~~~~~~~~~
-//#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/ESHandle.h"
@@ -51,13 +50,11 @@
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPIsolation.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
-//#include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPDeDxInfo.h"
-// Muons
+// Muons 
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtra.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtraMap.h"
 // Muons CSC segments
-//#include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
 #include "DataFormats/CSCRecHit/interface/CSCSegment.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
@@ -91,10 +88,12 @@
 #include "DataFormats/METReco/interface/PFMETFwd.h"
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
-
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
+#include "HLTrigger/HLTcore/interface/FractionalPrescale.h"
 
 // ~~~~~~~~~ user include files ~~~~~~~~~
+
 #define FWCORE
 #include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
@@ -109,6 +108,22 @@
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+#include "DataFormats/L1Trigger/interface/BXVector.h"
+#include "DataFormats/L1Trigger/interface/L1TObjComparison.h"
+#include "DataFormats/L1TGlobal/interface/GlobalAlgBlk.h"
+#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
+#include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
+
+
+
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
+#include "HLTrigger/HLTcore/interface/HLTFilter.h"
+#include "DataFormats/Provenance/interface/ParameterSetID.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "FWCore/Utilities/interface/InputTag.h"
+
 
 using namespace std;
 
@@ -116,13 +131,12 @@ class TupleMaker;
 class MCWeight;
 
 class Analyzer : public edm::EDAnalyzer {
+
 public:
   explicit Analyzer(const edm::ParameterSet&);
   ~Analyzer();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
-  double scaleFactor(double eta);
 
   void initializeCuts(edm::Service<TFileService>& fs,
                       vector<double>& CutPt,
@@ -162,74 +176,55 @@ public:
                      const double& RescaleT);
 
   bool passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic = false, L1BugEmulator* emul = nullptr);
-
-  //int  muonStations(const reco::HitPattern& hitPattern);
-  double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
-  TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
-  double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
-  float combineProbs(float probOnTrackWMulti, int numRecHits) const;
+  //double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
+  static constexpr unsigned int maxPhysicsTriggers = 512;
 
 private:
   virtual void beginJob() override;
+  virtual void beginRun(const edm::Run& run,const edm::EventSetup& iSetup) override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
-  virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
-
+  //virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
 
   // ----------member data ---------------------------
-  // HSCP, dEdx and TOF collections
   edm::EDGetTokenT<vector<susybsm::HSCParticle>> hscpToken_;
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
-  edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
-  //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>      _dedxToken;
+  edm::EDGetTokenT<BXVector<GlobalAlgBlk>> l1resToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;
-  edm::EDGetTokenT<reco::MuonTimeExtraMap> muonTimeToken_;  // for reading inverse beta
-  edm::EDGetTokenT<reco::MuonTimeExtraMap> muonDtTimeToken_;
-  edm::EDGetTokenT<reco::MuonTimeExtraMap> muonCscTimeToken_;
-  edm::EDGetTokenT<DTRecSegment4DCollection> muonDtSegmentToken_;
-  edm::EDGetTokenT<CSCSegmentCollection> muonCscSegmentToken_;
   edm::EDGetTokenT<vector<reco::Vertex>> offlinePrimaryVerticesToken_;
-  edm::EDGetTokenT<LumiScalersCollection> lumiScalersToken_;
-  edm::EDGetTokenT<vector<reco::Track>> refittedStandAloneMuonsToken_;
-  edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;
-  edm::EDGetTokenT<vector<reco::Muon>> muonToken_;
+  
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
   edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
   edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
-  //edm::EDGetTokenT<reco::Track>  _tracksToken;//edm::EDGetTokenT<vector<reco::Track>>  _tracksToken;
-  //edm::EDGetTokenT<vector<reco::DeDxHitInfo>>  _dedxHitInfosToken; //DataFormats/TrackReco/interface/DeDxHitInfo.h
-
+  
   vector<string> trigger_met_, trigger_mu_;
-
   vector<double> CutPt_, CutI_, CutTOF_;
   vector<double> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;
-  //map<string, vector<double>> VCuts;
 
   map<string, TProfile*> HCuts;
+  const int nbl1names = 12;
+  //following is hard coded for my actual purpose, a given list of L1 seeds of interest
+  const string ListL1Names[12] = {"L1_SingleMu22","L1_SingleMu25","L1_ETMHF90_HTT60er","L1_ETMHF100","L1_ETMHF100_HTT60er","L1_ETMHF110","L1_ETMHF110_HTT60er","L1_ETMHF120","L1_ETMHF120_HTT60er","L1_ETT2000","L1_ETM150","L1_ETMHF150"};
+  vector<double> EffL1Seeds;
+  vector<int> L1Num;
+  vector<int> L1Denom;
+  vector<bool> L1Dec; 
+  //end of hardcoded part
+  //
+  //
+  //
+  //
 
+
+  //
   bool* HSCPTk;
-  bool* HSCPTk_SystP;
-  bool* HSCPTk_SystI;
-  bool* HSCPTk_SystT;
-  bool* HSCPTk_SystM;
-  bool* HSCPTk_SystPU;
-  bool* HSCPTk_SystHUp;
-  bool* HSCPTk_SystHDown;
-  double* MaxMass;
-  double* MaxMass_SystP;
-  double* MaxMass_SystI;
-  double* MaxMass_SystT;
-  double* MaxMass_SystM;
-  double* MaxMass_SystPU;
-  double* MaxMass_SystHUp;
-  double* MaxMass_SystHDown;
 
   const reco::MuonTimeExtra* tof;
   const reco::MuonTimeExtra* dttof;
   const reco::MuonTimeExtra* csctof;
+
 
   double OpenAngle = -1;  //global variable needed by PassPreselection... Ugly isn't it?!
   double TreeDXY = -1;
@@ -242,20 +237,13 @@ private:
   string SampleName_;
   string Period_;
 
+  int nbpasspresel = 0;
+  int nbtot = 0;
+
+
   bool SkipSelectionPlot_;
 
   // binning for the pT, mass, IP distributions
-  double PtHistoUpperBound = 4000;
-  double MassHistoUpperBound = 4000;
-  int MassNBins = 400;
-  double IPbound = 1.0;
-  int PredBins =
-      0;  //  How many different bins the prediction is split in for analysis being run, sets how many histograms are actually initialized.
-  int EtaBins =
-      60;  //  How many bins we use for the background prediction method in Eta -- impacts background prediction method -- histograms with the name of the form "Pred_Eta*" in Analysis_PlotStructure.h
-  double dEdxS_UpLim = 1.0;
-  double dEdxM_UpLim = 30.0;
-  int DzRegions = 6;  //Number of different Dz side regions used to make cosmic background prediction
 
   //Variables used in the TOF only HSCP search
   float DTRegion = 0.9;       //Define the dividing line between DT and
@@ -263,9 +251,8 @@ private:
   float CosmicMinDz = 70.;    //Min dz displacement to be tagged as cosmic muon
   float CosmicMaxDz = 120.;   //Max dz displacement for cosmic tagged tracks
   double minSegEtaSep = 0.1;  //Minimum eta separation between SA track and muon segment on opposite side of detector
-
   int minMuStations = 2;
-
+  
   // Thresholds for candidate preselection
   double GlobalMaxEta = 2.1;      // cut on inner tracker track eta
   double GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
@@ -330,14 +317,6 @@ private:
 
   unsigned int STree = 0;
   unsigned int SGTree = 0;
-
-  // Emulators
-  /*dedxHIPEmulator      HIPemulator;
-      dedxHIPEmulator      HIPemulatorUp;
-      dedxHIPEmulator      HIPemulatorDown;
-      L1BugEmulator        L1Emul;
-      HIPTrackLossEmulator HIPTrackLossEmul;*/
-
   bool useClusterCleaning;
   bool isData;
   bool isBckg;
@@ -351,24 +330,25 @@ private:
   //double SampleWeight_ = 1.;
   double CrossSection_ = 1.;
   vector<float> PUSystFactor_;
-
+  
   unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met
-
+  //
   TRandom3* RNG = nullptr;
   bool is2016;
   bool is2016G;
-
   bool isMCglobal = false;
-
+  //
   double preTrackingChangeL1IntLumi_ = 29679.982;  // pb
   double IntegratedLuminosity_ = 33676.4;          //13TeV16
-
+  //
   const std::string pixelCPE_;
   const double trackProbQCut_;
   const int debugLevel_;
-  
+  //
   const edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> tTopoToken_;
   const edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> tkGeomToken_;
   const edm::ESGetToken<PixelClusterParameterEstimator, TkPixelCPERecord> pixelCPEToken_;
+  HLTPrescaleProvider hltPSProv_;
+  std::string hltProcess_;
 };
 #endif

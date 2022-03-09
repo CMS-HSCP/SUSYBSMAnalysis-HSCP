@@ -493,7 +493,8 @@ std::string LegendFromType(const std::string& InputPattern) {
   return std::string("unknown");
 }
 
-std::vector<int> convert(const std::vector<unsigned char>& input) {
+std::vector<int> convert(const std::vector<unsigned char>& input) {//change arguments to unsng int
+  //EDanalyzer test a la main
   std::vector<int> output;
   for (unsigned int i = 0; i < input.size(); i++) {
     output.push_back((int)input[i]);
@@ -694,7 +695,15 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
 bool clusterCleaning(const SiStripCluster* cluster, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
   if (!cluster)
     return true;
-  std::vector<int> ampls = convert(cluster->amplitudes());
+ 
+
+  auto const& amplls = cluster->amplitudes();
+  std::vector<int> ampls;
+  for(unsigned int i=0;i < amplls.size();i++){
+    ampls.push_back((int)amplls[i]);
+  }
+  
+  //std::vector<int> ampls = convert(cluster->amplitudes());
   if (crosstalkInv == 1)
     ampls = CrossTalkInv(ampls, 0.10, 0.04, true, true);
 
@@ -922,6 +931,7 @@ bool clusterCleaning(const SiStripCluster* cluster, int crosstalkInv = 0, uint8_
 }
 
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
+#include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
 
 const double TkModGeomThickness[] = {1,
                                      0.029000,
@@ -988,8 +998,36 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
   if (detid.subdetId() < 3) {
     return true;
   }  //do nothing for pixel modules
-  SiStripDetId SSdetId(detid);
-  int moduleGeometry = SSdetId.moduleGeometry();
+
+  int moduleGeometry = 0;  // underflow for debug
+  int layer = 0;
+  if (detid.subdetId() < 3) {
+     moduleGeometry = 15;
+   }  // 15 == pixel
+   else {
+     SiStripDetId SSdetId(detid);
+     if (SSdetId.moduleGeometry()==SiStripModuleGeometry::IB1) moduleGeometry=1;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::IB2) moduleGeometry=2;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::OB1) moduleGeometry=3;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::OB2) moduleGeometry=4;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W1A) moduleGeometry=5;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W2A) moduleGeometry=6;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W3A) moduleGeometry=7;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W1B) moduleGeometry=8;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W2B) moduleGeometry=9;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W3B) moduleGeometry=10;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W4) moduleGeometry=11;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W5) moduleGeometry=12;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W6) moduleGeometry=13;
+     else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W7) moduleGeometry=14;
+   
+   }
+ 
+
+
+
+  //SiStripDetId SSdetId(detid);
+  //int moduleGeometry = SSdetId.moduleGeometry();
 
   //clean along the apv lines
   if (cluster &&
@@ -1096,11 +1134,18 @@ HitDeDxCollection getHitDeDx(const reco::DeDxHitInfo* dedxHits,
 
     int ClusterCharge = dedxHits->charge(h);
     if (detid.subdetId() >= 3) {  //for strip only
-      const SiStripCluster* cluster = dedxHits->stripCluster(h);
-      std::vector<int> amplitudes = convert(cluster->amplitudes());
+      auto const& amplls = dedxHits->stripCluster(h)->amplitudes();
+      std::vector<int> amplitudes;
+      for(unsigned int i=0;i < amplls.size();i++){
+        amplitudes.push_back((int)amplls[i]);
+
+      }
+      
+      //const SiStripCluster* cluster = dedxHits->stripCluster(h);
+      //std::vector<int> amplitudes = convert(cluster->amplitudes());
       if (crossTalkInvAlgo)
         amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
-      int firstStrip = cluster->firstStrip();
+      int firstStrip = dedxHits->stripCluster(h)->firstStrip();
       int prevAPV = -1;
       double gain = 1.0;
 
@@ -1189,8 +1234,17 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
     bool test_sat = false;
     if (detid.subdetId() < 3)
       continue;
-    const SiStripCluster* cluster = dedxHits->stripCluster(t);
-    std::vector<int> amplitudes = convert(cluster->amplitudes());
+    auto const& amplls = dedxHits->stripCluster(t)->amplitudes();
+    std::vector<int> amplitudes;
+    for(unsigned int i=0;i < amplls.size();i++){
+      amplitudes.push_back((int)amplls[i]);
+
+    }
+    //std::vector <uint8_t> amplitudestest = dedxHits->stripCluster(h)->amplitudes();
+    //std::vector<int> amplitudes = convert(amplitudestest);
+
+    //const SiStripCluster* cluster = dedxHits->stripCluster(t);
+    //std::vector<int> amplitudes = convert(cluster->amplitudes());
     for (unsigned int s = 0; s < amplitudes.size(); s++) {
       if (amplitudes[s] > 253)
         test_sat = true;
@@ -1224,12 +1278,35 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
 
     if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1)
       continue;
+    
+    
+    if(detid.subdetId() >= 3 ){ 
+      SiStripDetId SdetId(dedxHits->detId(h));
+      int moduleGeometry = 0;
+      if (SdetId.moduleGeometry()==SiStripModuleGeometry::IB1) moduleGeometry=1;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::IB2) moduleGeometry=2;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::OB1) moduleGeometry=3;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::OB2) moduleGeometry=4;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W1A) moduleGeometry=5;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W2A) moduleGeometry=6;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W3A) moduleGeometry=7;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W1B) moduleGeometry=8;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W2B) moduleGeometry=9;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W3B) moduleGeometry=10;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W4) moduleGeometry=11;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W5) moduleGeometry=12;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W6) moduleGeometry=13;
+      else if (SdetId.moduleGeometry()==SiStripModuleGeometry::W7) moduleGeometry=14;
 
-    if (detid.subdetId() >= 3) {  //for strip only
+     
+      auto const& ampllsb = dedxHits->stripCluster(h)->amplitudes();
+      std::vector<int> amplitudes;
+      for(unsigned int i=0;i < ampllsb.size();i++){
+        amplitudes.push_back((int)ampllsb[i]);
+      }
 
-      SiStripDetId Sdetid(dedxHits->detId(h));
-      const SiStripCluster* cluster = dedxHits->stripCluster(h);
-      std::vector<int> amplitudes = convert(cluster->amplitudes());
+      //const SiStripCluster* cluster = dedxHits->stripCluster(h);
+      //std::vector<int> amplitudes = convert(cluster->amplitudes());
 
       //////////////////////////////////////////////////////////////
       //
@@ -1245,12 +1322,12 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       if (crossTalkInvAlgo == 1)
         amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
       if (crossTalkInvAlgo == 2)
-        amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
+        amplitudes = Correction(amplitudes, moduleGeometry, rsat, 25, 40, 0.6);
       if (crossTalkInvAlgo == 3)
         amplitudes =
-            CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
+            CrossTalkInv(Correction(amplitudes, moduleGeometry, rsat, 25, 40, 0.6), 0.10, 0.04, false);
 
-      int firstStrip = cluster->firstStrip();
+      int firstStrip = dedxHits->stripCluster(h)->firstStrip();
       int prevAPV = -1;
       double gain = 1.0;
 
@@ -1300,16 +1377,31 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       //FIXME still relevant?
       //if(isStrangePdgId) ChargeOverPathlength /= 2;
 
-      int moduleGeometry = 0;  // underflow for debug
+
+      int moduleGeometrybis = 0;  // underflow for debug
       int layer = 0;
       if (detid.subdetId() < 3) {
-        moduleGeometry = 15;
+        moduleGeometrybis = 15;
         if (skipPixel)
           continue;
       }  // 15 == pixel
       else {
         SiStripDetId SSdetId(detid);
-        moduleGeometry = SSdetId.moduleGeometry();
+        if (SSdetId.moduleGeometry()==SiStripModuleGeometry::IB1) moduleGeometrybis=1;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::IB2) moduleGeometrybis=2;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::OB1) moduleGeometrybis=3;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::OB2) moduleGeometrybis=4;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W1A) moduleGeometrybis=5;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W2A) moduleGeometrybis=6;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W3A) moduleGeometrybis=7;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W1B) moduleGeometrybis=8;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W2B) moduleGeometrybis=9;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W3B) moduleGeometrybis=10;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W4) moduleGeometrybis=11;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W5) moduleGeometrybis=12;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W6) moduleGeometrybis=13;
+        else if (SSdetId.moduleGeometry()==SiStripModuleGeometry::W7) moduleGeometrybis=14;
+
       }
       if (detid.subdetId() == 3) {
         layer = ((detid >> 14) & 0x7);
@@ -1323,7 +1415,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       if (detid.subdetId() == 6) {
         layer = ((detid >> 5) & 0x7) + 13;
       }  //TEC
-      int BinX = templateHisto->GetXaxis()->FindBin(moduleGeometry);
+      int BinX = templateHisto->GetXaxis()->FindBin(moduleGeometrybis);
       if (useTemplateLayer)
         BinX = templateHisto->GetXaxis()->FindBin(layer);
       int BinY = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h) * 10.0);  //*10 because of cm-->mm

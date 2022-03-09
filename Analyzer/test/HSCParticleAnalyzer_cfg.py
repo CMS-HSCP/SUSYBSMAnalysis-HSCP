@@ -13,7 +13,7 @@ options.register('TYPE', 0,
     VarParsing.varType.int,
     "0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1"
 )
-options.register('SAMPLE', 'isData',
+options.register('SAMPLE', 'isSignal',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isData or isBckg or isSignal or isSignalSyst" 
@@ -23,7 +23,7 @@ options.register('NAME', 'Data',
     VarParsing.varType.string,
     "Name of the tree (pattern). e.g Gluino_13TeV_M2400"
 )
-options.register('ERA', '2017',
+options.register('ERA', '2022',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "ERA. e.g 2017A"
