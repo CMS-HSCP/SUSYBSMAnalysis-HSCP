@@ -114,6 +114,7 @@ HSCParticleProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // Fill the output collection with HSCP Candidate (the candiate only contains ref to muon AND/OR track object)
   *hscp = getHSCPSeedCollection(trackCollectionHandle, muonCollectionHandle, MTmuonCollectionHandle);
 
+  std::cout << "fill output collection with HSCP candidate, size of collection = " << hscp->size() << std::endl;
   // find the track ref for isolation purposed (main track is supposed to be the Iso track after refitting)
   for(susybsm::HSCParticleCollection::iterator hscpcandidate = hscp->begin(); hscpcandidate != hscp->end(); ++hscpcandidate) {
       // Matching is needed because input track collection and muon inner track may lightly differs due to track refit
@@ -224,6 +225,7 @@ std::vector<HSCParticle> HSCParticleProducer::getHSCPSeedCollection(edm::Handle<
 	if( fabs( (1.0/innertrack->pt())-(1.0/track->pt())) > maxInvPtDiff) continue;
 	float dR = deltaR(innertrack->momentum(), track->momentum());
 	if(dR <= minDR) isMuon=true;
+        std::cout << "Found a muon assigned to HSCP" << std::endl; 
       }
 
       if((track->p()<minTkP || (track->chi2()/track->ndof())>maxTkChi2 || track->found()<minTkHits) && !isMuon)continue;
@@ -251,6 +253,7 @@ std::vector<HSCParticle> HSCParticleProducer::getHSCPSeedCollection(edm::Handle<
 
       HSCParticle candidate;
       candidate.setMuon(muon);
+      std::cout << "associated to muon" << std::endl;
       if(found>=0){
 //        printf("MUON with Inner Track Matching --> DR = %6.2f (%6.2f %+6.2f %+6.2f):(%6.2f %+6.2f %+6.2f) vs (%6.2f %+6.2f %+6.2f)\n",dRMin,muon->pt(), muon->eta(), muon->phi(), innertrack->pt(), innertrack->eta(), innertrack->phi(), tracks[found]->pt(), tracks[found]->eta(), tracks[found]->phi() );
         candidate.setTrack(tracks[found]);
@@ -316,7 +319,7 @@ std::vector<HSCParticle> HSCParticleProducer::getHSCPSeedCollection(edm::Handle<
       candidate.setTrack(tracks[i]);
       HSCPCollection.push_back(candidate);
    }
-
+   std::cout << "End code, HSCPCollection is returned with a size = : " << HSCPCollection.size() << std::endl;
    return HSCPCollection;
 }
 

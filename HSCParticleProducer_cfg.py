@@ -5,7 +5,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 
 # defaults
-options.outputFile = 'HSCP.root'
+options.outputFile = 'HSCPtest.root'
 options.maxEvents = -1 # -1 means all events
 
 options.register('GTAG', '123X_mcRun3_2021_realistic_v4',
@@ -18,7 +18,7 @@ options.register('SAMPLE', 'isSignal',
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
 )
-options.register('isSkimmedSample', False,
+options.register('isSkimmedSample', True,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"

@@ -123,10 +123,10 @@ void BetaCalculatorECAL::addInfoToCandidate(HSCParticle& candidate, edm::Handle<
    std::map<int,GlobalPoint> trackExitPositionMap; // rawId to exit position (subtracting cry center)
    std::map<int,float> trackCrossedXtalCurvedMap; // rawId to trackLength
 
-   FreeTrajectoryState tkInnerState = trajectoryStateTransform::innerFreeState(track,bField);
+   FreeTrajectoryState tkInnerState = trajectoryStateTransform::innerFreeState(track,&*bField);
    // Build set of points in Ecal (necklace) using the propagator
    std::vector<SteppingHelixStateInfo> neckLace;
-   neckLace = calcEcalDeposit(&tkInnerState,*ecalDetIdAssociator, bField);
+   neckLace = calcEcalDeposit(&tkInnerState,*ecalDetIdAssociator, &*bField);
    // Initialize variables to be filled by the track-length function
    double totalLengthCurved = 0.;
    GlobalPoint internalPointCurved(0., 0., 0.);
@@ -266,7 +266,7 @@ std::vector<SteppingHelixStateInfo> BetaCalculatorECAL::calcEcalDeposit(const Fr
    SteppingHelixStateInfo trackOrigin(*tkInnerState);
 
    // Define Propagator
-   SteppingHelixPropagator* prop = new SteppingHelixPropagator (bField, alongMomentum);
+   SteppingHelixPropagator* prop = new SteppingHelixPropagator (&*bField, alongMomentum);
    prop -> setMaterialMode(false);
    prop -> applyRadX0Correction(true);
 
