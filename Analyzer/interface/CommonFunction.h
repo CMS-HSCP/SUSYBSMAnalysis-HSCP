@@ -1499,7 +1499,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
   return true;
 }
 
-reco::DeDxData computedEdx(const edm::Event& iEvent,
+reco::DeDxData computedEdx(const int& run_number,
                            string year,
                            const reco::DeDxHitInfo* dedxHits,
                            double* scaleFactors,
@@ -1648,7 +1648,7 @@ crossTalkInvAlgo=1;
     double scaleFactor = scaleFactors[0];
     if (detid.subdetId() < 3){
       scaleFactor *= scaleFactors[1];  // add pixel scaling
-      double pixelScaling = GetSFPixel(detid.subdetId(), detid, year, iEvent.id().run());
+      float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
       scaleFactor *= pixelScaling;
     }
 
@@ -1692,7 +1692,8 @@ crossTalkInvAlgo=1;
       //skip templates ias = 2 --> pixel only, with pixL1 or not
       if (skip_templates_ias == 2 && (
                   detid.subdetId()>2 ||
-                  (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1)
+                  //(skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1) //decoding mask for 2016 !
+                  (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
                   )
         ){continue;}
 
