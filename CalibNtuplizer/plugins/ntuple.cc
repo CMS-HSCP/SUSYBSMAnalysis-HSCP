@@ -1493,8 +1493,8 @@ if(probQonTrack!=0) {
          const reco::GenParticle* genCand = &(*GenColl)[i];
          if(genCand->pt()<5) continue;
          if(genCand->status()!=1)continue;
-         int AbsPdg=abs(genCand->pdgId());
-         if(AbsPdg<1000000 && AbsPdg!=17)continue;
+         //int AbsPdg=abs(genCand->pdgId());
+         //if(AbsPdg<1000000 && AbsPdg!=17)continue;
          double dR = deltaR(track->eta(), track->phi(), genCand->eta(), genCand->phi());
          if(dR<RMin){ 
            RMin=dR;

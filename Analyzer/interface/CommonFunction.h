@@ -70,8 +70,8 @@ void MakeDirectories(std::string path) { system((std::string("mkdir -p ") + path
 int factorial(int n) { return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n; }
 
 struct HitDeDx {
-  double dedx;
-  double dx;
+  float dedx;
+  float dx;
   bool isSat;
   bool passClusterCleaning;
   bool isInside;
@@ -84,13 +84,13 @@ private:
   TH1D* ratePdfPixel;
   TH1D* ratePdfStrip;
 
-  double eventRatePixel;
-  double eventRateStrip;
+  float eventRatePixel;
+  float eventRateStrip;
 
   bool is2016;
 
 public:
-  void setEventRate(double ratePixel = -1, double rateStrip = -1) {
+  void setEventRate(float ratePixel = -1, float rateStrip = -1) {
     if (ratePixel < 0) {
       eventRatePixel = ratePdfPixel->GetRandom();
       eventRatePixel -= 3.2;  //2.4; //subtract rate already present in the MC
@@ -106,8 +106,8 @@ public:
       eventRateStrip = rateStrip;
     }
 
-    eventRatePixel = std::max(eventRatePixel, 0.0);
-    eventRateStrip = std::max(eventRateStrip, 0.0);
+    eventRatePixel = std::max(eventRatePixel, 0.f);
+    eventRateStrip = std::max(eventRateStrip, 0.f);
   }
 
   void setPeriodHIPRate(bool is2016_, const char* ratePdfPixelName = nullptr, const char* ratePdfStripName = nullptr) {
@@ -241,10 +241,10 @@ public:
   }
   ~dedxHIPEmulator() {}
 
-  double getEventRatePixel() { return eventRatePixel; }
-  double getEventRateStrip() { return eventRateStrip; }
+  float getEventRatePixel() { return eventRatePixel; }
+  float getEventRateStrip() { return eventRateStrip; }
 
-  double fakeHIP(unsigned int subDet, double dedx) {
+  float fakeHIP(unsigned int subDet, float dedx) {
     if (subDet < 3 && rand() % 10000 < eventRatePixel)
       dedx = (0.6 + ((rand() % 15000) / 10000.0));
     if (subDet >= 3 && rand() % 10000 < eventRateStrip)
@@ -263,17 +263,17 @@ class L1BugEmulator {
 private:
   TH2D* h1;
   TH2D* h2;
-  double Weight;
+  float Weight;
 
 public:
-  L1BugEmulator(double preTrackingChangeL1IntLumi = 1., double IntegratedLuminosity = 1.) {
-    //UNUSED//double Weight    = preTrackingChangeL1IntLumi/IntegratedLuminosity;
+  L1BugEmulator(float preTrackingChangeL1IntLumi = 1., float IntegratedLuminosity = 1.) {
+    //UNUSED//float Weight    = preTrackingChangeL1IntLumi/IntegratedLuminosity;
     /*?maybe*/ Weight = preTrackingChangeL1IntLumi / IntegratedLuminosity;
-    double pTBins[] = {0.0, 52, 80, 120, 200, 500, 999999};
-    double EtaBins[] = {0.0, 0.9, 1.2, 2.1, 2.4, 999999};
+    float pTBins[] = {0.0, 52, 80, 120, 200, 500, 999999};
+    float EtaBins[] = {0.0, 0.9, 1.2, 2.1, 2.4, 999999};
 
-    unsigned int NumPtBins = static_cast<unsigned int>(sizeof(pTBins) / sizeof(double)) - 1;
-    unsigned int NumEtaBins = static_cast<unsigned int>(sizeof(EtaBins) / sizeof(double)) - 1;
+    unsigned int NumPtBins = static_cast<unsigned int>(sizeof(pTBins) / sizeof(float)) - 1;
+    unsigned int NumEtaBins = static_cast<unsigned int>(sizeof(EtaBins) / sizeof(float)) - 1;
 
     // first period
     h1 = new TH2D(
@@ -358,7 +358,7 @@ public:
     // delete h2;
   }
 
-  bool PassesL1Inefficiency(double pT, double Eta) {
+  bool PassesL1Inefficiency(float pT, float Eta) {
     if ((rand() % 9999 * 1.0) / 10000 < Weight)
       return (((rand() % 9999) * 1.0 / 10000) < h1->GetBinContent(h1->FindBin(pT, Eta)));
     else
@@ -370,14 +370,14 @@ public:
 class HIPTrackLossEmulator {
 private:
   TH1D* h;
-  double lossRate;
+  float lossRate;
 
 public:
   HIPTrackLossEmulator() {
-    double NVertexBins[] = {0, 5, 10, 15, 22, 28, 35, 9999};
+    float NVertexBins[] = {0, 5, 10, 15, 22, 28, 35, 9999};
     h = new TH1D("TrackLoss_vs_NVertex",
                  "TrackLoss_vs_NVertex",
-                 static_cast<unsigned int>(sizeof(NVertexBins) / sizeof(double)) - 1,
+                 static_cast<unsigned int>(sizeof(NVertexBins) / sizeof(float)) - 1,
                  NVertexBins);
     h->SetBinContent(h->FindBin(2.5), 1.000);
     h->SetBinContent(h->FindBin(7.5), 0.998);
@@ -502,9 +502,9 @@ std::vector<int> convert(const std::vector<unsigned char>& input) {
 }
 
 // compute deltaR between two point (eta,phi) (eta,phi)
-double deltaR(double eta1, double phi1, double eta2, double phi2) {
-  double deta = eta1 - eta2;
-  double dphi = phi1 - phi2;
+float deltaR(float eta1, float phi1, float eta2, float phi2) {
+  float deta = eta1 - eta2;
+  float dphi = phi1 - phi2;
   while (dphi > M_PI)
     dphi -= 2 * M_PI;
   while (dphi <= -M_PI)
@@ -514,7 +514,7 @@ double deltaR(double eta1, double phi1, double eta2, double phi2) {
 
 #ifdef FWCORE
 // compute the distance between a "reconstructed" HSCP candidate and the closest generated HSCP
-double DistToHSCP(const susybsm::HSCParticle& hscp,
+float DistToHSCP(const susybsm::HSCParticle& hscp,
                   const std::vector<reco::GenParticle>& genColl,
                   int& IndexOfClosest,
                   int TypeMode) {
@@ -530,7 +530,7 @@ double DistToHSCP(const susybsm::HSCParticle& hscp,
   if (track.isNull())
     return false;
 
-  double RMin = 9999;
+  float RMin = 9999;
   IndexOfClosest = -1;
   for (unsigned int g = 0; g < genColl.size(); g++) {
     if (genColl[g].pt() < 5)
@@ -540,7 +540,7 @@ double DistToHSCP(const susybsm::HSCParticle& hscp,
     int AbsPdg = abs(genColl[g].pdgId());
     if (AbsPdg < 1000000 && AbsPdg != 17)
       continue;
-    double dR = deltaR(track->eta(), track->phi(), genColl[g].eta(), genColl[g].phi());
+    float dR = deltaR(track->eta(), track->phi(), genColl[g].eta(), genColl[g].phi());
     if (dR < RMin) {
       RMin = dR;
       IndexOfClosest = g;
@@ -940,7 +940,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
 
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 
-const double TkModGeomThickness[] = {1,
+const float TkModGeomThickness[] = {1,
                                      0.029000,
                                      0.029000,
                                      0.047000,
@@ -955,7 +955,7 @@ const double TkModGeomThickness[] = {1,
                                      0.047000,
                                      0.047000,
                                      0.047000};
-const double TkModGeomLength[] = {1,
+const float TkModGeomLength[] = {1,
                                   5.844250,
                                   5.844250,
                                   9.306700,
@@ -970,7 +970,7 @@ const double TkModGeomLength[] = {1,
                                   7.363125,
                                   9.204400,
                                   10.235775};
-const double TkModGeomWidthB[] = {1,
+const float TkModGeomWidthB[] = {1,
                                   3.072000,
                                   3.072000,
                                   4.684800,
@@ -985,7 +985,7 @@ const double TkModGeomWidthB[] = {1,
                                   6.002559,
                                   5.235483,
                                   3.574395};
-const double TkModGeomWidthT[] = {1,
+const float TkModGeomWidthT[] = {1,
                                   3.072000,
                                   3.072000,
                                   4.684800,
@@ -1013,16 +1013,16 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
       (cluster->firstStrip() % 128 == 0 || (cluster->firstStrip() + cluster->amplitudes().size() % 128 == 127)))
     return false;
 
-  double nx, ny;
+  float nx, ny;
   if (moduleGeometry <= 4) {
     ny = hitPos.y() / TkModGeomLength[moduleGeometry];
     nx = hitPos.x() / TkModGeomWidthT[moduleGeometry];
   } else {
-    double offset =
+    float offset =
         TkModGeomLength[moduleGeometry] * (TkModGeomWidthT[moduleGeometry] + TkModGeomWidthB[moduleGeometry]) /
         (TkModGeomWidthT[moduleGeometry] -
          TkModGeomWidthB[moduleGeometry]);  // check sign if GeomWidthT[moduleGeometry] < TkModGeomWidthB[moduleGeometry] !!!
-    double tan_a = TkModGeomWidthT[moduleGeometry] / std::abs(offset + TkModGeomLength[moduleGeometry]);
+    float tan_a = TkModGeomWidthT[moduleGeometry] / std::abs(offset + TkModGeomLength[moduleGeometry]);
     ny = hitPos.y() / TkModGeomLength[moduleGeometry];
     nx = hitPos.x() / (tan_a * std::abs(hitPos.y() + offset));
   }
@@ -1096,21 +1096,21 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
 }
 
 reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
-                           double* scaleFactors,
+                           float* scaleFactors,
                            TH3* templateHisto = nullptr,
                            bool usePixel = false,
                            bool useClusterCleaning = true,
                            bool reverseProb = false,
                            bool useTruncated = false,
-                           std::unordered_map<unsigned int, double>* TrackerGains = nullptr,
+                           std::unordered_map<unsigned int, float>* TrackerGains = nullptr,
                            bool useStrip = true,
                            bool mustBeInside = false,
                            size_t MaxStripNOM = 999,
                            bool correctFEDSat = false,
                            int crossTalkInvAlgo = 0,
-                           double dropLowerDeDxValue = 0.0,
+                           float dropLowerDeDxValue = 0.0,
                            dedxHIPEmulator* hipEmulator = nullptr,
-                           double* dEdxErr = nullptr,
+                           float* dEdxErr = nullptr,
                            unsigned int pdgId = 0,
                            bool skipPixel = true,
                            bool useTemplateLayer = false,
@@ -1121,9 +1121,9 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
 
-  std::vector<double> vect;
-  std::vector<double> vectStrip;
-  std::vector<double> vectPixel;
+  std::vector<float> vect;
+  std::vector<float> vectStrip;
+  std::vector<float> vectPixel;
 
   // loop in order to have the number of saturated clusters in a track
   unsigned int nsatclust = 0;
@@ -1145,7 +1145,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
 
   unsigned int NSat = 0;
   unsigned int SiStripNOM = 0;
-  //double lowerStripDeDx=1000; UNUSED
+  //float lowerStripDeDx=1000; UNUSED
   //int lowerStripDeDxIndex=-1; UNUSED
   for (unsigned int h = 0; h < dedxHits->size(); h++) {
     DetId detid(dedxHits->detId(h));
@@ -1196,7 +1196,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
 
       int firstStrip = cluster->firstStrip();
       int prevAPV = -1;
-      double gain = 1.0;
+      float gain = 1.0;
 
       bool isSatCluster = false;
       ClusterCharge = 0;
@@ -1231,12 +1231,12 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
         NSat++;
     }
 
-    double scaleFactor = scaleFactors[0];
+    float scaleFactor = scaleFactors[0];
     if (detid.subdetId() < 3)
       scaleFactor *= scaleFactors[1];  // add pixel scaling
 
     if (templateHisto) {  //save discriminator probability
-      double ChargeOverPathlength =
+      float ChargeOverPathlength =
           scaleFactor * ClusterCharge / (dedxHits->pathlength(h) * 10.0 * (detid.subdetId() < 3 ? 265 : 1));
 
 
@@ -1285,14 +1285,14 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
         BinX = templateHisto->GetXaxis()->FindBin(layer);
       int BinY = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h) * 10.0);  //*10 because of cm-->mm
       int BinZ = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
-      double Prob = templateHisto->GetBinContent(BinX, BinY, BinZ);
+      float Prob = templateHisto->GetBinContent(BinX, BinY, BinZ);
       //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
       if (reverseProb)
         Prob = 1.0 - Prob;
       vect.push_back(Prob);  //save probability
     } else {
-      double Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-      double ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
+      float Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+      float ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
       if (hipEmulator)
         ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
 
@@ -1307,9 +1307,9 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
   }
 
   if (dropLowerDeDxValue > 0) {
-    std::vector<double> tmp(vect.size());
+    std::vector<float> tmp(vect.size());
     std::copy(vect.begin(), vect.end(), tmp.begin());
-    std::sort(tmp.begin(), tmp.end(), std::greater<double>());
+    std::sort(tmp.begin(), tmp.end(), std::greater<float>());
     int nTrunc = tmp.size() * dropLowerDeDxValue;
     vect.clear();
     for (unsigned int t = 0; t + nTrunc < tmp.size(); t++) {
@@ -1317,7 +1317,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
     }
   }
 
-  double result;
+  float result;
   int size = vect.size();
 
   if (size > 0) {
@@ -1344,7 +1344,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       } else {
         //Ias discriminator
         result = 1.0 / (12 * size);
-        std::sort(vect.begin(), vect.end(), std::less<double>());
+        std::sort(vect.begin(), vect.end(), std::less<float>());
         for (int i = 1; i <= size; i++) {
           result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
         }
@@ -1353,7 +1353,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
     } else {  //dEdx estimator
       if (useTruncated) {
         //truncated40 estimator
-        std::sort(vect.begin(), vect.end(), std::less<double>());
+        std::sort(vect.begin(), vect.end(), std::less<float>());
         result = 0;
         int nTrunc = size * 0.40;
         for (int i = 0; i + nTrunc < size; i++) {
@@ -1363,7 +1363,7 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
       } else {
         //harmonic2 estimator
         result = 0;
-        double expo = -2;
+        float expo = -2;
         if (dEdxErr)
           *dEdxErr = 0;
 
@@ -1386,25 +1386,25 @@ reco::DeDxData computedEdx(const reco::DeDxHitInfo* dedxHits,
 #endif  //FWCORE
 
 // compute mass out of a momentum and dEdx value
-double GetMass(double P, double I, double dEdxK, double dEdxC) {
-  double& K = dEdxK;
-  double& C = dEdxC;
+float GetMass(float P, float I, float dEdxK, float dEdxC) {
+  float& K = dEdxK;
+  float& C = dEdxC;
 
   if (I - C < 0)
     return -1;
   return sqrt((I - C) / K) * P;
 }
 
-double GetMassErr(double P, double PErr, double dEdx, double dEdxErr, double M, double dEdxK, double dEdxC) {
+float GetMassErr(float P, float PErr, float dEdx, float dEdxErr, float M, float dEdxK, float dEdxC) {
   if (M < 0)
     return -1;
-  double KErr = 0.2;
-  //double CErr     = 0.4; UNUSED
-  //double cErr     = 0.01; UNUSED
-  double Criteria = dEdx - dEdxC;
-  double Fac1 = P * P / (2 * M * dEdxK);
-  double Fac2 = pow(2 * M * M * dEdxK / (P * P), 2);
-  double MassErr = Fac1 * sqrt(Fac2 * pow(PErr / P, 2) + Criteria * Criteria * pow(KErr / dEdxK, 2) +
+  float KErr = 0.2;
+  //float CErr     = 0.4; UNUSED
+  //float cErr     = 0.01; UNUSED
+  float Criteria = dEdx - dEdxC;
+  float Fac1 = P * P / (2 * M * dEdxK);
+  float Fac2 = pow(2 * M * M * dEdxK / (P * P), 2);
+  float MassErr = Fac1 * sqrt(Fac2 * pow(PErr / P, 2) + Criteria * Criteria * pow(KErr / dEdxK, 2) +
                                dEdxErr * dEdxErr + dEdxC * dEdxC);
 
   if (std::isnan(MassErr) || std::isinf(MassErr))
@@ -1414,39 +1414,39 @@ double GetMassErr(double P, double PErr, double dEdx, double dEdxErr, double M, 
 }
 
 // pz compute Ick out of dEdx value
-double GetIck(double I, double dEdxK, double dEdxC) {
-  double& K = dEdxK;
-  double& C = dEdxC;
+float GetIck(float I, float dEdxK, float dEdxC) {
+  float& K = dEdxK;
+  float& C = dEdxC;
 
   return (I - C) / K;
 }
 
 // compute mass out of a beta and momentum value
-double GetMassFromBeta(double P, double beta) {
-  double gamma = 1 / sqrt(1 - beta * beta);
+float GetMassFromBeta(float P, float beta) {
+  float gamma = 1 / sqrt(1 - beta * beta);
   return P / (beta * gamma);
 }
 
 // compute mass out of a momentum and TOF value
-double GetTOFMass(double P, double TOF) { return GetMassFromBeta(P, 1 / TOF); }
+float GetTOFMass(float P, float TOF) { return GetMassFromBeta(P, 1 / TOF); }
 
 // estimate beta from a dEdx value, if dEdx is below the allowed threshold returns a negative beta value
-double GetIBeta(double I, double dEdxK, double dEdxC) {
-  double& K = dEdxK;
-  double& C = dEdxC;
+float GetIBeta(float I, float dEdxK, float dEdxC) {
+  float& K = dEdxK;
+  float& C = dEdxC;
 
-  double a = K / (I - C);
-  double b2 = a / (a + 1);
+  float a = K / (I - C);
+  float b2 = a / (a + 1);
   if (b2 < 0)
     return -1 * sqrt(b2);
   return sqrt(b2);
 }
 
 #ifdef FWCORE
-double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp) {
+float deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp) {
   reco::TrackRef track1 = hscp.trackRef();
 
-  double maxDr = -0.1;
+  float maxDr = -0.1;
   for (unsigned int c = 0; c < hscpColl.size(); c++) {
     reco::TrackRef track2;
     if (!hscpColl[c].trackRef().isNull()) {
@@ -1460,10 +1460,10 @@ double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const 
     if (fabs(track1->pt() - track2->pt()) < 1 &&
         deltaR(track1->eta(), track1->phi(), track2->eta(), track2->phi()) < 0.1)
       continue;  //Skip same tracks
-    //  double dR = deltaR(-1*track1->eta(), M_PI+track1->phi(), track2->eta(), track2->phi());
+    //  float dR = deltaR(-1*track1->eta(), M_PI+track1->phi(), track2->eta(), track2->phi());
     TVector3 v1 = TVector3(track1->momentum().x(), track1->momentum().y(), track1->momentum().z());
     TVector3 v2 = TVector3(track2->momentum().x(), track2->momentum().y(), track2->momentum().z());
-    double dR = v1.Angle(v2);
+    float dR = v1.Angle(v2);
     if (dR > maxDr)
       maxDr = dR;
   }
@@ -1475,8 +1475,8 @@ double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const 
 //     Method for Counting the number of muon stations used in track fit only counting DT and CSC stations.
 //
 //=============================================================
-int muonStations(const reco::HitPattern& hitPattern) {
-  int stations[4] = {0, 0, 0, 0};
+unsigned int muonStations(const reco::HitPattern& hitPattern) {
+  unsigned int stations[4] = {0, 0, 0, 0};
   for (int i = 0; i < hitPattern.numberOfAllHits(reco::HitPattern::HitCategory::TRACK_HITS); i++) {
     uint32_t pattern = hitPattern.getHitPattern(reco::HitPattern::HitCategory::TRACK_HITS, i);
     if (pattern == 0)
@@ -1562,8 +1562,8 @@ int HowManyChargedHSCP(const std::vector<reco::GenParticle>& genColl) {
 //
 //=============================================================
 void GetGenHSCPDecayLength(const std::vector<reco::GenParticle>& genColl,
-                           double& length1,
-                           double& length2,
+                           float& length1,
+                           float& length2,
                            bool onlyCharged) {
   length1 = -1;
   length2 = -1;
@@ -1594,10 +1594,10 @@ void GetGenHSCPDecayLength(const std::vector<reco::GenParticle>& genColl,
     // Now daughter has no daughters with the same PDG ID as mcParticle.
     // Next choose the daughter with the outermost production vertex, in case there are multiple vertices
     // (e.g., an electron delta ray can produce a vertex before the decay vertex)
-    double radiusLastVtx = -99;
+    float radiusLastVtx = -99;
     int idxDauLastVtx = -99;
     for (uint i = 0; i < daughter->numberOfDaughters(); i++) {
-      double radius = daughter->daughter(i)->vertex().R();
+      float radius = daughter->daughter(i)->vertex().R();
       if (radius > radiusLastVtx) {
         radiusLastVtx = radius;
         idxDauLastVtx = i;
@@ -1611,7 +1611,7 @@ void GetGenHSCPDecayLength(const std::vector<reco::GenParticle>& genColl,
 
     TVector3 source(mcParticle.vx(), mcParticle.vy(), mcParticle.vz());
     TVector3 decay(daughter->vx(), daughter->vy(), daughter->vz());
-    double ctau = (decay - source).Mag() / (mcParticle.p4().Beta() * mcParticle.p4().Gamma());
+    float ctau = (decay - source).Mag() / (mcParticle.p4().Beta() * mcParticle.p4().Gamma());
 
     if (length1 < 0) {
       length1 = ctau;
@@ -1633,7 +1633,7 @@ void GetGenHSCPDecayLength(const std::vector<reco::GenParticle>& genColl,
 //     Returns the generated beta of the two firsts HSCP in the events
 //
 //=============================================================
-void GetGenHSCPBeta(const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged) {
+void GetGenHSCPBeta(const std::vector<reco::GenParticle>& genColl, float& beta1, float& beta2, bool onlyCharged) {
   beta1 = -1;
   beta2 = -1;
   for (auto const& mcParticle : genColl) {
@@ -1653,7 +1653,7 @@ void GetGenHSCPBeta(const std::vector<reco::GenParticle>& genColl, double& beta1
 //      Return tk-based isolation with a PV constrain
 //
 //============================================================
-double TkBasedIsolationWithPVConstrain(const std::vector<reco::Track>& tkTracks,
+float TkBasedIsolationWithPVConstrain(const std::vector<reco::Track>& tkTracks,
                                        const reco::Vertex& PV,
                                        reco::TrackRef TkRef,
                                        const float& dRmax,

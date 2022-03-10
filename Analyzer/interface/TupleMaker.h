@@ -16,17 +16,17 @@ public:
                        bool isSignal,
                        unsigned int NCuts,
                        unsigned int NCuts_Flip,
-                       double PtHistoUpperBound,
-                       double MassHistoUpperBound,
+                       float PtHistoUpperBound,
+                       float MassHistoUpperBound,
                        int MassNBins,
-                       double IPbound,
+                       float IPbound,
                        int PredBins,
                        int EtaBins,
-                       double dEdxS_UpLim,
-                       double dEdxM_UpLim,
+                       float dEdxS_UpLim,
+                       float dEdxM_UpLim,
                        int DzRegions,
-                       double GlobalMinPt,
-                       double GlobalMinTOF);
+                       float GlobalMinPt,
+                       float GlobalMinTOF);
 
   void fillTreeBranches(Tuple *&tuple,
                         const unsigned int &Trig,
@@ -175,19 +175,19 @@ public:
                                     const reco::MuonTimeExtra *tof,
                                     Tuple *&tuple,
                                     int TypeMode,
-                                    double GlobalMinTOF,
+                                    float GlobalMinTOF,
                                     float Event_Weight,
                                     bool isCosmicSB,
                                     float DTRegion,
                                     const int MaxPredBins,
-                                    double DeDxK,
-                                    double DeDxC,
-                                    std::vector<double> CutPt,
-                                    std::vector<double> CutI,
-                                    std::vector<double> CutTOF,
-                                    std::vector<double> CutPt_Flip,
-                                    std::vector<double> CutI_Flip,
-                                    std::vector<double> CutTOF_Flip);
+                                    float DeDxK,
+                                    float DeDxC,
+                                    std::vector<float> CutPt,
+                                    std::vector<float> CutI,
+                                    std::vector<float> CutTOF,
+                                    std::vector<float> CutPt_Flip,
+                                    std::vector<float> CutI_Flip,
+                                    std::vector<float> CutTOF_Flip);
 };
 
 //=============================================================
@@ -205,17 +205,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                                  bool isSignal,
                                  unsigned int NCuts,
                                  unsigned int NCuts_Flip,
-                                 double PtHistoUpperBound,
-                                 double MassHistoUpperBound,
+                                 float PtHistoUpperBound,
+                                 float MassHistoUpperBound,
                                  int MassNBins,
-                                 double IPbound,
+                                 float IPbound,
                                  int PredBins,
                                  int EtaBins,
-                                 double dEdxS_UpLim,
-                                 double dEdxM_UpLim,
+                                 float dEdxS_UpLim,
+                                 float dEdxM_UpLim,
                                  int DzRegions,
-                                 double GlobalMinPt,
-                                 double GlobalMinTOF) {
+                                 float GlobalMinPt,
+                                 float GlobalMinTOF) {
   std::string Name;
 
   Name = "IntLumi";
@@ -444,7 +444,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Gen_DecayLength = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1000, 0, 1000);
   tuple->Gen_DecayLength->Sumw2();
   Name = "Beta_Gen";
-  tuple->Beta_Gen = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
+  tuple->Beta_Gen = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->Beta_Gen->Sumw2();
   Name = "Beta_GenChaged";
   tuple->Beta_GenCharged = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
@@ -549,9 +549,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_TOFError";
   tuple->BS_TOFError = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 0.25);
   tuple->BS_TOFError->Sumw2();
-  Name = "BS_PtErr";
-  tuple->BS_Pterr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
-  tuple->BS_Pterr->Sumw2();
+  Name = "BS_PtErrOverPt";
+  tuple->BS_PterrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
+  tuple->BS_PterrOverPt->Sumw2();
+  Name = "BS_PtErrOverPt2";
+  tuple->BS_PterrOverPt2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
+  tuple->BS_PterrOverPt2->Sumw2();
   Name = "BS_MPt";
   tuple->BS_MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   tuple->BS_MPt->Sumw2();
@@ -1676,19 +1679,19 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
                                               const reco::MuonTimeExtra *tof,
                                               Tuple *&tuple,
                                               int TypeMode,
-                                              double GlobalMinTOF,
+                                              float GlobalMinTOF,
                                               float Event_Weight,
                                               bool isCosmicSB,
                                               float DTRegion,
                                               const int MaxPredBins,
-                                              double DeDxK,
-                                              double DeDxC,
-                                              std::vector<double> CutPt,
-                                              std::vector<double> CutI,
-                                              std::vector<double> CutTOF,
-                                              std::vector<double> CutPt_Flip,
-                                              std::vector<double> CutI_Flip,
-                                              std::vector<double> CutTOF_Flip) {
+                                              float DeDxK,
+                                              float DeDxC,
+                                              std::vector<float> CutPt,
+                                              std::vector<float> CutI,
+                                              std::vector<float> CutTOF,
+                                              std::vector<float> CutPt_Flip,
+                                              std::vector<float> CutI_Flip,
+                                              std::vector<float> CutTOF_Flip) {
   using namespace std;
   using namespace edm;
 
@@ -1703,13 +1706,13 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     track = muon->standAloneMuon();
   }
 
-  double MuonTOF = tof ? tof->inverseBeta() : GlobalMinTOF;
+  float MuonTOF = tof ? tof->inverseBeta() : GlobalMinTOF;
 
-  double Is = 0;
+  float Is = 0;
   if (dedxSObj) {
     Is = dedxSObj->dEdx();
   }
-  double Ih = 0;
+  float Ih = 0;
   if (dedxMObj) {
     Ih = dedxMObj->dEdx();
   }
@@ -1740,7 +1743,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   //      TOF
 
   //Use different pt regions if using momentum from Stand Alone Muons
-  std::vector<double> PtLimits;
+  std::vector<float> PtLimits;
   if (TypeMode != 3) {
     PtLimits.push_back(100);
     PtLimits.push_back(80);
@@ -1823,9 +1826,9 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   }
 
   //	 if(dedxMObj) Ih=dedxMObj->dEdx();
-  double Ick = 0;
+  float Ick = 0;
   if (dedxMObj)
-    Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(double I, bool MC, double dEdxK, double dEdxC)
+    Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(float I, bool MC, float dEdxK, float dEdxC)
 
   // std::cout << "Loop on the cut index for signal region" << std::endl;
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {

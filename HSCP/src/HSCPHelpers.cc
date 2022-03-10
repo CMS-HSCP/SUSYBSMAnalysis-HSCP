@@ -35,8 +35,8 @@ namespace hscphelpers {
     return Prob_ChargePath;
   }
 
-  int muonStations(const reco::HitPattern& hitPattern) {
-    int stations[4] = {0, 0, 0, 0};
+  unsigned int muonStations(const reco::HitPattern& hitPattern) {
+    unsigned int stations[4] = {0, 0, 0, 0};
     for (int i = 0; i < hitPattern.numberOfValidTrackerHits(); i++) {
       uint32_t pattern = hitPattern.getHitPattern(reco::HitPattern::HitCategory::TRACK_HITS, i);
       if (pattern == 0)
@@ -50,12 +50,12 @@ namespace hscphelpers {
     return stations[0] + stations[1] + stations[2] + stations[3];
   }
 
-  double rescaledPt(const double& pt, const double& eta, const double& phi, const int& charge, const int& TypeMode) {
+  float rescaledPt(const float& pt, const float& eta, const float& phi, const int& charge, const int& TypeMode) {
     if (TypeMode != 3) {
-      double newInvPt = 1 / pt + 0.000236 - 0.000135 * pow(eta, 2) + charge * 0.000282 * TMath::Sin(phi - 1.337);
+      auto newInvPt = 1 / pt + 0.000236 - 0.000135 * pow(eta, 2) + charge * 0.000282 * TMath::Sin(phi - 1.337);
       return 1 / newInvPt;
     } else {
-      double newInvPt = (1. / pt) * 1.1;
+      auto newInvPt = (1. / pt) * 1.1;
       return 1 / newInvPt;
     }
   }

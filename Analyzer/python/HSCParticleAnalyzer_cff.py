@@ -1,8 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 import os
 
-PATH_TO_DATA = "{}/src/SUSYBSMAnalysis/HSCP/data".format(os.getenv('CMSSW_BASE'))
+from SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi import HSCParticleAnalyzer as analyzer 
 
+PATH_TO_DATA = "{}/src/SUSYBSMAnalysis/HSCP/data".format(os.getenv('CMSSW_BASE'))
+'''
 analyzer = cms.EDAnalyzer('Analyzer'
     # collections
     ,hscpCollection   = cms.InputTag("HSCParticleProducer")
@@ -82,3 +84,4 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,HasMCMatch            = cms.untracked.bool(False)
     ,DoTriggering          = cms.untracked.bool(True)
 )
+'''

@@ -289,7 +289,8 @@ struct Tuple {
   TProfile* BS_NOMoNOHvsPV;
   TH1F* BS_nDof;
   TH1F* BS_TOFError;
-  TH1F* BS_Pterr;
+  TH1F* BS_PterrOverPt;
+  TH1F* BS_PterrOverPt2;
   TH1F* BS_MPt;
   TH1F* BS_MIs;
   TH1F* BS_MIm;
