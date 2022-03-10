@@ -53,6 +53,7 @@ struct Tuple {
   std::vector<float> Tree_Ias;
   std::vector<float> Tree_Ias_noTIBnoTIDno3TEC;
   std::vector<float> Tree_Ias_PixelOnly;
+  std::vector<float> Tree_Ias_StripOnly;
   std::vector<float> Tree_Ih;
   std::vector<float> Tree_Ick;  //return (Ih-C)/K
   std::vector<float> Tree_Fmip;

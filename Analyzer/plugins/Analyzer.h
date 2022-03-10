@@ -288,11 +288,20 @@ private:
   unsigned int minMuStations = 2;
 
   // Thresholds for candidate preselection
+<<<<<<< HEAD
   float GlobalMaxEta = 2.1;      // cut on inner tracker track eta
   float GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
   float GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
   float GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction
   float GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF
+=======
+  double GlobalMaxEta = 2.1;      // cut on inner tracker track eta
+  double GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
+  double GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
+  double GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction //proposal: 0.05
+  double GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF
+  int GlobalMinQual = 2;          // cut on track quality (2 meaning HighPurity tracks)
+>>>>>>> 6f37c23ea2e77227a7492b1f62a1409b549da2ab
   unsigned int GlobalMinNOH = 8;  //7AMSB;      // cut on number of (valid) track pixel+strip hits
   unsigned int GlobalMinNOPH = 2;          // cut on number of (valid) track pixel hits
   float GlobalMinFOVH = 0.8;     //0.0AMSB;    // cut on fraction of valid track hits
@@ -407,7 +416,11 @@ private:
   const bool hasMCMatch_;
   const bool doTriggering_;
 
+<<<<<<< HEAD
   static constexpr const char* const MOD = "Analyzer";
+=======
+   
+>>>>>>> 6f37c23ea2e77227a7492b1f62a1409b549da2ab
 
 };
 #endif
