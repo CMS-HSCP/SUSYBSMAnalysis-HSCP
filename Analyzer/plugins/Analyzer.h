@@ -51,14 +51,12 @@
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPIsolation.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
-//#include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPDeDxInfo.h"
 // Muons
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtra.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtraMap.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 // Muons CSC segments
-//#include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
 #include "DataFormats/CSCRecHit/interface/CSCSegment.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
@@ -114,6 +112,8 @@
 #include "RecoLocalTracker/ClusterParameterEstimator/interface/PixelClusterParameterEstimator.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
 using namespace std;
 
@@ -127,17 +127,17 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-  double scaleFactor(double eta);
+  float scaleFactor(float eta);
 
   void initializeCuts(edm::Service<TFileService>& fs,
-                      vector<double>& CutPt,
-                      vector<double>& CutI,
-                      vector<double>& CutTOF,
-                      vector<double>& CutPt_Flip,
-                      vector<double>& CutI_Flip,
-                      vector<double>& CutTOF_Flip);
+                      vector<float>& CutPt,
+                      vector<float>& CutI,
+                      vector<float>& CutTOF,
+                      vector<float>& CutPt_Flip,
+                      vector<float>& CutI_Flip,
+                      vector<float>& CutTOF_Flip);
 
-  bool passPreselection(const susybsm::HSCParticle& hscp,
+  bool passPreselection(const reco::TrackRef track,
                         const reco::DeDxHitInfo* dedxHits,
                         const reco::DeDxData* dedxSObj,
                         const reco::DeDxData* dedxMObj,
@@ -146,11 +146,11 @@ public:
                         const float pixelProbs[],
                         float Event_Weight,
                         Tuple* tuple,
-                        const double& GenBeta,
+                        const float& GenBeta,
                         bool RescaleP,
-                        const double& RescaleI,
-                        const double& RescaleT,
-                        double MassErr,
+                        const float& RescaleI,
+                        const float& RescaleT,
+                        float MassErr,
                         bool Ih_Iso_cut = true);
 
   bool passSelection(const reco::TrackRef track,
@@ -162,18 +162,16 @@ public:
                      const int& CutIndex,
                      Tuple*& tuple,
                      const bool isFlip,
-                     const double& GenBeta,
+                     const float& GenBeta,
                      bool RescaleP,
-                     const double& RescaleI,
-                     const double& RescaleT);
+                     const float& RescaleI,
+                     const float& RescaleT);
 
-  //int  muonStations(const reco::HitPattern& hitPattern);
-  double RescaledPt(const double& pt, const double& eta, const double& phi, const int& charge);
+  float RescaledPt(const float& pt, const float& eta, const float& phi, const int& charge);
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
-  double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
+  float SegSep(const reco::TrackRef track, const edm::Event& iEvent, float& minPhi, float& minEta);
   float combineProbs(float probOnTrackWMulti, int numRecHits) const;
-  void calculateSyst(reco::TrackRef track,
-                     const susybsm::HSCParticle& hscp,
+  void calculateSyst(const reco::TrackRef track,
                      const reco::DeDxHitInfo* dedxHits,
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
@@ -182,8 +180,8 @@ public:
                      const float pixelProbs[],
                      float Event_Weight,
                      Tuple* tuple,
-                     const double& GenBeta,
-                     double MassErr,
+                     const float& GenBeta,
+                     float MassErr,
                      bool Ih_Iso_cut);
 
 private:
@@ -225,9 +223,9 @@ private:
 
   vector<string> trigger_met_, trigger_mu_;
 
-  vector<double> CutPt_, CutI_, CutTOF_;
-  vector<double> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;
-  //map<string, vector<double>> VCuts;
+  vector<float> CutPt_, CutI_, CutTOF_;
+  vector<float> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;
+  //map<string, vector<float>> VCuts;
 
   map<string, TProfile*> HCuts;
 
@@ -239,103 +237,102 @@ private:
   bool* HSCPTk_SystPU;
   bool* HSCPTk_SystHUp;
   bool* HSCPTk_SystHDown;
-  double* MaxMass;
-  double* MaxMass_SystP;
-  double* MaxMass_SystI;
-  double* MaxMass_SystT;
-  double* MaxMass_SystM;
-  double* MaxMass_SystPU;
-  double* MaxMass_SystHUp;
-  double* MaxMass_SystHDown;
+  float* MaxMass;
+  float* MaxMass_SystP;
+  float* MaxMass_SystI;
+  float* MaxMass_SystT;
+  float* MaxMass_SystM;
+  float* MaxMass_SystPU;
+  float* MaxMass_SystHUp;
+  float* MaxMass_SystHDown;
 
   const reco::MuonTimeExtra* tof;
   const reco::MuonTimeExtra* dttof;
   const reco::MuonTimeExtra* csctof;
 
-  double OpenAngle = -1;  //global variable needed by PassPreselection... Ugly isn't it?!
-  double TreeDXY = -1;
-  double TreeDZ = -1;
-  double TreeprobQonTrack = -1;
-  double TreeprobQonTracknoL1 = -1;
-  double TreeprobXYonTrack = -1;
-  double TreeprobXYonTracknoL1 = -1;
+  float OpenAngle = -1;  //global variable needed by PassPreselection... Ugly isn't it?!
+  float TreeDXY = -1;
+  float TreeDZ = -1;
+  float TreeprobQonTrack = -1;
+  float TreeprobQonTracknoL1 = -1;
+  float TreeprobXYonTrack = -1;
+  float TreeprobXYonTracknoL1 = -1;
   bool isCosmicSB = false;
   bool isSemiCosmicSB = false;
 
-  int TypeMode_;
-  int SampleType_;
-  string SampleName_;
-  string Period_;
+  unsigned int typeMode_;
+  unsigned int sampleType_;
+  string sampleName_;
+  string period_;
 
-  bool SkipSelectionPlot_;
+  bool skipSelectionPlot_;
 
   // binning for the pT, mass, IP distributions
-  double PtHistoUpperBound = 4000;
-  double MassHistoUpperBound = 4000;
-  int MassNBins = 400;
-  double IPbound = 1.0;
-  int PredBins =
-      0;  //  How many different bins the prediction is split in for analysis being run, sets how many histograms are actually initialized.
-  int EtaBins =
-      60;  //  How many bins we use for the background prediction method in Eta -- impacts background prediction method -- histograms with the name of the form "Pred_Eta*" in Analysis_PlotStructure.h
-  double dEdxS_UpLim = 1.0;
-  double dEdxM_UpLim = 30.0;
-  int DzRegions = 6;  //Number of different Dz side regions used to make cosmic background prediction
+  float ptHistoUpperBound_ = 4000;
+  float massHistoUpperBound_ = 4000;
+  unsigned int massNBins_ = 400;
+  float cutOnIPbound_ = 1.0;
+  unsigned int predBins_ = 0;
+  unsigned int etaBins_ = 60;
+  float dEdxS_UpLim_ = 1.0;
+  float dEdxM_UpLim_ = 30.0;
+  unsigned int numDzRegions_ = 6;
 
   //Variables used in the TOF only HSCP search
   float DTRegion = 0.9;       //Define the dividing line between DT and
   float CSCRegion = 0.9;      //CSC regions of CMS
   float CosmicMinDz = 70.;    //Min dz displacement to be tagged as cosmic muon
   float CosmicMaxDz = 120.;   //Max dz displacement for cosmic tagged tracks
-  double minSegEtaSep = 0.1;  //Minimum eta separation between SA track and muon segment on opposite side of detector
+  float minSegEtaSep = 0.1;  //Minimum eta separation between SA track and muon segment on opposite side of detector
 
-  int minMuStations = 2;
+  unsigned int minMuStations = 2;
 
   // Thresholds for candidate preselection
-  double GlobalMaxEta = 2.1;      // cut on inner tracker track eta
-  double GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
-  double GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
-  double GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction //proposal: 0.05
-  double GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF
+  float GlobalMaxEta = 2.1;      // cut on inner tracker track eta
+  float GlobalMaxV3D = 99999;    //0.50 cuts away signal;   // cut on 3D distance (cm) to closest vertex
+  float GlobalMaxDZ = 0.50;      // cut on 1D distance (cm) to closest vertex in "Z" direction
+  float GlobalMaxDXY = 0.50;     // cut on 2D distance (cm) to closest vertex in "R" direction
+  float GlobalMaxChi2 = 5.0;     // cut on Track maximal Chi2/NDF
   int GlobalMinQual = 2;          // cut on track quality (2 meaning HighPurity tracks)
   unsigned int GlobalMinNOH = 8;  //7AMSB;      // cut on number of (valid) track pixel+strip hits
-  int GlobalMinNOPH = 2;          // cut on number of (valid) track pixel hits
-  double GlobalMinFOVH = 0.8;     //0.0AMSB;    // cut on fraction of valid track hits
-  unsigned int GlobalMaxNOMHTillLast =
-      99999;  //1AMSB;     // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
-  double GlobalMinFOVHTillLast =
-      -99999;  //0.85AMSB;   // cut on the fraction of valid hits divided by total expected hits until the last one
-  unsigned int GlobalMinNOM =
-      6;  //7AMSB;      // cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
-  double GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
-  double GlobalMinNDOFDT = 6;          // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
-  double GlobalMinNDOFCSC = 6;         // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
-  double GlobalMaxTOFErr = 0.15;       //0.07;   // cut on error on muon TOF measurement
-  double GlobalMaxPterr = 0.25;        //0.50;//0.25;   // cut on error on track pT measurement
-  double GlobalMaxTIsol = 50;          // cut on tracker isolation (SumPt)
-  double GlobalMaxRelTIsol = 9999999;  // cut on relative tracker isolation (SumPt/Pt)
-  double GlobalMaxEIsol = 0.30;        // cut on calorimeter isolation (E/P)
-  double GlobalMinPt = 55.00;          // cut on pT    at PRE-SELECTION
-  double GlobalMinIs = 0.0;            // cut on dEdxS at PRE-SELECTION (dEdxS is generally a  discriminator)
-  double GlobalMinIm = 0.0;            // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
-  double GlobalMinTOF = 1.0;           // cut on TOF   at PRE-SELECTION
+  unsigned int GlobalMinNOPH = 2;          // cut on number of (valid) track pixel hits
+  float GlobalMinFOVH = 0.8;     //0.0AMSB;    // cut on fraction of valid track hits
+  // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
+  unsigned int GlobalMaxNOMHTillLast =  99999;
+  // cut on the fraction of valid hits divided by total expected hits until the last one
+  float GlobalMinFOVHTillLast = -99999;
+// cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+// /7AMSB
+  unsigned int GlobalMinNOM = 6;
+  float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
+  float GlobalMinNDOFDT = 6;          // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
+  float GlobalMinNDOFCSC = 6;         // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
+  float GlobalMaxTOFErr = 0.15;       //0.07;   // cut on error on muon TOF measurement
+  float globalMaxPterr_ = 0.25;        //0.50;//0.25;   // cut on error on track pT measurement
+  float GlobalMaxTIsol = 50;          // cut on tracker isolation (SumPt)
+  float GlobalMaxRelTIsol = 9999999;  // cut on relative tracker isolation (SumPt/Pt)
+  float GlobalMaxEIsol = 0.30;        // cut on calorimeter isolation (E/P)
+  float globalMinPt_ = 55.00;          // cut on pT    at PRE-SELECTION
+  float GlobalMinIs = 0.0;            // cut on dEdxS at PRE-SELECTION (dEdxS is generally a  discriminator)
+  float GlobalMinIm = 0.0;            // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
+  float globalMinTOF_ = 1.0;           // cut on TOF   at PRE-SELECTION
 
-  bool skipPixel = true;
-  bool useTemplateLayer = false;
+  bool skipPixel_ = true;
+  bool useTemplateLayer_ = false;
 
-  const int MaxPredBins =
-      6;  // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
+  // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
+  const int MaxPredBins = 6; 
 
-  /*double dEdxK_Data = 2.580;
-  double dEdxC_Data = 3.922;
-  double dEdxK_MC = 2.935;
-  double dEdxC_MC = 3.197;*/
+  /*float dEdxK_Data = 2.580;
+  float dEdxC_Data = 3.922;
+  float dEdxK_MC = 2.935;
+  float dEdxC_MC = 3.197;*/
 
   //Values determined by Caroline
-  double dEdxK_Data = 2.30;
-  double dEdxC_Data = 3.17;
-  double dEdxK_MC = 2.26;
-  double dEdxC_MC = 3.22;
+  float dEdxK_Data = 2.30;
+  float dEdxC_Data = 3.17;
+  float dEdxK_MC = 2.26;
+  float dEdxC_MC = 3.22;
 
 
   //=============================================================
@@ -344,33 +341,33 @@ private:
   //=============================================================
 
   TH3F* dEdxTemplates = nullptr;
-//  double DeDxSF_0 = 1.00000;  // [0]  unchanged
-//  double DeDxSF_1 = 1.41822;  // [1]  Pixel data to SiStrip data
+//  float DeDxSF_0 = 1.00000;  // [0]  unchanged
+//  float DeDxSF_1 = 1.41822;  // [1]  Pixel data to SiStrip data
  
   //data 2017 values determined by Caroline
-//  double DeDxSF_0 = 1.00000;  // [0]  unchanged
-//  double DeDxSF_1 = 1.0325;  // [1]  Pixel data to SiStrip data
+//  float DeDxSF_0 = 1.00000;  // [0]  unchanged
+//  float DeDxSF_1 = 1.0325;  // [1]  Pixel data to SiStrip data
  
-//  double DeDxSF_0 = 1.0079;  // MC 
-//  double DeDxSF_1 = 1.0875;  // 
+//  float DeDxSF_0 = 1.0079;  // MC 
+//  float DeDxSF_1 = 1.0875;  // 
 
-  double DeDxSF_0, DeDxSF_1;
-  double dEdxSF[2] = {DeDxSF_0, DeDxSF_1};
-  double DeDxK;
-  double DeDxC;
+  float dEdxSF_0_, dEdxSF_1_;
+  float dEdxSF[2] = {dEdxSF_0_, dEdxSF_1_};
+  float dEdxK_;
+  float dEdxC_;
 
   dedxGainCorrector trackerCorrector;
-  string DeDxTemplate;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
-  bool enableDeDxCalibration;
-  string DeDxCalibration;  //"Data13TeVGains_v2.root" if Data
-  string Geometry;         //CMS_GeomTree.root
-  string TimeOffset;       //MuonTimeOffset.txt
+  string dEdxTemplate_;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
+  bool enableDeDxCalibration_;
+  string dEdxCalibration_;  //"Data13TeVGains_v2.root" if Data
+  string geometry_;         //CMS_GeomTree.root
+  string timeOffset_;       //MuonTimeOffset.txt
   muonTimingCalculator tofCalculator;
 
-  double FMIPX = 4;
+  float theFMIPX_ = 4;
 
-  unsigned int STree = 0;
-  unsigned int SGTree = 0;
+  unsigned int saveTree_ = 0;
+  unsigned int saveGenTree_ = 0;
 
   // Emulators
   /*dedxHIPEmulator      HIPemulator;
@@ -390,8 +387,8 @@ private:
 
   float EventWeight_ = 1.;
   float GeneratorWeight_ = 1.;
-  //double SampleWeight_ = 1.;
-  double CrossSection_ = 1.;
+  //float SampleWeight_ = 1.;
+  float CrossSection_ = 1.;
   vector<float> PUSystFactor_;
 
   unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met
@@ -402,16 +399,16 @@ private:
 
   bool isMCglobal = false;
 
-  double preTrackingChangeL1IntLumi_ = 29679.982;  // pb
-  double IntegratedLuminosity_ = 33676.4;          //13TeV16
+  float preTrackingChangeL1IntLumi_ = 29679.982;  // pb
+  float IntegratedLuminosity_ = 33676.4;          //13TeV16
 
   const std::string pixelCPE_;
-  const double trackProbQCut_;
-  const int debugLevel_;
+  const float trackProbQCut_;
+  const int debug_;
   const bool hasMCMatch_;
   const bool doTriggering_;
 
-   
+  static constexpr const char* const MOD = "Analyzer";
 
 };
 #endif

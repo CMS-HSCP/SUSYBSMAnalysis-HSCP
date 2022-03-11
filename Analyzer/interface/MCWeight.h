@@ -13,15 +13,14 @@ public:
   ~MCWeight();
 
   void loadPileupWeights(TString period);
-  void getSampleWeights(TString period, const TString pattern, double &IntegratedLuminosity, double &CrossSection);
+  void getSampleWeights(TString period, const TString pattern, float &IntegratedLuminosity, float &CrossSection);
   double getFGluinoWeight(int NChargedHSCP, int TypeMode);
-  void getRHadronWeights(std::string sample_name, bool Rhadron, double &Wa, double &Wad, double &Waa, double &Wan);
-  //double getEventPUWeight(edm::Handle<std::vector<PileupSummaryInfo>> PupInfo, double &PUSystFactor);
+  void getRHadronWeights(std::string sample_name, bool Rhadron, float &Wa, float &Wad, float &Waa, float &Wan);
   double getEventPUWeight(const edm::Event &event,
                           edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfo,
                           std::vector<float> &PUSystFactor);
   //void signalCrossSection(int mass, double &xsec, double &xsec_unc);
-  //float fractionNegWeights(const TString pattern);
+  //double fractionNegWeights(const TString pattern);
 private:
   double WNC0;  //weight for signal event with 0 Charged HSCP
   double WNC1;  //weight for signal event with 1 Charged HSCP
@@ -202,8 +201,8 @@ double getCrossSection(const TString pattern) {
 //=============================================================
 void MCWeight::getSampleWeights(TString period,
                                 const TString pattern,
-                                double &IntegratedLuminosity,
-                                double &CrossSection) {
+                                float &IntegratedLuminosity,
+                                float &CrossSection) {
   IntegratedLuminosity = 1.;  // inverse pb
   if (period.Contains("2018"))
     IntegratedLuminosity = 58970.47;
@@ -248,7 +247,7 @@ double MCWeight::getFGluinoWeight(int NChargedHSCP, int TypeMode) {
 }
 
 void MCWeight::getRHadronWeights(
-    std::string sample_name, bool Rhadron, double &Wa, double &Wad, double &Waa, double &Wan) {
+    std::string sample_name, bool Rhadron, float &Wa, float &Wad, float &Waa, float &Wan) {
   //------------ weights for R-hadron samples ----------Start
 
   if (sample_name == "Gluino_13TeV16_M100N_f10") {

@@ -1,4 +1,5 @@
 // Original Author:  Loic Quertenmont
+// Modification by Tamas Almos Vami
 
 #ifndef SUSYBSMAnalysis_Analyzer_Tuple_h
 #define SUSYBSMAnalysis_Analyzer_Tuple_h
@@ -289,7 +290,8 @@ struct Tuple {
   TProfile* BS_NOMoNOHvsPV;
   TH1F* BS_nDof;
   TH1F* BS_TOFError;
-  TH1F* BS_Pterr;
+  TH1F* BS_PterrOverPt;
+  TH1F* BS_PterrOverPt2;
   TH1F* BS_MPt;
   TH1F* BS_MIs;
   TH1F* BS_MIm;
@@ -336,6 +338,8 @@ struct Tuple {
 
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
+
+  TH1F* CutFlow;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
