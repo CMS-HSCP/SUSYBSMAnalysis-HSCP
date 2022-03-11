@@ -217,30 +217,37 @@ struct Tuple {
   TH1F* TotalTE;
   TH1F* Total;
   TH1F* V3D;
-  TH1F* Chi2PerNdof;
-  TH1F* Qual;
-  TH1F* TNOH;
+  TH1F* N1Eta;
+  TH1F* N1Chi2PerNdof;
+  TH1F* N1Qual;
+  TH1F* N1TNOH;
+  TH1F* N1TNOPH;
+  TH1F* N1TNOHFraction;
   TH1F* TNOM;
   TH1F* nDof;
   TH1F* tofError;
-  TH1F* Pterr;
-  TH1F* MPt;
-  TH1F* MI;
+  TH1F* N1MPt;
+  TH1F* N1MIm;
   TH1F* MTOF;
   TH1F* TIsol;
-  TH1F* EIsol;
+  TH1F* N1EIsol;
   TH1F* SumpTOverpT;
   TH1F* Pt;
+  TH1F* N1PterrOverPt;
   TH1F* I;
   TH1F* TOF;
   TH1F* HSCPE;
   TH1F* NVTrack;
-  TH1F* Stations;
-  TH1F* Dxy;
-  TH1F* Dz;
-  TH1F* SegSep;
+  TH1F* N1Stations;
+  TH1F* N1Dxy;
+  TH1F* N1Dz;
+  TH1F* N1SegSep;
   TH1F* FailDz;
   TH1F* Basic;
+  TH1F* N1ProbQ;
+  TH1F* ProbQNoL1;
+  TH1F* N1ProbXY;
+  TH1F* ProbXYNoL1;
 
   TH1F* HSCPE_SystP;
   TH1F* HSCPE_SystI;
@@ -260,11 +267,6 @@ struct Tuple {
   TH1F* BS_ProbQNoL1;
   TH1F* BS_ProbXYNoL1;
   
-  TH1F* ProbQ;
-  TH1F* ProbQNoL1;
-  TH1F* ProbXY;
-  TH1F* ProbXYNoL1;
-
   TH1F* Beta_Matched;
   TH1F* Beta_PreselectedA;
   TH1F* Beta_PreselectedB;
@@ -338,6 +340,7 @@ struct Tuple {
 
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
+  TH2F* BS_PterrOverPtVsPterrOverPt2;
 
   TH1F* CutFlow;
 

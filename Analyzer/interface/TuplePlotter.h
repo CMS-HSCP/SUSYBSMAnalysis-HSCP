@@ -48,32 +48,40 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->TotalTE = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Total";
   tuple->Total = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1Eta";
+  tuple->N1Eta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
   Name = "V3D";
   tuple->V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Chi2PerNdof";
-  tuple->Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Qual";
-  tuple->Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "TNOH";
-  tuple->TNOH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1Chi2PerNdof";
+  tuple->N1Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1Qual";
+  tuple->N1Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1TNOH";
+  tuple->N1TNOH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1TNOPH";
+  tuple->N1TNOPH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "TNOM";
   tuple->TNOM = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1TNOHFraction";
+  tuple->N1TNOHFraction = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
   Name = "nDof";
   tuple->nDof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "tofError";
   tuple->tofError = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Pterr";
-  tuple->Pterr = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1PterrOverPt";
+  tuple->N1PterrOverPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "TIsol";
   tuple->TIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "EIsol";
-  tuple->EIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1EIsol";
+  tuple->N1EIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "SumpTOverpT";
   tuple->SumpTOverpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "MPt";
-  tuple->MPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "MI";
-  tuple->MI = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1MPt";
+  tuple->N1MPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1MIm";
+  tuple->N1MIm = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "MTOF";
   tuple->MTOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Pt";
@@ -87,20 +95,29 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
 
   Name = "NVTrack";
   tuple->NVTrack = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Stations";
-  tuple->Stations = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Dxy";
-  tuple->Dxy = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Dz";
-  tuple->Dz = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "SegSep";
-  tuple->SegSep = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1Stations";
+  tuple->N1Stations = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1Dxy";
+  tuple->N1Dxy = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1Dz";
+  tuple->N1Dz = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1SegSep";
+  tuple->N1SegSep = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "FailDz";
   tuple->FailDz = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Basic";
   tuple->Basic = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "CutFlow";
   tuple->CutFlow = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
+  Name = "N1ProbQ";
+  tuple->N1ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbQNoL1";
+  tuple->ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1ProbXY";
+  tuple->N1ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "ProbXYNoL1";
+  tuple->ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "HSCPE_SystP";
   tuple->HSCPE_SystP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -213,15 +230,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_ProbXYNoL1";
   tuple->BS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  
-  Name = "ProbQ";
-  tuple->ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "ProbQNoL1";
-  tuple->ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "ProbXY";
-  tuple->ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "ProbXYNoL1";
-  tuple->ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "Beta_Matched";
   tuple->Beta_Matched = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -403,6 +411,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BS_TOF_FailDz_CSC = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "genrecopT";
   tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_PterrOverPtVsPterrOverPt2";
+  tuple->BS_PterrOverPtVsPterrOverPt2 = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "genlevelpT";
   tuple->genlevelpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -571,7 +581,7 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
           HCuts_Pt->GetBinContent(CutIndex + 1),
           HCuts_I->GetBinContent(CutIndex + 1),
           HCuts_TOF->GetBinContent(CutIndex + 1));
-
+/*
   FILE* pFile = fopen(Buffer, "w");
 
   fprintf(pFile, "#################### %20s ####################\n", DirName_.c_str());
@@ -670,6 +680,7 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
   fprintf(pFile, "\n\n");
 
   fclose(pFile);
+*/
 }
 
 /*void TuplePlotter::CutFlowPlot(Tuple* tuple, TDirectory* dir, uint CutIndex, double ylow, double yhigh, bool setLog){

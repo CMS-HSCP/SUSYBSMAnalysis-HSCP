@@ -152,9 +152,7 @@ public:
                         const std::vector<float> &genmass,
                         const std::vector<float> &genpt,
                         const std::vector<float> &geneta,
-                        const std::vector<float> &genphi
-
-  );
+                        const std::vector<float> &genphi);
 
   void fillGenTreeBranches(Tuple *&tuple,
                            const unsigned int &Run,
@@ -233,32 +231,37 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->TotalTE = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Total";
   tuple->Total = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  Name = "N1Eta";
+  tuple->N1Eta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6);
+  tuple->N1Eta->Sumw2();
   Name = "V3D";
   tuple->V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10); 
-  Name = "Chi2PerNdof";
-  tuple->Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
-  Name = "Qual";
-  tuple->Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
-  Name = "TNOH";
-  tuple->TNOH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
+  Name = "N1Chi2PerNdof";
+  tuple->N1Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
+  Name = "N1Qual";
+  tuple->N1Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
+  Name = "N1TNOH";
+  tuple->N1TNOH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
   Name = "TNOM";
   tuple->TNOM = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
+  Name = "N1TNOPH";
+  tuple->N1TNOPH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 16, 0, 8);
+  Name = "N1TNOHFraction";
+  tuple->N1TNOHFraction = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 1);
   Name = "nDof";
   tuple->nDof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 40);
   Name = "tofError";
   tuple->tofError = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 0.25);
-  Name = "Pterr";
-  tuple->Pterr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
   Name = "TIsol";
   tuple->TIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 100);
-  Name = "EIsol";
-  tuple->EIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 1.5);
+  Name = "N1EIsol";
+  tuple->N1EIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 1.5);
   Name = "SumpTOverpT";
   tuple->SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
-  Name = "MPt";
-  tuple->MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
-  Name = "MI";
-  tuple->MI = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  Name = "N1MPt";
+  tuple->N1MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
+  Name = "N1MIm";
+  tuple->N1MIm = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
   Name = "MTOF";
   tuple->MTOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2, 5);
   Name = "Pt";
@@ -273,20 +276,35 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->HSCPE->Sumw2();
   Name = "NVTrack";
   tuple->NVTrack = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "Stations";
-  tuple->Stations = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "Dxy";
-  tuple->Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
-  Name = "Dz";
-  tuple->Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
-  Name = "SegSep";
-  tuple->SegSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  Name = "N1Stations";
+  tuple->N1Stations = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  Name = "N1Dxy";
+  tuple->N1Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
+  Name = "N1Dz";
+  tuple->N1Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
+  Name = "N1PtErrOverPt";
+  tuple->N1PterrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
+  tuple->N1PterrOverPt->Sumw2();
+  Name = "N1SegSep";
+  tuple->N1SegSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "FailDz";
   tuple->FailDz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Basic";
   tuple->Basic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "CutFlow";
   tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
+  Name = "N1ProbQ";
+  tuple->N1ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->N1ProbQ->Sumw2();
+  Name = "ProbQNoL1";
+  tuple->ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbQNoL1->Sumw2();
+  Name = "N1ProbXY";
+  tuple->N1ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->N1ProbXY->Sumw2();
+  Name = "ProbXYNoL1";
+  tuple->ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->ProbXYNoL1->Sumw2();
 
 
   Name = "HSCPE_SystP";
@@ -466,19 +484,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_ProbXYNoL1";
   tuple->BS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->BS_ProbXYNoL1->Sumw2();
-
-  Name = "ProbQ";
-  tuple->ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
-  tuple->ProbQ->Sumw2();
-  Name = "ProbQNoL1";
-  tuple->ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
-  tuple->ProbQNoL1->Sumw2();
-  Name = "ProbXY";
-  tuple->ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
-  tuple->ProbXY->Sumw2();
-  Name = "ProbXYNoL1";
-  tuple->ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
-  tuple->ProbXYNoL1->Sumw2();
 
   Name = "Beta_Matched";
   tuple->Beta_Matched = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
@@ -748,6 +753,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "genrecopT";
   tuple->genrecopT = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
   tuple->genrecopT->Sumw2();
+  Name = "BS_PterrOverPtVsPterrOverPt2";
+  tuple->BS_PterrOverPtVsPterrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 1.);
+  tuple->BS_PterrOverPtVsPterrOverPt2->Sumw2();
 
   Name = "genlevelpT";
   tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
