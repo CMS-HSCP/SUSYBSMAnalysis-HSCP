@@ -283,9 +283,9 @@ private:
   // Thresholds for candidate preselection
   float globalMaxEta_, globalMinPt_;
   unsigned int globalMinNOH_, globalMinNOPH_;
-  float globalMinFOVH_, trackProbQCut_, globalMaxChi2_, globalMaxEIsol_, globalMinIm_, globalMaxPterr_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_;
+  float globalMinFOVH_, trackProbQCut_, globalMaxChi2_, globalMaxEIsol_, globalMinIh_, globalMaxPterr_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_;
   unsigned int minMuStations_, globalMinNOM_;
-  //float globalMinPt_, globalMaxPterr_, globalMaxEta_, globalMaxDZ_, globalMaxDXY_, globalMaxChi2_, globalMinFOVH_, globalMinIs_, globalMinIm_;
+  //float globalMinPt_, globalMaxPterr_, globalMaxEta_, globalMaxDZ_, globalMaxDXY_, globalMaxChi2_, globalMinFOVH_, globalMinIs_, globalMinIh_;
   unsigned int globalMinQual_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement

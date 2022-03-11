@@ -227,7 +227,7 @@ struct Tuple {
   TH1F* nDof;
   TH1F* tofError;
   TH1F* N1MPt;
-  TH1F* N1MIm;
+  TH1F* N1MIh;
   TH1F* MTOF;
   TH1F* TIsol;
   TH1F* N1EIsol;
@@ -296,7 +296,7 @@ struct Tuple {
   TH1F* BS_PterrOverPt2;
   TH1F* BS_MPt;
   TH1F* BS_MIs;
-  TH1F* BS_MIm;
+  TH1F* BS_MIh;
   TH1F* BS_MTOF;
   TH1F* BS_TIsol;
   TH1F* BS_EIsol;
@@ -365,10 +365,10 @@ struct Tuple {
   TH2F* AS_Is;
   TH1F* BS_Is_PUA;
   TH1F* BS_Is_PUB;
-  TH1F* BS_Im;
-  TH2F* AS_Im;
-  TH1F* BS_Im_PUA;
-  TH1F* BS_Im_PUB;
+  TH1F* BS_Ih;
+  TH2F* AS_Ih;
+  TH1F* BS_Ih_PUA;
+  TH1F* BS_Ih_PUB;
   TH1F* BS_TOF;
   TH2F* AS_TOF;
   TH1F* BS_TOF_PUA;
@@ -379,7 +379,7 @@ struct Tuple {
   TH1F* BS_Pt_Cosmic;
 
   TH2F* BS_EtaIs;   //TH3F*  AS_EtaIs;
-  TH2F* BS_EtaIm;   //TH3F*  AS_EtaIm;
+  TH2F* BS_EtaIh;   //TH3F*  AS_EtaIh;
   TH2F* BS_EtaP;    //TH3F*  AS_EtaP;
   TH2F* BS_EtaPt;   //TH3F*  AS_EtaPt;
   TH2F* BS_EtaTOF;  //TH3F*  AS_EtaTOF;
@@ -388,18 +388,18 @@ struct Tuple {
 
   TH2F* BS_PIs;
   TH3F* AS_PIs;
-  TH2F* BS_PImHD;
-  TH2F* BS_PIm;
-  TH3F* AS_PIm;
+  TH2F* BS_PIhHD;
+  TH2F* BS_PIh;
+  TH3F* AS_PIh;
   TH2F* BS_PtIs;
   TH3F* AS_PtIs;
-  TH2F* BS_PtIm;
-  TH3F* AS_PtIm;
+  TH2F* BS_PtIh;
+  TH3F* AS_PtIh;
   TH2F* BS_PtTOF;
   TH2F* BS_TOFIs;
   TH3F* AS_TOFIs;
-  TH2F* BS_TOFIm;
-  TH3F* AS_TOFIm;
+  TH2F* BS_TOFIh;
+  TH3F* AS_TOFIh;
 
   //Prediction histograms
   TH1D* H_A;
@@ -507,15 +507,15 @@ struct Tuple {
   TH1D* CtrlIs_S3_TOF;
   TH1D* CtrlIs_S4_TOF;
 
-  TH1D* CtrlIm_S1_TOF;
-  TH1D* CtrlIm_S2_TOF;
-  TH1D* CtrlIm_S3_TOF;
-  TH1D* CtrlIm_S4_TOF;
+  TH1D* CtrlIh_S1_TOF;
+  TH1D* CtrlIh_S2_TOF;
+  TH1D* CtrlIh_S3_TOF;
+  TH1D* CtrlIh_S4_TOF;
 
-  TH1D* CtrlPt_S1_Im;
-  TH1D* CtrlPt_S2_Im;
-  TH1D* CtrlPt_S3_Im;
-  TH1D* CtrlPt_S4_Im;
+  TH1D* CtrlPt_S1_Ih;
+  TH1D* CtrlPt_S2_Ih;
+  TH1D* CtrlPt_S3_Ih;
+  TH1D* CtrlPt_S4_Ih;
 
   TH1D* CtrlPt_S1_TOF;
   TH1D* CtrlPt_S2_TOF;
