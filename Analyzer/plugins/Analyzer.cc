@@ -79,7 +79,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
       globalMaxChi2_(iConfig.getUntrackedParameter<double>("GlobalMaxChi2")),
       globalMaxEIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxEIsol")),
-      globalMinIm_(iConfig.getUntrackedParameter<double>("GlobalMinIm")),
+      globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIm")),
       globalMaxPterr_(iConfig.getUntrackedParameter<double>("GlobalMaxPterr")),
       globalMaxDZ_(iConfig.getUntrackedParameter<double>("GlobalMaxDZ")),
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
@@ -771,7 +771,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (highestPtGoodVertex < 0)
       highestPtGoodVertex = 0;
 
-    // Impact paramters dz and dxy
+    // Ihpact paramters dz and dxy
     float dz = track->dz(vertexColl[highestPtGoodVertex].position());
     float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
 
@@ -1810,7 +1810,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEIsol",0.30)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.5)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.5)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
-  desc.addUntracked("GlobalMinIm",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
+  desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Is,Ias,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
@@ -2111,7 +2111,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float validFractionTillLast =
     track->found() <= 0 ? -1 : track->found() / float(track->found() + missingHitsTillLast);
   
-  // Impact paramters dz and dxy
+  // Ihpact paramters dz and dxy
   float dz = track->dz(vertexColl[highestPtGoodVertex].position());
   float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
   
@@ -2156,7 +2156,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool cutDxy = (typeMode_ != 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
   bool cutPtErr = (typeMode_ != 3 && (track->ptError() / track->pt()) > globalMaxPterr_) ? true : false;
   bool cutMaxTKIso = ( IsoTK_SumEt > globalMaxTIsol_) ? true : false;
-  bool cutIh = (typeMode_ != 5 &&  Ih < globalMinIm_) || (typeMode_ == 5 && Ih > globalMinIm_) ? true : false;
+  bool cutIh = (typeMode_ != 5 &&  Ih < globalMinIh_) || (typeMode_ == 5 && Ih > globalMinIm_) ? true : false;
   
   // TOF only cuts
   bool cutMinMuStations = (typeMode_ == 3 &&  muonStations(track->hitPattern()) < minMuStations_) ? true : false;
@@ -2268,7 +2268,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BS_PterrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->BS_PterrOverPtVsPterrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->BS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
-    tuple->BS_MIm->Fill(Ih, Event_Weight);
+    tuple->BS_MIh->Fill(Ih, Event_Weight);
     tuple->BS_MIs->Fill(Is, Event_Weight);
   }
   
@@ -2305,7 +2305,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->N1EIsol->Fill(EoP, Event_Weight);
     }
     if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && ! cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1MIm->Fill(Ih, Event_Weight);
+      tuple->N1MIh->Fill(Ih, Event_Weight);
     }
     if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && !cutIh && ! cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
       tuple->N1PterrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
@@ -2682,7 +2682,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (dedxSObj)
       tuple->BS_EtaIs->Fill(track->eta(), dedxSObj->dEdx(), Event_Weight);
     if (dedxMObj)
-      tuple->BS_EtaIm->Fill(track->eta(), dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_EtaIh->Fill(track->eta(), dedxMObj->dEdx(), Event_Weight);
     tuple->BS_EtaP->Fill(track->eta(), track->p(), Event_Weight);
     tuple->BS_EtaPt->Fill(track->eta(), track->pt(), Event_Weight);
     if (tof)
@@ -2737,11 +2737,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (dedxSObj && DXYSB && DZSB && OASB)
       tuple->BS_Is_Cosmic->Fill(dedxSObj->dEdx(), Event_Weight);
     if (dedxMObj)
-      tuple->BS_Im->Fill(dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_Ih->Fill(dedxMObj->dEdx(), Event_Weight);
     if (dedxMObj && PUA)
-      tuple->BS_Im_PUA->Fill(dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_Ih_PUA->Fill(dedxMObj->dEdx(), Event_Weight);
     if (dedxMObj && PUB)
-      tuple->BS_Im_PUB->Fill(dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_Ih_PUB->Fill(dedxMObj->dEdx(), Event_Weight);
 
     if (tof) {
       tuple->BS_TOF->Fill(tof->inverseBeta(), Event_Weight);
@@ -2757,15 +2757,15 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
     if (dedxSObj && dedxMObj) {
       tuple->BS_PIs->Fill(track->p(), dedxSObj->dEdx(), Event_Weight);
-      tuple->BS_PImHD->Fill(track->p(), dedxMObj->dEdx(), Event_Weight);
-      tuple->BS_PIm->Fill(track->p(), dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_PIhHD->Fill(track->p(), dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_PIh->Fill(track->p(), dedxMObj->dEdx(), Event_Weight);
       tuple->BS_PtIs->Fill(track->pt(), dedxSObj->dEdx(), Event_Weight);
-      tuple->BS_PtIm->Fill(track->pt(), dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_PtIh->Fill(track->pt(), dedxMObj->dEdx(), Event_Weight);
     }
     if (dedxSObj && tof)
       tuple->BS_TOFIs->Fill(tof->inverseBeta(), dedxSObj->dEdx(), Event_Weight);
     if (dedxMObj && tof)
-      tuple->BS_TOFIm->Fill(tof->inverseBeta(), dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_TOFIh->Fill(tof->inverseBeta(), dedxMObj->dEdx(), Event_Weight);
 
     //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
     //Binning not used for other analyses
@@ -2862,18 +2862,18 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     tuple->AS_P->Fill(CutIndex, track->p(), Event_Weight);
     tuple->AS_Pt->Fill(CutIndex, track->pt(), Event_Weight);
     tuple->AS_Is->Fill(CutIndex, Is, Event_Weight);
-    tuple->AS_Im->Fill(CutIndex, Ih, Event_Weight);
+    tuple->AS_Ih->Fill(CutIndex, Ih, Event_Weight);
     tuple->AS_TOF->Fill(CutIndex, MuonTOF, Event_Weight);
     //tuple->AS_EtaIs->Fill(CutIndex,track->eta(),Is,Event_Weight);
-    //tuple->AS_EtaIm->Fill(CutIndex,track->eta(),Ih,Event_Weight);
+    //tuple->AS_EtaIh->Fill(CutIndex,track->eta(),Ih,Event_Weight);
     //tuple->AS_EtaP ->Fill(CutIndex,track->eta(),track->p(),Event_Weight);
     //tuple->AS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),Event_Weight);
     tuple->AS_PIs->Fill(CutIndex, track->p(), Is, Event_Weight);
-    tuple->AS_PIm->Fill(CutIndex, track->p(), Ih, Event_Weight);
+    tuple->AS_PIh->Fill(CutIndex, track->p(), Ih, Event_Weight);
     tuple->AS_PtIs->Fill(CutIndex, track->pt(), Is, Event_Weight);
-    tuple->AS_PtIm->Fill(CutIndex, track->pt(), Ih, Event_Weight);
+    tuple->AS_PtIh->Fill(CutIndex, track->pt(), Ih, Event_Weight);
     tuple->AS_TOFIs->Fill(CutIndex, MuonTOF, Is, Event_Weight);
-    tuple->AS_TOFIm->Fill(CutIndex, MuonTOF, Ih, Event_Weight);
+    tuple->AS_TOFIh->Fill(CutIndex, MuonTOF, Ih, Event_Weight);
   }
   return true;
 }

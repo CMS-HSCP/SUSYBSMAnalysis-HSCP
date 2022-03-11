@@ -260,8 +260,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
   Name = "N1MPt";
   tuple->N1MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
-  Name = "N1MIm";
-  tuple->N1MIm = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  Name = "N1MIh";
+  tuple->N1MIh = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
   Name = "MTOF";
   tuple->MTOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2, 5);
   Name = "Pt";
@@ -567,9 +567,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_MIs";
   tuple->BS_MIs = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim);
   tuple->BS_MIs->Sumw2();
-  Name = "BS_MIm";
-  tuple->BS_MIm = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
-  tuple->BS_MIm->Sumw2();
+  Name = "BS_MIh";
+  tuple->BS_MIh = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  tuple->BS_MIh->Sumw2();
   Name = "BS_MTOF";
   tuple->BS_MTOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2, 5);
   tuple->BS_MTOF->Sumw2();
@@ -621,15 +621,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_Is_Cosmic";
   tuple->BS_Is_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, dEdxS_UpLim);
   tuple->BS_Is_Cosmic->Sumw2();
-  Name = "BS_Im";
-  tuple->BS_Im = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
-  tuple->BS_Im->Sumw2();
-  Name = "BS_Im_PUA";
-  tuple->BS_Im_PUA = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
-  tuple->BS_Im_PUA->Sumw2();
-  Name = "BS_Im_PUB";
-  tuple->BS_Im_PUB = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
-  tuple->BS_Im_PUB->Sumw2();
+  Name = "BS_Ih";
+  tuple->BS_Ih = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  tuple->BS_Ih->Sumw2();
+  Name = "BS_Ih_PUA";
+  tuple->BS_Ih_PUA = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  tuple->BS_Ih_PUA->Sumw2();
+  Name = "BS_Ih_PUB";
+  tuple->BS_Ih_PUB = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  tuple->BS_Ih_PUB->Sumw2();
   Name = "BS_TOF";
   tuple->BS_TOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -1, 5);
   tuple->BS_TOF->Sumw2();
@@ -815,17 +815,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "AS_Is";
   tuple->AS_Is = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, dEdxS_UpLim);
   tuple->AS_Is->Sumw2();
-  Name = "AS_Im";
-  tuple->AS_Im = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxM_UpLim);
-  tuple->AS_Im->Sumw2();
+  Name = "AS_Ih";
+  tuple->AS_Ih = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxM_UpLim);
+  tuple->AS_Ih->Sumw2();
   Name = "AS_TOF";
   tuple->AS_TOF = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 1, 5);
   tuple->AS_TOF->Sumw2();
 
   Name = "BS_EtaIs";
   tuple->BS_EtaIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 50, 0, dEdxS_UpLim);
-  Name = "BS_EtaIm";
-  tuple->BS_EtaIm = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 100, 0, dEdxM_UpLim);
+  Name = "BS_EtaIh";
+  tuple->BS_EtaIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 100, 0, dEdxM_UpLim);
   Name = "BS_EtaP";
   tuple->BS_EtaP = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 50, 0, PtHistoUpperBound);
   Name = "BS_EtaPt";
@@ -838,44 +838,44 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_EtaDz = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 50, -IPbound, IPbound);
   Name = "BS_PIs";
   tuple->BS_PIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxS_UpLim);
-  Name = "BS_PImHD";
-  tuple->BS_PImHD = dir.make<TH2F>(Name.c_str(), Name.c_str(), 500, 0, PtHistoUpperBound, 1000, 0, dEdxM_UpLim);
-  Name = "BS_PIm";
-  tuple->BS_PIm = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
+  Name = "BS_PIhHD";
+  tuple->BS_PIhHD = dir.make<TH2F>(Name.c_str(), Name.c_str(), 500, 0, PtHistoUpperBound, 1000, 0, dEdxM_UpLim);
+  Name = "BS_PIh";
+  tuple->BS_PIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "BS_PtIs";
   tuple->BS_PtIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
-  Name = "BS_PtIm";
-  tuple->BS_PtIm = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
+  Name = "BS_PtIh";
+  tuple->BS_PtIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "BS_PtTOF";
   tuple->BS_PtTOF = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, 5);
   //   Name = "BS_TOFIs"; tuple->BS_TOFIs = dir.make<TH2F>(Name.c_str(), Name.c_str(),                   100, 1, 5, 100, 0, dEdxS_UpLim);
   Name = "BS_TOFIs";
   tuple->BS_TOFIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, 5, 50, 0, dEdxS_UpLim);
-  //   Name = "BS_TOFIm"; BS_TOFIm = dir.make<TH2F>(Name.c_str(), Name.c_str(),                   100, 1, 5, 200, 0, dEdxM_UpLim);
-  Name = "BS_TOFIm";
-  tuple->BS_TOFIm = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, 5, 100, 0, dEdxM_UpLim);
+  //   Name = "BS_TOFIh"; BS_TOFIm = dir.make<TH2F>(Name.c_str(), Name.c_str(),                   100, 1, 5, 200, 0, dEdxM_UpLim);
+  Name = "BS_TOFIh";
+  tuple->BS_TOFIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, 5, 100, 0, dEdxM_UpLim);
 
   //   Name = "AS_EtaIs"; AS_EtaIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, dEdxS_UpLim);
-  //   Name = "AS_EtaIm"; AS_EtaIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3,100, 0, dEdxM_UpLim);
+  //   Name = "AS_EtaIh"; AS_EtaIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3,100, 0, dEdxM_UpLim);
   //   Name = "AS_EtaP" ; AS_EtaP  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
   //   Name = "AS_EtaPt"; AS_EtaPt = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
   //   Name = "AS_EtaTOF"; AS_EtaTOF = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, 3);
   Name = "AS_PIs";
   tuple->AS_PIs =
       dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
-  Name = "AS_PIm";
-  tuple->AS_PIm =
+  Name = "AS_PIh";
+  tuple->AS_PIh =
       dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "AS_PtIs";
   tuple->AS_PtIs =
       dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
-  Name = "AS_PtIm";
-  tuple->AS_PtIm =
+  Name = "AS_PtIh";
+  tuple->AS_PtIh =
       dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "AS_TOFIs";
   tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 50, 0, dEdxS_UpLim);
-  Name = "AS_TOFIm";
-  tuple->AS_TOFIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
+  Name = "AS_TOFIh";
+  tuple->AS_TOFIh = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
 
   Name = "H_D_DzSidebands";
   tuple->H_D_DzSidebands = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, DzRegions, 0, DzRegions);
@@ -1144,18 +1144,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->CtrlPt_S4_Is = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, dEdxS_UpLim);
     tuple->CtrlPt_S4_Is->Sumw2();
 
-    Name = "CtrlPt_S1_Im";
-    tuple->CtrlPt_S1_Im = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S1_Im->Sumw2();
-    Name = "CtrlPt_S2_Im";
-    tuple->CtrlPt_S2_Im = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S2_Im->Sumw2();
-    Name = "CtrlPt_S3_Im";
-    tuple->CtrlPt_S3_Im = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S3_Im->Sumw2();
-    Name = "CtrlPt_S4_Im";
-    tuple->CtrlPt_S4_Im = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S4_Im->Sumw2();
+    Name = "CtrlPt_S1_Ih";
+    tuple->CtrlPt_S1_Ih = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
+    tuple->CtrlPt_S1_Ih->Sumw2();
+    Name = "CtrlPt_S2_Ih";
+    tuple->CtrlPt_S2_Ih = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
+    tuple->CtrlPt_S2_Ih->Sumw2();
+    Name = "CtrlPt_S3_Ih";
+    tuple->CtrlPt_S3_Ih = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
+    tuple->CtrlPt_S3_Ih->Sumw2();
+    Name = "CtrlPt_S4_Ih";
+    tuple->CtrlPt_S4_Ih = dir.make<TH1D>(Name.c_str(), Name.c_str(), 400, 0, dEdxM_UpLim);
+    tuple->CtrlPt_S4_Ih->Sumw2();
 
     Name = "CtrlIs_S1_TOF";
     tuple->CtrlIs_S1_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
@@ -1170,18 +1170,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->CtrlIs_S4_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
     tuple->CtrlIs_S4_TOF->Sumw2();
 
-    Name = "CtrlIm_S1_TOF";
-    tuple->CtrlIm_S1_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
-    tuple->CtrlIm_S1_TOF->Sumw2();
-    Name = "CtrlIm_S2_TOF";
-    tuple->CtrlIm_S2_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
-    tuple->CtrlIm_S2_TOF->Sumw2();
-    Name = "CtrlIm_S3_TOF";
-    tuple->CtrlIm_S3_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
-    tuple->CtrlIm_S3_TOF->Sumw2();
-    Name = "CtrlIm_S4_TOF";
-    tuple->CtrlIm_S4_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
-    tuple->CtrlIm_S4_TOF->Sumw2();
+    Name = "CtrlIh_S1_TOF";
+    tuple->CtrlIh_S1_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
+    tuple->CtrlIh_S1_TOF->Sumw2();
+    Name = "CtrlIh_S2_TOF";
+    tuple->CtrlIh_S2_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
+    tuple->CtrlIh_S2_TOF->Sumw2();
+    Name = "CtrlIh_S3_TOF";
+    tuple->CtrlIh_S3_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
+    tuple->CtrlIh_S3_TOF->Sumw2();
+    Name = "CtrlIh_S4_TOF";
+    tuple->CtrlIh_S4_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, 5);
+    tuple->CtrlIh_S4_TOF->Sumw2();
 
     Name = "CtrlPt_S1_TOF";
     tuple->CtrlPt_S1_TOF = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, -2, 7);
@@ -1780,28 +1780,28 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (!isCosmicSB) {
     if (track->pt() > PtLimits[0]) {
       tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S4_Im->Fill(Ih, Event_Weight);
+      tuple->CtrlPt_S4_Ih->Fill(Ih, Event_Weight);
       if (tof)
         tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
       if (tof && bin >= 0 && bin < MaxPredBins)
         tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
     } else if (track->pt() > PtLimits[1]) {
       tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S3_Im->Fill(Ih, Event_Weight);
+      tuple->CtrlPt_S3_Ih->Fill(Ih, Event_Weight);
       if (tof)
         tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
       if (tof && bin >= 0 && bin < MaxPredBins)
         tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
     } else if (track->pt() > PtLimits[2]) {
       tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S2_Im->Fill(Ih, Event_Weight);
+      tuple->CtrlPt_S2_Ih->Fill(Ih, Event_Weight);
       if (tof)
         tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
       if (tof && bin >= 0 && bin < MaxPredBins)
         tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
     } else {
       tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S1_Im->Fill(Ih, Event_Weight);
+      tuple->CtrlPt_S1_Ih->Fill(Ih, Event_Weight);
       if (tof)
         tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
       if (tof && bin >= 0 && bin < MaxPredBins)
@@ -1824,16 +1824,16 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
 
     if (Ih > 4.4) {
       if (tof)
-        tuple->CtrlIm_S4_TOF->Fill(MuonTOF, Event_Weight);
+        tuple->CtrlIh_S4_TOF->Fill(MuonTOF, Event_Weight);
     } else if (Ih > 4.1) {
       if (tof)
-        tuple->CtrlIm_S3_TOF->Fill(MuonTOF, Event_Weight);
+        tuple->CtrlIh_S3_TOF->Fill(MuonTOF, Event_Weight);
     } else if (Ih > 3.8) {
       if (tof)
-        tuple->CtrlIm_S2_TOF->Fill(MuonTOF, Event_Weight);
+        tuple->CtrlIh_S2_TOF->Fill(MuonTOF, Event_Weight);
     } else {
       if (tof)
-        tuple->CtrlIm_S1_TOF->Fill(MuonTOF, Event_Weight);
+        tuple->CtrlIh_S1_TOF->Fill(MuonTOF, Event_Weight);
     }
   }
 
