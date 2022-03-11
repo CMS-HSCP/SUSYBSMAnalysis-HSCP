@@ -79,7 +79,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
       globalMaxChi2_(iConfig.getUntrackedParameter<double>("GlobalMaxChi2")),
       globalMaxEIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxEIsol")),
-      globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIm")),
+      globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
       globalMaxPterr_(iConfig.getUntrackedParameter<double>("GlobalMaxPterr")),
       globalMaxDZ_(iConfig.getUntrackedParameter<double>("GlobalMaxDZ")),
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
@@ -2156,7 +2156,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool cutDxy = (typeMode_ != 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
   bool cutPtErr = (typeMode_ != 3 && (track->ptError() / track->pt()) > globalMaxPterr_) ? true : false;
   bool cutMaxTKIso = ( IsoTK_SumEt > globalMaxTIsol_) ? true : false;
-  bool cutIh = (typeMode_ != 5 &&  Ih < globalMinIh_) || (typeMode_ == 5 && Ih > globalMinIm_) ? true : false;
+  bool cutIh = (typeMode_ != 5 &&  Ih < globalMinIh_) || (typeMode_ == 5 && Ih > globalMinIh_) ? true : false;
   
   // TOF only cuts
   bool cutMinMuStations = (typeMode_ == 3 &&  muonStations(track->hitPattern()) < minMuStations_) ? true : false;
