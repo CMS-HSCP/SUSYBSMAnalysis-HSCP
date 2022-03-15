@@ -166,6 +166,7 @@ struct Tuple {
 
   TH1F* CutFlow_nHSCP;
 
+
   TH2F* Mass;
   TH2F* MassTOF;
   TH2F* MassComb;
@@ -223,7 +224,7 @@ struct Tuple {
   TH1F* N1TNOH;
   TH1F* N1TNOPH;
   TH1F* N1TNOHFraction;
-  TH1F* TNOM;
+  TH1F* N1TNOM;
   TH1F* nDof;
   TH1F* tofError;
   TH1F* N1MPt;
@@ -231,9 +232,9 @@ struct Tuple {
   TH1F* MTOF;
   TH1F* TIsol;
   TH1F* N1EIsol;
-  TH1F* SumpTOverpT;
+  TH1F* N1SumpTOverpT;
   TH1F* Pt;
-  TH1F* N1PterrOverPt;
+  TH1F* N1PtErrOverPt;
   TH1F* I;
   TH1F* TOF;
   TH1F* HSCPE;
@@ -292,8 +293,8 @@ struct Tuple {
   TProfile* BS_NOMoNOHvsPV;
   TH1F* BS_nDof;
   TH1F* BS_TOFError;
-  TH1F* BS_PterrOverPt;
-  TH1F* BS_PterrOverPt2;
+  TH1F* BS_PtErrOverPt;
+  TH1F* BS_PtErrOverPt2;
   TH1F* BS_MPt;
   TH1F* BS_MIs;
   TH1F* BS_MIh;
@@ -340,9 +341,11 @@ struct Tuple {
 
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
-  TH2F* BS_PterrOverPtVsPterrOverPt2;
+  TH2F* BS_PtErrOverPtVsPtErrOverPt2;
 
   TH1F* CutFlow;
+  TH1F* CutFlowProbQLast;
+  TH1F* CutFlowProbQFirst;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;

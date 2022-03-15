@@ -11,12 +11,15 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v16p3:
+// v16p8:
 // - change double to float
 // - create fillDescription
 // - intro pterrOverPt vs pterrOverPt2
 // - change the order of preselection cuts
 // - N-1 plots
+// - Add two more cutflow histos, change boundary for pterrOverPt2
+// - Fix logic for new cutflow, fix the  change boundary for pterrOverPt2
+// - Make cuts into an array
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -80,7 +83,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMaxChi2_(iConfig.getUntrackedParameter<double>("GlobalMaxChi2")),
       globalMaxEIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxEIsol")),
       globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
-      globalMaxPterr_(iConfig.getUntrackedParameter<double>("GlobalMaxPterr")),
+      globalMaxPtErr_(iConfig.getUntrackedParameter<double>("GlobalMaxPtErr")),
       globalMaxDZ_(iConfig.getUntrackedParameter<double>("GlobalMaxDZ")),
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
@@ -1799,7 +1802,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
   desc.addUntracked("DoTriggering",true)->setComment("Boolean to dicde whether we want to use triggers");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
-  desc.addUntracked("GlobalMaxPterr",0.25)->setComment("Cut on error on track pT measurement");
+  desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxEta",2.1)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
   desc.addUntracked("GlobalMinNOH",8)->setComment("Cut on number of (valid) track pixel+strip hits");
@@ -2120,7 +2123,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float probXYonTrack = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
   
-  // what do PUA and PUB stand for??
+  // TODO: what do PUA and PUB stand for??
   bool PUA = (vertexColl.size() < 15);
   bool PUB = (vertexColl.size() >= 15);
   
@@ -2141,80 +2144,151 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool cutMinPt = (track->pt() < globalMinPt_) ? true : false;
-  bool cutMaxEtaCut = (fabs(track->eta()) > globalMaxEta_) ? true : false;
-  bool cutMinNumOfFoundHits = (typeMode_ != 3 && track->found() < globalMinNOH_) ? true : false;
-  bool cutMinNumOfPixHits = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) < globalMinNOPH_) ? true : false;
-  bool cutMinFractOfValidHits = (typeMode_ != 3 && track->validFraction() < globalMinFOVH_) ? true : false;
-  bool cutMinNumOfDeDxHits  = (numDeDxHits < globalMinNOM_)  ? true : false;
-  bool cutProbQ = (probQonTrack > trackProbQCut_ || probQonTrackNoLayer1 > trackProbQCut_) ? true : false;
-  bool cutProbXY = (probXYonTrack <= 0.0 || probXYonTrack >= 1.0)  ? true : false;
-  bool cutHighPurity = (typeMode_ != 3 && !track->quality(reco::TrackBase::highPurity)) ? true : false;
-  bool cutChi2OverNdof = (typeMode_ != 3 && track->chi2() / track->ndof() > globalMaxChi2_) ? true : false;
-  bool cutEoP = (EoP > globalMaxEIsol_) ? true : false;
-  bool cutDz = (typeMode_ != 5 && fabs(dz) > globalMaxDZ_) ? true : false;
-  bool cutDxy = (typeMode_ != 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
-  bool cutPtErr = (typeMode_ != 3 && (track->ptError() / track->pt()) > globalMaxPterr_) ? true : false;
-  bool cutMaxTKIso = ( IsoTK_SumEt > globalMaxTIsol_) ? true : false;
-  bool cutIh = (typeMode_ != 5 &&  Ih < globalMinIh_) || (typeMode_ == 5 && Ih > globalMinIh_) ? true : false;
+  bool passedCutsArray[20];
+  std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
+  // No cut, i.e. events after trigger
+  passedCutsArray[0]  = true;
+  // Check if eta is inside the max eta cut
+  passedCutsArray[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+  // Cut on number of matched muon stations
+  passedCutsArray[2]  = (track->pt() > globalMinPt_) ? true : false;
+  // Check the number of found hits (measurements)
+  passedCutsArray[3]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
+  // Check the number of pixel hits
+  passedCutsArray[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+  // Check the min fraction of valid hits
+  passedCutsArray[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+  // Cut for the number of dEdx hits
+  passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+  // Cut away background events based on the probQ
+  passedCutsArray[7]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  // This should be revised, for now switching it off
+  passedCutsArray[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
+  // Select only high purity tracks
+  passedCutsArray[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+  // Cut on the chi2 / ndof
+  passedCutsArray[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+  // Cut on the energy over momenta
+  passedCutsArray[11] = (EoP < globalMaxEIsol_) ? true : false;
+  // Cut on the impact parameter
+  passedCutsArray[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
+  passedCutsArray[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
+  // Cut on the uncertainty of the pt measurement
+  passedCutsArray[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+  // Cut on the tracker based isolation
+  passedCutsArray[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  // Cut on min Ih (or max for fractionally charged)
+  passedCutsArray[16] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
   // TOF only cuts
-  bool cutMinMuStations = (typeMode_ == 3 &&  muonStations(track->hitPattern()) < minMuStations_) ? true : false;
-  bool cutPhiTOFOnly = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
-  bool cutEtaTOFOnly = (typeMode_ == 3 && fabs(minEta) < minSegEtaSep) ? true : false;
+  passedCutsArray[17] = (typeMode_ == 3 &&  muonStations(track->hitPattern()) > minMuStations_) ? true : false;
+  passedCutsArray[18] = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
+  passedCutsArray[19] = (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) ? true : false;
   
-  // Not used cuts
+  // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
   // bool cutMinNumOfMissingHits = (typeMode_ != 3 && missingHitsTillLast > GlobalMaxNOMHTillLast) ? true : false;
   // cut on the fraction of valid hits divided by total expected hits until the last one
   // bool cutMinFractOfValidHitsTillLast = (typeMode_ != 3 && validFractionTillLast < GlobalMinFOVHTillLast) ? true : false;
   // cut on relative tracker isolation (SumPt/Pt)
   // bool cutRelTKIso = ( IsoTK_SumEt / track->pt() > GlobalMaxRelTIsol)  ? true : false;
+  // Cut for number of DOF in TOF ana
   
   // CutFlow in a single plot
   if (tuple) {
-    bool passNextCut = !cutMaxEtaCut;
-    if (passNextCut) {tuple->CutFlow->Fill(1.5, Event_Weight);}
-    passNextCut = passNextCut && !cutMinPt;
-    if (passNextCut) {tuple->CutFlow->Fill(2.5, Event_Weight);}
-    passNextCut = passNextCut && !cutMinNumOfFoundHits;
-    if (passNextCut)  {tuple->CutFlow->Fill(3.5, Event_Weight);}
-    passNextCut = passNextCut && !cutMinNumOfPixHits;
-    if (passNextCut)  {tuple->CutFlow->Fill(4.5, Event_Weight);}
-    passNextCut = passNextCut && !cutMinFractOfValidHits;
-    if (passNextCut)  {tuple->CutFlow->Fill(5.5, Event_Weight);}
-    passNextCut = passNextCut && !cutProbQ;
-    if (passNextCut)  {tuple->CutFlow->Fill(6.5, Event_Weight);}
-    passNextCut = passNextCut && !cutProbXY;
-    if (passNextCut)  {tuple->CutFlow->Fill(7.5, Event_Weight);}
-    passNextCut = passNextCut && !cutHighPurity;
-    if (passNextCut)  {tuple->CutFlow->Fill(8.5, Event_Weight);}
-    passNextCut = passNextCut && !cutChi2OverNdof;
-    if (passNextCut)  {tuple->CutFlow->Fill(9.5, Event_Weight);}
-    passNextCut = passNextCut && !cutEoP;
-    if (passNextCut)  {tuple->CutFlow->Fill(10.5, Event_Weight);}
-    passNextCut = passNextCut && !cutIh;
-    if (passNextCut)  {tuple->CutFlow->Fill(11.5, Event_Weight);}
-    passNextCut = passNextCut && !cutPtErr;
-    if (passNextCut)  {tuple->CutFlow->Fill(12.5, Event_Weight);}
-    passNextCut = passNextCut && !cutDz;
-    if (passNextCut)  {tuple->CutFlow->Fill(13.5, Event_Weight);}
-    passNextCut = passNextCut && !cutDxy;
-    if (passNextCut)  {tuple->CutFlow->Fill(14.5, Event_Weight);}
-    passNextCut = passNextCut && !cutMaxTKIso;
-    if (passNextCut)  {tuple->CutFlow->Fill(15.5, Event_Weight);}
-    passNextCut = passNextCut && !cutMinMuStations;
-    if (passNextCut)  {tuple->CutFlow->Fill(16.5, Event_Weight);}
-    passNextCut = passNextCut && !cutEtaTOFOnly;
-    if (passNextCut)  {tuple->CutFlow->Fill(17.5, Event_Weight);}
-    passNextCut = passNextCut && !cutPhiTOFOnly;
-    if (passNextCut)  {tuple->CutFlow->Fill(18.5, Event_Weight);}
-//    passNextCut = passNextCut && !cutRelTKIso;
-//    passNextCut = passNextCut && !cutMinNumOfMissingHits;
-//    passNextCut = passNextCut && !cutMinFractOfValidHitsTillLast;
+    for (size_t i=0;i<sizeof(passedCutsArray);i++) {
+      bool allCutsPassedSoFar = true;
+      for (size_t j=0;j<=i;j++) {
+        if (!passedCutsArray[j]) {
+          allCutsPassedSoFar = false;
+        }
+      }
+      if (allCutsPassedSoFar) {
+        tuple->CutFlow->Fill((i+0.5), Event_Weight);
+      }
+    }
   }
+    
+    // Preselection cuts
+    bool passedCutsArray2[20];
+    std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
+    passedCutsArray2[0]  = true;
+    passedCutsArray2[1]  = (track->pt() > globalMinPt_) ? true : false;
+    passedCutsArray2[2]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+    passedCutsArray2[3]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+    passedCutsArray2[4]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
+    passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+    passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+    passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+    passedCutsArray2[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
+    passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+    passedCutsArray2[10] =(typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
+    passedCutsArray2[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
+    passedCutsArray2[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
+    passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+    passedCutsArray2[16] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
+    // TOF only cuts
+    passedCutsArray2[17] = (typeMode_ == 3 &&  muonStations(track->hitPattern()) > minMuStations_) ? true : false;
+    passedCutsArray2[18] = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
+    passedCutsArray2[19] = (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) ? true : false;
+    
+    // CutFlow in a single plot
+    if (tuple) {
+      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
+        bool allCutsPassedSoFar = true;
+        for (size_t j=0;j<=i;j++) {
+          if (!passedCutsArray2[j]) {
+            allCutsPassedSoFar = false;
+          }
+        }
+        if (allCutsPassedSoFar) {
+          tuple->CutFlowProbQFirst->Fill((i+0.5), Event_Weight);
+        }
+      }
+    }
   
-
+    // Preselection cuts
+    bool passedCutsArray3[20];
+    std::fill(std::begin(passedCutsArray3), std::end(passedCutsArray3),false);
+    passedCutsArray3[0]  = true;
+    passedCutsArray3[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+    passedCutsArray3[2]  = (track->pt() > globalMinPt_) ? true : false;
+    passedCutsArray3[3]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
+    passedCutsArray3[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+    passedCutsArray3[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+    passedCutsArray3[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+    passedCutsArray3[7]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
+    passedCutsArray3[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+    passedCutsArray3[9]  = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+    passedCutsArray3[10] = (EoP < globalMaxEIsol_) ? true : false;
+    passedCutsArray3[11] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
+    passedCutsArray3[12] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
+    passedCutsArray3[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+    passedCutsArray3[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+    passedCutsArray3[15] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
+    passedCutsArray3[16] = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+    // TOF only cuts
+    passedCutsArray3[17] = (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_) ? true : false;
+    passedCutsArray3[18] = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
+    passedCutsArray3[19] = (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) ? true : false;
+  
+    if (tuple) {
+      // CutFlow in a single plot
+      for (size_t i=0;i<sizeof(passedCutsArray3);i++) {
+        bool allCutsPassedSoFar = true;
+        for (size_t j=0;j<=i;j++) {
+          if (!passedCutsArray3[j]) {
+            allCutsPassedSoFar = false;
+          }
+        }
+        if (allCutsPassedSoFar) {
+          tuple->CutFlowProbQLast->Fill((i+0.5), Event_Weight);
+        }
+      }
+    }
+  
   // Before (pre)selection plots
   if (tuple) {
     if (GenBeta >= 0) {
@@ -2264,185 +2338,58 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BS_V3D->Fill(v3d, Event_Weight);
     tuple->BS_EIsol->Fill(EoP, Event_Weight);
     tuple->BS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
-    tuple->BS_PterrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
-    tuple->BS_PterrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
-    tuple->BS_PterrOverPtVsPterrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
+    tuple->BS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
+    tuple->BS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
+    tuple->BS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->BS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
     tuple->BS_MIh->Fill(Ih, Event_Weight);
     tuple->BS_MIs->Fill(Is, Event_Weight);
   }
   
+  
   // N-1 plots
   if (tuple) {
-    if (!cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1Eta->Fill(track->eta(), Event_Weight);
-    }
-    if (!cutMaxEtaCut && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1MPt->Fill(track->pt(), Event_Weight);
-    }
-    if (!cutMaxEtaCut && !cutMinPt && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1TNOH->Fill(track->found(), Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && ! cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1TNOHFraction->Fill(track->validFraction(), Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && ! cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1ProbQ->Fill(probQonTrack, EventWeight_);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && ! cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1ProbXY->Fill(probXYonTrack, EventWeight_);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && ! cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1Qual->Fill(track->qualityMask(), Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && ! cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1EIsol->Fill(EoP, Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && ! cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1MIh->Fill(Ih, Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && !cutIh && ! cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1PterrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
-    }
-    if (!cutMaxEtaCut&&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && !cutIh && !cutPtErr && ! cutDxy && !cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1Dz->Fill(dz, Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && !cutIh && !cutPtErr && !cutDz && ! cutMinMuStations && !cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1Dxy->Fill(dxy, Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && ! cutEtaTOFOnly&& !cutPhiTOFOnly) {
-      tuple->N1Stations->Fill(muonStations(track->hitPattern()), Event_Weight);
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && ! cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutPhiTOFOnly) {
-      LogDebug(MOD) << "cutEtaTOFOnly";
-//      tuple->cutEtaTOFOnly
-    }
-    if (!cutMaxEtaCut &&  !cutMinPt && !cutMinNumOfFoundHits && !cutMinNumOfPixHits && !cutMinFractOfValidHits && !cutProbQ && !cutProbXY && !cutHighPurity && !cutChi2OverNdof && !cutEoP && !cutIh && !cutPtErr && !cutDz && !cutDxy && !cutMinMuStations && !cutEtaTOFOnly) {
-      LogDebug(MOD) << "cutPhiTOFOnly";
-//      tuple->cutPhiTOFOnly
-    }
-    
-  }
-
-  // Check if eta is inside the max eta cut
-  if (cutMaxEtaCut) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: eta is outside the max eta cut";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for eta cut";
-  }
-
-  // Cut on number of matched muon stations
-  if (cutMinMuStations) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: TOF only number of mu stations is too low";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for matched muon stations cut";
-  }
-
-  // Check the number of found hits
-  if (cutMinNumOfFoundHits) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of hits too low";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of hits cut";
-  }
-
-  // Check the number of pixel hits
-  if (cutMinNumOfPixHits) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of pixel hits too low";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of pixel hits cut ";
-  }
-  
-  // Check the min fraction of valid hits
-  if (cutMinFractOfValidHits) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Valid hit fraction is too low";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for valid hit fraction";
-  }
-
-  // Cut for the number of missing hits
-  // We currently dont cut on this, TODO: revise
-//  if (cutMinNumOfMissingHits) {
-//    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of missing hits is too high";
-//    return false;
-//  } else {
-//    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of missing hits cut";
-//  }
-
-  // Cut on the number of valid hit fraction w/ missing hits
-  // We currently dont cut on this, TODO: revise
-//  if (cutMinFractOfValidHitsTillLast) {
-//    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Valid hit fraction w/ missing hits is too low";
-//    return false;
-//  } else {
-//    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for valid hit fraction w/ missing hits cut";
-//  }
-
-  // Cut for the number of dEdx hits
-    if (cutMinNumOfDeDxHits) {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Number of dEdx hits is too low";
-      return false;
-    } else {
-      if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of dEdx hits cut";
-    }
-  
-  // Cut away background events based on the probQ
-  if (cutProbQ) {
-    if (debug_ > 4) LogPrint(MOD) << "        >> Preselection not passed: probQonTrack: "
-                                  << probQonTrack << " > trackProbQCut_: " << trackProbQCut_
-                                  << " , skipping it";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for probQ cut";
-  }
-
-  // This should be revised, for now switching it off
-  if (cutProbXY) {
-      //if (debug_ > 3) LogPrint(MOD) << "probXYonTrack < 0.01 or probXYonTrack > 0.99, skipping it";
-    if (debug_ > 4) LogPrint(MOD) << "        >> Preselection not passed:  probXYonTrack: "
-                                  << probXYonTrack << " and probXYonTrackNoLayer1: "
-                                  << probXYonTrackNoLayer1 << " , skipping it";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for probXY cut";
-  }
-  
-  // Cut for number of DOF in TOF ana
-  if (tof) {
-    if ((typeMode_ > 1 && typeMode_ != 5) && tof->nDof() < GlobalMinNDOF &&
-        (dttof->nDof() < GlobalMinNDOFDT || csctof->nDof() < GlobalMinNDOFCSC)) {
-      return false;
-    } else {
-      if (tuple) {
-        if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for number of DOF in TOF ana";
+    for (size_t i=0;i<sizeof(passedCutsArray);i++) {
+      bool allOtherCutsPassed = true;
+      for (size_t j=0;j<sizeof(passedCutsArray);j++) {
+        if (i==j) continue;
+        if (!passedCutsArray[j]) {
+          allOtherCutsPassed = false;
+          // We found a cut that's not passed, no point in looking into the rest of them
+          break;
+        }
+      }
+      if (allOtherCutsPassed) {
+        if (i==1)  { tuple->N1Eta->Fill(track->eta(), Event_Weight); };
+        if (i==2)  { tuple->N1MPt->Fill(track->pt(), Event_Weight); };
+        if (i==3)  { tuple->N1TNOH->Fill(track->found(), Event_Weight); };
+        if (i==4)  { tuple->N1TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight); };
+        if (i==5)  { tuple->N1TNOHFraction->Fill(track->validFraction(), Event_Weight); };
+        if (i==6)  { tuple->N1TNOM->Fill(numDeDxHits, Event_Weight); };
+        if (i==7)  { tuple->N1ProbQ->Fill(probQonTrack, EventWeight_); };
+        if (i==8)  { tuple->N1ProbXY->Fill(probXYonTrack, EventWeight_); };
+        if (i==9)  { tuple->N1Qual->Fill(track->qualityMask(), Event_Weight); };
+        if (i==10) { tuple->N1Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
+        if (i==11) { tuple->N1EIsol->Fill(EoP, Event_Weight); };
+        if (i==12) { tuple->N1Dz->Fill(dz, Event_Weight); };
+        if (i==13) { tuple->N1Dxy->Fill(dxy, Event_Weight); };
+        if (i==14) { tuple->N1PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
+        if (i==15) { tuple->N1SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
+        if (i==16) { tuple->N1MIh->Fill(Ih, Event_Weight); };
+        if (i==17) { tuple->N1Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
+        if (i==18) { LogDebug(MOD) << "cutPhiTOFOnly"; };
+        if (i==19) { LogDebug(MOD) << "cutEtaTOFOnly"; };
       }
     }
-  } // end of condition whether tof exists or not
-
-  // Select only high purity tracks 
-  if (cutHighPurity) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Not a high purity track";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection passed: This is a high purity track";
   }
 
-  // Cut on the chi2 / ndof
-  if (cutChi2OverNdof) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Chi2 / ndof is too high";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for chi2 / ndof cut";
+  // Return false in the function is a given cut is not passed
+  for (size_t i=0;i<sizeof(passedCutsArray);i++) {
+    if (!passedCutsArray[i]) {
+      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
+      // TODO: when the preselection list finalizes I might be more verbose than this
+      return false;
+    }
   }
 
   // Fill up gen based beta histo after preselection
@@ -2450,16 +2397,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->Beta_PreselectedA->Fill(GenBeta, Event_Weight);
   }
 
-  if (RescaleP) {
-    if (RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < globalMinPt_)
+
+  if (RescaleP && RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < globalMinPt_) {
       return false;
-  } else {
-    if (cutMinPt) {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: pt is too low";
-      return false;
-    } else {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection criteria passed for pT cut";
-    }
   }
 
   // Cut on  Rescaled Is
@@ -2472,14 +2412,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
 
-  // Cut on min Ih (or max for fractionally charged)
-  if (cutIh) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Ih is too low OR Ih is too high for fractionally charged";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for Ih cut ";
-  }
-
   if (tof) {
     if ((typeMode_ > 1 && typeMode_ != 5) && tof->inverseBetaErr() > GlobalMaxTOFErr) {
       return false;
@@ -2489,9 +2421,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                               min(fabs(tof->timeAtIpInOut() + 100), fabs(tof->timeAtIpInOut() + 50))) < 5)
       return false;
   } // End condition on tof existence or not
-
-  //Require at least one good vertex except if cosmic event
-  //WAIT//if(typeMode_==3 && goodVerts<1 && (!tuple || tuple->Name.find("Cosmic")==string::npos)) return false;
 
   //For TOF only analysis match to a SA track without vertex constraint for IP cuts
   if (typeMode_ == 3) {
@@ -2538,13 +2467,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   TreeDXY = dxy;
   // what is this DXYSB for?
   bool DXYSB = false;
-  if (cutDxy) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dxy is too high";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dxy cut";
-  }
-  
   if (typeMode_ == 5 && fabs(dxy) > 4) {
     if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dxy is too high";
     return false;
@@ -2556,45 +2478,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     DXYSB = true;
   }
 
-  if (typeMode_ != 3) {
-    if (cutMaxTKIso) {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Tracker based isolation is too high";
-      return false;
-    } else {
-      if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for tracker based isolation cut";
-    }
-
-    if (cutEoP) {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Calo based isolation is too high";
-      return false;
-    } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for calo based isolation cut";
-    }
-
-    // relative tracker isolation
-    // We currently dont cut on this, TODO: revise
-//    if (cutRelTKIso) {
-//      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Tracker based relative isolation is too high";
-//      return false;
-//    } else {
-//      if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for tracker based relative isolation cut";
-//    }
-  }
-
-  if (cutPtErr) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: pt error is too high";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for pt error cut";
-  }
-  //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
-
-  if (cutMinPt) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: pt too is low";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for pt cut";
-  }
+//  //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
 
   if (tuple) {
     tuple->BS_SegSep->Fill(segSep, Event_Weight);
@@ -2637,12 +2521,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
   TreeDZ = dz;
   bool DZSB = false;
-  if (cutDz) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dz it too high";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dz cut";
-  }
   
   if (typeMode_ == 5 && fabs(dz) > 4) {
     if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dz it too high";
@@ -2653,19 +2531,19 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (typeMode_ == 5 && fabs(dz) > globalMaxDZ_)
     DZSB = true;
 
-  if (cutEtaTOFOnly) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, eta is too low";
-    return false;
-  } else if (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for TOF eta cut";
-  }
-  if (tuple)
-    tuple->BS_Phi->Fill(track->phi(), Event_Weight);
+//  if (cutEtaTOFOnly) {
+//    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, eta is too low";
+//    return false;
+//  } else if (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) {
+//    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for TOF eta cut";
+//  }
+//  if (tuple)
+//    tuple->BS_Phi->Fill(track->phi(), Event_Weight);
 
-  if (cutPhiTOFOnly) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, 1.2 < phi < 1.9";
-    return false;
-  }
+//  if (cutPhiTOFOnly) {
+//    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, 1.2 < phi < 1.9";
+//    return false;
+//  }
   
   //skip HSCP that are compatible with cosmics.
   if (tuple)
