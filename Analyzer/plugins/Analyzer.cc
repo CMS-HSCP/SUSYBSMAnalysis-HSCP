@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v16p8:
+// v17:
 // - change double to float
 // - create fillDescription
 // - intro pterrOverPt vs pterrOverPt2
@@ -20,6 +20,7 @@
 // - Add two more cutflow histos, change boundary for pterrOverPt2
 // - Fix logic for new cutflow, fix the  change boundary for pterrOverPt2
 // - Make cuts into an array
+// - Fix logic with not used variales
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2181,9 +2182,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[16] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
   // TOF only cuts
-  passedCutsArray[17] = (typeMode_ == 3 &&  muonStations(track->hitPattern()) > minMuStations_) ? true : false;
-  passedCutsArray[18] = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
-  passedCutsArray[19] = (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) ? true : false;
+  passedCutsArray[17] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
+  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
   
   // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
@@ -2213,16 +2214,16 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     bool passedCutsArray2[20];
     std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
     passedCutsArray2[0]  = true;
-    passedCutsArray2[1]  = (track->pt() > globalMinPt_) ? true : false;
-    passedCutsArray2[2]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
-    passedCutsArray2[3]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+    passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+    passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
+    passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
     passedCutsArray2[4]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
     passedCutsArray2[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
-    passedCutsArray2[10] =(typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+    passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
     passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
     passedCutsArray2[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
     passedCutsArray2[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
@@ -2230,11 +2231,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     passedCutsArray2[16] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
     // TOF only cuts
-    passedCutsArray2[17] = (typeMode_ == 3 &&  muonStations(track->hitPattern()) > minMuStations_) ? true : false;
-    passedCutsArray2[18] = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
-    passedCutsArray2[19] = (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) ? true : false;
+    passedCutsArray2[17] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+    passedCutsArray2[18] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
+    passedCutsArray2[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
     
-    // CutFlow in a single plot
+    // CutFlow in a single plot when probQ is one of the first cuts
     if (tuple) {
       for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
         bool allCutsPassedSoFar = true;
@@ -2270,12 +2271,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray3[15] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
     passedCutsArray3[16] = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
     // TOF only cuts
-    passedCutsArray3[17] = (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_) ? true : false;
-    passedCutsArray3[18] = (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9) ? true : false;
-    passedCutsArray3[19] = (typeMode_ == 3 && fabs(minEta) > minSegEtaSep) ? true : false;
+    passedCutsArray3[17] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+    passedCutsArray3[18] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi())) < 1.9) ? true : false;
+    passedCutsArray3[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
   
     if (tuple) {
-      // CutFlow in a single plot
+      // CutFlow in a single plot when probQ is the last cut
       for (size_t i=0;i<sizeof(passedCutsArray3);i++) {
         bool allCutsPassedSoFar = true;
         for (size_t j=0;j<=i;j++) {
