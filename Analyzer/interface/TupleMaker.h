@@ -563,7 +563,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_PtErrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
   tuple->BS_PtErrOverPt->Sumw2();
   Name = "BS_PtErrOverPt2";
-  tuple->BS_PtErrOverPt2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 0.01);
+  tuple->BS_PtErrOverPt2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 0.003);
   tuple->BS_PtErrOverPt2->Sumw2();
   Name = "BS_MPt";
   tuple->BS_MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
@@ -758,7 +758,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->genrecopT = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
   tuple->genrecopT->Sumw2();
   Name = "BS_PtErrOverPtVsPtErrOverPt2";
-  tuple->BS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.01);
+  tuple->BS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.003);
   tuple->BS_PtErrOverPtVsPtErrOverPt2->Sumw2();
 
   Name = "genlevelpT";

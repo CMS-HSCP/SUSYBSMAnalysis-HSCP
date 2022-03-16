@@ -14,11 +14,11 @@
 // v17:
 // - change double to float
 // - create fillDescription
-// - intro pterrOverPt vs pterrOverPt2
+// - intro ptErrOverPt vs ptErrOverPt2
 // - change the order of preselection cuts
 // - N-1 plots
-// - Add two more cutflow histos, change boundary for pterrOverPt2
-// - Fix logic for new cutflow, fix the  change boundary for pterrOverPt2
+// - Add two more cutflow histos, change boundary for ptErrOverPt2
+// - Fix logic for new cutflow, fix the  change boundary for ptErrOverPt2
 // - Make cuts into an array
 // - Fix logic with not used variales
 
