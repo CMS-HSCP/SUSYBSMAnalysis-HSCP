@@ -148,8 +148,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       //std::cout <<"   "<<bitNr<<" "<<bitName<<" "<<passInitial<<" "<<passInterm<<" "<<passFinal<<" "<<prescale<<std::endl;
       if((bitName == ListL1Names[j])){
         L1Dec[j] = passFinal;
-        if(passFinal)  cout << "found L1 seed with name " << bitName << " value : 1" << endl;
-        else  cout << "found L1 seed with name " << bitName << " value : 0" << endl; 
+        if(passFinal)  std::cout << "found L1 seed with name " << bitName << " value : 1" << std::endl;
+        else  std::cout << "found L1 seed with name " << bitName << " value : 0" << std::endl; 
       }
     }
   }
@@ -162,7 +162,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       return;
     }
     else{
-      cout << "gen coll size : " << genCollH->size() << endl;
+      std::cout << "gen coll size : " << genCollH->size() << std::endl;
     }
     genColl = *genCollH;
 
@@ -298,14 +298,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     } // HSCP loop end
   if(discr==2)
-    cout << "There were 2 hscps passing preselection in this event" << endl;
+    std::cout << "There were 2 hscps passing preselection in this event" << std::endl;
   } // end of IsSignal
 
 }
 
 void Analyzer::endJob() {
 
-  cout << "# HSCP passing preSelection : " << nbpasspresel << ", # total HSCPs : " << nbtot << endl;      cout << "--> " << (nbpasspresel*1.0/nbtot)*100 << " % " << endl; 
+  std::cout << "# HSCP passing preSelection : " << nbpasspresel << ", # total HSCPs : " << nbtot << std::endl;      cout << "--> " << (nbpasspresel*1.0/nbtot)*100 << " % " << std::endl; 
  
   for (int i = 0; i < nbl1names; i++){
     if(L1Denom[i] == 0)
@@ -314,11 +314,10 @@ void Analyzer::endJob() {
       EffL1Seeds.at(i) = (L1Num[i]*1.0/L1Denom[i])*100;
     }
   }
- //here efficiencies of l1seed
-  cout << "Efficiencies of L1 seeds after preselection for scenario "<< scenarios_ << endl;
-  cout << "-------------------------------------------" << endl;
+
+  std::cout << "Efficiencies of L1 seeds after preselection for scenario "<< scenarios_ << std::endl << "-------------------------------------------" << std::endl;
   for (int i = 0; i < nbl1names; i++){
-    cout << ListL1Names[i] << " = " << L1Num[i] << "/" << L1Denom[i] << " = " <<EffL1Seeds.at(i) << "±" << sqrt((EffL1Seeds.at(i)*(1-EffL1Seeds.at(i)))/L1Denom[i])*100 << endl;
+    std::cout << ListL1Names[i] << " = " << L1Num[i] << "/" << L1Denom[i] << " = " <<EffL1Seeds.at(i) << "% ±" << sqrt((EffL1Seeds.at(i)*(1-EffL1Seeds.at(i)))/L1Denom[i])*100 << " %" <<std::endl;
   }
  
    
