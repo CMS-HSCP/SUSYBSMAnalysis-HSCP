@@ -145,13 +145,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       bool passFinal = l1GtUtils.decisionsFinal()[bitNr].second;
       int prescale = l1GtUtils.prescales()[bitNr].second;
       //std::cout <<"   "<<bitNr<<" "<<bitName<<" "<<passInitial<<" "<<passInterm<<" "<<passFinal<<" "<<prescale<<std::endl;
-      if((bitName == ListL1Names[j]) && passFinal == true){
-        cout << "found L1 seed with name " << bitName << " value : 1" << endl;
-        L1Dec[j]=true;
+      if((bitName == ListL1Names[j])){
+        if(passFinal){
+          cout << "found L1 seed with name " << bitName << " value : 1" << endl;
+          L1Dec[j]=true;
+        }
+        else{
+          cout << "found L1 seed with name " << bitName << " value : 0" << endl;
+        }
       }
-      if((bitName == ListL1Names[j]) && passFinal == false){
-        cout << "found L1 seed with name " << bitName << " value : 0" << endl;
-      }
+
     }
   }
 
