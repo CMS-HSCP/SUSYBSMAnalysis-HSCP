@@ -138,6 +138,8 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
+  void AssoGenID(const vector<bool>& l1decision);
+
   void initializeCuts(edm::Service<TFileService>& fs,
                       vector<double>& CutPt,
                       vector<double>& CutI,
@@ -145,6 +147,7 @@ public:
                       vector<double>& CutPt_Flip,
                       vector<double>& CutI_Flip,
                       vector<double>& CutTOF_Flip);
+
 
   bool passPreselection(const susybsm::HSCParticle& hscp,
                         const reco::DeDxHitInfo* dedxHits,
@@ -211,14 +214,7 @@ private:
   vector<int> L1Num;
   vector<int> L1Denom;
   vector<bool> L1Dec; 
-  //end of hardcoded part
-  //
-  //
-  //
-  //
 
-
-  //
   bool* HSCPTk;
 
   const reco::MuonTimeExtra* tof;
@@ -236,7 +232,6 @@ private:
   int SampleType_;
   string SampleName_;
   string Period_;
-
   int nbpasspresel = 0;
   int nbtot = 0;
 
@@ -349,6 +344,7 @@ private:
   const edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> tkGeomToken_;
   const edm::ESGetToken<PixelClusterParameterEstimator, TkPixelCPERecord> pixelCPEToken_;
   HLTPrescaleProvider hltPSProv_;
-  std::string hltProcess_;
+  std::string hltProcess_; 
+  string scenarios_;
 };
 #endif

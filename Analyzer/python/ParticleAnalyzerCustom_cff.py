@@ -33,4 +33,5 @@ analyzer = cms.EDAnalyzer('Analyzer'
     ,debugLevel            = cms.untracked.uint32(0)
     ,hltProcess            = cms.string("HLTX")
     ,stageL1Trigger        = cms.uint32(2)
+    ,Scenarios             = cms.untracked.string("both")
 )

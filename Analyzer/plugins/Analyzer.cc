@@ -46,7 +46,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       trackProbQCut_(iConfig.getUntrackedParameter<double>("trackProbQCut")),
       debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel")),
       hltPSProv_(iConfig,consumesCollector(),*this),
-      hltProcess_(iConfig.getParameter<std::string>("hltProcess"))
+      hltProcess_(iConfig.getParameter<std::string>("hltProcess")),
+      scenarios_(iConfig.getUntrackedParameter<string>("Scenarios"))
  {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
@@ -71,6 +72,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 
   //moduleGeom::loadGeometry(Geometry);
   //tofCalculator.loadTimeOffset(TimeOffset);
+  EffL1Seeds.resize(nbl1names,0.0);
+  L1Num.resize(nbl1names,0);
+  L1Denom.resize(nbl1names,0);
+  L1Dec.resize(nbl1names,false);
 }
       
 Analyzer::~Analyzer() {
@@ -90,10 +95,6 @@ void Analyzer::beginJob() {
   // create histograms & trees
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
 
-  EffL1Seeds.resize(nbl1names,0.0);
-  L1Num.resize(nbl1names,0);
-  L1Denom.resize(nbl1names,0);
-  L1Dec.resize(nbl1names,false);
   // Re-weighting
 
   tof = nullptr;
@@ -146,15 +147,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       int prescale = l1GtUtils.prescales()[bitNr].second;
       //std::cout <<"   "<<bitNr<<" "<<bitName<<" "<<passInitial<<" "<<passInterm<<" "<<passFinal<<" "<<prescale<<std::endl;
       if((bitName == ListL1Names[j])){
-        if(passFinal){
-          cout << "found L1 seed with name " << bitName << " value : 1" << endl;
-          L1Dec[j]=true;
-        }
-        else{
-          cout << "found L1 seed with name " << bitName << " value : 0" << endl;
-        }
+        L1Dec[j] = passFinal;
+        if(passFinal)  cout << "found L1 seed with name " << bitName << " value : 1" << endl;
+        else  cout << "found L1 seed with name " << bitName << " value : 0" << endl; 
       }
-
     }
   }
 
@@ -170,7 +166,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     genColl = *genCollH;
 
-    //int NChargedHSCP = HowManyChargedHSCP(genColl);
+    int NChargedHSCP = HowManyChargedHSCP(genColl);
+    int NNeutralHSCP = HowManyNeutralHSCP(genColl);
 
     double Wa = 1.0, Wad = 1.0, Waa = 1.0,
            Wan = 1.0;  // Wa is additional weight for single other, Wad for other+double_charged,
@@ -184,7 +181,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                  nn = 0;  //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
     
     
-    int discr = 0;
+
+    bool discr = true;
+
     //===================== Handle For DeDx Hits ==============
 
     Handle<reco::DeDxHitInfoAss> dedxCollH;
@@ -266,20 +265,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
       reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
-
-
-
       bool PRescale = false;
 
-
-      
-      //Initialiye array ListBit (size : nb of seeds)
-      //for(x size ListL1Names)
-      	//ListBit[x] = l1name_to_indx[ListL1Names[x]]
-
-      //with l1name_to_indx = {x.second.getName() :x.second.getIndex() for x in l1menu.getAlgorithmMap()}
-      //
-      //l1dec_final = l1algblk.at(0,0).getAlgoDecisionFinal()
       nbtot +=1;
 
       /*
@@ -287,29 +274,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       + infos L1 after HLT filters aswell
       ++ distrib cut variables, efficiencies step by step filters 
        
-
-
-
-
-
-
-
-
       */
       if(passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, nullptr, iEvent, 1, nullptr, -1, PRescale, 0, 0, 0))
       {  
         nbpasspresel+=1;
-
-        if(discr<1){ 
-          for(int i =0; i< nbl1names; i++){
-            L1Denom[i]+=1;
-            if(L1Dec[i]==true){
-              L1Num[i]+=1;
-              L1Dec[i]=false;
-            }
-          }
-        }
-        discr+=1;
+	if(discr){
+       		if(scenarios_ == "both"){
+        		AssoGenID(L1Dec);
+		}
+		else if(scenarios_ == "chch"){
+			if(NChargedHSCP == 2){
+				AssoGenID(L1Dec);
+			}
+		}	
+		else if(scenarios_ == "chn"){
+			if(NChargedHSCP == 1 && NNeutralHSCP == 1){
+				AssoGenID(L1Dec);
+			}
+		}
+	}
+        discr=false;
       }
 
     } // HSCP loop end
@@ -327,16 +311,17 @@ void Analyzer::endJob() {
     if(L1Denom[i] == 0)
       EffL1Seeds.at(i) = 0.0;
     else{
-      EffL1Seeds.at(i) = (L1Num[i]*1.0/L1Denom[i]);
+      EffL1Seeds.at(i) = (L1Num[i]*1.0/L1Denom[i])*100;
     }
   }
  //here efficiencies of l1seed
-  cout << "Efficiencies of L1 seeds after preselection"<<endl;
+  cout << "Efficiencies of L1 seeds after preselection for scenario "<< scenarios_ << endl;
   cout << "-------------------------------------------" << endl;
   for (int i = 0; i < nbl1names; i++){
-    cout << ListL1Names[i] << " = " << L1Num[i] << "/" << L1Denom[i] << " = " <<EffL1Seeds.at(i) << endl;
+    cout << ListL1Names[i] << " = " << L1Num[i] << "/" << L1Denom[i] << " = " <<EffL1Seeds.at(i) << "±" << sqrt((EffL1Seeds.at(i)*(1-EffL1Seeds.at(i)))/L1Denom[i])*100 << endl;
   }
-  
+ 
+   
 }
 
 
@@ -347,6 +332,13 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   descriptions.addDefault(desc);
 }
 
+void Analyzer::AssoGenID(const vector<bool>& l1decision){
+    for(int i =0; i< nbl1names; i++){
+        L1Denom[i]+=1;
+        if(l1decision[i]==true)
+          L1Num[i]+=1;
+    }
+}
 DEFINE_FWK_MODULE(Analyzer);
 
 
