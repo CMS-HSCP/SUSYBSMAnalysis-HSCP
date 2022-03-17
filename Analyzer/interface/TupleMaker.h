@@ -242,8 +242,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   Name = "N1TNOH";
   tuple->N1TNOH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
-  Name = "TNOM";
-  tuple->TNOM = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
+  Name = "N1TNOM";
+  tuple->N1TNOM = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 40);
   Name = "N1TNOPH";
   tuple->N1TNOPH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 16, 0, 8);
   Name = "N1TNOHFraction";
@@ -256,8 +256,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->TIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 100);
   Name = "N1EIsol";
   tuple->N1EIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 1.5);
-  Name = "SumpTOverpT";
-  tuple->SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
+  Name = "N1SumpTOverpT";
+  tuple->N1SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
   Name = "N1MPt";
   tuple->N1MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   Name = "N1MIh";
@@ -283,8 +283,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "N1Dz";
   tuple->N1Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
   Name = "N1PtErrOverPt";
-  tuple->N1PterrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
-  tuple->N1PterrOverPt->Sumw2();
+  tuple->N1PtErrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
+  tuple->N1PtErrOverPt->Sumw2();
   Name = "N1SegSep";
   tuple->N1SegSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "FailDz";
@@ -293,6 +293,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Basic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "CutFlow";
   tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
+  Name = "CutFlowProbQFirst";
+  tuple->CutFlowProbQFirst = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
+  Name = "CutFlowProbQLast";
+  tuple->CutFlowProbQLast = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
   Name = "N1ProbQ";
   tuple->N1ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->N1ProbQ->Sumw2();
@@ -556,11 +560,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_TOFError = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 0.25);
   tuple->BS_TOFError->Sumw2();
   Name = "BS_PtErrOverPt";
-  tuple->BS_PterrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
-  tuple->BS_PterrOverPt->Sumw2();
+  tuple->BS_PtErrOverPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
+  tuple->BS_PtErrOverPt->Sumw2();
   Name = "BS_PtErrOverPt2";
-  tuple->BS_PterrOverPt2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
-  tuple->BS_PterrOverPt2->Sumw2();
+  tuple->BS_PtErrOverPt2 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 0.003);
+  tuple->BS_PtErrOverPt2->Sumw2();
   Name = "BS_MPt";
   tuple->BS_MPt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   tuple->BS_MPt->Sumw2();
@@ -753,9 +757,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "genrecopT";
   tuple->genrecopT = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
   tuple->genrecopT->Sumw2();
-  Name = "BS_PterrOverPtVsPterrOverPt2";
-  tuple->BS_PterrOverPtVsPterrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 1.);
-  tuple->BS_PterrOverPtVsPterrOverPt2->Sumw2();
+  Name = "BS_PtErrOverPtVsPtErrOverPt2";
+  tuple->BS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.003);
+  tuple->BS_PtErrOverPtVsPtErrOverPt2->Sumw2();
 
   Name = "genlevelpT";
   tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
