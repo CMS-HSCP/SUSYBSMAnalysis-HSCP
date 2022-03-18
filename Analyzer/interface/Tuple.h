@@ -63,6 +63,7 @@ struct Tuple {
   std::vector<float> Tree_ProbQ_dEdx;
   std::vector<float> Tree_Ndof;
   std::vector<float> Tree_Chi2;
+  std::vector<int>   Tree_QualityMask;
   std::vector<bool>  Tree_isHighPurity;
   std::vector<float> Tree_muon_eta;
   std::vector<bool> Tree_isMuon;

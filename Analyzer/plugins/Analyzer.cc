@@ -11,13 +11,8 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v15:
-// - synchronisation with Caroline's framework
-//      > modification cross-talk inversion function
-//      > modification cluster cleaning
-//      > add saturation correction function
-// - add pixel SF correction 
-// - add branch 
+// v16:
+// Add qualityMask info
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -608,6 +603,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_ProbQ_dEdx;
   std::vector<float> HSCP_Ndof;
   std::vector<float> HSCP_Chi2;
+  std::vector<int>   HSCP_QualityMask;
   std::vector<bool>  HSCP_isHighPurity;
   std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
@@ -998,7 +994,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     unsigned int pdgId = 0;
     if (isSignal) {
       pdgId = abs(genColl[ClosestGen].pdgId());
-      LogPrint(MOD) << "  >> GenId  " << pdgId;
+      if (debugLevel_> 0) LogPrint(MOD) << "  >> GenId  " << pdgId;
     }
 
 //computedEdx: iEvent, year, hits, SF, templates, usePixel, useClusterCleaning, reverseProb, useTrunc, TrackerGains, 
@@ -1086,27 +1082,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     reco::DeDxData* dedx_probQ = dedx_probQ_Tmp.numberOfMeasurements() > 0 ? &dedx_probQ_Tmp : nullptr;
 
-    //Ias without TIB, TID, and 3 first TEC layers
+    //Ias without Pixels, TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp = 
-        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel, useTemplateLayer, true, false, 1);
 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
     //Ias Pixel only
     auto dedxIas_PixelOnly_Tmp = 
-        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning,false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, false, useTemplateLayer, false, false, 2);
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
     //Ias Strip only
     auto dedxIas_StripOnly_Tmp = 
-        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, true, useTemplateLayer);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
-
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     dedxMObj = dedxIh_noL1;
@@ -1411,6 +1406,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_ProbQ_dEdx.push_back(dedx_probQ ? dedx_probQ->dEdx() : -1);
     HSCP_Ndof.push_back(track->ndof());
     HSCP_Chi2.push_back(track->chi2());
+    HSCP_QualityMask.push_back(track->qualityMask());
     HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
@@ -1540,6 +1536,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_ProbQ_dEdx,
                                 HSCP_Ndof,
                                 HSCP_Chi2,
+                                HSCP_QualityMask,
                                 HSCP_isHighPurity,
                                 HSCP_isMuon,
                                 HSCP_MuonSelector,

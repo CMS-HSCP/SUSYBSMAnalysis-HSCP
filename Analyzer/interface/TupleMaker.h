@@ -81,6 +81,7 @@ public:
                         const std::vector<float> &ProbQ_dEdx,
                         const std::vector<float> &Ndof,
                         const std::vector<float> &Chi2,
+                        const std::vector<int>   &QualityMask,
                         const std::vector<bool>  &isHighPurity,
                         const std::vector<bool>  &isMuon,
                         const std::vector<int>   &MuonSelector,
@@ -1276,6 +1277,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("ProbQ_dEdx", &tuple->Tree_ProbQ_dEdx);
     tuple->Tree->Branch("Ndof", &tuple->Tree_Ndof);
     tuple->Tree->Branch("Chi2", &tuple->Tree_Chi2);
+    tuple->Tree->Branch("QualityMask", &tuple->Tree_QualityMask);
     tuple->Tree->Branch("isHighPurity", &tuple->Tree_isHighPurity);
     tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
     tuple->Tree->Branch("MuonSelector", &tuple->Tree_Muon_selector);
@@ -1433,6 +1435,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &ProbQ_dEdx,
                                   const std::vector<float> &Ndof,
                                   const std::vector<float> &Chi2,
+                                  const std::vector<int>   &QualityMask,
                                   const std::vector<bool>  &isHighPurity,
                                   const std::vector<bool>  &isMuon,
                                   const std::vector<int>   &MuonSelector,
@@ -1557,6 +1560,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_ProbQ = ProbQ_dEdx;
   tuple->Tree_Ndof = Ndof;
   tuple->Tree_Chi2 = Chi2;
+  tuple->Tree_QualityMask = QualityMask;
   tuple->Tree_isHighPurity = isHighPurity;
   tuple->Tree_isMuon = isMuon;
   tuple->Tree_Muon_selector = MuonSelector;

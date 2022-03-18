@@ -1703,10 +1703,10 @@ crossTalkInvAlgo=1;
       int BinY = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h) * 10.0);  //*10 because of cm-->mm
       int BinZ = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
       double Prob = templateHisto->GetBinContent(BinX, BinY, BinZ);
-      //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
       if (reverseProb)
         Prob = 1.0 - Prob;
       vect.push_back(Prob);  //save probability
+      //printf("%i %i %i %i  %f\n", layer, BinX, BinY, BinZ, Prob);
     } else {
       double Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
       double ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
