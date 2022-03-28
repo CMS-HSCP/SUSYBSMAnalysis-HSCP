@@ -109,7 +109,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
-      doTriggering_(iConfig.getUntrackedParameter<bool>("DoTriggering"))
+      doTriggering_(iConfig.getUntrackedParameter<bool>("DoTriggering")),
+      calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics"))
  {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
@@ -1155,7 +1156,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // ------------------------------------------------------------------------------------
     //compute systematic uncertainties on signal
     if (isSignal) {
-      bool calcSyst = false;
       float genpT = -1.0;
         // Loop through the gen collection
       for (auto const gen : genColl) {
@@ -1172,7 +1172,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // 2D plot to compare gen pt vs reco pt
         tuple->genrecopT->Fill(genpT, track->pt());
       }
-      if (calcSyst) {
+      if (calcSyst_) {
         calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true);
       }
     }  //End of systematic computation for signal
@@ -1801,7 +1801,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
-  desc.addUntracked("DoTriggering",true)->setComment("Boolean to dicde whether we want to use triggers");
+  desc.addUntracked("DoTriggering",true)->setComment("Boolean to eecide whether we want to use triggers");
+  desc.addUntracked("CalcSystematics",true)->setComment("Boolean to decide  whether we want to calculate the systematics");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxEta",2.1)->setComment("Cut on inner tracker track eta");

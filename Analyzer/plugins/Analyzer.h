@@ -344,7 +344,7 @@ private:
 
   const std::string pixelCPE_;
   const unsigned int debug_;
-  const bool hasMCMatch_, doTriggering_;
+  const bool hasMCMatch_, doTriggering_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
 
