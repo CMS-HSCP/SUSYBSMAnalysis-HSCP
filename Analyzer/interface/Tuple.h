@@ -429,7 +429,7 @@ struct Tuple {
   TH1D* Hist_TOF;
 
   //FIXME ------ To be modified for Number Of Hits (NOH)
-  TH3D* Pred_EtaP;
+  TH3F* Pred_EtaP;
   TH2F* Pred_I;
   TH2F* Pred_TOF;
   TH2F* Pred_EtaB;
@@ -440,19 +440,19 @@ struct Tuple {
 
   TH2F* PDF_E_Eta;
   TH2F* PDF_A_Eta;
-  TH3D* PDF_H_EtaMass;
-  TH3D* PDF_G_EtaP;
-  TH3D* PDF_C_EtaP;
-  TH3D* PDF_F_EtaICK;
-  TH3D* PDF_B_EtaICK;
+  TH3F* PDF_H_EtaMass;
+  TH3F* PDF_G_EtaP;
+  TH3F* PDF_C_EtaP;
+  TH3F* PDF_F_EtaICK;
+  TH3F* PDF_B_EtaICK;
 
   TH2F* PDF_E_Eta_Flip;
   TH2F* PDF_A_Eta_Flip;
-  TH3D* PDF_H_EtaMass_Flip;
-  TH3D* PDF_G_EtaP_Flip;
-  TH3D* PDF_C_EtaP_Flip;
-  TH3D* PDF_F_EtaICK_Flip;
-  TH3D* PDF_B_EtaICK_Flip;
+  TH3F* PDF_H_EtaMass_Flip;
+  TH3F* PDF_G_EtaP_Flip;
+  TH3F* PDF_C_EtaP_Flip;
+  TH3F* PDF_F_EtaICK_Flip;
+  TH3F* PDF_B_EtaICK_Flip;
 
   // end FIXME
 
@@ -478,7 +478,7 @@ struct Tuple {
   std::map<std::string, TH1D*> H_H_Binned_Flip;  //TH1D* H_H_Binned_Flip[MaxPredBins];
 
   //FIXME ------ To be modified for Number Of Hits (NOH)
-  TH3D* Pred_EtaP_Flip;
+  TH3F* Pred_EtaP_Flip;
   TH2F* Pred_I_Flip;
   TH2F* Pred_TOF_Flip;
   TH2F* Pred_EtaB_Flip;

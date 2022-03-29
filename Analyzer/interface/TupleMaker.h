@@ -960,7 +960,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Pred_EtaS2 = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->Pred_EtaS2->Sumw2();
       Name = "Pred_EtaP";
-      tuple->Pred_EtaP = dir.make<TH3D>(
+      tuple->Pred_EtaP = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->Pred_EtaP->Sumw2();
       Name = "Pred_TOF";
@@ -969,11 +969,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       //pz
 
       Name = "PDF_G_EtaP";
-      tuple->PDF_G_EtaP = dir.make<TH3D>(
+      tuple->PDF_G_EtaP = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_G_EtaP->Sumw2();
       Name = "PDF_C_EtaP";
-      tuple->PDF_C_EtaP = dir.make<TH3D>(
+      tuple->PDF_C_EtaP = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_C_EtaP->Sumw2();
 
@@ -985,24 +985,24 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->PDF_E_Eta->Sumw2();
 
       Name = "PDF_B_EtaICK";
-      tuple->PDF_B_EtaICK = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+      tuple->PDF_B_EtaICK = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_B_EtaICK->Sumw2();
       Name = "PDF_F_EtaICK";
-      tuple->PDF_F_EtaICK = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+      tuple->PDF_F_EtaICK = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_F_EtaICK->Sumw2();
 
       Name = "PDF_H_EtaMass";
-      tuple->PDF_H_EtaMass = dir.make<TH3D>(
+      tuple->PDF_H_EtaMass = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, MassNBins, 0, MassHistoUpperBound);
       tuple->PDF_H_EtaMass->Sumw2();
 
       //pz FLIP
       Name = "PDF_G_EtaP_Flip";
-      tuple->PDF_G_EtaP_Flip = dir.make<TH3D>(
+      tuple->PDF_G_EtaP_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_G_EtaP_Flip->Sumw2();
       Name = "PDF_C_EtaP_Flip";
-      tuple->PDF_C_EtaP_Flip = dir.make<TH3D>(
+      tuple->PDF_C_EtaP_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_C_EtaP_Flip->Sumw2();
 
@@ -1015,15 +1015,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
       Name = "PDF_B_EtaICK_Flip";
       tuple->PDF_B_EtaICK_Flip =
-          dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+          dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_B_EtaICK_Flip->Sumw2();
       Name = "PDF_F_EtaICK_Flip";
       tuple->PDF_F_EtaICK_Flip =
-          dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+          dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_F_EtaICK_Flip->Sumw2();
 
       Name = "PDF_H_EtaMass_Flip";
-      tuple->PDF_H_EtaMass_Flip = dir.make<TH3D>(
+      tuple->PDF_H_EtaMass_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, MassNBins, 0, MassHistoUpperBound);
       tuple->PDF_H_EtaMass_Flip->Sumw2();
     }
@@ -1106,7 +1106,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Pred_EtaS2_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
       tuple->Pred_EtaS2_Flip->Sumw2();
       Name = "Pred_EtaP_Flip";
-      tuple->Pred_EtaP_Flip = dir.make<TH3D>(
+      tuple->Pred_EtaP_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->Pred_EtaP_Flip->Sumw2();
       Name = "Pred_TOF_Flip";
