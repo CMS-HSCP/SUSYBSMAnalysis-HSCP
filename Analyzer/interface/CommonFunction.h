@@ -1656,47 +1656,6 @@ bool PassTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
   return false;
 }
 
-
-
-//=============================================================
-//
-//     selection of neutral HSCP
-//
-//=============================================================
-bool isNeutralHSCP(const reco::GenParticle& gen, bool onlyNeutral) {
-  if (gen.status() != 1)
-    return false;
-  if (gen.pt() < 5)
-    return false;
-  int AbsPdg = abs(gen.pdgId());
-  if (AbsPdg < 1000000 && AbsPdg != 17)
-    return false;
-  if (onlyNeutral && (AbsPdg == 1000993 || AbsPdg == 1009313 || AbsPdg == 1009113 || AbsPdg == 1009223 ||
-                      AbsPdg == 1009333 || AbsPdg == 1092114 || AbsPdg == 1093214 || AbsPdg == 1093324))
-    return true;  //Skip neutral gluino RHadrons
-  if (onlyNeutral && (AbsPdg == 1000622 || AbsPdg == 1000642 || AbsPdg == 1006113 || AbsPdg == 1006311 ||
-                      AbsPdg == 1006313 || AbsPdg == 1006333))
-    return true;  //skip neutral stop RHadrons
-  if (onlyNeutral && AbsPdg == 1000022)
-    return false;  //skip neutralino
-  return false;
-}
-
-
-//=============================================================
-//
-//     Count Number of Neutral HSCP
-//
-//=============================================================
-int HowManyNeutralHSCP(const std::vector<reco::GenParticle>& genColl) {
-  int toReturn = 0;
-  for (unsigned int g = 0; g < genColl.size(); g++) {
-    if (isNeutralHSCP(genColl[g], true))
-      toReturn++;
-  }
-  return toReturn;
-}
-
 //=============================================================
 //
 //     selection of gen HSCP
@@ -1721,6 +1680,30 @@ bool isGoodGenHSCP(const reco::GenParticle& gen, bool onlyCharged) {
   return true;
 }
 
+
+
+bool isNeutralGenHSCP(const reco::GenParticle& gen, bool onlyNeutral) {
+  if (gen.status() != 1)
+    return false;
+  if (gen.pt() < 5)
+    return false;
+  int AbsPdg = abs(gen.pdgId());
+  if (AbsPdg < 1000000 && AbsPdg != 17)
+    return false;
+  if (onlyNeutral && (AbsPdg == 1000993 || AbsPdg == 1009313 || AbsPdg == 1009113 || AbsPdg == 1009223 ||
+                      AbsPdg == 1009333 || AbsPdg == 1092114 || AbsPdg == 1093214 || AbsPdg == 1093324))
+    return true;  //Find neutral gluino RHadrons
+  if (onlyNeutral && (AbsPdg == 1000622 || AbsPdg == 1000642 || AbsPdg == 1006113 || AbsPdg == 1006311 ||
+                      AbsPdg == 1006313 || AbsPdg == 1006333))
+    return true;  //Find neutral stop RHadrons
+  if (onlyNeutral && AbsPdg == 1000022)
+    return false;  //skip neutralino
+  return false;
+}
+
+
+
+
 //=============================================================
 //
 //     Count Number of Charged HSCP
@@ -1734,6 +1717,25 @@ int HowManyChargedHSCP(const std::vector<reco::GenParticle>& genColl) {
   }
   return toReturn;
 }
+
+
+
+//=============================================================
+//
+//     Count Number of Neutral HSCP
+//
+//=============================================================
+int HowManyNeutralHSCP(const std::vector<reco::GenParticle>& genColl) {
+  int toReturn = 0;
+  for (unsigned int g = 0; g < genColl.size(); g++) {
+    if (isNeutralGenHSCP(genColl[g], true))
+      toReturn++;
+  }
+  return toReturn;
+}
+
+
+
 
 //=============================================================
 //

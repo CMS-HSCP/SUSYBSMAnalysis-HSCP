@@ -31,6 +31,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParticleCollection"))),
+      pfCandToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("PfCand"))),
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),    
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
@@ -47,7 +48,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       debugLevel_(iConfig.getUntrackedParameter<unsigned int>("debugLevel")),
       hltPSProv_(iConfig,consumesCollector(),*this),
       hltProcess_(iConfig.getParameter<std::string>("hltProcess")),
-      scenarios_(iConfig.getUntrackedParameter<string>("Scenarios"))
+      scenarios_(iConfig.getUntrackedParameter<std::string>("Scenario")) 
  {
   //now do what ever initialization is needed
   // define the selection to be considered later for the optimization
@@ -63,6 +64,13 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   isBckg = (SampleType_ == 1);
   isSignal = (SampleType_ >= 2);
 
+  EffL1Seeds.resize(nbl1names,0.0);
+  L1Num.resize(nbl1names,0);
+  L1Denom.resize(nbl1names,0);
+  L1NumFail.resize(nbl1names,0);
+  L1DenomFail.resize(nbl1names,0);
+  L1Dec.resize(nbl1names,false);
+  L1NoDec.resize(nbl1names,false);
   bool splitByModuleType = true;
   dEdxTemplates = loadDeDxTemplate(DeDxTemplate, splitByModuleType);
   if (enableDeDxCalibration)
@@ -72,10 +80,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 
   //moduleGeom::loadGeometry(Geometry);
   //tofCalculator.loadTimeOffset(TimeOffset);
-  EffL1Seeds.resize(nbl1names,0.0);
-  L1Num.resize(nbl1names,0);
-  L1Denom.resize(nbl1names,0);
-  L1Dec.resize(nbl1names,false);
 }
       
 Analyzer::~Analyzer() {
@@ -107,7 +111,18 @@ void Analyzer::beginJob() {
 
   is2016 = false;
   is2016G = false;
+  
 
+  /*
+ *move out for migration part 2
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+   */
 }
 
 
@@ -117,10 +132,9 @@ void Analyzer::beginRun(const edm::Run& run,const edm::EventSetup& setup)
   hltPSProv_.init(run,setup,hltProcess_,changed);
   const l1t::L1TGlobalUtil& l1GtUtils = hltPSProv_.l1tGlobalUtil();
   std::cout <<"l1 menu "<<l1GtUtils.gtTriggerMenuName()<<" version "<<l1GtUtils.gtTriggerMenuVersion()<<" comment "<<std::endl;
+  std::cout << "Scenario for study : " << scenarios_ <<std::endl;
   std::cout <<"hlt name "<<hltPSProv_.hltConfigProvider().tableName()<<std::endl;
 }
-
-//bool getinfol1seed(const trigger::TriggerEvent& trigEvent,const std::string& filterName,const std::string& hltProcess)
 
 
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -131,13 +145,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   double HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
   double HSCPDLength1 = -1, HSCPDLength2 = -1;
   int psColumn = hltPSProv_.prescaleSet(iEvent,iSetup);
-  std::cout <<"PS column "<<psColumn<<std::endl;
+  //std::cout <<"PS column "<<psColumn<<std::endl;
   if(psColumn==0 && iEvent.isRealData()){
     std::cout <<"PS column zero detected for data, this is unlikely (almost all triggers are disabled in normal menus here) and its more likely that you've not loaded the correct global tag in "<<std::endl;
   }
  
   l1t::L1TGlobalUtil& l1GtUtils = const_cast<l1t::L1TGlobalUtil&> (hltPSProv_.l1tGlobalUtil());
   //std::cout <<"l1 menu: name decisions prescale "<<std::endl;
+
+  int nbl1=0;
   for(int j=0;j<nbl1names;j++){
     for(size_t bitNr=0;bitNr<l1GtUtils.decisionsFinal().size();bitNr++){
       const std::string& bitName = l1GtUtils.decisionsFinal()[bitNr].first;
@@ -145,30 +161,50 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       bool passInterm = l1GtUtils.decisionsInterm()[bitNr].second;
       bool passFinal = l1GtUtils.decisionsFinal()[bitNr].second;
       int prescale = l1GtUtils.prescales()[bitNr].second;
-      //std::cout <<"   "<<bitNr<<" "<<bitName<<" "<<passInitial<<" "<<passInterm<<" "<<passFinal<<" "<<prescale<<std::endl;
-      if((bitName == ListL1Names[j])){
+      if(bitName == ListL1Names[j]){
+        nbl1+=1;
         L1Dec[j] = passFinal;
-        if(passFinal)  std::cout << "found L1 seed with name " << bitName << " value : 1" << std::endl;
-        else  std::cout << "found L1 seed with name " << bitName << " value : 0" << std::endl; 
-      }
+      } 
     }
+  }
+  if(nbl1!=nbl1names){
+    cout << "Didn't find every L1 seed for this event" << endl;
+    return;
   }
 
   if (isSignal) {
+    ntot +=1;
     Handle<vector<reco::GenParticle>> genCollH;
     iEvent.getByToken(genParticleToken_, genCollH);
     if (!genCollH.isValid()) {
+      cout << "Warning, gen particle collection is invalid" << endl;
       LogWarning("Analyzer") << "Invalid  GenParticle!!, this event will be ignored";
+      nbwrongcoll+=1;
       return;
     }
-    else{
-      std::cout << "gen coll size : " << genCollH->size() << std::endl;
-    }
+
     genColl = *genCollH;
 
     int NChargedHSCP = HowManyChargedHSCP(genColl);
     int NNeutralHSCP = HowManyNeutralHSCP(genColl);
+    int CheckNbHSCP = NChargedHSCP + NNeutralHSCP;
 
+    if(CheckNbHSCP != 2 ){
+      cout << " WARNING ----- Event does not contain 2 HSCPs, skipping it ----- " <<endl;
+    }
+
+    if(NChargedHSCP == 2){
+        nchch+=1;
+    }
+    else if(NNeutralHSCP == 2){
+        nnn+=1;
+
+    }
+    else if(NChargedHSCP == 1 && NNeutralHSCP == 1){
+        nchn +=1;
+    }
+
+    //std::cout <<"# Charged : " << NChargedHSCP << " ,# Neutral : " << NNeutralHSCP << endl; 
     double Wa = 1.0, Wad = 1.0, Waa = 1.0,
            Wan = 1.0;  // Wa is additional weight for single other, Wad for other+double_charged,
                        // Waa for the event with 2 other R-hadron, Wan for other+neutral
@@ -176,14 +212,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool Rhadron = 0;  // default value - not R-hadron (not need to weight)
     string sample_name = "";
 
-
-    unsigned int nw = 0, na = 0, nd = 0,
-                 nn = 0;  //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
+    double calo_met;
+    unsigned int nw = 0, na = 0, nd = 0;  //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
+    //===================== Handle For CaloMET =================
+    const edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle = iEvent.getHandle(CaloMETToken_);
+    if (CaloMETHandle.isValid() && !CaloMETHandle->empty()) {
+      //cout << "Size reco::calo MET collection : " << CaloMETHandle->size() << endl;
+      for (unsigned int i = 0; i < CaloMETHandle->size(); i++) {
+        const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
+        //cout << "calo MET[" << i << "] = " << calomet->et() << endl;
+        calo_met = calomet->et();
+      }
+    }
     
+    //===================== Handle For PFCandidate  =================
+    const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
     
 
-    bool discr = true;
-
+   
+    //int discr = 0;
+    bool dcr = true,dcrno = true;
     //===================== Handle For DeDx Hits ==============
 
     Handle<reco::DeDxHitInfoAss> dedxCollH;
@@ -192,11 +240,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //====================loop over HSCP candidates===================
     if (debugLevel_ > 0 ) LogPrint(MOD) << "Loop over HSCP candidates:";
     for (const auto& hscp : iEvent.get(hscpToken_)) {
-      if (debugLevel_> 0) LogPrint(MOD) << "  --------------------------------------------";
-
+      //if (debugLevel_> 0) LogPrint(MOD) << "  --------------------------------------------";
       reco::TrackRef track;
-      track = hscp.trackRef();    
+      track = hscp.trackRef();  
       if (track.isNull()) {
+        //cout << "  >> Event has no track associated to this HSCP, skipping it";
         if (debugLevel_> 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
         continue;
       }
@@ -205,6 +253,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (isSignal && DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) > 0.03) {
         if (debugLevel_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
       DistToHSCP(hscp, genColl, ClosestGen, TypeMode_) << "), skipping it";
+      //cout << " Signal MC HSCP distance from gen to candidate is too big "<<endl;
       continue;
       }
 
@@ -217,10 +266,58 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
 
       int pdgId = 0;
+
       if (isSignal) {
         pdgId = genColl[ClosestGen].pdgId();
-        LogPrint(MOD) << "  >> GenId  " << pdgId;
+
+        //std::cout << "  >> GenId  " << pdgId << " >> gen status :" << status;
+        //LogPrint(MOD) << "  >> GenId  " << pdgId << " >> gen status :" << status;
       }
+
+      float RMin = 9999.;
+      unsigned int idx_pf_RMin = 9999;
+      bool pf_isMuon = false;
+
+
+
+      if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
+        const reco::PFCandidateCollection* pf = pfCandHandle.product();
+        for (unsigned int i = 0; i < pf->size(); i++){
+          const reco::PFCandidate* pfCand = &(*pf)[i];
+          float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
+          //cout << dr; 
+          if(dr < RMin){
+            RMin = dr;
+            idx_pf_RMin = i;
+          }
+        }
+        //pf candidate ref to track 
+        for(unsigned int i=0;i<pf->size();i++){
+          const reco::PFCandidate* pfCand = &(*pf)[i];
+          if(i == idx_pf_RMin) {
+            pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+            //cout <<" pf_isMuon : " << pf_isMuon << endl;
+            if(pf_isMuon)
+              nbpfmuon+=1;
+          }
+        }
+      }
+      bool globlMuon = hscp.type() == susybsm::HSCParticleType::globalMuon;
+      //cout <<"globalMuon : " << globlMuon << endl;
+      if(globlMuon)
+          nbglobalmuon+=1;
+      bool TrkrMuon = hscp.type() == susybsm::HSCParticleType::trackerMuon;
+      //cout <<"trackerMuon : " << TrkrMuon << endl;
+      if(TrkrMuon)
+          nbtrkmuon+=1;
+      bool StdAloneMuon = hscp.type() == susybsm::HSCParticleType::standAloneMuon;
+      //cout <<"StandAloneMatchedMuon : " << StdAloneMuon << endl;
+      if(StdAloneMuon)
+          nbstdalnmuon+=1;
+      bool MtchStdAloneMuon = hscp.type() == susybsm::HSCParticleType::matchedStandAloneMuon;
+      //cout <<"StandAloneMatchedMuon : " << MtchStdAloneMuon << endl;
+      //frac muon or no muon : compare with old sample, or with sample from dylan 
+
       double dEdxErr = 0;
       reco::DeDxData dedxSObjTmp = computedEdx(dedxHits,
                                              dEdxSF,
@@ -266,61 +363,120 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
       reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
       bool PRescale = false;
-
-      nbtot +=1;
-
+      nbtot+=1;
       /*
       Splitting scenarios r-hadrons 
       + infos L1 after HLT filters aswell
       ++ distrib cut variables, efficiencies step by step filters 
-       
       */
-      if(passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, nullptr, iEvent, 1, nullptr, -1, PRescale, 0, 0, 0))
-      {  
-        nbpasspresel+=1;
-	if(discr){
-       		if(scenarios_ == "both"){
-        		AssoGenID(L1Dec);
-		}
-		else if(scenarios_ == "chch"){
-			if(NChargedHSCP == 2){
-				AssoGenID(L1Dec);
-			}
-		}	
-		else if(scenarios_ == "chn"){
-			if(NChargedHSCP == 1 && NNeutralHSCP == 1){
-				AssoGenID(L1Dec);
-			}
-		}
-	}
-        discr=false;
-      }
+      // comprendre les chooses differemment muon et MET"
+      
 
+      if(globlMuon){
+        if(passPreselection(hscp, dedxHits, dedxSObj, dedxMObj, nullptr, iEvent, 1, nullptr, -1, PRescale, 0, 0, 0)){
+          if(dcr){
+          nbpasspresel+=1;
+            if(scenarios_ == "both" ){
+              AssoGenID(L1Dec,"pass");
+            }      
+            else if(scenarios_ == "chch" && NChargedHSCP == 2){
+                AssoGenID(L1Dec,"pass");
+            } 
+            else if(scenarios_ == "chn" ){
+              if(NChargedHSCP == 1 && NNeutralHSCP == 1 && calo_met>90 ){
+                AssoGenID(L1Dec,"pass");
+              }        
+            }
+          }
+          dcr = false;
+        }
+        else{
+          if(dcrno){
+            nbnopasspresel+=1;
+            if(scenarios_ == "both"){
+              AssoGenID(L1Dec,"fail");
+            }
+            else if(scenarios_ == "chch" && NChargedHSCP == 2){
+              AssoGenID(L1Dec,"fail");
+            }
+            else if(scenarios_ == "chn"){
+              if(NChargedHSCP == 1 && NNeutralHSCP == 1 && calo_met>90 ){
+                AssoGenID(L1Dec,"fail");
+              }
+            }
+          }
+          dcrno = false;
+        }
+      }      
     } // HSCP loop end
-  if(discr==2)
-    std::cout << "There were 2 hscps passing preselection in this event" << std::endl;
   } // end of IsSignal
 
 }
 
 void Analyzer::endJob() {
 
-  std::cout << "# HSCP passing preSelection : " << nbpasspresel << ", # total HSCPs : " << nbtot << std::endl;      cout << "--> " << (nbpasspresel*1.0/nbtot)*100 << " % " << std::endl; 
- 
+  //cout << "# HSCP passing preSelection : " << nbpasspresel << ", # total HSCPs : " << nbtot << endl;      cout << "--> " << (nbpasspresel*1.0/nbtot)*100 << " % " << endl;
+  const string path = "MergeEff/PRESEL+MUON/";
+  const string number = "1";
+  const string passnm = "PassNum",passdnm = "PassDenom",failnm = "FailNum", faildnm = "FailDenom";
+  const string exttxt = ".txt";
+  const string passnumfile = path + passnm + number + exttxt,  passdenomfile = path +  passdnm + number + exttxt, failnumfile = path +  failnm + number + exttxt, faildenomfile = path +  faildnm + number + exttxt;
+  ofstream numl1pass,denoml1pass,numl1fail,denoml1fail;
+  numl1pass.open(passnumfile.c_str());
+  denoml1pass.open(passdenomfile.c_str());
+  numl1fail.open(failnumfile.c_str());
+  denoml1fail.open(faildenomfile.c_str());
+  
+  
+  cout << "Splitting scenarios on r-hadrons" << endl;
+  cout << "--------------------------------" << endl;
+  cout << "There was " << ntot << " - " << nbwrongcoll <<"(invalid Gen Col) = " <<ntot - nbwrongcoll << " events, and  " << nbtot  << " HSCPs"  <<endl;
+  cout << "There was " << nbpasspresel << " unique (per event) HSCP passing presel, and " << nbnopasspresel << " who failed presel" << endl; 
+  cout << nchch << " Charged-Charged, " << nchn << " Charged-Neutral, " << nnn << " Neutral-Neutral"<<endl;
+  cout << "Charged-Charged proportion : " << (nchch*1.0/ntot)*100 << " %, Charged-Neutral : " << (nchn*1.0/ntot)*100 << " %, Neutral-Neutral : " << (nnn*1.0/ntot)*100 << " %"<<endl;
+
+  cout << " Out of the " << nbtot << " HSCPS : " << endl;
+  cout << "             " << nbglobalmuon << " were global muons" <<endl;
+  cout << "             " << nbpfmuon << " were pf muons" <<endl;
+  
+
   for (int i = 0; i < nbl1names; i++){
-    if(L1Denom[i] == 0)
+    if(L1Denom[i] == 0 || L1Num[i] == 0)
       EffL1Seeds.at(i) = 0.0;
     else{
-      EffL1Seeds.at(i) = (L1Num[i]*1.0/L1Denom[i])*100;
+      EffL1Seeds.at(i) = (L1Num[i]*1.0/L1Denom[i]);
     }
   }
+ //here efficiencies of l1seed
+  cout << "Efficiencies of L1 seeds after preselection, for scenario "<< scenarios_.c_str() <<endl;
+  cout << "-------------------------------------------" << endl;
 
-  std::cout << "Efficiencies of L1 seeds after preselection for scenario "<< scenarios_ << std::endl << "-------------------------------------------" << std::endl;
+  cout << "HSCP PASSING PRESELECTION" << endl;
+
   for (int i = 0; i < nbl1names; i++){
-    std::cout << ListL1Names[i] << " = " << L1Num[i] << "/" << L1Denom[i] << " = " <<EffL1Seeds.at(i) << "% ±" << sqrt((EffL1Seeds.at(i)*(1-EffL1Seeds.at(i)))/L1Denom[i])*100 << " %" <<std::endl;
+    numl1pass << L1Num[i] << endl;
+    denoml1pass << L1Denom[i] << endl;
+    cout << ListL1Names[i] << " = " << L1Num[i] << "/" << L1Denom[i] << " = " <<EffL1Seeds.at(i)*100 << " ±" << sqrt((EffL1Seeds.at(i)*(1-EffL1Seeds.at(i)))/L1Denom[i])*100  << " %"<<endl;
   }
+
+  cout << "HSCP FAILING PRESELECTION" << endl;
+  for (int i = 0; i < nbl1names; i++){
+    numl1fail << L1NumFail[i] << endl;
+    denoml1fail << L1DenomFail[i] << endl;
+    cout << ListL1Names[i] << " = " << L1NumFail[i] << "/" << L1DenomFail[i] << " = " << (L1NumFail[i]*1.0/L1DenomFail[i])*100 << " ±" <<  sqrt(( (L1NumFail[i]*1.0/L1DenomFail[i]) * ( 1- (L1NumFail[i]*1.0/L1DenomFail[i]) ) )/L1DenomFail[i])*100  << " %"<<endl;
+  }
+
+
+  cout << "There was " <<ntot << " valid events and " << nbwrongcoll << " wrong events (gen collection invalid)";
+  numl1pass.close();
+  denoml1pass.close();
+  numl1fail.close();
+  denoml1fail.close();
+  EffL1Seeds.clear();
+  
+ //end eff L1
  
-   
+  
 }
 
 
@@ -331,13 +487,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   descriptions.addDefault(desc);
 }
 
-void Analyzer::AssoGenID(const vector<bool>& l1decision){
-    for(int i =0; i< nbl1names; i++){
-        L1Denom[i]+=1;
-        if(l1decision[i]==true)
-          L1Num[i]+=1;
-    }
-}
 DEFINE_FWK_MODULE(Analyzer);
 
 
@@ -833,3 +982,39 @@ bool Analyzer::passSelection(const susybsm::HSCParticle& hscp,
 
 
 }
+
+
+void Analyzer::AssoGenID(const vector<bool>& decisionl1, const string& mode){
+  
+  if(mode == "pass"){
+    for(int i =0; i< nbl1names; i++){
+      L1Denom[i]+=1;
+      if(decisionl1[i]==true){
+        L1Num[i]+=1;
+      }
+    }
+  }
+  else if(mode == "fail"){
+    for(int i =0; i< nbl1names; i++){
+      L1DenomFail[i]+=1;
+      if(decisionl1[i]==true){
+        L1NumFail[i]+=1;
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

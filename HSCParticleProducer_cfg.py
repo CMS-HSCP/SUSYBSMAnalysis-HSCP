@@ -5,8 +5,8 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 
 # defaults
-options.outputFile = 'HSCPtest.root'
-options.maxEvents = -1 # -1 means all events
+options.outputFile = 'HSCP.root'
+options.maxEvents = 1000 # -1 means all events
 
 options.register('GTAG', '123X_mcRun3_2021_realistic_v4',
     VarParsing.multiplicity.singleton,
@@ -171,6 +171,7 @@ process.schedule = cms.Schedule(process.HSCPTuplePath, process.endPath1)
 '''
 
          "keep GlobalAlbGlk_hltGtStage2Digis*_*_*",
+file:/opt/sbg/cms/ui2_data1/rhaeberl/CMSSW_12_3_0_pre4/src/HLTOUTPUT_DIGIrun3/HSCP_Gluino_Mass1800_AOD.root
          "keep GlobalExtBlk_hltGtStage2Digis*_*_*",
          "keep EventAux_*_*_*",
          "keep LumiSummary_*_*_*",

@@ -113,7 +113,7 @@
 #include "DataFormats/L1TGlobal/interface/GlobalAlgBlk.h"
 #include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
 #include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
-
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 
 
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
@@ -138,8 +138,6 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-  void AssoGenID(const vector<bool>& l1decision);
-
   void initializeCuts(edm::Service<TFileService>& fs,
                       vector<double>& CutPt,
                       vector<double>& CutI,
@@ -147,7 +145,6 @@ public:
                       vector<double>& CutPt_Flip,
                       vector<double>& CutI_Flip,
                       vector<double>& CutTOF_Flip);
-
 
   bool passPreselection(const susybsm::HSCParticle& hscp,
                         const reco::DeDxHitInfo* dedxHits,
@@ -178,6 +175,8 @@ public:
                      const double& RescaleI,
                      const double& RescaleT);
 
+  void AssoGenID(const vector<bool>& decisionl1,const string& mode);
+
   bool passTrigger(const edm::Event& iEvent, bool isData, bool isCosmic = false, L1BugEmulator* emul = nullptr);
   //double SegSep(const susybsm::HSCParticle& hscp, const edm::Event& iEvent, double& minPhi, double& minEta);
   static constexpr unsigned int maxPhysicsTriggers = 512;
@@ -201,7 +200,7 @@ private:
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
   edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
-  
+  edm::EDGetTokenT<reco::PFCandidateCollection> pfCandToken_; 
   vector<string> trigger_met_, trigger_mu_;
   vector<double> CutPt_, CutI_, CutTOF_;
   vector<double> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;
@@ -209,11 +208,23 @@ private:
   map<string, TProfile*> HCuts;
   const int nbl1names = 12;
   //following is hard coded for my actual purpose, a given list of L1 seeds of interest
+  
+
   const string ListL1Names[12] = {"L1_SingleMu22","L1_SingleMu25","L1_ETMHF90_HTT60er","L1_ETMHF100","L1_ETMHF100_HTT60er","L1_ETMHF110","L1_ETMHF110_HTT60er","L1_ETMHF120","L1_ETMHF120_HTT60er","L1_ETT2000","L1_ETM150","L1_ETMHF150"};
   vector<double> EffL1Seeds;
-  vector<int> L1Num;
-  vector<int> L1Denom;
-  vector<bool> L1Dec; 
+  vector<int> L1Num,L1Denom,L1NumFail,L1DenomFail;
+
+  vector<bool> L1Dec;
+  vector<bool> L1NoDec;
+  const vector<int> indexpdgch{1009213, 1009323, 1092214, 1091114, 1093114, 1093224, 1093314, 1093334, 1000612, 1000632, 1000652, 1006211, 1006213, 1006313, 1006321, 1006323 }, indexpdgn{1000622, 1093324, 1092114, 1000993, 1009113, 1009223, 1009313, 1009333, 1093214, 1000642, 1006113, 1006311, 1006313}, indexpdgch2{1006223, 1092224};
+  //end of hardcoded part
+  int nchn = 0,nchch=0,nnn=0,ntot=0,nbetmhf90=0,nballetmhf90=0;//counters for scenarios Charged-Charged, Charged-Neutral and Neutral-Neutral
+  int nbwrongcoll=0;//counter for # of invalid GenCollections 
+  int nbpfmupresel = 0, nbglobalmupresel = 0;
+
+  int nbpfmuon =0, nbglobalmuon = 0, nbstdalnmuon =0, nbtrkmuon = 0;//counters for muons
+  map <string, bool> mapl1;
+  
 
   bool* HSCPTk;
 
@@ -232,7 +243,8 @@ private:
   int SampleType_;
   string SampleName_;
   string Period_;
-  int nbpasspresel = 0;
+
+  int nbpasspresel = 0,nbnopasspresel = 0;
   int nbtot = 0;
 
 
@@ -344,7 +356,7 @@ private:
   const edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> tkGeomToken_;
   const edm::ESGetToken<PixelClusterParameterEstimator, TkPixelCPERecord> pixelCPEToken_;
   HLTPrescaleProvider hltPSProv_;
-  std::string hltProcess_; 
+  std::string hltProcess_;
   string scenarios_;
 };
 #endif

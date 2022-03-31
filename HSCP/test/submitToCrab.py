@@ -61,13 +61,13 @@ elif args.dataset:
     config.Data.inputDataset = args.dataset
     config.Data.inputDBS = 'global'
     if args.sample=='isData':
-        config.Data.splitting = 'LumiBased'
-        config.Data.unitsPerJob = 20
+        config.Data.splitting = 'FileBased'
+        config.Data.unitsPerJob = 1
         config.Data.lumiMask = args.lumiToProcess #'HSCP/test/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt'
         #config.Data.runRange = '297047-306462'
     else:
         config.Data.splitting = 'FileBased'
-        config.Data.unitsPerJob = 10
+        config.Data.unitsPerJob = 1
 else:
     print_help(psetName)
 
