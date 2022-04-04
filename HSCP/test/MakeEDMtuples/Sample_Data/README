@@ -1,0 +1,33 @@
+1)Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt
+
+list of run and lumi sections good for physics
+
+MET SAMPLES:
+/MET/Run2017B-17Nov2017-v1/AOD
+/MET/Run2017C-17Nov2017-v1/AOD
+/MET/Run2017D-17Nov2017-v1/AOD
+/MET/Run2017E-17Nov2017-v1/AOD
+/MET/Run2017F-17Nov2017-v1/AOD
+
+Single Muon SAMPLES:
+/SingleMuon/Run2017B-17Nov2017-v1/AOD
+/SingleMuon/Run2017C-17Nov2017-v1/AOD
+/SingleMuon/Run2017D-17Nov2017-v1/AOD
+/SingleMuon/Run2017E-17Nov2017-v1/AOD
+/SingleMuon/Run2017F-17Nov2017-v1/AOD
+
+
+Double Muon SAMPLES:
+/DoubleMuon/Run2017B-17Nov2017-v1/AOD
+/DoubleMuon/Run2017C-17Nov2017-v1/AOD
+/DoubleMuon/Run2017D-17Nov2017-v1/AOD
+/DoubleMuon/Run2017E-17Nov2017-v1/AOD
+/DoubleMuon/Run2017F-17Nov2017-v1/AOD
+
+To check if data are avaliable on Tier1 or Tier2: 
+dasgoclient --query='site dataset=/DoubleMuon/Run2017E-17Nov2017-v1/AOD | grep site.site_fraction' | grep T1_
+dasgoclient --query='site dataset=/DoubleMuon/Run2017E-17Nov2017-v1/AOD | grep site.site_fraction' | grep T2_
+
+
+Merge.py is not needed anymore
+

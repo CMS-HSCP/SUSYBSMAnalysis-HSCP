@@ -1,0 +1,13 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="hepmc"/>
+ <use name="DataFormats/TrackReco"/>
+ <use name="CommonTools/UtilAlgos"/>
+ <use name="RecoTracker/DeDx"/>
+ <use name="AnalysisDataFormats/SUSYBSMObjects"/>
+
+<use name="Geometry/TrackerGeometryBuilder"/>
+<use name="RecoTracker/Record"/>
+<use name="RecoTracker/TrackProducer"/>
+<flags EDM_PLUGIN="1"/>

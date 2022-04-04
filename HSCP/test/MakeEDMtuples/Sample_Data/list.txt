@@ -1,0 +1,9 @@
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297219_1160/HSCP_297219_1160.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297057_40/HSCP_297057_40.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297100_306/HSCP_297100_306.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297101_1037/HSCP_297101_1037.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297050_277/HSCP_297050_277.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297101_481/HSCP_297101_481.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297100_126/HSCP_297100_126.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297057_226/HSCP_297057_226.root
+file /home/ucl/cp3/jpriscia/CMSSW_9_4_3/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Sample_Data/out/297101_31/HSCP_297101_31.root
