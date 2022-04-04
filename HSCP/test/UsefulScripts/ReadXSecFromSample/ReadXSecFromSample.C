@@ -25,9 +25,10 @@
 // namespace edm {class TriggerResults; class TriggerResultsByName; class InputTag;}
 // namespace reco { class Vertex; class Track; class GenParticle;}
 // namespace susybsm {class HSCParticle;}
- namespace fwlite  { class ChainEvent;}
+namespace fwlite {
+  class ChainEvent;
+}
 // namespace trigger {class TriggerEvent;}
-
 
 #if !defined(__CINT__) && !defined(__MAKECINT__)
 #include "FWCore/FWLite/interface/FWLiteEnabler.h"
@@ -49,50 +50,48 @@
 */
 #include "SimDataFormats/GeneratorProducts/interface/GenRunInfoProduct.h"
 
- using namespace fwlite;
+using namespace fwlite;
 // using namespace reco;
- using namespace edm;
- using namespace std;
+using namespace edm;
+using namespace std;
 // using namespace trigger;
-
 
 #include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
 
-
 #endif
 
-void ReadXSecFromSample()
-{
-   InitBaseDirectory();
-   GetSampleDefinition(samples , "../../AnalysisCode/Analysis_Samples.txt");
-   keepOnlyValidSamples(samples);
+void ReadXSecFromSample() {
+  InitBaseDirectory();
+  GetSampleDefinition(samples, "../../AnalysisCode/Analysis_Samples.txt");
+  keepOnlyValidSamples(samples);
 
-   for(unsigned int i=0;i<samples.size();i++){
-      if( samples[i].Type !=2) continue; //only process signal samples
+  for (unsigned int i = 0; i < samples.size(); i++) {
+    if (samples[i].Type != 2)
+      continue;  //only process signal samples
 
-      vector<string> FileName;
-      GetInputFiles(samples[i], BaseDirectory, FileName, 1);
+    vector<string> FileName;
+    GetInputFiles(samples[i], BaseDirectory, FileName, 1);
 
-      // loop on all the run blocks for an EDM file in order to count the number of events that are in a sample
-      // this is useful to determine how to normalize the events (compute weight)
-      double Total = 0;
-      double Error = 0;
-      int NRuns = 0;
-      for(unsigned int f=0;f<FileName.size();f++){
-         TFile *file = TFile::Open(FileName[f].c_str());      
-         fwlite::Run run( file );
-         for(run.toBegin(); !run.atEnd(); ++run){
-            fwlite::Handle<GenRunInfoProduct> genRunInfo;
-            genRunInfo.getByLabel(run,"generator");
-            if(!genRunInfo.isValid()){printf("Invalid genRunInfo Handle\n");continue;}
-            Total+= genRunInfo->internalXSec().value();
-            Error+= genRunInfo->internalXSec().error();
-            NRuns++;
-         }
+    // loop on all the run blocks for an EDM file in order to count the number of events that are in a sample
+    // this is useful to determine how to normalize the events (compute weight)
+    double Total = 0;
+    double Error = 0;
+    int NRuns = 0;
+    for (unsigned int f = 0; f < FileName.size(); f++) {
+      TFile *file = TFile::Open(FileName[f].c_str());
+      fwlite::Run run(file);
+      for (run.toBegin(); !run.atEnd(); ++run) {
+        fwlite::Handle<GenRunInfoProduct> genRunInfo;
+        genRunInfo.getByLabel(run, "generator");
+        if (!genRunInfo.isValid()) {
+          printf("Invalid genRunInfo Handle\n");
+          continue;
+        }
+        Total += genRunInfo->internalXSec().value();
+        Error += genRunInfo->internalXSec().error();
+        NRuns++;
       }
-      printf("%40s --> xsec= %8E +- %8E pb\n",samples[i].Name.c_str(), Total/NRuns, Error/NRuns);
-
-   }
-
+    }
+    printf("%40s --> xsec= %8E +- %8E pb\n", samples[i].Name.c_str(), Total / NRuns, Error / NRuns);
+  }
 }
-
