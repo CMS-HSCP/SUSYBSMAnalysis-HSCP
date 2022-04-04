@@ -13,8 +13,8 @@
 #include "DataFormats/TrackReco/interface/HitPattern.h"
 
 namespace hscphelpers {
-  TH3F* preprocess_dEdx_template(TH3F* histo, bool splitByModuleType=true);
-  int  muonStations(const reco::HitPattern& hitPattern);
-}
+  TH3F* preprocess_dEdx_template(TH3F* histo, bool splitByModuleType = true);
+  int muonStations(const reco::HitPattern& hitPattern);
+}  // namespace hscphelpers
 
 #endif
