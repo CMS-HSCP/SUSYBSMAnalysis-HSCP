@@ -8,17 +8,23 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag.globaltag = "94X_mc2017_realistic_v17"
+process.GlobalTag.globaltag = "106X_mc2017_realistic_v9" #pdmv 5 oct 2021
+
+process.load("RecoVertex.BeamSpotProducer.BeamSpot_cff")
+process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
+process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 
 
-#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-         # aod 2017
-         'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17DRPremix/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/RECOSIMstep_94X_mc2017_realistic_v10-v1/00000/785EFE4D-43F1-E711-B3E1-0CC47A74527A.root'
+         # aod 2017 w+1j
+         'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17RECO/W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/106X_mc2017_realistic_v6-v1/00000/01EDA01D-B02E-754C-8882-A1906F60202C.root'
+         # aod prod malgorzata
+         #'root://cmsxrootd.fnal.gov//store/user/kazana/HSCP/MC2017/UL17_mc_PU/HSCPgluino_M_1000_TuneCP5_13TeV_pythia8/UL17_mc_PU/210326_181209/0000/RECO_1.root'
     )
 )
 
@@ -59,6 +65,12 @@ process.stage = cms.EDAnalyzer('ntuple'
     , doRecomputeMuTim  = cms.bool(False)  # no recomputation for MC !! 
     , cscSegments     = cms.InputTag("cscSegments")
     , dt4DSegments    = cms.InputTag("dt4DSegments")
+    , pfCand              = cms.InputTag("particleFlow", "", "RECO")
+    , pfMET = cms.InputTag("pfMet", "", "RECO")
+    , pfJet = cms.InputTag("ak4PFJetsCHS", "", "RECO")
+    , CaloMET = cms.InputTag("caloMet", "", "RECO")
+    , pixelCPE              = cms.string("PixelCPEClusterRepair")
+    , trackProbQCut         = cms.untracked.double(1.0)
 )
 
 
@@ -88,6 +100,7 @@ process.HSCPTrigger.HLTPaths = [ #check triggers
           "HLT_OldMu100_*",                     # fractionaly charged on SingleMu
           "HLT_TkMu100_*",                      # fractionaly charged on SingleMu
           "HLT_Mu45_eta2p1*",                  # HSCP 2016
+          "HLT_TkMu50_v*",                      # April2020 studies -> email 05/05
 ]
 
 #process.p = cms.Path(process.HSCPTrigger + process.HSCParticleProducerSeq +process.stage)
