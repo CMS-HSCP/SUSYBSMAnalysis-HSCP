@@ -15,7 +15,7 @@
 //         Created:  Mon, 14 Jan 2019 15:48:08 GMT
 //
 // Modifications: Tamas Almos Vami (tav)
-// v2: add mother of DPG in HSCP candidate
+// v5: add mother of DPG in HSCP candidate
 
 
 // system include files
