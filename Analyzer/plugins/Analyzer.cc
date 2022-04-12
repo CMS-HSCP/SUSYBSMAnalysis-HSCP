@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v17:
+// v17p2:
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -21,6 +21,7 @@
 // - Fix logic for new cutflow, fix the  change boundary for ptErrOverPt2
 // - Make cuts into an array
 // - Fix logic with not used variales
+// - Change the cut flow order
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -80,16 +81,16 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMinNOH_(iConfig.getUntrackedParameter<int>("GlobalMinNOH")),
       globalMinNOPH_(iConfig.getUntrackedParameter<int>("GlobalMinNOPH")),
       globalMinFOVH_(iConfig.getUntrackedParameter<double>("GlobalMinFOVH")),
-      trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
+      globalMinNOM_(iConfig.getUntrackedParameter<int>("GlobalMinNOM")),
       globalMaxChi2_(iConfig.getUntrackedParameter<double>("GlobalMaxChi2")),
       globalMaxEIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxEIsol")),
-      globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
-      globalMaxPtErr_(iConfig.getUntrackedParameter<double>("GlobalMaxPtErr")),
       globalMaxDZ_(iConfig.getUntrackedParameter<double>("GlobalMaxDZ")),
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
+      globalMaxPtErr_(iConfig.getUntrackedParameter<double>("GlobalMaxPtErr")),
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
+      globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
+      trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
       minMuStations_(iConfig.getUntrackedParameter<int>("MinMuStations")),
-      globalMinNOM_(iConfig.getUntrackedParameter<int>("GlobalMinNOM")),
       globalMinIs_(iConfig.getUntrackedParameter<double>("GlobalMinIs")),
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       skipPixel_(iConfig.getUntrackedParameter<bool>("SkipPixel")),
@@ -1177,9 +1178,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
-
-    // First bin of cutflow is after trigger
-    tuple->CutFlow->Fill(0.5, EventWeight_);
     
     if (debug_ > 5 ) LogPrint(MOD)  << "        >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
     // Check if we pass the preselection
@@ -1748,7 +1746,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
     ->setComment("A");
-  desc.add("TrackToGenAssoc", edm::InputTag("allTrackMCMatch"))
+  desc.add("TrackToGenAssoc", edm::InputTag("prunedTrackMCMatch"))
     ->setComment("Collection used to match to gen thruth");
   desc.add("PfCand", edm::InputTag("particleFlow"))
     ->setComment("Input collection for particleFlow algorithm");
@@ -1803,10 +1801,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
   desc.addUntracked("DoTriggering",true)->setComment("Boolean to eecide whether we want to use triggers");
   desc.addUntracked("CalcSystematics",true)->setComment("Boolean to decide  whether we want to calculate the systematics");
-  desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
-  desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxEta",2.1)->setComment("Cut on inner tracker track eta");
-  desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
+  desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
   desc.addUntracked("GlobalMinNOH",8)->setComment("Cut on number of (valid) track pixel+strip hits");
   desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
@@ -1815,10 +1811,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEIsol",0.30)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.5)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.5)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
-  desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
+  desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Is,Ias,etc)");
+  desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Is,Ias,etc)");
+  desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
 //  desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
 //  desc.addUntracked("GlobalMinNDOFDT",6.0)->setComment("Cut on number of DT DegreeOfFreedom used for muon TOF measurement");
 //  desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
@@ -2163,25 +2161,25 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-  // Cut away background events based on the probQ
-  passedCutsArray[7]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
+  passedCutsArray[7]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
   // Select only high purity tracks
-  passedCutsArray[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+  passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
-  passedCutsArray[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+  passedCutsArray[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-  passedCutsArray[11] = (EoP < globalMaxEIsol_) ? true : false;
+  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
   // Cut on the impact parameter
-  passedCutsArray[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
-  passedCutsArray[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
+  passedCutsArray[11] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
+  passedCutsArray[12] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
   // Cut on the uncertainty of the pt measurement
-  passedCutsArray[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
-  passedCutsArray[16] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
+  passedCutsArray[15] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
+    // Cut away background events based on the probQ
+  passedCutsArray[16]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // TOF only cuts
   passedCutsArray[17] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
   passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -2214,7 +2212,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // Preselection cuts
     bool passedCutsArray2[20];
     std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
-    passedCutsArray2[0]  = true;
+    passedCutsArray2[0]  = true; // passed trigger
     passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
     passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
@@ -2238,9 +2236,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     // CutFlow in a single plot when probQ is one of the first cuts
     if (tuple) {
-      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
+      for (size_t i=1;i<sizeof(passedCutsArray2);i++) {
         bool allCutsPassedSoFar = true;
-        for (size_t j=0;j<=i;j++) {
+        for (size_t j=1;j<=i;j++) {
           if (!passedCutsArray2[j]) {
             allCutsPassedSoFar = false;
           }
@@ -2254,7 +2252,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // Preselection cuts
     bool passedCutsArray3[20];
     std::fill(std::begin(passedCutsArray3), std::end(passedCutsArray3),false);
-    passedCutsArray3[0]  = true;
+    passedCutsArray3[0]  = true; // passed trigger
     passedCutsArray3[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     passedCutsArray3[2]  = (track->pt() > globalMinPt_) ? true : false;
     passedCutsArray3[3]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
