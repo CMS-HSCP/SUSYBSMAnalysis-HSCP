@@ -15,7 +15,7 @@
 //         Created:  Mon, 14 Jan 2019 15:48:08 GMT
 //
 // Modifications: Tamas Almos Vami (tav)
-// v1
+// v2: add mother of DPG in HSCP candidate
 
 
 // system include files
@@ -318,6 +318,7 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
        int      tree_hscp ;
        int      tree_hscp_gen_id[nMaxHSCP];
+       int      tree_hscp_gen_moth_pdg[nMaxHSCP];
        float    tree_hscp_gen_dr[nMaxHSCP];
        int      tree_hscp_track_idx[nMaxHSCP];
        int      tree_hscp_muon_idx[nMaxHSCP];
@@ -558,6 +559,7 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
 
    smalltree -> Branch ( "nhscp",              &tree_hscp ) ;
    smalltree -> Branch ( "hscp_gen_id",        tree_hscp_gen_id,             "hscp_gen_id[nhscp]/I" );
+   smalltree -> Branch ( "hscp_gen_moth_pdg",  tree_hscp_gen_moth_pdg,       "hscp_gen_moth_pdg[nhscp]/I" );
    smalltree -> Branch ( "hscp_gen_dr",        tree_hscp_gen_dr,             "hscp_gen_dr[nhscp]/F" );
    smalltree -> Branch ( "hscp_track_idx",     tree_hscp_track_idx,          "hscp_track_idx[nhscp]/I" );
    smalltree -> Branch ( "hscp_muon_idx",      tree_hscp_muon_idx,           "hscp_muon_idx[nhscp]/I" );
@@ -1489,6 +1491,7 @@ if(probQonTrack!=0) {
        if (n_genp>0 && !track.isNull()) {
         double RMin = 9999;
         int idxG=-1;
+        int motherID=-1;
         for(int i=0;i< n_genp ;++i){
          const reco::GenParticle* genCand = &(*GenColl)[i];
          if(genCand->pt()<5) continue;
@@ -1498,15 +1501,22 @@ if(probQonTrack!=0) {
          double dR = deltaR(track->eta(), track->phi(), genCand->eta(), genCand->phi());
          if(dR<RMin){ 
            RMin=dR;
-           idxG=genCand->pdgId();
+           idxG=abs(genCand->pdgId());
+           if (genCand->numberOfMothers()>0) {
+             motherID=abs(genCand->mother()->pdgId());
+           } else {
+             motherID = -9999;
+           }
          }
         }
         tree_hscp_gen_id[tree_hscp]=idxG;
         tree_hscp_gen_dr[tree_hscp]=RMin;
+        tree_hscp_gen_moth_pdg[tree_hscp]=motherID;
        }
        else {
         tree_hscp_gen_id[tree_hscp]=-1;
         tree_hscp_gen_dr[tree_hscp]=-1;
+        tree_hscp_gen_moth_pdg[tree_hscp]=-1;
        }
 
        float Mindelta=0.001;
