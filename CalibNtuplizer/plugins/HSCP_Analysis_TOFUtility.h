@@ -873,8 +873,8 @@ public:
             int hitSide = -tm->isLeft * 2 + 1;
             double t0_segm = (-(hitSide * segmLocalPos) + (hitSide * hitLocalPos)) / 0.00543 + tm->timeCorr;
 
-            //double hitWeightInvbeta_ = ((double)seg.size() - 2.) * tm->distIP * tm->distIP / ((double)seg.size() * 30.*30.*theError_ * theError_);
-            //double hitWeightVertex_ = ((double)seg.size() - 2.) / ((double)seg.size() * theError_ * theError_);
+            double hitWeightInvbeta_ = ((double)seg.size() - 2.) * tm->distIP * tm->distIP / ((double)seg.size() * 30.*30.*theError_ * theError_);
+            double hitWeightVertex_ = ((double)seg.size() - 2.) / ((double)seg.size() * theError_ * theError_);
 
             dstnc.push_back(tm->distIP);
             local_t0.push_back(t0_segm);

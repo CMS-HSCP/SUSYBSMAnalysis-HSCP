@@ -28,6 +28,7 @@ void MakeMyProfile(TH2D* input, TH1D* output);
 void SaveCanvas(TCanvas* c, std::string path, std::string name, bool OnlyPPNG=false);
 void plot(bool mb);
 void GetSF(bool mb, bool corr);
+void GetSF();
 
 
 void plot( bool mb) {
@@ -376,6 +377,26 @@ void MakeMyProfile(TH2D* input, TH1D* FitResult)
 		   FitResult->SetBinError  (x, mygaus->GetParError (1));
                    cout << "      fit " << mygaus->GetParameter(1) << "  chi2 " << chiFromFit << endl;
                    delete mygaus;
+
+/*
+
+                   float maxval=Projection->GetXaxis()->GetBinCenter(Projection->GetMaximumBin());
+                   float liminf = maxval -2;
+                   if (liminf<0) liminf=0;
+                   float limsup = maxval + 3;
+                   TF1* mylandau = new TF1("mylandau","[0]*TMath::Landau(x,[1],[2])",liminf, limsup);
+                   mylandau->SetParameters(1,maxval,0.3);
+                   mylandau->SetParLimits(0, 0.1, 1000000000.0);
+                   mylandau->SetParLimits(1, 0.0001, 100.0);
+                   mylandau->SetParLimits(2, 0.0001, 100.0);
+                   Projection->Fit("mylandau","Q 0 RME");
+                   FitResult->SetBinContent(x, mylandau->GetParameter(1));
+                   FitResult->SetBinError  (x, mylandau->GetParError (1));
+                   delete mylandau;
+
+*/
+
+
                   }
 
                   delete Projection;
@@ -386,9 +407,12 @@ void MakeMyProfile(TH2D* input, TH1D* FitResult)
 }
 
 
-void GetSF(bool mb, bool corr) {
+//void GetSF(bool mb, bool corr) {
+void GetSF() {
   TFile *_file0 ;
+  TFile *_file1 ;
 
+/*
   if (mb)  {
 //   if(corr) _file0= TFile::Open("minbias_template_corr.root");
 //   else _file0 = TFile::Open("minbias_template_uncorr.root");
@@ -403,15 +427,58 @@ void GetSF(bool mb, bool corr) {
    if(corr) _file0 = TFile::Open("tt3_template_corr.root");
    else _file0 = TFile::Open("tt3_template_uncorr.root");
   }
-
- _file0->cd();
- cout << "opening file for mb = " << mb << " and corr = " << corr << endl;   
-
+*/
    TH2D*   HdedxVsP1;
    TH2D*   HdedxVsP2;
 
-   HdedxVsP2 = (TH2D*) gROOT->FindObject("HHit2DPix");
-   HdedxVsP1 = (TH2D*) gROOT->FindObject("HHit2DStrip");
+   bool mc_to_data=false;
+   bool mc_alone=false;
+   bool data_alone=true;
+
+  if (mc_alone)  {
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_newIh.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_highstat_woSF.root");
+//     _file0 = TFile::Open("analysis_ul_2017_wSF_15dec.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_21jan.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_wSF_15dec.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_10feb_fullsel.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_8feb_oldsel.root");
+//     _file0 = TFile::Open("analysis_ul_2018MC_w18_MC_dedx1_25feb.root");
+     _file0 = TFile::Open("analysis_ul_2018MC_w18_MC_28feb.root");
+     _file0->cd();
+     HdedxVsP2 = (TH2D*) gROOT->FindObject("HHit2DPix");
+     HdedxVsP1 = (TH2D*) gROOT->FindObject("HHit2DStrip");
+  }
+  else if (data_alone) {
+//     _file0 = new TFile ("/opt/sbg/cms/safe1/cms/ccollard/HSCP/CMSSW_10_6_12/src/stage/ntuple/test/analysisRun2/analysis_ul_2017_newIh.root");
+//     _file0 = new TFile ("analysis_ul_2017_wSF_15dec.root");
+//     _file0 = new TFile ("analysis_ul_2017_21jan.root");
+//     _file0 = new TFile ("analysis_ul_2018_dedx1_25feb_B2D.root");
+     _file0 = new TFile ("analysis_ul_2018_28feb.root");
+     _file0->cd();
+     HdedxVsP2 = (TH2D*) gROOT->FindObject("HHit2DPix");
+     HdedxVsP1 = (TH2D*) gROOT->FindObject("HHit2DStrip");
+  }
+  else if (mc_to_data)  {
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_newIh.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_highstat_woSF.root");
+//     _file0 = TFile::Open("analysis_ulMC_w17_MC_21jan.root");
+//     _file0 = new TFile ("analysis_ul_2017_21jan.root");
+//     _file0 = new TFile ("analysis_ul_2018_dedx1_25feb_B2D.root");
+     _file0 = new TFile ("analysis_ul_2018_28feb.root");
+     _file0->cd();
+     HdedxVsP1 = (TH2D*) gROOT->FindObject("HHit2DStrip");
+//     _file1 = new TFile ("/opt/sbg/cms/safe1/cms/ccollard/HSCP/CMSSW_10_6_12/src/stage/ntuple/test/analysisRun2/analysis_ul_2017_newIh.root");
+//     _file1 = TFile::Open("analysis_ul_2017_wSF_15dec.root");
+//     _file1 = TFile::Open("analysis_ulMC_w17_MC_wSF_15dec.root");
+//     _file1 = new TFile ("analysis_ul_2017_wSF_15dec.root");
+//     _file1 = new TFile ("analysis_ulMC_w17_MC_10feb_fullsel.root");
+//     _file1 = TFile::Open("analysis_ul_2018MC_w18_MC_dedx1_25feb.root");
+     _file1 = TFile::Open("analysis_ul_2018MC_w18_MC_28feb.root");
+     _file1->cd();
+     HdedxVsP2 = (TH2D*) gROOT->FindObject("HHit2DStrip");
+  }
+
 
    HdedxVsP2->Rebin2D(2,1);
    HdedxVsP1->Rebin2D(2,1);
@@ -444,7 +511,7 @@ void GetSF(bool mb, bool corr) {
 
    TH1D* Chi2Dist = new TH1D("Chi2Dist","Chi2Dist",5000, 0.8 ,1.8);
 
-   double Minimum = 999999;
+   double Minimum = 99999999999;
    double AbsGain = -1;
 
    for(int i=1;i<=Chi2Dist->GetNbinsX();i++){
@@ -484,7 +551,7 @@ void GetSF(bool mb, bool corr) {
 
    TCanvas* c2 = new TCanvas("c2", "c2", 600,600);
    TLegend* leg = new TLegend (0.25, 0.70, 0.65, 0.90);
-   leg->SetHeader ("Fitting the Profile");
+   leg->SetHeader ("Fitting the Gaussian means");
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
@@ -505,15 +572,23 @@ void GetSF(bool mb, bool corr) {
    HdedxVsPProfile4->SetLineColor(4);
    HdedxVsPProfile4->Scale(AbsGain);
    HdedxVsPProfile4->Draw("same");
+   if (data_alone || mc_alone) { 
    leg->AddEntry (HdedxVsPProfile1, "Strip", "LP");
    leg->AddEntry (HdedxVsPProfile2, "unscaled Pixel", "LP");
    leg->AddEntry (HdedxVsPProfile4, "scaled Pixel",   "LP");
+   }
+   else if (mc_to_data) {
+   leg->AddEntry (HdedxVsPProfile1, "Data Strip ", "LP");
+   leg->AddEntry (HdedxVsPProfile2, "unscaled MC Pixel", "LP");
+   leg->AddEntry (HdedxVsPProfile4, "scaled MC Pixel",   "LP");
+   }
    leg->Draw();
 
 //   DrawPreliminary("", 13, "");
    SaveCanvas(c2, SaveDir, "Rescale_HdedxVsPProfile");
 
-   fprintf (fout, "HHit Pixel to Strip ::  Profile: %.7lf \n", SFProfile);
+   if (data_alone || mc_alone) fprintf (fout, "HHit Pixel to Strip ::  Profile: %.7lf \n", SFProfile);
+   else if (mc_to_data)  fprintf (fout, "HHit MC to Data Strip ::  Profile: %.7lf \n", SFProfile);
    fclose (fout);
 
 }

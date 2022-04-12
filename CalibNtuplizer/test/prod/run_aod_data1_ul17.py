@@ -8,29 +8,28 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag.globaltag = "106X_mc2017_realistic_v9" #pdmv 5 oct 2021
+process.GlobalTag.globaltag = "106X_dataRun2_v28"
+
 
 process.load("RecoVertex.BeamSpotProducer.BeamSpot_cff")
 process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 
-
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5000) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-         # aod 2017 w+1j
-         'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL17RECO/W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/AODSIM/106X_mc2017_realistic_v6-v1/00000/01EDA01D-B02E-754C-8882-A1906F60202C.root'
-         # aod prod malgorzata
-         #'root://cmsxrootd.fnal.gov//store/user/kazana/HSCP/MC2017/UL17_mc_PU/HSCPgluino_M_1000_TuneCP5_13TeV_pythia8/UL17_mc_PU/210326_181209/0000/RECO_1.root'
+         # aod UL2017
+         ' root://cmsxrootd.fnal.gov//store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/510000/FF2A0C85-E423-AB46-B6B3-8AED8553A847.root'
     )
 )
 
 process.stage = cms.EDAnalyzer('ntuple'
      , format_file       = cms.string('AOD')
-     , isdata            = cms.bool(False)
+     , isdata            = cms.bool(True)
      , year              = cms.untracked.int32(2017)
      , primaryVertexColl  = cms.InputTag('offlinePrimaryVertices')  #->AOD
      , isotracks             = cms.InputTag("isolatedTracks")
@@ -78,11 +77,11 @@ process.stage = cms.EDAnalyzer('ntuple'
 process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 
 process.TFileService = cms.Service("TFileService",
-     fileName = cms.string('nt_mc_aod.root')
+     fileName = cms.string('nt_aod_ul2017.root')
  )
 
 process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff")
-process.HSCParticleProducer.filter = cms.bool( False )  # no filter for MC !!
+process.HSCParticleProducer.filter = cms.bool( True )  # no filter for MC !!
 
 process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
 process.HSCPTrigger = process.hltHighLevel.clone()
@@ -103,12 +102,9 @@ process.HSCPTrigger.HLTPaths = [ #check triggers
           "HLT_TkMu50_v*",                      # April2020 studies -> email 05/05
 ]
 
-#process.p = cms.Path(process.HSCPTrigger + process.HSCParticleProducerSeq +process.stage)
-process.p = cms.Path(process.HSCParticleProducerSeq +process.stage)  # no filter for MC!!
+process.p = cms.Path(process.HSCPTrigger + process.HSCParticleProducerSeq +process.stage)
+##process.p = cms.Path(process.HSCParticleProducerSeq + process.stage)  # no filter for MC!!
 #process.p = cms.Path(process.dump)
-
-
-
 
 ## MessageLogger
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
