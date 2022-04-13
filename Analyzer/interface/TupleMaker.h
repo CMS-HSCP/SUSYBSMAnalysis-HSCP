@@ -882,7 +882,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->AS_TOFIh = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
 
   Name = "H_D_DzSidebands";
-  tuple->H_D_DzSidebands = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, DzRegions, 0, DzRegions);
+  tuple->H_D_DzSidebands = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, DzRegions, 0, DzRegions);
   tuple->H_D_DzSidebands->Sumw2();
 
   // Background prediction histograms don't need to be made for signal or individual MC samples
@@ -948,101 +948,101 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     //The following are only used to create the predicted mass spectrum.  Memory intensive so don't initialize for analyses not doing mass fits
     if (TypeMode < 3) {
       Name = "Pred_I";
-      tuple->Pred_I = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
+      tuple->Pred_I = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
       tuple->Pred_I->Sumw2();
       Name = "Pred_EtaB";
-      tuple->Pred_EtaB = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->Pred_EtaB = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->Pred_EtaB->Sumw2();
       Name = "Pred_EtaS";
-      tuple->Pred_EtaS = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->Pred_EtaS = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->Pred_EtaS->Sumw2();
       Name = "Pred_EtaS2";
-      tuple->Pred_EtaS2 = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->Pred_EtaS2 = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->Pred_EtaS2->Sumw2();
       Name = "Pred_EtaP";
-      tuple->Pred_EtaP = dir.make<TH3D>(
+      tuple->Pred_EtaP = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->Pred_EtaP->Sumw2();
       Name = "Pred_TOF";
-      tuple->Pred_TOF = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
+      tuple->Pred_TOF = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
       tuple->Pred_TOF->Sumw2();
       //pz
 
       Name = "PDF_G_EtaP";
-      tuple->PDF_G_EtaP = dir.make<TH3D>(
+      tuple->PDF_G_EtaP = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_G_EtaP->Sumw2();
       Name = "PDF_C_EtaP";
-      tuple->PDF_C_EtaP = dir.make<TH3D>(
+      tuple->PDF_C_EtaP = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_C_EtaP->Sumw2();
 
       Name = "PDF_A_Eta";
-      tuple->PDF_A_Eta = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->PDF_A_Eta = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->PDF_A_Eta->Sumw2();
       Name = "PDF_E_Eta";
-      tuple->PDF_E_Eta = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->PDF_E_Eta = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->PDF_E_Eta->Sumw2();
 
       Name = "PDF_B_EtaICK";
-      tuple->PDF_B_EtaICK = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+      tuple->PDF_B_EtaICK = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_B_EtaICK->Sumw2();
       Name = "PDF_F_EtaICK";
-      tuple->PDF_F_EtaICK = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+      tuple->PDF_F_EtaICK = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_F_EtaICK->Sumw2();
 
       Name = "PDF_H_EtaMass";
-      tuple->PDF_H_EtaMass = dir.make<TH3D>(
+      tuple->PDF_H_EtaMass = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, MassNBins, 0, MassHistoUpperBound);
       tuple->PDF_H_EtaMass->Sumw2();
 
       //pz FLIP
       Name = "PDF_G_EtaP_Flip";
-      tuple->PDF_G_EtaP_Flip = dir.make<TH3D>(
+      tuple->PDF_G_EtaP_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_G_EtaP_Flip->Sumw2();
       Name = "PDF_C_EtaP_Flip";
-      tuple->PDF_C_EtaP_Flip = dir.make<TH3D>(
+      tuple->PDF_C_EtaP_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->PDF_C_EtaP_Flip->Sumw2();
 
       Name = "PDF_A_Eta_Flip";
-      tuple->PDF_A_Eta_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->PDF_A_Eta_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->PDF_A_Eta_Flip->Sumw2();
       Name = "PDF_E_Eta_Flip";
-      tuple->PDF_E_Eta_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
+      tuple->PDF_E_Eta_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->PDF_E_Eta_Flip->Sumw2();
 
       Name = "PDF_B_EtaICK_Flip";
       tuple->PDF_B_EtaICK_Flip =
-          dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+          dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_B_EtaICK_Flip->Sumw2();
       Name = "PDF_F_EtaICK_Flip";
       tuple->PDF_F_EtaICK_Flip =
-          dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
+          dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 60, -2., 3.);
       tuple->PDF_F_EtaICK_Flip->Sumw2();
 
       Name = "PDF_H_EtaMass_Flip";
-      tuple->PDF_H_EtaMass_Flip = dir.make<TH3D>(
+      tuple->PDF_H_EtaMass_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, MassNBins, 0, MassHistoUpperBound);
       tuple->PDF_H_EtaMass_Flip->Sumw2();
     }
 
     Name = "RegionD_I";
-    tuple->RegionD_I = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
+    tuple->RegionD_I = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
     tuple->RegionD_I->Sumw2();
     Name = "RegionD_Ias";
-    tuple->RegionD_Ias = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
+    tuple->RegionD_Ias = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
     tuple->RegionD_Ias->Sumw2();
     Name = "RegionD_P";
-    tuple->RegionD_P = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 200, GlobalMinPt, PtHistoUpperBound);
+    tuple->RegionD_P = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 200, GlobalMinPt, PtHistoUpperBound);
     tuple->RegionD_P->Sumw2();
     Name = "RegionD_TOF";
-    tuple->RegionD_TOF = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
+    tuple->RegionD_TOF = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
     tuple->RegionD_TOF->Sumw2();
 
     Name = "RegionH_Ias";
-    tuple->RegionH_Ias = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
+    tuple->RegionH_Ias = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
     tuple->RegionH_Ias->Sumw2();
 
     Name = "H_A_Flip";
@@ -1094,45 +1094,45 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     //The following are only used to create the predicted mass spectrum.  Memory intensive so don't initialize for analyses not doing mass fits
     if (TypeMode < 3) {
       Name = "Pred_I_Flip";
-      tuple->Pred_I_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 400, 0, dEdxM_UpLim);
+      tuple->Pred_I_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 400, 0, dEdxM_UpLim);
       tuple->Pred_I_Flip->Sumw2();
       Name = "Pred_EtaB_Flip";
-      tuple->Pred_EtaB_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
+      tuple->Pred_EtaB_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
       tuple->Pred_EtaB_Flip->Sumw2();
       Name = "Pred_EtaS_Flip";
-      tuple->Pred_EtaS_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
+      tuple->Pred_EtaS_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
       tuple->Pred_EtaS_Flip->Sumw2();
       Name = "Pred_EtaS2_Flip";
-      tuple->Pred_EtaS2_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
+      tuple->Pred_EtaS2_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3);
       tuple->Pred_EtaS2_Flip->Sumw2();
       Name = "Pred_EtaP_Flip";
-      tuple->Pred_EtaP_Flip = dir.make<TH3D>(
+      tuple->Pred_EtaP_Flip = dir.make<TH3F>(
           Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, EtaBins, -3, 3, 200, GlobalMinPt, PtHistoUpperBound);
       tuple->Pred_EtaP_Flip->Sumw2();
       Name = "Pred_TOF_Flip";
       tuple->Pred_TOF_Flip =
-          dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinTOF, 5);
+          dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinTOF, 5);
       tuple->Pred_TOF_Flip->Sumw2();
     }
 
     Name = "RegionD_I_Flip";
-    tuple->RegionD_I_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 400, 0, dEdxM_UpLim);
+    tuple->RegionD_I_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 400, 0, dEdxM_UpLim);
     tuple->RegionD_I_Flip->Sumw2();
     Name = "RegionD_Ias_Flip";
     tuple->RegionD_Ias_Flip =
-        dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
+        dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
     tuple->RegionD_Ias_Flip->Sumw2();
     Name = "RegionD_P_Flip";
     tuple->RegionD_P_Flip =
-        dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinPt, PtHistoUpperBound);
+        dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinPt, PtHistoUpperBound);
     tuple->RegionD_P_Flip->Sumw2();
     Name = "RegionD_TOF_Flip";
-    tuple->RegionD_TOF_Flip = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 200, -3, 1);
+    tuple->RegionD_TOF_Flip = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 200, -3, 1);
     tuple->RegionD_TOF_Flip->Sumw2();
 
     Name = "RegionH_Ias_Flip";
     tuple->RegionH_Ias_Flip =
-        dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
+        dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
     tuple->RegionH_Ias_Flip->Sumw2();
 
     Name = "CtrlPt_S1_Is";

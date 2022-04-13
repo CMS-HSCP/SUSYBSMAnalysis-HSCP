@@ -283,9 +283,10 @@ private:
   // Thresholds for candidate preselection
   float globalMaxEta_, globalMinPt_;
   unsigned int globalMinNOH_, globalMinNOPH_;
-  float globalMinFOVH_, trackProbQCut_, globalMaxChi2_, globalMaxEIsol_, globalMinIh_, globalMaxPtErr_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_;
-  unsigned int minMuStations_, globalMinNOM_;
-  unsigned int globalMinQual_;
+  float globalMinFOVH_;
+  unsigned int globalMinNOM_;
+  float globalMaxChi2_, globalMaxEIsol_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMinIh_, trackProbQCut_;
+  unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
   float GlobalMinNDOFDT = 6;          // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
@@ -344,7 +345,7 @@ private:
 
   const std::string pixelCPE_;
   const unsigned int debug_;
-  const bool hasMCMatch_, doTriggering_;
+  const bool hasMCMatch_, doTriggering_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
 

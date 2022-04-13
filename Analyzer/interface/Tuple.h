@@ -429,39 +429,39 @@ struct Tuple {
   TH1D* Hist_TOF;
 
   //FIXME ------ To be modified for Number Of Hits (NOH)
-  TH3D* Pred_EtaP;
-  TH2D* Pred_I;
-  TH2D* Pred_TOF;
-  TH2D* Pred_EtaB;
-  TH2D* Pred_EtaS;
-  TH2D* Pred_EtaS2;
+  TH3F* Pred_EtaP;
+  TH2F* Pred_I;
+  TH2F* Pred_TOF;
+  TH2F* Pred_EtaB;
+  TH2F* Pred_EtaS;
+  TH2F* Pred_EtaS2;
 
   //pz
 
-  TH2D* PDF_E_Eta;
-  TH2D* PDF_A_Eta;
-  TH3D* PDF_H_EtaMass;
-  TH3D* PDF_G_EtaP;
-  TH3D* PDF_C_EtaP;
-  TH3D* PDF_F_EtaICK;
-  TH3D* PDF_B_EtaICK;
+  TH2F* PDF_E_Eta;
+  TH2F* PDF_A_Eta;
+  TH3F* PDF_H_EtaMass;
+  TH3F* PDF_G_EtaP;
+  TH3F* PDF_C_EtaP;
+  TH3F* PDF_F_EtaICK;
+  TH3F* PDF_B_EtaICK;
 
-  TH2D* PDF_E_Eta_Flip;
-  TH2D* PDF_A_Eta_Flip;
-  TH3D* PDF_H_EtaMass_Flip;
-  TH3D* PDF_G_EtaP_Flip;
-  TH3D* PDF_C_EtaP_Flip;
-  TH3D* PDF_F_EtaICK_Flip;
-  TH3D* PDF_B_EtaICK_Flip;
+  TH2F* PDF_E_Eta_Flip;
+  TH2F* PDF_A_Eta_Flip;
+  TH3F* PDF_H_EtaMass_Flip;
+  TH3F* PDF_G_EtaP_Flip;
+  TH3F* PDF_C_EtaP_Flip;
+  TH3F* PDF_F_EtaICK_Flip;
+  TH3F* PDF_B_EtaICK_Flip;
 
   // end FIXME
 
-  TH2D* RegionD_P;
-  TH2D* RegionD_I;
-  TH2D* RegionD_Ias;
-  TH2D* RegionD_TOF;
+  TH2F* RegionD_P;
+  TH2F* RegionD_I;
+  TH2F* RegionD_Ias;
+  TH2F* RegionD_TOF;
 
-  TH2D* RegionH_Ias;
+  TH2F* RegionH_Ias;
 
   TH1D* H_A_Flip;
   TH1D* H_B_Flip;
@@ -478,22 +478,22 @@ struct Tuple {
   std::map<std::string, TH1D*> H_H_Binned_Flip;  //TH1D* H_H_Binned_Flip[MaxPredBins];
 
   //FIXME ------ To be modified for Number Of Hits (NOH)
-  TH3D* Pred_EtaP_Flip;
-  TH2D* Pred_I_Flip;
-  TH2D* Pred_TOF_Flip;
-  TH2D* Pred_EtaB_Flip;
-  TH2D* Pred_EtaS_Flip;
-  TH2D* Pred_EtaS2_Flip;
+  TH3F* Pred_EtaP_Flip;
+  TH2F* Pred_I_Flip;
+  TH2F* Pred_TOF_Flip;
+  TH2F* Pred_EtaB_Flip;
+  TH2F* Pred_EtaS_Flip;
+  TH2F* Pred_EtaS2_Flip;
   // end FIXME
 
-  TH2D* RegionD_P_Flip;
-  TH2D* RegionD_I_Flip;
-  TH2D* RegionD_Ias_Flip;
-  TH2D* RegionD_TOF_Flip;
+  TH2F* RegionD_P_Flip;
+  TH2F* RegionD_I_Flip;
+  TH2F* RegionD_Ias_Flip;
+  TH2F* RegionD_TOF_Flip;
 
-  TH2D* RegionH_Ias_Flip;
+  TH2F* RegionH_Ias_Flip;
 
-  TH2D* H_D_DzSidebands;
+  TH2F* H_D_DzSidebands;
 
   TH2F* genrecopT;
   TH1F* genlevelpT;
