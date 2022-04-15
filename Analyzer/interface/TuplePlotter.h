@@ -481,8 +481,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BS_EtaDz = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_PIs";
   tuple->BS_PIs = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "BS_PIhHD";
-  tuple->BS_PIhHD = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_IhIs";
+  tuple->BS_IhIs = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_PIh";
   tuple->BS_PIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_PtIs";

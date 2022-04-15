@@ -391,7 +391,7 @@ struct Tuple {
 
   TH2F* BS_PIs;
   TH3F* AS_PIs;
-  TH2F* BS_PIhHD;
+  TH2F* BS_IhIs;
   TH2F* BS_PIh;
   TH3F* AS_PIh;
   TH2F* BS_PtIs;

@@ -690,13 +690,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_dzAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
   tuple->BS_dzAll->Sumw2();
   Name = "BS_dxyAll";
-  tuple->BS_dxyAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
+  tuple->BS_dxyAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, -0.5, 0.5);
   tuple->BS_dxyAll->Sumw2();
   Name = "BS_dzMinv3d";
-  tuple->BS_dzMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
+  tuple->BS_dzMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, -0.5, 0.5);
   tuple->BS_dzMinv3d->Sumw2();
   Name = "BS_dxyMinv3d";
-  tuple->BS_dxyMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
+  tuple->BS_dxyMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, -0.5, 0.5);
   tuple->BS_dxyMinv3d->Sumw2();
 
   Name = "BS_SegSep";
@@ -842,8 +842,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_EtaDz = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 50, -IPbound, IPbound);
   Name = "BS_PIs";
   tuple->BS_PIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxS_UpLim);
-  Name = "BS_PIhHD";
-  tuple->BS_PIhHD = dir.make<TH2F>(Name.c_str(), Name.c_str(), 500, 0, PtHistoUpperBound, 1000, 0, dEdxM_UpLim);
+  Name = "BS_IhIs";
+  tuple->BS_IhIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0, dEdxM_UpLim, 100, 0, dEdxS_UpLim);
   Name = "BS_PIh";
   tuple->BS_PIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "BS_PtIs";

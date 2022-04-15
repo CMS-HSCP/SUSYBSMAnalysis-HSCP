@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v17p2:
+// v17p3:
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -22,6 +22,7 @@
 // - Make cuts into an array
 // - Fix logic with not used variales
 // - Change the cut flow order
+// - Add Ih vs Is plot in preselection, change boundary for dxy plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2497,25 +2498,28 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
 
-  if (tuple && tof) {
-    //Plots for tracks in dz control region
-    if (fabs(dz) > CosmicMinDz && fabs(dz) < CosmicMaxDz) {
-      tuple->BS_Pt_FailDz->Fill(track->pt(), Event_Weight);
-      tuple->BS_TOF_FailDz->Fill(tof->inverseBeta(), Event_Weight);
+  if (tuple) {
+    if (tof) {
+      //Plots for tracks in dz control region
+      if (fabs(dz) > CosmicMinDz && fabs(dz) < CosmicMaxDz) {
+        tuple->BS_Pt_FailDz->Fill(track->pt(), Event_Weight);
+        tuple->BS_TOF_FailDz->Fill(tof->inverseBeta(), Event_Weight);
+        if (fabs(track->eta()) > CSCRegion) {
+          tuple->BS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), Event_Weight);
+          tuple->BS_Pt_FailDz_CSC->Fill(track->pt(), Event_Weight);
+        } else if (fabs(track->eta()) < DTRegion) {
+          tuple->BS_TOF_FailDz_DT->Fill(tof->inverseBeta(), Event_Weight);
+          tuple->BS_Pt_FailDz_DT->Fill(track->pt(), Event_Weight);
+        }
+      }
+    //Plots of dz
       if (fabs(track->eta()) > CSCRegion) {
-        tuple->BS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), Event_Weight);
-        tuple->BS_Pt_FailDz_CSC->Fill(track->pt(), Event_Weight);
+        tuple->BS_Dz_CSC->Fill(dz, Event_Weight);
       } else if (fabs(track->eta()) < DTRegion) {
-        tuple->BS_TOF_FailDz_DT->Fill(tof->inverseBeta(), Event_Weight);
-        tuple->BS_Pt_FailDz_DT->Fill(track->pt(), Event_Weight);
+        tuple->BS_Dz_DT->Fill(dz, Event_Weight);
       }
     }
-    //Plots of dz
     tuple->BS_Dz->Fill(dz, Event_Weight);
-    if (fabs(track->eta()) > CSCRegion)
-      tuple->BS_Dz_CSC->Fill(dz, Event_Weight);
-    else if (fabs(track->eta()) < DTRegion)
-      tuple->BS_Dz_DT->Fill(dz, Event_Weight);
     tuple->BS_EtaDz->Fill(track->eta(), dz, Event_Weight);
   }
 
@@ -2546,21 +2550,22 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  }
   
   //skip HSCP that are compatible with cosmics.
-  if (tuple)
+  if (tuple) {
     tuple->BS_OpenAngle->Fill(OpenAngle, Event_Weight);
+  }
 
-  bool OASB = false;
-  if (typeMode_ == 5 && OpenAngle >= 2.8)
-    OASB = true;
+  bool OASB = (typeMode_ == 5 && OpenAngle >= 2.8) ? true : false;
 
   isCosmicSB = DXYSB && DZSB && OASB;
   isSemiCosmicSB = (!isCosmicSB && (DXYSB || DZSB || OASB));
 
   if (tuple) {
-    if (dedxSObj)
+    if (dedxSObj) {
       tuple->BS_EtaIs->Fill(track->eta(), dedxSObj->dEdx(), Event_Weight);
-    if (dedxMObj)
+    } 
+    if (dedxMObj) {
       tuple->BS_EtaIh->Fill(track->eta(), dedxMObj->dEdx(), Event_Weight);
+    }
     tuple->BS_EtaP->Fill(track->eta(), track->p(), Event_Weight);
     tuple->BS_EtaPt->Fill(track->eta(), track->pt(), Event_Weight);
     if (tof)
@@ -2635,7 +2640,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
     if (dedxSObj && dedxMObj) {
       tuple->BS_PIs->Fill(track->p(), dedxSObj->dEdx(), Event_Weight);
-      tuple->BS_PIhHD->Fill(track->p(), dedxMObj->dEdx(), Event_Weight);
+      tuple->BS_IhIs->Fill(dedxMObj->dEdx(), dedxSObj->dEdx(), Event_Weight);
       tuple->BS_PIh->Fill(track->p(), dedxMObj->dEdx(), Event_Weight);
       tuple->BS_PtIs->Fill(track->pt(), dedxSObj->dEdx(), Event_Weight);
       tuple->BS_PtIh->Fill(track->pt(), dedxMObj->dEdx(), Event_Weight);
