@@ -276,6 +276,11 @@ struct Tuple {
   TH2F* Beta_SelectedI;
   TH2F* Beta_SelectedT;
 
+  TH1F* BS_massT;
+  TH1F* BS_MiniRelIsoAll;
+  TH1F* BS_MiniRelIsoChg;
+  TH1F* BS_RecoPFMET;
+
   TH1F* BS_V3D;
   TH1F* BS_Chi2PerNdof;
   TH1F* BS_Qual;

@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v17p3:
+// v17p5:
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -22,7 +22,9 @@
 // - Make cuts into an array
 // - Fix logic with not used variales
 // - Change the cut flow order
-// - Add Ih vs Is plot in preselection, change boundary for dxy plots
+// - Add Ih vs Is plot in preselection, change boundary for dxy/dz plots
+// - Change dxy/dz cut default
+// - Add plots for MiniIsol, MET, mT
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -512,6 +514,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
   }
 
+  tuple->BS_RecoPFMET->Fill(RecoPFMET_et);
+
   //===================== Handle For CaloMET ===================
   const edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle = iEvent.getHandle(CaloMETToken_);
   if (CaloMETHandle.isValid() && !CaloMETHandle->empty()) {
@@ -778,12 +782,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (highestPtGoodVertex < 0)
       highestPtGoodVertex = 0;
 
-    // Ihpact paramters dz and dxy
+    // Impact paramters dz and dxy
     float dz = track->dz(vertexColl[highestPtGoodVertex].position());
     float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
 
     // Compute transverse mass mT between HSCP with and MET
-    HSCP_mT.push_back(sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi))));
+    float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi))); 
+    HSCP_mT.push_back(massT);
+    tuple->BS_massT->Fill(massT);
   
     // Save PF informations and isolation
     float pfIsolation_DZ_ = 0.1;
@@ -827,9 +833,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         int id = std::abs(pfCand->pdgId());
         float pt = pfCand->p4().pt();
         if(dr<0.05){
+            // charged cands from PV get added to trackIso
             if(id == 211 && fromPV) track_PFIso005_sumCharHadPt+=pt;
+            // charged cands not from PV get added to pileup iso
             else if(id == 211) track_PFIso005_sumPUPt+=pt;
+            // neutral hadron iso
             if(id == 130) track_PFIso005_sumNeutHadPt+=pt;
+            // photon iso
             if(id == 22) track_PFIso005_sumPhotonPt+=pt;
         }if(dr<0.1){
             if(id == 211 && fromPV) track_PFIso01_sumCharHadPt+=pt;
@@ -849,6 +859,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }//end loop PFCandidates
     }
+
+    // Add PFCadidate based isolation info to the tuple
+    // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
+    tuple->BS_MiniRelIsoAll->Fill((track_PFIso005_sumCharHadPt + track_PFIso005_sumPUPt + track_PFIso005_sumNeutHadPt) / track->pt());
+    tuple->BS_MiniRelIsoChg->Fill(track_PFIso005_sumCharHadPt / track->pt());
 
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
@@ -1810,8 +1825,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinNOM",6)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
   desc.addUntracked("GlobalMaxEIsol",0.30)->setComment("Cut on calorimeter isolation (E/P)");
-  desc.addUntracked("GlobalMaxDZ",0.5)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
-  desc.addUntracked("GlobalMaxDXY",0.5)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
+  desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
+  desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
@@ -2115,7 +2130,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float validFractionTillLast =
     track->found() <= 0 ? -1 : track->found() / float(track->found() + missingHitsTillLast);
   
-  // Ihpact paramters dz and dxy
+  // Impact paramters dz and dxy
   float dz = track->dz(vertexColl[highestPtGoodVertex].position());
   float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
   

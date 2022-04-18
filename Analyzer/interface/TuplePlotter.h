@@ -250,6 +250,16 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "Beta_SelectedT";
   tuple->Beta_SelectedT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
 
+  Name = "BS_massT";
+  tuple->BS_massT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_MiniRelIsoAll";
+  tuple->BS_MiniRelIsoAll = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_MiniRelIsoChg";
+  tuple->BS_MiniRelIsoChg = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_RecoPFMET";
+  tuple->BS_RecoPFMET = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
+
   Name = "BS_V3D";
   tuple->BS_V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_Chi2PerNdof";

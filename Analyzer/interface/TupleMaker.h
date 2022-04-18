@@ -511,6 +511,23 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Beta_SelectedT = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 20, 0, 1);
   tuple->Beta_SelectedT->Sumw2();
 
+
+  Name = "BS_massT";
+  tuple->BS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 250, 0.0, 250.0);
+  tuple->BS_massT->Sumw2();
+
+  Name = "BS_MiniRelIsoAll";
+  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0.0, 5.0);
+  tuple->BS_MiniRelIsoAll->Sumw2();
+  
+  Name = "BS_MiniRelIsoChg";
+  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  100, 0.0, 5.0);
+  tuple->BS_MiniRelIsoChg->Sumw2();
+
+  Name = "BS_RecoPFMET";
+  tuple->BS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 4000.0);
+  tuple->BS_RecoPFMET->Sumw2();
+
   Name = "BS_V3D";
   tuple->BS_V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, 0, IPbound);
   tuple->BS_V3D->Sumw2();
@@ -690,13 +707,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_dzAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10);
   tuple->BS_dzAll->Sumw2();
   Name = "BS_dxyAll";
-  tuple->BS_dxyAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, -0.5, 0.5);
+  tuple->BS_dxyAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
   tuple->BS_dxyAll->Sumw2();
   Name = "BS_dzMinv3d";
-  tuple->BS_dzMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, -0.5, 0.5);
+  tuple->BS_dzMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
   tuple->BS_dzMinv3d->Sumw2();
   Name = "BS_dxyMinv3d";
-  tuple->BS_dxyMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, -0.5, 0.5);
+  tuple->BS_dxyMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
   tuple->BS_dxyMinv3d->Sumw2();
 
   Name = "BS_SegSep";
@@ -719,13 +736,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_Dz_FailSep->Sumw2();
 
   Name = "BS_Dxy";
-  tuple->BS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
+  tuple->BS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, -0.2);
   tuple->BS_Dxy->Sumw2();
   Name = "BS_Dxy_Cosmic";
   tuple->BS_Dxy_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
   tuple->BS_Dxy_Cosmic->Sumw2();
   Name = "BS_Dz";
-  tuple->BS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
+  tuple->BS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
   tuple->BS_Dz->Sumw2();
   Name = "BS_Dz_Cosmic";
   tuple->BS_Dz_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
