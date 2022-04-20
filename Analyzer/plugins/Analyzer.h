@@ -285,7 +285,7 @@ private:
   unsigned int globalMinNOH_, globalMinNOPH_;
   float globalMinFOVH_;
   unsigned int globalMinNOM_;
-  float globalMaxChi2_, globalMaxEIsol_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMinIh_, trackProbQCut_;
+  float globalMaxChi2_, globalMaxEIsol_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMiniRelIsoAll_, globalMassT_,  globalMinIh_, trackProbQCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement

@@ -111,8 +111,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->CutFlow = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "CutFlowProbQFirst";
   tuple->CutFlowProbQFirst = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "CutFlowProbQLast";
-  tuple->CutFlowProbQLast = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "N1ProbQ";
   tuple->N1ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

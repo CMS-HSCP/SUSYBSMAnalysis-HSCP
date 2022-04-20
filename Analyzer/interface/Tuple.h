@@ -349,7 +349,6 @@ struct Tuple {
   TH2F* BS_PtErrOverPtVsPtErrOverPt2;
 
   TH1F* CutFlow;
-  TH1F* CutFlowProbQLast;
   TH1F* CutFlowProbQFirst;
 
   TH2F* AS_Eta_RegionA;

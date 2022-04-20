@@ -295,8 +295,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
   Name = "CutFlowProbQFirst";
   tuple->CutFlowProbQFirst = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
-  Name = "CutFlowProbQLast";
-  tuple->CutFlowProbQLast = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
   Name = "N1ProbQ";
   tuple->N1ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->N1ProbQ->Sumw2();
@@ -517,15 +515,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_massT->Sumw2();
 
   Name = "BS_MiniRelIsoAll";
-  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0.0, 5.0);
+  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0.0, 2.0);
   tuple->BS_MiniRelIsoAll->Sumw2();
   
   Name = "BS_MiniRelIsoChg";
-  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  100, 0.0, 5.0);
+  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  100, 0.0, 2.0);
   tuple->BS_MiniRelIsoChg->Sumw2();
 
   Name = "BS_RecoPFMET";
-  tuple->BS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 4000.0);
+  tuple->BS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->BS_RecoPFMET->Sumw2();
 
   Name = "BS_V3D";
@@ -736,13 +734,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_Dz_FailSep->Sumw2();
 
   Name = "BS_Dxy";
-  tuple->BS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, -0.2);
+  tuple->BS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.02, 0.02);
   tuple->BS_Dxy->Sumw2();
   Name = "BS_Dxy_Cosmic";
   tuple->BS_Dxy_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
   tuple->BS_Dxy_Cosmic->Sumw2();
   Name = "BS_Dz";
-  tuple->BS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
+  tuple->BS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.04, 0.04);
   tuple->BS_Dz->Sumw2();
   Name = "BS_Dz_Cosmic";
   tuple->BS_Dz_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
