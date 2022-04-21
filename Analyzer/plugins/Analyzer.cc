@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v18p0
+// v18p1
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -26,7 +26,7 @@
 // - Change dxy/dz cut default
 // - Add plots for MiniIsol, MET, mT
 // - Change MiniIsol definition, and plot range, move it to preselection
-// - Change EoP to 0.8
+// - Change EoP to 0.8, then to 2.0 (essentially no cut)
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -1823,7 +1823,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",6)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
-  desc.addUntracked("GlobalMaxEIsol",0.80)->setComment("Cut on calorimeter isolation (E/P)");
+  desc.addUntracked("GlobalMaxEIsol",2.0)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
