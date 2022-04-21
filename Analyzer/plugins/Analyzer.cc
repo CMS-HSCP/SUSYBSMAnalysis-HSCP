@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v18p1
+// v18p2
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -27,6 +27,7 @@
 // - Add plots for MiniIsol, MET, mT
 // - Change MiniIsol definition, and plot range, move it to preselection
 // - Change EoP to 0.8, then to 2.0 (essentially no cut)
+// - Change to allTrackMCMatch
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -1761,7 +1762,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
     ->setComment("A");
-  desc.add("TrackToGenAssoc", edm::InputTag("prunedTrackMCMatch"))
+  desc.add("TrackToGenAssoc", edm::InputTag("allTrackMCMatch"))
     ->setComment("Collection used to match to gen thruth");
   desc.add("PfCand", edm::InputTag("particleFlow"))
     ->setComment("Input collection for particleFlow algorithm");
