@@ -1828,7 +1828,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMiniRelIsoAll",0.1)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMassT",50)->setComment("Cut on the transverse mass");
+  desc.addUntracked("GlobalMassT",50.0)->setComment("Cut on the transverse mass");
   desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Is,Ias,etc)");
@@ -2187,8 +2187,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }//end loop PFCandidates
   
   // Calculate PF mini relative isolation
-  auto miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + track_PFMiniIso_sumPUPt + track_PFMiniIso_sumNeutHadPt)/track->pt();
-  auto miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
+  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + track_PFMiniIso_sumPUPt + track_PFMiniIso_sumNeutHadPt)/track->pt();
+  float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
   
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
