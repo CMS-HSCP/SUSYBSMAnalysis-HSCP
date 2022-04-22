@@ -1,17 +1,37 @@
 
 
-Code to produce the template on top of the ntuples:
 
---> rundEdXtemplate.C
-which calls dEdXtemplate.C
+
+// ----------  Used codes ---------------------------
+
+Code which produces the histograms for stability study, for calibration, ...
+--> run2study.C  with minimal selection on the tracks and clusters
+    run2analysis.C with almost final track selection
+
+examples on how to run them : run2exe.C & run2exe2.C
+
 
 Code to fit K and C:
 --> FitKandC.C
+  .L FitKandC.C
+  FitKandC("name_of_the_file.root");
 
 Codes to compute the Scale Factors:
---> GetSF.C [ the one inspired by the HSCP analysis ]
 --> makeProfilePlot2.C  [ making fit in place of profile,  makeProfilePlot.C is an intermediate development ]
+  .L makeProfilePlot2.C
+  GetSF();
 
+
+
+
+//----------- old codes ---------------------------
+Code to produce the template on top of the ntuples:
+--> rundEdXtemplate.C
+which calls dEdXtemplate.C
 
 Starting code to play with the events:
 --> GluinoAnalysis.C
+
+Codes to compute the Scale Factors:
+--> GetSF.C [ the one inspired by the HSCP analysis ]
+//---------------------------------------------------
