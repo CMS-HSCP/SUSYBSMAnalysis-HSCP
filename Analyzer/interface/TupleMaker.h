@@ -307,6 +307,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "ProbXYNoL1";
   tuple->ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->ProbXYNoL1->Sumw2();
+  Name = "pfType";
+  tuple->pfType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 9, 0, 9);
+  tuple->pfType->Sumw2();
 
 
   Name = "HSCPE_SystP";
@@ -515,11 +518,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_massT->Sumw2();
 
   Name = "BS_MiniRelIsoAll";
-  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0.0, 2.0);
+  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0.0, 2.0);
   tuple->BS_MiniRelIsoAll->Sumw2();
   
   Name = "BS_MiniRelIsoChg";
-  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  100, 0.0, 2.0);
+  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  40, 0.0, 2.0);
   tuple->BS_MiniRelIsoChg->Sumw2();
 
   Name = "BS_RecoPFMET";

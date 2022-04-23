@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v18p2
+// v18p3
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -28,6 +28,7 @@
 // - Change MiniIsol definition, and plot range, move it to preselection
 // - Change EoP to 0.8, then to 2.0 (essentially no cut)
 // - Change to allTrackMCMatch
+// - 18:p3: PF matching to gentracks, change the binning of MiniIso histo
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2136,33 +2137,57 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
   
   // Loop on PF candidates
-  bool pf_isPhoton = false, pf_isChHadron = false, pf_isNeutHadron = false;
+  bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
+  bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
+    
+  // number of tracks as the first bin
+  if (tuple) {
+    tuple->pfType->Fill(0.5);
+  }
   
-  float RMin = 9999.;
-  unsigned int idx_pf_RMin = 9999;
   
   if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
     const reco::PFCandidateCollection* pf = pfCandHandle.product();
     for (unsigned int i = 0; i < pf->size(); i++){
-      const reco::PFCandidate* pfCand = &(*pf)[i];
-      float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
-      if(dr < RMin){
-        RMin = dr;
-        idx_pf_RMin = i;
-      }
-    }//end loop PFCandidates
-    
     // https://github.com/cms-sw/cmssw/blob/72d0fc00976da53d1fb745eb7f37b2a4ad965d7e/
     // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
-    for(unsigned int i=0;i<pf->size();i++){
       const reco::PFCandidate* pfCand = &(*pf)[i];
-      if(i == idx_pf_RMin) {
-        pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
-        pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-        pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+
+      pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+      pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+      pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+
+      pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+      pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+      pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
+      
+      
+      if (pfCand->trackRef().isNonnull() && pfCand->trackRef().id() == track.id()) {
+        if (tuple) {
+          // Number of PF tracks matched to general track
+          tuple->pfType->Fill(1.5);
+          if (pf_isElectron) {
+            tuple->pfType->Fill(2.5);
+          } else if (pf_isMuon) {
+            tuple->pfType->Fill(3.5);
+          } else if (pf_isPhoton) {
+            tuple->pfType->Fill(4.5);
+          } else if (pf_isChHadron) {
+            tuple->pfType->Fill(5.5);
+          } else if (pf_isNeutHadron) {
+            tuple->pfType->Fill(6.5);
+          } else if (pf_isUndefined) {
+            tuple->pfType->Fill(7.5);
+          } else {
+            tuple->pfType->Fill(8.5);
+          }
+        }
+        // The sum of the pt in the cone does not contain the pt of the track
+        // just the pt of the surrounding tracks in the cone
+        continue;
       }
-      if(i == idx_pf_RMin) continue; //don't count itself
+
       float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
       bool fromPV = (fabs(dz) < 0.1);
 

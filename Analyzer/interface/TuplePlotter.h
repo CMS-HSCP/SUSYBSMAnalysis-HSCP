@@ -121,6 +121,9 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "ProbXYNoL1";
   tuple->ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
+  Name = "pfType";
+  tuple->pfType = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
   Name = "HSCPE_SystP";
   tuple->HSCPE_SystP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "HSCPE_SystI";

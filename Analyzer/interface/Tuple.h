@@ -250,6 +250,8 @@ struct Tuple {
   TH1F* N1ProbXY;
   TH1F* ProbXYNoL1;
 
+  TH1F* pfType;
+
   TH1F* HSCPE_SystP;
   TH1F* HSCPE_SystI;
   TH1F* HSCPE_SystM;
