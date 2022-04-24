@@ -2143,7 +2143,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
   // number of tracks as the first bin
   if (tuple) {
-    tuple->pfType->Fill(0.5);
+    tuple->pfType->Fill(0.5, EventWeight_);
   }
   
   
@@ -2161,26 +2161,25 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
       pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
       pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
-      
-      
-      if (pfCand->trackRef().isNonnull() && pfCand->trackRef().id() == track.id()) {
+
+      if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
         if (tuple) {
           // Number of PF tracks matched to general track
-          tuple->pfType->Fill(1.5);
+            tuple->pfType->Fill(1.5, EventWeight_);
           if (pf_isElectron) {
-            tuple->pfType->Fill(2.5);
+            tuple->pfType->Fill(2.5, EventWeight_);
           } else if (pf_isMuon) {
-            tuple->pfType->Fill(3.5);
+            tuple->pfType->Fill(3.5, EventWeight_);
           } else if (pf_isPhoton) {
-            tuple->pfType->Fill(4.5);
+            tuple->pfType->Fill(4.5, EventWeight_);
           } else if (pf_isChHadron) {
-            tuple->pfType->Fill(5.5);
+           tuple->pfType->Fill(5.5, EventWeight_);
           } else if (pf_isNeutHadron) {
-            tuple->pfType->Fill(6.5);
+            tuple->pfType->Fill(6.5, EventWeight_);
           } else if (pf_isUndefined) {
-            tuple->pfType->Fill(7.5);
+            tuple->pfType->Fill(7.5, EventWeight_);
           } else {
-            tuple->pfType->Fill(8.5);
+           tuple->pfType->Fill(8.5, EventWeight_);
           }
         }
         // The sum of the pt in the cone does not contain the pt of the track
