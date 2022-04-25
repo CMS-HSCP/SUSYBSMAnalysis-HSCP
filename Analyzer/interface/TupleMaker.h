@@ -514,7 +514,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
 
   Name = "BS_massT";
-  tuple->BS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 250, 0.0, 250.0);
+  tuple->BS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0);
   tuple->BS_massT->Sumw2();
 
   Name = "BS_MiniRelIsoAll";
