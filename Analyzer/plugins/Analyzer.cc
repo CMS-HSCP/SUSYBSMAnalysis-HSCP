@@ -28,7 +28,8 @@
 // - Change MiniIsol definition, and plot range, move it to preselection
 // - Change EoP to 0.8, then to 2.0 (essentially no cut)
 // - Change to allTrackMCMatch
-// - 18:p3: PF matching to gentracks, change the binning of MiniIso histo
+// - 18p3: PF matching to gentracks, change the binning of MiniIso histo
+// - 18p4: fix for cutflowProbQfirst index, get rid of EoP cut
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2289,7 +2290,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the chi2 / ndof
   passedCutsArray[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
+//  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
+  passedCutsArray[10] = true;
   // Cut on the impact parameter
   passedCutsArray[11] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
   passedCutsArray[12] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
@@ -2348,7 +2350,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
-    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
+//    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
+    passedCutsArray2[11] = true;
     passedCutsArray2[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
     passedCutsArray2[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
     passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
@@ -2366,9 +2369,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     // CutFlow in a single plot when probQ is one of the first cuts
     if (tuple) {
-      for (size_t i=1;i<sizeof(passedCutsArray2);i++) {
+      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
         bool allCutsPassedSoFar = true;
-        for (size_t j=1;j<=i;j++) {
+        for (size_t j=0;j<=i;j++) {
           if (!passedCutsArray2[j]) {
             allCutsPassedSoFar = false;
           }
