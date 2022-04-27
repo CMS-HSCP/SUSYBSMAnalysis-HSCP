@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v18p5
+// v18p6
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -31,6 +31,7 @@
 // - 18p3: PF matching to gentracks, change the binning of MiniIso histo
 // - 18p4: fix for cutflowProbQfirst index, get rid of EoP cut
 // - 18p5 change to new templates
+// - 18p5: remove TK iso
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2237,7 +2238,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
 
   // Number of DeDx hits
-  unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 9999;
+  unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 0;
   unsigned int missingHitsTillLast =
     track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
     track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
@@ -2302,7 +2303,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the uncertainty of the pt measurement
   passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  passedCutsArray[14] = true;
+//  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the transverse mass
@@ -2359,7 +2361,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
     passedCutsArray2[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
     passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
-    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+    passedCutsArray2[15] = true;
+//    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
     passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
     // Cut on the transverse mass
