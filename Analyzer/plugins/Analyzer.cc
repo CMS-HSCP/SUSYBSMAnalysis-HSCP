@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v18p3
+// v18p5
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -30,6 +30,7 @@
 // - Change to allTrackMCMatch
 // - 18p3: PF matching to gentracks, change the binning of MiniIso histo
 // - 18p4: fix for cutflowProbQfirst index, get rid of EoP cut
+// - 18p5 change to new templates
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -437,7 +438,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
 
   // Check if the event is passing trigger
-  if (debug_ > 0) LogPrint(MOD) << "Check if the event is passing trigger";
+  if (debug_ > 0) LogPrint(MOD) << "Checking if the event is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
 
@@ -454,7 +455,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
   if (doTriggering_ && TrigInfo_ > 0) {
-      if (debug_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers!";
+      if (debug_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
   } else {
       if (debug_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
@@ -719,8 +720,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //====================loop over HSCP candidates===================
   if (debug_ > 0 ) LogPrint(MOD) << "Loop over HSCP candidates:";
+  unsigned int genTrack_count = 0;
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     if (debug_> 0) LogPrint(MOD) << "  --------------------------------------------";
+    genTrack_count++;
+    if (debug_> 0) LogPrint(MOD) << "  >> This is general track " << genTrack_count;
     
     // Tracker only analysis must have either a tracker muon or a global muon
     if (typeMode_ == 1 &&
