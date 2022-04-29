@@ -264,11 +264,6 @@ struct Tuple {
   TH1F* Beta_Gen;
   TH1F* Beta_GenCharged;
   TH1F* Beta_Triggered;
-
-  TH1F* BS_ProbQ;
-  TH1F* BS_ProbXY;
-  TH1F* BS_ProbQNoL1;
-  TH1F* BS_ProbXYNoL1;
   
   TH1F* Beta_Matched;
   TH1F* Beta_PreselectedA;
@@ -349,7 +344,91 @@ struct Tuple {
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
   TH2F* BS_PtErrOverPtVsPtErrOverPt2;
+  
+  TH1F* BS_ProbQ;
+  TH1F* BS_ProbXY;
+  TH1F* BS_ProbQNoL1;
+  TH1F* BS_ProbXYNoL1;
 
+  TH1F* PostPreS_massT;
+  TH1F* PostPreS_MiniRelIsoAll;
+  TH1F* PostPreS_MiniRelIsoChg;
+  TH1F* PostPreS_RecoPFMET;
+  
+  TH1F* PostPreS_V3D;
+  TH1F* PostPreS_Chi2PerNdof;
+  TH1F* PostPreS_Qual;
+  TH1F* PostPreS_TNOH;
+  TH1F* PostPreS_TNOH_PUA;
+  TH1F* PostPreS_TNOH_PUB;
+  TH1F* PostPreS_TNOHFraction;
+  TH1F* PostPreS_TNOPH;
+  TH1F* PostPreS_TNOHFractionTillLast;
+  TH1F* PostPreS_TNOMHTillLast;
+  TH1F* PostPreS_Eta;
+  TH1F* PostPreS_TNOM;
+  TH1F* PostPreS_TNOM_PUA;
+  TH1F* PostPreS_TNOM_PUB;
+  TProfile* PostPreS_NOMoNOHvsPV;
+  TH1F* PostPreS_nDof;
+  TH1F* PostPreS_TOFError;
+  TH1F* PostPreS_PtErrOverPt;
+  TH1F* PostPreS_PtErrOverPt2;
+  TH1F* PostPreS_Pt;
+  TH1F* PostPreS_P;
+  TH1F* PostPreS_MIs;
+  TH1F* PostPreS_MIh;
+  TH1F* PostPreS_Ih;
+  TH1F* PostPreS_MTOF;
+  TH1F* PostPreS_TIsol;
+  TH1F* PostPreS_EIsol;
+  TH1F* PostPreS_SumpTOverpT;
+  TH1F* PostPreS_dR_NVTrack;
+  TH1F* PostPreS_MatchedStations;
+  TH1F* PostPreS_NVertex;
+  TH1F* PostPreS_NVertex_NoEventWeight;
+  TH1F* PostPreS_PV;
+  TH1F* PostPreS_PV_NoEventWeight;
+  TH1F* PostPreS_dzAll;
+  TH1F* PostPreS_dxyAll;
+  TH1F* PostPreS_dzMinv3d;
+  TH1F* PostPreS_dxyMinv3d;
+  TH1F* PostPreS_SegSep;
+  TH1F* PostPreS_SegMinPhiSep;
+  TH1F* PostPreS_SegMinEtaSep;
+  TH1F* PostPreS_SegMinEtaSep_FailDz;
+  TH1F* PostPreS_SegMinEtaSep_PassDz;
+  TH1F* PostPreS_Dz_FailSep;
+  TH1F* PostPreS_InnerInvPtDiff;
+  TH1F* PostPreS_Phi;
+  TH1F* PostPreS_TimeAtIP;
+  TH1F* PostPreS_OpenAngle;
+  TH1F* PostPreS_OpenAngle_Cosmic;
+  
+  TH1F* PostPreS_Pt_FailDz;
+  TH1F* PostPreS_Pt_FailDz_DT;
+  TH1F* PostPreS_Pt_FailDz_CSC;
+  TH1F* PostPreS_TOF_FailDz;
+  TH1F* PostPreS_TOF_FailDz_DT;
+  TH1F* PostPreS_TOF_FailDz_CSC;
+  TH1F* PostPreS_Dxy;
+  TH1F* PostPreS_Dxy_Cosmic;
+  TH1F* PostPreS_Dz;
+  TH1F* PostPreS_Dz_Cosmic;
+  TH1F* PostPreS_Dz_CSC;
+  TH1F* PostPreS_Dz_DT;
+  std::map<std::string, TH1F*> PostPreS_Pt_Binned;   //TH1F*  PostPreS_Pt_Binned[MaxPredBins];
+  std::map<std::string, TH1F*> PostPreS_TOF_Binned;  //TH1F*  PostPreS_TOF_Binned[MaxPredBins];
+  
+  TH1F* PostPreS_LastHitDXY;
+  TH1F* PostPreS_LastHitD3D;
+  TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
+  
+  TH1F* PostPreS_ProbQ;
+  TH1F* PostPreS_ProbXY;
+  TH1F* PostPreS_ProbQNoL1;
+  TH1F* PostPreS_ProbXYNoL1;
+  
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;
 

@@ -11,7 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
-// v18p6
+// v19p0
 // - change double to float
 // - create fillDescription
 // - intro ptErrOverPt vs ptErrOverPt2
@@ -32,6 +32,8 @@
 // - 18p4: fix for cutflowProbQfirst index, get rid of EoP cut
 // - 18p5 change to new templates
 // - 18p5: remove TK iso
+// - 18p8: Add postPreselection plots
+// - 19p0: One try with TOF
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2497,6 +2499,63 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       // TODO: when the preselection list finalizes I might be more verbose than this
       return false;
     }
+  }
+  
+  // After (pre)selection plots
+  if (tuple) {
+    tuple->PostPreS_Eta->Fill(track->eta(), Event_Weight);
+    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern()), Event_Weight);
+    tuple->PostPreS_NVertex->Fill(vertexColl.size(), Event_Weight);
+    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size());
+    tuple->PostPreS_TNOH->Fill(track->found(), Event_Weight);
+    if (PUA) {
+      tuple->PostPreS_TNOH_PUA->Fill(track->found(), Event_Weight);
+      tuple->PostPreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
+    }
+    if (PUB) {
+      tuple->PostPreS_TNOH_PUB->Fill(track->found(), Event_Weight);
+      tuple->PostPreS_TNOM_PUB->Fill(numDeDxHits, Event_Weight);
+    }
+    tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), Event_Weight);
+    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight);
+    tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, Event_Weight);
+    tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
+    tuple->PostPreS_TNOM->Fill(numDeDxHits, Event_Weight);
+    tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
+    tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
+    tuple->PostPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
+    if (tof) {
+      tuple->PostPreS_nDof->Fill(tof->nDof(), Event_Weight);
+      tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
+      tuple->PostPreS_TOFError->Fill(tof->inverseBetaErr(), Event_Weight);
+      tuple->PostPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), Event_Weight);
+    }
+    tuple->PostPreS_Qual->Fill(track->qualityMask(), Event_Weight);
+    tuple->PostPreS_Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
+    tuple->PostPreS_Pt->Fill(track->pt(), Event_Weight);
+    tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
+    tuple->PostPreS_dzMinv3d->Fill(dz, Event_Weight);
+    tuple->PostPreS_dxyMinv3d->Fill(dxy, Event_Weight);
+    tuple->PostPreS_PV->Fill(goodVerts, Event_Weight);
+    tuple->PostPreS_PV_NoEventWeight->Fill(goodVerts);
+    
+    tuple->PostPreS_V3D->Fill(v3d, Event_Weight);
+    tuple->PostPreS_EIsol->Fill(EoP, Event_Weight);
+    tuple->PostPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
+    tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
+    tuple->PostPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
+    tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
+    tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
+    tuple->PostPreS_MIh->Fill(Ih, Event_Weight);
+    tuple->PostPreS_MIs->Fill(Is, Event_Weight);
+    tuple->PostPreS_massT->Fill(massT);
+      // Add PFCadidate based isolation info to the tuple
+      // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
+      // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
+    tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll);
+    tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg);
+    
   }
 
   // Fill up gen based beta histo after preselection
