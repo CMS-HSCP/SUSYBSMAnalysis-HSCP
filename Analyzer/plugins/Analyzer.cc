@@ -34,6 +34,7 @@
 // - 18p5: remove TK iso
 // - 18p8: Add postPreselection plots
 // - 19p0: One try with TOF
+// - 19p1: Change mass binning, remove massT cut
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -1790,7 +1791,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
   desc.addUntracked("MassHistoUpperBound",4000.0)->setComment("A");
-  desc.addUntracked("MassNBins",400)->setComment("A");
+  desc.addUntracked("MassNBins",40)->setComment("Number of bins in the mass plot");
   desc.addUntracked("IPbound",1.0)
     ->setComment("Number of different Dz side regions used to make cosmic background prediction");
   desc.addUntracked("PredBins",0)
@@ -2310,7 +2311,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the PF based mini-isolation
   passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the transverse mass
-  passedCutsArray[16] = ( massT < globalMassT_) ? true : false;
+  passedCutsArray[16] = true; //( massT < globalMassT_) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[17] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
     // Cut away background events based on the probQ
@@ -2368,7 +2369,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // Cut on the PF based mini-isolation
     passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
     // Cut on the transverse mass
-    passedCutsArray2[17] = ( massT < globalMassT_) ? true : false;
+    passedCutsArray2[17] = true;// ( massT < globalMassT_) ? true : false;
     // Cut on Ih
     passedCutsArray2[18] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
     // TOF only cuts
@@ -2443,6 +2444,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
     tuple->BS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->BS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
+    tuple->BS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), Event_Weight);
     tuple->BS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
     tuple->BS_MIh->Fill(Ih, Event_Weight);
     tuple->BS_MIs->Fill(Is, Event_Weight);
@@ -2546,6 +2548,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
     tuple->PostPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
+    tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), Event_Weight);
     tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
     tuple->PostPreS_MIh->Fill(Ih, Event_Weight);
     tuple->PostPreS_MIs->Fill(Is, Event_Weight);

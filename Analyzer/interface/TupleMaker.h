@@ -765,6 +765,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_PtErrOverPtVsPtErrOverPt2";
   tuple->BS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.003);
   tuple->BS_PtErrOverPtVsPtErrOverPt2->Sumw2();
+  Name = "BS_PtErrOverPtVsPt";
+  tuple->BS_PtErrOverPtVsPt = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 4000);
+  tuple->BS_PtErrOverPtVsPt->Sumw2();
   
   Name = "BS_ProbQ";
   tuple->BS_ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
@@ -997,6 +1000,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_PtErrOverPtVsPtErrOverPt2";
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.003);
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Sumw2();
+  Name = "PostPreS_PtErrOverPtVsPt";
+  tuple->PostPreS_PtErrOverPtVsPt = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 4000);
+  tuple->PostPreS_PtErrOverPtVsPt->Sumw2();
   
   Name = "PostPreS_ProbQ";
   tuple->PostPreS_ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);

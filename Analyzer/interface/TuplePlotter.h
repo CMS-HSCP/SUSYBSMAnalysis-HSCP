@@ -419,6 +419,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_PtErrOverPtVsPtErrOverPt2";
   tuple->BS_PtErrOverPtVsPtErrOverPt2 = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_PtErrOverPtVsPt";
+  tuple->BS_PtErrOverPtVsPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "BS_ProbQ";
   tuple->BS_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -574,6 +576,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtErrOverPtVsPtErrOverPt2";
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtErrOverPtVsPt";
+  tuple->PostPreS_PtErrOverPtVsPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "PostPreS_ProbQ";
   tuple->PostPreS_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

@@ -344,6 +344,7 @@ struct Tuple {
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
   TH2F* BS_PtErrOverPtVsPtErrOverPt2;
+  TH2F* BS_PtErrOverPtVsPt;
   
   TH1F* BS_ProbQ;
   TH1F* BS_ProbXY;
@@ -423,6 +424,7 @@ struct Tuple {
   TH1F* PostPreS_LastHitDXY;
   TH1F* PostPreS_LastHitD3D;
   TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
+  TH2F* PostPreS_PtErrOverPtVsPt;
   
   TH1F* PostPreS_ProbQ;
   TH1F* PostPreS_ProbXY;
