@@ -35,6 +35,7 @@
 // - 18p8: Add postPreselection plots
 // - 19p0: One try with TOF
 // - 19p1: Change mass binning, remove massT cut
+// - 19p3: Simplify probQ cut, change mini-iso def
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -988,7 +989,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-        if (probQ > 0) {
+        if (probQ > 0.f) {
           numRecHits++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
@@ -2201,10 +2202,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
       float pt = pfCand->p4().pt();
       float drForMiniIso = 0.0;
-      if (pt < 50 ) {
+      if (track->pt() < 50 ) {
         drForMiniIso = 0.2;
-      } else if (pt < 200) {
-        drForMiniIso = 10/pt;
+      } else if (track->pt() < 200) {
+        drForMiniIso = 10/track->pt();
       } else {
         drForMiniIso = 0.05;
       }
@@ -2315,7 +2316,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[17] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
     // Cut away background events based on the probQ
-  passedCutsArray[18]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  passedCutsArray[18]  = (probQonTrack < trackProbQCut_) ? true : false;
+// passedCutsArray[18]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // TOF only cuts
   passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
   passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -2351,7 +2353,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[0]  = true; // passed trigger
     passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
-    passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+    passedCutsArray2[3]  = (probQonTrack < trackProbQCut_) ? true : false;
+//  passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
     passedCutsArray2[4]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
