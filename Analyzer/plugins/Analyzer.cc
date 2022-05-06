@@ -1060,10 +1060,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
       
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
-    if (pixelProbs[0] <= 0.0 || pixelProbs[1] <= 0.0 || pixelProbs[0] >= 1.0 || pixelProbs[1] >= 1.0) {
-      if (debug_> 3) LogPrint(MOD) << "    >> Probs out of bound: " <<
+    if (pixelProbs[0] <= 0.0 || pixelProbs[1] <= 0.0 || pixelProbs[0] >= 1.00000001 || pixelProbs[1] >= 1.000000001) {
+      if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
         " ProbQ = " << pixelProbs[0] << " ProbXY = " << pixelProbs[1] <<  " ProbQNoL1 = "<< pixelProbs[2] << " ProbXYNoL1 = " << pixelProbs[3];
-      continue;
+   //   continue;
     }
     
     TreeprobQonTrack = pixelProbs[0];
@@ -2087,7 +2087,7 @@ float Analyzer::SegSep(const reco::TrackRef track, const edm::Event& iEvent, flo
     //Find segment most opposite in phi
     if (fabs(dphi) < fabs(minPhi)) {
       minPhi = dphi;
-    }
+    //}
     //Find segment most opposite in Eta-Phi
     float dR = sqrt(deta * deta + dphi * dphi);
     if (dR < minDr)
