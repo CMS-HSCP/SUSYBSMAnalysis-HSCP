@@ -164,9 +164,6 @@ struct Tuple {
   //      Declare Histograms
   //=============================================================
 
-  TH1F* CutFlow_nHSCP;
-
-
   TH2F* Mass;
   TH2F* MassTOF;
   TH2F* MassComb;
@@ -433,6 +430,8 @@ struct Tuple {
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;
+  
+  TH2F* CutFlowEta;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;

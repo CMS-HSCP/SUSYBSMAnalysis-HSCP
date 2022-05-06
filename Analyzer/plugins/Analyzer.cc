@@ -2092,6 +2092,7 @@ float Analyzer::SegSep(const reco::TrackRef track, const edm::Event& iEvent, flo
     float dR = sqrt(deta * deta + dphi * dphi);
     if (dR < minDr)
       minDr = dR;
+    }
   }
   return minDr;
 }
@@ -2368,7 +2369,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
     
-    // Preselection cuts
+    // Preselection cuts when probQ is one of the first cuts
     bool passedCutsArray2[22];
     std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
     passedCutsArray2[0]  = true; // passed trigger
@@ -2523,6 +2524,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (!passedCutsArray[i]) {
       if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
       // TODO: when the preselection list finalizes I might be more verbose than this
+      // Plot Eta after each cut
+      if (tuple) {
+        tuple->CutFlowEta->Fill(track->eta(),i+0.5, Event_Weight);
+      }
       return false;
     }
   }
