@@ -375,7 +375,9 @@ struct Tuple {
   TH1F* PostPreS_Pt;
   TH1F* PostPreS_P;
   TH1F* PostPreS_MIs;
+  TH1F* PostPreS_MIs_NoEventWeight;
   TH1F* PostPreS_MIh;
+  TH1F* PostPreS_MIh_NoEventWeight;
   TH1F* PostPreS_Ih;
   TH1F* PostPreS_MTOF;
   TH1F* PostPreS_TIsol;
@@ -427,6 +429,15 @@ struct Tuple {
   TH1F* PostPreS_ProbXY;
   TH1F* PostPreS_ProbQNoL1;
   TH1F* PostPreS_ProbXYNoL1;
+
+  TH2F* PostPreS_EtaPerGenID;
+  TH2F* PostPreS_ProbQPerGenID;
+  TH2F* PostPreS_ProbXYPerGenID;
+  TH2F* PostPreS_PtPerGenID;
+  TH2F* PostPreS_EIsolPerGenID;
+  TH2F* PostPreS_MIhPerGenID;
+  TH2F* PostPreS_MIsPerGenID;
+  TH2F* PostPreS_massTPerGenID;
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;

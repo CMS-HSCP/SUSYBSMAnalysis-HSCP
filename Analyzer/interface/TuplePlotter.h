@@ -484,8 +484,12 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_Pt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_MIs";
   tuple->PostPreS_MIs = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MIs_NoEventWeight";
+  tuple->PostPreS_MIs_NoEventWeight = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_MIh";
   tuple->PostPreS_MIh = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MIh_NoEventWeight";
+  tuple->PostPreS_MIh_NoEventWeight = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_MTOF";
   tuple->PostPreS_MTOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_TIsol";
@@ -591,6 +595,23 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "PostPreS_ProbXYNoL1";
   tuple->PostPreS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
+  Name = "PostPreS_EtaPerGenID";
+  tuple->PostPreS_EtaPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbQPerGenID";
+  tuple->PostPreS_ProbQPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbXYPerGenID";
+  tuple->PostPreS_ProbXYPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtPerGenID";
+  tuple->PostPreS_PtPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EIsolPerGenID";
+  tuple->PostPreS_EIsolPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MIhPerGenID";
+  tuple->PostPreS_MIhPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MIsPerGenID";
+  tuple->PostPreS_MIsPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_massTPerGenID";
+  tuple->PostPreS_massTPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  
   Name = "genlevelpT";
   tuple->genlevelpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "genleveleta";

@@ -861,9 +861,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_MIs";
   tuple->PostPreS_MIs = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim);
   tuple->PostPreS_MIs->Sumw2();
+  Name = "PostPreS_MIs_NoEventWeight";
+  tuple->PostPreS_MIs_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim);
+  tuple->PostPreS_MIs_NoEventWeight->Sumw2();
   Name = "PostPreS_MIh";
   tuple->PostPreS_MIh = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
   tuple->PostPreS_MIh->Sumw2();
+  Name = "PostPreS_MIh_NoEventWeight";
+  tuple->PostPreS_MIh_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
+  tuple->PostPreS_MIh_NoEventWeight->Sumw2();
   Name = "PostPreS_MTOF";
   tuple->PostPreS_MTOF = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2, 5);
   tuple->PostPreS_MTOF->Sumw2();
@@ -1018,6 +1024,31 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbXYNoL1";
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1->Sumw2();
+
+  Name = "PostPreS_EtaPerGenID";
+  tuple->PostPreS_EtaPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(),  50, -2.6, 2.6, 4000, 0.0,4000.0);
+  tuple->PostPreS_EtaPerGenID->Sumw2();
+  Name = "PostPreS_ProbQPerGenID";
+  tuple->PostPreS_ProbQPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0,4000.0);
+  tuple->PostPreS_ProbQPerGenID->Sumw2();
+  Name = "PostPreS_ProbXYPerGenID";
+  tuple->PostPreS_ProbXYPerGenID->Sumw2();
+  tuple->PostPreS_ProbXYPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0,4000.0);
+  Name = "PostPreS_PtPerGenID";
+  tuple->PostPreS_PtPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 4000, 0.0,4000.0);
+  tuple->PostPreS_PtPerGenID->Sumw2();
+  Name = "PostPreS_EIsolPerGenID";
+  tuple->PostPreS_EIsolPerGenID->Sumw2();
+  tuple->PostPreS_EIsolPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 25, 0, 1.5, 4000, 0.0,4000.0);
+  Name = "PostPreS_MIhPerGenID";  
+  tuple->PostPreS_MIhPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0,4000.0);
+  tuple->PostPreS_MIhPerGenID->Sumw2();
+  Name = "PostPreS_MIsPerGenID";
+  tuple->PostPreS_MIsPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0,4000.0);
+  tuple->PostPreS_MIsPerGenID ->Sumw2();
+  Name = "PostPreS_massTPerGenID";
+  tuple->PostPreS_massTPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0,4000.0);
+  tuple->PostPreS_massTPerGenID->Sumw2();
 
   Name = "genlevelpT";
   tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);

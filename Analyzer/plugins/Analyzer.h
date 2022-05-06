@@ -147,11 +147,12 @@ public:
                         float Event_Weight,
                         Tuple* tuple,
                         const float& GenBeta,
-                        bool RescaleP,
+                        const bool& RescaleP,
                         const float& RescaleI,
                         const float& RescaleT,
                         float MassErr,
-                        bool Ih_Iso_cut = true);
+                        const bool Ih_Iso_cut = true,
+                        const unsigned int closestBackgroundPDGsID = 0);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
@@ -163,7 +164,7 @@ public:
                      Tuple*& tuple,
                      const bool isFlip,
                      const float& GenBeta,
-                     bool RescaleP,
+                     const bool& RescaleP,
                      const float& RescaleI,
                      const float& RescaleT);
 
@@ -182,7 +183,8 @@ public:
                      Tuple* tuple,
                      const float& GenBeta,
                      float MassErr,
-                     bool Ih_Iso_cut);
+                     const bool Ih_Iso_cut,
+                     const unsigned int closestBackgroundPDGsID);
 
 private:
   virtual void beginJob() override;

@@ -1216,7 +1216,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->genrecopT->Fill(genpT, track->pt());
       }
       if (calcSyst_) {
-        calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true);
+        calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsID);
       }
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
@@ -1241,7 +1241,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           0,
                           MassErr,
-                          Ih_Iso_cut);
+                          Ih_Iso_cut,
+                          closestBackgroundPDGsID);
     
     Ih_Iso_cut = false;
     bool passPre_noIh_noIso = passPreselection(
@@ -1259,7 +1260,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           0,
                           MassErr,
-                          Ih_Iso_cut);
+                          Ih_Iso_cut,
+                          closestBackgroundPDGsID);
 
     // Dont do TOF only is isSemiCosmicSB is true
     if (typeMode_ == 5 && isSemiCosmicSB) {
@@ -2112,11 +2114,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 float Event_Weight,
                                 Tuple* tuple,
                                 const float& GenBeta,
-                                bool RescaleP,
+                                const bool& RescaleP,
                                 const float& RescaleI,
                                 const float& RescaleT,
                                 float MassErr,
-                                bool Ih_Iso_cut) {
+                                bool Ih_Iso_cut,
+                                const unsigned int closestBackgroundPDGsID) {
   using namespace edm;
     
   //===================== Handle For vertex ===============
@@ -2580,13 +2583,24 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), Event_Weight);
     tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
     tuple->PostPreS_MIh->Fill(Ih, Event_Weight);
+    tuple->PostPreS_MIh_NoEventWeight->Fill(Ih);
     tuple->PostPreS_MIs->Fill(Is, Event_Weight);
-    tuple->PostPreS_massT->Fill(massT);
+    tuple->PostPreS_MIs_NoEventWeight->Fill(Is);
+    tuple->PostPreS_massT->Fill(massT, Event_Weight);
       // Add PFCadidate based isolation info to the tuple
       // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
       // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
-    tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll);
-    tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg);
+    tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
+    tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
+    
+    tuple->PostPreS_EtaPerGenID->Fill(track->eta(), closestBackgroundPDGsID, Event_Weight);
+    tuple->PostPreS_ProbQPerGenID->Fill(probQonTrack, closestBackgroundPDGsID, EventWeight_);
+    tuple->PostPreS_ProbXYPerGenID->Fill(probXYonTrack, closestBackgroundPDGsID, EventWeight_);
+    tuple->PostPreS_PtPerGenID->Fill(track->pt(), closestBackgroundPDGsID, Event_Weight);
+    tuple->PostPreS_EIsolPerGenID->Fill(EoP, closestBackgroundPDGsID, Event_Weight);
+    tuple->PostPreS_MIhPerGenID->Fill(Ih, closestBackgroundPDGsID, Event_Weight);
+    tuple->PostPreS_MIsPerGenID->Fill(Is, closestBackgroundPDGsID, Event_Weight);
+    tuple->PostPreS_massTPerGenID->Fill(massT, closestBackgroundPDGsID, Event_Weight);
     
   }
 
@@ -2877,7 +2891,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
                              Tuple*& tuple,
                              const bool isFlip,
                              const float& GenBeta,
-                             bool RescaleP,
+                             const bool& RescaleP,
                              const float& RescaleI,
                              const float& RescaleT) {
   static constexpr const char* const MOD = "Analyzer";
@@ -3023,7 +3037,8 @@ void Analyzer::calculateSyst(reco::TrackRef track,
                              Tuple* tuple,
                              const float& GenBeta,
                              float MassErr,
-                             bool Ih_Iso_cut) {
+                             const bool Ih_Iso_cut,
+                             const unsigned int closestBackgroundPDGsID) {
   //FIXME to be measured on 2015 data, currently assume 2012
   bool PRescale = true;
   float IRescale = -0.05;  // added to the Ias value
@@ -3031,7 +3046,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
   float TRescale = -0.015;  //-0.005 (used in 2012); // added to the 1/beta value
 
   // compute systematic due to momentum scale
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, Ih_Iso_cut)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
     float RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
     
     float Mass = -1;
@@ -3075,7 +3090,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     } // end loop on cut index
   } // end compute systematic due to momentum scale
   // compute systematic due to dEdx (both Ias and Ih)
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, IRescale, 0)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, IRescale, 0, closestBackgroundPDGsID)) {
       //if(TypeMode==5 && isSemiCosmicSB)continue;
     float Mass = -1;
     if (dedxMObj)
@@ -3105,7 +3120,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to dEdx
   // compute systematic due to Mass shift ??????????
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -3135,7 +3150,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to Mass shift
   // compute systematic due to TOF
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, Ih_Iso_cut)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -3166,7 +3181,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End condition for compute systematic due to TOF
   // compute systematics due to PU
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
