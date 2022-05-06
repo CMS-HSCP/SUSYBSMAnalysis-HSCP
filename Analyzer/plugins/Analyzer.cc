@@ -36,6 +36,7 @@
 // - 19p0: One try with TOF
 // - 19p1: Change mass binning, remove massT cut
 // - 19p3: Simplify probQ cut, change mini-iso def
+// - 19p4: Change mini-iso binning
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -102,7 +103,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
       globalMaxPtErr_(iConfig.getUntrackedParameter<double>("GlobalMaxPtErr")),
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
-      globalMiniRelIsoAll_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoAll")),
+      globalMiniRelIsoChg_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoChg")),
       globalMassT_(iConfig.getUntrackedParameter<double>("GlobalMassT")),
       globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
       trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
@@ -281,7 +282,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     EventWeight_ = 1.;
   }
 
-  if (debug_ > 0 ) LogPrint(MOD) << "Event weight factor applied: " << EventWeight_;
+  if (debug_ > 0 ) LogPrint(MOD) << "\nEvent weight factor applied: " << EventWeight_;
 
   float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
@@ -298,7 +299,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (!isData) {
     const edm::Handle<vector<reco::GenParticle>> genCollH = iEvent.getHandle(genParticleToken_);
     if (!genCollH.isValid()) {
-      LogWarning(MOD) << "Invalid GenParticle collection, this event will be ignored";
+      LogPrint(MOD) << "Invalid GenParticle collection, this event will be ignored!";
       return;
     } else {
       genColl = *genCollH;
@@ -349,6 +350,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   vector<float> geneta;
   vector<float> genphi;
 
+
   if (!isData) {
     for (auto const& gen : genColl) {
       int GenId = abs(gen.pdgId());
@@ -356,13 +358,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Categorise event with R-hadrons for additional weighting
         if (GenId == 1000612 || GenId == 1092214) {
           nw += 1;  // count wrong
-        } else if (abs(GenId) == 1006223 || abs(GenId) == 1092224) {
+        } else if (GenId == 1006223 || GenId == 1092224) {
            nd += 1;  // count doble charged
-        } else if (abs(GenId) == 1006113. || abs(GenId) == 1006333. || abs(GenId) == 1006313. || abs(GenId) == 1000622. ||
-                   abs(GenId) == 1092114. || abs(GenId) == 1093324. || abs(GenId) == 1093214. || abs(GenId) == 1009333. ||
-                   abs(GenId) == 1009223. || abs(GenId) == 1009113. || abs(GenId) == 1009313. || abs(GenId) == 1000993.) {
+        } else if ((GenId) == 1006113 || (GenId) == 1006333 || (GenId) == 1006313 || (GenId) == 1000622 ||
+                   (GenId) == 1092114 || (GenId) == 1093324 || (GenId) == 1093214 || (GenId) == 1009333 ||
+                   (GenId) == 1009223 || (GenId) == 1009113 || (GenId) == 1009313 || (GenId) == 1000993) {
           nn += 1;  // count neutral
-        } else if (abs(GenId) > 1000000) {
+        } else if ((GenId) > 1000000) {
           na += 1;
         }  // count other R-hadrons
       
@@ -384,10 +386,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->genleveleta->Fill(gen.eta(), EventWeight_);
         tuple->genlevelbeta->Fill(gen.p() / gen.energy(), EventWeight_);
         // TODO: I'm not sure if this needs to be weighted
-//      tuple->genlevelpT->Fill(gen.pt());
-//      tuple->genleveleta->Fill(gen.eta());
-//      tuple->genlevelbeta->Fill(gen.p() / gen.energy());
-      
+
         // Variables for the tuple gen tree branch
         genid.push_back(gen.pdgId());
         gencharge.push_back(gen.charge());
@@ -396,7 +395,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         geneta.push_back(gen.eta());
         genphi.push_back(gen.phi());
       }
-    } 
+    }
 
     if (debug_ > 3 ) LogPrint(MOD) << "Fill GenTree with basics gen info";
     tuple_maker->fillGenTreeBranches(tuple,
@@ -779,7 +778,36 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
         continue;
     }
-
+        
+    // Reco - GEN track matching
+    // For signal only, make sure that the candidate is associated to a true HSCP
+    int closestGenIndex = -1;
+    unsigned int closestHSCPsPDGsID = 0;
+    unsigned int closestBackgroundPDGsID = 0;
+    if (isSignal && DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) > 0.3) {
+      if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
+        DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) << "), skipping it";
+      continue;
+    } else if (isBckg) {
+      float dRMinBckg = 9999.0;
+      for (unsigned int g = 0; g < genColl.size(); g++) {
+        float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
+        if(dr < dRMinBckg){
+          dRMinBckg = dr;
+          closestBackgroundPDGsID = genColl[g].pdgId();
+          closestGenIndex = g;
+          if (debug_> 8) LogPrint(MOD) << "  >> closestBackgroundPDGsID:" << closestBackgroundPDGsID;
+        }
+      }
+    }
+      
+    if (isSignal) {
+      closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
+      // Dont mix double charged R-hadrons with the rest
+      // The reco pt of them is 1/2 the pt of the gen track
+      if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {continue;}
+    }
+    
     // TODO this is repeated in the pre-selection
     int highestPtGoodVertex = -1;
     int goodVerts = 0;
@@ -832,7 +860,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
            }
        }//end loop PFCandidates
 
-      // https://github.com/cms-sw/cmssw/blob/72d0fc00976da53d1fb745eb7f37b2a4ad965d7e/PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
+      // https://github.com/cms-sw/cmssw/blob/72d0fc00976da53d1fb745eb7f37b2a4ad965d7e/
+      // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
       for(unsigned int i=0;i<pf->size();i++){
         const reco::PFCandidate* pfCand = &(*pf)[i];
         if(i == idx_pf_RMin) {
@@ -916,16 +945,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         continue;
       }
     }
-
-    //for signal only, make sure that the candidate is associated to a true HSCP
-    int ClosestGen;
-    if (isSignal && DistToHSCP(hscp, genColl, ClosestGen, typeMode_) > 0.3) {
-      if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
-      DistToHSCP(hscp, genColl, ClosestGen, typeMode_) << "), skipping it";
-      continue;
-    }
-    // we are losing some tracks due to HIP
-    //WAIT//if(!isData && is2016 && !HIPTrackLossEmul.TrackSurvivesHIPInefficiency()) continue;
 
     //load quantity associated to this track (TOF and dEdx)
     const reco::DeDxHitInfo* dedxHits = nullptr;
@@ -1042,6 +1061,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (pixelProbs[0] <= 0.0 || pixelProbs[1] <= 0.0 || pixelProbs[0] >= 1.0 || pixelProbs[1] >= 1.0) {
+      if (debug_> 3) LogPrint(MOD) << "    >> Probs out of bound: " <<
+        " ProbQ = " << pixelProbs[0] << " ProbXY = " << pixelProbs[1] <<  " ProbQNoL1 = "<< pixelProbs[2] << " ProbXYNoL1 = " << pixelProbs[3];
       continue;
     }
     
@@ -1052,14 +1073,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
-    unsigned int pdgId = 0;
-    if (isSignal) {
-      pdgId = abs(genColl[ClosestGen].pdgId());
-      LogPrint(MOD) << "  >> GenId  " << pdgId;
-    }
-
     //computedEdx: hits, SF, templates, usePixel, useClusterCleaning, reverseProb, uneTrunc, TrackerGains,
-    //             useStrips, mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, hipEmul, dedxErr, pdgid, skipPix, useTemplateLayer_, skipPixel_L1, DeDxprobQ, skip_templ_Ias
+    //             useStrips, mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, hipEmul, dedxErr, closestHSCPsPDGsID, skipPix, useTemplateLayer_, skipPixel_L1, DeDxprobQ, skip_templ_Ias
     //
     //correction inverseXtalk = 0 --> take the raw amplitudes of the cluster
     //correction inverseXtalk = 1 --> modify the amplitudes based on xtalk for non-saturated cluster + correct for saturation
@@ -1075,91 +1090,91 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dEdxErr = 0;
     auto dedxSObjTmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, typeMode_ == 5, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel_, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_);
     
     reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
 
     //Ih
     auto dedxMObjTmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, skipPixel_, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_);
     
     reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
 
     // Ih Up
     auto dedxMUpObjTmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.15, nullptr, 0, pdgId, skipPixel_, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.15, nullptr, 0, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_);
     
     reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements() > 0 ? &dedxMUpObjTmp : nullptr;
 
     // Ih Down
     auto dedxMDownObjTmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.15, nullptr, 0, pdgId, skipPixel_, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.15, nullptr, 0, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_);
     
     reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements() > 0 ? &dedxMDownObjTmp : nullptr;
 
     // Ih no pixel L1
     auto dedxIh_noL1_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                      true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, false, useTemplateLayer_, true);
+                      true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, closestHSCPsPDGsID, false, useTemplateLayer_, true);
     
     reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
 
     // Ih 0.15 low values drop
     auto dedxIh_15drop_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, true, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                      true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, skipPixel_, useTemplateLayer_);
+                      true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_);
     
     reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
 
     // Ih Strip only
     auto dedxIh_StripOnly_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, pdgId, true, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.0, nullptr, &dEdxErr, closestHSCPsPDGsID, true, useTemplateLayer_);
 
     reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
 
     // Ih Strip only and 0.15 low values drop
     auto dedxIh_StripOnly_15drop_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, pdgId, true, useTemplateLayer_, true);
+                    true, true, 99, false, 1, 0.15, nullptr, &dEdxErr, closestHSCPsPDGsID, true, useTemplateLayer_, true);
     
     reco::DeDxData* dedxIh_StripOnly_15drop = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
 
     // Ih correct saturation from fits
     auto dedxIh_SaturationCorrectionFromFits_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 2, 0.0, nullptr, &dEdxErr, pdgId, skipPixel_, useTemplateLayer_, true);
+                    true, true, 99, false, 2, 0.0, nullptr, &dEdxErr, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_, true);
 
     reco::DeDxData* dedxIh_SaturationCorrectionFromFits = dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements() > 0 ? &dedxIh_SaturationCorrectionFromFits_Tmp : nullptr;
 
     //dEdx probQ discriminator based on templates (same than Ias)
     auto dedx_probQ_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel_, useTemplateLayer_, true, true);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_, true, true);
 
     reco::DeDxData* dedx_probQ = dedx_probQ_Tmp.numberOfMeasurements() > 0 ? &dedx_probQ_Tmp : nullptr;
 
     //Ias without TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, skipPixel_, useTemplateLayer_, true, false, 1);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_, true, false, 1);
 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
     //Ias Pixel only
     auto dedxIas_PixelOnly_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, false, useTemplateLayer_, false, false, 2);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, false, useTemplateLayer_, false, false, 2);
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
     //Ias Strip only
     auto dedxIas_StripOnly_Tmp = 
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, pdgId, true, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, true, useTemplateLayer_);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
@@ -1221,7 +1236,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           pixelProbs,
                           EventWeight_,
                           tuple,
-                          isSignal ? genColl[ClosestGen].p() / genColl[ClosestGen].energy() : -1,
+                          isSignal ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1,
                           false,
                           0,
                           0,
@@ -1239,7 +1254,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           pixelProbs,
                           EventWeight_,
                           NULL,
-                          isSignal ? genColl[ClosestGen].p() / genColl[ClosestGen].energy() : -1,
+                          isSignal ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1,
                           false,
                           0,
                           0,
@@ -1358,14 +1373,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                            CutIndex,
                            tuple,
                            false,
-                           isSignal ? genColl[ClosestGen].p() / genColl[ClosestGen].energy() : -1,
+                           isSignal ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1,
                            false,
                            0,
                            0)) {
-          if (debug_ > 3 ) LogPrint(MOD) << "        >> Selection failed, skipping this CutIndex = " << CutIndex;
+          if (debug_ > 6 ) LogPrint(MOD) << "        >> Selection failed, skipping this CutIndex = " << CutIndex;
           continue;
         } else {
-          if (debug_ > 3 ) LogPrint(MOD) << "        >> Selection passed with CutIndex = " << CutIndex;
+          if (debug_ > 6 ) LogPrint(MOD) << "        >> Selection passed with CutIndex = " << CutIndex;
         }
         if (CutIndex != 0)
           PassNonTrivialSelection = true;
@@ -1412,12 +1427,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float genid = 0, gencharge = -99, genmass = -99, genpt = -99, geneta = -99, genphi = -99;
 
     if (isSignal) {
-      genid = genColl[ClosestGen].pdgId();
-      gencharge = genColl[ClosestGen].charge();
-      genmass = genColl[ClosestGen].mass();
-      genpt = genColl[ClosestGen].pt();
-      geneta = genColl[ClosestGen].eta();
-      genphi = genColl[ClosestGen].phi();
+      genid = genColl[closestGenIndex].pdgId();
+      gencharge = genColl[closestGenIndex].charge();
+      genmass = genColl[closestGenIndex].mass();
+      genpt = genColl[closestGenIndex].pt();
+      geneta = genColl[closestGenIndex].eta();
+      genphi = genColl[closestGenIndex].phi();
     }
 
     float iso_TK = -1;
@@ -1840,7 +1855,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMiniRelIsoAll",0.1)->setComment("Cut on the PF based mini-isolation");
+  desc.addUntracked("GlobalMiniRelIsoChg",0.1)->setComment("Cut on the charged PF based mini-isolation");
   desc.addUntracked("GlobalMassT",50.0)->setComment("Cut on the transverse mass");
   desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
@@ -2225,6 +2240,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Calculate PF mini relative isolation
   float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + track_PFMiniIso_sumPUPt + track_PFMiniIso_sumNeutHadPt)/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
+
+
+  if (miniRelIsoChg > 2.0 && track->pt() > 55.0) {
+     cout << "miniRelIsoChg > 2, it's " << miniRelIsoChg << " and pt is " << track->pt() << endl;
+     cout << "miniRelIsoAll " << miniRelIsoAll << " and track_PFMiniIso_sumPUPt " << track_PFMiniIso_sumPUPt << endl;
+  }
   
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
@@ -2310,7 +2331,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[14] = true;
 //  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+  passedCutsArray[15] = ( miniRelIsoChg < globalMiniRelIsoChg_) ? true : false;
   // Cut on the transverse mass
   passedCutsArray[16] = true; //( massT < globalMassT_) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
@@ -2370,7 +2391,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[15] = true;
 //    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
-    passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+    passedCutsArray2[16] = ( miniRelIsoChg < globalMiniRelIsoChg_) ? true : false;
     // Cut on the transverse mass
     passedCutsArray2[17] = true;// ( massT < globalMassT_) ? true : false;
     // Cut on Ih

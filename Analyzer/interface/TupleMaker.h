@@ -505,11 +505,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_massT->Sumw2();
 
   Name = "BS_MiniRelIsoAll";
-  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0.0, 2.0);
+  tuple->BS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0.0, 10.0);
   tuple->BS_MiniRelIsoAll->Sumw2();
   
   Name = "BS_MiniRelIsoChg";
-  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  40, 0.0, 2.0);
+  tuple->BS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
   tuple->BS_MiniRelIsoChg->Sumw2();
 
   Name = "BS_RecoPFMET";
@@ -788,11 +788,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_massT->Sumw2();
   
   Name = "PostPreS_MiniRelIsoAll";
-  tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0.0, 2.0);
+  tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0.0, 10.0);
   tuple->PostPreS_MiniRelIsoAll->Sumw2();
   
   Name = "PostPreS_MiniRelIsoChg";
-  tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  40, 0.0, 2.0);
+  tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
   tuple->PostPreS_MiniRelIsoChg->Sumw2();
   
   Name = "PostPreS_RecoPFMET";
