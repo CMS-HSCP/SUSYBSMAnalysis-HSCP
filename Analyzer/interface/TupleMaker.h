@@ -217,6 +217,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                                  float GlobalMinTOF) {
   std::string Name;
 
+  cout << "Init Basic plots" << endl;
   Name = "IntLumi";
   tuple->IntLumi = dir.make<TProfile>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "XSection";
@@ -231,11 +232,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->TotalTE = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Total";
   tuple->Total = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  cout << "Init N1 plots" << endl;
   Name = "N1Eta";
   tuple->N1Eta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6);
-  tuple->N1Eta->Sumw2();
-  Name = "V3D";
-  tuple->V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -10, 10); 
   Name = "N1Chi2PerNdof";
   tuple->N1Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   Name = "N1Qual";
@@ -291,6 +290,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->FailDz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "Basic";
   tuple->Basic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  cout << "Init CutFlow plots" << endl;
   Name = "CutFlow";
   tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
   Name = "CutFlowProbQFirst";
@@ -313,7 +313,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->pfType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 9, 0, 9);
   tuple->pfType->Sumw2();
 
-
+  cout << "Init Systematics plots" << endl;
   Name = "HSCPE_SystP";
   tuple->HSCPE_SystP = dir.make<TH1F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
   tuple->HSCPE_SystP->Sumw2();
@@ -336,6 +336,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->HSCPE_SystHDown = dir.make<TH1F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
   tuple->HSCPE_SystHDown->Sumw2();
 
+  cout << "Init Mass plots" << endl;
   Name = "Mass";
   tuple->Mass = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
   tuple->Mass->Sumw2();
@@ -466,6 +467,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   if (SkipSelectionPlot)
     return;
 
+  cout << "Init Gen level plots" << endl;
   Name = "Gen_DecayLength";
   tuple->Gen_DecayLength = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1000, 0, 1000);
   tuple->Gen_DecayLength->Sumw2();
@@ -501,7 +503,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Beta_SelectedT = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 20, 0, 1);
   tuple->Beta_SelectedT->Sumw2();
 
-
+  cout << "Init BS plots" << endl;
   Name = "BS_massT";
   tuple->BS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0);
   tuple->BS_massT->Sumw2();
@@ -518,9 +520,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->BS_RecoPFMET->Sumw2();
 
-  Name = "BS_V3D";
-  tuple->BS_V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, 0, IPbound);
-  tuple->BS_V3D->Sumw2();
   Name = "BS_Chi2PerNdof";
   tuple->BS_Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   tuple->BS_Chi2PerNdof->Sumw2();
@@ -784,7 +783,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->BS_ProbXYNoL1->Sumw2();
   
-  
+  cout << "Init PostPreSelection plots" << endl;
   Name = "PostPreS_massT";
   tuple->PostPreS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0);
   tuple->PostPreS_massT->Sumw2();
@@ -801,9 +800,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFMET->Sumw2();
   
-  Name = "PostPreS_V3D";
-  tuple->PostPreS_V3D = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, 0, IPbound);
-  tuple->PostPreS_V3D->Sumw2();
   Name = "PostPreS_Chi2PerNdof";
   tuple->PostPreS_Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   tuple->PostPreS_Chi2PerNdof->Sumw2();
@@ -1025,31 +1021,57 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1->Sumw2();
 
+  cout << "Init PostPreSelectionPerGenID plots" << endl;
   Name = "PostPreS_EtaPerGenID";
-  tuple->PostPreS_EtaPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(),  50, -2.6, 2.6, 4000, 0.0,4000.0);
+  tuple->PostPreS_EtaPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(),  50, -2.6, 2.6, 4000, 0.0, 4000.0);
   tuple->PostPreS_EtaPerGenID->Sumw2();
   Name = "PostPreS_ProbQPerGenID";
-  tuple->PostPreS_ProbQPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0,4000.0);
+  tuple->PostPreS_ProbQPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQPerGenID->Sumw2();
   Name = "PostPreS_ProbXYPerGenID";
+  tuple->PostPreS_ProbXYPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbXYPerGenID->Sumw2();
-  tuple->PostPreS_ProbXYPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0,4000.0);
   Name = "PostPreS_PtPerGenID";
-  tuple->PostPreS_PtPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 4000, 0.0,4000.0);
+  tuple->PostPreS_PtPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 4000, 0.0, 4000.0);
   tuple->PostPreS_PtPerGenID->Sumw2();
   Name = "PostPreS_EIsolPerGenID";
+  tuple->PostPreS_EIsolPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 25, 0, 1.5, 4000, 0.0, 4000.0);
   tuple->PostPreS_EIsolPerGenID->Sumw2();
-  tuple->PostPreS_EIsolPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 25, 0, 1.5, 4000, 0.0,4000.0);
   Name = "PostPreS_MIhPerGenID";  
-  tuple->PostPreS_MIhPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0,4000.0);
+  tuple->PostPreS_MIhPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0, 4000.0);
   tuple->PostPreS_MIhPerGenID->Sumw2();
   Name = "PostPreS_MIsPerGenID";
-  tuple->PostPreS_MIsPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0,4000.0);
+  tuple->PostPreS_MIsPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
   tuple->PostPreS_MIsPerGenID ->Sumw2();
   Name = "PostPreS_massTPerGenID";
-  tuple->PostPreS_massTPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0,4000.0);
+  tuple->PostPreS_massTPerGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_massTPerGenID->Sumw2();
+  Name = "PostPreS_EtaPerMomGenID";
+  tuple->PostPreS_EtaPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(),  50, -2.6, 2.6, 4000, 0.0, 4000.0);
+  tuple->PostPreS_EtaPerMomGenID->Sumw2();
+  Name = "PostPreS_ProbQPerMomGenID";
+  tuple->PostPreS_ProbQPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
+  tuple->PostPreS_ProbQPerMomGenID->Sumw2();
+  Name = "PostPreS_ProbXYPerMomGenID";
+  tuple->PostPreS_ProbXYPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
+  tuple->PostPreS_ProbXYPerMomGenID->Sumw2();
+  Name = "PostPreS_PtPerMomGenID";
+  tuple->PostPreS_PtPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 4000, 0.0, 4000.0);
+  tuple->PostPreS_PtPerMomGenID->Sumw2();
+  Name = "PostPreS_EIsolPerMomGenID";
+  tuple->PostPreS_EIsolPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 25, 0, 1.5, 4000, 0.0, 4000.0);
+  tuple->PostPreS_EIsolPerMomGenID->Sumw2();
+  Name = "PostPreS_MIhPerMomGenID";
+  tuple->PostPreS_MIhPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_MIhPerMomGenID->Sumw2();
+  Name = "PostPreS_MIsPerMomGenID";
+  tuple->PostPreS_MIsPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_MIsPerMomGenID ->Sumw2();
+  Name = "PostPreS_massTPerMomGenID";
+  tuple->PostPreS_massTPerMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
+  tuple->PostPreS_massTPerMomGenID->Sumw2();
 
+  cout << "Init gen level plots" << endl;
   Name = "genlevelpT";
   tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   tuple->genlevelpT->Sumw2();
@@ -1061,6 +1083,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->genlevelbeta->Sumw2();
 
   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
+  cout << "Init prediction plots" << endl;
   for (int i = 0; i < PredBins; i++) {
     char Suffix[1024];
     sprintf(Suffix, "_%i", i);
@@ -1074,6 +1097,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BS_TOF_Binned[std::to_string(i)]->Sumw2();
   }
 
+  cout << "Init AS plots" << endl;
   Name = "AS_Eta_RegionA";
   tuple->AS_Eta_RegionA = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 52, -2.6, 2.6);
   tuple->AS_Eta_RegionA->Sumw2();
@@ -1424,6 +1448,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
         dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
     tuple->RegionH_Ias_Flip->Sumw2();
 
+    cout << "Init ctrl plots" << endl;
     Name = "CtrlPt_S1_Is";
     tuple->CtrlPt_S1_Is = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, dEdxS_UpLim);
     tuple->CtrlPt_S1_Is->Sumw2();
@@ -1516,7 +1541,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   //  HSCPCandidates ttree: different saving-levels
   //
   //===================================================
-
+  cout << "Init make tree" << endl;
   tuple->Tree = dir.make<TTree>("HscpCandidates", "HscpCandidates");
   ///tuple->Tree->SetDirectory(0);
   if (saveTree > 0) {
@@ -2024,7 +2049,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     tuple->Hist_TOF->Fill(MuonTOF, Event_Weight);
   }
 
-  // std::cout << "After PT, Is and TOF plots are filled" << std::endl;
+  // std::cout << "Init After PT, Is and TOF plots are filled" << std::endl;
   //          /\ Is
   //       /\  |----------------------------
   //        |  |   |           |             |
@@ -2065,7 +2090,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       bin = muonStations(track->hitPattern()) + 1;
   }
 
-  // std::cout << "Fill out the control plots" << std::endl;
+  // std::cout << "Init Fill out the control plots" << std::endl;
   if (!isCosmicSB) {
     if (track->pt() > PtLimits[0]) {
       tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
@@ -2131,7 +2156,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (dedxMObj)
     Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(float I, bool MC, float dEdxK, float dEdxC)
 
-  // std::cout << "Loop on the cut index for signal region" << std::endl;
+  // std::cout << "Init Loop on the cut index for signal region" << std::endl;
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {
     if (MuonTOF < GlobalMinTOF)
       continue;

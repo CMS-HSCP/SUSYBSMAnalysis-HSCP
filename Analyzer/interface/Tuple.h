@@ -214,7 +214,6 @@ struct Tuple {
   TH1F* TotalEPU;
   TH1F* TotalTE;
   TH1F* Total;
-  TH1F* V3D;
   TH1F* N1Eta;
   TH1F* N1Chi2PerNdof;
   TH1F* N1Qual;
@@ -275,7 +274,6 @@ struct Tuple {
   TH1F* BS_MiniRelIsoChg;
   TH1F* BS_RecoPFMET;
 
-  TH1F* BS_V3D;
   TH1F* BS_Chi2PerNdof;
   TH1F* BS_Qual;
   TH1F* BS_TNOH;
@@ -353,7 +351,6 @@ struct Tuple {
   TH1F* PostPreS_MiniRelIsoChg;
   TH1F* PostPreS_RecoPFMET;
   
-  TH1F* PostPreS_V3D;
   TH1F* PostPreS_Chi2PerNdof;
   TH1F* PostPreS_Qual;
   TH1F* PostPreS_TNOH;
@@ -417,8 +414,6 @@ struct Tuple {
   TH1F* PostPreS_Dz_Cosmic;
   TH1F* PostPreS_Dz_CSC;
   TH1F* PostPreS_Dz_DT;
-  std::map<std::string, TH1F*> PostPreS_Pt_Binned;   //TH1F*  PostPreS_Pt_Binned[MaxPredBins];
-  std::map<std::string, TH1F*> PostPreS_TOF_Binned;  //TH1F*  PostPreS_TOF_Binned[MaxPredBins];
   
   TH1F* PostPreS_LastHitDXY;
   TH1F* PostPreS_LastHitD3D;
@@ -438,6 +433,14 @@ struct Tuple {
   TH2F* PostPreS_MIhPerGenID;
   TH2F* PostPreS_MIsPerGenID;
   TH2F* PostPreS_massTPerGenID;
+  TH2F* PostPreS_EtaPerMomGenID;
+  TH2F* PostPreS_ProbQPerMomGenID;
+  TH2F* PostPreS_ProbXYPerMomGenID;
+  TH2F* PostPreS_PtPerMomGenID;
+  TH2F* PostPreS_EIsolPerMomGenID;
+  TH2F* PostPreS_MIhPerMomGenID;
+  TH2F* PostPreS_MIsPerMomGenID;
+  TH2F* PostPreS_massTPerMomGenID;
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;

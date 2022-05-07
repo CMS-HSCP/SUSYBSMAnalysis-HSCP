@@ -144,29 +144,29 @@ public:
                         const reco::MuonTimeExtra* tof,
                         const edm::Event& iEvent,
                         const float pixelProbs[],
-                        float Event_Weight,
+                        const float Event_Weight,
                         Tuple* tuple,
-                        const float& GenBeta,
-                        const bool& RescaleP,
-                        const float& RescaleI,
-                        const float& RescaleT,
+                        const float GenBeta,
+                        const bool RescaleP,
+                        const float RescaleI,
+                        const float RescaleT,
                         float MassErr,
-                        const bool Ih_Iso_cut = true,
-                        const unsigned int closestBackgroundPDGsID = 0);
+                        const bool Ih_Iso_cut,
+                        const unsigned int closestBackgroundPDGsIDs[]);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
-                     float Event_Weight,
+                     const float Event_Weight,
                      const int& CutIndex,
                      Tuple*& tuple,
                      const bool isFlip,
-                     const float& GenBeta,
-                     const bool& RescaleP,
-                     const float& RescaleI,
-                     const float& RescaleT);
+                     const float GenBeta,
+                     const bool RescaleP,
+                     const float RescaleI,
+                     const float RescaleT);
 
   float RescaledPt(const float& pt, const float& eta, const float& phi, const int& charge);
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
@@ -179,12 +179,12 @@ public:
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
                      const float pixelProbs[],
-                     float Event_Weight,
+                     const float Event_Weight,
                      Tuple* tuple,
-                     const float& GenBeta,
+                     const float GenBeta,
                      float MassErr,
                      const bool Ih_Iso_cut,
-                     const unsigned int closestBackgroundPDGsID);
+                     const unsigned int closestBackgroundPDGsIDs[]);
 
 private:
   virtual void beginJob() override;

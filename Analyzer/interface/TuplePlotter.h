@@ -48,11 +48,9 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->TotalTE = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Total";
   tuple->Total = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
   Name = "N1Eta";
   tuple->N1Eta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-
-  Name = "V3D";
-  tuple->V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1Chi2PerNdof";
   tuple->N1Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1Qual";
@@ -229,6 +227,10 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->Beta_GenCharged = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Beta_Triggered";
   tuple->Beta_Triggered = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+
+
+  Name = "genrecopT";
+  tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "Beta_Matched";
   tuple->Beta_Matched = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -255,8 +257,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BS_RecoPFMET = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
 
-  Name = "BS_V3D";
-  tuple->BS_V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_Chi2PerNdof";
   tuple->BS_Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_Qual";
@@ -418,8 +418,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BS_TOF_FailDz_DT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_TOF_FailDz_CSC";
   tuple->BS_TOF_FailDz_CSC = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "genrecopT";
-  tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_PtErrOverPtVsPtErrOverPt2";
   tuple->BS_PtErrOverPtVsPtErrOverPt2 = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_PtErrOverPtVsPt";
@@ -444,8 +442,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_RecoPFMET = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   
   
-  Name = "PostPreS_V3D";
-  tuple->PostPreS_V3D = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_Chi2PerNdof";
   tuple->PostPreS_Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_Qual";
@@ -579,8 +575,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_TOF_FailDz_DT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_TOF_FailDz_CSC";
   tuple->PostPreS_TOF_FailDz_CSC = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "genrecopT";
-  tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtErrOverPtVsPtErrOverPt2";
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtErrOverPtVsPt";
@@ -611,6 +605,22 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_MIsPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_massTPerGenID";
   tuple->PostPreS_massTPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EtaPerMomGenID";
+  tuple->PostPreS_EtaPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbQPerMomGenID";
+  tuple->PostPreS_ProbQPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbXYPerMomGenID";
+  tuple->PostPreS_ProbXYPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtPerMomGenID";
+  tuple->PostPreS_PtPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EIsolPerMomGenID";
+  tuple->PostPreS_EIsolPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MIhPerMomGenID";
+  tuple->PostPreS_MIhPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MIsPerMomGenID";
+  tuple->PostPreS_MIsPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_massTPerMomGenID";
+  tuple->PostPreS_massTPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "genlevelpT";
   tuple->genlevelpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

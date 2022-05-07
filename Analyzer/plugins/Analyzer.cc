@@ -164,14 +164,14 @@ Analyzer::~Analyzer() {
 
 // ------------ method called once each job just before starting event loop  ------------
 void Analyzer::beginJob() {
-  // Book histograms
+  // Book histograms using TFileService
   edm::Service<TFileService> fs;
-  tuple = new Tuple();
-
   TFileDirectory dir = fs->mkdir(sampleName_.c_str(), sampleName_.c_str());
 
   // create histograms & trees
+  tuple = new Tuple();
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
+  
   tuple_maker->initializeTuple(tuple,
                                dir,
                                saveTree_,
@@ -192,6 +192,8 @@ void Analyzer::beginJob() {
                                numDzRegions_,
                                globalMinPt_,
                                globalMinTOF_);
+  
+  cout << "After initializeTuple" << endl;
 
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
@@ -783,7 +785,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // For signal only, make sure that the candidate is associated to a true HSCP
     int closestGenIndex = -1;
     unsigned int closestHSCPsPDGsID = 0;
-    unsigned int closestBackgroundPDGsID = 0;
+    unsigned int closestBackgroundPDGsIDs[2] = {0,0};
     if (isSignal && DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) > 0.3) {
       if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
         DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) << "), skipping it";
@@ -794,12 +796,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         if(dr < dRMinBckg){
           dRMinBckg = dr;
-          closestBackgroundPDGsID = genColl[g].pdgId();
+          closestBackgroundPDGsIDs[0] = abs(genColl[g].pdgId());
+          for (unsigned int numMom = 0; numMom < genColl[g].numberOfMothers(); numMom++) {
+            if (abs(genColl[g].mother(numMom)->pdgId())  != abs(genColl[g].pdgId()))
+            {
+              closestBackgroundPDGsIDs[1] = abs(genColl[g].mother(numMom)->pdgId());
+              break;
+            }
+          }
           closestGenIndex = g;
-          if (debug_> 8) LogPrint(MOD) << "  >> closestBackgroundPDGsID:" << closestBackgroundPDGsID;
         }
       }
     }
+    if (debug_> 2) LogPrint(MOD) << "  >> closestBackgroundPDGsIDs[0]: " << closestBackgroundPDGsIDs[0]
+    << " closestBackgroundPDGsIDs[1]: " << closestBackgroundPDGsIDs[1];
       
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
@@ -1216,7 +1226,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->genrecopT->Fill(genpT, track->pt());
       }
       if (calcSyst_) {
-        calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsID);
+        calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsIDs);
       }
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
@@ -1242,7 +1252,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           MassErr,
                           Ih_Iso_cut,
-                          closestBackgroundPDGsID);
+                          closestBackgroundPDGsIDs);
     
     Ih_Iso_cut = false;
     bool passPre_noIh_noIso = passPreselection(
@@ -1261,7 +1271,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           MassErr,
                           Ih_Iso_cut,
-                          closestBackgroundPDGsID);
+                          closestBackgroundPDGsIDs);
 
     // Dont do TOF only is isSemiCosmicSB is true
     if (typeMode_ == 5 && isSemiCosmicSB) {
@@ -1270,8 +1280,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //fill the ABCD histograms and a few other control plots
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
-    if (debug_ > 2) LogPrint(MOD) << "      >> Fill control and prediction Histos";
-    if (passPre)
+    
+    if (passPre) {
+      if (debug_ > 2) LogPrint(MOD) << "      >> Fill control and prediction Histos";
       tuple_maker->fillControlAndPredictionHist(hscp,
                                                 dedxSObj,
                                                 dedxMObj,
@@ -1291,6 +1302,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                 CutPt_Flip_,
                                                 CutI_Flip_,
                                                 CutTOF_Flip_);
+    } else {
+      if (debug_ > 2) LogPrint(MOD) << "      >> Preselection not passed";
+      continue;
+    }
 
     if (typeMode_ == 5 && isCosmicSB)
       continue;
@@ -1313,18 +1328,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         MassComb = Mass;
       if (tof)
         MassComb = GetMassFromBeta(track->p(), (1 / (2 - tof->inverseBeta())));
-      
-      if (passPre) {
-        for (unsigned int CutIndex = 0; CutIndex < CutPt_Flip_.size(); CutIndex++) {
-          //Background check looking at region with TOF<1
-          //WAIT//if(!PassSelection   (hscp, dedxSObj, dedxMObj, tof, ev, CutIndex, NULL, true)) continue;
-
-          //Fill Mass Histograms
-          tuple->Mass_Flip->Fill(CutIndex, Mass, EventWeight_);
-          if (tof)
-            tuple->MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
-          tuple->MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
-        }
+      //Background check looking at region with TOF<1
+      for (unsigned int CutIndex = 0; CutIndex < CutPt_Flip_.size(); CutIndex++) {
+        //Fill Mass Histograms
+        tuple->Mass_Flip->Fill(CutIndex, Mass, EventWeight_);
+        if (tof)
+          tuple->MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
+        tuple->MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
       }
     }
 
@@ -1728,6 +1738,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 // ------------ method called once each job just after ending the event loop  ------------
 void Analyzer::endJob() {
   delete RNG;
+  delete tuple;
+  if (!isData) {
+    delete mcWeight;
+  }
   delete[] HSCPTk;
   delete[] HSCPTk_SystP;
   delete[] HSCPTk_SystI;
@@ -2089,10 +2103,10 @@ float Analyzer::SegSep(const reco::TrackRef track, const edm::Event& iEvent, flo
     //Find segment most opposite in phi
     if (fabs(dphi) < fabs(minPhi)) {
       minPhi = dphi;
-    //}
+    }
     //Find segment most opposite in Eta-Phi
     float dR = sqrt(deta * deta + dphi * dphi);
-    if (dR < minDr)
+    if (dR < minDr) {
       minDr = dR;
     }
   }
@@ -2111,15 +2125,15 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 const reco::MuonTimeExtra* tof,
                                 const edm::Event& iEvent,
                                 const float pixelProbs[],
-                                float Event_Weight,
+                                const float Event_Weight,
                                 Tuple* tuple,
-                                const float& GenBeta,
-                                const bool& RescaleP,
-                                const float& RescaleI,
-                                const float& RescaleT,
+                                const float GenBeta,
+                                const bool RescaleP,
+                                const float RescaleI,
+                                const float RescaleT,
                                 float MassErr,
-                                bool Ih_Iso_cut,
-                                const unsigned int closestBackgroundPDGsID) {
+                                const bool Ih_Iso_cut,
+                                const unsigned int closestBackgroundPDGsIDs[]) {
   using namespace edm;
     
   //===================== Handle For vertex ===============
@@ -2282,9 +2296,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // TODO: what do PUA and PUB stand for??
   bool PUA = (vertexColl.size() < 15);
   bool PUB = (vertexColl.size() >= 15);
-  
-  // TODO: This is not used as a cut after all, get rid of it?
-  float v3d = sqrt(dz * dz + dxy * dxy);
   
   const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
   susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
@@ -2466,7 +2477,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BS_PV->Fill(goodVerts, Event_Weight);
     tuple->BS_PV_NoEventWeight->Fill(goodVerts);
     
-    tuple->BS_V3D->Fill(v3d, Event_Weight);
     tuple->BS_EIsol->Fill(EoP, Event_Weight);
     tuple->BS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
     tuple->BS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
@@ -2476,12 +2486,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
     tuple->BS_MIh->Fill(Ih, Event_Weight);
     tuple->BS_MIs->Fill(Is, Event_Weight);
-    tuple->BS_massT->Fill(massT);
+    tuple->BS_massT->Fill(massT, Event_Weight);
     // Add PFCadidate based isolation info to the tuple
     // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
     // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
-    tuple->BS_MiniRelIsoAll->Fill(miniRelIsoAll);
-    tuple->BS_MiniRelIsoChg->Fill(miniRelIsoChg);
+    tuple->BS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
+    tuple->BS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
 
   }
   
@@ -2574,7 +2584,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_PV->Fill(goodVerts, Event_Weight);
     tuple->PostPreS_PV_NoEventWeight->Fill(goodVerts);
     
-    tuple->PostPreS_V3D->Fill(v3d, Event_Weight);
     tuple->PostPreS_EIsol->Fill(EoP, Event_Weight);
     tuple->PostPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
     tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
@@ -2593,14 +2602,22 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
     tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
     
-    tuple->PostPreS_EtaPerGenID->Fill(track->eta(), closestBackgroundPDGsID, Event_Weight);
-    tuple->PostPreS_ProbQPerGenID->Fill(probQonTrack, closestBackgroundPDGsID, EventWeight_);
-    tuple->PostPreS_ProbXYPerGenID->Fill(probXYonTrack, closestBackgroundPDGsID, EventWeight_);
-    tuple->PostPreS_PtPerGenID->Fill(track->pt(), closestBackgroundPDGsID, Event_Weight);
-    tuple->PostPreS_EIsolPerGenID->Fill(EoP, closestBackgroundPDGsID, Event_Weight);
-    tuple->PostPreS_MIhPerGenID->Fill(Ih, closestBackgroundPDGsID, Event_Weight);
-    tuple->PostPreS_MIsPerGenID->Fill(Is, closestBackgroundPDGsID, Event_Weight);
-    tuple->PostPreS_massTPerGenID->Fill(massT, closestBackgroundPDGsID, Event_Weight);
+    tuple->PostPreS_EtaPerGenID->Fill(track->eta(), closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_ProbQPerGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_ProbXYPerGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_PtPerGenID->Fill(track->pt(), closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_EIsolPerGenID->Fill(EoP, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_MIhPerGenID->Fill(Ih, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_MIsPerGenID->Fill(Is, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_massTPerGenID->Fill(massT, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_EtaPerMomGenID->Fill(track->eta(), closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_ProbQPerMomGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_ProbXYPerMomGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_PtPerMomGenID->Fill(track->pt(), closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_EIsolPerMomGenID->Fill(EoP, closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_MIhPerMomGenID->Fill(Ih, closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_MIsPerMomGenID->Fill(Is, closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_massTPerMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
     
   }
 
@@ -2890,10 +2907,10 @@ bool Analyzer::passSelection(const reco::TrackRef track,
                              const int& CutIndex,
                              Tuple*& tuple,
                              const bool isFlip,
-                             const float& GenBeta,
-                             const bool& RescaleP,
-                             const float& RescaleI,
-                             const float& RescaleT) {
+                             const float GenBeta,
+                             const bool RescaleP,
+                             const float RescaleI,
+                             const float RescaleT) {
   static constexpr const char* const MOD = "Analyzer";
   using namespace edm;
   float MuonTOF, Is, Ih;
@@ -3033,12 +3050,12 @@ void Analyzer::calculateSyst(reco::TrackRef track,
                              const reco::MuonTimeExtra* tof,
                              const edm::Event& iEvent,
                              const float pixelProbs[],
-                             float Event_Weight,
+                             const float Event_Weight,
                              Tuple* tuple,
-                             const float& GenBeta,
+                             const float GenBeta,
                              float MassErr,
                              const bool Ih_Iso_cut,
-                             const unsigned int closestBackgroundPDGsID) {
+                             const unsigned int closestBackgroundPDGsIDs[]) {
   //FIXME to be measured on 2015 data, currently assume 2012
   bool PRescale = true;
   float IRescale = -0.05;  // added to the Ias value
@@ -3046,7 +3063,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
   float TRescale = -0.015;  //-0.005 (used in 2012); // added to the 1/beta value
 
   // compute systematic due to momentum scale
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
     float RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
     
     float Mass = -1;
@@ -3090,7 +3107,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     } // end loop on cut index
   } // end compute systematic due to momentum scale
   // compute systematic due to dEdx (both Ias and Ih)
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, IRescale, 0, closestBackgroundPDGsID)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, false, 0.0, IRescale, 0.0, false, closestBackgroundPDGsIDs)) {
       //if(TypeMode==5 && isSemiCosmicSB)continue;
     float Mass = -1;
     if (dedxMObj)
@@ -3120,7 +3137,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to dEdx
   // compute systematic due to Mass shift ??????????
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -3150,7 +3167,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to Mass shift
   // compute systematic due to TOF
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -3181,7 +3198,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End condition for compute systematic due to TOF
   // compute systematics due to PU
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsID)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
