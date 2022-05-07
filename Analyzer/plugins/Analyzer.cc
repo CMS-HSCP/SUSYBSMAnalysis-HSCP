@@ -212,11 +212,11 @@ void Analyzer::beginJob() {
   // TODO: this should be revised, currently 2016 is used, it should be made year dependent,
   //       prob best to be able to control it from the config too
   //       or if not, then it should not be a global variable, I think
-  tuple->IntLumi->Fill(0.0, IntegratedLuminosity_);
+  tuple->IntLumi->Fill(0.5, IntegratedLuminosity_);
 
   // Get cross section from Analyzer/interface/MCWeight.h file
   // The SampleName in the config has to contain the HSCP flavor and mass
-  tuple->XSection->Fill(0.0, CrossSection_);
+  tuple->XSection->Fill(0.5, CrossSection_);
 
   tof = nullptr;
   dttof = nullptr;
@@ -226,8 +226,6 @@ void Analyzer::beginJob() {
 
   CurrentRun_ = 0;
   RNG = new TRandom3();
-  is2016 = false;
-  is2016G = false;
 
   // TODO: This is needed when there is no PU reweighting, i.e. data
   // Should be revised
@@ -257,9 +255,6 @@ void Analyzer::beginJob() {
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   static constexpr const char* const MOD = "Analyzer";
   using namespace edm;
-
-  // Count the number of (re-weighted) events
-  tuple->EventsTotal->Fill(0.0, EventWeight_);
 
   //if run change, update conditions
   if (CurrentRun_ != iEvent.id().run()) {
@@ -439,9 +434,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       HLT_MET105_IsoTrk50 = true;
   }
   // Number of (re-weighted) events
-  tuple->TotalE->Fill(0.0, EventWeight_);
+  tuple->NumEvents->Fill(0.5, EventWeight_);
   // Number of (re-weighted with PU syst fact) events
-  tuple->TotalEPU->Fill(0.0, EventWeight_ * PUSystFactor_[0]);
+  tuple->NumEvents->Fill(1.5, EventWeight_ * PUSystFactor_[0]);
 
   // Check if the event is passing trigger
   if (debug_ > 0) LogPrint(MOD) << "Checking if the event is passing trigger...";
@@ -469,7 +464,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   // Number of events that pass the trigger
-  tuple->TotalTE->Fill(0.0, EventWeight_);
+  tuple->NumEvents->Fill(2.5, EventWeight_);
 
   //keep beta distribution for signal after the trigger
   if (isSignal) {
@@ -2436,7 +2431,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (GenBeta >= 0) {
       tuple->Beta_Matched->Fill(GenBeta, Event_Weight);
     }
-    tuple->Total->Fill(0.0, Event_Weight);
     tuple->BS_Eta->Fill(track->eta(), Event_Weight);
     tuple->BS_MatchedStations->Fill(muonStations(track->hitPattern()), Event_Weight);
     tuple->BS_NVertex->Fill(vertexColl.size(), Event_Weight);

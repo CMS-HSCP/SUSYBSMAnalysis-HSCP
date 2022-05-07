@@ -209,11 +209,7 @@ struct Tuple {
 
   TProfile* IntLumi;
   TProfile* XSection;
-  TH1F* EventsTotal;
-  TH1F* TotalE;
-  TH1F* TotalEPU;
-  TH1F* TotalTE;
-  TH1F* Total;
+  TH1F* NumEvents;
   TH1F* N1Eta;
   TH1F* N1Chi2PerNdof;
   TH1F* N1Qual;

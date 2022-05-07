@@ -38,16 +38,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->IntLumi = (TProfile*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "XSection";
   tuple->XSection = (TProfile*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "EventsTotal";
-  tuple->EventsTotal = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "TotalE";
-  tuple->TotalE = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "TotalEPU";
-  tuple->TotalEPU = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "TotalTE";
-  tuple->TotalTE = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Total";
-  tuple->Total = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "NumEvents";
+  tuple->NumEvents = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "N1Eta";
   tuple->N1Eta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

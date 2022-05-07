@@ -222,16 +222,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->IntLumi = dir.make<TProfile>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "XSection";
   tuple->XSection = dir.make<TProfile>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "EventsTotal";
-  tuple->EventsTotal = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "TotalE";
-  tuple->TotalE = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "TotalEPU";
-  tuple->TotalEPU = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "TotalTE";
-  tuple->TotalTE = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
-  Name = "Total";
-  tuple->Total = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1, 0, 1);
+  Name = "NumEvents";
+  tuple->NumEvents = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+
   cout << "Init N1 plots" << endl;
   Name = "N1Eta";
   tuple->N1Eta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6);
