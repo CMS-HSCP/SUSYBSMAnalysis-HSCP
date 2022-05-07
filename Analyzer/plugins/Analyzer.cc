@@ -37,6 +37,9 @@
 // - 19p1: Change mass binning, remove massT cut
 // - 19p3: Simplify probQ cut, change mini-iso def
 // - 19p4: Change mini-iso binning
+// - 19p5: use charged iso in cutflow, dont cut away out of bound probs, only in preselection
+// - 19p6: intro CutFlowEta and PerGenID
+// - 19p7: intro NumEvents and HSCPCandidateType, for comparrison, put back EoP cut and TkIso cut (will remove in 19p8)
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -803,14 +806,46 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    if (debug_> 2) LogPrint(MOD) << "  >> closestBackgroundPDGsIDs[0]: " << closestBackgroundPDGsIDs[0]
-    << " closestBackgroundPDGsIDs[1]: " << closestBackgroundPDGsIDs[1];
       
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
-      // Dont mix double charged R-hadrons with the rest
-      // The reco pt of them is 1/2 the pt of the gen track
-      if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {continue;}
+      // All HSCP candidates
+      tuple->HSCPCandidateType->Fill(0.5, EventWeight_);
+      // Neutral HSCP candidates
+      if (   closestHSCPsPDGsID == 1000993 || closestHSCPsPDGsID == 1009113
+          || closestHSCPsPDGsID == 1009223 || closestHSCPsPDGsID == 1009313
+          || closestHSCPsPDGsID == 1009333 || closestHSCPsPDGsID == 1092114
+          || closestHSCPsPDGsID == 1093214 || closestHSCPsPDGsID == 1093324
+          || closestHSCPsPDGsID == 1000622 || closestHSCPsPDGsID == 1000642
+          || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
+          || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
+        tuple->HSCPCandidateType->Fill(1.5, EventWeight_);
+      }
+      // Single-charged HSCP
+      else if (   closestHSCPsPDGsID == 1009213 || closestHSCPsPDGsID == 1009323
+               || closestHSCPsPDGsID == 1091114 || closestHSCPsPDGsID == 1092214
+               || closestHSCPsPDGsID == 1093114 || closestHSCPsPDGsID == 1093224
+               || closestHSCPsPDGsID == 1093314 || closestHSCPsPDGsID == 1093334
+               || closestHSCPsPDGsID == 1000612 || closestHSCPsPDGsID == 1000632
+               || closestHSCPsPDGsID == 1000652 || closestHSCPsPDGsID == 1006211
+               || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
+               || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
+        tuple->HSCPCandidateType->Fill(2.5, EventWeight_);
+      }
+      // Double-charged R-hadrons
+      else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
+        tuple->HSCPCandidateType->Fill(3.5, EventWeight_);
+        // Dont mix double charged R-hadrons with the rest
+        // The reco pt of them is 1/2 the pt of the gen track
+        continue;
+      }
+      // tau prime, could be single or multiple charged
+      else if (closestHSCPsPDGsID == 17) {
+        tuple->HSCPCandidateType->Fill(4.5, EventWeight_);
+      }
+      else {
+        tuple->HSCPCandidateType->Fill(5.5, EventWeight_);
+      }
     }
     
     // TODO this is repeated in the pre-selection
@@ -1187,11 +1222,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     dedxMObj = dedxIh_noL1;
 
-    if (typeMode_ == 5) {
-      OpenAngle = deltaROpositeTrack(
-          iEvent.get(hscpToken_),
-          hscp);  //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
-    }
+    OpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp);
     
     float MassErr = GetMassErr(track->p(),
                                 track->ptError(),
@@ -1228,7 +1259,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     if (debug_ > 5 ) LogPrint(MOD)  << "        >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
     // Check if we pass the preselection
-    if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
+    if (debug_ > 2) LogPrint(MOD)  << "      >> Check if we pass Preselection";
     bool Ih_Iso_cut = true;
 
     bool passPre = passPreselection(
@@ -1268,16 +1299,30 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           Ih_Iso_cut,
                           closestBackgroundPDGsIDs);
 
+    
+      // Dont do TOF only is isCosmicSB is true
+    if (typeMode_ == 5 && isCosmicSB) {
+      if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, skipping it";
+      continue;
+    } else if (isCosmicSB) {
+      if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, please check what's up";
+    }
+    
     // Dont do TOF only is isSemiCosmicSB is true
     if (typeMode_ == 5 && isSemiCosmicSB) {
+      if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, skipping it";
       continue;
+    } else if (isSemiCosmicSB) {
+      if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, please check what's up";
     }
+    
     //fill the ABCD histograms and a few other control plots
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
 
     
     if (passPre) {
-      if (debug_ > 2) LogPrint(MOD) << "      >> Fill control and prediction Histos";
+      if (debug_ > 2) LogPrint(MOD) << "      >> Passed pre-selection";
+      if (debug_ > 2) LogPrint(MOD) << "      >> Fill control and prediction histos";
       tuple_maker->fillControlAndPredictionHist(hscp,
                                                 dedxSObj,
                                                 dedxMObj,
@@ -1301,10 +1346,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (debug_ > 2) LogPrint(MOD) << "      >> Preselection not passed";
       continue;
     }
-
-    if (typeMode_ == 5 && isCosmicSB)
-      continue;
-
+    
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
     if (isBckg || isData) {
@@ -1366,7 +1408,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool PassNonTrivialSelection = false;
 
     if (passPre) {
-      if (debug_ > 3 ) LogPrint(MOD) << "      >> We passed pre-selection";
+      if (debug_ > 3 ) LogPrint(MOD) << "      >> We enter the selection cut loop now";
       //==========================================================
       // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
       for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
@@ -2330,22 +2372,27 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the chi2 / ndof
   passedCutsArray[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-//  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
-  passedCutsArray[10] = true;
+  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
+//  passedCutsArray[10] = true;
   // Cut on the impact parameter
-  passedCutsArray[11] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
-  passedCutsArray[12] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
+    // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
+  passedCutsArray[11] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+                        || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
+  // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
+  passedCutsArray[12] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+                        || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
   passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[14] = true;
-//  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+//  passedCutsArray[14] = true;
+  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   passedCutsArray[15] = ( miniRelIsoChg < globalMiniRelIsoChg_) ? true : false;
   // Cut on the transverse mass
   passedCutsArray[16] = true; //( massT < globalMassT_) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
-  passedCutsArray[17] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
+  passedCutsArray[17] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
+                        || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
     // Cut away background events based on the probQ
   passedCutsArray[18]  = (probQonTrack < trackProbQCut_) ? true : false;
 // passedCutsArray[18]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
@@ -2393,19 +2440,24 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
-//    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
-    passedCutsArray2[11] = true;
-    passedCutsArray2[12] = (typeMode_ != 5 && fabs(dz) < globalMaxDZ_) ? true : false;
-    passedCutsArray2[13] = (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_) ? true : false;
+    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
+//    passedCutsArray2[11] = true;
+    // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
+    passedCutsArray2[12] = (   (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+                            || (typeMode_ == 5 && fabs(dz) < 4.0)) ? true : false;
+    // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
+    passedCutsArray2[13] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+                           || (typeMode_ == 5 && fabs(dxy)) < 4.0) ? true : false;
     passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
-    passedCutsArray2[15] = true;
-//    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+//    passedCutsArray2[15] = true;
+    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
     passedCutsArray2[16] = ( miniRelIsoChg < globalMiniRelIsoChg_) ? true : false;
     // Cut on the transverse mass
     passedCutsArray2[17] = true;// ( massT < globalMassT_) ? true : false;
     // Cut on Ih
-    passedCutsArray2[18] = (typeMode_ != 5 &&  Ih > globalMinIh_) || (typeMode_ == 5 && Ih < globalMinIh_) ? true : false;
+    passedCutsArray2[18] = (  (typeMode_ != 5 && Ih > globalMinIh_)
+                           || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
     // TOF only cuts
     passedCutsArray2[19] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
     passedCutsArray2[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -2468,9 +2520,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
     tuple->BS_dzMinv3d->Fill(dz, Event_Weight);
     tuple->BS_dxyMinv3d->Fill(dxy, Event_Weight);
+    tuple->BS_Dxy->Fill(dxy, Event_Weight);
+    tuple->BS_Dz->Fill(dz, Event_Weight);
+    tuple->BS_EtaDz->Fill(track->eta(), dz, Event_Weight);
     tuple->BS_PV->Fill(goodVerts, Event_Weight);
     tuple->BS_PV_NoEventWeight->Fill(goodVerts);
-    
     tuple->BS_EIsol->Fill(EoP, Event_Weight);
     tuple->BS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
     tuple->BS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
@@ -2486,9 +2540,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
     tuple->BS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
     tuple->BS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
-
+    tuple->BS_SegSep->Fill(segSep, Event_Weight);
+    tuple->BS_SegMinPhiSep->Fill(minPhi, Event_Weight);
+    tuple->BS_SegMinEtaSep->Fill(minEta, Event_Weight);
+    tuple->BS_OpenAngle->Fill(OpenAngle, Event_Weight);
+    tuple->BS_MassErr->Fill(MassErr, Event_Weight);
   }
-  
   
   // N-1 plots
   if (tuple) {
@@ -2612,7 +2669,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MIhPerMomGenID->Fill(Ih, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_MIsPerMomGenID->Fill(Is, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_massTPerMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
-    
+    tuple->PostPreS_MassErr->Fill(MassErr, Event_Weight);
   }
 
   // Fill up gen based beta histo after preselection
@@ -2620,18 +2677,18 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->Beta_PreselectedA->Fill(GenBeta, Event_Weight);
   }
 
-
+  // Cut on  Rescaled P
   if (RescaleP && RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < globalMinPt_) {
       return false;
   }
 
   // Cut on  Rescaled Is
-  if (dedxSObj) {
+  if (dedxSObj && RescaleI != 0.0) {
     if (dedxSObj->dEdx() + RescaleI < globalMinIs_) {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Rescaled Ih is too low for fractionally charged";
+      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: Rescaled Ias is too low for fractionally charged";
       return false;
     } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for rescaled Ih cut";
+    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for rescaled Ias cut";
     }
   }
 
@@ -2670,43 +2727,26 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
     // Find displacement of tracks with respect to beam spot
     const reco::BeamSpot beamSpotColl = iEvent.get(offlineBeamSpotToken_);
-    dz = NVTrack.dz(beamSpotColl.position());
-    dxy = NVTrack.dxy(beamSpotColl.position());
+    float dzFromBeamSpot = NVTrack.dz(beamSpotColl.position());
+    float dxyFromBeamSpot = NVTrack.dxy(beamSpotColl.position());
+    if (debug_ > 8 ) LogPrint(MOD) << dzFromBeamSpot << " and " << dxyFromBeamSpot;
+    // TODO use this for TOF only analysis, instead of dxy and dz
+
     if (muonStations(NVTrack.hitPattern()) < minMuStations_)
       return false;
+  
+    if (tuple) {
+      tuple->MTOF->Fill(0.0, Event_Weight);
+      if (GenBeta >= 0)
+        tuple->Beta_PreselectedB->Fill(GenBeta, Event_Weight);
+    }
   } // End condition for TOF only analysis
 
-  if (tuple) {
-    tuple->MTOF->Fill(0.0, Event_Weight);
-    if (GenBeta >= 0)
-      tuple->Beta_PreselectedB->Fill(GenBeta, Event_Weight);
-  }
-
   
-
-  if (tuple)
-    tuple->BS_Dxy->Fill(dxy, Event_Weight);
-
-  TreeDXY = dxy;
-  // what is this DXYSB for?
-  bool DXYSB = false;
-  if (typeMode_ == 5 && fabs(dxy) > 4) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dxy is too high";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dxy cut";
-  }
-  
-  if (typeMode_ == 5 && fabs(dxy) > globalMaxDXY_) {
-    DXYSB = true;
-  }
 
 //  //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
 
   if (tuple) {
-    tuple->BS_SegSep->Fill(segSep, Event_Weight);
-    tuple->BS_SegMinPhiSep->Fill(minPhi, Event_Weight);
-    tuple->BS_SegMinEtaSep->Fill(minEta, Event_Weight);
     //Plotting segment separation depending on whether track passed dz cut
     if (fabs(dz) > globalMaxDZ_) {
       tuple->BS_SegMinEtaSep_FailDz->Fill(minEta, Event_Weight);
@@ -2718,9 +2758,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       //Needed to compare dz distribution of cosmics in pure cosmic and main sample
       tuple->BS_Dz_FailSep->Fill(dz);
     }
-  }
 
-  if (tuple) {
     if (tof) {
       //Plots for tracks in dz control region
       if (fabs(dz) > CosmicMinDz && fabs(dz) < CosmicMaxDz) {
@@ -2741,22 +2779,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         tuple->BS_Dz_DT->Fill(dz, Event_Weight);
       }
     }
-    tuple->BS_Dz->Fill(dz, Event_Weight);
-    tuple->BS_EtaDz->Fill(track->eta(), dz, Event_Weight);
   }
 
+  TreeDXY = dxy;
   TreeDZ = dz;
-  bool DZSB = false;
   
-  if (typeMode_ == 5 && fabs(dz) > 4) {
-    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: dz it too high";
-    return false;
-  } else {
-    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for dz cut";
-  }
-  if (typeMode_ == 5 && fabs(dz) > globalMaxDZ_)
-    DZSB = true;
-
+  bool DXYSB = (typeMode_ == 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
+  bool DZSB = (typeMode_ == 5 && fabs(dz) > globalMaxDZ_) ? true : false;
+  
 //  if (cutEtaTOFOnly) {
 //    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, eta is too low";
 //    return false;
@@ -2771,11 +2801,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //    return false;
 //  }
   
-  //skip HSCP that are compatible with cosmics.
-  if (tuple) {
-    tuple->BS_OpenAngle->Fill(OpenAngle, Event_Weight);
-  }
-
+  //check if HSCP is compatible with cosmics.
   bool OASB = (typeMode_ == 5 && OpenAngle >= 2.8) ? true : false;
 
   isCosmicSB = DXYSB && DZSB && OASB;

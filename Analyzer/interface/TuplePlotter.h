@@ -423,6 +423,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BS_ProbXYNoL1";
   tuple->BS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "BS_MassErr";
+  tuple->BS_MassErr = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "PostPreS_massT";
   tuple->PostPreS_massT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -580,6 +582,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_ProbXYNoL1";
   tuple->PostPreS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_MassErr";
+  tuple->PostPreS_MassErr = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "PostPreS_EtaPerGenID";
   tuple->PostPreS_EtaPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);

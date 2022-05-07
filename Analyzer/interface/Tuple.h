@@ -210,6 +210,7 @@ struct Tuple {
   TProfile* IntLumi;
   TProfile* XSection;
   TH1F* NumEvents;
+  TH1F* HSCPCandidateType;
   TH1F* N1Eta;
   TH1F* N1Chi2PerNdof;
   TH1F* N1Qual;
@@ -341,6 +342,7 @@ struct Tuple {
   TH1F* BS_ProbXY;
   TH1F* BS_ProbQNoL1;
   TH1F* BS_ProbXYNoL1;
+  TH1F* BS_MassErr;
 
   TH1F* PostPreS_massT;
   TH1F* PostPreS_MiniRelIsoAll;
@@ -420,6 +422,7 @@ struct Tuple {
   TH1F* PostPreS_ProbXY;
   TH1F* PostPreS_ProbQNoL1;
   TH1F* PostPreS_ProbXYNoL1;
+  TH1F* PostPreS_MassErr;
 
   TH2F* PostPreS_EtaPerGenID;
   TH2F* PostPreS_ProbQPerGenID;

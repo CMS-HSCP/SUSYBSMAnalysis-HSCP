@@ -224,6 +224,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->XSection = dir.make<TProfile>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "NumEvents";
   tuple->NumEvents = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  Name = "HSCPCandidateType";
+  tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
 
   cout << "Init N1 plots" << endl;
   Name = "N1Eta";
@@ -775,6 +777,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BS_ProbXYNoL1";
   tuple->BS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->BS_ProbXYNoL1->Sumw2();
+  Name = "BS_MassErr";
+  tuple->BS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 5.);
+  tuple->BS_MassErr->Sumw2();
   
   cout << "Init PostPreSelection plots" << endl;
   Name = "PostPreS_massT";
@@ -1013,6 +1018,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbXYNoL1";
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1->Sumw2();
+  Name = "PostPreS_MassErr";
+  tuple->PostPreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 5.);
+  tuple->PostPreS_MassErr->Sumw2();
 
   cout << "Init PostPreSelectionPerGenID plots" << endl;
   Name = "PostPreS_EtaPerGenID";
