@@ -164,9 +164,6 @@ struct Tuple {
   //      Declare Histograms
   //=============================================================
 
-  TH1F* CutFlow_nHSCP;
-
-
   TH2F* Mass;
   TH2F* MassTOF;
   TH2F* MassComb;
@@ -212,12 +209,8 @@ struct Tuple {
 
   TProfile* IntLumi;
   TProfile* XSection;
-  TH1F* EventsTotal;
-  TH1F* TotalE;
-  TH1F* TotalEPU;
-  TH1F* TotalTE;
-  TH1F* Total;
-  TH1F* V3D;
+  TH1F* NumEvents;
+  TH1F* HSCPCandidateType;
   TH1F* N1Eta;
   TH1F* N1Chi2PerNdof;
   TH1F* N1Qual;
@@ -250,6 +243,8 @@ struct Tuple {
   TH1F* N1ProbXY;
   TH1F* ProbXYNoL1;
 
+  TH1F* pfType;
+
   TH1F* HSCPE_SystP;
   TH1F* HSCPE_SystI;
   TH1F* HSCPE_SystM;
@@ -262,11 +257,6 @@ struct Tuple {
   TH1F* Beta_Gen;
   TH1F* Beta_GenCharged;
   TH1F* Beta_Triggered;
-
-  TH1F* BS_ProbQ;
-  TH1F* BS_ProbXY;
-  TH1F* BS_ProbQNoL1;
-  TH1F* BS_ProbXYNoL1;
   
   TH1F* Beta_Matched;
   TH1F* Beta_PreselectedA;
@@ -276,7 +266,11 @@ struct Tuple {
   TH2F* Beta_SelectedI;
   TH2F* Beta_SelectedT;
 
-  TH1F* BS_V3D;
+  TH1F* BS_massT;
+  TH1F* BS_MiniRelIsoAll;
+  TH1F* BS_MiniRelIsoChg;
+  TH1F* BS_RecoPFMET;
+
   TH1F* BS_Chi2PerNdof;
   TH1F* BS_Qual;
   TH1F* BS_TNOH;
@@ -342,10 +336,115 @@ struct Tuple {
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
   TH2F* BS_PtErrOverPtVsPtErrOverPt2;
+  TH2F* BS_PtErrOverPtVsPt;
+  
+  TH1F* BS_ProbQ;
+  TH1F* BS_ProbXY;
+  TH1F* BS_ProbQNoL1;
+  TH1F* BS_ProbXYNoL1;
+  TH1F* BS_MassErr;
 
+  TH1F* PostPreS_massT;
+  TH1F* PostPreS_MiniRelIsoAll;
+  TH1F* PostPreS_MiniRelIsoChg;
+  TH1F* PostPreS_RecoPFMET;
+  
+  TH1F* PostPreS_Chi2PerNdof;
+  TH1F* PostPreS_Qual;
+  TH1F* PostPreS_TNOH;
+  TH1F* PostPreS_TNOH_PUA;
+  TH1F* PostPreS_TNOH_PUB;
+  TH1F* PostPreS_TNOHFraction;
+  TH1F* PostPreS_TNOPH;
+  TH1F* PostPreS_TNOHFractionTillLast;
+  TH1F* PostPreS_TNOMHTillLast;
+  TH1F* PostPreS_Eta;
+  TH1F* PostPreS_TNOM;
+  TH1F* PostPreS_TNOM_PUA;
+  TH1F* PostPreS_TNOM_PUB;
+  TProfile* PostPreS_NOMoNOHvsPV;
+  TH1F* PostPreS_nDof;
+  TH1F* PostPreS_TOFError;
+  TH1F* PostPreS_PtErrOverPt;
+  TH1F* PostPreS_PtErrOverPt2;
+  TH1F* PostPreS_Pt;
+  TH1F* PostPreS_P;
+  TH1F* PostPreS_MIs;
+  TH1F* PostPreS_MIs_NoEventWeight;
+  TH1F* PostPreS_MIh;
+  TH1F* PostPreS_MIh_NoEventWeight;
+  TH1F* PostPreS_Ih;
+  TH1F* PostPreS_MTOF;
+  TH1F* PostPreS_TIsol;
+  TH1F* PostPreS_EIsol;
+  TH1F* PostPreS_SumpTOverpT;
+  TH1F* PostPreS_dR_NVTrack;
+  TH1F* PostPreS_MatchedStations;
+  TH1F* PostPreS_NVertex;
+  TH1F* PostPreS_NVertex_NoEventWeight;
+  TH1F* PostPreS_PV;
+  TH1F* PostPreS_PV_NoEventWeight;
+  TH1F* PostPreS_dzAll;
+  TH1F* PostPreS_dxyAll;
+  TH1F* PostPreS_dzMinv3d;
+  TH1F* PostPreS_dxyMinv3d;
+  TH1F* PostPreS_SegSep;
+  TH1F* PostPreS_SegMinPhiSep;
+  TH1F* PostPreS_SegMinEtaSep;
+  TH1F* PostPreS_SegMinEtaSep_FailDz;
+  TH1F* PostPreS_SegMinEtaSep_PassDz;
+  TH1F* PostPreS_Dz_FailSep;
+  TH1F* PostPreS_InnerInvPtDiff;
+  TH1F* PostPreS_Phi;
+  TH1F* PostPreS_TimeAtIP;
+  TH1F* PostPreS_OpenAngle;
+  TH1F* PostPreS_OpenAngle_Cosmic;
+  
+  TH1F* PostPreS_Pt_FailDz;
+  TH1F* PostPreS_Pt_FailDz_DT;
+  TH1F* PostPreS_Pt_FailDz_CSC;
+  TH1F* PostPreS_TOF_FailDz;
+  TH1F* PostPreS_TOF_FailDz_DT;
+  TH1F* PostPreS_TOF_FailDz_CSC;
+  TH1F* PostPreS_Dxy;
+  TH1F* PostPreS_Dxy_Cosmic;
+  TH1F* PostPreS_Dz;
+  TH1F* PostPreS_Dz_Cosmic;
+  TH1F* PostPreS_Dz_CSC;
+  TH1F* PostPreS_Dz_DT;
+  
+  TH1F* PostPreS_LastHitDXY;
+  TH1F* PostPreS_LastHitD3D;
+  TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
+  TH2F* PostPreS_PtErrOverPtVsPt;
+  
+  TH1F* PostPreS_ProbQ;
+  TH1F* PostPreS_ProbXY;
+  TH1F* PostPreS_ProbQNoL1;
+  TH1F* PostPreS_ProbXYNoL1;
+  TH1F* PostPreS_MassErr;
+
+  TH2F* PostPreS_EtaPerGenID;
+  TH2F* PostPreS_ProbQPerGenID;
+  TH2F* PostPreS_ProbXYPerGenID;
+  TH2F* PostPreS_PtPerGenID;
+  TH2F* PostPreS_EIsolPerGenID;
+  TH2F* PostPreS_MIhPerGenID;
+  TH2F* PostPreS_MIsPerGenID;
+  TH2F* PostPreS_massTPerGenID;
+  TH2F* PostPreS_EtaPerMomGenID;
+  TH2F* PostPreS_ProbQPerMomGenID;
+  TH2F* PostPreS_ProbXYPerMomGenID;
+  TH2F* PostPreS_PtPerMomGenID;
+  TH2F* PostPreS_EIsolPerMomGenID;
+  TH2F* PostPreS_MIhPerMomGenID;
+  TH2F* PostPreS_MIsPerMomGenID;
+  TH2F* PostPreS_massTPerMomGenID;
+  
   TH1F* CutFlow;
-  TH1F* CutFlowProbQLast;
   TH1F* CutFlowProbQFirst;
+  
+  TH2F* CutFlowEta;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
@@ -391,7 +490,7 @@ struct Tuple {
 
   TH2F* BS_PIs;
   TH3F* AS_PIs;
-  TH2F* BS_PIhHD;
+  TH2F* BS_IhIs;
   TH2F* BS_PIh;
   TH3F* AS_PIh;
   TH2F* BS_PtIs;
