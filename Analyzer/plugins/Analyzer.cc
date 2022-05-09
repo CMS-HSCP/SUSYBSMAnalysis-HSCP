@@ -41,6 +41,7 @@
 // - 19p6: intro CutFlowEta and PerGenID
 // - 19p7: intro NumEvents and HSCPCandidateType, for comparrison, put back EoP cut and TkIso cut (will remove in 19p8)
 // - 19p8: - Cut on PF iso electrons, no cut on EoP and TkIso - Fixed N1_ plots, renamed BS_ to PrePreS_
+// - 19p9: - Futher gen printouts, change back mass histo binning
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -784,7 +785,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // For signal only, make sure that the candidate is associated to a true HSCP
     int closestGenIndex = -1;
     unsigned int closestHSCPsPDGsID = 0;
-    unsigned int closestBackgroundPDGsIDs[2] = {0,0};
     if (isSignal && DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) > 0.3) {
       if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
         DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) << "), skipping it";
@@ -793,21 +793,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float dRMinBckg = 9999.0;
       for (unsigned int g = 0; g < genColl.size(); g++) {
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
-        if(dr < dRMinBckg){
+        if (dr < dRMinBckg) {
           dRMinBckg = dr;
-          closestBackgroundPDGsIDs[0] = abs(genColl[g].pdgId());
-          for (unsigned int numMom = 0; numMom < genColl[g].numberOfMothers(); numMom++) {
-            if (abs(genColl[g].mother(numMom)->pdgId())  != abs(genColl[g].pdgId()))
-            {
-              closestBackgroundPDGsIDs[1] = abs(genColl[g].mother(numMom)->pdgId());
-              break;
-            }
-          }
           closestGenIndex = g;
         }
       }
     }
-      
+    
+    // ID for the candidate, it's mother, and it's nearest sibling, and their angle
+    float closestBackgroundPDGsIDs[4] = {0.,0.,0.,9999.};
+    // Look at the properties of the closes gen candidate
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
       // All HSCP candidates
@@ -847,6 +842,36 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       else {
         tuple->HSCPCandidateType->Fill(5.5, EventWeight_);
       }
+    } else if (isBckg) {
+      closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
+      if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track ID: " << closestBackgroundPDGsIDs[0];
+      float genEta = genColl[closestGenIndex].eta();
+      float genPhi = genColl[closestGenIndex].phi();
+      float dRMinBckgAndSibling = 9999.0;
+      for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+        if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
+          closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
+          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
+          unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
+          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Number of siblings: " << numSiblings;
+          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+            cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
+            float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
+            float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
+            float dr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+            if( (dr!=0.0) && (dr < dRMinBckgAndSibling)) {
+              dRMinBckgAndSibling = dr;
+              closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId());
+            }
+          }
+          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
+          break;
+        }
+      }
+      closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
+      if (debug_> 0) LogPrint(MOD) <<
+        "  >> BckgMC: Min angle between track and its closest siblings: " << dRMinBckgAndSibling;
+      
     }
     
     // TODO this is repeated in the pre-selection
@@ -1861,7 +1886,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
   desc.addUntracked("MassHistoUpperBound",4000.0)->setComment("A");
-  desc.addUntracked("MassNBins",40)->setComment("Number of bins in the mass plot");
+  desc.addUntracked("MassNBins",400)->setComment("Number of bins in the mass plot");
   desc.addUntracked("IPbound",1.0)
     ->setComment("Number of different Dz side regions used to make cosmic background prediction");
   desc.addUntracked("PredBins",0)
@@ -2171,7 +2196,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 const float RescaleT,
                                 float MassErr,
                                 const bool Ih_Iso_cut,
-                                const unsigned int closestBackgroundPDGsIDs[]) {
+                                const float closestBackgroundPDGsIDs[]) {
   using namespace edm;
     
   //===================== Handle For vertex ===============
@@ -2709,7 +2734,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTPerMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_MassErr->Fill(MassErr, Event_Weight);
   }
-
+  
+  if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Is > 0.7\n\n\n";
+  if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
+  if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
+  
   // Fill up gen based beta histo after preselection
   if (tuple && GenBeta >= 0) {
     tuple->Beta_PreselectedA->Fill(GenBeta, Event_Weight);
@@ -3113,7 +3142,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
                              const float GenBeta,
                              float MassErr,
                              const bool Ih_Iso_cut,
-                             const unsigned int closestBackgroundPDGsIDs[]) {
+                             const float closestBackgroundPDGsIDs[]) {
   //FIXME to be measured on 2015 data, currently assume 2012
   bool PRescale = true;
   float IRescale = -0.05;  // added to the Ias value

@@ -152,7 +152,7 @@ public:
                         const float RescaleT,
                         float MassErr,
                         const bool Ih_Iso_cut,
-                        const unsigned int closestBackgroundPDGsIDs[]);
+                        const float closestBackgroundPDGsIDs[]);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
@@ -184,7 +184,7 @@ public:
                      const float GenBeta,
                      float MassErr,
                      const bool Ih_Iso_cut,
-                     const unsigned int closestBackgroundPDGsIDs[]);
+                     const float closestBackgroundPDGsIDs[]);
 
 private:
   virtual void beginJob() override;

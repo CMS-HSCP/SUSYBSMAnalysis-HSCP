@@ -786,7 +786,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PrePreS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->PrePreS_ProbXYNoL1->Sumw2();
   Name = "PrePreS_MassErr";
-  tuple->PrePreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 5.);
+  tuple->PrePreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 10.);
   tuple->PrePreS_MassErr->Sumw2();
   
   cout << "Init PostPreSelection plots" << endl;
@@ -1032,7 +1032,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1->Sumw2();
   Name = "PostPreS_MassErr";
-  tuple->PostPreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 5.);
+  tuple->PostPreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 10.);
   tuple->PostPreS_MassErr->Sumw2();
 
   cout << "Init PostPreSelectionPerGenID plots" << endl;
