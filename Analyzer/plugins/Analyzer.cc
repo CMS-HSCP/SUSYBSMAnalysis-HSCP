@@ -42,6 +42,7 @@
 // - 19p7: intro NumEvents and HSCPCandidateType, for comparrison, put back EoP cut and TkIso cut (will remove in 19p8)
 // - 19p8: - Cut on PF iso electrons, no cut on EoP and TkIso - Fixed N1_ plots, renamed BS_ to PrePreS_
 // - 19p9: - Futher gen printouts, change back mass histo binning
+// - 19p10: - Move sibling ID and angle to histos
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -198,8 +199,6 @@ void Analyzer::beginJob() {
                                globalMinPt_,
                                globalMinTOF_);
   
-  cout << "After initializeTuple" << endl;
-
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
   if (!isData) {
@@ -444,7 +443,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->NumEvents->Fill(1.5, EventWeight_ * PUSystFactor_[0]);
 
   // Check if the event is passing trigger
-  if (debug_ > 0) LogPrint(MOD) << "Checking if the event is passing trigger...";
+  if (debug_ > 1) LogPrint(MOD) << "Checking if the event is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
 
@@ -799,7 +798,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    
+    if (closestGenIndex < 0 ) {
+      // dont look at events where we didnt find the gen canidate
+      continue;
+    }
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     float closestBackgroundPDGsIDs[4] = {0.,0.,0.,9999.};
     // Look at the properties of the closes gen candidate
@@ -855,7 +857,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Number of siblings: " << numSiblings;
           for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-            cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
+            std::cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
             float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
             float dr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -866,6 +868,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
           break;
+        } else {
+          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: This track has no mother than itself";
+          dRMinBckgAndSibling = 0.0;
         }
       }
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
@@ -2322,12 +2327,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + track_PFMiniIso_sumPUPt + track_PFMiniIso_sumNeutHadPt)/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
-
-  if (miniRelIsoChg > 2.0 && track->pt() > 55.0) {
-     cout << "miniRelIsoChg > 2, it's " << miniRelIsoChg << " and pt is " << track->pt() << endl;
-     cout << "miniRelIsoAll " << miniRelIsoAll << " and track_PFMiniIso_sumPUPt " << track_PFMiniIso_sumPUPt << endl;
-  }
-  
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
 //  float RecoPFMET_eta = -1, RecoPFMET_significance = -1;
@@ -2715,6 +2714,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
     tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
     tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
+    tuple->PostPreS_MassErr->Fill(MassErr, Event_Weight);
     
     tuple->PostPreS_EtaPerGenID->Fill(track->eta(), closestBackgroundPDGsIDs[0], Event_Weight);
     tuple->PostPreS_ProbQPerGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
@@ -2732,7 +2732,22 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MIhPerMomGenID->Fill(Ih, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_MIsPerMomGenID->Fill(Is, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_massTPerMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_MassErr->Fill(MassErr, Event_Weight);
+    tuple->PostPreS_EtaPerSiblingGenID->Fill(track->eta(), closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_ProbQPerSiblingGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_ProbXYPerSiblingGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_PtPerSiblingGenID->Fill(track->pt(), closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_EIsolPerSiblingGenID->Fill(EoP, closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_MIhPerSiblingGenID->Fill(Ih, closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_MIsPerSiblingGenID->Fill(Is, closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_massTPerSiblingGenID->Fill(massT, closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_EtaPerGenAngle->Fill(track->eta(), closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_ProbQPerGenAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_ProbXYPerGenAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_PtPerGenAngle->Fill(track->pt(), closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_EIsolPerGenAngle->Fill(EoP, closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_MIhPerGenAngle->Fill(Ih, closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_MIsPerGenAngle->Fill(Is, closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_massTPerGenAngle->Fill(massT, closestBackgroundPDGsIDs[3], Event_Weight);
   }
   
   if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Is > 0.7\n\n\n";
