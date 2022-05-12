@@ -1,1 +1,1 @@
-file:/opt/sbg/cms/ui2_data1/rhaeberl/Prod/prodMarch2022_Gluino1800/EDM/0000/HSCP_numEvent1000_1.root
+file:/opt/sbg/cms/ui2_data1/rhaeberl/CMSSW_12_3_0_pre4/src/HSCP_Gluino_Mass1800_AOD_towers_2.root

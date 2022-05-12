@@ -87,7 +87,7 @@ if(not options.isSkimmedSample):
 
    process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
    process.HSCPTrigger = process.hltHighLevel.clone()
-   process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLTX" )
+   process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLT" )
    process.HSCPTrigger.andOr = cms.bool( True ) #OR
    process.HSCPTrigger.throw = cms.bool( False )
    if(options.SAMPLE=='isData'):
