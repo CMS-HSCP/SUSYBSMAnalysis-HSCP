@@ -436,6 +436,9 @@ struct Tuple {
   TH2F* PostPreS_MIhPerGenID;
   TH2F* PostPreS_MIsPerGenID;
   TH2F* PostPreS_massTPerGenID;
+  TH2F* PostPreS_miniIsoChgPerGenID;
+  TH2F* PostPreS_miniIsoAllPerGenID;
+
   TH2F* PostPreS_EtaPerMomGenID;
   TH2F* PostPreS_ProbQPerMomGenID;
   TH2F* PostPreS_ProbXYPerMomGenID;
@@ -444,6 +447,9 @@ struct Tuple {
   TH2F* PostPreS_MIhPerMomGenID;
   TH2F* PostPreS_MIsPerMomGenID;
   TH2F* PostPreS_massTPerMomGenID;
+  TH2F* PostPreS_miniIsoChgPerMomGenID;
+  TH2F* PostPreS_miniIsoAllPerMomGenID;
+
   TH2F* PostPreS_EtaPerSiblingGenID;
   TH2F* PostPreS_ProbQPerSiblingGenID;
   TH2F* PostPreS_ProbXYPerSiblingGenID;
@@ -452,6 +458,7 @@ struct Tuple {
   TH2F* PostPreS_MIhPerSiblingGenID;
   TH2F* PostPreS_MIsPerSiblingGenID;
   TH2F* PostPreS_massTPerSiblingGenID;
+
   TH2F* PostPreS_EtaPerGenAngle;
   TH2F* PostPreS_ProbQPerGenAngle;
   TH2F* PostPreS_ProbXYPerGenAngle;
@@ -460,11 +467,28 @@ struct Tuple {
   TH2F* PostPreS_MIhPerGenAngle;
   TH2F* PostPreS_MIsPerGenAngle;
   TH2F* PostPreS_massTPerGenAngle;
+  TH2F* PostPreS_miniIsoChgPerGenAngle;
+  TH2F* PostPreS_miniIsoAllPerGenAngle;
+
+  TH2F* PostPreS_EtaPerGenMomAngle;
+  TH2F* PostPreS_ProbQPerGenMomAngle;
+  TH2F* PostPreS_ProbXYPerGenMomAngle;
+  TH2F* PostPreS_PtPerGenMomAngle;
+  TH2F* PostPreS_EIsolPerGenMomAngle;
+  TH2F* PostPreS_MIhPerGenMomAngle;
+  TH2F* PostPreS_MIsPerGenMomAngle;
+  TH2F* PostPreS_massTPerGenMomAngle;
+  TH2F* PostPreS_miniIsoChgPerGenMomAngle;
+  TH2F* PostPreS_miniIsoAllPerGenMomAngle;
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;
   
   TH2F* CutFlowEta;
+
+  TH3F* PostPreS_MIsAllIhPerLayer;
+  TH3F* PostPreS_MIsPixelIhPerLayer;
+  TH3F* PostPreS_MIsStripIhPerLayer;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;

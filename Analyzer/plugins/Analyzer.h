@@ -346,7 +346,7 @@ private:
   float IntegratedLuminosity_ = 33676.4;          //13TeV16
 
   const std::string pixelCPE_;
-  const unsigned int debug_;
+  const int debug_;
   const bool hasMCMatch_, doTriggering_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";

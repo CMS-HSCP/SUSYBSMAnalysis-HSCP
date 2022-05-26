@@ -43,6 +43,7 @@
 // - 19p8: - Cut on PF iso electrons, no cut on EoP and TkIso - Fixed N1_ plots, renamed BS_ to PrePreS_
 // - 19p9: - Futher gen printouts, change back mass histo binning
 // - 19p10: - Move sibling ID and angle to histos
+// - 19p14: - Angles from the mother, other gen level plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -283,7 +284,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     EventWeight_ = 1.;
   }
 
-  if (debug_ > 0 ) LogPrint(MOD) << "\nEvent weight factor applied: " << EventWeight_;
+  if (debug_ > 1 ) LogPrint(MOD) << "\nEvent weight factor applied: " << EventWeight_;
 
   float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
@@ -803,7 +804,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
-    float closestBackgroundPDGsIDs[4] = {0.,0.,0.,9999.};
+    float closestBackgroundPDGsIDs[5] = {0.,0.,0.,9999.,9999.};
     // Look at the properties of the closes gen candidate
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
@@ -850,6 +851,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float genEta = genColl[closestGenIndex].eta();
       float genPhi = genColl[closestGenIndex].phi();
       float dRMinBckgAndSibling = 9999.0;
+      float dRMinBckgAndMom = 9999.0;
       for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
         if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
           closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
@@ -857,23 +859,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Number of siblings: " << numSiblings;
           for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-            std::cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
+           if (debug_> 0) std::cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
             float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
-            float dr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-            if( (dr!=0.0) && (dr < dRMinBckgAndSibling)) {
-              dRMinBckgAndSibling = dr;
+            float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+            if( (siblingDr != 0.0) && (siblingDr < dRMinBckgAndSibling)) {
+              dRMinBckgAndSibling = siblingDr;
               closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId());
             }
           }
+          float momEta = genColl[closestGenIndex].mother(numMomIndx)->eta();
+          float momPhi = genColl[closestGenIndex].mother(numMomIndx)->phi();
+          dRMinBckgAndMom = deltaR(genEta, genPhi, momEta, momPhi);
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
           break;
         } else {
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: This track has no mother than itself";
           dRMinBckgAndSibling = 0.0;
+          dRMinBckgAndMom = 0.0;
         }
       }
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
+      closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
       if (debug_> 0) LogPrint(MOD) <<
         "  >> BckgMC: Min angle between track and its closest siblings: " << dRMinBckgAndSibling;
       
@@ -1283,12 +1290,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->genrecopT->Fill(genpT, track->pt());
       }
       if (calcSyst_) {
+        if (debug_ > 2) LogPrint(MOD)  << "      >> Compute systematic uncertainties on signal";
         calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsIDs);
       }
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
     
-    if (debug_ > 5 ) LogPrint(MOD)  << "        >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
+    if (debug_ > 5 ) LogPrint(MOD)  << "     >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
     // Check if we pass the preselection
     if (debug_ > 2) LogPrint(MOD)  << "      >> Check if we pass Preselection";
     bool Ih_Iso_cut = true;
@@ -1310,8 +1318,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           MassErr,
                           Ih_Iso_cut,
                           closestBackgroundPDGsIDs);
-    
+ 
+
     Ih_Iso_cut = false;
+    bool passPre_noIh_noIso = false;
+/*
     bool passPre_noIh_noIso = passPreselection(
                           track,
                           dedxHits,
@@ -1328,8 +1339,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           MassErr,
                           Ih_Iso_cut,
-                          closestBackgroundPDGsIDs);
-
+                          closestBackgroundPDGsIDs);*/
     
       // Dont do TOF only is isCosmicSB is true
     if (typeMode_ == 5 && isCosmicSB) {
@@ -1437,6 +1447,50 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       MassDownComb = GetMassFromBeta(track->p(), (1 / tof->inverseBeta()));
 
     bool PassNonTrivialSelection = false;
+
+    float Is = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
+
+    // Loop through the rechits on the given track
+    for (unsigned int i = 0; i < dedxHits->size(); i++) {
+        DetId detid(dedxHits->detId(i));
+        float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+        auto IhOnLayer = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
+        tuple->PostPreS_MIsAllIhPerLayer->Fill(Is, IhOnLayer, i, EventWeight_);
+            // One plot for the pixels
+        if (detid.subdetId() < 3) {
+                // up to 8 in histo
+            unsigned int pixLayerIndex = 0;
+            if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
+                pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
+            } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
+                pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
+            }
+            if (tuple) {
+                tuple->PostPreS_MIsPixelIhPerLayer->Fill(Is, IhOnLayer, pixLayerIndex, EventWeight_);
+            }
+        }
+            // another for the strips
+        else {
+                // up to 25 in histo
+            unsigned int stripLayerIndex = 0;
+            if (detid.subdetId() == StripSubdetector::TIB) {
+                stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+            }
+            if (detid.subdetId() == StripSubdetector::TOB) {
+                stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+            }
+            else if (detid.subdetId() == StripSubdetector::TID) {
+                stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+            }
+            else if (detid.subdetId() == StripSubdetector::TEC) {
+                stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+            }
+
+            if (tuple) {
+                tuple->PostPreS_MIsStripIhPerLayer->Fill(Is, IhOnLayer, stripLayerIndex, EventWeight_);
+            }
+        }
+    }
 
     if (passPre) {
       if (debug_ > 3 ) LogPrint(MOD) << "      >> We enter the selection cut loop now";
@@ -2210,8 +2264,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
     //===================== Handle For PFMET ===================
   const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
-  
-  
+
   if (vertexColl.size() < 1) {
     LogError(MOD) << "        >> Preselection not passed: there is no vertex"
                   << " -- this should never happen as there was a check before";
@@ -2391,7 +2444,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
+  passedCutsArray[7]  = (probXYonTrack > 0.0 || probXYonTrack < 1.0)  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -2462,7 +2515,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = (probXYonTrack >= 0.0 || probXYonTrack <= 1.0)  ? true : false;
+    passedCutsArray2[8]  = (probXYonTrack > 0.0 || probXYonTrack < 1.0)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
 //    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
@@ -2724,6 +2777,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MIhPerGenID->Fill(Ih, closestBackgroundPDGsIDs[0], Event_Weight);
     tuple->PostPreS_MIsPerGenID->Fill(Is, closestBackgroundPDGsIDs[0], Event_Weight);
     tuple->PostPreS_massTPerGenID->Fill(massT, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_miniIsoChgPerGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_miniIsoChgPerGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[0], Event_Weight);
+    
     tuple->PostPreS_EtaPerMomGenID->Fill(track->eta(), closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_ProbQPerMomGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
     tuple->PostPreS_ProbXYPerMomGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
@@ -2732,6 +2788,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MIhPerMomGenID->Fill(Ih, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_MIsPerMomGenID->Fill(Is, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_massTPerMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_miniIsoChgPerMomGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_miniIsoAllPerMomGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[1], Event_Weight);
+    
     tuple->PostPreS_EtaPerSiblingGenID->Fill(track->eta(), closestBackgroundPDGsIDs[2], Event_Weight);
     tuple->PostPreS_ProbQPerSiblingGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
     tuple->PostPreS_ProbXYPerSiblingGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
@@ -2740,6 +2799,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MIhPerSiblingGenID->Fill(Ih, closestBackgroundPDGsIDs[2], Event_Weight);
     tuple->PostPreS_MIsPerSiblingGenID->Fill(Is, closestBackgroundPDGsIDs[2], Event_Weight);
     tuple->PostPreS_massTPerSiblingGenID->Fill(massT, closestBackgroundPDGsIDs[2], Event_Weight);
+    
     tuple->PostPreS_EtaPerGenAngle->Fill(track->eta(), closestBackgroundPDGsIDs[3], Event_Weight);
     tuple->PostPreS_ProbQPerGenAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
     tuple->PostPreS_ProbXYPerGenAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
@@ -2748,11 +2808,27 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MIhPerGenAngle->Fill(Ih, closestBackgroundPDGsIDs[3], Event_Weight);
     tuple->PostPreS_MIsPerGenAngle->Fill(Is, closestBackgroundPDGsIDs[3], Event_Weight);
     tuple->PostPreS_massTPerGenAngle->Fill(massT, closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_miniIsoChgPerGenAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_miniIsoAllPerGenAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[3], Event_Weight);
+    
+    tuple->PostPreS_EtaPerGenMomAngle->Fill(track->eta(), closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_ProbQPerGenMomAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_ProbXYPerGenMomAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_PtPerGenMomAngle->Fill(track->pt(), closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_EIsolPerGenMomAngle->Fill(EoP, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_MIhPerGenMomAngle->Fill(Ih, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_MIsPerGenMomAngle->Fill(Is, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_massTPerGenMomAngle->Fill(massT, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_miniIsoChgPerGenMomAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_miniIsoAllPerGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], Event_Weight);
+    
   }
-  
-  if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Is > 0.7\n\n\n";
-  if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
-  if (debug_ > 0 && Is > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
+ 
+  if (Is > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Is > 0.7\n\n";
+  if (Is > 0.7 ) LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
+  if (Is > 0.7 ) LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
+  if (Is > 0.7 ) LogPrint(MOD) << "        >> probQonTrack" << probQonTrack << " probXYonTrack: " << probXYonTrack; 
+  if (Is > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
   
   // Fill up gen based beta histo after preselection
   if (tuple && GenBeta >= 0) {
