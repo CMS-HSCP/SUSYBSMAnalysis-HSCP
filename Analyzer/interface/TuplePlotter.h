@@ -72,8 +72,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->N1_MPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_MIh";
   tuple->N1_MIh = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_MiniRelIsoChg";
-  tuple->N1_MiniRelIsoChg  = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_MiniRelIsoAll";
+  tuple->N1_MiniRelIsoAll  = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "MTOF";
   tuple->MTOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "Pt";
@@ -529,10 +529,10 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_dzAll = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_dxyAll";
   tuple->PostPreS_dxyAll = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_dzMinv3d";
-  tuple->PostPreS_dzMinv3d = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_dxyMinv3d";
-  tuple->PostPreS_dxyMinv3d = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Dz";
+  tuple->PostPreS_Dz = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Dxy";
+  tuple->PostPreS_Dxy = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "PostPreS_SegSep";
   tuple->PostPreS_SegSep = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

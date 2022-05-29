@@ -292,15 +292,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "N1_ProbQ";
   tuple->N1_ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->N1_ProbQ->Sumw2();
+  Name = "N1_ProbQVsIas";
+  tuple->N1_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->N1_ProbQVsIas->Sumw2();
   Name = "ProbQNoL1";
   tuple->ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->ProbQNoL1->Sumw2();
   Name = "N1_ProbXY";
   tuple->N1_ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->N1_ProbXY->Sumw2();
-  Name = "N1_MiniRelIsoChg";
-  tuple->N1_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
-  tuple->N1_MiniRelIsoChg->Sumw2();
+  Name = "N1_MiniRelIsoAll";
+  tuple->N1_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
+  tuple->N1_MiniRelIsoAll->Sumw2();
   Name = "ProbXYNoL1";
   tuple->ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->ProbXYNoL1->Sumw2();
@@ -701,12 +704,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PrePreS_dxyAll";
   tuple->PrePreS_dxyAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
   tuple->PrePreS_dxyAll->Sumw2();
-  Name = "PrePreS_dzMinv3d";
-  tuple->PrePreS_dzMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
-  tuple->PrePreS_dzMinv3d->Sumw2();
-  Name = "PrePreS_dxyMinv3d";
-  tuple->PrePreS_dxyMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
-  tuple->PrePreS_dxyMinv3d->Sumw2();
+  Name = "PrePreS_Dz";
+  tuple->PrePreS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
+  tuple->PrePreS_Dz->Sumw2();
+  Name = "PrePreS_Dxy";
+  tuple->PrePreS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
+  tuple->PrePreS_Dxy->Sumw2();
 
   Name = "PrePreS_SegSep";
   tuple->PrePreS_SegSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 2.5);
@@ -788,6 +791,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PrePreS_MassErr";
   tuple->PrePreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 10.);
   tuple->PrePreS_MassErr->Sumw2();
+  Name = "PrePreS_ProbQVsIas";
+  tuple->PrePreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->PrePreS_ProbQVsIas->Sumw2();
   
   cout << "Init PostPreSelection plots" << endl;
 
@@ -947,12 +953,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_dxyAll";
   tuple->PostPreS_dxyAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.2, 0.2);
   tuple->PostPreS_dxyAll->Sumw2();
-  Name = "PostPreS_dzMinv3d";
-  tuple->PostPreS_dzMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.1, 0.1);
-  tuple->PostPreS_dzMinv3d->Sumw2();
-  Name = "PostPreS_dxyMinv3d";
-  tuple->PostPreS_dxyMinv3d = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.1, 0.1);
-  tuple->PostPreS_dxyMinv3d->Sumw2();
+  Name = "PostPreS_Dz";
+  tuple->PostPreS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.1, 0.1);
+  tuple->PostPreS_Dz->Sumw2();
+  Name = "PostPreS_Dxy";
+  tuple->PostPreS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.1, 0.1);
+  tuple->PostPreS_Dxy->Sumw2();
   
   Name = "PostPreS_SegSep";
   tuple->PostPreS_SegSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 2.5);
@@ -973,15 +979,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_Dz_FailSep = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -150, 150);
   tuple->PostPreS_Dz_FailSep->Sumw2();
   
-  Name = "PostPreS_Dxy";
-  tuple->PostPreS_Dxy = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.02, 0.02);
-  tuple->PostPreS_Dxy->Sumw2();
   Name = "PostPreS_Dxy_Cosmic";
   tuple->PostPreS_Dxy_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
   tuple->PostPreS_Dxy_Cosmic->Sumw2();
-  Name = "PostPreS_Dz";
-  tuple->PostPreS_Dz = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, -0.04, 0.04);
-  tuple->PostPreS_Dz->Sumw2();
   Name = "PostPreS_Dz_Cosmic";
   tuple->PostPreS_Dz_Cosmic = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -IPbound, IPbound);
   tuple->PostPreS_Dz_Cosmic->Sumw2();
@@ -1184,6 +1184,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_miniIsoAllPerGenMomAngle";
   tuple->PostPreS_miniIsoAllPerGenMomAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 20, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->PostPreS_miniIsoAllPerGenMomAngle->Sumw2();
+  Name = "PostPreS_ProbQVsIas";
+  tuple->PostPreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->PostPreS_ProbQVsIas->Sumw2();
   
   Name = "PostPreS_MIsAllIhPerLayer";
   tuple->PostPreS_MIsAllIhPerLayer = dir.make<TH3F>(Name.c_str(), Name.c_str(), 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 35, 0.,35.);
@@ -1194,6 +1197,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_MIsStripIhPerLayer";
   tuple->PostPreS_MIsStripIhPerLayer = dir.make<TH3F>(Name.c_str(), Name.c_str(), 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 25, 0.,25.);
   tuple->PostPreS_MIsStripIhPerLayer->Sumw2();
+  Name = "PostPreS_HighIsPixelL1ProbQPerProbXY";
+  tuple->PostPreS_HighIsPixelL1ProbQPerProbXY = dir.make<TH3F>(Name.c_str(), Name.c_str(), 200, 0., dEdxM_UpLim,  100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->PostPreS_HighIsPixelL1ProbQPerProbXY->Sumw2();
+  Name = "PostPreS_LowIsPixelL1ProbQPerProbXY";
+  tuple->PostPreS_LowIsPixelL1ProbQPerProbXY = dir.make<TH3F>(Name.c_str(), Name.c_str(), 200, 0., dEdxM_UpLim,  100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->PostPreS_LowIsPixelL1ProbQPerProbXY->Sumw2();
+  Name = "PostPreS_HighIsPixelL2ProbQPerProbXY";
+  tuple->PostPreS_HighIsPixelL2ProbQPerProbXY = dir.make<TH3F>(Name.c_str(), Name.c_str(), 200, 0., dEdxM_UpLim,  100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->PostPreS_HighIsPixelL2ProbQPerProbXY->Sumw2();
+  Name = "PostPreS_LowIsPixelL2ProbQPerProbXY";
+  tuple->PostPreS_LowIsPixelL2ProbQPerProbXY = dir.make<TH3F>(Name.c_str(), Name.c_str(), 200, 0., dEdxM_UpLim,  100, 0.0, 1.0, 100, 0.0, 1.0);
+  tuple->PostPreS_LowIsPixelL2ProbQPerProbXY->Sumw2();
 
   cout << "Init gen level plots" << endl;
   Name = "genlevelpT";

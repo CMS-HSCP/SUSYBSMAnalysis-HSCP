@@ -44,6 +44,7 @@
 // - 19p9: - Futher gen printouts, change back mass histo binning
 // - 19p10: - Move sibling ID and angle to histos
 // - 19p14: - Angles from the mother, other gen level plots
+// - 19p15: - probQvsProbXY for possibly merged clusters, Change MiniIso to all, probQ vs Ias correlation
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -110,7 +111,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
       globalMaxPtErr_(iConfig.getUntrackedParameter<double>("GlobalMaxPtErr")),
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
-      globalMiniRelIsoChg_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoChg")),
+      globalMiniRelIsoAll_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoAll")),
       globalMassT_(iConfig.getUntrackedParameter<double>("GlobalMassT")),
       globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
       trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
@@ -1462,6 +1463,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             unsigned int pixLayerIndex = 0;
             if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
                 pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
+              if (pixLayerIndex==1 && Is>0.7) {
+                tuple->PostPreS_HighIsPixelL1ProbQPerProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+              } else if (pixLayerIndex==1 && Is<0.7) {
+                tuple->PostPreS_LowIsPixelL1ProbQPerProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+              } else if (pixLayerIndex==2 && Is>0.7) {
+                tuple->PostPreS_HighIsPixelL2ProbQPerProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+              } else if (pixLayerIndex==2 && Is<0.7) {
+                tuple->PostPreS_LowIsPixelL2ProbQPerProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+              }
             } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
                 pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
             }
@@ -1993,7 +2003,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMiniRelIsoChg",0.1)->setComment("Cut on the charged PF based mini-isolation");
+  desc.addUntracked("GlobalMiniRelIsoAll",0.1)->setComment("Cut on the PF based mini-isolation");
   desc.addUntracked("GlobalMassT",50.0)->setComment("Cut on the transverse mass");
   desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
@@ -2465,7 +2475,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[14] = true;
 //  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[15] = ( miniRelIsoChg < globalMiniRelIsoChg_) ? true : false;
+  passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
   passedCutsArray[16] = ( !pf_isElectron ) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
@@ -2530,7 +2540,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[15] = true;
 //    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
-    passedCutsArray2[16] = ( miniRelIsoChg < globalMiniRelIsoChg_) ? true : false;
+    passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
     // Cut on the PF electron ID 
     passedCutsArray2[17] = ( !pf_isElectron ) ? true : false;
     // Cut on Ih
@@ -2596,8 +2606,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PrePreS_Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
     tuple->PrePreS_MPt->Fill(track->pt(), Event_Weight);
     tuple->PrePreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
-    tuple->PrePreS_dzMinv3d->Fill(dz, Event_Weight);
-    tuple->PrePreS_dxyMinv3d->Fill(dxy, Event_Weight);
     tuple->PrePreS_Dxy->Fill(dxy, Event_Weight);
     tuple->PrePreS_Dz->Fill(dz, Event_Weight);
     tuple->PrePreS_EtaDz->Fill(track->eta(), dz, Event_Weight);
@@ -2623,6 +2631,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PrePreS_SegMinEtaSep->Fill(minEta, Event_Weight);
     tuple->PrePreS_OpenAngle->Fill(OpenAngle, Event_Weight);
     tuple->PrePreS_MassErr->Fill(MassErr, Event_Weight);
+    tuple->PrePreS_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
   }
   
   // N-1 plots
@@ -2652,7 +2661,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==12) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
         if (i==13) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
         if (i==14) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
-        if (i==15) { tuple->N1_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight); };
+        if (i==15) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
         if (i==16) { tuple->N1_MIh->Fill(Ih, Event_Weight); };
         if (i==17) {
             tuple->N1_pfType->Fill(0.5, EventWeight_);
@@ -2673,7 +2682,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
            tuple->N1_pfType->Fill(8.5, EventWeight_);
           }
         }
-        if (i==18) { tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_); };
+        if (i==18) {
+          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
+          tuple->N1_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
+        };
         if (i==19) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
         if (i==20) { LogDebug(MOD) << "cutPhiTOFOnly"; };
         if (i==21) { LogDebug(MOD) << "cutEtaTOFOnly"; };
@@ -2745,8 +2757,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
     tuple->PostPreS_Pt->Fill(track->pt(), Event_Weight);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
-    tuple->PostPreS_dzMinv3d->Fill(dz, Event_Weight);
-    tuple->PostPreS_dxyMinv3d->Fill(dxy, Event_Weight);
+    tuple->PostPreS_Dz->Fill(dz, Event_Weight);
+    tuple->PostPreS_Dxy->Fill(dxy, Event_Weight);
     tuple->PostPreS_PV->Fill(goodVerts, Event_Weight);
     tuple->PostPreS_PV_NoEventWeight->Fill(goodVerts);
     
@@ -2821,6 +2833,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTPerGenMomAngle->Fill(massT, closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_miniIsoChgPerGenMomAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_miniIsoAllPerGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], Event_Weight);
+    
+    tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
     
   }
  

@@ -237,10 +237,11 @@ struct Tuple {
   TH1F* N1_SegSep;
   TH1F* FailDz;
   TH1F* N1_ProbQ;
+  TH2F* N1_ProbQVsIas;
   TH1F* ProbQNoL1;
   TH1F* N1_ProbXY;
   TH1F* N1_pfType;
-  TH1F* N1_MiniRelIsoChg;
+  TH1F* N1_MiniRelIsoAll;
   TH1F* ProbXYNoL1;
 
   TH1F* PrePreS_pfType;
@@ -344,6 +345,7 @@ struct Tuple {
   TH1F* PrePreS_ProbQNoL1;
   TH1F* PrePreS_ProbXYNoL1;
   TH1F* PrePreS_MassErr;
+  TH2F* PrePreS_ProbQVsIas;
 
 
   // Post preselection plots
@@ -390,8 +392,8 @@ struct Tuple {
   TH1F* PostPreS_PV_NoEventWeight;
   TH1F* PostPreS_dzAll;
   TH1F* PostPreS_dxyAll;
-  TH1F* PostPreS_dzMinv3d;
-  TH1F* PostPreS_dxyMinv3d;
+  TH1F* PostPreS_Dz;
+  TH1F* PostPreS_Dxy;
   TH1F* PostPreS_SegSep;
   TH1F* PostPreS_SegMinPhiSep;
   TH1F* PostPreS_SegMinEtaSep;
@@ -410,9 +412,7 @@ struct Tuple {
   TH1F* PostPreS_TOF_FailDz;
   TH1F* PostPreS_TOF_FailDz_DT;
   TH1F* PostPreS_TOF_FailDz_CSC;
-  TH1F* PostPreS_Dxy;
   TH1F* PostPreS_Dxy_Cosmic;
-  TH1F* PostPreS_Dz;
   TH1F* PostPreS_Dz_Cosmic;
   TH1F* PostPreS_Dz_CSC;
   TH1F* PostPreS_Dz_DT;
@@ -480,6 +480,7 @@ struct Tuple {
   TH2F* PostPreS_massTPerGenMomAngle;
   TH2F* PostPreS_miniIsoChgPerGenMomAngle;
   TH2F* PostPreS_miniIsoAllPerGenMomAngle;
+  TH2F* PostPreS_ProbQVsIas;
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;
@@ -489,6 +490,10 @@ struct Tuple {
   TH3F* PostPreS_MIsAllIhPerLayer;
   TH3F* PostPreS_MIsPixelIhPerLayer;
   TH3F* PostPreS_MIsStripIhPerLayer;
+  TH3F* PostPreS_HighIsPixelL1ProbQPerProbXY;
+  TH3F* PostPreS_LowIsPixelL1ProbQPerProbXY;
+  TH3F* PostPreS_HighIsPixelL2ProbQPerProbXY;
+  TH3F* PostPreS_LowIsPixelL2ProbQPerProbXY;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
