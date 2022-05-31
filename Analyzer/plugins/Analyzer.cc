@@ -45,7 +45,8 @@
 // - 19p10: - Move sibling ID and angle to histos
 // - 19p14: - Angles from the mother, other gen level plots
 // - 19p15: - probQvsProbXY for possibly merged clusters, Change MiniIso to all, probQ vs Ias correlation
-// - 19p15: - add status check for gen particles, shift layer to make plots prettier
+// - 19p16: - add status check for gen particles, shift layer to make plots prettier
+// - 19p17: - Add 2D genPT vs recoPT plot
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -801,15 +802,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    if (closestGenIndex < 0 ) {
+    if (!isData && closestGenIndex < 0 ) {
       // dont look at events where we didnt find the gen canidate
       continue;
     }
 
-    if (genColl[closestGenIndex].status() != 1) {
+    if (!isData && genColl[closestGenIndex].status() != 1) {
     // dont look at events where the gen candidate is not a final product
       continue;
     }
+
+    if (!isData) {
+      // 2D plot to compare gen pt vs reco pt
+      tuple->genrecopT->Fill(genColl[closestGenIndex].pt(), track->pt());
+    }
+
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     float closestBackgroundPDGsIDs[5] = {0.,0.,0.,9999.,9999.};
     // Look at the properties of the closes gen candidate
@@ -1279,27 +1286,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // ------------------------------------------------------------------------------------
     //compute systematic uncertainties on signal
-    if (isSignal) {
-      float genpT = -1.0;
-        // Loop through the gen collection
-      for (auto const gen : genColl) {
-        if (!isGoodGenHSCP(gen,false)) continue;
-        float separation = deltaR(track->eta(), track->phi(), gen.eta(), gen.phi());
-        if (separation > 0.3) {
-          continue;
-        } else {
-          genpT = gen.pt();
-          break;
-        }
-      }
-      if (genpT > 0) {
-        // 2D plot to compare gen pt vs reco pt
-        tuple->genrecopT->Fill(genpT, track->pt());
-      }
-      if (calcSyst_) {
-        if (debug_ > 2) LogPrint(MOD)  << "      >> Compute systematic uncertainties on signal";
-        calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsIDs);
-      }
+    if (isSignal && calcSyst_) {
+      if (debug_ > 2) LogPrint(MOD)  << "      >> Compute systematic uncertainties on signal";
+      calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsIDs);
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
     
