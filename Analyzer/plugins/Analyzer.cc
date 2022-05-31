@@ -45,6 +45,7 @@
 // - 19p10: - Move sibling ID and angle to histos
 // - 19p14: - Angles from the mother, other gen level plots
 // - 19p15: - probQvsProbXY for possibly merged clusters, Change MiniIso to all, probQ vs Ias correlation
+// - 19p15: - add status check for gen particles, shift layer to make plots prettier
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -804,6 +805,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // dont look at events where we didnt find the gen canidate
       continue;
     }
+
+    if (genColl[closestGenIndex].status() != 1) {
+    // dont look at events where the gen candidate is not a final product
+      continue;
+    }
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     float closestBackgroundPDGsIDs[5] = {0.,0.,0.,9999.,9999.};
     // Look at the properties of the closes gen candidate
@@ -1456,7 +1462,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         DetId detid(dedxHits->detId(i));
         float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
         auto IhOnLayer = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
-        tuple->PostPreS_MIsAllIhPerLayer->Fill(Is, IhOnLayer, i, EventWeight_);
+        tuple->PostPreS_MIsAllIhPerLayer->Fill(Is, IhOnLayer, i+0.5, EventWeight_);
             // One plot for the pixels
         if (detid.subdetId() < 3) {
                 // up to 8 in histo
@@ -1476,7 +1482,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
             }
             if (tuple) {
-                tuple->PostPreS_MIsPixelIhPerLayer->Fill(Is, IhOnLayer, pixLayerIndex, EventWeight_);
+                tuple->PostPreS_MIsPixelIhPerLayer->Fill(Is, IhOnLayer, pixLayerIndex-0.5, EventWeight_);
             }
         }
             // another for the strips
@@ -1497,7 +1503,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             }
 
             if (tuple) {
-                tuple->PostPreS_MIsStripIhPerLayer->Fill(Is, IhOnLayer, stripLayerIndex, EventWeight_);
+                tuple->PostPreS_MIsStripIhPerLayer->Fill(Is, IhOnLayer, stripLayerIndex-0.5, EventWeight_);
             }
         }
     }
