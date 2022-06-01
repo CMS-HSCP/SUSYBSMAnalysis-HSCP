@@ -47,6 +47,7 @@
 // - 19p15: - probQvsProbXY for possibly merged clusters, Change MiniIso to all, probQ vs Ias correlation
 // - 19p16: - add status check for gen particles, shift layer to make plots prettier
 // - 19p17: - Add 2D genPT vs recoPT plot
+// - 19p18: - Add 2D genPT vs recoPT plot as PostPreS and rename to PrePreS
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -814,11 +815,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     if (!isData) {
       // 2D plot to compare gen pt vs reco pt
-      tuple->genrecopT->Fill(genColl[closestGenIndex].pt(), track->pt());
+      tuple->PrePreS_GenPtVsRecoPt->Fill(genColl[closestGenIndex].pt(), track->pt());
     }
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
-    float closestBackgroundPDGsIDs[5] = {0.,0.,0.,9999.,9999.};
+    float closestBackgroundPDGsIDs[6] = {0.,0.,0.,9999.,9999.,0.};
     // Look at the properties of the closes gen candidate
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
@@ -895,6 +896,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
       closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
+      closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
       if (debug_> 0) LogPrint(MOD) <<
         "  >> BckgMC: Min angle between track and its closest siblings: " << dRMinBckgAndSibling;
       
@@ -2830,6 +2832,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_miniIsoAllPerGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], Event_Weight);
     
     tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
+    tuple->PostPreS_GenPtVsRecoPt->Fill(closestBackgroundPDGsIDs[5], track->pt());
     
   }
  

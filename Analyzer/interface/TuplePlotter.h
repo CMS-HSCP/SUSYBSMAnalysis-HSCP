@@ -223,8 +223,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->Beta_Triggered = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
 
-  Name = "genrecopT";
-  tuple->genrecopT = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_GenPtVsRecoPt";
+  tuple->PrePreS_GenPtVsRecoPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "Beta_Matched";
   tuple->Beta_Matched = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);

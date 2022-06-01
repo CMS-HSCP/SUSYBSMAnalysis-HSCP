@@ -643,7 +643,8 @@ struct Tuple {
 
   TH2F* H_D_DzSidebands;
 
-  TH2F* genrecopT;
+  TH2F* PrePreS_GenPtVsRecoPt;
+  TH2F* PostPreS_GenPtVsRecoPt;
   TH1F* genlevelpT;
   TH1F* genleveleta;
   TH1F* genlevelbeta;

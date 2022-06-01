@@ -506,6 +506,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   cout << "Init BS plots" << endl;
 
+  Name = "PrePreS_GenPtVsRecoPt"; 
+  tuple->PrePreS_GenPtVsRecoPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
+  tuple->PrePreS_GenPtVsRecoPt->Sumw2();
+
   Name = "PrePreS_pfType";
   tuple->PrePreS_pfType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 9, 0, 9);
   tuple->PrePreS_pfType->Sumw2();
@@ -766,9 +770,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PrePreS_TOF_FailDz_CSC";
   tuple->PrePreS_TOF_FailDz_CSC = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -1, 5);
   tuple->PrePreS_TOF_FailDz_CSC->Sumw2();
-  Name = "genrecopT";
-  tuple->genrecopT = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
-  tuple->genrecopT->Sumw2();
+  Name = "PrePreS_GenPtVsRecoPt";
+  tuple->PrePreS_GenPtVsRecoPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
+  tuple->PrePreS_GenPtVsRecoPt->Sumw2();
   Name = "PrePreS_PtErrOverPtVsPtErrOverPt2";
   tuple->PrePreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.003);
   tuple->PrePreS_PtErrOverPtVsPtErrOverPt2->Sumw2();
@@ -1009,15 +1013,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_TOF_FailDz_CSC";
   tuple->PostPreS_TOF_FailDz_CSC = dir.make<TH1F>(Name.c_str(), Name.c_str(), 150, -1, 5);
   tuple->PostPreS_TOF_FailDz_CSC->Sumw2();
-  Name = "genrecopT";
-  tuple->genrecopT = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
-  tuple->genrecopT->Sumw2();
   Name = "PostPreS_PtErrOverPtVsPtErrOverPt2";
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 0.003);
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Sumw2();
   Name = "PostPreS_PtErrOverPtVsPt";
   tuple->PostPreS_PtErrOverPtVsPt = dir.make<TH2F>(Name.c_str(), Name.c_str(),  40, 0., 1., 40, 0., 4000);
   tuple->PostPreS_PtErrOverPtVsPt->Sumw2();
+  Name = "PostPreS_GenPtVsRecoPt"; 
+  tuple->PostPreS_GenPtVsRecoPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
+  tuple->PostPreS_GenPtVsRecoPt->Sumw2();
   
   Name = "PostPreS_ProbQ";
   tuple->PostPreS_ProbQ = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
