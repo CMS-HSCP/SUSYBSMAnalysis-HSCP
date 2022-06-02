@@ -48,6 +48,7 @@
 // - 19p16: - add status check for gen particles, shift layer to make plots prettier
 // - 19p17: - Add 2D genPT vs recoPT plot
 // - 19p18: - Add 2D genPT vs recoPT plot as PostPreS and rename to PrePreS
+// - 19p19: - Cut on probXY > 0.01, add the check on special cases in pixel CPE
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -1011,7 +1012,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_isPixel;
     
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
-    float pixelProbs[4] = {0.0,0.0,0.0,0.0};
+    float pixelProbs[5] = {0.0,0.0,0.0,0.0,0.0};
+    bool specialInCPE = false;
     
     int numRecHits = 0;
     int numRecHitsNoLayer1 = 0;
@@ -1102,6 +1104,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+        bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+        bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+        bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        
+        if (isOnEdge || hasBadPixels || spansTwoROCs) {
+          specialInCPE = true;
+        }
+        
         if (probQ > 0.f) {
           numRecHits++;
           // Calculate alpha term needed for the combination
@@ -1152,6 +1162,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     pixelProbs[1] = combineProbs(probXYonTrackWMulti, numRecHits);
     pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
     pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+    if (specialInCPE) {
+      pixelProbs[4] = 1.0;
+    } else {
+      pixelProbs[4] = 0.0;
+    }
       
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (pixelProbs[0] <= 0.0 || pixelProbs[1] <= 0.0 || pixelProbs[0] >= 1.00000001 || pixelProbs[1] >= 1.000000001) {
@@ -2414,6 +2429,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float probQonTrackNoLayer1 = pixelProbs[1];
   float probXYonTrack = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
+  float specialInCPEfloat = pixelProbs[4];
+  
+  std::cout << "specialInCPEfloat: " << specialInCPEfloat << std::endl;
   
   // TODO: what do PUA and PUB stand for??
   bool PUA = (vertexColl.size() < 15);
@@ -2451,7 +2469,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = (probXYonTrack > 0.0 || probXYonTrack < 1.0)  ? true : false;
+  passedCutsArray[7]  = (probXYonTrack > 0.01 || probXYonTrack < 1.0)  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -2522,7 +2540,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = (probXYonTrack > 0.0 || probXYonTrack < 1.0)  ? true : false;
+    passedCutsArray2[8]  = (probXYonTrack > 0.01 || probXYonTrack < 1.0)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
 //    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
