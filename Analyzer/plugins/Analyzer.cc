@@ -49,6 +49,9 @@
 // - 19p17: - Add 2D genPT vs recoPT plot
 // - 19p18: - Add 2D genPT vs recoPT plot as PostPreS and rename to PrePreS
 // - 19p19: - Cut on probXY > 0.01, add the check on special cases in pixel CPE
+// - 19p20: - Cut on probXY > 0.0, and cut on isPhoton
+// - 19p21: - Cut on probXY > 0.01, for real this time
+// - 19p22:- Cut on probXY > 0.0, loose NOPH>1
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2006,7 +2009,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEta",2.1)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
   desc.addUntracked("GlobalMinNOH",8)->setComment("Cut on number of (valid) track pixel+strip hits");
-  desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
+  desc.addUntracked("GlobalMinNOPH",1)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",6)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
@@ -2469,7 +2472,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = (probXYonTrack > 0.01 || probXYonTrack < 1.0)  ? true : false;
+  passedCutsArray[7]  = (probXYonTrack > 0.0 && probXYonTrack < 1.0)  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -2540,7 +2543,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = (probXYonTrack > 0.01 || probXYonTrack < 1.0)  ? true : false;
+    passedCutsArray2[8]  = (probXYonTrack > 0.0 && probXYonTrack < 1.0)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
 //    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
