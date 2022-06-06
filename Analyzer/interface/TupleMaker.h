@@ -1191,6 +1191,37 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbQVsIas";
   tuple->PostPreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->PostPreS_ProbQVsIas->Sumw2();
+
+  Name = "PostPreS_EtaPerGenNumSibling";
+  tuple->PostPreS_EtaPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(),  50, -2.6, 2.6, 100, 0.0, 10.0);
+  tuple->PostPreS_EtaPerGenNumSibling->Sumw2();
+  Name = "PostPreS_ProbQPerGenNumSibling";
+  tuple->PostPreS_ProbQPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0,1.0);
+  tuple->PostPreS_ProbQPerGenNumSibling->Sumw2();
+  Name = "PostPreS_ProbXYPerGenNumSibling";
+  tuple->PostPreS_ProbXYPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 10.0);
+  tuple->PostPreS_ProbXYPerGenNumSibling->Sumw2();
+  Name = "PostPreS_PtPerGenNumSibling";
+  tuple->PostPreS_PtPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0.0, 10.0);
+  tuple->PostPreS_PtPerGenNumSibling->Sumw2();
+  Name = "PostPreS_EIsolPerGenNumSibling";
+  tuple->PostPreS_EIsolPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 25, 0, 1.5, 100, 0.0, 10.0);
+  tuple->PostPreS_EIsolPerGenNumSibling->Sumw2();
+  Name = "PostPreS_MIhPerGenNumSibling";
+  tuple->PostPreS_MIhPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 100, 0.0, 10.0);
+  tuple->PostPreS_MIhPerGenNumSibling->Sumw2();
+  Name = "PostPreS_MIsPerGenNumSibling";
+  tuple->PostPreS_MIsPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 100, 0.0, 10.0);
+  tuple->PostPreS_MIsPerGenNumSibling ->Sumw2();
+  Name = "PostPreS_massTPerGenNumSibling";
+  tuple->PostPreS_massTPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 100, 0.0, 10.0);
+  tuple->PostPreS_massTPerGenNumSibling->Sumw2();
+  Name = "PostPreS_miniIsoChgPerGenNumSibling";
+  tuple->PostPreS_miniIsoChgPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 20, 0.0, 1.0, 100, 0.0, 10.0);
+  tuple->PostPreS_miniIsoChgPerGenNumSibling->Sumw2();
+  Name = "PostPreS_miniIsoAllPerGenNumSibling";
+  tuple->PostPreS_miniIsoAllPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 20, 0.0, 1.0, 100, 0.0, 10.0);
+  tuple->PostPreS_miniIsoAllPerGenNumSibling->Sumw2();
   
   Name = "PostPreS_MIsAllIhPerLayer";
   tuple->PostPreS_MIsAllIhPerLayer = dir.make<TH3F>(Name.c_str(), Name.c_str(), 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 35, 0.,35.);

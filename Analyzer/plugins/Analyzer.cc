@@ -52,6 +52,7 @@
 // - 19p20: - Cut on probXY > 0.0, and cut on isPhoton
 // - 19p21: - Cut on probXY > 0.01, for real this time
 // - 19p22:- Cut on probXY > 0.0, loose NOPH>1
+// - 19p23: - Add GenNumSibling plots, change the default IDs to 9999
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -823,7 +824,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
-    float closestBackgroundPDGsIDs[6] = {0.,0.,0.,9999.,9999.,0.};
+    // the pt of the candidate and the number of siblings
+    float closestBackgroundPDGsIDs[7] = {9999.,9999.,9999.,9999.,9999.,0.,9999.};
     // Look at the properties of the closes gen candidate
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
@@ -871,11 +873,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float genPhi = genColl[closestGenIndex].phi();
       float dRMinBckgAndSibling = 9999.0;
       float dRMinBckgAndMom = 9999.0;
+      float numSiblingsF = 9999.0;
       for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
         if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
           closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
           unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
+          numSiblingsF  = float(numSiblings);
           if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Number of siblings: " << numSiblings;
           for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
            if (debug_> 0) std::cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
@@ -901,6 +905,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
       closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
       closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
+      closestBackgroundPDGsIDs[6] = numSiblingsF;
       if (debug_> 0) LogPrint(MOD) <<
         "  >> BckgMC: Min angle between track and its closest siblings: " << dRMinBckgAndSibling;
       
@@ -2854,6 +2859,17 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
     tuple->PostPreS_GenPtVsRecoPt->Fill(closestBackgroundPDGsIDs[5], track->pt());
+    
+    tuple->PostPreS_EtaPerGenNumSibling->Fill(track->eta(), closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_ProbQPerGenNumSibling->Fill(probQonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_ProbXYPerGenNumSibling->Fill(probXYonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_PtPerGenNumSibling->Fill(track->pt(), closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_EIsolPerGenNumSibling->Fill(EoP, closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_MIhPerGenNumSibling->Fill(Ih, closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_MIsPerGenNumSibling->Fill(Is, closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_massTPerGenNumSibling->Fill(massT, closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_miniIsoChgPerGenNumSibling->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[6], Event_Weight);
+    tuple->PostPreS_miniIsoAllPerGenNumSibling->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[6], Event_Weight);
     
   }
  

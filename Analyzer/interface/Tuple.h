@@ -481,6 +481,17 @@ struct Tuple {
   TH2F* PostPreS_miniIsoChgPerGenMomAngle;
   TH2F* PostPreS_miniIsoAllPerGenMomAngle;
   TH2F* PostPreS_ProbQVsIas;
+
+  TH2F* PostPreS_EtaPerGenNumSibling;
+  TH2F* PostPreS_ProbQPerGenNumSibling;
+  TH2F* PostPreS_ProbXYPerGenNumSibling;
+  TH2F* PostPreS_PtPerGenNumSibling;
+  TH2F* PostPreS_EIsolPerGenNumSibling;
+  TH2F* PostPreS_MIhPerGenNumSibling;
+  TH2F* PostPreS_MIsPerGenNumSibling;
+  TH2F* PostPreS_massTPerGenNumSibling;
+  TH2F* PostPreS_miniIsoChgPerGenNumSibling;
+  TH2F* PostPreS_miniIsoAllPerGenNumSibling;
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;
