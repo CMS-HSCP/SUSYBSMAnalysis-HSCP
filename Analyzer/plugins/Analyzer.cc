@@ -53,7 +53,8 @@
 // - 19p21: - Cut on probXY > 0.01, for real this time
 // - 19p22: - Cut on probXY > 0.0, loose NOPH>1
 // - 19p23: - Add GenNumSibling plots, change the default IDs to 9999
-// - 19p24: - Change EoP to use PF energy
+// - 20p0: - Change EoP to use PF energy
+//
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
