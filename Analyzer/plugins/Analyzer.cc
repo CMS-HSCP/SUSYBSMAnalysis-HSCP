@@ -51,8 +51,9 @@
 // - 19p19: - Cut on probXY > 0.01, add the check on special cases in pixel CPE
 // - 19p20: - Cut on probXY > 0.0, and cut on isPhoton
 // - 19p21: - Cut on probXY > 0.01, for real this time
-// - 19p22:- Cut on probXY > 0.0, loose NOPH>1
+// - 19p22: - Cut on probXY > 0.0, loose NOPH>1
 // - 19p23: - Add GenNumSibling plots, change the default IDs to 9999
+// - 19p24: - Change EoP to use PF energy
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2334,6 +2335,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
+  float pf_energy = 0.0;
     
   // number of tracks as the first bin
   if (tuple) {
@@ -2357,6 +2359,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
 
       if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
+        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to general track
             tuple->PrePreS_pfType->Fill(1.5, EventWeight_);
@@ -2448,7 +2451,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
   susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
   
-  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
+//  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
+  float EoP = pf_energy / track->p();
   float IsoTK_SumEt = (Ih_Iso_cut) ? hscpIso.Get_TK_SumEt() : 0.0;
   
   float Ih = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
