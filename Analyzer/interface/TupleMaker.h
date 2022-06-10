@@ -234,6 +234,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowProbQFirst = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
   Name = "CutFlowEta";
   tuple->CutFlowEta = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6, 21, 0.0,21.0);
+  Name = "CutFlowPfType";
+  tuple->CutFlowPfType = dir.make<TH2F>(Name.c_str(), Name.c_str(), 9, 0., 9., 21, 0.,21.);
 
   cout << "Init N1_ plots" << endl;
   Name = "N1_Eta";

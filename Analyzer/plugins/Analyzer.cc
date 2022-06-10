@@ -55,7 +55,7 @@
 // - 19p23: - Add GenNumSibling plots, change the default IDs to 9999
 // - 20p0: - Change EoP to use PF energy
 // - 20p1: - Add check if secondaries are coming from pixel NI
-// - 20p2: - Add RecoPFHT and RecoPFNumJets plots
+// - 20p2: - Add RecoPFHT and RecoPFNumJets plots, add CutFlowPfType
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2370,6 +2370,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }
   
   // Loop on PF candidates
+  bool pf_isPfTrack = false, pf_isNotPfTrack = true;
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
@@ -2397,6 +2398,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
 
       if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
+        pf_isPfTrack = true;
+        pf_isNotPfTrack = false;
         pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to general track
@@ -2729,8 +2732,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==15) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
         if (i==16) { tuple->N1_MIh->Fill(Ih, Event_Weight); };
         if (i==17) {
+          if (pf_isPfTrack || pf_isNotPfTrack) {
             tuple->N1_pfType->Fill(0.5, EventWeight_);
+          }
+          if (pf_isPfTrack) {
             tuple->N1_pfType->Fill(1.5, EventWeight_);
+          }
           if (pf_isElectron) {
             tuple->N1_pfType->Fill(2.5, EventWeight_);
           } else if (pf_isMuon) {
@@ -2765,7 +2772,28 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       // TODO: when the preselection list finalizes I might be more verbose than this
       // Plot Eta after each cut
       if (tuple) {
-        tuple->CutFlowEta->Fill(track->eta(),i+0.5, Event_Weight);
+        tuple->CutFlowEta->Fill(track->eta(), i+0.5, Event_Weight);
+        if (pf_isPfTrack || pf_isNotPfTrack) {
+          tuple->CutFlowPfType->Fill(0.5, i+0.5, EventWeight_);
+        }
+        if (pf_isPfTrack) {
+          tuple->CutFlowPfType->Fill(1.5, i+0.5, EventWeight_);
+        }
+        if (pf_isElectron) {
+          tuple->CutFlowPfType->Fill(2.5, i+0.5, EventWeight_);
+        } else if (pf_isMuon) {
+          tuple->CutFlowPfType->Fill(3.5, i+0.5, EventWeight_);
+        } else if (pf_isPhoton) {
+          tuple->CutFlowPfType->Fill(4.5, i+0.5, EventWeight_);
+        } else if (pf_isChHadron) {
+          tuple->CutFlowPfType->Fill(5.5, i+0.5, EventWeight_);
+        } else if (pf_isNeutHadron) {
+          tuple->CutFlowPfType->Fill(6.5, i+0.5, EventWeight_);
+        } else if (pf_isUndefined) {
+          tuple->CutFlowPfType->Fill(7.5, i+0.5, EventWeight_);
+        } else {
+          tuple->CutFlowPfType->Fill(8.5, i+0.5, EventWeight_);
+        }
       }
       return false;
     }
@@ -2773,8 +2801,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   // After (pre)selection plots
   if (tuple) {
-    tuple->PostPreS_pfType->Fill(0.5, EventWeight_);
-    tuple->PostPreS_pfType->Fill(1.5, EventWeight_);
+    if (pf_isPfTrack || pf_isNotPfTrack) {
+      tuple->PostPreS_pfType->Fill(0.5, EventWeight_);
+    }
+    if (pf_isPfTrack) {
+      tuple->PostPreS_pfType->Fill(1.5, EventWeight_);
+    }
     if (pf_isElectron) {
        tuple->PostPreS_pfType->Fill(2.5, EventWeight_);
     } else if (pf_isMuon) {

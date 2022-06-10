@@ -501,6 +501,7 @@ struct Tuple {
   TH1F* CutFlowProbQFirst;
   
   TH2F* CutFlowEta;
+  TH2F* CutFlowPfType; 
 
   TH3F* PostPreS_MIsAllIhPerLayer;
   TH3F* PostPreS_MIsPixelIhPerLayer;
