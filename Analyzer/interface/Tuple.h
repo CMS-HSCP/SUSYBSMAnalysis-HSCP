@@ -659,6 +659,8 @@ struct Tuple {
 
   TH2F* H_D_DzSidebands;
 
+  TH2F* PrePreS_GenPtVsdRMinBckg;
+  TH2F* PrePreS_GenPtVsGenMinPt;
   TH2F* PrePreS_GenPtVsRecoPt;
   TH2F* PostPreS_GenPtVsRecoPt;
   TH1F* genlevelpT;

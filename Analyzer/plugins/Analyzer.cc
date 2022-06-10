@@ -56,7 +56,10 @@
 // - 20p0: - Change EoP to use PF energy
 // - 20p1: - Add check if secondaries are coming from pixel NI
 // - 20p2: - Add RecoPFHT and RecoPFNumJets plots, add CutFlowPfType
-// - 20p3: - Change the logic of CutFlowPfType and CutFlowEta plots
+// - 20p3: - Change the logic of CutFlowPfType and CutFlowEta plots,
+//         - add PrePreS_GenPtVsGenMinPt, and PrePreS_GenPtVsdRMinBckg
+//         - change the logic, that the if the closest gen in not status=1 then it's not the match
+// - 20p4 Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -287,7 +290,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     */
     dEdxSF[0] = dEdxSF_0_;
     dEdxSF[1] = dEdxSF_1_;
-    //LogInfo(MOD) <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
+    //LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
   }
     
 
@@ -506,13 +509,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (!isBckg) {  //do not recompute TOF on MC background
     iEvent.getByToken(muonCscSegmentToken_, CSCSegmentCollH);
     if (!CSCSegmentCollH.isValid()) {
-      LogError(MOD) << "CSC Segment Collection not found!";
+      LogError("Analyzer") << "CSC Segment Collection not found!";
       return;
     }
 
     iEvent.getByToken(muonDtSegmentToken_, DTSegmentCollH);
     if (!DTSegmentCollH.isValid()) {
-      LogError(MOD) << "DT Segment Collection not found!";
+      LogError("Analyzer") << "DT Segment Collection not found!";
       return;
     }
   }
@@ -806,32 +809,46 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Reco - GEN track matching
     // For signal only, make sure that the candidate is associated to a true HSCP
     int closestGenIndex = -1;
+    float dRMinBckg = 9999.0;
+    float dPtMinBcg = 9999.0;
     unsigned int closestHSCPsPDGsID = 0;
     if (isSignal && DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) > 0.3) {
       if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
         DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) << "), skipping it";
       continue;
     } else if (isBckg) {
-      float dRMinBckg = 9999.0;
       for (unsigned int g = 0; g < genColl.size(); g++) {
+        if (genColl[g].pt() < 5 || genColl[g].status() != 1) {
+          continue;
+        }
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
+        float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
         if (dr < dRMinBckg) {
           dRMinBckg = dr;
           closestGenIndex = g;
+        }
+        if (dPt < dPtMinBcg) {
+          dPtMinBcg = dPt;
         }
       }
     }
     if (!isData && closestGenIndex < 0 ) {
       // dont look at events where we didnt find the gen canidate
+      LogPrint(MOD) << "  >> Event where we didnt find the gen canidate";
       continue;
     }
-
-    if (!isData && genColl[closestGenIndex].status() != 1) {
-    // dont look at events where the gen candidate is not a final product
-      continue;
+    if (!isData) {
+      tuple->PrePreS_GenPtVsdRMinBckg->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
     }
+    // TODO: do this later
+//    if (!isData && dRMinBckg > 0.3 ) {
+//        // dont look at events where we didnt find the gen canidate
+//      LogPrint(MOD) << "  >> Gen candidate distance is too big (" << dRMinBckg << "), skipping it";
+//      continue;
+//    }
 
     if (!isData) {
+      tuple->PrePreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
       // 2D plot to compare gen pt vs reco pt
       tuple->PrePreS_GenPtVsRecoPt->Fill(genColl[closestGenIndex].pt(), track->pt());
     }
@@ -1058,7 +1075,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const auto& trackToGenAssoc = *trackToGenAssocHandle;
       reco::GenParticleRef genCollForTrack = trackToGenAssoc[track]; //.key()];
       if (genCollForTrack.isNull()) {
-        LogPrint(MOD) << "  >> No associated gen track to this candidatei -- this is a fake track, skipping it"; 
+        LogPrint(MOD) << "  >> No associated gen track to this candidatei -- this is a fake track, skipping it";
         continue;
       }
     }
@@ -1325,14 +1342,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // ------------------------------------------------------------------------------------
     //compute systematic uncertainties on signal
     if (isSignal && calcSyst_) {
-      if (debug_ > 2) LogPrint(MOD)  << "      >> Compute systematic uncertainties on signal";
+      if (debug_ > 2) LogPrint(MOD) << "      >> Compute systematic uncertainties on signal";
       calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, pixelProbs, EventWeight_, tuple, -1, MassErr, true, closestBackgroundPDGsIDs);
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
     
-    if (debug_ > 5 ) LogPrint(MOD)  << "     >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
+    if (debug_ > 5 ) LogPrint(MOD) << "     >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
     // Check if we pass the preselection
-    if (debug_ > 2) LogPrint(MOD)  << "      >> Check if we pass Preselection";
+    if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
     bool Ih_Iso_cut = true;
 
     bool passPre = passPreselection(
@@ -2159,7 +2176,7 @@ void Analyzer::initializeCuts(edm::Service<TFileService>& fs,
 
   //printf("%i Different Final Selection will be tested\n",(int)CutPt.size());
   //printf("%i Different Final Selection will be tested for background uncertainty\n",(int)CutPt_Flip.size());
-  edm::LogInfo(MOD) << CutPt.size() << " Different Final Selection will be tested\n"
+  edm::LogInfo("Analyzer") << CutPt.size() << " Different Final Selection will be tested\n"
                            << CutPt_Flip.size()
                            << " Different Final Selection will be tested for background uncertainty";
 
@@ -2313,7 +2330,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   auto inclusiveSecondaryVertices = iEvent.get(inclusiveSecondaryVerticesToken_);
 
   if (vertexColl.size() < 1) {
-    LogError(MOD) << "        >> Preselection not passed: there is no vertex"
+    LogPrint(MOD) << "        >> Preselection not passed: there is no vertex"
                   << " -- this should never happen as there was a check before";
     return false;
   }
@@ -2484,7 +2501,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float probXYonTrackNoLayer1 = pixelProbs[3];
   float specialInCPEfloat = pixelProbs[4];
   
-  std::cout << "specialInCPEfloat: " << specialInCPEfloat << std::endl;
+  LogPrint(MOD) << "specialInCPEfloat: " << specialInCPEfloat << std::endl;
   
   // TODO: what do PUA and PUB stand for??
   bool PUA = (vertexColl.size() < 15);
@@ -2760,8 +2777,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
         };
         if (i==19) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
-        if (i==20) { LogDebug(MOD) << "cutPhiTOFOnly"; };
-        if (i==21) { LogDebug(MOD) << "cutEtaTOFOnly"; };
+        if (i==20) { LogDebug("Analyzer") << "cutPhiTOFOnly"; };
+        if (i==21) { LogDebug("Analyzer") << "cutEtaTOFOnly"; };
       }
     }
   }
@@ -2952,7 +2969,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (Is > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Is > 0.7\n\n";
   if (Is > 0.7 ) LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
   if (Is > 0.7 ) LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
-  if (Is > 0.7 ) LogPrint(MOD) << "        >> probQonTrack" << probQonTrack << " probXYonTrack: " << probXYonTrack; 
+  if (Is > 0.7 ) LogPrint(MOD) << "        >> probQonTrack" << probQonTrack << " probXYonTrack: " << probXYonTrack;
   if (Is > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
   
   // Fill up gen based beta histo after preselection
@@ -3531,5 +3548,3 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   }  // End compute systematics due to PU
 }
-
-

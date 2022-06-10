@@ -508,6 +508,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   cout << "Init BS plots" << endl;
 
+  Name = "PrePreS_GenPtVsdRMinBckg";
+  tuple->PrePreS_GenPtVsdRMinBckg = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
+  tuple->PrePreS_GenPtVsdRMinBckg->Sumw2();
+  Name = "PrePreS_GenPtVsGenMinPt";
+  tuple->PrePreS_GenPtVsGenMinPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, 1.);
+  tuple->PrePreS_GenPtVsGenMinPt->Sumw2();
   Name = "PrePreS_GenPtVsRecoPt"; 
   tuple->PrePreS_GenPtVsRecoPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
   tuple->PrePreS_GenPtVsRecoPt->Sumw2();
