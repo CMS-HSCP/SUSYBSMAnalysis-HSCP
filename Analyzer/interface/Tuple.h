@@ -272,6 +272,8 @@ struct Tuple {
   TH1F* PrePreS_MiniRelIsoAll;
   TH1F* PrePreS_MiniRelIsoChg;
   TH1F* PrePreS_RecoPFMET;
+  TH1F* PrePreS_RecoPFHT;
+  TH1F* PrePreS_RecoPFNumJets;
 
   TH1F* PrePreS_Chi2PerNdof;
   TH1F* PrePreS_Qual;
@@ -354,6 +356,8 @@ struct Tuple {
   TH1F* PostPreS_MiniRelIsoAll;
   TH1F* PostPreS_MiniRelIsoChg;
   TH1F* PostPreS_RecoPFMET;
+  TH1F* PostPreS_RecoPFHT;
+  TH1F* PostPreS_RecoPFNumJets;
   
   TH1F* PostPreS_Chi2PerNdof;
   TH1F* PostPreS_Qual;

@@ -55,6 +55,7 @@
 // - 19p23: - Add GenNumSibling plots, change the default IDs to 9999
 // - 20p0: - Change EoP to use PF energy
 // - 20p1: - Add check if secondaries are coming from pixel NI
+// - 20p2: - Add RecoPFHT and RecoPFNumJets plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -75,7 +76,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
           consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("MuonCscSegmentCollection"))),
       offlinePrimaryVerticesToken_(
           consumes<vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("OfflinePrimaryVerticesCollection"))),
-      inclusiveSecondaryVerticesToken_(consumes< reco::VertexCollection >(edm::InputTag("InclusiveSecondaryVertices"))),
+      inclusiveSecondaryVerticesToken_(
+          consumes< reco::VertexCollection >(iConfig.getParameter<edm::InputTag>("InclusiveSecondaryVertices"))),
       lumiScalersToken_(consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("LumiScalers"))),
       refittedStandAloneMuonsToken_(
           consumes<vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("RefittedStandAloneMuonsCollection"))),
@@ -552,6 +554,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   //===================== Handle For PFJet ===================
+  float pfJetHT = 0;
   unsigned int Jets_count = 0;
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
@@ -561,13 +564,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const reco::PFJet* jet = &(*pfJetColl)[i];
       Jets_count++;
       if (jet->pt() < 20 || abs(jet->eta()) > 5 ||
-          jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9)
+          jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9) {
         continue;
+      }
+      pfJetHT += jet->pt();
       TLorentzVector p4(jet->pt() * cos(jet->phi()), jet->pt() * sin(jet->phi()), 0, jet->et());
       pMHT += p4;
     }
     RecoPFMHT = pMHT.Pt();
   }
+  
+  tuple->PrePreS_RecoPFHT->Fill(pfJetHT);
+  tuple->PrePreS_RecoPFNumJets->Fill(Jets_count);
+  
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
 
@@ -2340,7 +2349,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool isMaterialTrack = false;
   
   // Loop on the secondary vertices to find tracks that original from the pixel layers
-  // i.e. are due to NI 
+  // i.e. are due to NI
   for (unsigned int i = 0; i < inclusiveSecondaryVertices.size(); i++) {
     if (inclusiveSecondaryVertices[i].isFake()) {
       continue;

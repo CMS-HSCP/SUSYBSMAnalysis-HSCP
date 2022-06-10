@@ -529,6 +529,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PrePreS_RecoPFMET";
   tuple->PrePreS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PrePreS_RecoPFMET->Sumw2();
+  Name = "PrePreS_RecoPFHT";
+  tuple->PrePreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
+  tuple->PrePreS_RecoPFHT->Sumw2();
+  Name = "PrePreS_RecoPFNumJets";
+  tuple->PrePreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  150, 0.0, 15.0);
+  tuple->PrePreS_RecoPFNumJets->Sumw2();
 
   Name = "PrePreS_Chi2PerNdof";
   tuple->PrePreS_Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
@@ -820,6 +826,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_RecoPFMET";
   tuple->PostPreS_RecoPFMET = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFMET->Sumw2();
+  Name = "PostPreS_RecoPFHT";
+  tuple->PostPreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
+  tuple->PostPreS_RecoPFHT->Sumw2();
+  Name = "PostPreS_RecoPFNumJets";
+  tuple->PostPreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  150, 0.0, 15.0);
+  tuple->PostPreS_RecoPFNumJets->Sumw2();
   
   Name = "PostPreS_Chi2PerNdof";
   tuple->PostPreS_Chi2PerNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
