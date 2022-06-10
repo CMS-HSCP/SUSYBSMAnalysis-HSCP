@@ -56,6 +56,7 @@
 // - 20p0: - Change EoP to use PF energy
 // - 20p1: - Add check if secondaries are coming from pixel NI
 // - 20p2: - Add RecoPFHT and RecoPFNumJets plots, add CutFlowPfType
+// - 20p3: - Change the logic of CutFlowPfType and CutFlowEta plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -2767,10 +2768,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
   // Return false in the function is a given cut is not passed
   for (size_t i=0;i<sizeof(passedCutsArray);i++) {
-    if (!passedCutsArray[i]) {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
-      // TODO: when the preselection list finalizes I might be more verbose than this
-      // Plot Eta after each cut
+    if (passedCutsArray[i]) {
+        // Plot Eta after each cut
       if (tuple) {
         tuple->CutFlowEta->Fill(track->eta(), i+0.5, Event_Weight);
         if (pf_isPfTrack || pf_isNotPfTrack) {
@@ -2795,6 +2794,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->CutFlowPfType->Fill(8.5, i+0.5, EventWeight_);
         }
       }
+    } else {
+      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
+      // TODO: when the preselection list finalizes I might be more verbose than this
       return false;
     }
   }
