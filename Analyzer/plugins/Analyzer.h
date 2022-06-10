@@ -115,6 +115,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
+#include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
+
 using namespace std;
 
 class TupleMaker;
@@ -204,6 +206,7 @@ private:
   edm::EDGetTokenT<DTRecSegment4DCollection> muonDtSegmentToken_;
   edm::EDGetTokenT<CSCSegmentCollection> muonCscSegmentToken_;
   edm::EDGetTokenT<vector<reco::Vertex>> offlinePrimaryVerticesToken_;
+  edm::EDGetTokenT<vector<reco::Vertex>> inclusiveSecondaryVerticesToken_;
   edm::EDGetTokenT<LumiScalersCollection> lumiScalersToken_;
   edm::EDGetTokenT<vector<reco::Track>> refittedStandAloneMuonsToken_;
   edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;

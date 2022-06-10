@@ -54,7 +54,7 @@
 // - 19p22: - Cut on probXY > 0.0, loose NOPH>1
 // - 19p23: - Add GenNumSibling plots, change the default IDs to 9999
 // - 20p0: - Change EoP to use PF energy
-//
+// - 20p1: - Add check if secondaries are coming from pixel NI
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -75,6 +75,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
           consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("MuonCscSegmentCollection"))),
       offlinePrimaryVerticesToken_(
           consumes<vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("OfflinePrimaryVerticesCollection"))),
+      inclusiveSecondaryVerticesToken_(consumes< reco::VertexCollection >(edm::InputTag("InclusiveSecondaryVertices"))),
       lumiScalersToken_(consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("LumiScalers"))),
       refittedStandAloneMuonsToken_(
           consumes<vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("RefittedStandAloneMuonsCollection"))),
@@ -1936,6 +1937,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("OfflinePrimaryVerticesCollection", edm::InputTag("offlinePrimaryVertices"))
     ->setComment("A");
+  desc.add("InclusiveSecondaryVertices", edm::InputTag("inclusiveSecondaryVertices"))
+  ->setComment("A");
   desc.add("LumiScalers", edm::InputTag("scalersRawToDigi"))
     ->setComment("A");
   desc.add("RefittedStandAloneMuonsCollection", edm::InputTag("refittedStandAloneMuons"))
@@ -2294,8 +2297,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
-    //===================== Handle For PFMET ===================
+  //===================== Handle For PFMET ===================
   const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
+    //=============== Handle for secondary (displaced) vertices ===============
+  auto inclusiveSecondaryVertices = iEvent.get(inclusiveSecondaryVerticesToken_);
 
   if (vertexColl.size() < 1) {
     LogError(MOD) << "        >> Preselection not passed: there is no vertex"
@@ -2331,6 +2336,29 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Impact paramters dz and dxy
   float dz = track->dz(vertexColl[highestPtGoodVertex].position());
   float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
+  
+  bool isMaterialTrack = false;
+  
+  // Loop on the secondary vertices to find tracks that original from the pixel layers
+  // i.e. are due to NI 
+  for (unsigned int i = 0; i < inclusiveSecondaryVertices.size(); i++) {
+    if (inclusiveSecondaryVertices[i].isFake()) {
+      continue;
+    }
+    auto rho = inclusiveSecondaryVertices[i].position().rho();
+    if ( (( 2.80-0.075 ) < rho && rho < ( 3.10+0.075 )) || (( 6.60-0.075 ) < rho && rho < ( 7.00+0.075 ))
+        || (( 10.9-0.075 ) < rho && rho < ( 10.9+0.075 )) || (( 16.0-0.075 ) < rho && rho < ( 16.0+0.075 )) ) {
+      for( const auto& rf_track : inclusiveSecondaryVertices[i].refittedTracks() ) {
+        const reco::Track& origTrk = *( inclusiveSecondaryVertices[i].originalTrack( rf_track ));
+        if( track->pt() == origTrk.pt() ){
+          isMaterialTrack = true;
+          break;
+        }
+      }
+    } else {
+      continue;
+    }
+  }
   
   // Loop on PF candidates
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
@@ -2500,7 +2528,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the uncertainty of the pt measurement
   passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[14] = true;
+  passedCutsArray[14] = (!isMaterialTrack) ? true : false;
 //  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
@@ -2565,7 +2593,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[13] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                            || (typeMode_ == 5 && fabs(dxy)) < 4.0) ? true : false;
     passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
-    passedCutsArray2[15] = true;
+    passedCutsArray2[15] = (!isMaterialTrack) ? true : false;
 //    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
     passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
