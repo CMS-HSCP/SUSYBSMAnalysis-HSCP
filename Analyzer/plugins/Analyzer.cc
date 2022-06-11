@@ -59,7 +59,8 @@
 // - 20p3: - Change the logic of CutFlowPfType and CutFlowEta plots,
 //         - add PrePreS_GenPtVsGenMinPt, and PrePreS_GenPtVsdRMinBckg
 //         - change the logic, that the if the closest gen in not status=1 then it's not the match
-// - 20p4 Cut if the minDr for them is > 0.3
+// - 20p4: - Fix20p4, move the status check out of the OR
+// - 20pX Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -559,10 +560,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //===================== Handle For PFJet ===================
   float pfJetHT = 0;
+  unsigned int pfNumJets = 0;
   unsigned int Jets_count = 0;
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
+    pfNumJets = pfJetColl->size();
     TLorentzVector pMHT;
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
@@ -579,7 +582,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   
   tuple->PrePreS_RecoPFHT->Fill(pfJetHT);
-  tuple->PrePreS_RecoPFNumJets->Fill(Jets_count);
+  tuple->PrePreS_RecoPFNumJets->Fill(pfNumJets);
   
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
@@ -755,18 +758,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     if (debug_> 0) LogPrint(MOD) << "  --------------------------------------------";
     genTrack_count++;
+    // First bin of the error histo is all tracks
+//    tuple->ErrorHisto->Fill(0.5);
     if (debug_> 0) LogPrint(MOD) << "  >> This is general track " << genTrack_count;
     
     // Tracker only analysis must have either a tracker muon or a global muon
     if (typeMode_ == 1 &&
         !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
+      // Second bin of the error histo, num tracks that fail the track existence checks
+//      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
     
     // Tracker + Muon analysis  must have either a global muon
     if ((typeMode_ == 2 || typeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker + Muon analysis w/o a global muon";
+      // Second bin of the error histo, num tracks that fail the track existence checks
+//      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
     
@@ -775,6 +784,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     reco::MuonRef muon = hscp.muonRef();
     if (typeMode_ == 3 && muon.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> TOF only mode but no muon connected to the candidate -- skipping it";
+      // Second bin of the error histo, num tracks that fail the track existence checks
+//      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
     
@@ -785,12 +796,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Skip events without track
     if (track.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
+      // Third bin of the error histo, no tracks
+//      tuple->ErrorHisto->Fill(2.5);
       continue;
     }
 
     // Require a track segment in the muon system
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
+      // Second bin of the error histo, num tracks that fail the track existence checks
+//      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
 
@@ -803,6 +818,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     if (vertexColl.size() < 1) {
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
+        // 4-th bin of the error histo, no PV
+//        tuple->ErrorHisto->Fill(3.5);
         continue;
     }
         
@@ -818,7 +835,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     } else if (isBckg) {
       for (unsigned int g = 0; g < genColl.size(); g++) {
-        if (genColl[g].pt() < 5 || genColl[g].status() != 1) {
+        if (genColl[g].pt() < 5) {
+          continue;
+        }
+        if (genColl[g].status() != 1) {
           continue;
         }
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
@@ -835,6 +855,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!isData && closestGenIndex < 0 ) {
       // dont look at events where we didnt find the gen canidate
       LogPrint(MOD) << "  >> Event where we didnt find the gen canidate";
+      // 5-th bin of the error histo, didnt find the gen canidate
+//      tuple->ErrorHisto->Fill(4.5);
       continue;
     }
     if (!isData) {
