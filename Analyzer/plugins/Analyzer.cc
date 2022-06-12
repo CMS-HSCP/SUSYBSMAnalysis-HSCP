@@ -62,6 +62,7 @@
 // - 20p4: - Fix20p3, move the status check out of the OR
 // - 20p5: - Add ErrorHisto, TriggerType, possible fix pfType plots by interoducing the ForIdx version
 // - 20p6: - Further fix for pfType?
+// - 20p7: - Add PostPreS_EIsolPerPfType plot, cleanup gen print-outs, move them after the preS
 // - 20pX Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -927,7 +928,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     } else if (isBckg) {
       closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
-      if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track ID: " << closestBackgroundPDGsIDs[0];
       float genEta = genColl[closestGenIndex].eta();
       float genPhi = genColl[closestGenIndex].phi();
       float dRMinBckgAndSibling = 9999.0;
@@ -936,12 +936,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
         if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
           closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
-          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
           unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
           numSiblingsF  = float(numSiblings);
-          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Number of siblings: " << numSiblings;
           for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-           if (debug_> 0) std::cout << "  >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() << " , ";
             float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
             float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -953,25 +950,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           float momEta = genColl[closestGenIndex].mother(numMomIndx)->eta();
           float momPhi = genColl[closestGenIndex].mother(numMomIndx)->phi();
           dRMinBckgAndMom = deltaR(genEta, genPhi, momEta, momPhi);
-          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
           break;
         } else {
-          if (debug_> 0) LogPrint(MOD) << "  >> BckgMC: This track has no mother than itself";
           dRMinBckgAndSibling = 0.0;
           dRMinBckgAndMom = 0.0;
         }
-      }
-      if (genColl[closestGenIndex].numberOfMothers() == 0) {
-        LogPrint(MOD) << "There are zero mothers, track ID" << abs(genColl[closestGenIndex].pdgId()) <<
-        " Eta: " << genEta << " Phi: " << genPhi ;
       }
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
       closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
       closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
       closestBackgroundPDGsIDs[6] = numSiblingsF;
-      if (debug_> 0) LogPrint(MOD) <<
-        "  >> BckgMC: Min angle between track and its closest siblings: " << dRMinBckgAndSibling;
-      
     }
     
     // TODO this is repeated in the pre-selection
@@ -1479,6 +1467,45 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (debug_ > 2) LogPrint(MOD) << "      >> Preselection not passed";
       continue;
     }
+    
+    // Let's do some printouts after preselections for gen particles
+    if (isBckg) {
+      if (debug_> 0) {
+        LogPrint(MOD) << "      >> BckgMC: Track ID: " << closestBackgroundPDGsIDs[0];
+        float genEta = genColl[closestGenIndex].eta();
+        float genPhi = genColl[closestGenIndex].phi();
+        LogPrint(MOD) << "      >> BckgMC: Track eta: " << genEta << " and phi: " << genPhi;
+        LogPrint(MOD) << "      >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
+        for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+          if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
+            unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
+            LogPrint(MOD) << "      >> BckgMC: Number of siblings: " << numSiblings;
+            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+              std::cout << "      >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+              float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
+              float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
+              float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+              std::cout << " (dR = " << siblingDr << ") , ";
+            }
+            break;
+          } else {
+            LogPrint(MOD) << "      >> BckgMC: This track has no mother than itself";
+            LogPrint(MOD) << "      >> BckgMC: The num mother is: " << genColl[closestGenIndex].numberOfMothers();
+          }
+        }
+        if (genColl[closestGenIndex].numberOfMothers() == 0) {
+          LogPrint(MOD) << "There are zero mothers, track ID" << abs(genColl[closestGenIndex].pdgId()) <<
+          " Eta: " << genEta << " Phi: " << genPhi ;
+        }
+        std::cout << std::endl;
+        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
+        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling angle: " << closestBackgroundPDGsIDs[3];
+        LogPrint(MOD) << "      >> BckgMC: Track's pt: " << closestBackgroundPDGsIDs[4];
+        LogPrint(MOD) << "      >> BckgMC: Track's num siblings: " << closestBackgroundPDGsIDs[5];
+      }
+    }
+    
+      // TODO this
     
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
@@ -3000,6 +3027,26 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTPerGenNumSibling->Fill(massT, closestBackgroundPDGsIDs[6], Event_Weight);
     tuple->PostPreS_miniIsoChgPerGenNumSibling->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[6], Event_Weight);
     tuple->PostPreS_miniIsoAllPerGenNumSibling->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[6], Event_Weight);
+    
+    tuple->PostPreS_EIsolPerPfType->Fill(EoP, 0.5, EventWeight_);
+    if (pf_isPfTrack) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 1.5, EventWeight_);
+    } else {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 8.5, EventWeight_);
+    }
+    if (pf_isElectron) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 2.5, EventWeight_);
+    } else if (pf_isMuon) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 3.5, EventWeight_);
+    } else if (pf_isPhoton) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 4.5, EventWeight_);
+    } else if (pf_isChHadron) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 5.5, EventWeight_);
+    } else if (pf_isNeutHadron) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 6.5, EventWeight_);
+    } else if (pf_isUndefined) {
+      tuple->PostPreS_EIsolPerPfType->Fill(EoP, 7.5, EventWeight_);
+    }
     
   }
  

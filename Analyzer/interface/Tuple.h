@@ -498,6 +498,7 @@ struct Tuple {
   TH2F* PostPreS_massTPerGenNumSibling;
   TH2F* PostPreS_miniIsoChgPerGenNumSibling;
   TH2F* PostPreS_miniIsoAllPerGenNumSibling;
+  TH2F* PostPreS_EIsolPerPfType;
   
   TH1F* CutFlow;
   TH1F* CutFlowProbQFirst;

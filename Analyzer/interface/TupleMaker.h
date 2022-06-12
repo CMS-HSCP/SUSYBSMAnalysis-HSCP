@@ -1246,6 +1246,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_miniIsoAllPerGenNumSibling";
   tuple->PostPreS_miniIsoAllPerGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 20, 0.0, 1.0, 100, 0.0, 10.0);
   tuple->PostPreS_miniIsoAllPerGenNumSibling->Sumw2();
+  Name = "PostPreS_EIsolPerPfType";
+  tuple->PostPreS_EIsolPerPfType = dir.make<TH2F>(Name.c_str(), Name.c_str(), 25, 0.0, 1.5, 9, 0.0, 9.0);
+  tuple->PostPreS_EIsolPerPfType->Sumw2();
   
   Name = "PostPreS_MIsAllIhPerLayer";
   tuple->PostPreS_MIsAllIhPerLayer = dir.make<TH3F>(Name.c_str(), Name.c_str(), 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 35, 0.,35.);
