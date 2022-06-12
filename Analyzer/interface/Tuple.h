@@ -210,6 +210,8 @@ struct Tuple {
   TProfile* IntLumi;
   TProfile* XSection;
   TH1F* NumEvents;
+  TH1F* ErrorHisto;
+  TH1F* TriggerType;
   TH1F* HSCPCandidateType;
   TH1F* N1_Eta;
   TH1F* N1_Chi2PerNdof;

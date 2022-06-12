@@ -224,6 +224,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->XSection = dir.make<TProfile>(Name.c_str(), Name.c_str(), 1, 0, 1);
   Name = "NumEvents";
   tuple->NumEvents = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  Name = "ErrorHisto";
+  tuple->ErrorHisto = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0., 10.);
+  Name = "TriggerType";
+  tuple->TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
 

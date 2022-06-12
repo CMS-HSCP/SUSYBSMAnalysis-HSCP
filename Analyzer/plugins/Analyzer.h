@@ -192,7 +192,7 @@ private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
-  virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
+//  virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
 
 
   // ----------member data ---------------------------

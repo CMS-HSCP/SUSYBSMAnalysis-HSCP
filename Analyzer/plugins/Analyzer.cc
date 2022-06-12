@@ -59,7 +59,9 @@
 // - 20p3: - Change the logic of CutFlowPfType and CutFlowEta plots,
 //         - add PrePreS_GenPtVsGenMinPt, and PrePreS_GenPtVsdRMinBckg
 //         - change the logic, that the if the closest gen in not status=1 then it's not the match
-// - 20p4: - Fix20p4, move the status check out of the OR
+// - 20p4: - Fix20p3, move the status check out of the OR
+// - 20p5: - Add ErrorHisto, TriggerType, possible fix pfType plots by interoducing the ForIdx version
+// - 20p6: - Further fix for pfType?
 // - 20pX Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -481,6 +483,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
   if (doTriggering_ && TrigInfo_ > 0) {
       if (debug_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
+      tuple->TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
   } else {
       if (debug_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
@@ -759,7 +762,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debug_> 0) LogPrint(MOD) << "  --------------------------------------------";
     genTrack_count++;
     // First bin of the error histo is all tracks
-//    tuple->ErrorHisto->Fill(0.5);
+    tuple->ErrorHisto->Fill(0.5);
     if (debug_> 0) LogPrint(MOD) << "  >> This is general track " << genTrack_count;
     
     // Tracker only analysis must have either a tracker muon or a global muon
@@ -767,7 +770,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-//      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
     
@@ -775,7 +778,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if ((typeMode_ == 2 || typeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker + Muon analysis w/o a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-//      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
     
@@ -785,7 +788,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ == 3 && muon.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> TOF only mode but no muon connected to the candidate -- skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-//      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
     
@@ -797,7 +800,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (track.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
       // Third bin of the error histo, no tracks
-//      tuple->ErrorHisto->Fill(2.5);
+      tuple->ErrorHisto->Fill(2.5);
       continue;
     }
 
@@ -805,7 +808,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-//      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.5);
       continue;
     }
 
@@ -819,7 +822,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (vertexColl.size() < 1) {
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
         // 4-th bin of the error histo, no PV
-//        tuple->ErrorHisto->Fill(3.5);
+        tuple->ErrorHisto->Fill(3.5);
         continue;
     }
         
@@ -829,10 +832,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dRMinBckg = 9999.0;
     float dPtMinBcg = 9999.0;
     unsigned int closestHSCPsPDGsID = 0;
-    if (isSignal && DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) > 0.3) {
-      if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
-        DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) << "), skipping it";
-      continue;
+    if (isSignal) {
+      if (DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) > 0.3) {
+        if (debug_> 0) LogPrint(MOD) << "  >> Signal MC HSCP distance from gen to candidate is too big (" <<
+          DistToHSCP(hscp, genColl, closestGenIndex, typeMode_) << "), skipping it";
+        continue;
+      }
     } else if (isBckg) {
       for (unsigned int g = 0; g < genColl.size(); g++) {
         if (genColl[g].pt() < 5) {
@@ -856,7 +861,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // dont look at events where we didnt find the gen canidate
       LogPrint(MOD) << "  >> Event where we didnt find the gen canidate";
       // 5-th bin of the error histo, didnt find the gen canidate
-//      tuple->ErrorHisto->Fill(4.5);
+      tuple->ErrorHisto->Fill(4.5);
       continue;
     }
     if (!isData) {
@@ -866,6 +871,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 //    if (!isData && dRMinBckg > 0.3 ) {
 //        // dont look at events where we didnt find the gen canidate
 //      LogPrint(MOD) << "  >> Gen candidate distance is too big (" << dRMinBckg << "), skipping it";
+      // 6-th bin of the error histo, didnt find the gen canidate
+//    tuple->ErrorHisto->Fill(5.5);
 //      continue;
 //    }
 
@@ -877,7 +884,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     // the pt of the candidate and the number of siblings
-    float closestBackgroundPDGsIDs[7] = {9999.,9999.,9999.,9999.,9999.,0.,9999.};
+    float closestBackgroundPDGsIDs[7] = {0.,0.,0.,9999.,9999.,0.,9999.};
     // Look at the properties of the closes gen candidate
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
@@ -954,6 +961,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           dRMinBckgAndMom = 0.0;
         }
       }
+      if (genColl[closestGenIndex].numberOfMothers() == 0) {
+        LogPrint(MOD) << "There are zero mothers, track ID" << abs(genColl[closestGenIndex].pdgId()) <<
+        " Eta: " << genEta << " Phi: " << genPhi ;
+      }
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
       closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
       closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
@@ -978,8 +989,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         highestPtGoodVertex = i;
       }
     } // End loop on the vertices in the event
-    if (highestPtGoodVertex < 0)
+    if (highestPtGoodVertex < 0) {
       highestPtGoodVertex = 0;
+    }
 
     // Impact paramters dz and dxy
     float dz = track->dz(vertexColl[highestPtGoodVertex].position());
@@ -1000,6 +1012,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float RMin = 9999.;
     unsigned int idx_pf_RMin = 9999;
 
+    // This is again repeated in the preselection
     bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
     int pf_muon_selector = -1;
     float pf_ecal_energy = 0, pf_hcal_energy = 0;
@@ -1130,6 +1143,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // skip tracks without hits otherwise there will be a crash
     if (!dedxHits) {
       if (debug_> 3) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
+      // 7-th bin of the error histo, didnt find the gen canidate
+      tuple->ErrorHisto->Fill(6.5);
       continue;
     }
 
@@ -1417,6 +1432,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Dont do TOF only is isCosmicSB is true
     if (typeMode_ == 5 && isCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, skipping it";
+      // 8-th bin of the error histo, not a collision track
+      tuple->ErrorHisto->Fill(7.5);
       continue;
     } else if (isCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, please check what's up";
@@ -1425,6 +1442,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Dont do TOF only is isSemiCosmicSB is true
     if (typeMode_ == 5 && isSemiCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, skipping it";
+      // 8-th bin of the error histo, not a collision track
+      tuple->ErrorHisto->Fill(7.5);
       continue;
     } else if (isSemiCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, please check what's up";
@@ -2410,7 +2429,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }
   
   // Loop on PF candidates
-  bool pf_isPfTrack = false, pf_isNotPfTrack = true;
+  bool pf_isPfTrack = false;
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
@@ -2429,17 +2448,19 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
       const reco::PFCandidate* pfCand = &(*pf)[i];
 
-      pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
-      pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-      pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
-
-      pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-      pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
-      pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
+      bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+      bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+      bool pf_isNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
 
       if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
+        pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+        pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+        pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+        
+        pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+        pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+        pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
         pf_isPfTrack = true;
-        pf_isNotPfTrack = false;
         pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to general track
@@ -2479,13 +2500,13 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       }
       if (dr<drForMiniIso) {
         // charged cands from PV get added to trackIso
-        if(pf_isChHadron && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
+        if(pf_isChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
         // charged cands not from PV get added to pileup iso
-        else if(pf_isChHadron) track_PFMiniIso_sumPUPt+=pt;
+        else if(pf_isChHadronForIdx) track_PFMiniIso_sumPUPt+=pt;
         // neutral hadron iso
-        if(pf_isNeutHadron) track_PFMiniIso_sumNeutHadPt+=pt;
+        if(pf_isNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
         // photon iso
-        if(pf_isPhoton) track_PFMiniIso_sumPhotonPt+=pt;
+        if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
       }
     }
   }//end loop PFCandidates
@@ -2770,13 +2791,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==13) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
         if (i==14) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
         if (i==15) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
-        if (i==16) { tuple->N1_MIh->Fill(Ih, Event_Weight); };
-        if (i==17) {
-          if (pf_isPfTrack || pf_isNotPfTrack) {
-            tuple->N1_pfType->Fill(0.5, EventWeight_);
-          }
+        if (i==16) {
+          tuple->N1_pfType->Fill(0.5, EventWeight_);
           if (pf_isPfTrack) {
             tuple->N1_pfType->Fill(1.5, EventWeight_);
+          } else {
+            tuple->N1_pfType->Fill(8.5, EventWeight_);
           }
           if (pf_isElectron) {
             tuple->N1_pfType->Fill(2.5, EventWeight_);
@@ -2790,10 +2810,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->N1_pfType->Fill(6.5, EventWeight_);
           } else if (pf_isUndefined) {
             tuple->N1_pfType->Fill(7.5, EventWeight_);
-          } else {
-           tuple->N1_pfType->Fill(8.5, EventWeight_);
           }
         }
+        if (i==17) { tuple->N1_MIh->Fill(Ih, Event_Weight); };
         if (i==18) {
           tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
           tuple->N1_ProbQVsIas->Fill(probQonTrack, Is, EventWeight_);
@@ -2810,12 +2829,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (passedCutsArray[i]) {
         // Plot Eta after each cut
       if (tuple) {
-        tuple->CutFlowEta->Fill(track->eta(), i+0.5, Event_Weight);
-        if (pf_isPfTrack || pf_isNotPfTrack) {
-          tuple->CutFlowPfType->Fill(0.5, i+0.5, EventWeight_);
-        }
+        tuple->CutFlowEta->Fill(track->eta(), i+0.5, EventWeight_);
+        tuple->CutFlowPfType->Fill(0.5, i+0.5, EventWeight_);
         if (pf_isPfTrack) {
           tuple->CutFlowPfType->Fill(1.5, i+0.5, EventWeight_);
+        } else {
+          tuple->CutFlowPfType->Fill(8.5, i+0.5, EventWeight_);
         }
         if (pf_isElectron) {
           tuple->CutFlowPfType->Fill(2.5, i+0.5, EventWeight_);
@@ -2829,8 +2848,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->CutFlowPfType->Fill(6.5, i+0.5, EventWeight_);
         } else if (pf_isUndefined) {
           tuple->CutFlowPfType->Fill(7.5, i+0.5, EventWeight_);
-        } else {
-          tuple->CutFlowPfType->Fill(8.5, i+0.5, EventWeight_);
         }
       }
     } else {
@@ -2842,11 +2859,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   // After (pre)selection plots
   if (tuple) {
-    if (pf_isPfTrack || pf_isNotPfTrack) {
       tuple->PostPreS_pfType->Fill(0.5, EventWeight_);
-    }
     if (pf_isPfTrack) {
       tuple->PostPreS_pfType->Fill(1.5, EventWeight_);
+    } else {
+      tuple->PostPreS_pfType->Fill(8.5, EventWeight_);
     }
     if (pf_isElectron) {
        tuple->PostPreS_pfType->Fill(2.5, EventWeight_);
@@ -2860,8 +2877,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
        tuple->PostPreS_pfType->Fill(6.5, EventWeight_);
     } else if (pf_isUndefined) {
        tuple->PostPreS_pfType->Fill(7.5, EventWeight_);
-    } else {
-       tuple->PostPreS_pfType->Fill(8.5, EventWeight_);
     }
     tuple->PostPreS_Eta->Fill(track->eta(), Event_Weight);
     tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern()), Event_Weight);
@@ -3317,10 +3332,12 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     tuple->AS_Is->Fill(CutIndex, Is, Event_Weight);
     tuple->AS_Ih->Fill(CutIndex, Ih, Event_Weight);
     tuple->AS_TOF->Fill(CutIndex, MuonTOF, Event_Weight);
+    // TODO: I put this back
     //tuple->AS_EtaIs->Fill(CutIndex,track->eta(),Is,Event_Weight);
     //tuple->AS_EtaIh->Fill(CutIndex,track->eta(),Ih,Event_Weight);
     //tuple->AS_EtaP ->Fill(CutIndex,track->eta(),track->p(),Event_Weight);
     //tuple->AS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),Event_Weight);
+    // TODO: until here
     tuple->AS_PIs->Fill(CutIndex, track->p(), Is, Event_Weight);
     tuple->AS_PIh->Fill(CutIndex, track->p(), Ih, Event_Weight);
     tuple->AS_PtIs->Fill(CutIndex, track->pt(), Is, Event_Weight);
@@ -3331,30 +3348,31 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   return true;
 }
 
-//=============================================================
-//
-//     Check if track is from pixel
-//
-//=============================================================
-void Analyzer::isPixelTrack(const edm::Ref<std::vector<Trajectory>>& refTraj, bool& isBpixtrack, bool& isFpixtrack) {
-  // Used in analyze() to see if it is pixel track
-  std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
-  std::vector<TrajectoryMeasurement>::const_iterator tmeasIt;
-  for (tmeasIt = tmeasColl.begin(); tmeasIt != tmeasColl.end(); tmeasIt++) {
-    if (!tmeasIt->updatedState().isValid())
-      continue;
-    TransientTrackingRecHit::ConstRecHitPointer testhit = tmeasIt->recHit();
-    if (!testhit->isValid() || testhit->geographicalId().det() != DetId::Tracker)
-      continue;
-    uint testSubDetID = (testhit->geographicalId().subdetId());
-    if (testSubDetID == PixelSubdetector::PixelBarrel)
-      isBpixtrack = true;
-    if (testSubDetID == PixelSubdetector::PixelEndcap)
-      isFpixtrack = true;
-    if (isBpixtrack && isFpixtrack)
-      break;
-  }
-}
+// TODO: remove this
+////=============================================================
+////
+////     Check if track is from pixel
+////
+////=============================================================
+//void Analyzer::isPixelTrack(const edm::Ref<std::vector<Trajectory>>& refTraj, bool& isBpixtrack, bool& isFpixtrack) {
+//  // Used in analyze() to see if it is pixel track
+//  std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
+//  std::vector<TrajectoryMeasurement>::const_iterator tmeasIt;
+//  for (tmeasIt = tmeasColl.begin(); tmeasIt != tmeasColl.end(); tmeasIt++) {
+//    if (!tmeasIt->updatedState().isValid())
+//      continue;
+//    TransientTrackingRecHit::ConstRecHitPointer testhit = tmeasIt->recHit();
+//    if (!testhit->isValid() || testhit->geographicalId().det() != DetId::Tracker)
+//      continue;
+//    uint testSubDetID = (testhit->geographicalId().subdetId());
+//    if (testSubDetID == PixelSubdetector::PixelBarrel)
+//      isBpixtrack = true;
+//    if (testSubDetID == PixelSubdetector::PixelEndcap)
+//      isFpixtrack = true;
+//    if (isBpixtrack && isFpixtrack)
+//      break;
+//  }
+//}
 
 //=============================================================
 //
