@@ -15,9 +15,10 @@
 //         Created:  Mon, 14 Jan 2019 15:48:08 GMT
 //
 // Modifications: Tamas Almos Vami (tav)
-// v1
+// v5: add mother of DPG in HSCP candidate
 
 
+#include <stdlib.h>
 // system include files
 #include <memory>
 
@@ -39,6 +40,8 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/PatCandidates/interface/IsolatedTrack.h"
+#include "DataFormats/Math/interface/deltaR.h"
+#include "DataFormats/PatCandidates/interface/PFIsolation.h"
 
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/TrackReco/interface/DeDxData.h"
@@ -51,6 +54,7 @@
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtra.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtraMap.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 
 
 #include "SimDataFormats/CrossingFrame/interface/CrossingFrame.h"
@@ -76,16 +80,27 @@
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPIsolation.h"
 
+#include "DataFormats/METReco/interface/CaloMET.h"
+#include "DataFormats/METReco/interface/PFMET.h"
+#include "DataFormats/METReco/interface/PFMETFwd.h"
 
+#include "DataFormats/JetReco/interface/PFJet.h"
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
+
+#include "DataFormats/PatCandidates/interface/MHT.h"
+
+// new from Tamas
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
 #include "RecoLocalTracker/ClusterParameterEstimator/interface/PixelClusterParameterEstimator.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+//
 
 #include "TH1.h"
 #include <TTree.h>
 #include <string.h>
+#include "TLorentzVector.h"
 //
 // class declaration
 //
@@ -105,6 +120,8 @@ const int nMaxSimHit = 100000;
 const int nMaxGen = 1000;
 const int nMaxMuon = 10000;
 const int nMaxHSCP = 10000;
+const int nMaxpfMET = 100000;
+const int nMaxpfJet = 10000;
 
 
 class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
@@ -145,8 +162,15 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        edm::EDGetTokenT<LumiScalersCollection> m_lumiScalerTag;
        edm::EDGetTokenT<CSCSegmentCollection>  m_cscSegments;
        edm::EDGetTokenT<DTRecSegment4DCollection>  m_dt4DSegments;
+//       edm::EDGetTokenT<std::vector<reco::PFMET>> m_pfMet;
+       edm::EDGetTokenT<reco::PFCandidateCollection> m_pfCand;
+       edm::EDGetTokenT<reco::PFJetCollection> m_pfJets;
+       edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
+       edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
+       edm::EDGetTokenT<std::vector<reco::CaloMET>> CaloMETToken_;
        std::string pixelCPE_;
        double trackProbQCut_;
+
 
 //       edm::EDGetTokenT< edm::ValueMap<reco::DeDxData> > dEdxTrackToken_;
 
@@ -178,6 +202,11 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        uint32_t      tree_event ;
        int      tree_npv;
        int      tree_ngoodpv;
+       bool     tree_1goodIsFistPV;
+       float      tree_pv_z;
+       float      tree_pv_errz;
+       float      tree_pv0_z;
+       float      tree_pv0_errz;
 
        bool     tree_boolhlt_mu45;
        bool     tree_boolhlt_mu50;
@@ -185,9 +214,11 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        bool     tree_boolhlt_old100;
        bool     tree_boolhlt_pfmet_mht;
        bool     tree_boolhlt_pfmet;
+       bool     tree_boolhlt_tkmu50;
 
        float    tree_InstLumi;
 
+       float    tree_gen_pv_z;
        int      tree_genpart;
        int      tree_gen_pdg[nMaxGen];
        float    tree_gen_pt[nMaxGen];
@@ -214,8 +245,15 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        float    tree_track_validfrac[nMaxTrack];
        float    tree_track_validlast[nMaxTrack];
        int      tree_track_qual[nMaxTrack];
+       bool     tree_track_qual2[nMaxTrack];
        float    tree_track_dz[nMaxTrack];
        float    tree_track_dxy[nMaxTrack];
+       float    tree_track_dz_0[nMaxTrack];
+       float    tree_track_dxy_0[nMaxTrack];
+       float    tree_track_dz_2[nMaxTrack];
+       float    tree_track_dxy_2[nMaxTrack];
+       float    tree_track_pvweight[nMaxTrack];
+       float    tree_track_pv0weight[nMaxTrack];
 //       float    tree_track_dedx_harmonic2[nMaxTrack];
        int      tree_track_index_hit[nMaxTrack];
        int      tree_track_nhits[nMaxTrack];
@@ -224,11 +262,34 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        float    tree_track_ih_ampl_corr[nMaxTrack];
        float    tree_track_ias_ampl[nMaxTrack];
        float    tree_track_ias_ampl_corr[nMaxTrack];
-       float tree_track_probQ[nMaxTrack];
-       float tree_track_probQNoL1[nMaxTrack];
-       float tree_track_probXY[nMaxTrack];
-       float tree_track_probXYNoL1[nMaxTrack];
 
+       float    tree_track_isoR005_sumChargedHadronPt[nMaxTrack];
+       float    tree_track_isoR005_sumNeutHadronPt[nMaxTrack];
+       float    tree_track_isoR005_sumPhotonPt[nMaxTrack];
+       float    tree_track_isoR005_sumPUPt[nMaxTrack];
+
+       float    tree_track_isoR01_sumChargedHadronPt[nMaxTrack];
+       float    tree_track_isoR01_sumNeutHadronPt[nMaxTrack];
+       float    tree_track_isoR01_sumPhotonPt[nMaxTrack];
+       float    tree_track_isoR01_sumPUPt[nMaxTrack];
+
+       float    tree_track_isoR03_sumChargedHadronPt[nMaxTrack];
+       float    tree_track_isoR03_sumNeutHadronPt[nMaxTrack];
+       float    tree_track_isoR03_sumPhotonPt[nMaxTrack];
+       float    tree_track_isoR03_sumPUPt[nMaxTrack];
+
+       float    tree_track_isoR05_sumChargedHadronPt[nMaxTrack];
+       float    tree_track_isoR05_sumNeutHadronPt[nMaxTrack];
+       float    tree_track_isoR05_sumPhotonPt[nMaxTrack];
+       float    tree_track_isoR05_sumPUPt[nMaxTrack];
+
+       float    tree_track_probQ[nMaxTrack];
+       float    tree_track_probQNoL1[nMaxTrack];
+       float    tree_track_probXY[nMaxTrack];
+       float    tree_track_probXYNoL1[nMaxTrack];
+
+
+      
        int      tree_dedxhits ;
        uint32_t tree_dedx_detid[nMaxDeDxH];
        int      tree_dedx_subdetid[nMaxDeDxH];
@@ -290,6 +351,14 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        bool     tree_muon_isMatchesValid[nMaxMuon];
        bool     tree_muon_isTrackerMuon[nMaxMuon];
        bool     tree_muon_isGlobalMuon[nMaxMuon];
+       bool     tree_muon_isTightMuon[nMaxMuon];
+       bool     tree_muon_isMediumMuon[nMaxMuon];
+       bool     tree_muon_isLooseMuon[nMaxMuon];
+       bool     tree_muon_isHighPtMuon[nMaxMuon];
+       float    tree_muon_isoR04_sumChargedHadronPt[nMaxMuon];
+       float    tree_muon_isoR04_sumNeutHadronEt[nMaxMuon];
+       float    tree_muon_isoR04_sumPhotonEt[nMaxMuon];
+       float    tree_muon_isoR04_sumPUPt[nMaxMuon];
 
        float    tree_muon_comb_inversebeta[nMaxMuon];
        float    tree_muon_comb_inversebetaerr[nMaxMuon];
@@ -317,7 +386,10 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        float    tree_muon_newcsc_vertextime[nMaxMuon];
 
        int      tree_hscp ;
+       int      tree_hscp_type[nMaxHSCP];
+       float    tree_hscp_pt[nMaxHSCP];
        int      tree_hscp_gen_id[nMaxHSCP];
+       int      tree_hscp_gen_moth_pdg[nMaxHSCP];
        float    tree_hscp_gen_dr[nMaxHSCP];
        int      tree_hscp_track_idx[nMaxHSCP];
        int      tree_hscp_muon_idx[nMaxHSCP];
@@ -334,6 +406,18 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        float    tree_hscp_iso3_ecal[nMaxHSCP];
        float    tree_hscp_iso3_hcal[nMaxHSCP];
 
+       float    tree_pfmet;
+       float    tree_calomet;
+       float    tree_pfmht;
+
+       int      tree_njets;
+       float    tree_jet_pt[nMaxpfJet];
+       float    tree_jet_eta[nMaxpfJet];
+       float    tree_jet_phi[nMaxpfJet];
+       float    tree_jet_E[nMaxpfJet];
+       float    tree_jet_m[nMaxpfJet];
+       int      tree_jet_id[nMaxpfJet];
+       float    tree_jet_et[nMaxpfJet];
 
 };
 
@@ -393,14 +477,22 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    m_muontimecb = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTOF"));
    m_muontimedt = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTDT"));
    m_muontimecsc = consumes< reco::MuonTimeExtraMap >(iConfig.getParameter<edm::InputTag>("muonTCSC"));
-//   triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("RECO")));
    triggerBits_   = consumes<edm::TriggerResults>(edm::InputTag(std::string("TriggerResults"),std::string(""),std::string("HLT")));
    m_lumiScalerTag = consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("lumiScalerTag"));
    m_doRecomputeMuTim  = iConfig.getParameter<bool>("doRecomputeMuTim");
    m_cscSegments = consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("cscSegments"));
    m_dt4DSegments = consumes<DTRecSegment4DCollection>(iConfig.getParameter<edm::InputTag>("dt4DSegments"));
+   m_pfCand = consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("pfCand"));  
+//   m_pfJets = consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet"));
+//   m_pfMet = consumes< std::vector<reco::PFMET> >(iConfig.getParameter<edm::InputTag>("pfMet"));
+   pfMETToken_ = consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("pfMET"));
+   pfJetToken_ = consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("pfJet"));
+   CaloMETToken_ = consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"));
+//   m_MHT = consumes<std::vector<pat::MHT>>(iConfig.getParameter<edm::InputTag>("MHT"));
+
    pixelCPE_ = iConfig.getParameter<std::string>("pixelCPE");
    trackProbQCut_ = iConfig.getUntrackedParameter<double>("trackProbQCut");
+
 
    if (m_doRecomputeMuTim) {
     moduleGeom::loadGeometry("CMS_GeomTree.root");
@@ -417,6 +509,11 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "event",     &tree_event ) ;
    smalltree -> Branch ( "npv",     &tree_npv ) ;
    smalltree -> Branch ( "ngoodpv",     &tree_ngoodpv ) ;
+   smalltree -> Branch ( "goodIsFistPV",     &tree_1goodIsFistPV ) ;
+   smalltree -> Branch ( "pv_z",     &tree_pv_z ) ;
+   smalltree -> Branch ( "pv_errz",     &tree_pv_errz ) ;
+   smalltree -> Branch ( "pv0_z",     &tree_pv0_z ) ;
+   smalltree -> Branch ( "pv0_errz",     &tree_pv0_errz ) ;
 
    smalltree -> Branch ( "hlt_mu45",     &tree_boolhlt_mu45 ) ;
    smalltree -> Branch ( "hlt_mu50",     &tree_boolhlt_mu50 ) ;
@@ -424,9 +521,11 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "hlt_oldmu100", &tree_boolhlt_old100 ) ;
    smalltree -> Branch ( "hlt_pfmet_mht",&tree_boolhlt_pfmet_mht ) ;
    smalltree -> Branch ( "hlt_pfmet",&tree_boolhlt_pfmet ) ;
+   smalltree -> Branch ( "hlt_tkmu50",   &tree_boolhlt_tkmu50 ) ;
 
    smalltree -> Branch ( "InstLumi"   , &tree_InstLumi);
 
+   smalltree -> Branch ( "gen_pv_z",    &tree_gen_pv_z);
    smalltree -> Branch ( "ngenpart",  &tree_genpart) ;
    smalltree -> Branch ( "gen_pdg",   tree_gen_pdg,    "gen_pdg[ngenpart]/I");
    smalltree -> Branch ( "gen_pt",    tree_gen_pt,     "gen_pt[ngenpart]/F");
@@ -454,8 +553,15 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "track_validfraction",  tree_track_validfrac,      "track_validfraction[ntracks]/F" );
    smalltree -> Branch ( "track_validlast",      tree_track_validlast,      "track_validlast[ntracks]/F" );
    smalltree -> Branch ( "track_qual",           tree_track_qual,           "track_qual[ntracks]/I" );
+   smalltree -> Branch ( "track_qual2",          tree_track_qual2,          "track_qual2[ntracks]/O" );
    smalltree -> Branch ( "track_dz",             tree_track_dz,             "track_dz[ntracks]/F" );
    smalltree -> Branch ( "track_dxy",            tree_track_dxy,            "track_dxy[ntracks]/F" );
+   smalltree -> Branch ( "track_dz_0",             tree_track_dz_0,         "track_dz_0[ntracks]/F" );
+   smalltree -> Branch ( "track_dxy_0",            tree_track_dxy_0,        "track_dxy_0[ntracks]/F" );
+   smalltree -> Branch ( "track_dz_2",             tree_track_dz_2,         "track_dz_2[ntracks]/F" );
+   smalltree -> Branch ( "track_dxy_2",            tree_track_dxy_2,        "track_dxy_2[ntracks]/F" );
+   smalltree -> Branch ( "track_pvweight",         tree_track_pvweight,     "tree_track_pvweight[ntracks]/F" );
+   smalltree -> Branch ( "track_pv0weight",        tree_track_pv0weight,    "tree_track_pv0weight[ntracks]/F" );
 //   smalltree -> Branch ( "track_dedx_harmonic2", tree_track_dedx_harmonic2, "track_dedx_harmonic2[ntracks]/F" );
    smalltree -> Branch ( "track_index_hit",      tree_track_index_hit,      "track_index_hit[ntracks]/I" );
    smalltree -> Branch ( "track_nhits",          tree_track_nhits,          "track_nhits[ntracks]/I"  );
@@ -464,6 +570,22 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "track_ih_ampl_corr",   tree_track_ih_ampl_corr,   "track_ih_ampl_corr[ntracks]/F" );
    smalltree -> Branch ( "track_ias_ampl",       tree_track_ias_ampl,       "track_ias_ampl[ntracks]/F" );
    smalltree -> Branch ( "track_ias_ampl_corr",  tree_track_ias_ampl_corr,  "track_ias_ampl_corr[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR005_sumChargedHadronPt",        tree_track_isoR005_sumChargedHadronPt,  "track_isoR005_sumChargedHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR005_sumNeutHadronPt",           tree_track_isoR005_sumNeutHadronPt,     "track_isoR005_sumNeutHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR005_sumPhotonPt",               tree_track_isoR005_sumPhotonPt,         "track_isoR005_sumPhotonPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR005_sumPUPt",                   tree_track_isoR005_sumPUPt,             "track_isoR005_sumPUPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR01_sumChargedHadronPt",        tree_track_isoR01_sumChargedHadronPt,  "track_isoR01_sumChargedHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR01_sumNeutHadronPt",           tree_track_isoR01_sumNeutHadronPt,     "track_isoR01_sumNeutHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR01_sumPhotonPt",               tree_track_isoR01_sumPhotonPt,         "track_isoR01_sumPhotonPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR01_sumPUPt",                   tree_track_isoR01_sumPUPt,             "track_isoR01_sumPUPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR03_sumChargedHadronPt",        tree_track_isoR03_sumChargedHadronPt,  "track_isoR03_sumChargedHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR03_sumNeutHadronPt",           tree_track_isoR03_sumNeutHadronPt,     "track_isoR03_sumNeutHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR03_sumPhotonPt",               tree_track_isoR03_sumPhotonPt,         "track_isoR03_sumPhotonPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR03_sumPUPt",                   tree_track_isoR03_sumPUPt,             "track_isoR03_sumPUPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR05_sumChargedHadronPt",        tree_track_isoR05_sumChargedHadronPt,  "track_isoR05_sumChargedHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR05_sumNeutHadronPt",           tree_track_isoR05_sumNeutHadronPt,     "track_isoR05_sumNeutHadronPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR05_sumPhotonPt",               tree_track_isoR05_sumPhotonPt,         "track_isoR05_sumPhotonPt[ntracks]/F" );
+   smalltree -> Branch ( "track_isoR05_sumPUPt",                   tree_track_isoR05_sumPUPt,             "track_isoR05_sumPUPt[ntracks]/F" );
    smalltree->Branch("track_probQ", tree_track_probQ, "track_probQ[ntracks]/F");
    smalltree->Branch("track_probQNoL1", tree_track_probQNoL1, "track_probQNoL1[ntracks]/F");
    smalltree->Branch("track_probXY", tree_track_probXY, "track_probXY[ntracks]/F");
@@ -531,6 +653,15 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "muon_isMatchesValid",      tree_muon_isMatchesValid,      "muon_isMatchesValid[nmuons]/O" );
    smalltree -> Branch ( "muon_isTrackerMuon",       tree_muon_isTrackerMuon,       "muon_isTrackerMuon[nmuons]/O" );
    smalltree -> Branch ( "muon_isGlobalMuon",        tree_muon_isGlobalMuon,        "muon_isGlobalMuon[nmuons]/O" );
+   smalltree -> Branch ( "muon_isTightMuon",        tree_muon_isTightMuon,        "muon_isTightMuon[nmuons]/O" );
+   smalltree -> Branch ( "muon_isMediumMuon",        tree_muon_isMediumMuon,        "muon_isMediumMuon[nmuons]/O" );
+   smalltree -> Branch ( "muon_isLooseMuon",        tree_muon_isLooseMuon,        "muon_isLooseMuon[nmuons]/O" );
+   smalltree -> Branch ( "muon_isHighPtMuon",        tree_muon_isHighPtMuon,        "muon_isHighPtMuon[nmuons]/O" );
+   smalltree -> Branch ( "muon_isoR04_sumChargedHadronPt",  tree_muon_isoR04_sumChargedHadronPt,    "muon_isoR04_sumChargedHadronPt[nmuons]/F" );
+   smalltree -> Branch ( "muon_isoR04_sumNeutHadronEt",     tree_muon_isoR04_sumNeutHadronEt,       "muon_isoR04_sumNeutHadronEt[nmuons]/F" );
+   smalltree -> Branch ( "muon_isoR04_sumPhotonEt",         tree_muon_isoR04_sumPhotonEt,           "muon_isoR04_sumPhotonEt[nmuons]/F" );
+   smalltree -> Branch ( "muon_isoR04_sumPUPt",             tree_muon_isoR04_sumPUPt,               "muon_isoR04_sumPUPt[nmuons]/F" );
+
    smalltree -> Branch ( "muon_comb_inversebeta",    tree_muon_comb_inversebeta,    "muon_comb_inversebeta[nmuons]/F" );
    smalltree -> Branch ( "muon_comb_inversebetaerr", tree_muon_comb_inversebetaerr, "muon_comb_inversebetaerr[nmuons]/F" );
    smalltree -> Branch ( "muon_comb_tofndof",        tree_muon_comb_tofndof,        "muon_comb_tofndof[nmuons]/I" );
@@ -557,7 +688,10 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "muon_newcsc_vertextime",      tree_muon_newcsc_vertextime,      "muon_newcsc_vertextime[nmuons]/F" );
 
    smalltree -> Branch ( "nhscp",              &tree_hscp ) ;
+   smalltree -> Branch ( "hscp_type",           tree_hscp_type,             "hscp_type[nhscp]/I" );
+   smalltree -> Branch ( "hscp_pt",             tree_hscp_pt,               "hscp_pt[nhscp]/F" );
    smalltree -> Branch ( "hscp_gen_id",        tree_hscp_gen_id,             "hscp_gen_id[nhscp]/I" );
+   smalltree -> Branch ( "hscp_gen_moth_pdg",  tree_hscp_gen_moth_pdg,       "hscp_gen_moth_pdg[nhscp]/I" );
    smalltree -> Branch ( "hscp_gen_dr",        tree_hscp_gen_dr,             "hscp_gen_dr[nhscp]/F" );
    smalltree -> Branch ( "hscp_track_idx",     tree_hscp_track_idx,          "hscp_track_idx[nhscp]/I" );
    smalltree -> Branch ( "hscp_muon_idx",      tree_hscp_muon_idx,           "hscp_muon_idx[nhscp]/I" );
@@ -573,6 +707,19 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "hscp_iso3_tk",        tree_hscp_iso3_tk,             "hscp_iso3_tk[nhscp]/F" );
    smalltree -> Branch ( "hscp_iso3_ecal",      tree_hscp_iso3_ecal,           "hscp_iso3_ecal[nhscp]/F" );
    smalltree -> Branch ( "hscp_iso3_hcal",      tree_hscp_iso3_hcal,           "hscp_iso3_hcal[nhscp]/F" );
+
+   smalltree -> Branch ( "pfmet",               &tree_pfmet ) ;
+   smalltree -> Branch ( "calomet",               &tree_calomet ) ;
+   smalltree -> Branch ( "pfmht",               &tree_pfmht ) ;
+
+   smalltree -> Branch ( "njets",               &tree_njets ) ;
+   smalltree -> Branch ( "jet_pt",              tree_jet_pt,                "jet_pt[njets]/F");
+   smalltree -> Branch ( "jet_eta",             tree_jet_eta,               "jet_eta[njets]/F");
+   smalltree -> Branch ( "jet_phi",             tree_jet_phi,               "jet_phi[njets]/F");
+   smalltree -> Branch ( "jet_E",               tree_jet_E,                 "jet_E[njets]/F");
+   smalltree -> Branch ( "jet_m",               tree_jet_m,                 "jet_m[njets]/F");
+   smalltree -> Branch ( "jet_id",              tree_jet_id,                "jet_id[njets]/F");
+   smalltree -> Branch ( "jet_et",              tree_jet_et,                "jet_et[njets]/F");
 }
 
 
@@ -612,7 +759,9 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        if (printOut_ > 0) std::cout << "apres le setRun tofCalculator "<< std::endl;
       }
     }
-    
+   
+
+    tree_1goodIsFistPV = false;
     edm::Handle<reco::VertexCollection> primaryVertex ;
     iEvent.getByToken(m_primaryVertexTag,primaryVertex);
     tree_npv = primaryVertex->size();
@@ -621,10 +770,17 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     bool firstpvfound=false;
     int index_pv=-1;
     for(unsigned int i=0;i<vertexColl.size();i++){
+      if (i==0) {
+          tree_pv0_z=vertexColl[i].z();
+          tree_pv0_errz=vertexColl[i].zError();
+      }
       if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
       if(!firstpvfound) {
           firstpvfound=true;
           index_pv=i;
+          if (i==0) tree_1goodIsFistPV=true;
+          tree_pv_z=vertexColl[i].z();
+          tree_pv_errz=vertexColl[i].zError();
       }
       goodVerts++;
     }
@@ -653,6 +809,7 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     tree_boolhlt_old100=false;
     tree_boolhlt_pfmet_mht=false;
     tree_boolhlt_pfmet=false;
+    tree_boolhlt_tkmu50=false;
     for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
     {
 //         std::string triggerNameHLT = names.triggerName(i);
@@ -664,6 +821,12 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
            if (TString(names.triggerName(i)).Contains("HLT_OldMu100_") && triggerBits->accept(i))                   tree_boolhlt_old100=true;
            if (TString(names.triggerName(i)).Contains("HLT_TkMu100_") && triggerBits->accept(i))                    tree_boolhlt_mu100=true;
            if (TString(names.triggerName(i)).Contains("HLT_PFMET170_NoiseCleaned") && triggerBits->accept(i))       tree_boolhlt_pfmet=true;
+           if (TString(names.triggerName(i)).Contains("HLT_TkMu50_v") && triggerBits->accept(i))                    tree_boolhlt_tkmu50=true;
+
+//           if (TString(names.triggerName(i)).Contains("HLT_Mu50") )   std::cout << "trigger " << names.triggerName(i)  << " accept ?  "  << triggerBits->accept(i)  
+//             << std::endl;
+
+           //std::cout << " trigger " << names.triggerName(i) << std::endl; //list of triggers
     }
 
     tree_InstLumi=-1;
@@ -682,13 +845,90 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
     }
 
-
     edm::Handle<reco::TrackCollection> trackCollectionHandle;
-//    edm::Handle<std::vector<reco::PFCandidate> > pCands;
+    //edm::Handle<std::vector<reco::PFCandidate> > pCands;
     edm::Handle<std::vector<pat::IsolatedTrack>>  IsotrackCollectionHandle;
     if (m_format != "miniAOD" ) {iEvent.getByToken(m_tracksTag,trackCollectionHandle); }
-//    else {iEvent.getByToken(m_tracksMiniAOD,pCands);}
+    //else {iEvent.getByToken(m_tracksMiniAOD,pCands);}
     else {iEvent.getByToken(m_isotracksTag,IsotrackCollectionHandle);}
+
+    edm::Handle<reco::PFCandidateCollection> pfCandHandle;
+    iEvent.getByToken(m_pfCand,pfCandHandle);
+    const reco::PFCandidateCollection* pf = pfCandHandle.product();
+
+//    edm::Handle<std::vector<pat::MHT>> MHThandle;
+//    iEvent.getByToken(m_MHT, MHThandle);
+
+
+    
+    /*
+    // inspired by https://twiki.cern.ch/twiki/bin/view/Sandbox/WorkBookMetAnalysis
+    edm::Handle<std::vector<reco::PFMET>> pfMEThandle;
+    iEvent.getByToken(m_pfMet, pfMEThandle);
+
+    tree_pfmet=0;
+    int npfmet = pfMEThandle->size();
+    if(npfmet > 0){
+        for(int i=0;i<npfmet;i++){
+            const reco::PFMET* pfMET = &(*pfMEThandle)[i];
+            if(tree_pfmet<nMaxpfMET){
+                tree_pfmet_et[tree_pfmet] = pfMET->et();
+                tree_pfmet++;
+            }
+        }
+    }
+   */
+
+  // from https://github.com/enibigir/SUSYBSMAnalysis-HSCP/blob/dev/Analyzer/plugins/Analyzer.cc
+  //
+  //===================== Handle For PFMET ===================
+  //
+  edm::Handle<std::vector<reco::PFMET>> pfMETHandle;
+  iEvent.getByToken(pfMETToken_, pfMETHandle);
+  if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
+    for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
+      const reco::PFMET* pfMet = &(*pfMETHandle)[i];
+      tree_pfmet = pfMet->et();
+    }
+  }
+    //===================== Handle For CaloMET ===================
+   edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle;
+  iEvent.getByToken(CaloMETToken_, CaloMETHandle);
+  if (CaloMETHandle.isValid() && !CaloMETHandle->empty()) {
+    for (unsigned int i = 0; i < CaloMETHandle->size(); i++) {
+      const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
+      tree_calomet = calomet->et();
+    }
+  }
+
+  //===================== Handle For PFJet ===================
+  edm::Handle<reco::PFJetCollection> pfJetHandle;
+  iEvent.getByToken(pfJetToken_, pfJetHandle);
+  if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
+    const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
+    TLorentzVector pMHT;
+    tree_njets=0;
+    for (unsigned int i = 0; i < pfJetColl->size(); i++) {
+      const reco::PFJet* jet = &(*pfJetColl)[i];
+      if (jet->pt() < 20 || abs(jet->eta()) > 5 ||
+          jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9)
+        continue;
+      TLorentzVector p4(jet->pt() * cos(jet->phi()), jet->pt() * sin(jet->phi()), 0, jet->et());
+      pMHT += p4;
+
+      if(tree_njets<nMaxpfJet){
+                tree_jet_pt[tree_njets]    = jet->pt();
+                tree_jet_eta[tree_njets]   = jet->eta();
+                tree_jet_phi[tree_njets]   = jet->phi();
+                tree_jet_E[tree_njets]     = jet->energy();
+                tree_jet_m[tree_njets]     = jet->mass();
+                tree_jet_id[tree_njets]    = jet->pdgId();
+                tree_jet_et[tree_njets]    = jet->et();
+                tree_njets++;
+      }
+    }
+    tree_pfmht = pMHT.Pt();
+  }
 
 
     // inspired by /opt/sbg/data/safe1/cms/ccollard/HSCP/CMSSW_9_4_3/src/SUSYBSMAnalysis-HSCP/test/UsefulScripts/DeDxStudy/DeDxStudy
@@ -711,6 +951,7 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
     // inspired by SUSYBSMAnalysis/HSCP/test/AnalysisCode/Analysis_Step1_EventLoop.C
+    //
     edm::Handle<susybsm::HSCParticleCollection> hscpCollH;
     edm::Handle<susybsm::HSCPIsolationValueMap> isoHSCPColl0;
     edm::Handle<susybsm::HSCPIsolationValueMap> isoHSCPColl1;
@@ -837,6 +1078,7 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (!m_isdata) {
     iEvent.getByToken(genParticlesToken_, GenColl);
 
+    tree_gen_pv_z=-10000;
 
     n_genp = GenColl->size();
     if (n_genp>0) {
@@ -856,6 +1098,8 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           std::cout << " particle " << absPdg << "     status "  << genCand->status()          << std::endl;
       } 
 */
+      if (genCand->isHardProcess()) tree_gen_pv_z = genCand->vz();
+
       if (tree_genpart<nMaxGen) {
        tree_gen_pdg[tree_genpart]=genCand->pdgId();
        tree_gen_pt[tree_genpart]=genCand->pt();
@@ -899,6 +1143,9 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       float eta_tr=0;
       float phi_tr=0;
       float charge_tr=0;
+      float px_tr=0;
+      float py_tr=0;
+      float pz_tr=0;
       float chi2_tr=0;
       int nh_tr=0;
       int nhpix_tr=0;
@@ -906,8 +1153,13 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       float frac_tr=-1;
       float frac2_tr=-1;
       int qual_tr=0;
+      bool qual_tr2=0;
       float dz_tr=-1000;
       float dxy_tr=-1000;
+      float dz0_tr=-1000;
+      float dxy0_tr=-1000;
+      float dz2_tr=-1000;
+      float dxy2_tr=-1000;
       const reco::DeDxHitInfo* dedxHits = nullptr;
       reco::DeDxHitInfoRef dedxHitsRef;
 
@@ -922,11 +1174,65 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       float probQonTrackWMultiNoLayer1 = 1;
       float probXYonTrackWMultiNoLayer1 = 1;
 
-      reco::TrackRef  track = reco::TrackRef( trackCollectionHandle.product(), c );
+
+      float Ze_pvw_tr=0.;
+      float pvw0_tr=0.;
+      float pvw_tr=0.;
+
+      float pfIsolation_DZ_ = 0.1;
+      float chiso005 = 0, nhiso005 = 0, phiso005 = 0, puiso005 = 0;
+      float chiso01 = 0, nhiso01 = 0, phiso01 = 0, puiso01 = 0;
+      float chiso03 = 0, nhiso03 = 0, phiso03 = 0, puiso03 = 0;
+      float chiso05 = 0, nhiso05 = 0, phiso05 = 0, puiso05 = 0;
+
+      float RMin = 9999.;
+      unsigned int idx_pf_RMin = 9999;
 
 
       if (m_format != "miniAOD" ) {  // AOD on RECO General Tracks
 
+          reco::TrackRef  track = reco::TrackRef( trackCollectionHandle.product(), c ); 
+         
+          //find pfCand corresponding to track
+          for(unsigned int i=0;i<pf->size();i++){
+              const reco::PFCandidate* pfCand = &(*pf)[i];
+              float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
+              if(dr < RMin){
+                  RMin = dr;
+                  idx_pf_RMin = i;
+              }
+          }
+
+          for(unsigned int i=0;i<pf->size();i++){
+              if(i == idx_pf_RMin) continue; //don't count itself
+              const reco::PFCandidate* pfCand = &(*pf)[i];
+              float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
+              bool fromPV = (fabs(track->dz()) < pfIsolation_DZ_);
+              int id = std::abs(pfCand->pdgId());
+              float pt = pfCand->p4().pt();
+              if(dr<0.05){
+                  if(id == 211 && fromPV) chiso005+=pt;
+                  else if(id == 211) puiso005+=pt;
+                  if(id == 130) nhiso005+=pt;
+                  if(id == 22) phiso005+=pt;
+              }if(dr<0.1){
+                  if(id == 211 && fromPV) chiso01+=pt;
+                  else if(id == 211) puiso01+=pt;
+                  if(id == 130) nhiso01+=pt;
+                  if(id == 22) phiso01+=pt;
+              }if(dr<0.3){
+                  if(id == 211 && fromPV) chiso03+=pt;
+                  else if(id == 211) puiso03+=pt;
+                  if(id == 130) nhiso03+=pt;
+                  if(id == 22) phiso03+=pt;
+              }if(dr<0.5){
+                  if(id == 211 && fromPV) chiso05+=pt;
+                  else if(id == 211) puiso05+=pt;
+                  if(id == 130) nhiso05+=pt;
+                  if(id == 22) phiso05+=pt;
+              }
+          }//end loop PFCandidates
+ 
           if (printOut_ > 0) std::cout << " track with pT =  " << track->pt() << std::endl;
           pt_tr=track->pt();
           pterr_tr=track->ptError();
@@ -934,6 +1240,9 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           eta_tr=track->eta();
           phi_tr=track->phi();
           charge_tr=track->charge();
+          px_tr=track->px();
+          py_tr=track->py();
+          pz_tr=track->pz();
           chi2_tr=track->chi2()/track->ndof();
           nh_tr=track->numberOfValidHits();
           nhpix_tr=track->hitPattern().numberOfValidPixelHits();
@@ -941,10 +1250,48 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           frac_tr=track->validFraction();
           frac2_tr=track->found()<=0?-1:track->found() / float(track->found() + nmisstilL_tr);
           qual_tr=track->qualityMask(); // >=2 = (2 meaning HighPurity tracks)
+          qual_tr2=track->quality(track->qualityByName("highPurity")); // recommended access to quality information
           if (index_pv>-1) {
           dz_tr=track->dz(vertexColl[index_pv].position());
           dxy_tr=track->dxy(vertexColl[index_pv].position());
           }
+          if (tree_npv>0) {
+           dz0_tr=track->dz(vertexColl[0].position());
+           dxy0_tr=track->dxy(vertexColl[0].position());
+
+           float dzMin=20000;
+           int highestPtGoodVertex=-1;
+           for(unsigned int i=0;i<vertexColl.size();i++){
+             if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
+             if(fabs(track->dz (vertexColl[i].position())) < fabs(dzMin) ){
+                dzMin = fabs(track->dz (vertexColl[i].position()));
+                highestPtGoodVertex = i;
+             }
+
+             // loop over tracks in vertices
+             const reco::TrackBaseRef trackBaseRef( track );
+             for (reco::Vertex::trackRef_iterator it=vertexColl[i].tracks_begin(); it!=vertexColl[i].tracks_end(); ++it) {
+                const reco::TrackBaseRef & baseRef = *it;
+                // one of the tracks in the vertex is the same as the track considered in the function
+                if( baseRef == trackBaseRef  )
+                {
+                    float w = vertexColl[i].trackWeight(baseRef);
+                    if( w > Ze_pvw_tr )
+                    {
+                        Ze_pvw_tr = w;
+                        if (i==0) pvw0_tr=w;
+                        if (i== (unsigned int) index_pv) pvw_tr=w;
+                        break;
+                    }
+                }
+              } //end loop over tracks in vertices
+           }
+           if (highestPtGoodVertex>-1) {
+             dz2_tr  = track->dz (vertexColl[highestPtGoodVertex].position());
+             dxy2_tr = track->dxy(vertexColl[highestPtGoodVertex].position()); 
+           }
+          }
+
           dedxHitsRef = dedxCollH->get(track.key());
           if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
           if(!dedxHitsRef.isNull() && tree_ntracks < nMaxTrack) KeepTrackRefVec.push_back(track);
@@ -959,9 +1306,17 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
           phi_tr=track->phi();
 //          chi2_tr=track.chi2()/track.ndof();
 //          nh_tr=track.numberOfValidHits();
+          charge_tr=track->charge();
+          px_tr=track->px();
+          py_tr=track->py();
+          pz_tr=track->pz();
           dedxHitsRef = (*dedxMiniH)[track];
           if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
       }
+
+   
+
+
 //     for(reco::TrackCollection::const_iterator track = trackCollectionHandle->begin(); track != trackCollectionHandle->end(); ++track)
       //basic track quality cuts
       ////if(track.isNull())continue;
@@ -993,8 +1348,32 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        tree_track_validfrac[tree_ntracks]= frac_tr;
        tree_track_validlast[tree_ntracks]= frac2_tr;
        tree_track_qual[tree_ntracks]= qual_tr;
+       tree_track_qual2[tree_ntracks]= qual_tr2;
        tree_track_dz[tree_ntracks]= dz_tr;
        tree_track_dxy[tree_ntracks]= dxy_tr;
+       tree_track_dz_0[tree_ntracks]= dz0_tr;
+       tree_track_dxy_0[tree_ntracks]= dxy0_tr;
+       tree_track_dz_2[tree_ntracks]= dz2_tr;
+       tree_track_dxy_2[tree_ntracks]= dxy2_tr;
+       tree_track_pvweight[tree_ntracks]= pvw_tr;
+       tree_track_pv0weight[tree_ntracks]= pvw0_tr;
+       tree_track_isoR005_sumChargedHadronPt[tree_ntracks]= chiso005;
+       tree_track_isoR005_sumNeutHadronPt[tree_ntracks]= nhiso005;
+       tree_track_isoR005_sumPhotonPt[tree_ntracks]= phiso005;
+       tree_track_isoR005_sumPUPt[tree_ntracks]= puiso005;
+       tree_track_isoR01_sumChargedHadronPt[tree_ntracks]= chiso01;
+       tree_track_isoR01_sumNeutHadronPt[tree_ntracks]= nhiso01;
+       tree_track_isoR01_sumPhotonPt[tree_ntracks]= phiso01;
+       tree_track_isoR01_sumPUPt[tree_ntracks]= puiso01;
+       tree_track_isoR03_sumChargedHadronPt[tree_ntracks]= chiso03;
+       tree_track_isoR03_sumNeutHadronPt[tree_ntracks]= nhiso03;
+       tree_track_isoR03_sumPhotonPt[tree_ntracks]= phiso03;
+       tree_track_isoR03_sumPUPt[tree_ntracks]= puiso03;
+       tree_track_isoR05_sumChargedHadronPt[tree_ntracks]= chiso05;
+       tree_track_isoR05_sumNeutHadronPt[tree_ntracks]= nhiso05;
+       tree_track_isoR05_sumPhotonPt[tree_ntracks]= phiso05;
+       tree_track_isoR05_sumPUPt[tree_ntracks]= puiso05;
+
 
 
        //load dEdx informations
@@ -1065,10 +1444,12 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        if(dedxSObj2) tree_track_ias_ampl_corr[tree_ntracks]=dedxSObj2->dEdx();
        }
 
-       tree_track_probQ[tree_ntracks] = 0;
-       tree_track_probQNoL1[tree_ntracks] = 0;
-       tree_track_probXY[tree_ntracks] = 0;
-       tree_track_probXYNoL1[tree_ntracks] = 0;    
+       tree_track_probQ[tree_ntracks] = 2.0;
+       tree_track_probQNoL1[tree_ntracks] = 2.0;
+       tree_track_probXY[tree_ntracks] = 2.0;
+       tree_track_probXYNoL1[tree_ntracks] = 2.0;
+
+    
 
        for(unsigned int h=0;h< dedxHits->size();h++){
           if (tree_dedxhits<nMaxDeDxH) {
@@ -1093,42 +1474,65 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
              if (printOut_ > 0) std::cout << " path length = " << dedxHits->pathlength(h) << std::endl;
              if (printOut_ > 0) std::cout << " ChargeOverPathlength " << dedxHits->charge(h)/dedxHits->pathlength(h) << std::endl;
              if (printOut_ > 0) std::cout << " DetId " << detid.subdetId() << std::endl;
-      if (detid.subdetId() < 3) {
-        // Calculate probQ and probXY for this pixel rechit
-        // Taking the pixel cluster
-        auto const* pixelCluster =  dedxHits->pixelCluster(h);
-        if (pixelCluster == nullptr) continue;
-        // Check on which geometry unit the hit is
-        const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
-        // Get the local vector for the track direction
-        LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
-        // Re-run the CPE on this cluster with the lv above
-        auto reCPE = std::get<2>(pixelCPE->getParameters(
-              *pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, track->charge())));
-        // extract probQ and probXY from this 
-        float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
-        float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-        if (probQ > 0) {
-          numRecHits++;
-          // Calculate alpha term needed for the combination
-          probQonTrackWMulti *= probQ;
-          probXYonTrackWMulti *= probXY;
-        }
-        // Have a separate variable that excludes Layer 1
-        // Layer 1 was very noisy in 2017/2018
 
-        if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel &&
-          tTopo->pxbLayer(detid) != 1)) {
-          float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
-          float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probQNoLayer1 > 0.f) {  // only save the non-zero rechits
-            numRecHitsNoLayer1++;
-            // Calculate alpha term needed for the combination
-            probQonTrackWMultiNoLayer1 *= probQNoLayer1;
-            probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
-          }
-        }
-      } else if (detid.subdetId() >= 3) {
+             if (detid.subdetId() < 3) {
+               // Calculate probQ and probXY for this pixel rechit
+               // Taking the pixel cluster
+                auto const* pixelCluster =  dedxHits->pixelCluster(h);
+                if (pixelCluster == nullptr) continue;
+                // Check on which geometry unit the hit is
+                const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+                // Get the local vector for the track direction
+                // LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
+                LocalVector lv = geomDet.toLocal(GlobalVector(px_tr, py_tr, pz_tr));
+                // Re-run the CPE on this cluster with the lv above
+                //auto reCPE = std::get<2>(pixelCPE->getParameters(
+                //    *pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, track->charge())));
+                auto reCPE = std::get<2>(pixelCPE->getParameters(
+                    *pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, charge_tr)));
+                // extract probQ and probXY from this
+                float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+                float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+                if (probQ > 0) {
+                  numRecHits++;
+                  // Calculate alpha term needed for the combination
+                  probQonTrackWMulti *= probQ;
+                  probXYonTrackWMulti *= probXY;
+                }
+                // Have a separate variable that excludes Layer 1
+                // Layer 1 was very noisy in 2017/2018
+                if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel &&
+                      tTopo->pxbLayer(detid) != 1)) {
+                         float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+                         float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+                         if (probQNoLayer1 > 0.f) {  // only save the non-zero rechits
+                             numRecHitsNoLayer1++;
+                             // Calculate alpha term needed for the combination
+                             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
+                             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
+                         }
+                }
+               tree_dedx_strip[tree_dedxhits]=false;
+               tree_dedx_pixel[tree_dedxhits]=true;
+               tree_sclus_firstsclus[tree_dedxhits]=-1;
+               tree_sclus_barycenter[tree_dedxhits]=-1;
+               tree_sclus_charge[tree_dedxhits]=-1;
+               tree_sclus_errorclus[tree_dedxhits]=-1;
+               tree_sclus_ismerged[tree_dedxhits]=0;
+               tree_sclus_index_strip[tree_dedxhits]=-1;
+               tree_sclus_nstrip[tree_dedxhits]=0;
+               tree_sclus_index_simhit[tree_dedxhits]=-1;
+               tree_sclus_nsimhit[tree_dedxhits]=0;
+               tree_sclus_eloss[tree_dedxhits]=0;
+               tree_sclus_sat254[tree_dedxhits]=0;
+               tree_sclus_sat255[tree_dedxhits]=0;
+               tree_sclus_shape[tree_dedxhits]=0;
+               tree_sclus_clusclean[tree_dedxhits]=0;
+               tree_sclus_charge_corr[tree_dedxhits]=-1;
+               tree_sclus_nstrip_corr[tree_dedxhits]=0;
+               tree_sclus_clusclean2[tree_dedxhits]=0;
+             }
+             else if (detid.subdetId()>=3) {
                tree_dedx_strip[tree_dedxhits]=true;
                tree_dedx_pixel[tree_dedxhits]=false;
  
@@ -1293,56 +1697,40 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                }
                // end search for associated simHit
                    //
-             }
-             else {
-               tree_dedx_strip[tree_dedxhits]=false;
-               tree_dedx_pixel[tree_dedxhits]=true;
-               tree_sclus_firstsclus[tree_dedxhits]=-1;
-               tree_sclus_barycenter[tree_dedxhits]=-1;
-               tree_sclus_charge[tree_dedxhits]=-1;
-               tree_sclus_errorclus[tree_dedxhits]=-1;
-               tree_sclus_ismerged[tree_dedxhits]=0;
-               tree_sclus_index_strip[tree_dedxhits]=-1;
-               tree_sclus_nstrip[tree_dedxhits]=0;
-               tree_sclus_index_simhit[tree_dedxhits]=-1;
-               tree_sclus_nsimhit[tree_dedxhits]=0;
-               tree_sclus_eloss[tree_dedxhits]=0;
-               tree_sclus_sat254[tree_dedxhits]=0;
-               tree_sclus_sat255[tree_dedxhits]=0;
-               tree_sclus_shape[tree_dedxhits]=0;
-               tree_sclus_clusclean[tree_dedxhits]=0;
-               tree_sclus_charge_corr[tree_dedxhits]=-1;
-               tree_sclus_nstrip_corr[tree_dedxhits]=0;
-               tree_sclus_clusclean2[tree_dedxhits]=0;
-
              } // end if detID
+
              tree_dedxhits++;
              
           } //end if MaxDeDx
           else {
                    std::cout << "Limit reached for tree_dedxhits "<< tree_dedxhits << std::endl;
           } // end if MaxDeDx
-        } // end loop on dEdx hits on a given track
-    // Combine probQ-s into HSCP candidate (track) level quantity
-    probQonTrack = combineProbs(probQonTrackWMulti, numRecHits);
-    probXYonTrack = combineProbs(probXYonTrackWMulti, numRecHits);
-    probQonTrackNoLayer1 = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
-    probXYonTrackNoLayer1 = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
-if(probQonTrack!=0) {
-    cout << "------------------------------" << endl;
-    cout << "probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack << endl;
-    cout << "probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1 << endl;
+        } // end loop dEdx
+        // Combine probQ-s into HSCP candidate (track) level quantity
+        probQonTrack = combineProbs(probQonTrackWMulti, numRecHits);
+        probXYonTrack = combineProbs(probXYonTrackWMulti, numRecHits);
+        probQonTrackNoLayer1 = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+        probXYonTrackNoLayer1 = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+/*
+        if(probQonTrack!=0) {
+          cout << "------------------------------" << endl;
+          cout << "probQonTrack: " << probQonTrack << " and probXYonTrack: " << probXYonTrack << endl;
+          cout << "probQonTrackNoLayer1: " << probQonTrackNoLayer1 << " and probXYonTrackNoLayer1: " << probXYonTrackNoLayer1 << endl;
+        }
+*/
         tree_track_probQ[tree_ntracks] = probQonTrack;
         tree_track_probQNoL1[tree_ntracks] = probQonTrackNoLayer1;
         tree_track_probXY[tree_ntracks] = probXYonTrack;
         tree_track_probXYNoL1[tree_ntracks] = probXYonTrackNoLayer1;
 
+
         tree_ntracks++;
-    }
       } // end if MaxTracks 
       else {
-         std::cout << "Limit reached for tree_ntracks "<< tree_ntracks << std::endl;
+                   std::cout << "Limit reached for tree_ntracks "<< tree_ntracks << std::endl;
       } // end if MaxTracks
+
+
 
     } // end loop TrackCollection
 
@@ -1351,7 +1739,6 @@ if(probQonTrack!=0) {
     if (m_format != "miniAOD" )  {
     for(unsigned int c=0;c<muonCollectionHandle->size();c++){
       reco::MuonRef muon  = reco::MuonRef( muonCollectionHandle, c );
-
       if (tree_nmuons < nMaxMuon) {
        KeepMuonRefVec.push_back(muon);
        if (printOut_ > 0) std::cout << " muon with pT =  " << muon->pt() << std::endl;
@@ -1370,6 +1757,15 @@ if(probQonTrack!=0) {
        tree_muon_isMatchesValid[tree_nmuons]= muon->isMatchesValid();
        tree_muon_isTrackerMuon[tree_nmuons]=  muon->isTrackerMuon();
        tree_muon_isGlobalMuon[tree_nmuons]=  muon->isGlobalMuon();
+       tree_muon_isTightMuon[tree_nmuons]=  muon::isTightMuon(*muon, vertexColl[index_pv]);
+       tree_muon_isMediumMuon[tree_nmuons]=  muon::isMediumMuon(*muon);
+       tree_muon_isLooseMuon[tree_nmuons]=  muon::isLooseMuon(*muon);
+       tree_muon_isHighPtMuon[tree_nmuons]=  muon::isHighPtMuon(*muon, vertexColl[index_pv]);
+
+       tree_muon_isoR04_sumChargedHadronPt[tree_nmuons]= muon->pfIsolationR04().sumChargedHadronPt;
+       tree_muon_isoR04_sumNeutHadronEt[tree_nmuons]= muon->pfIsolationR04().sumNeutralHadronEt;
+       tree_muon_isoR04_sumPhotonEt[tree_nmuons]= muon->pfIsolationR04().sumPhotonEt;
+       tree_muon_isoR04_sumPUPt[tree_nmuons]= muon->pfIsolationR04().sumPUPt;
 
        const reco::MuonTimeExtra* tof = NULL;
        const reco::MuonTimeExtra* dttof = NULL;
@@ -1473,10 +1869,20 @@ if(probQonTrack!=0) {
        //define alias for important variable
        susybsm::HSCParticle hscp  = hscpColl[c];
        reco::MuonRef  muon  = hscp.muonRef();
- 
+
        //For TOF only analysis use updated stand alone muon track.
        //Otherwise use inner tracker track      
        reco::TrackRef track = hscp.trackRef();
+       reco::TrackRef isoTrack = hscp.trackIsoRef();
+
+       tree_hscp_pt[tree_hscp]=hscp.pt();
+       tree_hscp_type[tree_hscp]=hscp.type();
+
+
+       if (!track.isNull() && !isoTrack.isNull() && printOut_ > 0) std::cout << " trackpt " << track->pt() << " isotrackpt " << isoTrack->pt() << std::endl;
+
+       if (!track.isNull() && printOut_ > 0) std::cout << " hscp track pt " << track->pt() << std::endl; 
+       if (!muon.isNull() && printOut_ > 0) std::cout << " hscp muon pt " << muon->pt() << std::endl;
 
        if (printOut_ > 0) std::cout << "HSCP candidate " << c << std::endl;
        if (track.isNull() && printOut_ > 0 ) std::cout << "probleme track isNull"<< std::endl;
@@ -1485,28 +1891,35 @@ if(probQonTrack!=0) {
        if (tree_hscp<nMaxHSCP) {
 
 
-
        if (n_genp>0 && !track.isNull()) {
         double RMin = 9999;
         int idxG=-1;
+        int motherID=-1;
         for(int i=0;i< n_genp ;++i){
          const reco::GenParticle* genCand = &(*GenColl)[i];
          if(genCand->pt()<5) continue;
          if(genCand->status()!=1)continue;
-         //int AbsPdg=abs(genCand->pdgId());
-         //if(AbsPdg<1000000 && AbsPdg!=17)continue;
+         int AbsPdg=abs(genCand->pdgId());
+         if(AbsPdg<1000000 && AbsPdg!=17)continue;
          double dR = deltaR(track->eta(), track->phi(), genCand->eta(), genCand->phi());
          if(dR<RMin){ 
            RMin=dR;
-           idxG=genCand->pdgId();
+           idxG=abs(genCand->pdgId());
+           if (genCand->numberOfMothers()>0) {
+             motherID=abs(genCand->mother()->pdgId());
+           } else {
+             motherID = -9999;
+           }
          }
         }
         tree_hscp_gen_id[tree_hscp]=idxG;
         tree_hscp_gen_dr[tree_hscp]=RMin;
+        tree_hscp_gen_moth_pdg[tree_hscp]=motherID;
        }
        else {
         tree_hscp_gen_id[tree_hscp]=-1;
         tree_hscp_gen_dr[tree_hscp]=-1;
+        tree_hscp_gen_moth_pdg[tree_hscp]=-1;
        }
 
        float Mindelta=0.001;
@@ -1575,6 +1988,10 @@ if(probQonTrack!=0) {
            susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());   
            if (printOut_ > 0) std::cout << "HSCP iso " << hscpIso.Get_TK_SumEt() << "  "  << hscpIso.Get_ECAL_Energy() 
                                         << "     "  << hscpIso.Get_HCAL_Energy() << "  for HSCP p " << track->p()  << std::endl;
+           //if (hscpIso.Get_ECAL_Energy() < 0 && track->pt() > 10) 
+           if (printOut_ > 0) std::cout << " ecal " << hscpIso.Get_ECAL_Energy() << " trackpT " << track->pt() << " trackp " << track->p() 
+                                        << " tracketa " << track->eta() << " trackphi " << track->phi() << std::endl; 
+           //if (hscpIso.Get_HCAL_Energy() < 0 && track->pt() > 10) std::cout << " hcal " << hscpIso.Get_HCAL_Energy() << " trackpT " << track->pt() << " trackp " << track->p() << std::endl; 
            tree_hscp_iso2_tk[tree_hscp]=hscpIso.Get_TK_SumEt();
            tree_hscp_iso2_ecal[tree_hscp]=hscpIso.Get_ECAL_Energy();
            tree_hscp_iso2_hcal[tree_hscp]=hscpIso.Get_HCAL_Energy();
@@ -1624,8 +2041,6 @@ if(probQonTrack!=0) {
 
 
 
-
-
     smalltree -> Fill();
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
@@ -1652,6 +2067,8 @@ ntuple::endJob()
 {
 }
 
+
+
 //=============================================================
 //
 //     Combine individual probs into a track level one
@@ -1675,6 +2092,7 @@ float ntuple::combineProbs(float probOnTrackWMulti, int numRecHits) const {
 
   return probOnTrack;
 }
+
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void

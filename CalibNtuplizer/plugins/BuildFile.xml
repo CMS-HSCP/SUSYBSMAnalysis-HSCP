@@ -4,6 +4,8 @@
 <use name="DataFormats/TrackReco"/>
 <use name="CommonTools/UtilAlgos"/>
 <use name="RecoTracker/DeDx"/>
+<use name="AnalysisDataFormats/SUSYBSMObjects"/>
+<use name="DataFormats/Math"/>
 <use name="Geometry/TrackerGeometryBuilder"/>
 <use name="RecoTracker/Record"/>
 <use name="RecoTracker/TrackProducer"/>

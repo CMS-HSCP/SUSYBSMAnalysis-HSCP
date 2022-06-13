@@ -144,28 +144,29 @@ public:
                         const reco::MuonTimeExtra* tof,
                         const edm::Event& iEvent,
                         const float pixelProbs[],
-                        float Event_Weight,
+                        const float Event_Weight,
                         Tuple* tuple,
-                        const float& GenBeta,
-                        bool RescaleP,
-                        const float& RescaleI,
-                        const float& RescaleT,
+                        const float GenBeta,
+                        const bool RescaleP,
+                        const float RescaleI,
+                        const float RescaleT,
                         float MassErr,
-                        bool Ih_Iso_cut = true);
+                        const bool Ih_Iso_cut,
+                        const unsigned int closestBackgroundPDGsIDs[]);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
-                     float Event_Weight,
+                     const float Event_Weight,
                      const int& CutIndex,
                      Tuple*& tuple,
                      const bool isFlip,
-                     const float& GenBeta,
-                     bool RescaleP,
-                     const float& RescaleI,
-                     const float& RescaleT);
+                     const float GenBeta,
+                     const bool RescaleP,
+                     const float RescaleI,
+                     const float RescaleT);
 
   float RescaledPt(const float& pt, const float& eta, const float& phi, const int& charge);
   TVector3 getOuterHitPos(const reco::DeDxHitInfo* dedxHits);
@@ -178,11 +179,12 @@ public:
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
                      const float pixelProbs[],
-                     float Event_Weight,
+                     const float Event_Weight,
                      Tuple* tuple,
-                     const float& GenBeta,
+                     const float GenBeta,
                      float MassErr,
-                     bool Ih_Iso_cut);
+                     const bool Ih_Iso_cut,
+                     const unsigned int closestBackgroundPDGsIDs[]);
 
 private:
   virtual void beginJob() override;
@@ -283,10 +285,10 @@ private:
   // Thresholds for candidate preselection
   float globalMaxEta_, globalMinPt_;
   unsigned int globalMinNOH_, globalMinNOPH_;
-  float globalMinFOVH_, trackProbQCut_, globalMaxChi2_, globalMaxEIsol_, globalMinIh_, globalMaxPterr_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_;
-  unsigned int minMuStations_, globalMinNOM_;
-  //float globalMinPt_, globalMaxPterr_, globalMaxEta_, globalMaxDZ_, globalMaxDXY_, globalMaxChi2_, globalMinFOVH_, globalMinIs_, globalMinIh_;
-  unsigned int globalMinQual_;
+  float globalMinFOVH_;
+  unsigned int globalMinNOM_;
+  float globalMaxChi2_, globalMaxEIsol_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMiniRelIsoChg_, globalMassT_,  globalMinIh_, trackProbQCut_;
+  unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
   float GlobalMinNDOFDT = 6;          // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
@@ -345,7 +347,7 @@ private:
 
   const std::string pixelCPE_;
   const unsigned int debug_;
-  const bool hasMCMatch_, doTriggering_;
+  const bool hasMCMatch_, doTriggering_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
 
