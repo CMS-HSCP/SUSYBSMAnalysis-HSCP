@@ -22,6 +22,7 @@ struct Tuple {
   unsigned int Tree_njets;
   float Tree_Weight;
   float Tree_GeneratorWeight;
+  float Tree_GeneratorBinningValues;
   bool Tree_HLT_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
   bool Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -64,6 +65,7 @@ struct Tuple {
   std::vector<float> Tree_ProbQ_dEdx;
   std::vector<float> Tree_Ndof;
   std::vector<float> Tree_Chi2;
+  std::vector<int>   Tree_QualityMask;
   std::vector<bool>  Tree_isHighPurity;
   std::vector<float> Tree_muon_eta;
   std::vector<bool> Tree_isMuon;
@@ -152,6 +154,7 @@ struct Tuple {
   unsigned int GenTree_Hscp;
   float GenTree_Weight;
   float GenTree_GeneratorWeight;
+  float GenTree_GeneratorBinningValues;
   std::vector<float> GenTree_GenId;
   std::vector<float> GenTree_GenCharge;
   std::vector<float> GenTree_GenMass;
