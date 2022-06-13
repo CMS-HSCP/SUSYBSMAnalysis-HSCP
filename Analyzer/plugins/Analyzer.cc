@@ -1855,7 +1855,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Collection used to match to gen thruth");
   desc.add("PfCand", edm::InputTag("particleFlow"))
     ->setComment("Input collection for particleFlow algorithm");
-  desc.add("GenCollection", edm::InputTag("GenParticleCollection"))
+  desc.add("GenCollection", edm::InputTag("generator","","GEN"))
     ->setComment("A");
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
     ->setComment("Add the list of muon triggers");
