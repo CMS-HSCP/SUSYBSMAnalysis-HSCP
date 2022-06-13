@@ -390,6 +390,7 @@ private:
 
   float EventWeight_ = 1.;
   float GeneratorWeight_ = 1.;
+  float GeneratorBinningValues_ = 1.;
   //double SampleWeight_ = 1.;
   double CrossSection_ = 1.;
   vector<float> PUSystFactor_;

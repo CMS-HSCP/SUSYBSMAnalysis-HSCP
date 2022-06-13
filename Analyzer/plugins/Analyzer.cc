@@ -244,11 +244,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   double HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
-  //get generator weight
+  //get generator weight and pthat
   if (!isData){
       const edm::Handle<GenEventInfoProduct> genEvt = iEvent.getHandle(genEventToken_);
       if (genEvt.isValid()){
           GeneratorWeight_ = genEvt->weight();
+          if(genEvt->binningValues().size()>0) GeneratorBinningValues_ = genEvt->binningValues()[0];
       }
   }
 
@@ -364,6 +365,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                      iEvent.id().luminosityBlock(),
                                      EventWeight_,
                                      GeneratorWeight_,
+                                     GeneratorBinningValues_,
                                      genid,
                                      gencharge,
                                      genmass,
@@ -1495,6 +1497,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 Jets_count,
                                 EventWeight_,
                                 GeneratorWeight_,
+                                GeneratorBinningValues_,
                                 HLT_Mu50,
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
