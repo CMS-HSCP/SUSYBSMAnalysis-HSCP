@@ -63,6 +63,7 @@
 // - 20p5: - Add ErrorHisto, TriggerType, possible fix pfType plots by interoducing the ForIdx version
 // - 20p6: - Further fix for pfType?
 // - 20p7: - Add PostPreS_EIsolPerPfType plot, cleanup gen print-outs, move them after the preS
+// - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
 // - 20pX Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -306,7 +307,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     EventWeight_ = 1.;
   }
 
-  if (debug_ > 1 ) LogPrint(MOD) << "\nEvent weight factor applied: " << EventWeight_;
+  if (debug_ > 1 ) LogPrint(MOD) << "\nThis is a new event. Weight factor applied: " << EventWeight_;
 
   float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
@@ -421,7 +422,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
 
-    if (debug_ > 3 ) LogPrint(MOD) << "Fill GenTree with basics gen info";
+    if (debug_ > 4 ) LogPrint(MOD) << "Fill GenTree with basics gen info";
     tuple_maker->fillGenTreeBranches(tuple,
                                      iEvent.id().run(),
                                      iEvent.id().event(),
@@ -483,10 +484,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
   if (doTriggering_ && TrigInfo_ > 0) {
-      if (debug_ > 0 ) LogPrint(MOD) << "This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
+      if (debug_ > 2 ) LogPrint(MOD) << "This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
       tuple->TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
   } else {
-      if (debug_ > 0 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
+      if (debug_ > 2 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
   }
@@ -1464,7 +1465,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                 CutI_Flip_,
                                                 CutTOF_Flip_);
     } else {
-      if (debug_ > 2) LogPrint(MOD) << "      >> Preselection not passed";
+      // Preselection not passed, skipping it
       continue;
     }
     
@@ -2569,9 +2570,13 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float probQonTrackNoLayer1 = pixelProbs[1];
   float probXYonTrack = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
-  float specialInCPEfloat = pixelProbs[4];
   
-  LogPrint(MOD) << "specialInCPEfloat: " << specialInCPEfloat << std::endl;
+  bool specialInCPE = false;
+  if (pixelProbs[4] > 0.5) {
+    LogPrint(MOD) << "        >> This track is special in the CPE";
+    specialInCPE = true;
+  }
+  
   
   // TODO: what do PUA and PUB stand for??
   bool PUA = (vertexColl.size() < 15);
@@ -2610,7 +2615,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = (probXYonTrack > 0.0 && probXYonTrack < 1.0)  ? true : false;
+  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0) && !specialInCPE)  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -2633,7 +2638,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the PF based mini-isolation
   passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
-  passedCutsArray[16] = ( !pf_isElectron ) ? true : false;
+  passedCutsArray[16] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[17] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
@@ -2681,7 +2686,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = (probXYonTrack > 0.0 && probXYonTrack < 1.0)  ? true : false;
+    passedCutsArray2[8]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0) && !specialInCPE)  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
 //    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
@@ -2698,7 +2703,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // Cut on the PF based mini-isolation
     passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
     // Cut on the PF electron ID 
-    passedCutsArray2[17] = ( !pf_isElectron ) ? true : false;
+    passedCutsArray2[17] = ( !pf_isElectron && !pf_isPhoton) ? true : false;
     // Cut on Ih
     passedCutsArray2[18] = (  (typeMode_ != 5 && Ih > globalMinIh_)
                            || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
@@ -2878,7 +2883,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         }
       }
     } else {
-      if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
+      if (debug_ > 2 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
       // TODO: when the preselection list finalizes I might be more verbose than this
       return false;
     }
