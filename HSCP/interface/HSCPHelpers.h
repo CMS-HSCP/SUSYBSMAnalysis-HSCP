@@ -14,7 +14,7 @@
 
 namespace hscphelpers {
   TH3F* preprocess_dEdx_template(TH3F* histo, bool splitByModuleType = true);
-  int muonStations(const reco::HitPattern& hitPattern);
+  unsigned int muonStations(const reco::HitPattern& hitPattern);
 }  // namespace hscphelpers
 
 #endif

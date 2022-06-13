@@ -1,4 +1,5 @@
 // Original Author:  Loic Quertenmont
+// Modification by Tamas Almos Vami
 
 #ifndef SUSYBSMAnalysis_Analyzer_Tuple_h
 #define SUSYBSMAnalysis_Analyzer_Tuple_h
@@ -166,8 +167,6 @@ struct Tuple {
   //      Declare Histograms
   //=============================================================
 
-  TH1F* CutFlow_nHSCP;
-
   TH2F* Mass;
   TH2F* MassTOF;
   TH2F* MassComb;
@@ -213,36 +212,41 @@ struct Tuple {
 
   TProfile* IntLumi;
   TProfile* XSection;
-  TH1F* EventsTotal;
-  TH1F* TotalE;
-  TH1F* TotalEPU;
-  TH1F* TotalTE;
-  TH1F* Total;
-  TH1F* V3D;
-  TH1F* Chi2PerNdof;
-  TH1F* Qual;
-  TH1F* TNOH;
-  TH1F* TNOM;
+  TH1F* NumEvents;
+  TH1F* HSCPCandidateType;
+  TH1F* N1Eta;
+  TH1F* N1Chi2PerNdof;
+  TH1F* N1Qual;
+  TH1F* N1TNOH;
+  TH1F* N1TNOPH;
+  TH1F* N1TNOHFraction;
+  TH1F* N1TNOM;
   TH1F* nDof;
   TH1F* tofError;
-  TH1F* Pterr;
-  TH1F* MPt;
-  TH1F* MI;
+  TH1F* N1MPt;
+  TH1F* N1MIh;
   TH1F* MTOF;
   TH1F* TIsol;
-  TH1F* EIsol;
-  TH1F* SumpTOverpT;
+  TH1F* N1EIsol;
+  TH1F* N1SumpTOverpT;
   TH1F* Pt;
+  TH1F* N1PtErrOverPt;
   TH1F* I;
   TH1F* TOF;
   TH1F* HSCPE;
   TH1F* NVTrack;
-  TH1F* Stations;
-  TH1F* Dxy;
-  TH1F* Dz;
-  TH1F* SegSep;
+  TH1F* N1Stations;
+  TH1F* N1Dxy;
+  TH1F* N1Dz;
+  TH1F* N1SegSep;
   TH1F* FailDz;
   TH1F* Basic;
+  TH1F* N1ProbQ;
+  TH1F* ProbQNoL1;
+  TH1F* N1ProbXY;
+  TH1F* ProbXYNoL1;
+
+  TH1F* pfType;
 
   TH1F* HSCPE_SystP;
   TH1F* HSCPE_SystI;
@@ -256,17 +260,7 @@ struct Tuple {
   TH1F* Beta_Gen;
   TH1F* Beta_GenCharged;
   TH1F* Beta_Triggered;
-
-  TH1F* BS_ProbQ;
-  TH1F* BS_ProbXY;
-  TH1F* BS_ProbQNoL1;
-  TH1F* BS_ProbXYNoL1;
   
-  TH1F* ProbQ;
-  TH1F* ProbQNoL1;
-  TH1F* ProbXY;
-  TH1F* ProbXYNoL1;
-
   TH1F* Beta_Matched;
   TH1F* Beta_PreselectedA;
   TH1F* Beta_PreselectedB;
@@ -275,7 +269,11 @@ struct Tuple {
   TH2F* Beta_SelectedI;
   TH2F* Beta_SelectedT;
 
-  TH1F* BS_V3D;
+  TH1F* BS_massT;
+  TH1F* BS_MiniRelIsoAll;
+  TH1F* BS_MiniRelIsoChg;
+  TH1F* BS_RecoPFMET;
+
   TH1F* BS_Chi2PerNdof;
   TH1F* BS_Qual;
   TH1F* BS_TNOH;
@@ -292,10 +290,11 @@ struct Tuple {
   TProfile* BS_NOMoNOHvsPV;
   TH1F* BS_nDof;
   TH1F* BS_TOFError;
-  TH1F* BS_Pterr;
+  TH1F* BS_PtErrOverPt;
+  TH1F* BS_PtErrOverPt2;
   TH1F* BS_MPt;
   TH1F* BS_MIs;
-  TH1F* BS_MIm;
+  TH1F* BS_MIh;
   TH1F* BS_MTOF;
   TH1F* BS_TIsol;
   TH1F* BS_EIsol;
@@ -339,6 +338,116 @@ struct Tuple {
 
   TH1F* BS_LastHitDXY;
   TH1F* BS_LastHitD3D;
+  TH2F* BS_PtErrOverPtVsPtErrOverPt2;
+  TH2F* BS_PtErrOverPtVsPt;
+  
+  TH1F* BS_ProbQ;
+  TH1F* BS_ProbXY;
+  TH1F* BS_ProbQNoL1;
+  TH1F* BS_ProbXYNoL1;
+  TH1F* BS_MassErr;
+
+  TH1F* PostPreS_massT;
+  TH1F* PostPreS_MiniRelIsoAll;
+  TH1F* PostPreS_MiniRelIsoChg;
+  TH1F* PostPreS_RecoPFMET;
+  
+  TH1F* PostPreS_Chi2PerNdof;
+  TH1F* PostPreS_Qual;
+  TH1F* PostPreS_TNOH;
+  TH1F* PostPreS_TNOH_PUA;
+  TH1F* PostPreS_TNOH_PUB;
+  TH1F* PostPreS_TNOHFraction;
+  TH1F* PostPreS_TNOPH;
+  TH1F* PostPreS_TNOHFractionTillLast;
+  TH1F* PostPreS_TNOMHTillLast;
+  TH1F* PostPreS_Eta;
+  TH1F* PostPreS_TNOM;
+  TH1F* PostPreS_TNOM_PUA;
+  TH1F* PostPreS_TNOM_PUB;
+  TProfile* PostPreS_NOMoNOHvsPV;
+  TH1F* PostPreS_nDof;
+  TH1F* PostPreS_TOFError;
+  TH1F* PostPreS_PtErrOverPt;
+  TH1F* PostPreS_PtErrOverPt2;
+  TH1F* PostPreS_Pt;
+  TH1F* PostPreS_P;
+  TH1F* PostPreS_MIs;
+  TH1F* PostPreS_MIs_NoEventWeight;
+  TH1F* PostPreS_MIh;
+  TH1F* PostPreS_MIh_NoEventWeight;
+  TH1F* PostPreS_Ih;
+  TH1F* PostPreS_MTOF;
+  TH1F* PostPreS_TIsol;
+  TH1F* PostPreS_EIsol;
+  TH1F* PostPreS_SumpTOverpT;
+  TH1F* PostPreS_dR_NVTrack;
+  TH1F* PostPreS_MatchedStations;
+  TH1F* PostPreS_NVertex;
+  TH1F* PostPreS_NVertex_NoEventWeight;
+  TH1F* PostPreS_PV;
+  TH1F* PostPreS_PV_NoEventWeight;
+  TH1F* PostPreS_dzAll;
+  TH1F* PostPreS_dxyAll;
+  TH1F* PostPreS_dzMinv3d;
+  TH1F* PostPreS_dxyMinv3d;
+  TH1F* PostPreS_SegSep;
+  TH1F* PostPreS_SegMinPhiSep;
+  TH1F* PostPreS_SegMinEtaSep;
+  TH1F* PostPreS_SegMinEtaSep_FailDz;
+  TH1F* PostPreS_SegMinEtaSep_PassDz;
+  TH1F* PostPreS_Dz_FailSep;
+  TH1F* PostPreS_InnerInvPtDiff;
+  TH1F* PostPreS_Phi;
+  TH1F* PostPreS_TimeAtIP;
+  TH1F* PostPreS_OpenAngle;
+  TH1F* PostPreS_OpenAngle_Cosmic;
+  
+  TH1F* PostPreS_Pt_FailDz;
+  TH1F* PostPreS_Pt_FailDz_DT;
+  TH1F* PostPreS_Pt_FailDz_CSC;
+  TH1F* PostPreS_TOF_FailDz;
+  TH1F* PostPreS_TOF_FailDz_DT;
+  TH1F* PostPreS_TOF_FailDz_CSC;
+  TH1F* PostPreS_Dxy;
+  TH1F* PostPreS_Dxy_Cosmic;
+  TH1F* PostPreS_Dz;
+  TH1F* PostPreS_Dz_Cosmic;
+  TH1F* PostPreS_Dz_CSC;
+  TH1F* PostPreS_Dz_DT;
+  
+  TH1F* PostPreS_LastHitDXY;
+  TH1F* PostPreS_LastHitD3D;
+  TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
+  TH2F* PostPreS_PtErrOverPtVsPt;
+  
+  TH1F* PostPreS_ProbQ;
+  TH1F* PostPreS_ProbXY;
+  TH1F* PostPreS_ProbQNoL1;
+  TH1F* PostPreS_ProbXYNoL1;
+  TH1F* PostPreS_MassErr;
+
+  TH2F* PostPreS_EtaPerGenID;
+  TH2F* PostPreS_ProbQPerGenID;
+  TH2F* PostPreS_ProbXYPerGenID;
+  TH2F* PostPreS_PtPerGenID;
+  TH2F* PostPreS_EIsolPerGenID;
+  TH2F* PostPreS_MIhPerGenID;
+  TH2F* PostPreS_MIsPerGenID;
+  TH2F* PostPreS_massTPerGenID;
+  TH2F* PostPreS_EtaPerMomGenID;
+  TH2F* PostPreS_ProbQPerMomGenID;
+  TH2F* PostPreS_ProbXYPerMomGenID;
+  TH2F* PostPreS_PtPerMomGenID;
+  TH2F* PostPreS_EIsolPerMomGenID;
+  TH2F* PostPreS_MIhPerMomGenID;
+  TH2F* PostPreS_MIsPerMomGenID;
+  TH2F* PostPreS_massTPerMomGenID;
+  
+  TH1F* CutFlow;
+  TH1F* CutFlowProbQFirst;
+  
+  TH2F* CutFlowEta;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
@@ -361,10 +470,10 @@ struct Tuple {
   TH2F* AS_Is;
   TH1F* BS_Is_PUA;
   TH1F* BS_Is_PUB;
-  TH1F* BS_Im;
-  TH2F* AS_Im;
-  TH1F* BS_Im_PUA;
-  TH1F* BS_Im_PUB;
+  TH1F* BS_Ih;
+  TH2F* AS_Ih;
+  TH1F* BS_Ih_PUA;
+  TH1F* BS_Ih_PUB;
   TH1F* BS_TOF;
   TH2F* AS_TOF;
   TH1F* BS_TOF_PUA;
@@ -375,7 +484,7 @@ struct Tuple {
   TH1F* BS_Pt_Cosmic;
 
   TH2F* BS_EtaIs;   //TH3F*  AS_EtaIs;
-  TH2F* BS_EtaIm;   //TH3F*  AS_EtaIm;
+  TH2F* BS_EtaIh;   //TH3F*  AS_EtaIh;
   TH2F* BS_EtaP;    //TH3F*  AS_EtaP;
   TH2F* BS_EtaPt;   //TH3F*  AS_EtaPt;
   TH2F* BS_EtaTOF;  //TH3F*  AS_EtaTOF;
@@ -384,18 +493,18 @@ struct Tuple {
 
   TH2F* BS_PIs;
   TH3F* AS_PIs;
-  TH2F* BS_PImHD;
-  TH2F* BS_PIm;
-  TH3F* AS_PIm;
+  TH2F* BS_IhIs;
+  TH2F* BS_PIh;
+  TH3F* AS_PIh;
   TH2F* BS_PtIs;
   TH3F* AS_PtIs;
-  TH2F* BS_PtIm;
-  TH3F* AS_PtIm;
+  TH2F* BS_PtIh;
+  TH3F* AS_PtIh;
   TH2F* BS_PtTOF;
   TH2F* BS_TOFIs;
   TH3F* AS_TOFIs;
-  TH2F* BS_TOFIm;
-  TH3F* AS_TOFIm;
+  TH2F* BS_TOFIh;
+  TH3F* AS_TOFIh;
 
   //Prediction histograms
   TH1D* H_A;
@@ -422,39 +531,39 @@ struct Tuple {
   TH1D* Hist_TOF;
 
   //FIXME ------ To be modified for Number Of Hits (NOH)
-  TH3D* Pred_EtaP;
-  TH2D* Pred_I;
-  TH2D* Pred_TOF;
-  TH2D* Pred_EtaB;
-  TH2D* Pred_EtaS;
-  TH2D* Pred_EtaS2;
+  TH3F* Pred_EtaP;
+  TH2F* Pred_I;
+  TH2F* Pred_TOF;
+  TH2F* Pred_EtaB;
+  TH2F* Pred_EtaS;
+  TH2F* Pred_EtaS2;
 
   //pz
 
-  TH2D* PDF_E_Eta;
-  TH2D* PDF_A_Eta;
-  TH3D* PDF_H_EtaMass;
-  TH3D* PDF_G_EtaP;
-  TH3D* PDF_C_EtaP;
-  TH3D* PDF_F_EtaICK;
-  TH3D* PDF_B_EtaICK;
+  TH2F* PDF_E_Eta;
+  TH2F* PDF_A_Eta;
+  TH3F* PDF_H_EtaMass;
+  TH3F* PDF_G_EtaP;
+  TH3F* PDF_C_EtaP;
+  TH3F* PDF_F_EtaICK;
+  TH3F* PDF_B_EtaICK;
 
-  TH2D* PDF_E_Eta_Flip;
-  TH2D* PDF_A_Eta_Flip;
-  TH3D* PDF_H_EtaMass_Flip;
-  TH3D* PDF_G_EtaP_Flip;
-  TH3D* PDF_C_EtaP_Flip;
-  TH3D* PDF_F_EtaICK_Flip;
-  TH3D* PDF_B_EtaICK_Flip;
+  TH2F* PDF_E_Eta_Flip;
+  TH2F* PDF_A_Eta_Flip;
+  TH3F* PDF_H_EtaMass_Flip;
+  TH3F* PDF_G_EtaP_Flip;
+  TH3F* PDF_C_EtaP_Flip;
+  TH3F* PDF_F_EtaICK_Flip;
+  TH3F* PDF_B_EtaICK_Flip;
 
   // end FIXME
 
-  TH2D* RegionD_P;
-  TH2D* RegionD_I;
-  TH2D* RegionD_Ias;
-  TH2D* RegionD_TOF;
+  TH2F* RegionD_P;
+  TH2F* RegionD_I;
+  TH2F* RegionD_Ias;
+  TH2F* RegionD_TOF;
 
-  TH2D* RegionH_Ias;
+  TH2F* RegionH_Ias;
 
   TH1D* H_A_Flip;
   TH1D* H_B_Flip;
@@ -471,22 +580,22 @@ struct Tuple {
   std::map<std::string, TH1D*> H_H_Binned_Flip;  //TH1D* H_H_Binned_Flip[MaxPredBins];
 
   //FIXME ------ To be modified for Number Of Hits (NOH)
-  TH3D* Pred_EtaP_Flip;
-  TH2D* Pred_I_Flip;
-  TH2D* Pred_TOF_Flip;
-  TH2D* Pred_EtaB_Flip;
-  TH2D* Pred_EtaS_Flip;
-  TH2D* Pred_EtaS2_Flip;
+  TH3F* Pred_EtaP_Flip;
+  TH2F* Pred_I_Flip;
+  TH2F* Pred_TOF_Flip;
+  TH2F* Pred_EtaB_Flip;
+  TH2F* Pred_EtaS_Flip;
+  TH2F* Pred_EtaS2_Flip;
   // end FIXME
 
-  TH2D* RegionD_P_Flip;
-  TH2D* RegionD_I_Flip;
-  TH2D* RegionD_Ias_Flip;
-  TH2D* RegionD_TOF_Flip;
+  TH2F* RegionD_P_Flip;
+  TH2F* RegionD_I_Flip;
+  TH2F* RegionD_Ias_Flip;
+  TH2F* RegionD_TOF_Flip;
 
-  TH2D* RegionH_Ias_Flip;
+  TH2F* RegionH_Ias_Flip;
 
-  TH2D* H_D_DzSidebands;
+  TH2F* H_D_DzSidebands;
 
   TH2F* genrecopT;
   TH1F* genlevelpT;
@@ -503,15 +612,15 @@ struct Tuple {
   TH1D* CtrlIs_S3_TOF;
   TH1D* CtrlIs_S4_TOF;
 
-  TH1D* CtrlIm_S1_TOF;
-  TH1D* CtrlIm_S2_TOF;
-  TH1D* CtrlIm_S3_TOF;
-  TH1D* CtrlIm_S4_TOF;
+  TH1D* CtrlIh_S1_TOF;
+  TH1D* CtrlIh_S2_TOF;
+  TH1D* CtrlIh_S3_TOF;
+  TH1D* CtrlIh_S4_TOF;
 
-  TH1D* CtrlPt_S1_Im;
-  TH1D* CtrlPt_S2_Im;
-  TH1D* CtrlPt_S3_Im;
-  TH1D* CtrlPt_S4_Im;
+  TH1D* CtrlPt_S1_Ih;
+  TH1D* CtrlPt_S2_Ih;
+  TH1D* CtrlPt_S3_Ih;
+  TH1D* CtrlPt_S4_Ih;
 
   TH1D* CtrlPt_S1_TOF;
   TH1D* CtrlPt_S2_TOF;

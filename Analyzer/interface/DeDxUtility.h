@@ -8,7 +8,7 @@
 //=============================================================
 
 void loadDeDxParameters(
-    int CurrentRun, int SampleType, double& dEdxSF_0, double& dEdxSF_1, double& dEdxK, double& dEdxC) {
+    int CurrentRun, int SampleType, float& dEdxSF_0, float& dEdxSF_1, float& dEdxK, float& dEdxC) {
   bool isData = (SampleType == 0);
   bool isMC = (SampleType > 0);
 
@@ -70,12 +70,12 @@ TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType) {
 
   for (int i = 0; i <= Prob_ChargePath->GetXaxis()->GetNbins() + 1; i++) {    // loop over geometry/layer
     for (int j = 0; j <= Prob_ChargePath->GetYaxis()->GetNbins() + 1; j++) {  // loop over pathlength
-      double Ni = 0;
+      float Ni = 0;
       for (int k = 0; k <= Prob_ChargePath->GetZaxis()->GetNbins() + 1; k++) {  // loop over ChargeOverPathlength
         Ni += DeDxMap_->GetBinContent(i, j, k);
       }
       for (int k = 0; k <= Prob_ChargePath->GetZaxis()->GetNbins() + 1; k++) {  // loop over ChargeOverPathlength
-        double tmp = 0;
+        float tmp = 0;
         for (int l = 0; l <= k; l++) {
           tmp += DeDxMap_->GetBinContent(i, j, l);
         }
@@ -93,10 +93,10 @@ TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType) {
 
 class dedxGainCorrector {
 private:
-  std::map<unsigned int, std::unordered_map<unsigned int, double> > TrackerGainsPerRuns;
+  std::map<unsigned int, std::unordered_map<unsigned int, float> > TrackerGainsPerRuns;
 
 public:
-  std::unordered_map<unsigned int, double>* TrackerGains;
+  std::unordered_map<unsigned int, float>* TrackerGains;
   dedxGainCorrector() { TrackerGains = nullptr; }
   ~dedxGainCorrector() {}
 
@@ -105,7 +105,7 @@ public:
       TrackerGains = nullptr;
       return;
     }
-    std::map<unsigned int, std::unordered_map<unsigned int, double> >::iterator it,
+    std::map<unsigned int, std::unordered_map<unsigned int, float> >::iterator it,
         itPrev = TrackerGainsPerRuns.begin();
     for (it = TrackerGainsPerRuns.begin(); it != TrackerGainsPerRuns.end(); it++) {
       if (it->first > currentRun) {
@@ -136,9 +136,9 @@ public:
         t1->SetBranchAddress("DetId", &tree_DetId);
         unsigned char tree_APVId;
         t1->SetBranchAddress("APVId", &tree_APVId);
-        double tree_Gain;
+        float tree_Gain;
         t1->SetBranchAddress("Gain", &tree_Gain);
-        //double        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
+        //float        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
 
         TrackerGains = &TrackerGainsPerRuns[FirstRun];
         for (unsigned int ientry = 0; ientry < t1->GetEntries(); ientry++) {

@@ -8,7 +8,7 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag.globaltag = "106X_mc2017_realistic_v9" #pdmv 5 oct 2021
+process.GlobalTag.globaltag = "106X_upgrade2018_realistic_v16_L1v1" #pdmv feb 2022 
 
 process.load("RecoVertex.BeamSpotProducer.BeamSpot_cff")
 process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
@@ -31,7 +31,7 @@ process.source = cms.Source("PoolSource",
 process.stage = cms.EDAnalyzer('ntuple'
      , format_file       = cms.string('AOD')
      , isdata            = cms.bool(False)
-     , year              = cms.untracked.int32(2017)
+     , year              = cms.untracked.int32(2018)
      , primaryVertexColl  = cms.InputTag('offlinePrimaryVertices')  #->AOD
      , isotracks             = cms.InputTag("isolatedTracks")
      , tracks             = cms.InputTag("generalTracks")
