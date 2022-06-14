@@ -64,6 +64,7 @@
 // - 20p6: - Further fix for pfType?
 // - 20p7: - Add PostPreS_EIsolPerPfType plot, cleanup gen print-outs, move them after the preS
 // - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
+// - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
 // - 20pX Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -934,12 +935,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float dRMinBckgAndSibling = 9999.0;
       float dRMinBckgAndMom = 9999.0;
       float numSiblingsF = 9999.0;
-      for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+      for (unsigned int numMomIndx = 0; numMomIndx <= genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
         if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
           closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
           unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
           numSiblingsF  = float(numSiblings);
-          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+          for (unsigned int daughterIndx = 0; daughterIndx <= numSiblings+1; daughterIndx++) {
             float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
             float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -1076,7 +1077,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
     float pixelProbs[5] = {0.0,0.0,0.0,0.0,0.0};
     bool specialInCPE = false;
-    
     int numRecHits = 0;
     int numRecHitsNoLayer1 = 0;
     float probQonTrackWMulti = 1;
@@ -1477,11 +1477,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float genPhi = genColl[closestGenIndex].phi();
         LogPrint(MOD) << "      >> BckgMC: Track eta: " << genEta << " and phi: " << genPhi;
         LogPrint(MOD) << "      >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-        for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+        for (unsigned int numMomIndx = 0; numMomIndx <= genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
           if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
             unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
             LogPrint(MOD) << "      >> BckgMC: Number of siblings: " << numSiblings;
-            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+            for (unsigned int daughterIndx = 0; daughterIndx <= numSiblings+1; daughterIndx++) {
               std::cout << "      >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
@@ -1501,8 +1501,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         std::cout << std::endl;
         LogPrint(MOD) << "      >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
         LogPrint(MOD) << "      >> BckgMC: Track's closest sibling angle: " << closestBackgroundPDGsIDs[3];
-        LogPrint(MOD) << "      >> BckgMC: Track's pt: " << closestBackgroundPDGsIDs[4];
-        LogPrint(MOD) << "      >> BckgMC: Track's num siblings: " << closestBackgroundPDGsIDs[5];
+        LogPrint(MOD) << "      >> BckgMC: Track's angle wrt to mom: " << closestBackgroundPDGsIDs[4];
+        LogPrint(MOD) << "      >> BckgMC: Track's pt: " << closestBackgroundPDGsIDs[5];
+        LogPrint(MOD) << "      >> BckgMC: Track's num siblings: " << closestBackgroundPDGsIDs[6];
       }
     }
     
@@ -2119,7 +2120,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",6)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
-  desc.addUntracked("GlobalMaxEIsol",2.0)->setComment("Cut on calorimeter isolation (E/P)");
+  desc.addUntracked("GlobalMaxEIsol",0.3)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
@@ -2573,8 +2574,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   bool specialInCPE = false;
   if (pixelProbs[4] > 0.5) {
-    LogPrint(MOD) << "        >> This track is special in the CPE";
     specialInCPE = true;
+  }
+  if (specialInCPE) {
+    LogPrint(MOD) << "        >> This track is special in the CPE";
   }
   
   
@@ -2615,14 +2618,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0) && !specialInCPE)  ? true : false;
+  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
   passedCutsArray[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-//  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
-  passedCutsArray[10] = true;
+  passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
+//  passedCutsArray[10] = true;
   // Cut on the impact parameter
     // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
   passedCutsArray[11] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
@@ -2686,11 +2689,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0) && !specialInCPE)  ? true : false;
+    passedCutsArray2[8]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
-//    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
-    passedCutsArray2[11] = true;
+    passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
+//    passedCutsArray2[11] = true;
     // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
     passedCutsArray2[12] = (   (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
                             || (typeMode_ == 5 && fabs(dz) < 4.0)) ? true : false;
@@ -2733,10 +2736,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->Beta_Matched->Fill(GenBeta, Event_Weight);
     }
     tuple->PrePreS_Eta->Fill(track->eta(), Event_Weight);
-    tuple->PrePreS_MatchedStations->Fill(muonStations(track->hitPattern()), Event_Weight);
-    tuple->PrePreS_NVertex->Fill(vertexColl.size(), Event_Weight);
-    tuple->PrePreS_NVertex_NoEventWeight->Fill(vertexColl.size());
-    tuple->PrePreS_TNOH->Fill(track->found(), Event_Weight);
+    tuple->PrePreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, Event_Weight);
+    tuple->PrePreS_NVertex->Fill(vertexColl.size()-.5, Event_Weight);
+    tuple->PrePreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
+    tuple->PrePreS_TNOH->Fill(track->found()-.5, Event_Weight);
     if (PUA) {
       tuple->PrePreS_TNOH_PUA->Fill(track->found(), Event_Weight);
       tuple->PrePreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
@@ -2746,10 +2749,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->PrePreS_TNOM_PUB->Fill(numDeDxHits, Event_Weight);
     }
     tuple->PrePreS_TNOHFraction->Fill(track->validFraction(), Event_Weight);
-    tuple->PrePreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight);
+    tuple->PrePreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
     tuple->PrePreS_TNOHFractionTillLast->Fill(validFractionTillLast, Event_Weight);
     tuple->PrePreS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
-    tuple->PrePreS_TNOM->Fill(numDeDxHits, Event_Weight);
+    tuple->PrePreS_TNOM->Fill(numDeDxHits-.5, Event_Weight);
     if (track->found() - numDeDxHits) {
       tuple->PrePreS_EtaNBH->Fill(track->eta(), track->found() - numDeDxHits, Event_Weight);
     }
@@ -2758,7 +2761,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PrePreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
     tuple->PrePreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     if (tof) {
-      tuple->PrePreS_nDof->Fill(tof->nDof(), Event_Weight);
+      tuple->PrePreS_nDof->Fill(tof->nDof()-.5, Event_Weight);
       tuple->PrePreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
       tuple->PrePreS_TOFError->Fill(tof->inverseBetaErr(), Event_Weight);
       tuple->PrePreS_TimeAtIP->Fill(tof->timeAtIpInOut(), Event_Weight);
@@ -2810,12 +2813,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if (allOtherCutsPassed) {
         if (i==1)  { tuple->N1_Eta->Fill(track->eta(), Event_Weight); };
         if (i==2)  { tuple->N1_MPt->Fill(track->pt(), Event_Weight); };
-        if (i==3)  { tuple->N1_TNOH->Fill(track->found(), Event_Weight); };
-        if (i==4)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight); };
+        if (i==3)  { tuple->N1_TNOH->Fill(track->found()-.5, Event_Weight); };
+        if (i==4)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
         if (i==5)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
-        if (i==6)  { tuple->N1_TNOM->Fill(numDeDxHits, Event_Weight); };
+        if (i==6)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
         if (i==7)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
-        if (i==8)  { tuple->N1_Qual->Fill(track->qualityMask(), Event_Weight); };
+        if (i==8)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
         if (i==9)  { tuple->N1_Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
         if (i==10) { tuple->N1_EIsol->Fill(EoP, Event_Weight); };
         if (i==11) { tuple->N1_Dz->Fill(dz, Event_Weight); };
@@ -2911,10 +2914,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
        tuple->PostPreS_pfType->Fill(7.5, EventWeight_);
     }
     tuple->PostPreS_Eta->Fill(track->eta(), Event_Weight);
-    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern()), Event_Weight);
-    tuple->PostPreS_NVertex->Fill(vertexColl.size(), Event_Weight);
-    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size());
-    tuple->PostPreS_TNOH->Fill(track->found(), Event_Weight);
+    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, Event_Weight);
+    tuple->PostPreS_NVertex->Fill(vertexColl.size()-.5, Event_Weight);
+    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
+    tuple->PostPreS_TNOH->Fill(track->found()-.5, Event_Weight);
     if (PUA) {
       tuple->PostPreS_TNOH_PUA->Fill(track->found(), Event_Weight);
       tuple->PostPreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
@@ -2924,21 +2927,21 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->PostPreS_TNOM_PUB->Fill(numDeDxHits, Event_Weight);
     }
     tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), Event_Weight);
-    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), Event_Weight);
+    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
     tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, Event_Weight);
     tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
-    tuple->PostPreS_TNOM->Fill(numDeDxHits, Event_Weight);
+    tuple->PostPreS_TNOM->Fill(numDeDxHits-.5, Event_Weight);
     tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
     tuple->PostPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     if (tof) {
-      tuple->PostPreS_nDof->Fill(tof->nDof(), Event_Weight);
+      tuple->PostPreS_nDof->Fill(tof->nDof()-.5, Event_Weight);
       tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
       tuple->PostPreS_TOFError->Fill(tof->inverseBetaErr(), Event_Weight);
       tuple->PostPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), Event_Weight);
     }
-    tuple->PostPreS_Qual->Fill(track->qualityMask(), Event_Weight);
+    tuple->PostPreS_Qual->Fill(track->qualityMask()-.5, Event_Weight);
     tuple->PostPreS_Chi2PerNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
     tuple->PostPreS_Pt->Fill(track->pt(), Event_Weight);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
