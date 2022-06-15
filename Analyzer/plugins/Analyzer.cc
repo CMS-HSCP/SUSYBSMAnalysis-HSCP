@@ -65,6 +65,7 @@
 // - 20p7: - Add PostPreS_EIsolPerPfType plot, cleanup gen print-outs, move them after the preS
 // - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
 // - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
+// - 21p0: - Cut on ProbXY > 0.001
 // - 20pX Cut if the minDr for them is > 0.3
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -2638,7 +2639,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+  passedCutsArray[7]  = ((probXYonTrack > 0.001 && probXYonTrack < 1.0))  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -2709,7 +2710,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+    passedCutsArray2[8]  = ((probXYonTrack > 0.001 && probXYonTrack < 1.0))  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
     passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
