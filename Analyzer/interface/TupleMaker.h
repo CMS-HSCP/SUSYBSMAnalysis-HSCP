@@ -545,7 +545,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PrePreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PrePreS_RecoPFHT->Sumw2();
   Name = "PrePreS_RecoPFNumJets";
-  tuple->PrePreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  30, 0.0, 30.0);
+  tuple->PrePreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  70, 0.0, 70.0);
   tuple->PrePreS_RecoPFNumJets->Sumw2();
 
   Name = "PrePreS_Chi2PerNdof";

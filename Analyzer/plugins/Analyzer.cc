@@ -842,6 +842,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         continue;
       }
     } else if (isBckg) {
+//        if (debug_> 0) LogPrint(MOD) << "  >> Background MC, Reco - GEN track matching";
       for (unsigned int g = 0; g < genColl.size(); g++) {
         if (genColl[g].pt() < 5) {
           continue;
@@ -929,18 +930,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->HSCPCandidateType->Fill(5.5, EventWeight_);
       }
     } else if (isBckg) {
+//      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
       closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
       float genEta = genColl[closestGenIndex].eta();
       float genPhi = genColl[closestGenIndex].phi();
       float dRMinBckgAndSibling = 9999.0;
       float dRMinBckgAndMom = 9999.0;
       float numSiblingsF = 9999.0;
-      for (unsigned int numMomIndx = 0; numMomIndx <= genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+      for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
         if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
           closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
           unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
           numSiblingsF  = float(numSiblings);
-          for (unsigned int daughterIndx = 0; daughterIndx <= numSiblings+1; daughterIndx++) {
+          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
             float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
             float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -958,12 +960,30 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           dRMinBckgAndMom = 0.0;
         }
       }
+      if (genColl[closestGenIndex].numberOfMothers()==1) {
+        closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother()->pdgId());
+        unsigned int numSiblings = genColl[closestGenIndex].mother()->numberOfDaughters() -1;
+        numSiblingsF  = float(numSiblings);
+        for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+          float siblingEta = genColl[closestGenIndex].mother()->daughter(daughterIndx)->eta();
+          float siblingPhi = genColl[closestGenIndex].mother()->daughter(daughterIndx)->phi();
+          float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+          if( (siblingDr != 0.0) && (siblingDr < dRMinBckgAndSibling)) {
+            dRMinBckgAndSibling = siblingDr;
+            closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother()->daughter(daughterIndx)->pdgId());
+          }
+        }
+        float momEta = genColl[closestGenIndex].mother()->eta();
+        float momPhi = genColl[closestGenIndex].mother()->phi();
+        dRMinBckgAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+      }
       closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
       closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
       closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
       closestBackgroundPDGsIDs[6] = numSiblingsF;
     }
-    
+   
+//    if (debug_> 0) LogPrint(MOD) << "  >> Loop on the vertices in the event"; 
     // TODO this is repeated in the pre-selection
     int highestPtGoodVertex = -1;
     int goodVerts = 0;
@@ -1477,11 +1497,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float genPhi = genColl[closestGenIndex].phi();
         LogPrint(MOD) << "      >> BckgMC: Track eta: " << genEta << " and phi: " << genPhi;
         LogPrint(MOD) << "      >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-        for (unsigned int numMomIndx = 0; numMomIndx <= genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+        for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
           if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
             unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
             LogPrint(MOD) << "      >> BckgMC: Number of siblings: " << numSiblings;
-            for (unsigned int daughterIndx = 0; daughterIndx <= numSiblings+1; daughterIndx++) {
+            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
               std::cout << "      >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
