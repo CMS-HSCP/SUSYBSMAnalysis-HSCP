@@ -12,9 +12,9 @@
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
 
-//v20
-// - v20.1 add Regions used to vlaidate the background estimate method
-// - 
+//v22
+// - v22.1 add Regions used to validate the background estimate method
+//  
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
