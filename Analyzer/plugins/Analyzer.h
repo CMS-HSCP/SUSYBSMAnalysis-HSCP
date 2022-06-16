@@ -115,6 +115,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
+#include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
+
 using namespace std;
 
 class TupleMaker;
@@ -152,7 +154,7 @@ public:
                         const float RescaleT,
                         float MassErr,
                         const bool Ih_Iso_cut,
-                        const unsigned int closestBackgroundPDGsIDs[]);
+                        const float closestBackgroundPDGsIDs[]);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
@@ -184,13 +186,13 @@ public:
                      const float GenBeta,
                      float MassErr,
                      const bool Ih_Iso_cut,
-                     const unsigned int closestBackgroundPDGsIDs[]);
+                     const float closestBackgroundPDGsIDs[]);
 
 private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
-  virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
+//  virtual void isPixelTrack(const edm::Ref<std::vector<Trajectory>>&, bool&, bool&);
 
 
   // ----------member data ---------------------------
@@ -204,6 +206,7 @@ private:
   edm::EDGetTokenT<DTRecSegment4DCollection> muonDtSegmentToken_;
   edm::EDGetTokenT<CSCSegmentCollection> muonCscSegmentToken_;
   edm::EDGetTokenT<vector<reco::Vertex>> offlinePrimaryVerticesToken_;
+  edm::EDGetTokenT<vector<reco::Vertex>> inclusiveSecondaryVerticesToken_;
   edm::EDGetTokenT<LumiScalersCollection> lumiScalersToken_;
   edm::EDGetTokenT<vector<reco::Track>> refittedStandAloneMuonsToken_;
   edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;
@@ -287,7 +290,7 @@ private:
   unsigned int globalMinNOH_, globalMinNOPH_;
   float globalMinFOVH_;
   unsigned int globalMinNOM_;
-  float globalMaxChi2_, globalMaxEIsol_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMiniRelIsoChg_, globalMassT_,  globalMinIh_, trackProbQCut_;
+  float globalMaxChi2_, globalMaxEIsol_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMiniRelIsoAll_, globalMassT_,  globalMinIh_, trackProbQCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
@@ -348,7 +351,7 @@ private:
   float IntegratedLuminosity_ = 33676.4;          //13TeV16
 
   const std::string pixelCPE_;
-  const unsigned int debug_;
+  const int debug_;
   const bool hasMCMatch_, doTriggering_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
