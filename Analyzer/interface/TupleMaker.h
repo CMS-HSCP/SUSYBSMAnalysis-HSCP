@@ -2625,7 +2625,7 @@ void TupleMaker::fillRegions(Tuple *&tuple,
         if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) {m<500?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
     }
 }
 
