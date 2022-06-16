@@ -14,14 +14,14 @@ void step2_backgroundPrediction(){
     infile.open("configFile_readHist.txt");
     std::string line;
     std::string filename;
-    int cutIndex;
+    int nPE, cutIndex;
     int rebineta,rebinih,rebinp,rebinmass;
     bool rebin;
     while(std::getline(infile,line)){
         if(std::strncmp(line.c_str(),"#",1)==0) continue;
         std::cout << line << std::endl;
         std::stringstream ss(line);
-        ss >> filename >> cutIndex >> rebin >> rebineta >> rebinih >> rebinp >> rebinmass;
+        ss >> filename >> nPE >> cutIndex >> rebin >> rebineta >> rebinih >> rebinp >> rebinmass;
     }
 
     std::string outfilename_;
@@ -96,12 +96,12 @@ void step2_backgroundPrediction(){
     // estimate the background in different Ias slices, each containing 10% of the statistic 
     // ------------------------------------------------------------------------------------------------------
     
-    bckgEstimate(rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", 100);
-    bckgEstimate(rb_60ias70, rc_ias50, rbc_60ias70, ra_ias50, rd_60ias70, "60ias70", 100);
-    bckgEstimate(rb_70ias80, rc_ias50, rbc_70ias80, ra_ias50, rd_70ias80, "70ias80", 100);
-    bckgEstimate(rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", 100);
-    bckgEstimate(rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", 100);
-    bckgEstimate(rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", 100);
+    bckgEstimate(rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", nPE);
+    bckgEstimate(rb_60ias70, rc_ias50, rbc_60ias70, ra_ias50, rd_60ias70, "60ias70", nPE);
+    bckgEstimate(rb_70ias80, rc_ias50, rbc_70ias80, ra_ias50, rd_70ias80, "70ias80", nPE);
+    bckgEstimate(rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", nPE);
+    bckgEstimate(rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", nPE);
+    bckgEstimate(rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", nPE);
     
     // ------------------------------------------------------------------------------------------------------
 
