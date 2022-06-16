@@ -11,6 +11,10 @@
 <use name="Geometry/TrackerGeometryBuilder"/>
 <use name="RecoTracker/Record"/>
 <use name="RecoTracker/TrackProducer"/>
+<use name="root"/>
+<use name="roofit"/>
+<use name="rootmath"/>
+<use name="rootrflx"/>
 <!--use name="CommonTools/Utils"/-->
 <!--use name="RecoTracker/DeDx"/-->
 <!--<flags EDM_PLUGIN="1"/>-->

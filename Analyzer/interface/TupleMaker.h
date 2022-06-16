@@ -28,6 +28,13 @@ public:
                        float GlobalMinPt,
                        float GlobalMinTOF);
 
+  void initializeRegions(Tuple *&tuple,
+                        TFileDirectory &dir,
+                        int etabins,
+                        int ihbins,
+                        int pbins,
+                        int massbins);
+
   void fillTreeBranches(Tuple *&tuple,
                         const unsigned int &Trig,
                         const unsigned int &Run,
@@ -190,6 +197,22 @@ public:
                                     std::vector<float> CutPt_Flip,
                                     std::vector<float> CutI_Flip,
                                     std::vector<float> CutTOF_Flip);
+
+  void fillRegions(Tuple *&tuple,
+                   float pt_cut,
+                   float Ias_quantiles[6],
+                   float eta,
+                   float p,
+                   float pt,
+                   float pterr,
+                   float ih,
+                   float ias,
+                   float m,
+                   float tof,
+                   float w);
+
+  void writeRegions(Tuple *&tuple,
+                    TFileDirectory &dir);
 };
 
 //=============================================================
@@ -1911,6 +1934,34 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
 //=============================================================
 //
+//      Initialize regions
+//
+//=============================================================
+
+void TupleMaker::initializeRegions(Tuple *&tuple,
+                                TFileDirectory &dir,
+                                int etabins,
+                                int ihbins,
+                                int pbins,
+                                int massbins) {
+    tuple->rA_ias50.setSuffix("_regionA_ias50"); tuple->rA_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rC_ias50.setSuffix("_regionC_ias50"); tuple->rC_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_50ias60.setSuffix("_regionB_50ias60"); tuple->rB_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_60ias70.setSuffix("_regionB_60ias70"); tuple->rB_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_70ias80.setSuffix("_regionB_70ias80"); tuple->rB_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_50ias90.setSuffix("_regionB_50ias90"); tuple->rB_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_50ias90.setSuffix("_regionD_50ias90"); tuple->rD_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+}
+
+//=============================================================
+//
 //     Fill branches of Tree
 //
 //=============================================================
@@ -2539,4 +2590,60 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->PDF_E_Eta_Flip->Fill(CutIndex, track->eta(), Event_Weight);  //pz
     }
   }
+}
+
+//=============================================================
+//
+//  Fill regions used to validate the background estimate method
+//
+//=============================================================
+
+void TupleMaker::fillRegions(Tuple *&tuple,
+                             float pt_cut,
+                             float Ias_quantiles[6],
+                             float eta,
+                             float p,
+                             float pt,
+                             float pterr,
+                             float ih,
+                             float ias,
+                             float m,
+                             float tof,
+                             float w){
+    if(pt<=pt_cut){
+        if(ias<Ias_quantiles[0]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w); 
+        if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[1]) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    }else{
+        if(ias<Ias_quantiles[0]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w); 
+        if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[1]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    }
+}
+
+void TupleMaker::writeRegions(Tuple *&tuple,
+                              TFileDirectory &dir){
+   dir.cd();
+   tuple->rA_ias50.write();
+   tuple->rC_ias50.write();
+   tuple->rB_50ias60.write();
+   tuple->rB_60ias70.write();
+   tuple->rB_70ias80.write();
+   tuple->rB_80ias90.write();
+   tuple->rB_50ias90.write();
+   tuple->rB_90ias100.write();
+   tuple->rD_50ias60.write();
+   tuple->rD_60ias70.write();
+   tuple->rD_70ias80.write();
+   tuple->rD_80ias90.write();
+   tuple->rD_50ias90.write();
+   tuple->rD_90ias100.write();
 }

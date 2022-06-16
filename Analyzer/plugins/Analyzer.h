@@ -106,6 +106,7 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
@@ -274,9 +275,23 @@ private:
   float cutOnIPbound_ = 1.0;
   unsigned int predBins_ = 0;
   unsigned int etaBins_ = 60;
+  
+  // Ias quantiles and pT_cut used to validate the background estimate method in data
+  float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
+  float pT_cut = 60;
+  
+  // binning for eta, ih, p, mass distributions used to validate the background estimate method in data
+  int reg_etabins_ = 120;
+  int reg_ihbins_ = 200;
+  int reg_pbins_ = 200;
+  int reg_massbins_ = 50;
+  
+  
   float dEdxS_UpLim_ = 1.0;
   float dEdxM_UpLim_ = 30.0;
   unsigned int numDzRegions_ = 6;
+
+
 
   //Variables used in the TOF only HSCP search
   float DTRegion = 0.9;       //Define the dividing line between DT and

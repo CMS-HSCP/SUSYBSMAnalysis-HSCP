@@ -67,6 +67,9 @@
 // - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
 // - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
 // - 20pX Cut if the minDr for them is > 0.3
+//v22
+// - v22.1 add Regions used to validate the background estimate method
+//  
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -120,6 +123,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       cutOnIPbound_(iConfig.getUntrackedParameter<double>("IPbound")),
       predBins_(iConfig.getUntrackedParameter<int>("PredBins")),
       etaBins_(iConfig.getUntrackedParameter<int>("EtaBins")),
+      reg_etabins_(iConfig.getUntrackedParameter<int>("RegEtaBins")),
+      reg_ihbins_(iConfig.getUntrackedParameter<int>("RegIhBins")),
+      reg_pbins_(iConfig.getUntrackedParameter<int>("RegPBins")),
+      reg_massbins_(iConfig.getUntrackedParameter<int>("RegMassBins")),
       dEdxS_UpLim_(iConfig.getUntrackedParameter<double>("DeDxS_UpLim")),
       dEdxM_UpLim_(iConfig.getUntrackedParameter<double>("DeDxM_UpLim")),
       numDzRegions_(iConfig.getUntrackedParameter<int>("DzRegions")),
@@ -225,6 +232,17 @@ void Analyzer::beginJob() {
                                globalMinPt_,
                                globalMinTOF_);
   
+  cout << "After initializeTuple" << endl;
+
+  tuple_maker->initializeRegions(tuple,
+                                 dir,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+  
+  cout << "After initializeRegions" << endl;
+
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
   if (!isData) {
@@ -1650,6 +1668,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     if (passPre) {
+        tuple_maker->fillRegions(tuple,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+
       if (debug_ > 3 ) LogPrint(MOD) << "      >> We enter the selection cut loop now";
       //==========================================================
       // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
@@ -2114,6 +2145,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   ->setComment("How many different bins the prediction is split in for analysis being run, sets how many histograms are actually initialized.");
   desc.addUntracked("EtaBins",60)
   ->setComment("How many bins we use for the background prediction method in Eta -- impacts background prediction method -- histograms with the name of the form Pred_Eta in Analysis_PlotStructure.h");
+  desc.addUntracked("RegEtaBins",120)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegIhBins",200)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegPBins",200)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegMassBins",50)->setComment("How many bins we use for the validation of the background estimate method");
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
@@ -2664,7 +2699,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[12] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
-  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+//  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
   passedCutsArray[14] = (!isMaterialTrack) ? true : false;
 //  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
