@@ -11,6 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
+
 // v19p0
 // - change double to float
 // - create fillDescription
@@ -312,11 +313,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
-  //get generator weight
+  //get generator weight and pthat
   if (!isData){
       const edm::Handle<GenEventInfoProduct> genEvt = iEvent.getHandle(genEventToken_);
       if (genEvt.isValid()){
           GeneratorWeight_ = genEvt->weight();
+          if(genEvt->binningValues().size()>0) GeneratorBinningValues_ = genEvt->binningValues()[0];
       }
   }
 
@@ -430,6 +432,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                      iEvent.id().luminosityBlock(),
                                      EventWeight_,
                                      GeneratorWeight_,
+                                     GeneratorBinningValues_,
                                      genid,
                                      gencharge,
                                      genmass,
@@ -679,6 +682,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_ProbQ_dEdx;
   std::vector<float> HSCP_Ndof;
   std::vector<float> HSCP_Chi2;
+  std::vector<int>   HSCP_QualityMask;
   std::vector<bool>  HSCP_isHighPurity;
   std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
@@ -1266,6 +1270,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
+
     //computedEdx: hits, SF, templates, usePixel, useClusterCleaning, reverseProb, uneTrunc, TrackerGains,
     //             useStrips, mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, hipEmul, dedxErr, closestHSCPsPDGsID, skipPix, useTemplateLayer_, skipPixel_L1, DeDxprobQ, skip_templ_Ias
     //
@@ -1350,6 +1355,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     reco::DeDxData* dedx_probQ = dedx_probQ_Tmp.numberOfMeasurements() > 0 ? &dedx_probQ_Tmp : nullptr;
 
+
     //Ias without TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
@@ -1358,6 +1364,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
     //Ias Pixel only
+
     auto dedxIas_PixelOnly_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, false, useTemplateLayer_, false, false, 2);
@@ -1366,11 +1373,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //Ias Strip only
     auto dedxIas_StripOnly_Tmp = 
+
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
                     true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, true, useTemplateLayer_);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
-
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     dedxMObj = dedxIh_noL1;
@@ -1764,6 +1771,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_ProbQ_dEdx.push_back(dedx_probQ ? dedx_probQ->dEdx() : -1);
     HSCP_Ndof.push_back(track->ndof());
     HSCP_Chi2.push_back(track->chi2());
+    HSCP_QualityMask.push_back(track->qualityMask());
     HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
@@ -1852,6 +1860,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 Jets_count,
                                 EventWeight_,
                                 GeneratorWeight_,
+                                GeneratorBinningValues_,
                                 HLT_Mu50,
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1893,6 +1902,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_ProbQ_dEdx,
                                 HSCP_Ndof,
                                 HSCP_Chi2,
+                                HSCP_QualityMask,
                                 HSCP_isHighPurity,
                                 HSCP_isMuon,
                                 HSCP_MuonSelector,
@@ -2082,7 +2092,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Collection used to match to gen thruth");
   desc.add("PfCand", edm::InputTag("particleFlow"))
     ->setComment("Input collection for particleFlow algorithm");
-  desc.add("GenCollection", edm::InputTag("prunedGenParticles"))
+  desc.add("GenCollection", edm::InputTag("generator","","GEN"))
     ->setComment("A");
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
     ->setComment("Add the list of muon triggers");

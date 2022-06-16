@@ -334,8 +334,10 @@ private:
 
   float EventWeight_ = 1.;
   float GeneratorWeight_ = 1.;
-  //float SampleWeight_ = 1.;
+  float GeneratorBinningValues_ = 1.;
+  //double SampleWeight_ = 1.;
   float CrossSection_ = 1.;
+
   vector<float> PUSystFactor_;
 
   unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met

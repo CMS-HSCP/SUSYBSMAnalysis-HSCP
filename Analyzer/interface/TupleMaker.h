@@ -40,6 +40,7 @@ public:
                         const unsigned int &njets,
                         const float &weight,
                         const float &generator_weight,
+                        const float &generator_binning_values,
                         const bool &HLT_Mu50,
                         const bool &HLT_PFMET120_PFMHT120_IDTight,
                         const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -81,6 +82,7 @@ public:
                         const std::vector<float> &ProbQ_dEdx,
                         const std::vector<float> &Ndof,
                         const std::vector<float> &Chi2,
+                        const std::vector<int>   &QualityMask,
                         const std::vector<bool>  &isHighPurity,
                         const std::vector<bool>  &isMuon,
                         const std::vector<int>   &MuonSelector,
@@ -161,6 +163,7 @@ public:
                            /*const unsigned int &Hscp,*/
                            const float &weight,
                            const float &generator_weight,
+                           const float &generator_binning_values,
                            const std::vector<float> &genid,
                            const std::vector<float> &gencharge,
                            const std::vector<float> &genmass,
@@ -1757,6 +1760,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("njets", &tuple->Tree_njets, "njets/i");
     tuple->Tree->Branch("Weight", &tuple->Tree_Weight, "Weight/F");
     tuple->Tree->Branch("GeneratorWeight", &tuple->Tree_GeneratorWeight, "GeneratorWeight/F");
+    tuple->Tree->Branch("GeneratorBinningValues", &tuple->Tree_GeneratorBinningValues, "GeneratorBinningValues/F");
     tuple->Tree->Branch("HLT_Mu50", &tuple->Tree_HLT_Mu50, "HLT_Mu50/O");
     tuple->Tree->Branch(
         "HLT_PFMET120_PFMHT120_IDTight", &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight, "HLT_PFMET120_PFMHT120_IDTight/O");
@@ -1805,6 +1809,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("ProbQ_dEdx", &tuple->Tree_ProbQ_dEdx);
     tuple->Tree->Branch("Ndof", &tuple->Tree_Ndof);
     tuple->Tree->Branch("Chi2", &tuple->Tree_Chi2);
+    tuple->Tree->Branch("QualityMask", &tuple->Tree_QualityMask);
     tuple->Tree->Branch("isHighPurity", &tuple->Tree_isHighPurity);
     tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
     tuple->Tree->Branch("MuonSelector", &tuple->Tree_Muon_selector);
@@ -1894,6 +1899,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     /*tuple->GenTree->Branch("Hscp"    ,&tuple->GenTree_Hscp      ,"Hscp/i");*/
     tuple->GenTree->Branch("Weight", &tuple->GenTree_Weight, "Weight/F");
     tuple->GenTree->Branch("GeneratorWeight", &tuple->GenTree_GeneratorWeight, "GeneratorWeight/F");
+    tuple->GenTree->Branch("GeneratorBinningValues", &tuple->GenTree_GeneratorBinningValues, "GeneratorBinningValues/F");
     tuple->GenTree->Branch("GenId", &tuple->GenTree_GenId);
     tuple->GenTree->Branch("GenCharge", &tuple->GenTree_GenCharge);
     tuple->GenTree->Branch("GenMass", &tuple->GenTree_GenMass);
@@ -1921,6 +1927,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const unsigned int &njets,
                                   const float &weight,
                                   const float &generator_weight,
+                                  const float &generator_binning_values,
                                   const bool &HLT_Mu50,
                                   const bool &HLT_PFMET120_PFMHT120_IDTight,
                                   const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1962,6 +1969,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &ProbQ_dEdx,
                                   const std::vector<float> &Ndof,
                                   const std::vector<float> &Chi2,
+                                  const std::vector<int>   &QualityMask,
                                   const std::vector<bool>  &isHighPurity,
                                   const std::vector<bool>  &isMuon,
                                   const std::vector<int>   &MuonSelector,
@@ -2045,6 +2053,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_njets = njets;
   tuple->Tree_Weight = weight;
   tuple->Tree_GeneratorWeight = generator_weight;
+  tuple->Tree_GeneratorBinningValues = generator_binning_values;
   tuple->Tree_HLT_Mu50 = HLT_Mu50;
   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight = HLT_PFMET120_PFMHT120_IDTight;
   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -2086,6 +2095,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_ProbQ = ProbQ_dEdx;
   tuple->Tree_Ndof = Ndof;
   tuple->Tree_Chi2 = Chi2;
+  tuple->Tree_QualityMask = QualityMask;
   tuple->Tree_isHighPurity = isHighPurity;
   tuple->Tree_isMuon = isMuon;
   tuple->Tree_Muon_selector = MuonSelector;
@@ -2171,6 +2181,7 @@ void TupleMaker::fillGenTreeBranches(Tuple *&tuple,
                                      /*const unsigned int &Hscp,*/
                                      const float &weight,
                                      const float &generator_weight,
+                                     const float &generator_binning_values,
                                      const std::vector<float> &genid,
                                      const std::vector<float> &gencharge,
                                      const std::vector<float> &genmass,
@@ -2183,6 +2194,7 @@ void TupleMaker::fillGenTreeBranches(Tuple *&tuple,
   /*tuple->GenTree_Hscp      = Hscp;*/
   tuple->GenTree_Weight = weight;
   tuple->GenTree_GeneratorWeight = generator_weight;
+  tuple->GenTree_GeneratorBinningValues = generator_binning_values;
   tuple->GenTree_GenId = genid;
   tuple->GenTree_GenCharge = gencharge;
   tuple->GenTree_GenMass = genmass;
