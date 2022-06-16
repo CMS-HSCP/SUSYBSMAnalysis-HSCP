@@ -14,17 +14,19 @@ void step2_backgroundPrediction(){
     infile.open("configFile_readHist.txt");
     std::string line;
     std::string filename;
-    int rebineta,rebinih,rebinp,rebinmass,thresholdP,thresholdMass;
-    bool rebin,varBinsP,varBinsMass;
+    int cutIndex;
+    int rebineta,rebinih,rebinp,rebinmass;
+    bool rebin;
     while(std::getline(infile,line)){
         if(std::strncmp(line.c_str(),"#",1)==0) continue;
         std::cout << line << std::endl;
         std::stringstream ss(line);
-        ss >> filename >> rebin >> rebineta >> rebinih >> rebinp >> rebinmass;
+        ss >> filename >> cutIndex >> rebin >> rebineta >> rebinih >> rebinp >> rebinmass;
     }
 
     std::string outfilename_;
-    outfilename_ = filename+"_rebinEta"+to_string(rebineta)+"_rebinIh"+to_string(rebinih)+"_rebinP"+to_string(rebinp)+"_rebinMass"+to_string(rebinmass)+"_analysed";
+    if(!rebin)outfilename_ = filename+"_cutIndex"+to_string(cutIndex)+"_analysed";
+    else outfilename_ = filename+"_cutIndex"+to_string(cutIndex)+"_rebinEta"+to_string(rebineta)+"_rebinIh"+to_string(rebinih)+"_rebinP"+to_string(rebinp)+"_rebinMass"+to_string(rebinmass)+"_analysed";
 
     std::cout << outfilename_ << std::endl;
 
@@ -55,6 +57,9 @@ void step2_backgroundPrediction(){
     Region rbc_90ias100;
     
     bool bool_rebin=rebin;
+   
+    // loading histograms used to validate the background estimate method in data --> base on Ias slices 
+    // ------------------------------------------------------------------------------------------------------
     
     loadHistograms(ra_ias50,ifile,"regionA_ias50",bool_rebin,rebineta,rebinp,rebinih,rebinmass); 
     loadHistograms(rc_ias50,ifile,"regionC_ias50",bool_rebin,rebineta,rebinp,rebinih,rebinmass); 
@@ -79,19 +84,26 @@ void step2_backgroundPrediction(){
     loadHistograms(rbc_80ias90,ifile,"regionD_80ias90",bool_rebin,rebineta,rebinp,rebinih,rebinmass); 
     loadHistograms(rbc_50ias90,ifile,"regionD_50ias90",bool_rebin,rebineta,rebinp,rebinih,rebinmass); 
     loadHistograms(rbc_90ias100,ifile,"regionD_90ias100",bool_rebin,rebineta,rebinp,rebinih,rebinmass);
-
+    
+    // ------------------------------------------------------------------------------------------------------
+    
     std::cout << "Regions loaded" << std::endl;
 
     TFile* ofile = new TFile((outfilename_+".root").c_str(),"RECREATE");
 
     std::cout << "saving... " << std::endl;
 
+    // estimate the background in different Ias slices, each containing 10% of the statistic 
+    // ------------------------------------------------------------------------------------------------------
+    
     bckgEstimate(rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", 100);
     bckgEstimate(rb_60ias70, rc_ias50, rbc_60ias70, ra_ias50, rd_60ias70, "60ias70", 100);
     bckgEstimate(rb_70ias80, rc_ias50, rbc_70ias80, ra_ias50, rd_70ias80, "70ias80", 100);
     bckgEstimate(rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", 100);
     bckgEstimate(rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", 100);
     bckgEstimate(rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", 100);
+    
+    // ------------------------------------------------------------------------------------------------------
 
     return;
 }

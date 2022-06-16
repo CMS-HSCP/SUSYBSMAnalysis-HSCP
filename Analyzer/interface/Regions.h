@@ -184,16 +184,16 @@ void Region::write(){
 
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
-    r.ih_p_eta                          = (TH3F*)f->Get(("ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
-    r.eta_p                             = (TH2F*)f->Get(("eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
-    r.ih_eta                            = (TH2F*)f->Get(("ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
-    r.ih_p                              = (TH2F*)f->Get(("ih_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p->Rebin2D(rebinp,rebinih);
-    r.ias_p                             = (TH2F*)f->Get(("ias_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_p->Rebin2D(rebinp,rebinih);
-    r.ias_pt                            = (TH2F*)f->Get(("ias_pt_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_pt->Rebin2D(rebinp,rebinih);
-    r.mass                              = (TH1F*)f->Get(("mass_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
-    r.pred_mass                         = (TH1F*)f->Get(("pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
+    std::string dir = "analyzer/BaseName/";
+    r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
+    r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
+    r.ih_eta                            = (TH2F*)f->Get((dir+"ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
+    r.ih_p                              = (TH2F*)f->Get((dir+"ih_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p->Rebin2D(rebinp,rebinih);
+    r.ias_p                             = (TH2F*)f->Get((dir+"ias_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_p->Rebin2D(rebinp,rebinih);
+    r.ias_pt                            = (TH2F*)f->Get((dir+"ias_pt_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_pt->Rebin2D(rebinp,rebinih);
+    r.mass                              = (TH1F*)f->Get((dir+"mass_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
+    r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
 }
-
 
 
 // Return randomly select histo 

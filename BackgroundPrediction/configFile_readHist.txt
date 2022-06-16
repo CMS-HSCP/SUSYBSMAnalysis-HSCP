@@ -1,3 +1,2 @@
-#root_file      rebin_boolean   rebin eta   rebin Ih    rebin p     rebin mass
-
-?               0               2           2           2           25
+#root_file  cutIndex      rebin_boolean   rebin eta   rebin Ih    rebin p     rebin mass
+?           3             0               2           2           2           25
