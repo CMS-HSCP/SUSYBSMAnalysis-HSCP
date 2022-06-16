@@ -181,8 +181,6 @@ void Region::write(){
     hTOF->Write();
 }
 
-
-
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
     std::string dir = "analyzer/BaseName/";
     r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
@@ -195,8 +193,12 @@ void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool boo
     r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
 }
 
-
 // Return randomly select histo 
+void poissonHisto(TH1F &h){
+    for(int i=0;i<h.GetNbinsX()+1;i++){
+        h.SetBinContent(i,RNG->Poisson(h.GetBinContent(i)));
+    }
+}
 void poissonHisto(TH2F &h){
     for(int i=0;i<h.GetNbinsX()+1;i++){
         for(int j=0;j<h.GetNbinsY()+1;j++){
@@ -204,6 +206,7 @@ void poissonHisto(TH2F &h){
         }
     }
 }
+
 // Function doing the eta reweighing between two 2D-histograms as done in the Hscp background estimate method,
 // because of the correlation between variables (momentum & transverse momentum). 
 // The first given 2D-histogram is weighted in respect to the 1D-histogram 
@@ -348,7 +351,6 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
 
 void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
     std::vector<TH1F> vPE;
-    std::cout << st << std::endl;
     for(int pe=0;pe<nPE;pe++){
         TH2F a_ih_eta(*a.ih_eta);
         TH2F b_ih_eta(*b.ih_eta);
@@ -383,6 +385,43 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
     
     plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
     plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+}
+
+TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, int cutIndex=3, bool mass_rebin=true, int nPE=100){
+    // cutIndex = 3 --> pT > 60 GeV & Ias > 0.05
+    
+    TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_proj",cutIndex+1,cutIndex+1);
+    TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_proj",cutIndex+1,cutIndex+1);
+    ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
+    TH2F* ih_eta_regB =  (TH2F*)ih_eta_cutIndex_regB->Project3D("zy");
+    eta_p_cutIndex_regC->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
+    TH2F* eta_p_regC = (TH2F*)eta_p_cutIndex_regC->Project3D("zy"); 
+
+    Region rBC;
+
+    std::vector<TH1F> vPE;
+    for(int pe=0;pe<nPE;pe++){
+        poissonHisto(*eta_regA);
+        poissonHisto(*eta_regB);
+        poissonHisto(*ih_eta_regB);
+        poissonHisto(*eta_p_regC);
+        etaReweighingP(eta_p_regC, eta_regB);
+        rBC.eta_p = eta_p_regC; rBC.ih_eta = ih_eta_regB;
+        float A = eta_regA->Integral();
+        float B = eta_regB->Integral();
+        float C = eta_p_regC->Integral();
+        float norm = B*C/A;
+        rBC.fillPredMass();
+        scale(rBC.pred_mass);
+        massNormalisation(rBC.pred_mass,norm);
+        vPE.push_back(*rBC.pred_mass);
+    }
+    TH1F h_tmp = meanHistoPE(vPE);
+    if(nPE>1) rBC.pred_mass = &h_tmp;
+    if(mass_rebin) rebinHisto(rBC.pred_mass); 
+    else overflowLastBin(rBC.pred_mass);
+    rBC.pred_mass->SetName(("pred_mass_cutIndex_"+to_string(cutIndex)).c_str());
+    return rBC.pred_mass;
 }
 
 #endif

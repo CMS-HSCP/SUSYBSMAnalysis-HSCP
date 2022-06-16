@@ -1492,6 +1492,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       Name = "Pred_I";
       tuple->Pred_I = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
       tuple->Pred_I->Sumw2();
+      Name = "Pred_EtaI";
+      tuple->Pred_EtaI = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 400, 0, dEdxM_UpLim);
+      tuple->Pred_EtaI->Sumw2();
       Name = "Pred_EtaB";
       tuple->Pred_EtaB = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->Pred_EtaB->Sumw2();
@@ -2458,8 +2461,10 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->H_B->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
         tuple->H_B_Binned[to_string(bin)]->Fill(CutIndex, Event_Weight);
-      if (TypeMode < 2)
+      if (TypeMode < 2){
         tuple->Pred_I->Fill(CutIndex, Ih, Event_Weight);
+        tuple->Pred_EtaI->Fill(CutIndex, track->eta(), Ih, Event_Weight);
+      }
       if (TypeMode < 2)
         tuple->Pred_EtaS->Fill(CutIndex, track->eta(), Event_Weight);
       tuple->PDF_B_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz

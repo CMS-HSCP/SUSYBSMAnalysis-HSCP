@@ -606,6 +606,7 @@ struct Tuple {
   //FIXME ------ To be modified for Number Of Hits (NOH)
   TH3F* Pred_EtaP;
   TH2F* Pred_I;
+  TH3F* Pred_EtaI;
   TH2F* Pred_TOF;
   TH2F* Pred_EtaB;
   TH2F* Pred_EtaS;

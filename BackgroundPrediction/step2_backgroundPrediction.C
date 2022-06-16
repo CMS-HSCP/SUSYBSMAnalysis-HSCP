@@ -30,7 +30,20 @@ void step2_backgroundPrediction(){
 
     std::cout << outfilename_ << std::endl;
 
+    bool bool_rebin=rebin;
+    
     TFile* ifile = new TFile((filename+".root").c_str());
+
+    // histograms used for the mass prediction
+    //------------
+
+    std::string dir = "analyzer/BaseName";
+    TH2F* eta_cutIndex_regA = (TH2F*)f->Get((dir+"Pred_EtaB").c_str())->Clone(); 
+    TH2F* eta_cutIndex_regB = (TH2F*)f->Get((dir+"Pred_EtaS").c_str())->Clone(); 
+    TH3F* ih_eta_cutIndex_regB = (TH3F*)f->Get((dir+"Pred_EtaI").c_str())->Clone(); 
+    TH3F* eta_p_cutIndex_regC = (TH3F*)f->Get((dir+"Pred_EtaP").c_str())->Clone(); 
+
+    //------------
 
     Region ra_ias50;
     Region rc_ias50;
@@ -56,7 +69,6 @@ void step2_backgroundPrediction(){
     Region rbc_50ias90;
     Region rbc_90ias100;
     
-    bool bool_rebin=rebin;
    
     // loading histograms used to validate the background estimate method in data --> base on Ias slices 
     // ------------------------------------------------------------------------------------------------------
@@ -104,6 +116,9 @@ void step2_backgroundPrediction(){
     bckgEstimate(rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", nPE);
     
     // ------------------------------------------------------------------------------------------------------
+    
+
+    bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, 3, true, nPE);
 
     return;
 }
