@@ -635,22 +635,22 @@ struct Tuple {
   std::map<std::string, TH1D*> CtrlPt_S3_TOF_Binned;  //TH1D* CtrlPt_S3_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S4_TOF_Binned;  //TH1D* CtrlPt_S4_TOF_Binned[MaxPredBins];
    
-  region rA_ias50;
-  region rC_ias50;
+  Region rA_ias50;
+  Region rC_ias50;
   
-  region rB_50ias60;
-  region rB_60ias70;
-  region rB_70ias80;
-  region rB_80ias90;
-  region rB_50ias90;
-  region rB_90ias100;
+  Region rB_50ias60;
+  Region rB_60ias70;
+  Region rB_70ias80;
+  Region rB_80ias90;
+  Region rB_50ias90;
+  Region rB_90ias100;
 
-  region rD_50ias60;
-  region rD_60ias70;
-  region rD_70ias80;
-  region rD_80ias90;
-  region rD_50ias90;
-  region rD_90ias100;
+  Region rD_50ias60;
+  Region rD_60ias70;
+  Region rD_70ias80;
+  Region rD_80ias90;
+  Region rD_50ias90;
+  Region rD_90ias100;
 
 };
 

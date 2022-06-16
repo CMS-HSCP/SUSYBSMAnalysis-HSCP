@@ -21,11 +21,11 @@ void scale(TH1F* h){
 }
 
 // class using to definite signal and control regions. 
-class region{
+class Region{
     public:
-        region();
-        region(TFileDirectory &dir,std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins);
-        ~region();
+        Region();
+        Region(TFileDirectory &dir,std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins);
+        ~Region();
         void setSuffix(std::string suffix);
         void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins);
         void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w);
@@ -65,21 +65,21 @@ class region{
         TH1F* hTOF;
 };
 
-region::region(){}
+Region::Region(){}
 
-region::region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins){
+Region::Region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins){
     suffix_ = suffix;
     initHisto(dir,etabins,ihbins,pbins,massbins);
 } 
 
-region::~region(){}
+Region::~Region(){}
 
-void region::setSuffix(std::string suffix){
+void Region::setSuffix(std::string suffix){
     suffix_ = suffix;
 }
 
 // Function which intializes the histograms with given binnings 
-void region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins){
+void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins){
     np = pbins;
     plow = 0;
     pup = 10000;
@@ -114,7 +114,7 @@ void region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
 }
 
 // Function which fills histograms
-void region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w){
+void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w){
    ih_p_eta->Fill(eta,p,ih,w);
    eta_p->Fill(p,eta,w);
    ih_eta->Fill(eta,ih,w);
@@ -134,7 +134,7 @@ void region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, floa
 // While combining the input for several couples leading to the same mass: 
 // contents are added 
 // errors: the sqrt of the squared uncertainties are added
-void region::fillMassFrom1DTemplatesEtaBinning(float weight_=-1) {
+void Region::fillMassFrom1DTemplatesEtaBinning(float weight_=-1) {
     TH1F* eta = (TH1F*) ih_eta->ProjectionX();
     for(int i=1;i<eta->GetNbinsX();i++)
     {
@@ -168,7 +168,7 @@ void region::fillMassFrom1DTemplatesEtaBinning(float weight_=-1) {
     }
 }
 
-void region::write(){
+void Region::write(){
     ih_p_eta->Write();
     eta_p->Write();
     ih_eta->Write();
@@ -183,7 +183,7 @@ void region::write(){
 
 
 
-void loadHistograms(region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
+void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
     r.ih_p_eta                          = (TH3F*)f->Get(("ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
     r.eta_p                             = (TH2F*)f->Get(("eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
     r.ih_eta                            = (TH2F*)f->Get(("ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
@@ -346,7 +346,7 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     return c1;
 }
 
-void bckgEstimate(region& b, region& c, region& bc, region& a, region& d, std::string st, int nPE=100){
+void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
     std::vector<TH1F> vPE;
     std::cout << st << std::endl;
     for(int pe=0;pe<nPE;pe++){
