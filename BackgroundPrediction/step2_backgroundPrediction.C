@@ -117,8 +117,17 @@ void step2_backgroundPrediction(){
     
     // ------------------------------------------------------------------------------------------------------
     
+    // bkg estimate for a selected cut index 
+    // cutIndex = 3 --> pT > 60 GeV & Ias > 0.05
+    bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutIndex, true, nPE)->Write();
 
-    bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutIndex, true, nPE);
+    // 2D-histograms PredMass_Vs_CutIndex used in later steps to compare to data //FIXME not yet finished
+    int n_cutIndex = 1;
+    TH2F* mass_cutIndex = new TH2F();
+
+    for(int cutI = 0; cutI < n_cutIndex; cutI++){
+        bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutI, true, nPE);
+    }
 
     return;
 }

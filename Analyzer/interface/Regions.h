@@ -388,8 +388,6 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
 }
 
 TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, int cutIndex=3, bool mass_rebin=true, int nPE=100){
-    // cutIndex = 3 --> pT > 60 GeV & Ias > 0.05
-    
     TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_proj",cutIndex+1,cutIndex+1);
     TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_proj",cutIndex+1,cutIndex+1);
     ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
