@@ -4,6 +4,9 @@
 #ifndef SUSYBSMAnalysis_Analyzer_Tuple_h
 #define SUSYBSMAnalysis_Analyzer_Tuple_h
 
+#include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
+
+
 struct Tuple {
   //=============================================================
   //      Declare Trees & Branches
@@ -22,6 +25,7 @@ struct Tuple {
   unsigned int Tree_njets;
   float Tree_Weight;
   float Tree_GeneratorWeight;
+  float Tree_GeneratorBinningValues;
   bool Tree_HLT_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
   bool Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -64,6 +68,7 @@ struct Tuple {
   std::vector<float> Tree_ProbQ_dEdx;
   std::vector<float> Tree_Ndof;
   std::vector<float> Tree_Chi2;
+  std::vector<int>   Tree_QualityMask;
   std::vector<bool>  Tree_isHighPurity;
   std::vector<float> Tree_muon_eta;
   std::vector<bool> Tree_isMuon;
@@ -152,6 +157,7 @@ struct Tuple {
   unsigned int GenTree_Hscp;
   float GenTree_Weight;
   float GenTree_GeneratorWeight;
+  float GenTree_GeneratorBinningValues;
   std::vector<float> GenTree_GenId;
   std::vector<float> GenTree_GenCharge;
   std::vector<float> GenTree_GenMass;
@@ -699,6 +705,24 @@ struct Tuple {
   std::map<std::string, TH1D*> CtrlPt_S2_TOF_Binned;  //TH1D* CtrlPt_S2_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S3_TOF_Binned;  //TH1D* CtrlPt_S3_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S4_TOF_Binned;  //TH1D* CtrlPt_S4_TOF_Binned[MaxPredBins];
+   
+  Region rA_ias50;
+  Region rC_ias50;
+  
+  Region rB_50ias60;
+  Region rB_60ias70;
+  Region rB_70ias80;
+  Region rB_80ias90;
+  Region rB_50ias90;
+  Region rB_90ias100;
+
+  Region rD_50ias60;
+  Region rD_60ias70;
+  Region rD_70ias80;
+  Region rD_80ias90;
+  Region rD_50ias90;
+  Region rD_90ias100;
+
 };
 
 #endif

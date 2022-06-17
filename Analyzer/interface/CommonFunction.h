@@ -1707,6 +1707,7 @@ crossTalkInvAlgo=1;
       if (reverseProb)
         Prob = 1.0 - Prob;
       vect.push_back(Prob);  //save probability
+      //printf("%i %i %i %i  %f\n", layer, BinX, BinY, BinZ, Prob);
     } else {
       float Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
       float ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
@@ -2096,6 +2097,44 @@ float TkBasedIsolationWithPVConstrain(const std::vector<reco::Track>& tkTracks,
   }
   return SumPt;
 }
+
+//============================================================
+//
+//      Return cut on sigma_pT / pT for as a function of
+//      3 eta bins and for a given sigma_pT quantile
+//
+//============================================================
+
+TF1 f_eta_0p8_q95("f_eta_0p8_q95","0.006725+0.000122*x",0,10000);
+TF1 f_0p8_eta_1p7_q95("f_0p8_eta_1p7_q95","0.012919+0.000168*x",0,10000);
+TF1 f_1p7_eta_2p1_q95("f_1p7_eta_2p1_q95","0.015408+0.000320*x",0,10000);
+
+TF1 f_eta_0p8_q99("f_eta_0p8_q99","0.006428+0.000174*x",0,10000);
+TF1 f_0p8_eta_1p7_q99("f_0p8_eta_1p7_q99","0.012825+0.000222*x",0,10000);
+TF1 f_1p7_eta_2p1_q99("f_1p7_eta_2p1_q99","0.015597+0.000403*x",0,10000);
+
+TF1 f_eta_0p8_q999("f_eta_0p8_q999","0.006260+0.000258*x",0,10000);
+TF1 f_0p8_eta_1p7_q999("f_0p8_eta_1p7_q999","0.018252+0.000372*x",0,10000);
+TF1 f_1p7_eta_2p1_q999("f_1p7_eta_2p1_q999","-0.008672+0.001016*x",0,10000);
+
+
+float pTerr_over_pT_etaBin(const float& pt, const float& eta, float q=99){
+    if(q==999){
+        if(abs(eta)<=0.8) return std::max(f_eta_0p8_q999(pt),0.01);
+        else if(abs(eta)>0.8 && abs(eta)<=1.7) return std::max(f_0p8_eta_1p7_q999(pt),0.01);
+        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q999(pt),0.01); 
+    }else if(q==99){
+        if(abs(eta)<=0.8) return std::max(f_eta_0p8_q99(pt),0.01);
+        else if(abs(eta)>0.8 && abs(eta)<=1.7) return std::max(f_0p8_eta_1p7_q99(pt),0.01);
+        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q99(pt),0.01); 
+    }else if(q==95){
+        if(abs(eta)<=0.8) return std::max(f_eta_0p8_q95(pt),0.01);
+        else if(abs(eta)>0.8 && abs(eta)<=1.7) return std::max(f_0p8_eta_1p7_q95(pt),0.01);
+        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q95(pt),0.01);
+    }
+    return -1.;
+}
+
 
 #endif  //FWCORE
 
