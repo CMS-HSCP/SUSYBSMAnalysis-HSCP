@@ -129,5 +129,8 @@ void step2_backgroundPrediction(){
         bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutI, true, nPE);
     }
 
+    delete ofile;
+    delete mass_cutIndex;
+
     return;
 }
