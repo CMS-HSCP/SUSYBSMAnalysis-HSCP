@@ -29,7 +29,7 @@ class Region{
         void setSuffix(std::string suffix);
         void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins);
         void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w);
-        void fillMassFrom1DTemplatesEtaBinning(float weight_);
+        void fillPredMass(float weight_);
         void write();
 
         int np;
@@ -59,7 +59,7 @@ class Region{
         TH2F* ias_p;
         TH2F* ias_pt;
         TH1F* mass;
-        TH1F* massFrom1DTemplatesEtaBinning;
+        TH1F* pred_mass;
         TH2F* eta_p_rebinned;
         TH2F* pt_pterroverpt;
         TH1F* hTOF;
@@ -105,10 +105,10 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup); ih_p->Sumw2();
     ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";p [GeV];I_{as}",np,plow,pup,nias,iaslow,iasup); ias_p->Sumw2();
     ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];I_{as}",npt,ptlow,ptup,nias,iaslow,iasup); ias_pt->Sumw2();
-    mass = dir.make<TH1F>(("massFromTree"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); mass->Sumw2();
-    massFrom1DTemplatesEtaBinning = dir.make<TH1F>(("massFrom1DTemplatesEtaBinning"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); massFrom1DTemplatesEtaBinning->Sumw2();
+    mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); mass->Sumw2();
+    pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); pred_mass->Sumw2();
     mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
-    massFrom1DTemplatesEtaBinning->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
+    pred_mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); pt_pterroverpt->Sumw2();
     hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10); hTOF->Sumw2();
 }
@@ -134,7 +134,7 @@ void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, floa
 // While combining the input for several couples leading to the same mass: 
 // contents are added 
 // errors: the sqrt of the squared uncertainties are added
-void Region::fillMassFrom1DTemplatesEtaBinning(float weight_=-1) {
+void Region::fillPredMass(float weight_=-1) {
     TH1F* eta = (TH1F*) ih_eta->ProjectionX();
     for(int i=1;i<eta->GetNbinsX();i++)
     {
@@ -155,11 +155,11 @@ void Region::fillMassFrom1DTemplatesEtaBinning(float weight_=-1) {
                 if(weight_>0) weight = weight_;
                 float err_weight = weight*sqrt((1./(ih->GetBinContent(k)))+(1./(p->GetBinContent(j)*ih->Integral())));
                 float mass = GetMass(mom,dedx,K,C);
-                int bin_mass = massFrom1DTemplatesEtaBinning->FindBin(mass);
+                int bin_mass = pred_mass->FindBin(mass);
                 if(prob>=0)
                 {
-                    massFrom1DTemplatesEtaBinning->SetBinContent(bin_mass,massFrom1DTemplatesEtaBinning->GetBinContent(bin_mass)+weight);
-                    massFrom1DTemplatesEtaBinning->SetBinError(bin_mass,sqrt(pow(massFrom1DTemplatesEtaBinning->GetBinError(bin_mass),2)+pow(err_weight,2)));
+                    pred_mass->SetBinContent(bin_mass,pred_mass->GetBinContent(bin_mass)+weight);
+                    pred_mass->SetBinError(bin_mass,sqrt(pow(pred_mass->GetBinError(bin_mass),2)+pow(err_weight,2)));
                 }
             }
         }
@@ -176,27 +176,29 @@ void Region::write(){
     ias_p->Write();
     ias_pt->Write();
     mass->Write();
-    massFrom1DTemplatesEtaBinning->Write();
+    pred_mass->Write();
     pt_pterroverpt->Write();
     hTOF->Write();
 }
 
-
-
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
-    r.ih_p_eta                          = (TH3F*)f->Get(("ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
-    r.eta_p                             = (TH2F*)f->Get(("eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
-    r.ih_eta                            = (TH2F*)f->Get(("ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
-    r.ih_p                              = (TH2F*)f->Get(("ih_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p->Rebin2D(rebinp,rebinih);
-    r.ias_p                             = (TH2F*)f->Get(("ias_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_p->Rebin2D(rebinp,rebinih);
-    r.ias_pt                            = (TH2F*)f->Get(("ias_pt_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_pt->Rebin2D(rebinp,rebinih);
-    r.mass                              = (TH1F*)f->Get(("massFromTree_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
-    r.massFrom1DTemplatesEtaBinning     = (TH1F*)f->Get(("massFrom1DTemplatesEtaBinning_"+regionName).c_str())->Clone(); r.massFrom1DTemplatesEtaBinning->Reset(); if(bool_rebin) r.massFrom1DTemplatesEtaBinning->Rebin(rebinmass);
+    std::string dir = "analyzer/BaseName/";
+    r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
+    r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
+    r.ih_eta                            = (TH2F*)f->Get((dir+"ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
+    r.ih_p                              = (TH2F*)f->Get((dir+"ih_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p->Rebin2D(rebinp,rebinih);
+    r.ias_p                             = (TH2F*)f->Get((dir+"ias_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_p->Rebin2D(rebinp,rebinih);
+    r.ias_pt                            = (TH2F*)f->Get((dir+"ias_pt_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_pt->Rebin2D(rebinp,rebinih);
+    r.mass                              = (TH1F*)f->Get((dir+"mass_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
+    r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
 }
 
-
-
 // Return randomly select histo 
+void poissonHisto(TH1F &h){
+    for(int i=0;i<h.GetNbinsX()+1;i++){
+        h.SetBinContent(i,RNG->Poisson(h.GetBinContent(i)));
+    }
+}
 void poissonHisto(TH2F &h){
     for(int i=0;i<h.GetNbinsX()+1;i++){
         for(int j=0;j<h.GetNbinsY()+1;j++){
@@ -204,6 +206,7 @@ void poissonHisto(TH2F &h){
         }
     }
 }
+
 // Function doing the eta reweighing between two 2D-histograms as done in the Hscp background estimate method,
 // because of the correlation between variables (momentum & transverse momentum). 
 // The first given 2D-histogram is weighted in respect to the 1D-histogram 
@@ -348,7 +351,6 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
 
 void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
     std::vector<TH1F> vPE;
-    std::cout << st << std::endl;
     for(int pe=0;pe<nPE;pe++){
         TH2F a_ih_eta(*a.ih_eta);
         TH2F b_ih_eta(*b.ih_eta);
@@ -367,22 +369,57 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
         float B = b_ih_eta.Integral();
         float C = c_ih_eta.Integral();
         float normalisationABC = B*C/A;
-        bc.fillMassFrom1DTemplatesEtaBinning();
-        scale(bc.massFrom1DTemplatesEtaBinning);
-        massNormalisation(bc.massFrom1DTemplatesEtaBinning,normalisationABC);
-        vPE.push_back(*bc.massFrom1DTemplatesEtaBinning);
+        bc.fillPredMass();
+        scale(bc.pred_mass);
+        massNormalisation(bc.pred_mass,normalisationABC);
+        vPE.push_back(*bc.pred_mass);
     }
     TH1F h_temp = meanHistoPE(vPE);
-    if(nPE>1) bc.massFrom1DTemplatesEtaBinning = &h_temp;
+    if(nPE>1) bc.pred_mass = &h_temp;
     
-    saveHistoRatio(d.mass,bc.massFrom1DTemplatesEtaBinning,("mass_obs_"+st).c_str(),("mass_predBC_"+st).c_str(),("mass_predBCR_"+st).c_str());
-    saveHistoRatio(d.mass,bc.massFrom1DTemplatesEtaBinning,("mass_obs_"+st).c_str(),("mass_predBC_"+st).c_str(),("mass_predBCR_"+st).c_str(),true);
+    saveHistoRatio(d.mass,bc.pred_mass,("mass_obs_"+st).c_str(),("mass_predBC_"+st).c_str(),("mass_predBCR_"+st).c_str());
+    saveHistoRatio(d.mass,bc.pred_mass,("mass_obs_"+st).c_str(),("mass_predBC_"+st).c_str(),("mass_predBCR_"+st).c_str(),true);
     
     overflowLastBin(d.mass);
-    overflowLastBin(bc.massFrom1DTemplatesEtaBinning);
+    overflowLastBin(bc.pred_mass);
     
-    plotting(d.mass,bc.massFrom1DTemplatesEtaBinning,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
-    plotting(d.mass,bc.massFrom1DTemplatesEtaBinning,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
+    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+}
+
+TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, int cutIndex=3, bool mass_rebin=true, int nPE=100){
+    TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_proj",cutIndex+1,cutIndex+1);
+    TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_proj",cutIndex+1,cutIndex+1);
+    ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
+    TH2F* ih_eta_regB =  (TH2F*)ih_eta_cutIndex_regB->Project3D("zy");
+    eta_p_cutIndex_regC->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
+    TH2F* eta_p_regC = (TH2F*)eta_p_cutIndex_regC->Project3D("zy"); 
+
+    Region rBC;
+
+    std::vector<TH1F> vPE;
+    for(int pe=0;pe<nPE;pe++){
+        poissonHisto(*eta_regA);
+        poissonHisto(*eta_regB);
+        poissonHisto(*ih_eta_regB);
+        poissonHisto(*eta_p_regC);
+        etaReweighingP(eta_p_regC, eta_regB);
+        rBC.eta_p = eta_p_regC; rBC.ih_eta = ih_eta_regB;
+        float A = eta_regA->Integral();
+        float B = eta_regB->Integral();
+        float C = eta_p_regC->Integral();
+        float norm = B*C/A;
+        rBC.fillPredMass();
+        scale(rBC.pred_mass);
+        massNormalisation(rBC.pred_mass,norm);
+        vPE.push_back(*rBC.pred_mass);
+    }
+    TH1F h_tmp = meanHistoPE(vPE);
+    if(nPE>1) rBC.pred_mass = &h_tmp;
+    if(mass_rebin) rebinHisto(rBC.pred_mass); 
+    else overflowLastBin(rBC.pred_mass);
+    rBC.pred_mass->SetName(("pred_mass_cutIndex_"+to_string(cutIndex)).c_str());
+    return rBC.pred_mass;
 }
 
 #endif
