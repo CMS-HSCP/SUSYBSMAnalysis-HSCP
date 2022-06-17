@@ -79,6 +79,7 @@ public:
                         const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                         const std::vector<float> &Ias_PixelOnly,
                         const std::vector<float> &Ias_StripOnly,
+                        const std::vector<float> &Ias_PixelOnly_noL1,
                         const std::vector<float> &Ih,
                         const std::vector<float> &Ick,
                         const std::vector<float> &Fmip,
@@ -147,6 +148,7 @@ public:
                         const std::vector<float> &Ih_15drop,
                         const std::vector<float> &Ih_StripOnly,
                         const std::vector<float> &Ih_StripOnly_15drop,
+                        const std::vector<float> &Ih_PixelOnly_noL1,
                         const std::vector<float> &Ih_SaturationCorrectionFromFits,
                         const std::vector<std::vector<float>> &clust_charge,
                         const std::vector<std::vector<float>> &clust_pathlength,
@@ -1490,6 +1492,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       Name = "Pred_I";
       tuple->Pred_I = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
       tuple->Pred_I->Sumw2();
+      Name = "Pred_EtaI";
+      tuple->Pred_EtaI = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 400, 0, dEdxM_UpLim);
+      tuple->Pred_EtaI->Sumw2();
       Name = "Pred_EtaB";
       tuple->Pred_EtaB = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3);
       tuple->Pred_EtaB->Sumw2();
@@ -1822,6 +1827,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Ias_noTIBnoTIDno3TEC", &tuple->Tree_Ias_noTIBnoTIDno3TEC);
     tuple->Tree->Branch("Ias_PixelOnly", &tuple->Tree_Ias_PixelOnly);
     tuple->Tree->Branch("Ias_StripOnly", &tuple->Tree_Ias_StripOnly);
+    tuple->Tree->Branch("Ias_PixelOnly_noL1", &tuple->Tree_Ias_PixelOnly_noL1);
     tuple->Tree->Branch("Ih", &tuple->Tree_Ih);
     tuple->Tree->Branch("Ick", &tuple->Tree_Ick);
     tuple->Tree->Branch("Fmip", &tuple->Tree_Fmip);
@@ -1891,6 +1897,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("Ih_15drop", &tuple->Tree_Ih_15drop);
       tuple->Tree->Branch("Ih_StripOnly", &tuple->Tree_Ih_StripOnly);
       tuple->Tree->Branch("Ih_StripOnly_15drop", &tuple->Tree_Ih_StripOnly_15drop);
+      tuple->Tree->Branch("Ih_PixelOnly_noL1", &tuple->Tree_Ih_PixelOnly_noL1);
       tuple->Tree->Branch("Ih_SaturationCorrectionFromFits", &tuple->Tree_Ih_SaturationCorrectionFromFits);
     }
     if (saveTree > 2) {
@@ -2010,6 +2017,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                                   const std::vector<float> &Ias_PixelOnly,
                                   const std::vector<float> &Ias_StripOnly,
+                                  const std::vector<float> &Ias_PixelOnly_noL1,
                                   const std::vector<float> &Ih,
                                   const std::vector<float> &Ick,
                                   const std::vector<float> &Fmip,
@@ -2078,6 +2086,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Ih_15drop,
                                   const std::vector<float> &Ih_StripOnly,
                                   const std::vector<float> &Ih_StripOnly_15drop,
+                                  const std::vector<float> &Ih_PixelOnly_noL1,
                                   const std::vector<float> &Ih_SaturationCorrectionFromFits,
                                   const std::vector<std::vector<float>> &clust_charge,
                                   const std::vector<std::vector<float>> &clust_pathlength,
@@ -2136,6 +2145,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Ias_noTIBnoTIDno3TEC = Ias_noTIBnoTIDno3TEC;
   tuple->Tree_Ias_PixelOnly = Ias_PixelOnly;
   tuple->Tree_Ias_StripOnly = Ias_StripOnly;
+  tuple->Tree_Ias_PixelOnly_noL1 = Ias_PixelOnly_noL1;
   tuple->Tree_Ih = Ih;
   tuple->Tree_Ick = Ick;
   tuple->Tree_Fmip = Fmip;
@@ -2204,6 +2214,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Ih_15drop = Ih_15drop;
   tuple->Tree_Ih_StripOnly = Ih_StripOnly;
   tuple->Tree_Ih_StripOnly_15drop = Ih_StripOnly_15drop;
+  tuple->Tree_Ih_PixelOnly_noL1 = Ih_PixelOnly_noL1;
   tuple->Tree_Ih_SaturationCorrectionFromFits = Ih_SaturationCorrectionFromFits;
   tuple->Tree_clust_charge = clust_charge;
   tuple->Tree_clust_pathlength = clust_pathlength;
@@ -2450,8 +2461,10 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->H_B->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
         tuple->H_B_Binned[to_string(bin)]->Fill(CutIndex, Event_Weight);
-      if (TypeMode < 2)
+      if (TypeMode < 2){
         tuple->Pred_I->Fill(CutIndex, Ih, Event_Weight);
+        tuple->Pred_EtaI->Fill(CutIndex, track->eta(), Ih, Event_Weight);
+      }
       if (TypeMode < 2)
         tuple->Pred_EtaS->Fill(CutIndex, track->eta(), Event_Weight);
       tuple->PDF_B_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz

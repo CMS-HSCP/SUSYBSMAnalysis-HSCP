@@ -1,0 +1,9 @@
+{ decls }
+namespace std {  }
+
+[ libmydict.so ]
+# List of selected classes
+class vector<vector<bool> >
+class vector<vector<float> >
+class vector<vector<int> >
+class vector<vector<unsigned int> >
