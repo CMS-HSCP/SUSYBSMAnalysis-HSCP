@@ -67,9 +67,10 @@
 // - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
 // - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
 // - 20pX Cut if the minDr for them is > 0.3
-//v22
-// - v22.1 add Regions used to validate the background estimate method
-//  
+//v23 Dylan 
+// - v23 fix clust infos
+// - add Ih and Ias Pixel only no BPIXL1
+// - new step2 bkg estimate
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
