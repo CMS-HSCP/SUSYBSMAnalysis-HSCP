@@ -68,8 +68,9 @@
 // - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
 // - 21p0: - Cut on ProbXY > 0.001
 // - 20pX Cut if the minDr for them is > 0.3
-//v22
-// - v22.1 add Regions used to validate the background estimate method
+//v22.1 Dylan
+// - 21p1 add Regions used to validate the background estimate method
+// - 21p2 - Fix bug in the miniIso definition
 //  
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -2607,7 +2608,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }//end loop PFCandidates
   
   // Calculate PF mini relative isolation
-  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + track_PFMiniIso_sumPUPt + track_PFMiniIso_sumNeutHadPt)/track->pt();
+  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
@@ -2684,7 +2685,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut for the number of dEdx hits
   passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = ((probXYonTrack > 0.001 && probXYonTrack < 1.0))  ? true : false;
+  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -2756,7 +2757,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
     passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = ((probXYonTrack > 0.001 && probXYonTrack < 1.0))  ? true : false;
+    passedCutsArray2[8]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
     passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
     passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
     passedCutsArray2[11] = (EoP < globalMaxEIsol_) ? true : false;
@@ -2767,7 +2768,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
     passedCutsArray2[13] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                            || (typeMode_ == 5 && fabs(dxy)) < 4.0) ? true : false;
-    passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
+    passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) <  pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
     passedCutsArray2[15] = (!isMaterialTrack) ? true : false;
 //    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
