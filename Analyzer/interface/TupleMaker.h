@@ -252,8 +252,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->NumEvents = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
   Name = "ErrorHisto";
   tuple->ErrorHisto = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0., 10.);
-  Name = "TriggerType";
-  tuple->TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  tuple->ErrorHisto->Sumw2();
+  Name = "PrePreS_TriggerType";
+  tuple->PrePreS_TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  tuple->PrePreS_TriggerType->Sumw2();
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
 
@@ -844,6 +846,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PrePreS_ProbQVsIas->Sumw2();
   
   cout << "Init PostPreSelection plots" << endl;
+
+  Name = "PostPreS_TriggerType";
+  tuple->PostPreS_TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  tuple->PostPreS_TriggerType->Sumw2();
 
   Name = "PostPreS_pfType";
   tuple->PostPreS_pfType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 9, 0, 9);

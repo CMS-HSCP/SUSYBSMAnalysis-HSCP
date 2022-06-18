@@ -217,7 +217,7 @@ struct Tuple {
   TProfile* XSection;
   TH1F* NumEvents;
   TH1F* ErrorHisto;
-  TH1F* TriggerType;
+  TH1F* PrePreS_TriggerType;
   TH1F* HSCPCandidateType;
   TH1F* N1_Eta;
   TH1F* N1_Chi2PerNdof;
@@ -359,6 +359,7 @@ struct Tuple {
 
 
   // Post preselection plots
+  TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_pfType;
   TH1F* PostPreS_massT;
   TH1F* PostPreS_MiniRelIsoAll;
