@@ -58,6 +58,7 @@ struct Tuple {
   std::vector<float> Tree_Ias_noTIBnoTIDno3TEC;
   std::vector<float> Tree_Ias_PixelOnly;
   std::vector<float> Tree_Ias_StripOnly;
+  std::vector<float> Tree_Ias_PixelOnly_noL1;
   std::vector<float> Tree_Ih;
   std::vector<float> Tree_Ick;  //return (Ih-C)/K
   std::vector<float> Tree_Fmip;
@@ -134,6 +135,7 @@ struct Tuple {
   std::vector<float> Tree_Ih_15drop;
   std::vector<float> Tree_Ih_StripOnly;
   std::vector<float> Tree_Ih_StripOnly_15drop;
+  std::vector<float> Tree_Ih_PixelOnly_noL1;
   std::vector<float> Tree_Ih_SaturationCorrectionFromFits;
   std::vector<std::vector<float>> Tree_clust_charge;  //dedx charge -> either strip or pixel
   std::vector<std::vector<float>> Tree_clust_pathlength;
@@ -605,6 +607,7 @@ struct Tuple {
   //FIXME ------ To be modified for Number Of Hits (NOH)
   TH3F* Pred_EtaP;
   TH2F* Pred_I;
+  TH3F* Pred_EtaI;
   TH2F* Pred_TOF;
   TH2F* Pred_EtaB;
   TH2F* Pred_EtaS;

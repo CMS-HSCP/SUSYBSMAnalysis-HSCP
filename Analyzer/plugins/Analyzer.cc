@@ -72,6 +72,10 @@
 // - 21p2 - Fix bug in the miniIso definition
 // - 21p3: - Cut if the minDr for them is > 0.1, change to no MET triggers
 //  
+//v23 Dylan 
+// - v23 fix clust infos
+// - add Ih and Ias Pixel only no BPIXL1
+// - new step2 bkg estimate
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -692,6 +696,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ias_noPix_noTIB_noTID_no3TEC;
   std::vector<float> HSCP_Ias_PixelOnly;
   std::vector<float> HSCP_Ias_StripOnly;
+  std::vector<float> HSCP_Ias_PixelOnly_noL1;
   std::vector<float> HSCP_Ih;
   std::vector<float> HSCP_Ick;  //return (Ih-C)/K
   std::vector<float> HSCP_Fmip;
@@ -766,6 +771,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ih_15drop;
   std::vector<float> HSCP_Ih_StripOnly;
   std::vector<float> HSCP_Ih_StripOnly_15drop;
+  std::vector<float> HSCP_Ih_PixelOnly_noL1;
   std::vector<float> HSCP_Ih_SaturationCorrectionFromFits;
   std::vector<std::vector<float>> HSCP_clust_charge;  //dedx charge -> either strip or pixel
   std::vector<std::vector<float>> HSCP_clust_pathlength;
@@ -1360,6 +1366,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     reco::DeDxData* dedxIh_StripOnly_15drop = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
 
+    // Ih Pixel only no BPIXL1
+    auto dedxIh_PixelOnly_noL1_Tmp =
+        computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
+                    false, true, 99, false, 1, 0.0, nullptr, &dEdxErr, closestHSCPsPDGsID, false, useTemplateLayer_,true);
+
+    reco::DeDxData* dedxIh_PixelOnlyh_noL1 = dedxIh_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_PixelOnly_noL1_Tmp : nullptr;
+
     // Ih correct saturation from fits
     auto dedxIh_SaturationCorrectionFromFits_Tmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, nullptr, false, useClusterCleaning, false, false, trackerCorrector.TrackerGains,
@@ -1397,6 +1410,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, true, useTemplateLayer_);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
+
+    //Ias Pixel only no BPIXL1
+
+    auto dedxIas_PixelOnly_noL1_Tmp =
+        computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, true, false, trackerCorrector.TrackerGains,
+                    false, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, false, useTemplateLayer_, true, false, 2);
+
+    reco::DeDxData* dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     dedxMObj = dedxIh_noL1;
@@ -1795,6 +1816,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
     HSCP_Ias_StripOnly.push_back(dedxIas_StripOnly ? dedxIas_StripOnly->dEdx() : -1);
+    HSCP_Ias_PixelOnly_noL1.push_back(dedxIas_PixelOnly_noL1 ? dedxIas_PixelOnly_noL1->dEdx() : -1);
     HSCP_Ih.push_back(dedxMObj ? dedxMObj->dEdx() : -1);
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
@@ -1863,6 +1885,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ih_15drop.push_back(dedxIh_15drop ? dedxIh_15drop->dEdx() : -1);
     HSCP_Ih_StripOnly.push_back(dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1);
     HSCP_Ih_StripOnly_15drop.push_back(dedxIh_StripOnly_15drop ? dedxIh_StripOnly_15drop->dEdx() : -1);
+    HSCP_Ih_PixelOnly_noL1.push_back(dedxIh_PixelOnlyh_noL1 ? dedxIh_PixelOnlyh_noL1->dEdx() : -1);
     HSCP_Ih_SaturationCorrectionFromFits.push_back(
         dedxIh_SaturationCorrectionFromFits ? dedxIh_SaturationCorrectionFromFits->dEdx() : -1);
     HSCP_clust_charge.push_back(clust_charge);
@@ -1925,6 +1948,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ias,
                                 HSCP_Ias_PixelOnly,
                                 HSCP_Ias_StripOnly,
+                                HSCP_Ias_PixelOnly_noL1,
                                 HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ih,
                                 HSCP_Ick,
@@ -1994,6 +2018,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ih_15drop,
                                 HSCP_Ih_StripOnly,
                                 HSCP_Ih_StripOnly_15drop,
+                                HSCP_Ih_PixelOnly_noL1,
                                 HSCP_Ih_SaturationCorrectionFromFits,
                                 HSCP_clust_charge,
                                 HSCP_clust_pathlength,
