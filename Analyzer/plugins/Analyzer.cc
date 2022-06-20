@@ -75,6 +75,9 @@
 // - v23 fix clust infos
 // - add Ih and Ias Pixel only no BPIXL1
 // - new step2 bkg estimate
+// v24 Dylan
+// - add miniIso with muon contribution
+// - add miniIso in the tuple
 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
