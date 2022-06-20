@@ -106,6 +106,10 @@ struct Tuple {
   std::vector<float> Tree_iso_TK;
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
+  
+  std::vector<float> Tree_PFMiniIso_relative;
+  std::vector<float> Tree_PFMiniIso_wMuon_relative;
+
   std::vector<float> Tree_track_PFIsolationR005_sumChargedHadronPt;
   std::vector<float> Tree_track_PFIsolationR005_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR005_sumPhotonPt;

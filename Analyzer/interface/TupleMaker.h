@@ -124,6 +124,8 @@ public:
                         const std::vector<float> &iso_TK,
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
+                        const std::vector<float> &PFMiniIso_relative,
+                        const std::vector<float> &PFMiniIso_wMuon_relative,
                         const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
                         const std::vector<float> &track_PFIsolationR005_sumNeutralHadronPt,
                         const std::vector<float> &track_PFIsolationR005_sumPhotonPt,
@@ -1873,6 +1875,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     if (saveTree > 1) {
+      tuple->Tree->Branch("PFMiniIso_relative", &tuple->Tree_PFMiniIso_relative);
+      tuple->Tree->Branch("PFMiniIso_wMuon_relative", &tuple->Tree_PFMiniIso_wMuon_relative);
       tuple->Tree->Branch("TrackPFIsolationR005_sumChargedHadronPt", &tuple->Tree_track_PFIsolationR005_sumChargedHadronPt);
       tuple->Tree->Branch("TrackPFIsolationR005_sumNeutralHadronPt", &tuple->Tree_track_PFIsolationR005_sumNeutralHadronPt);
       tuple->Tree->Branch("TrackPFIsolationR005_sumPhotonPt", &tuple->Tree_track_PFIsolationR005_sumPhotonPt);
@@ -2062,6 +2066,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_TK,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
+                                  const std::vector<float> &PFMiniIso_relative,
+                                  const std::vector<float> &PFMiniIso_wMuon_relative,
                                   const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
                                   const std::vector<float> &track_PFIsolationR005_sumNeutralHadronPt,
                                   const std::vector<float> &track_PFIsolationR005_sumPhotonPt,
@@ -2190,6 +2196,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_iso_TK = iso_TK;
   tuple->Tree_iso_ECAL = iso_ECAL;
   tuple->Tree_iso_HCAL = iso_HCAL;
+  tuple->Tree_PFMiniIso_relative = PFMiniIso_relative;
+  tuple->Tree_PFMiniIso_wMuon_relative = PFMiniIso_wMuon_relative;
   tuple->Tree_track_PFIsolationR005_sumChargedHadronPt = track_PFIsolationR005_sumChargedHadronPt;
   tuple->Tree_track_PFIsolationR005_sumNeutralHadronPt = track_PFIsolationR005_sumNeutralHadronPt;
   tuple->Tree_track_PFIsolationR005_sumPhotonPt = track_PFIsolationR005_sumPhotonPt;
