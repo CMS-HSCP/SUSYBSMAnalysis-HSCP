@@ -43,8 +43,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
 
   Name = "N1_Eta";
   tuple->N1_Eta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_Chi2PerNdof";
-  tuple->N1_Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_Chi2oNdof";
+  tuple->N1_Chi2oNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_Qual";
   tuple->N1_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_TNOH";
@@ -64,14 +64,14 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->N1_PtErrOverPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "TIsol";
   tuple->TIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_EIsol";
-  tuple->N1_EIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_EoP";
+  tuple->N1_EoP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_SumpTOverpT";
   tuple->N1_SumpTOverpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_MPt";
-  tuple->N1_MPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_MIh";
-  tuple->N1_MIh = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_Pt";
+  tuple->N1_Pt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_Ih";
+  tuple->N1_Ih = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_MiniRelIsoAll";
   tuple->N1_MiniRelIsoAll  = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "MTOF";
@@ -251,8 +251,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PrePreS_RecoPFMET = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
 
-  Name = "PrePreS_Chi2PerNdof";
-  tuple->PrePreS_Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Chi2oNdof";
+  tuple->PrePreS_Chi2oNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_Qual";
   tuple->PrePreS_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_TNOH";
@@ -285,18 +285,18 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PrePreS_PtErrOverPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_PtErrOverPt2";
   tuple->PrePreS_PtErrOverPt2 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_MPt";
-  tuple->PrePreS_MPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_MIs";
-  tuple->PrePreS_MIs = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_MIh";
-  tuple->PrePreS_MIh = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Pt";
+  tuple->PrePreS_Pt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Ias";
+  tuple->PrePreS_Ias = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Ih";
+  tuple->PrePreS_Ih = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_MTOF";
   tuple->PrePreS_MTOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_TIsol";
   tuple->PrePreS_TIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EIsol";
-  tuple->PrePreS_EIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EoP";
+  tuple->PrePreS_EoP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_SumpTOverpT";
   tuple->PrePreS_SumpTOverpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_LastHitDXY";
@@ -317,14 +317,14 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PrePreS_Pt_DT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_Pt_CSC";
   tuple->PrePreS_Pt_CSC = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_Is";
-  tuple->PrePreS_Is = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_Is_PUA";
-  tuple->PrePreS_Is_PUA = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_Is_PUB";
-  tuple->PrePreS_Is_PUB = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_Is_Cosmic";
-  tuple->PrePreS_Is_Cosmic = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Ias";
+  tuple->PrePreS_Ias = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Ias_PUA";
+  tuple->PrePreS_Ias_PUA = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Ias_PUB";
+  tuple->PrePreS_Ias_PUB = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_Ias_Cosmic";
+  tuple->PrePreS_Ias_Cosmic = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_Ih";
   tuple->PrePreS_Ih = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_Ih_PUA";
@@ -438,8 +438,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_RecoPFMET = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_pfType";
   tuple->PostPreS_pfType = (TH1F*)GetObjectFromPath(dir, path + "/" + Name); 
-  Name = "PostPreS_Chi2PerNdof";
-  tuple->PostPreS_Chi2PerNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Chi2oNdof";
+  tuple->PostPreS_Chi2oNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_Qual";
   tuple->PostPreS_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_TNOH";
@@ -474,20 +474,20 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_PtErrOverPt2 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_Pt";
   tuple->PostPreS_Pt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIs";
-  tuple->PostPreS_MIs = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIs_NoEventWeight";
-  tuple->PostPreS_MIs_NoEventWeight = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIh";
-  tuple->PostPreS_MIh = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIh_NoEventWeight";
-  tuple->PostPreS_MIh_NoEventWeight = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Ias";
+  tuple->PostPreS_Ias = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Ias_NoEventWeight";
+  tuple->PostPreS_Ias_NoEventWeight = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Ih";
+  tuple->PostPreS_Ih = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_Ih_NoEventWeight";
+  tuple->PostPreS_Ih_NoEventWeight = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_MTOF";
   tuple->PostPreS_MTOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_TIsol";
   tuple->PostPreS_TIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EIsol";
-  tuple->PostPreS_EIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EoP";
+  tuple->PostPreS_EoP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_SumpTOverpT";
   tuple->PostPreS_SumpTOverpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_LastHitDXY";
@@ -587,70 +587,70 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "PostPreS_MassErr";
   tuple->PostPreS_MassErr = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
-  Name = "PostPreS_EtaPerGenID";
-  tuple->PostPreS_EtaPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQPerGenID";
-  tuple->PostPreS_ProbQPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbXYPerGenID";
-  tuple->PostPreS_ProbXYPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_PtPerGenID";
-  tuple->PostPreS_PtPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EIsolPerGenID";
-  tuple->PostPreS_EIsolPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIhPerGenID";
-  tuple->PostPreS_MIhPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIsPerGenID";
-  tuple->PostPreS_MIsPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_massTPerGenID";
-  tuple->PostPreS_massTPerGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EtaPerMomGenID";
-  tuple->PostPreS_EtaPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQPerMomGenID";
-  tuple->PostPreS_ProbQPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbXYPerMomGenID";
-  tuple->PostPreS_ProbXYPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_PtPerMomGenID";
-  tuple->PostPreS_PtPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EIsolPerMomGenID";
-  tuple->PostPreS_EIsolPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIhPerMomGenID";
-  tuple->PostPreS_MIhPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIsPerMomGenID";
-  tuple->PostPreS_MIsPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_massTPerMomGenID";
-  tuple->PostPreS_massTPerMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EtaPerSiblingGenID";
-  tuple->PostPreS_EtaPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQPerSiblingGenID";
-  tuple->PostPreS_ProbQPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbXYPerSiblingGenID";
-  tuple->PostPreS_ProbXYPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_PtPerSiblingGenID";
-  tuple->PostPreS_PtPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EIsolPerSiblingGenID";
-  tuple->PostPreS_EIsolPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIhPerSiblingGenID";
-  tuple->PostPreS_MIhPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIsPerSiblingGenID";
-  tuple->PostPreS_MIsPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_massTPerSiblingGenID";
-  tuple->PostPreS_massTPerSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EtaPerGenAngle";
-  tuple->PostPreS_EtaPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQPerGenAngle";
-  tuple->PostPreS_ProbQPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbXYPerGenAngle";
-  tuple->PostPreS_ProbXYPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_PtPerGenAngle";
-  tuple->PostPreS_PtPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_EIsolPerGenAngle";
-  tuple->PostPreS_EIsolPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIhPerGenAngle";
-  tuple->PostPreS_MIhPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_MIsPerGenAngle";
-  tuple->PostPreS_MIsPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_massTPerGenAngle";
-  tuple->PostPreS_massTPerGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EtaVsGenID";
+  tuple->PostPreS_EtaVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbQVsGenID";
+  tuple->PostPreS_ProbQVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbXYVsGenID";
+  tuple->PostPreS_ProbXYVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtVsGenID";
+  tuple->PostPreS_PtVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EoPVsGenID";
+  tuple->PostPreS_EoPVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IhVsGenID";
+  tuple->PostPreS_IhVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IasVsGenID";
+  tuple->PostPreS_IasVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_massTVsGenID";
+  tuple->PostPreS_massTVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EtaVsMomGenID";
+  tuple->PostPreS_EtaVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbQVsMomGenID";
+  tuple->PostPreS_ProbQVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbXYVsMomGenID";
+  tuple->PostPreS_ProbXYVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtVsMomGenID";
+  tuple->PostPreS_PtVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EoPVsMomGenID";
+  tuple->PostPreS_EoPVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IhVsMomGenID";
+  tuple->PostPreS_IhVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IasVsMomGenID";
+  tuple->PostPreS_IasVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_massTVsMomGenID";
+  tuple->PostPreS_massTVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EtaVsSiblingGenID";
+  tuple->PostPreS_EtaVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbQVsSiblingGenID";
+  tuple->PostPreS_ProbQVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbXYVsSiblingGenID";
+  tuple->PostPreS_ProbXYVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtVsSiblingGenID";
+  tuple->PostPreS_PtVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EoPVsSiblingGenID";
+  tuple->PostPreS_EoPVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IhVsSiblingGenID";
+  tuple->PostPreS_IhVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IasVsSiblingGenID";
+  tuple->PostPreS_IasVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_massTVsSiblingGenID";
+  tuple->PostPreS_massTVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EtaVsGenAngle";
+  tuple->PostPreS_EtaVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbQVsGenAngle";
+  tuple->PostPreS_ProbQVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_ProbXYVsGenAngle";
+  tuple->PostPreS_ProbXYVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_PtVsGenAngle";
+  tuple->PostPreS_PtVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_EoPVsGenAngle";
+  tuple->PostPreS_EoPVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IhVsGenAngle";
+  tuple->PostPreS_IhVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_IasVsGenAngle";
+  tuple->PostPreS_IasVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PostPreS_massTVsGenAngle";
+  tuple->PostPreS_massTVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
   Name = "genlevelpT";
   tuple->genlevelpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -692,37 +692,37 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->AS_P = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "AS_Pt";
   tuple->AS_Pt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "AS_Is";
-  tuple->AS_Is = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "AS_Ias";
+  tuple->AS_Ias = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "AS_Ih";
   tuple->AS_Ih = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "AS_TOF";
   tuple->AS_TOF = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
 
-  Name = "PrePreS_EtaIs";
-  tuple->PrePreS_EtaIs = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EtaIh";
-  tuple->PrePreS_EtaIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EtaP";
-  tuple->PrePreS_EtaP = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EtaPt";
-  tuple->PrePreS_EtaPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EtaTOF";
-  tuple->PrePreS_EtaTOF = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EtaNBH";
-  tuple->PrePreS_EtaNBH = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_EtaDz";
-  tuple->PrePreS_EtaDz = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_PIs";
-  tuple->PrePreS_PIs = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_IhIs";
-  tuple->PrePreS_IhIs = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_PIh";
-  tuple->PrePreS_PIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_PtIs";
-  tuple->PrePreS_PtIs = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PrePreS_PtIh";
-  tuple->PrePreS_PtIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsIas";
+  tuple->PrePreS_EtaVsIas = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsIh";
+  tuple->PrePreS_EtaVsIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsP";
+  tuple->PrePreS_EtaVsP = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsPt";
+  tuple->PrePreS_EtaVsPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsTOF";
+  tuple->PrePreS_EtaVsTOF = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsNBH";
+  tuple->PrePreS_EtaVsNBH = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_EtaVsDz";
+  tuple->PrePreS_EtaVsDz = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_PVsIas";
+  tuple->PrePreS_PVsIas = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_IhVsIas";
+  tuple->PrePreS_IhVsIas = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_PVsIh";
+  tuple->PrePreS_PVsIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_PtVsIas";
+  tuple->PrePreS_PtVsIas = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "PrePreS_PtVsIh";
+  tuple->PrePreS_PtVsIh = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PrePreS_PtTOF";
   tuple->PrePreS_PtTOF = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   //   Name = "PrePreS_TOFIs"; tuple->PrePreS_TOFIs = (TH2F*)GetObjectFromPath(dir, path+"/"+Name);
@@ -772,7 +772,7 @@ void TuplePlotter::draw(Tuple* tuple, TDirectory* dir, std::string LegendTitle, 
 
   TCanvas* c1 = new TCanvas("c1", "c1,", 600, 600);
   legend.clear();
-  Histos[0] = (TH1*)tuple->PrePreS_EtaIs;
+  Histos[0] = (TH1*)tuple->PrePreS_EtaVsIas;
   legend.push_back("Before Cut");
   std::string dEdxS_Legend = "I_{as}";
   DrawSuperposedHistos((TH1**)Histos, legend, "COLZ", "#eta", dEdxS_Legend.c_str(), 0, 0, 0, 0, false);
@@ -846,13 +846,13 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
           tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1),
           tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1) / tuple->nDof->Integral(0,tuple->nDof->GetNbinsX()+1));
   fprintf(pFile,
-          "#Tracks passing Chi2PerNdof   cuts   = %4.2E Eff=%4.3E\n",
-          tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1),
-          tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1) / tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1));
+          "#Tracks passing Chi2VsNdof   cuts   = %4.2E Eff=%4.3E\n",
+          tuple->Chi2VsNdof->Integral(0,tuple->Chi2VsNdof->GetNbinsX()+1),
+          tuple->Chi2VsNdof->Integral(0,tuple->Chi2VsNdof->GetNbinsX()+1) / tuple->Qual->Integral(0,tuple->Qual->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min Pt cuts   = %4.2E Eff=%4.3E\n",
           tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1),
-          tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1) / tuple->Chi2PerNdof->Integral(0,tuple->Chi2PerNdof->GetNbinsX()+1));
+          tuple->MPt->Integral(0,tuple->MPt->GetNbinsX()+1) / tuple->Chi2VsNdof->Integral(0,tuple->Chi2VsNdof->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Min I  cuts   = %4.2E Eff=%4.3E\n",
           tuple->MI->Integral(0,tuple->MI->GetNbinsX()+1),
@@ -870,13 +870,13 @@ void TuplePlotter::CutFlow(Tuple* tuple, TDirectory* dir, uint CutIndex) {
           tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1),
           tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1) / tuple->Dxy->Integral(0,tuple->Dxy->GetNbinsX()+1));
   fprintf(pFile,
-          "#Tracks passing EIsol  cuts   = %4.2E Eff=%4.3E\n",
-          tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1),
-          tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1) / tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1));
+          "#Tracks passing EoP  cuts   = %4.2E Eff=%4.3E\n",
+          tuple->EoP->Integral(0,tuple->EoP->GetNbinsX()+1),
+          tuple->EoP->Integral(0,tuple->EoP->GetNbinsX()+1) / tuple->TIsol->Integral(0,tuple->TIsol->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing PtErr  cuts   = %4.2E Eff=%4.3E\n",
           tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1),
-          tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1) / tuple->EIsol->Integral(0,tuple->EIsol->GetNbinsX()+1));
+          tuple->Pterr->Integral(0,tuple->Pterr->GetNbinsX()+1) / tuple->EoP->Integral(0,tuple->EoP->GetNbinsX()+1));
   fprintf(pFile,
           "#Tracks passing Dz  cuts      = %4.2E Eff=%4.3E\n",
           tuple->Dz->Integral(0,tuple->Dz->GetNbinsX()+1),
