@@ -1920,6 +1920,9 @@ bool passTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
   for (unsigned int i = 0; i < triggerNames.triggerNames().size(); i++) {
     TString name = triggerNames.triggerNames()[i];
     for (TString const& pattern : patterns) {
+        if (pattern.Length()==0) {
+          return false;
+        }
       if (name.Contains(pattern) && trigger->accept(i))
         return true;
     }
@@ -1929,6 +1932,9 @@ bool passTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
 bool passTriggerPatterns(edm::Handle<edm::TriggerResults> trigger,
                          const edm::TriggerNames triggerNames,
                          std::string pattern) {
+  if (pattern.length()==0) {
+    return false;
+  }
   for (uint i = 0; i < triggerNames.triggerNames().size(); i++) {
     TString name = triggerNames.triggerNames()[i];
     if (name.Contains(pattern) && trigger->accept(i))

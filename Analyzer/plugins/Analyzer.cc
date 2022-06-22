@@ -67,15 +67,15 @@
 // - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
 // - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
 // - 21p0: - Cut on ProbXY > 0.001
-// - 20pX Cut if the minDr for them is > 0.3
 //v22.1 Dylan
 // - 21p1 add Regions used to validate the background estimate method
 // - 21p2 - Fix bug in the miniIso definition
+// - 21p3: - Cut if the minDr for them is > 0.1, change to no MET triggers
+//  
 //v23 Dylan 
 // - v23 fix clust infos
 // - add Ih and Ias Pixel only no BPIXL1
 // - new step2 bkg estimate
-
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -513,7 +513,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
   if (doTriggering_ && TrigInfo_ > 0) {
       if (debug_ > 2 ) LogPrint(MOD) << "This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
-      tuple->TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
+      tuple->PrePreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
   } else {
       if (debug_ > 2 ) LogPrint(MOD) << "This event did not pass the needed triggers, skipping it";
       return;
@@ -901,14 +901,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!isData) {
       tuple->PrePreS_GenPtVsdRMinBckg->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
     }
-    // TODO: do this later
-//    if (!isData && dRMinBckg > 0.3 ) {
-//        // dont look at events where we didnt find the gen canidate
-//      LogPrint(MOD) << "  >> Gen candidate distance is too big (" << dRMinBckg << "), skipping it";
+    if (!isData && dRMinBckg > 0.1 ) {
+      // dont look at events where we didnt find the gen canidate close enough
+      LogPrint(MOD) << "  >> Gen candidate distance is too big (" << dRMinBckg << "), skipping it";
       // 6-th bin of the error histo, didnt find the gen canidate
-//    tuple->ErrorHisto->Fill(5.5);
-//      continue;
-//    }
+      tuple->ErrorHisto->Fill(5.5);
+      continue;
+    }
 
     if (!isData) {
       tuple->PrePreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
@@ -1536,6 +1535,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Preselection not passed, skipping it
       continue;
     }
+
+    tuple->PostPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
     
     // Let's do some printouts after preselections for gen particles
     if (isBckg) {
@@ -2154,7 +2155,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
     ->setComment("Add the list of muon triggers");
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   desc.addUntracked("TypeMode", 0)
     ->setComment("0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1");

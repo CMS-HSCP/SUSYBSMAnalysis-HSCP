@@ -6,8 +6,10 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
-"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
-"/MET/Run2017C-09Aug2019_UL2017_rsb-v1/AOD",
+#"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
+#"/MET/Run2017C-09Aug2019_UL2017_rsb-v1/AOD",
+"/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
+"/MET/Run2018C-15Feb2022_UL2018-v1/AOD",
 ]
 
 codeVersion = sys.argv[1]
