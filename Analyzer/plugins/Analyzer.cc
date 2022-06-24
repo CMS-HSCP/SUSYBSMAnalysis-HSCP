@@ -72,6 +72,7 @@
 // - 21p2 - Fix bug in the miniIso definition
 // - 21p3: - Cut if the minDr for them is > 0.1, change to no MET triggers
 // - 21p9: - Change variable names
+// - 22p0: - Exclude NumHits preselection cut, change pixel hits to 2, add lepton pt to miniIso
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -139,7 +140,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       numDzRegions_(iConfig.getUntrackedParameter<int>("DzRegions")),
       globalMaxEta_(iConfig.getUntrackedParameter<double>("GlobalMaxEta")),
       globalMinPt_(iConfig.getUntrackedParameter<double>("GlobalMinPt")),
-      globalMinNOH_(iConfig.getUntrackedParameter<int>("GlobalMinNOH")),
       globalMinNOPH_(iConfig.getUntrackedParameter<int>("GlobalMinNOPH")),
       globalMinFOVH_(iConfig.getUntrackedParameter<double>("GlobalMinFOVH")),
       globalMinNOM_(iConfig.getUntrackedParameter<int>("GlobalMinNOM")),
@@ -902,7 +902,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!isData) {
       tuple->PrePreS_GenPtVsdRMinBckg->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
     }
-    if (!isData && dRMinBckg > 0.1 ) {
+    if (isBckg && dRMinBckg > 0.1 ) {
       // dont look at events where we didnt find the gen canidate close enough
       LogPrint(MOD) << "  >> Gen candidate distance is too big (" << dRMinBckg << "), skipping it";
       // 6-th bin of the error histo, didnt find the gen canidate
@@ -911,6 +911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     if (!isData) {
+      tuple->PrePreS_GenPtVsdRMinBckgPostCut->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
       tuple->PrePreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
       // 2D plot to compare gen pt vs reco pt
       tuple->PrePreS_GenPtVsRecoPt->Fill(genColl[closestGenIndex].pt(), track->pt());
@@ -1510,7 +1511,43 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     //fill the ABCD histograms and a few other control plots
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
-
+    // Let's do some gen printouts befre preselections for gen particles
+    if (isBckg) {
+      if (debug_> 0) {
+        LogPrint(MOD) << "      >> BckgMC: Track ID: " << closestBackgroundPDGsIDs[0];
+        float genEta = genColl[closestGenIndex].eta();
+        float genPhi = genColl[closestGenIndex].phi();
+        LogPrint(MOD) << "      >> BckgMC: Track eta: " << genEta << " and phi: " << genPhi;
+        LogPrint(MOD) << "      >> BckgMC: Track's mom ID: " << closestBackgroundPDGsIDs[1];
+        for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
+          if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
+            unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
+            LogPrint(MOD) << "      >> BckgMC: Number of siblings: " << numSiblings;
+            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+              std::cout << "      >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+              float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
+              float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
+              float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+              std::cout << " (dR = " << siblingDr << ") , ";
+            }
+            break;
+          } else {
+            LogPrint(MOD) << "      >> BckgMC: This track has no mother than itself";
+            LogPrint(MOD) << "      >> BckgMC: The number of mothers is: " << genColl[closestGenIndex].numberOfMothers();
+          }
+        }
+        if (genColl[closestGenIndex].numberOfMothers() == 0) {
+          LogPrint(MOD) << "There are zero mothers, track ID" << abs(genColl[closestGenIndex].pdgId()) <<
+          " Eta: " << genEta << " Phi: " << genPhi ;
+        }
+        std::cout << std::endl;
+        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
+        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
+        LogPrint(MOD) << "      >> BckgMC: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
+        LogPrint(MOD) << "      >> BckgMC: Track's gen pt: " << closestBackgroundPDGsIDs[5];
+        LogPrint(MOD) << "      >> BckgMC: Track's num siblings: " << closestBackgroundPDGsIDs[6];
+      }
+    }
     
     if (passPre) {
       if (debug_ > 2) LogPrint(MOD) << "      >> Passed pre-selection";
@@ -1563,7 +1600,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             break;
           } else {
             LogPrint(MOD) << "      >> BckgMC: This track has no mother than itself";
-            LogPrint(MOD) << "      >> BckgMC: The num mother is: " << genColl[closestGenIndex].numberOfMothers();
+            LogPrint(MOD) << "      >> BckgMC: The number of mothers is: " << genColl[closestGenIndex].numberOfMothers();
           }
         }
         if (genColl[closestGenIndex].numberOfMothers() == 0) {
@@ -1571,10 +1608,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           " Eta: " << genEta << " Phi: " << genPhi ;
         }
         std::cout << std::endl;
-        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling ID: " << closestBackgroundPDGsIDs[2];
-        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling angle: " << closestBackgroundPDGsIDs[3];
-        LogPrint(MOD) << "      >> BckgMC: Track's angle wrt to mom: " << closestBackgroundPDGsIDs[4];
-        LogPrint(MOD) << "      >> BckgMC: Track's pt: " << closestBackgroundPDGsIDs[5];
+        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
+        LogPrint(MOD) << "      >> BckgMC: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
+        LogPrint(MOD) << "      >> BckgMC: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
+        LogPrint(MOD) << "      >> BckgMC: Track's gen pt: " << closestBackgroundPDGsIDs[5];
         LogPrint(MOD) << "      >> BckgMC: Track's num siblings: " << closestBackgroundPDGsIDs[6];
       }
     }
@@ -2212,8 +2249,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("CalcSystematics",true)->setComment("Boolean to decide  whether we want to calculate the systematics");
   desc.addUntracked("GlobalMaxEta",2.1)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
-  desc.addUntracked("GlobalMinNOH",8)->setComment("Cut on number of (valid) track pixel+strip hits");
-  desc.addUntracked("GlobalMinNOPH",1)->setComment("Cut on number of (valid) track pixel hits");
+  desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",6)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
@@ -2576,7 +2612,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool pf_IasPfTrack = false;
   bool pf_IasPhoton = false, pf_IasElectron = false, pf_IasMuon = false;
   bool pf_IasChHadron = false, pf_IasNeutHadron = false, pf_IasUndefined = false;
-  float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
+  float track_PFMiniIso_sumLeptonPt = 0, track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
   float pf_energy = 0.0;
     
   // number of tracks as the first bin
@@ -2592,6 +2628,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
       const reco::PFCandidate* pfCand = &(*pf)[i];
 
+      bool pf_IasElectronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+      bool pf_IasMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
       bool pf_IasPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
       bool pf_IasChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
       bool pf_IasNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
@@ -2643,6 +2681,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         drForMiniIso = 0.05;
       }
       if (dr<drForMiniIso) {
+        // Leptons get added to trackIso (this is not in the official definition)
+        if (pf_IasElectronForIdx || pf_IasMuonForIdx) track_PFMiniIso_sumLeptonPt+=pt;
         // charged cands from PV get added to trackIso
         if(pf_IasChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
         // charged cands not from PV get added to pileup iso
@@ -2656,7 +2696,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }//end loop PFCandidates
   
   // Calculate PF mini relative isolation
-  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  //float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
@@ -2715,7 +2756,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[22];
+  bool passedCutsArray[21];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -2724,50 +2765,47 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
   // Cut on number of matched muon stations
   passedCutsArray[2]  = (track->pt() > globalMinPt_) ? true : false;
-  // Check the number of found hits (measurements)
-  passedCutsArray[3]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
   // Check the number of pixel hits
-  passedCutsArray[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+  passedCutsArray[3]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
   // Check the min fraction of valid hits
-  passedCutsArray[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+  passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits
-  passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+  passedCutsArray[5]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+  passedCutsArray[6]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
   // Select only high purity tracks
-  passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+  passedCutsArray[7]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
-  passedCutsArray[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+  passedCutsArray[8] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-  passedCutsArray[10] = (EoP < globalMaxEoP_) ? true : false;
-//  passedCutsArray[10] = true;
+  passedCutsArray[9] = (EoP < globalMaxEoP_) ? true : false;
   // Cut on the impact parameter
-    // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-  passedCutsArray[11] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+  // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
+  passedCutsArray[10] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
                         || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
   // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-  passedCutsArray[12] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+  passedCutsArray[11] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
 //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
-  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+  passedCutsArray[12] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[14] = (!isMaterialTrack) ? true : false;
-//  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  passedCutsArray[13] = (!isMaterialTrack) ? true : false;
+//  passedCutsArray[13] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+  passedCutsArray[14] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
-  passedCutsArray[16] = ( !pf_IasElectron  && !pf_IasPhoton) ? true : false;
+  passedCutsArray[15] = ( !pf_IasElectron  && !pf_IasPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
-  passedCutsArray[17] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
+  passedCutsArray[16] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
     // Cut away background events based on the probQ
-  passedCutsArray[18]  = (probQonTrack < trackProbQCut_) ? true : false;
-// passedCutsArray[18]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  passedCutsArray[17]  = (probQonTrack < trackProbQCut_) ? true : false;
+// passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // TOF only cuts
-  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
-  passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
-  passedCutsArray[21] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
+  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
+  passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
   
   // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
@@ -2794,48 +2832,47 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }
     
     // Preselection cuts when probQ is one of the first cuts
-    bool passedCutsArray2[22];
+    bool passedCutsArray2[21];
     std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
     passedCutsArray2[0]  = true; // passed trigger
     passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
     passedCutsArray2[3]  = (probQonTrack < trackProbQCut_) ? true : false;
 //  passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
-    passedCutsArray2[4]  = (typeMode_ != 3 && track->found() > globalMinNOH_) ? true : false;
-    passedCutsArray2[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
-    passedCutsArray2[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
-    passedCutsArray2[7]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[8]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
-    passedCutsArray2[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
-    passedCutsArray2[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
-    passedCutsArray2[11] = (EoP < globalMaxEoP_) ? true : false;
-//    passedCutsArray2[11] = true;
+    passedCutsArray2[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+    passedCutsArray2[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+    passedCutsArray2[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+    passedCutsArray2[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+    passedCutsArray2[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+    passedCutsArray2[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+    passedCutsArray2[10] = (EoP < globalMaxEoP_) ? true : false;
+//    passedCutsArray2[10] = true;
     // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-    passedCutsArray2[12] = (   (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+    passedCutsArray2[11] = (   (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
                             || (typeMode_ == 5 && fabs(dz) < 4.0)) ? true : false;
     // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-    passedCutsArray2[13] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+    passedCutsArray2[12] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                            || (typeMode_ == 5 && fabs(dxy)) < 4.0) ? true : false;
-    passedCutsArray2[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) <  pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
-    passedCutsArray2[15] = (!isMaterialTrack) ? true : false;
-//    passedCutsArray2[15] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+    passedCutsArray2[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) <  pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+    passedCutsArray2[14] = (!isMaterialTrack) ? true : false;
+//    passedCutsArray2[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
     // Cut on the PF based mini-isolation
-    passedCutsArray2[16] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+    passedCutsArray2[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
     // Cut on the PF electron ID 
-    passedCutsArray2[17] = ( !pf_IasElectron && !pf_IasPhoton) ? true : false;
+    passedCutsArray2[16] = ( !pf_IasElectron && !pf_IasPhoton) ? true : false;
     // Cut on Ih
-    passedCutsArray2[18] = (  (typeMode_ != 5 && Ih > globalMinIh_)
+    passedCutsArray2[17] = (  (typeMode_ != 5 && Ih > globalMinIh_)
                            || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
     // TOF only cuts
-    passedCutsArray2[19] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
-    passedCutsArray2[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
-    passedCutsArray2[21] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
+    passedCutsArray2[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+    passedCutsArray2[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
+    passedCutsArray2[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
     
     // CutFlow in a single plot when probQ is one of the first cuts
     if (tuple) {
-      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
+      for (size_t i=1;i<sizeof(passedCutsArray2);i++) {
         bool allCutsPassedSoFar = true;
-        for (size_t j=0;j<=i;j++) {
+        for (size_t j=1;j<=i;j++) {
           if (!passedCutsArray2[j]) {
             allCutsPassedSoFar = false;
           }
@@ -2845,6 +2882,28 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         }
       }
     }
+  
+  // Before preselection print-outs
+  if (debug_ > 7 ) {
+    LogPrint(MOD) << "        >> Trigger passed!";
+    LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
+    LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
+    LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
+    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
+    LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
+    LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
+    LogPrint(MOD) << "        >>   probXYonTrack  " <<   probXYonTrack ;
+    LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
+    LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
+    LogPrint(MOD) << "        >>   dz  " <<   dz ;
+    LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
+    LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
+    LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
+    LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
+    LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
+    LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
+    LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+  }
   
   // Before (pre)selection plots
   if (tuple) {
@@ -3085,9 +3144,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   // N-1 plots
   if (tuple) {
-    for (size_t i=0;i<sizeof(passedCutsArray);i++) {
+    for (size_t i=1;i<sizeof(passedCutsArray);i++) {
       bool allOtherCutsPassed = true;
-      for (size_t j=0;j<sizeof(passedCutsArray);j++) {
+      for (size_t j=1;j<sizeof(passedCutsArray);j++) {
         if (i==j) continue;
         if (!passedCutsArray[j]) {
           allOtherCutsPassed = false;
@@ -3170,6 +3229,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->CutFlowPfType->Fill(7.5, i+0.5, EventWeight_);
         }
       }
+      
     } else {
       if (debug_ > 2 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
       // TODO: when the preselection list finalizes I might be more verbose than this
@@ -3346,8 +3406,30 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (Ias > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Ias > 0.7\n\n";
   if (Ias > 0.7 ) LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
   if (Ias > 0.7 ) LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
-  if (Ias > 0.7 ) LogPrint(MOD) << "        >> probQonTrack" << probQonTrack << " probXYonTrack: " << probXYonTrack;
+  if (Ias > 0.7 ) LogPrint(MOD) << "        >> probQonTrack " << probQonTrack << " probXYonTrack: " << probXYonTrack;
   if (Ias > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
+  
+    // After preselection print-outs
+  if (debug_ > 7 ) {
+    LogPrint(MOD) << "        >> Preselection passed!";
+    LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
+    LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
+    LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
+    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
+    LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
+    LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
+    LogPrint(MOD) << "        >>   probXYonTrack  " <<   probXYonTrack ;
+    LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
+    LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
+    LogPrint(MOD) << "        >>   dz  " <<   dz ;
+    LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
+    LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
+    LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
+    LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
+    LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
+    LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
+    LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+  }
   
   // Fill up gen based beta histo after preselection
   if (tuple && GenBeta >= 0) {

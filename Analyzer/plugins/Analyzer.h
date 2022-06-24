@@ -304,7 +304,7 @@ private:
 
   // Thresholds for candidate preselection
   float globalMaxEta_, globalMinPt_;
-  unsigned int globalMinNOH_, globalMinNOPH_;
+  unsigned int globalMinNOPH_;
   float globalMinFOVH_;
   unsigned int globalMinNOM_;
   float globalMaxChi2_, globalMaxEoP_, globalMaxDZ_, globalMaxDXY_, globalMaxPtErr_, globalMaxTIsol_, globalMiniRelIsoAll_, globalMassT_,  globalMinIh_, trackProbQCut_;

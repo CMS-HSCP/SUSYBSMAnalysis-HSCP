@@ -545,6 +545,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PrePreS_GenPtVsdRMinBckg";
   tuple->PrePreS_GenPtVsdRMinBckg = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
   tuple->PrePreS_GenPtVsdRMinBckg->Sumw2();
+  Name = "PrePreS_GenPtVsdRMinBckgPostCut";
+  tuple->PrePreS_GenPtVsdRMinBckgPostCut = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
+  tuple->PrePreS_GenPtVsdRMinBckgPostCut->Sumw2();
   Name = "PrePreS_GenPtVsGenMinPt";
   tuple->PrePreS_GenPtVsGenMinPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, 1.);
   tuple->PrePreS_GenPtVsGenMinPt->Sumw2();
