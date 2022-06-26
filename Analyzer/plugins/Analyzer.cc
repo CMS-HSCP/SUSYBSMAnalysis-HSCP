@@ -75,6 +75,7 @@
 // - 22p0: - Exclude NumHits preselection cut, change pixel hits to 2, add lepton pt to miniIso
 // - 22p1: - Minor technical changes
 // - 22p2: - Change probQ to no use L1 when cutting on it
+// - 22p3: - Fix N1 plots, that were buggy because of 22p0 (Exclude NumHits preselection cut)
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2872,9 +2873,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     // CutFlow in a single plot when probQ is one of the first cuts
     if (tuple) {
-      for (size_t i=1;i<sizeof(passedCutsArray2);i++) {
+      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
         bool allCutsPassedSoFar = true;
-        for (size_t j=1;j<=i;j++) {
+        for (size_t j=0;j<=i;j++) {
           if (!passedCutsArray2[j]) {
             allCutsPassedSoFar = false;
           }
@@ -3159,20 +3160,19 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if (allOtherCutsPassed) {
         if (i==1)  { tuple->N1_Eta->Fill(track->eta(), Event_Weight); };
         if (i==2)  { tuple->N1_Pt->Fill(track->pt(), Event_Weight); };
-        if (i==3)  { tuple->N1_TNOH->Fill(track->found()-.5, Event_Weight); };
-        if (i==4)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
-        if (i==5)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
-        if (i==6)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
-        if (i==7)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
-        if (i==8)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
-        if (i==9)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
-        if (i==10) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
-        if (i==11) { tuple->N1_Dz->Fill(dz, Event_Weight); };
-        if (i==12) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
-        if (i==13) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
-        if (i==14) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
-        if (i==15) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
-        if (i==16) {
+        if (i==3)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
+        if (i==4)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
+        if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
+        if (i==6)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
+        if (i==7)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
+        if (i==8)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
+        if (i==9) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
+        if (i==10) { tuple->N1_Dz->Fill(dz, Event_Weight); };
+        if (i==11) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
+        if (i==12) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
+        if (i==13) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
+        if (i==14) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
+        if (i==15) {
           tuple->N1_pfType->Fill(0.5, EventWeight_);
           if (pf_IasPfTrack) {
             tuple->N1_pfType->Fill(1.5, EventWeight_);
@@ -3193,14 +3193,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->N1_pfType->Fill(7.5, EventWeight_);
           }
         }
-        if (i==17) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
-        if (i==18) {
+        if (i==16) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
+        if (i==17) {
           tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
           tuple->N1_ProbQVsIas->Fill(probQonTrack, Ias, EventWeight_);
         };
-        if (i==19) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
-        if (i==20) { LogDebug("Analyzer") << "cutPhiTOFOnly"; };
-        if (i==21) { LogDebug("Analyzer") << "cutEtaTOFOnly"; };
+        if (i==18) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
+        if (i==19) { LogDebug("Analyzer") << "cutPhiTOFOnly"; };
+        if (i==20) { LogDebug("Analyzer") << "cutEtaTOFOnly"; };
       }
     }
   }
