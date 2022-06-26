@@ -73,6 +73,8 @@
 // - 21p3: - Cut if the minDr for them is > 0.1, change to no MET triggers
 // - 21p9: - Change variable names
 // - 22p0: - Exclude NumHits preselection cut, change pixel hits to 2, add lepton pt to miniIso
+// - 22p1: - Minor technical changes
+// - 22p2: - Change probQ to no use L1 when cutting on it
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -165,7 +167,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       dEdxTemplate_(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
       enableDeDxCalibration_(iConfig.getUntrackedParameter<bool>("EnableDeDxCalibration")),
       dEdxCalibration_(iConfig.getUntrackedParameter<string>("DeDxCalibration")),
-      geometry_(iConfig.getUntrackedParameter<string>("Geometry")),
+  //    geometry_(iConfig.getUntrackedParameter<string>("Geometry")),
       timeOffset_(iConfig.getUntrackedParameter<string>("TimeOffset")),
       theFMIPX_(iConfig.getUntrackedParameter<double>("FMIPX")),
       saveTree_(iConfig.getUntrackedParameter<int>("SaveTree")),
@@ -199,7 +201,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   else
     trackerCorrector.TrackerGains = nullptr;
 
-  moduleGeom::loadGeometry(geometry_);
+  //moduleGeom::loadGeometry(geometry_);
   tofCalculator.loadTimeOffset(timeOffset_);
 }
 
@@ -904,7 +906,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     if (isBckg && dRMinBckg > 0.1 ) {
       // dont look at events where we didnt find the gen canidate close enough
-      LogPrint(MOD) << "  >> Gen candidate distance is too big (" << dRMinBckg << "), skipping it";
+      LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinBckg << "), skipping the track";
       // 6-th bin of the error histo, didnt find the gen canidate
       tuple->ErrorHisto->Fill(5.5);
       continue;
@@ -2236,8 +2238,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Second gain calibration for strips");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
     ->setComment("Ias vs Pt templates in eta binning");
-  desc.addUntracked<std::string>("Geometry","SUSYBSMAnalysis/HSCP/data/CMS_GeomTree.txt")
-  ->setComment("MuonTimeOffset info"); // I'm not sure we need this
+  //desc.addUntracked<std::string>("Geometry","SUSYBSMAnalysis/HSCP/data/CMS_GeomTree.txt")
+  //->setComment("MuonTimeOffset info"); // I'm not sure we need this
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
   desc.add<std::string>("PixelCPE","PixelCPEClusterRepair")
@@ -2733,7 +2735,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     specialInCPE = true;
   }
   if (specialInCPE) {
-    LogPrint(MOD) << "        >> This track is special in the CPE";
+    if (debug_ > 7) LogPrint(MOD) << "        >> This track is special in the CPE";
   }
   
   
@@ -2800,7 +2802,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[16] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
     // Cut away background events based on the probQ
-  passedCutsArray[17]  = (probQonTrack < trackProbQCut_) ? true : false;
+  passedCutsArray[17]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
 // passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // TOF only cuts
   passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
@@ -2837,7 +2839,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     passedCutsArray2[0]  = true; // passed trigger
     passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
-    passedCutsArray2[3]  = (probQonTrack < trackProbQCut_) ? true : false;
+    passedCutsArray2[3]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
 //  passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
     passedCutsArray2[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
     passedCutsArray2[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
