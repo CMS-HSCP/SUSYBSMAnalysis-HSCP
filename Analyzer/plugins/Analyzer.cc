@@ -2637,7 +2637,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0;
-  float pf_energy = 0.0;
+  //float pf_energy = 0.0;
     
   // number of tracks as the first bin
   if (tuple) {
@@ -2666,7 +2666,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
         pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
         pf_isPfTrack = true;
-        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
+        //pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to general track
             tuple->PrePreS_pfType->Fill(1.5, EventWeight_);

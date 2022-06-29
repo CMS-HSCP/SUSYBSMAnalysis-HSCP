@@ -11,7 +11,7 @@
 
 
 
-float K = 2.30;
+float K = 3.20;
 float C = 3.17;
 
 // Scale the 1D-histogram given to the unit 
@@ -192,16 +192,13 @@ void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool boo
     r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
 }
 
-TRandom3* RNG = new TRandom3();
 // Return randomly select histo 
-void poissonHisto(TH1F &h){
-    TRandom3* RNG = new TRandom3();
+void poissonHisto(TH1F &h,TRandom3* RNG){
     for(int i=0;i<h.GetNbinsX()+1;i++){
         h.SetBinContent(i,RNG->Poisson(h.GetBinContent(i)));
     }
 }
-void poissonHisto(TH2F &h){
-    TRandom3* RNG = new TRandom3();
+void poissonHisto(TH2F &h,TRandom3* RNG){
     for(int i=0;i<h.GetNbinsX()+1;i++){
         for(int j=0;j<h.GetNbinsY()+1;j++){
             h.SetBinContent(i,j,RNG->Poisson(h.GetBinContent(i,j)));
@@ -353,17 +350,18 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
 
 void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
     std::vector<TH1F> vPE;
+    TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
         TH2F a_ih_eta(*a.ih_eta);
         TH2F b_ih_eta(*b.ih_eta);
         TH2F c_ih_eta(*c.ih_eta);
         TH2F b_eta_p(*b.eta_p);
         TH2F c_eta_p(*c.eta_p);
-        poissonHisto(a_ih_eta);
-        poissonHisto(b_ih_eta);
-        poissonHisto(c_ih_eta);
-        poissonHisto(b_eta_p);
-        poissonHisto(c_eta_p);
+        poissonHisto(a_ih_eta,RNG);
+        poissonHisto(b_ih_eta,RNG);
+        poissonHisto(c_ih_eta,RNG);
+        poissonHisto(b_eta_p,RNG);
+        poissonHisto(c_eta_p,RNG);
         TH1F* b_eta = (TH1F*)b_eta_p.ProjectionY();
         etaReweighingP(&c_eta_p,b_eta);
         bc.eta_p = &c_eta_p;    bc.ih_eta = &b_ih_eta;
@@ -387,6 +385,7 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
     
     plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
     plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+    delete RNG;
 }
 
 TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, int cutIndex=3, bool mass_rebin=true, int nPE=100){
@@ -400,11 +399,12 @@ TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, 
     Region rBC;
 
     std::vector<TH1F> vPE;
+    TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
-        poissonHisto(*eta_regA);
-        poissonHisto(*eta_regB);
-        poissonHisto(*ih_eta_regB);
-        poissonHisto(*eta_p_regC);
+        poissonHisto(*eta_regA,RNG);
+        poissonHisto(*eta_regB,RNG);
+        poissonHisto(*ih_eta_regB,RNG);
+        poissonHisto(*eta_p_regC,RNG);
         etaReweighingP(eta_p_regC, eta_regB);
         rBC.eta_p = eta_p_regC; rBC.ih_eta = ih_eta_regB;
         float A = eta_regA->Integral();
@@ -421,6 +421,7 @@ TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, 
     if(mass_rebin) rebinHisto(rBC.pred_mass); 
     else overflowLastBin(rBC.pred_mass);
     rBC.pred_mass->SetName(("pred_mass_cutIndex_"+to_string(cutIndex)).c_str());
+    delete RNG;
     return rBC.pred_mass;
 }
 
