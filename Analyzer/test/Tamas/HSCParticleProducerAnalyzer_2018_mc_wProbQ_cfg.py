@@ -76,9 +76,23 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
    #fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
+  # fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
+#   fileNames = cms.untracked.vstring("file:F8A9F740-F226-D443-A132-45CBC706B908.root"),
+ #  fileNames = cms.untracked.vstring("file:D49DD2CE-E848-9E42-9CB0-AE4E6C60280A.root"),
+  # fileNames = cms.untracked.vstring("file:589444D4-2FA5-2D42-B952-F719D35D1EF4.root"),
+  # fileNames = cms.untracked.vstring("file:3A0707EB-0FC4-E74B-9491-27C51157FB89.root"),
+   fileNames = cms.untracked.vstring("file:B406DEC6-85A0-E342-A677-281FC853ABEE.root"),
+
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
+
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:29057:317155112')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:30965:337976289')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:34335:374762778')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:9798:91439758')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:1707:15925987')
+
+
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -252,7 +266,7 @@ process.analyzer.Geometry="CMS_GeomTree.root"
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
 process.analyzer.TrackProbQCut = 0.1
 process.analyzer.Period = "2018"
-process.analyzer.DebugLevel = 3
+process.analyzer.DebugLevel = 6 
 process.analyzer.DeDxK = K
 process.analyzer.DeDxC = C
 process.analyzer.DeDxSF_0 = SF0
