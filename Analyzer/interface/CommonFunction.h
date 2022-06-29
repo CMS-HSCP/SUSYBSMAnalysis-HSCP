@@ -1174,7 +1174,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
       MaxOnEnd = true;
     }
   }
-  // Si une seule strip touch�e
+  // Si une seule strip touchée
   if (ampls.size() == 1) {
     NofMax = 1;
   }

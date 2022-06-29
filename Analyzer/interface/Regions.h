@@ -10,10 +10,9 @@
 #include "TDirectory.h"
 
 
-TRandom3* RNG = new TRandom3();
 
-float K = 1;
-float C = 1;
+float K = 2.30;
+float C = 3.17;
 
 // Scale the 1D-histogram given to the unit 
 void scale(TH1F* h){
@@ -193,13 +192,16 @@ void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool boo
     r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
 }
 
+TRandom3* RNG = new TRandom3();
 // Return randomly select histo 
 void poissonHisto(TH1F &h){
+    TRandom3* RNG = new TRandom3();
     for(int i=0;i<h.GetNbinsX()+1;i++){
         h.SetBinContent(i,RNG->Poisson(h.GetBinContent(i)));
     }
 }
 void poissonHisto(TH2F &h){
+    TRandom3* RNG = new TRandom3();
     for(int i=0;i<h.GetNbinsX()+1;i++){
         for(int j=0;j<h.GetNbinsY()+1;j++){
             h.SetBinContent(i,j,RNG->Poisson(h.GetBinContent(i,j)));

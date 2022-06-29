@@ -46,6 +46,16 @@ struct Tuple {
   float Tree_Muon2_eta;
   float Tree_Muon2_phi;
 
+  std::vector<float> Tree_jet_pt;
+  std::vector<float> Tree_jet_eta;
+  std::vector<float> Tree_jet_phi;
+  std::vector<float> Tree_jet_mass;
+  std::vector<float> Tree_jet_energy;
+  std::vector<float> Tree_jet_pdgId;
+  std::vector<float> Tree_jet_et;
+  std::vector<float> Tree_jet_chargedEmEnergyFraction;
+  std::vector<float> Tree_jet_neutralEmEnergyFraction;
+
   std::vector<float> Tree_vect_mT;
   std::vector<bool> Tree_passCutPt55;
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
@@ -71,6 +81,7 @@ struct Tuple {
   std::vector<float> Tree_Chi2;
   std::vector<int>   Tree_QualityMask;
   std::vector<bool>  Tree_isHighPurity;
+  std::vector<float> Tree_EoverP;
   std::vector<float> Tree_muon_eta;
   std::vector<bool> Tree_isMuon;
   std::vector<int>  Tree_Muon_selector;

@@ -78,6 +78,9 @@
 // v24 Dylan
 // - add miniIso with muon contribution
 // - add miniIso in the tuple
+// v25 Dylan
+// - add EoP in the ntuple
+// - add jets info in the ntuple
 
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
@@ -598,6 +601,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float pfJetHT = 0;
   unsigned int pfNumJets = 0;
   unsigned int Jets_count = 0;
+  
+  std::vector<float> Jets_pt;
+  std::vector<float> Jets_eta;
+  std::vector<float> Jets_phi;
+  std::vector<float> Jets_mass;
+  std::vector<float> Jets_E;
+  std::vector<float> Jets_pdgId;
+  std::vector<float> Jets_et;
+  std::vector<float> Jets_chargedEmEnergyFraction;
+  std::vector<float> Jets_neutralEmEnergyFraction;
+  
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
@@ -605,11 +619,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     TLorentzVector pMHT;
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
-      Jets_count++;
       if (jet->pt() < 20 || abs(jet->eta()) > 5 ||
           jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9) {
         continue;
       }
+      Jets_count++;
+      Jets_pt.push_back(jet->pt());
+      Jets_eta.push_back(jet->eta());
+      Jets_phi.push_back(jet->phi());
+      Jets_mass.push_back(jet->mass());
+      Jets_E.push_back(jet->energy());
+      Jets_pdgId.push_back(jet->pdgId());
+      Jets_et.push_back(jet->et());
+      Jets_chargedEmEnergyFraction.push_back(jet->chargedEmEnergyFraction());
+      Jets_neutralEmEnergyFraction.push_back(jet->neutralEmEnergyFraction());
       pfJetHT += jet->pt();
       TLorentzVector p4(jet->pt() * cos(jet->phi()), jet->pt() * sin(jet->phi()), 0, jet->et());
       pMHT += p4;
@@ -712,6 +735,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Chi2;
   std::vector<int>   HSCP_QualityMask;
   std::vector<bool>  HSCP_isHighPurity;
+  std::vector<float> HSCP_EoverP;
   std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
   std::vector<bool>  HSCP_isElectron;
@@ -1055,6 +1079,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float track_PFIso05_sumCharHadPt = 0, track_PFIso05_sumNeutHadPt = 0, track_PFIso05_sumPhotonPt = 0, track_PFIso05_sumPUPt = 0;
 
     float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0;
+    float pf_energy=0;
 
     float RMin = 9999.;
     unsigned int idx_pf_RMin = 9999;
@@ -1087,6 +1112,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             pf_ecal_energy = pfCand->ecalEnergy();
             pf_hcal_energy = pfCand->hcalEnergy();
         }
+        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
 
         bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
         bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
@@ -1574,7 +1600,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                 CutTOF_Flip_);
     } else {
       // Preselection not passed, skipping it
-      continue;
+      //continue; // NOOOOOO !! DONT SKIP IT ! SKIP CAUSES PROBLEM FOR THE TUPLE
     }
     
     // Let's do some printouts after preselections for gen particles
@@ -1868,6 +1894,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Chi2.push_back(track->chi2());
     HSCP_QualityMask.push_back(track->qualityMask());
     HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
+    HSCP_EoverP.push_back(pf_energy/track->p());
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
     HSCP_isElectron.push_back(pf_isElectron);
@@ -1978,6 +2005,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 maxPtMuon2,
                                 etaMuon2,
                                 phiMuon2,
+                                Jets_pt,
+                                Jets_eta,
+                                Jets_phi,
+                                Jets_mass,
+                                Jets_E,
+                                Jets_pdgId,
+                                Jets_et,
+                                Jets_chargedEmEnergyFraction,
+                                Jets_neutralEmEnergyFraction,
                                 HSCP_mT,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection_noIsolation_noIh,
@@ -2003,6 +2039,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Chi2,
                                 HSCP_QualityMask,
                                 HSCP_isHighPurity,
+                                HSCP_EoverP,
                                 HSCP_isMuon,
                                 HSCP_MuonSelector,
                                 HSCP_isElectron,
@@ -3001,7 +3038,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
 
-  // Return false in the function is a given cut is not passed
+  // Return false in the function if a given cut is not passed
   for (size_t i=0;i<sizeof(passedCutsArray);i++) {
     if (passedCutsArray[i]) {
         // Plot Eta after each cut
