@@ -2288,21 +2288,21 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
   desc.addUntracked("DoTriggering",true)->setComment("Boolean to eecide whether we want to use triggers");
   desc.addUntracked("CalcSystematics",true)->setComment("Boolean to decide  whether we want to calculate the systematics");
-  desc.addUntracked("GlobalMaxEta",2.1)->setComment("Cut on inner tracker track eta");
+  desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
   desc.addUntracked("GlobalMinNOH",8)->setComment("Cut on number of (valid) track pixel+strip hits");
-  desc.addUntracked("GlobalMinNOPH",1)->setComment("Cut on number of (valid) track pixel hits");
+  desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
-  desc.addUntracked("GlobalMinNOM",6)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
+  desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
   desc.addUntracked("GlobalMaxEIsol",0.3)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
-  desc.addUntracked("GlobalMaxTIsol",50.0)->setComment("Cut on tracker isolation (SumPt)");
+  desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMiniRelIsoAll",0.1)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMassT",50.0)->setComment("Cut on the transverse mass");
-  desc.addUntracked("GlobalMinIh",0.0)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
+  desc.addUntracked("GlobalMassT",0.0)->setComment("Cut on the transverse mass");
+  desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Is,Ias,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
@@ -2768,8 +2768,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
   susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
   
-//  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
-  float EoP = pf_energy / track->p();
+  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
+  //float EoP = pf_energy / track->p();
   float IsoTK_SumEt = (Ih_Iso_cut) ? hscpIso.Get_TK_SumEt() : 0.0;
   
   float Ih = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
@@ -2796,16 +2796,17 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Check the min fraction of valid hits
   passedCutsArray[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits
-  passedCutsArray[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+  passedCutsArray[6]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
   // This should be revised, for now switching it off
-  passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+  //passedCutsArray[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+  passedCutsArray[7]  = true;
   // Select only high purity tracks
   passedCutsArray[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
   passedCutsArray[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
   passedCutsArray[10] = (EoP < globalMaxEIsol_) ? true : false;
-//  passedCutsArray[10] = true;
+  //passedCutsArray[10] = true;
   // Cut on the impact parameter
     // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
   passedCutsArray[11] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
@@ -2817,9 +2818,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
   passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[14] = (!isMaterialTrack) ? true : false;
-//  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  //passedCutsArray[14] = (!isMaterialTrack) ? true : false;
+  passedCutsArray[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
+  //passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   passedCutsArray[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
   passedCutsArray[16] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
@@ -2827,8 +2829,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[17] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
     // Cut away background events based on the probQ
-  passedCutsArray[18]  = (probQonTrack < trackProbQCut_) ? true : false;
+  //passedCutsArray[18]  = (probQonTrack < trackProbQCut_) ? true : false;
 // passedCutsArray[18]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  passedCutsArray[18]  = true;
   // TOF only cuts
   passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
   passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
