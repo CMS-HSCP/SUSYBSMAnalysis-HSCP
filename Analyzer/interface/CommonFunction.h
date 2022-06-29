@@ -1027,7 +1027,7 @@ std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1
   std::vector<int> QII;
   std::vector<float> QI(N,0);
 
-//---  que pour 1 max bien net
+//---  only for one max well-defined
  if(Q.size()<2 || Q.size()>8){
         for (unsigned int i=0;i<Q.size();i++){
                 QII.push_back((int) Q[i]);
@@ -1064,7 +1064,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
   //  bool debugbool=false;
   TMatrix A(N, N);
 
-  //---  que pour 1 max bien net
+  //---
   if (Q.size() < 2 || Q.size() > 8) {
     for (unsigned int i = 0; i < Q.size(); i++) {
       QII.push_back((int)Q[i]);
@@ -1119,7 +1119,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
 bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
 
 
-  // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------
+  // ---------------- Count the number of maximas    --------------------------
   //----------------------------------------------------------------------------
   Int_t NofMax = 0;
   Int_t recur255 = 1;
@@ -1127,7 +1127,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
   bool MaxOnStart = false;
   bool MaxInMiddle = false, MaxOnEnd = false;
   Int_t MaxPos = 0;
-  // Debut avec max
+  // Start with a max
   if (ampls.size() != 1 &&
       ((ampls[0] > ampls[1]) ||
        (ampls.size() > 2 && ampls[0] == ampls[1] && ampls[1] > ampls[2] && ampls[0] != 254 && ampls[0] != 255) ||
@@ -1136,7 +1136,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
     MaxOnStart = true;
   }
 
-  // Maximum entoure
+  // Max in the middle (strip between other ones)
   if (ampls.size() > 2) {
     for (unsigned int i = 1; i < ampls.size() - 1; i++) {
       if ((ampls[i] > ampls[i - 1] && ampls[i] > ampls[i + 1]) ||
@@ -1164,7 +1164,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
       }
     }
   }
-  // Fin avec un max
+  // Max at the end of the cluster 
   if (ampls.size() > 1) {
     if (ampls[ampls.size() - 1] > ampls[ampls.size() - 2] ||
         (ampls.size() > 2 && ampls[ampls.size() - 1] == ampls[ampls.size() - 2] &&
@@ -1174,12 +1174,12 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
       MaxOnEnd = true;
     }
   }
-  // Si une seule strip touchée
+  // If only one strip is hit
   if (ampls.size() == 1) {
     NofMax = 1;
   }
 
-  // ---  SELECTION EN FONCTION DE LA FORME POUR LES MAXIMA UNIQUES ---------
+  // --- SHAPE SELECTION 
   //------------------------------------------------------------------------
   //
   //               ____
