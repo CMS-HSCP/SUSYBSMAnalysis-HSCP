@@ -77,6 +77,8 @@
 // - 22p2: - Change probQ to no use L1 when cutting on it
 // - 22p3: - Fix N1 plots, that were buggy because of 22p0 (Exclude NumHits preselection cut)
 // - 22p4: - Change NOM > 10, Eta < 1.2
+// - 22p5: - Change Eta < 1.0
+// - 22p6: - Include reverse cutflow
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2251,7 +2253,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
   desc.addUntracked("DoTriggering",true)->setComment("Boolean to eecide whether we want to use triggers");
   desc.addUntracked("CalcSystematics",true)->setComment("Boolean to decide  whether we want to calculate the systematics");
-  desc.addUntracked("GlobalMaxEta",1.2)->setComment("Cut on inner tracker track eta");
+  desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
   desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
@@ -2874,7 +2876,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     // CutFlow in a single plot when probQ is one of the first cuts
     if (tuple) {
-      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
+//      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
+        for (size_t i= sizeof(passedCutsArray2)-1; i>0; i--) {
         bool allCutsPassedSoFar = true;
         for (size_t j=0;j<=i;j++) {
           if (!passedCutsArray2[j]) {
