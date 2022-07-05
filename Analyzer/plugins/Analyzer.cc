@@ -79,6 +79,7 @@
 // - 22p4: - Change NOM > 10, Eta < 1.2
 // - 22p5: - Change Eta < 1.0
 // - 22p6: - Include reverse cutflow
+// - 22p7: - Include reverse cutflow, Variable vs Ias plots ( I should do variable vs probQ too)
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -910,7 +911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     if (isBckg && dRMinBckg > 0.1 ) {
       // dont look at events where we didnt find the gen canidate close enough
-      LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinBckg << "), skipping the track";
+      if (debug_ > 4 ) LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinBckg << "), skipping the track";
       // 6-th bin of the error histo, didnt find the gen canidate
       tuple->ErrorHisto->Fill(5.5);
       continue;
@@ -2837,55 +2838,54 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
     
-    // Preselection cuts when probQ is one of the first cuts
-    bool passedCutsArray2[21];
-    std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
-    passedCutsArray2[0]  = true; // passed trigger
-    passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
-    passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
-    passedCutsArray2[3]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
-//  passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
-    passedCutsArray2[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
-    passedCutsArray2[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
-    passedCutsArray2[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-    passedCutsArray2[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
-    passedCutsArray2[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
-    passedCutsArray2[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
-    passedCutsArray2[10] = (EoP < globalMaxEoP_) ? true : false;
-//    passedCutsArray2[10] = true;
-    // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-    passedCutsArray2[11] = (   (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
-                            || (typeMode_ == 5 && fabs(dz) < 4.0)) ? true : false;
-    // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-    passedCutsArray2[12] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
-                           || (typeMode_ == 5 && fabs(dxy)) < 4.0) ? true : false;
-    passedCutsArray2[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) <  pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
-    passedCutsArray2[14] = (!isMaterialTrack) ? true : false;
-//    passedCutsArray2[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
-    // Cut on the PF based mini-isolation
-    passedCutsArray2[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
-    // Cut on the PF electron ID 
-    passedCutsArray2[16] = ( !pf_IasElectron && !pf_IasPhoton) ? true : false;
-    // Cut on Ih
-    passedCutsArray2[17] = (  (typeMode_ != 5 && Ih > globalMinIh_)
-                           || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-    // TOF only cuts
-    passedCutsArray2[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
-    passedCutsArray2[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
-    passedCutsArray2[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
-    
-    // CutFlow in a single plot when probQ is one of the first cuts
+//    // Preselection cuts when probQ is one of the first cuts
+//    bool passedCutsArray2[21];
+//    std::fill(std::begin(passedCutsArray2), std::end(passedCutsArray2),false);
+//    passedCutsArray2[0]  = true; // passed trigger
+//    passedCutsArray2[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+//    passedCutsArray2[2]  = (track->pt() > globalMinPt_) ? true : false;
+//    passedCutsArray2[3]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+////  passedCutsArray2[3]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+//    passedCutsArray2[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+//    passedCutsArray2[5]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+//    passedCutsArray2[6]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+//    passedCutsArray2[7]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
+//    passedCutsArray2[8]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+//    passedCutsArray2[9] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+//    passedCutsArray2[10] = (EoP < globalMaxEoP_) ? true : false;
+////    passedCutsArray2[10] = true;
+//    // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
+//    passedCutsArray2[11] = (   (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+//                            || (typeMode_ == 5 && fabs(dz) < 4.0)) ? true : false;
+//    // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
+//    passedCutsArray2[12] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+//                           || (typeMode_ == 5 && fabs(dxy)) < 4.0) ? true : false;
+//    passedCutsArray2[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) <  pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+//    passedCutsArray2[14] = (!isMaterialTrack) ? true : false;
+////    passedCutsArray2[14] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+//    // Cut on the PF based mini-isolation
+//    passedCutsArray2[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+//    // Cut on the PF electron ID
+//    passedCutsArray2[16] = ( !pf_IasElectron && !pf_IasPhoton) ? true : false;
+//    // Cut on Ih
+//    passedCutsArray2[17] = (  (typeMode_ != 5 && Ih > globalMinIh_)
+//                           || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
+//    // TOF only cuts
+//    passedCutsArray2[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+//    passedCutsArray2[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
+//    passedCutsArray2[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
+//
+    // CutFlow in a single plot when the order is reversed
     if (tuple) {
-//      for (size_t i=0;i<sizeof(passedCutsArray2);i++) {
-        for (size_t i= sizeof(passedCutsArray2)-1; i>0; i--) {
+        for (size_t i = sizeof(passedCutsArray)-1; i>0; i--) {
         bool allCutsPassedSoFar = true;
-        for (size_t j=0;j<=i;j++) {
-          if (!passedCutsArray2[j]) {
+        for (size_t j = sizeof(passedCutsArray)-1; j>0; j--) {
+          if (!passedCutsArray[j]) {
             allCutsPassedSoFar = false;
           }
         }
         if (allCutsPassedSoFar) {
-          tuple->CutFlowProbQFirst->Fill((i+0.5), Event_Weight);
+          tuple->CutFlowReverse->Fill((i+0.5), Event_Weight);
         }
       }
     }
@@ -2921,7 +2921,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, Event_Weight);
     tuple->BefPreS_NVertex->Fill(vertexColl.size()-.5, Event_Weight);
     tuple->BefPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
-    tuple->BefPreS_TNOH->Fill(track->found()-.5, Event_Weight);
     if (PUA) {
       tuple->BefPreS_TNOH_PUA->Fill(track->found(), Event_Weight);
       tuple->BefPreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
@@ -3083,6 +3082,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   isCosmicSB = (DXYSB && DZSB && OASB);
   isSemiCosmicSB = (!isCosmicSB && (DXYSB || DZSB || OASB));
+
+
+  // Get the location of the outmost hit
+  const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
+  const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
+  const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
   
   if (tuple) {
     if (tof)
@@ -3100,9 +3105,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->BefPreS_OpenAngle_Cosmic->Fill(OpenAngle, Event_Weight);
     
     // Get the location of the outmost hit
-    const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
-    const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
-    const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
     tuple->BefPreS_LastHitDXY->Fill(furthersHitDxy, Event_Weight);
     tuple->BefPreS_LastHitD3D->Fill(furthersHitDistance, Event_Weight);
 
@@ -3246,29 +3248,38 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // After (pre)selection plots
   if (tuple) {
       tuple->PostPreS_pfType->Fill(0.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(0.5, Ias, EventWeight_);
     if (pf_IasPfTrack) {
       tuple->PostPreS_pfType->Fill(1.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(1.5, Ias, EventWeight_);
     } else {
       tuple->PostPreS_pfType->Fill(8.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(8.5, Ias, EventWeight_);
     }
     if (pf_IasElectron) {
-       tuple->PostPreS_pfType->Fill(2.5, EventWeight_);
+      tuple->PostPreS_pfType->Fill(2.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(2.5, Ias, EventWeight_);
     } else if (pf_IasMuon) {
-       tuple->PostPreS_pfType->Fill(3.5, EventWeight_);
+      tuple->PostPreS_pfType->Fill(3.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(3.5, Ias, EventWeight_);
     } else if (pf_IasPhoton) {
-       tuple->PostPreS_pfType->Fill(4.5, EventWeight_);
+      tuple->PostPreS_pfType->Fill(4.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(4.5, Ias, EventWeight_);
     } else if (pf_IasChHadron) {
-       tuple->PostPreS_pfType->Fill(5.5, EventWeight_);
+      tuple->PostPreS_pfType->Fill(5.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(5.5, Ias, EventWeight_);
     } else if (pf_IasNeutHadron) {
-       tuple->PostPreS_pfType->Fill(6.5, EventWeight_);
+      tuple->PostPreS_pfType->Fill(6.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(6.5, Ias, EventWeight_);
     } else if (pf_IasUndefined) {
-       tuple->PostPreS_pfType->Fill(7.5, EventWeight_);
+      tuple->PostPreS_pfType->Fill(7.5, EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(7.5, Ias, EventWeight_);
     }
     tuple->PostPreS_Eta->Fill(track->eta(), Event_Weight);
+    tuple->PostPreS_EtaVsIas->Fill(track->eta(), Ias, Event_Weight);
     tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, Event_Weight);
     tuple->PostPreS_NVertex->Fill(vertexColl.size()-.5, Event_Weight);
     tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
-    tuple->PostPreS_TNOH->Fill(track->found()-.5, Event_Weight);
     if (PUA) {
       tuple->PostPreS_TNOH_PUA->Fill(track->found(), Event_Weight);
       tuple->PostPreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
@@ -3278,14 +3289,21 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->PostPreS_TNOM_PUB->Fill(numDeDxHits, Event_Weight);
     }
     tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), Event_Weight);
+    tuple->PostPreS_TNOHFractionVsIas->Fill(track->validFraction(), Ias, Event_Weight);
     tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
+    tuple->PostPreS_TNOPHVsIas->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Ias, Event_Weight);
     tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, Event_Weight);
     tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
     tuple->PostPreS_TNOM->Fill(numDeDxHits-.5, Event_Weight);
+    tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits-.5, Ias, Event_Weight);
     tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
+    tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, Ias, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
+    tuple->PostPreS_ProbXYVsIas->Fill(probXYonTrack, Ias, EventWeight_);
     tuple->PostPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_ProbQNoL1VsIas->Fill(probQonTrackNoLayer1, Ias, EventWeight_);
     tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoLayer1, Ias, EventWeight_);
     if (tof) {
       tuple->PostPreS_nDof->Fill(tof->nDof()-.5, Event_Weight);
       tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
@@ -3294,7 +3312,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
     tuple->PostPreS_Qual->Fill(track->qualityMask()-.5, Event_Weight);
     tuple->PostPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
+    tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), Ias, Event_Weight);
     tuple->PostPreS_Pt->Fill(track->pt(), Event_Weight);
+    tuple->PostPreS_PtVsIas->Fill(track->pt(), Ias, Event_Weight);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
     tuple->PostPreS_Dz->Fill(dz, Event_Weight);
     tuple->PostPreS_Dxy->Fill(dxy, Event_Weight);
@@ -3302,23 +3322,31 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_PV_NoEventWeight->Fill(goodVerts);
     
     tuple->PostPreS_EoP->Fill(EoP, Event_Weight);
+    tuple->PostPreS_EoPVsIas->Fill(EoP, Ias, Event_Weight);
     tuple->PostPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
+    tuple->PostPreS_SumpTOverpTVsIas->Fill(IsoTK_SumEt / track->pt(), Ias, Event_Weight);
     tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
+    tuple->PostPreS_PtErrOverPtVsIas->Fill(track->ptError() / track->pt(), Ias, Event_Weight);
     tuple->PostPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
     tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), Event_Weight);
     tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
+    tuple->PostPreS_TIsolVsIas->Fill(IsoTK_SumEt, Ias,Event_Weight);
     tuple->PostPreS_Ih->Fill(Ih, Event_Weight);
+    tuple->PostPreS_IhVsIas->Fill(Ih, Ias, Event_Weight);
     tuple->PostPreS_Ih_NoEventWeight->Fill(Ih);
     tuple->PostPreS_Ias->Fill(Ias, Event_Weight);
     tuple->PostPreS_Ias_NoEventWeight->Fill(Ias);
     tuple->PostPreS_massT->Fill(massT, Event_Weight);
+    tuple->PostPreS_massTVsIas->Fill(massT, Ias, Event_Weight);
       // Add PFCadidate based isolation info to the tuple
       // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
       // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
     tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
+    tuple->PostPreS_MiniRelIsoAllVsIas->Fill(miniRelIsoAll, Ias, Event_Weight);
     tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
     tuple->PostPreS_MassErr->Fill(MassErr, Event_Weight);
+    tuple->PostPreS_MassErrVsIas->Fill(MassErr, Ias, Event_Weight);
     
     tuple->PostPreS_EtaVsGenID->Fill(track->eta(), closestBackgroundPDGsIDs[0], Event_Weight);
     tuple->PostPreS_ProbQVsGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
@@ -3372,8 +3400,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTVsGenMomAngle->Fill(massT, closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_miniIsoChgVsGenMomAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_miniIsoAllVsGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], Event_Weight);
-    
-    tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, Ias, EventWeight_);
+
     tuple->PostPreS_GenPtVsRecoPt->Fill(closestBackgroundPDGsIDs[5], track->pt());
     
     tuple->PostPreS_EtaVsGenNumSibling->Fill(track->eta(), closestBackgroundPDGsIDs[6], Event_Weight);
@@ -3386,6 +3413,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTVsGenNumSibling->Fill(massT, closestBackgroundPDGsIDs[6], Event_Weight);
     tuple->PostPreS_miniIsoChgVsGenNumSibling->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[6], Event_Weight);
     tuple->PostPreS_miniIsoAllVsGenNumSibling->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[6], Event_Weight);
+    
+    tuple->PostPreS_LastHitDXY->Fill(furthersHitDxy, Event_Weight);
+    tuple->PostPreS_LastHitDXYVsEta->Fill(furthersHitDxy, track->eta(), Event_Weight);
+    tuple->PostPreS_LastHitD3D->Fill(furthersHitDistance, Event_Weight);
+    tuple->PostPreS_LastHitD3DVsEta->Fill(furthersHitDistance, track->eta(), Event_Weight);
     
     tuple->PostPreS_EoPVsPfType->Fill(EoP, 0.5, EventWeight_);
     if (pf_IasPfTrack) {
@@ -3415,7 +3447,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (Ias > 0.7 ) LogPrint(MOD) << "        >> probQonTrack " << probQonTrack << " probXYonTrack: " << probXYonTrack;
   if (Ias > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
   
-    // After preselection print-outs
+  // After preselection print-outs
   if (debug_ > 7 ) {
     LogPrint(MOD) << "        >> Preselection passed!";
     LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;

@@ -369,41 +369,54 @@ struct Tuple {
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_pfType;
+  TH2F* PostPreS_pfTypeVsIas;
   TH1F* PostPreS_massT;
+  TH2F* PostPreS_massTVsIas;
   TH1F* PostPreS_MiniRelIsoAll;
+  TH2F* PostPreS_MiniRelIsoAllVsIas;
   TH1F* PostPreS_MiniRelIsoChg;
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
   TH1F* PostPreS_RecoPFNumJets;
   
   TH1F* PostPreS_Chi2oNdof;
+  TH2F* PostPreS_Chi2oNdofVsIas;
   TH1F* PostPreS_Qual;
-  TH1F* PostPreS_TNOH;
   TH1F* PostPreS_TNOH_PUA;
   TH1F* PostPreS_TNOH_PUB;
   TH1F* PostPreS_TNOHFraction;
+  TH2F* PostPreS_TNOHFractionVsIas;
   TH1F* PostPreS_TNOPH;
+  TH2F* PostPreS_TNOPHVsIas;
   TH1F* PostPreS_TNOHFractionTillLast;
   TH1F* PostPreS_TNOMHTillLast;
   TH1F* PostPreS_Eta;
+  TH2F* PostPreS_EtaVsIas;
   TH1F* PostPreS_TNOM;
+  TH2F* PostPreS_TNOMVsIas;
   TH1F* PostPreS_TNOM_PUA;
   TH1F* PostPreS_TNOM_PUB;
   TProfile* PostPreS_NOMoNOHvsPV;
   TH1F* PostPreS_nDof;
   TH1F* PostPreS_TOFError;
   TH1F* PostPreS_PtErrOverPt;
+  TH2F* PostPreS_PtErrOverPtVsIas;
   TH1F* PostPreS_PtErrOverPt2;
   TH1F* PostPreS_Pt;
+  TH2F* PostPreS_PtVsIas;
   TH1F* PostPreS_P;
   TH1F* PostPreS_Ias;
   TH1F* PostPreS_Ias_NoEventWeight;
   TH1F* PostPreS_Ih;
+  TH2F* PostPreS_IhVsIas;
   TH1F* PostPreS_Ih_NoEventWeight;
   TH1F* PostPreS_MTOF;
   TH1F* PostPreS_TIsol;
+  TH2F* PostPreS_TIsolVsIas;
   TH1F* PostPreS_EoP;
+  TH2F* PostPreS_EoPVsIas;
   TH1F* PostPreS_SumpTOverpT;
+  TH2F* PostPreS_SumpTOverpTVsIas;
   TH1F* PostPreS_dR_NVTrack;
   TH1F* PostPreS_MatchedStations;
   TH1F* PostPreS_NVertex;
@@ -438,15 +451,22 @@ struct Tuple {
   TH1F* PostPreS_Dz_DT;
   
   TH1F* PostPreS_LastHitDXY;
+  TH2F* PostPreS_LastHitDXYVsEta;
   TH1F* PostPreS_LastHitD3D;
+  TH2F* PostPreS_LastHitD3DVsEta;
   TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
   TH2F* PostPreS_PtErrOverPtVsPt;
   
   TH1F* PostPreS_ProbQ;
+  TH2F* PostPreS_ProbQVsIas;
   TH1F* PostPreS_ProbXY;
+  TH2F* PostPreS_ProbXYVsIas;
   TH1F* PostPreS_ProbQNoL1;
+  TH2F* PostPreS_ProbQNoL1VsIas;
   TH1F* PostPreS_ProbXYNoL1;
+  TH2F* PostPreS_ProbXYNoL1VsIas;
   TH1F* PostPreS_MassErr;
+  TH2F* PostPreS_MassErrVsIas;
 
   TH2F* PostPreS_EtaVsGenID;
   TH2F* PostPreS_ProbQVsGenID;
@@ -455,6 +475,7 @@ struct Tuple {
   TH2F* PostPreS_EoPVsGenID;
   TH2F* PostPreS_IhVsGenID;
   TH2F* PostPreS_IasVsGenID;
+  TH1F* PostPreS_TNOH;
   TH2F* PostPreS_massTVsGenID;
   TH2F* PostPreS_miniIsoChgVsGenID;
   TH2F* PostPreS_miniIsoAllVsGenID;
@@ -500,7 +521,6 @@ struct Tuple {
   TH2F* PostPreS_massTVsGenMomAngle;
   TH2F* PostPreS_miniIsoChgVsGenMomAngle;
   TH2F* PostPreS_miniIsoAllVsGenMomAngle;
-  TH2F* PostPreS_ProbQVsIas;
 
   TH2F* PostPreS_EtaVsGenNumSibling;
   TH2F* PostPreS_ProbQVsGenNumSibling;
@@ -515,7 +535,7 @@ struct Tuple {
   TH2F* PostPreS_EoPVsPfType;
   
   TH1F* CutFlow;
-  TH1F* CutFlowProbQFirst;
+  TH1F* CutFlowReverse;
   
   TH2F* CutFlowEta;
   TH2F* CutFlowPfType; 
