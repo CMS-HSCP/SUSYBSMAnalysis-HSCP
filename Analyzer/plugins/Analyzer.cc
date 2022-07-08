@@ -80,6 +80,7 @@
 // - 22p5: - Change Eta < 1.0
 // - 22p6: - Include reverse cutflow
 // - 22p7: - Include reverse cutflow, Variable vs Ias plots ( I should do variable vs probQ too)
+// - 22p8: - (probXYonTrack > 0.1) and a later point in the cutflow
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2778,35 +2779,35 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits
   passedCutsArray[5]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-  // This should be revised, for now switching it off
-  passedCutsArray[6]  = ((probXYonTrack > 0.0 && probXYonTrack < 1.0))  ? true : false;
   // Select only high purity tracks
-  passedCutsArray[7]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+  passedCutsArray[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
-  passedCutsArray[8] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+  passedCutsArray[7] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-  passedCutsArray[9] = (EoP < globalMaxEoP_) ? true : false;
+  passedCutsArray[8] = (EoP < globalMaxEoP_) ? true : false;
   // Cut on the impact parameter
   // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-  passedCutsArray[10] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+  passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
                         || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
   // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-  passedCutsArray[11] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+  passedCutsArray[10] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
 //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < globalMaxPtErr_) ? true : false;
-  passedCutsArray[12] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+  passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[13] = (!isMaterialTrack) ? true : false;
+  passedCutsArray[12] = (!isMaterialTrack) ? true : false;
 //  passedCutsArray[13] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[14] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+  passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
-  passedCutsArray[15] = ( !pf_IasElectron  && !pf_IasPhoton) ? true : false;
+  passedCutsArray[14] = ( !pf_IasElectron  && !pf_IasPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
-  passedCutsArray[16] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
+  passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-    // Cut away background events based on the probQ
+  // Cut away background events based on the probXY
+  passedCutsArray[16]  = ((probXYonTrack > 0.1 && probXYonTrack < 1.0))  ? true : false;
+  // Cut away background events based on the probQ
   passedCutsArray[17]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
 // passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // TOF only cuts
@@ -2879,7 +2880,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (tuple) {
         for (size_t i = sizeof(passedCutsArray)-1; i>0; i--) {
         bool allCutsPassedSoFar = true;
-        for (size_t j = sizeof(passedCutsArray)-1; j>0; j--) {
+        for (size_t j = sizeof(passedCutsArray)-1; j>i; j--) {
           if (!passedCutsArray[j]) {
             allCutsPassedSoFar = false;
           }
@@ -3169,16 +3170,15 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==3)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
         if (i==4)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
         if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
-        if (i==6)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
-        if (i==7)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
-        if (i==8)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
-        if (i==9) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
-        if (i==10) { tuple->N1_Dz->Fill(dz, Event_Weight); };
-        if (i==11) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
-        if (i==12) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
-        if (i==13) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
-        if (i==14) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
-        if (i==15) {
+        if (i==6)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
+        if (i==7)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
+        if (i==8) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
+        if (i==9) { tuple->N1_Dz->Fill(dz, Event_Weight); };
+        if (i==10) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
+        if (i==11) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
+        if (i==12) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
+        if (i==13) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
+        if (i==14) {
           tuple->N1_pfType->Fill(0.5, EventWeight_);
           if (pf_IasPfTrack) {
             tuple->N1_pfType->Fill(1.5, EventWeight_);
@@ -3199,7 +3199,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->N1_pfType->Fill(7.5, EventWeight_);
           }
         }
-        if (i==16) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
+        if (i==15) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
+        if (i==16)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
         if (i==17) {
           tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
           tuple->N1_ProbQVsIas->Fill(probQonTrack, Ias, EventWeight_);
