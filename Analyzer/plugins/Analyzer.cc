@@ -81,6 +81,7 @@
 // - 22p6: - Include reverse cutflow
 // - 22p7: - Include reverse cutflow, Variable vs Ias plots ( I should do variable vs probQ too)
 // - 22p8: - (probXYonTrack > 0.1) and a later point in the cutflow
+// - 22p9: - (probXYonTrackNoLayer1 > 0.1) 
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2806,7 +2807,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
   // Cut away background events based on the probXY
-  passedCutsArray[16]  = ((probXYonTrack > 0.1 && probXYonTrack < 1.0))  ? true : false;
+  passedCutsArray[16]  = ((probXYonTrackNoLayer1 > 0.1 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
   passedCutsArray[17]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
 // passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
@@ -2886,7 +2887,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           }
         }
         if (allCutsPassedSoFar) {
-          tuple->CutFlowReverse->Fill((i+0.5), Event_Weight);
+          tuple->CutFlowReverse->Fill((i-0.5), Event_Weight);
         }
       }
     }
