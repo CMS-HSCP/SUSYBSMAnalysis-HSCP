@@ -82,6 +82,7 @@
 // - 22p7: - Include reverse cutflow, Variable vs Ias plots ( I should do variable vs probQ too)
 // - 22p8: - (probXYonTrack > 0.1) and a later point in the cutflow
 // - 22p9: - (probXYonTrackNoLayer1 > 0.1) 
+// - 23p0: - (probXYonTrackNoLayer1 > 0.01) 
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2759,6 +2760,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   float Ih = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
   float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
+
+  float Mass = GetMass(track->p(), Ih, dEdxK_, dEdxC_);
   
   //Find distance to nearest segment on opposite side of detector
   float minPhi = 0.0, minEta = 0.0;
@@ -2807,7 +2810,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
   // Cut away background events based on the probXY
-  passedCutsArray[16]  = ((probXYonTrackNoLayer1 > 0.1 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+  passedCutsArray[16]  = ((probXYonTrackNoLayer1 > 0.01 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
   passedCutsArray[17]  = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
 // passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
@@ -3360,6 +3363,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTVsGenID->Fill(massT, closestBackgroundPDGsIDs[0], Event_Weight);
     tuple->PostPreS_miniIsoChgVsGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[0], Event_Weight);
     tuple->PostPreS_miniIsoChgVsGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_MassVsGenID->Fill(Mass, closestBackgroundPDGsIDs[0], Event_Weight);
     
     tuple->PostPreS_EtaVsMomGenID->Fill(track->eta(), closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_ProbQVsMomGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
@@ -3371,6 +3375,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTVsMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_miniIsoChgVsMomGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[1], Event_Weight);
     tuple->PostPreS_miniIsoAllVsMomGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_MassVsMomGenID->Fill(Mass, closestBackgroundPDGsIDs[1], Event_Weight);
     
     tuple->PostPreS_EtaVsSiblingGenID->Fill(track->eta(), closestBackgroundPDGsIDs[2], Event_Weight);
     tuple->PostPreS_ProbQVsSiblingGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
@@ -3380,6 +3385,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_IhVsSiblingGenID->Fill(Ih, closestBackgroundPDGsIDs[2], Event_Weight);
     tuple->PostPreS_IasVsSiblingGenID->Fill(Ias, closestBackgroundPDGsIDs[2], Event_Weight);
     tuple->PostPreS_massTVsSiblingGenID->Fill(massT, closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_MassVsSiblingGenID->Fill(Mass, closestBackgroundPDGsIDs[2], Event_Weight);
     
     tuple->PostPreS_EtaVsGenAngle->Fill(track->eta(), closestBackgroundPDGsIDs[3], Event_Weight);
     tuple->PostPreS_ProbQVsGenAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
@@ -3391,6 +3397,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTVsGenAngle->Fill(massT, closestBackgroundPDGsIDs[3], Event_Weight);
     tuple->PostPreS_miniIsoChgVsGenAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[3], Event_Weight);
     tuple->PostPreS_miniIsoAllVsGenAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_MassVsGenAngle->Fill(Mass, closestBackgroundPDGsIDs[3], Event_Weight);
     
     tuple->PostPreS_EtaVsGenMomAngle->Fill(track->eta(), closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_ProbQVsGenMomAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
@@ -3402,6 +3409,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_massTVsGenMomAngle->Fill(massT, closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_miniIsoChgVsGenMomAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[4], Event_Weight);
     tuple->PostPreS_miniIsoAllVsGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_MassVsGenMomAngle->Fill(Mass, closestBackgroundPDGsIDs[4], Event_Weight);
 
     tuple->PostPreS_GenPtVsRecoPt->Fill(closestBackgroundPDGsIDs[5], track->pt());
     
@@ -3422,32 +3430,60 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_LastHitD3DVsEta->Fill(furthersHitDistance, track->eta(), Event_Weight);
     
     tuple->PostPreS_EoPVsPfType->Fill(EoP, 0.5, EventWeight_);
+    tuple->PostPreS_MassVsPfType->Fill(Mass, 0.5, EventWeight_);
     if (pf_IasPfTrack) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 1.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 1.5, EventWeight_);
     } else {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 8.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 8.5, EventWeight_);
     }
     if (pf_IasElectron) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 2.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 2.5, EventWeight_);
     } else if (pf_IasMuon) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 3.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 3.5, EventWeight_);
     } else if (pf_IasPhoton) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 4.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 4.5, EventWeight_);
     } else if (pf_IasChHadron) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 5.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 5.5, EventWeight_);
     } else if (pf_IasNeutHadron) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 6.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 6.5, EventWeight_);
     } else if (pf_IasUndefined) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 7.5, EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 7.5, EventWeight_);
     }
-    
+  
+    tuple->PostPreS_Mass->Fill(Mass, Event_Weight);
+    tuple->PostPreS_MassVsPt->Fill(Mass, track->pt(), Event_Weight);
+    tuple->PostPreS_MassVsP->Fill(Mass, track->p(), Event_Weight);
+    tuple->PostPreS_MassVsTNOHFraction->Fill(Mass, track->validFraction(), Event_Weight);
+    tuple->PostPreS_MassVsTNOPH->Fill(Mass, track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
+    tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits-.5, Event_Weight);
+    tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,probQonTrackNoLayer1, Event_Weight);
+    tuple->PostPreS_MassVsProbXYNoL1->Fill(Mass,probXYonTrackNoLayer1, Event_Weight);
+    tuple->PostPreS_MassVsEoP->Fill(Mass, EoP, Event_Weight);
+    tuple->PostPreS_MassVsSumpTOverpT->Fill(Mass, IsoTK_SumEt / track->pt(), Event_Weight);
+    tuple->PostPreS_MassVsPtErrOverPt->Fill(Mass, track->ptError() / track->pt(), Event_Weight);
+    tuple->PostPreS_MassVsTIsol->Fill(Mass, IsoTK_SumEt,Event_Weight);
+    tuple->PostPreS_MassVsIh->Fill(Mass, Ih, Event_Weight);
+    tuple->PostPreS_MassVsMassT->Fill(Mass, massT, Event_Weight);
+    tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, Event_Weight);
+    tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, Event_Weight);
+      
   }
  
-  if (Ias > 0.7 ) LogPrint(MOD) << "        >> After passing preselection, the Ias > 0.7\n\n";
-  if (Ias > 0.7 ) LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
-  if (Ias > 0.7 ) LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
-  if (Ias > 0.7 ) LogPrint(MOD) << "        >> probQonTrack " << probQonTrack << " probXYonTrack: " << probXYonTrack;
-  if (Ias > 0.7 ) LogPrint(MOD) << "        >> -----------------------------------------------";
+  if (Ias > 0.7 || Mass > 1000 ) {
+    LogPrint(MOD) << "        >> After passing preselection, the Ias > 0.7\n\n";
+    LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
+    LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
+    LogPrint(MOD) << "        >> probQonTrack " << probQonTrack << " probXYonTrack: " << probXYonTrack;
+    LogPrint(MOD) << "        >> -----------------------------------------------";
+  } 
   
   // After preselection print-outs
   if (debug_ > 7 ) {

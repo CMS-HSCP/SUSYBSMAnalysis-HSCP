@@ -47,8 +47,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->N1_Chi2oNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_Qual";
   tuple->N1_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_TNOH";
-  tuple->N1_TNOH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_TNOPH";
   tuple->N1_TNOPH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_TNOM";
@@ -255,8 +253,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BefPreS_Chi2oNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BefPreS_Qual";
   tuple->BefPreS_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "BefPreS_TNOH";
-  tuple->BefPreS_TNOH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BefPreS_TNOH_PUA";
   tuple->BefPreS_TNOH_PUA = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BefPreS_TNOH_PUB";
@@ -442,8 +438,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_Chi2oNdof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_Qual";
   tuple->PostPreS_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_TNOH";
-  tuple->PostPreS_TNOH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_TNOH_PUA";
   tuple->PostPreS_TNOH_PUA = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_TNOH_PUB";

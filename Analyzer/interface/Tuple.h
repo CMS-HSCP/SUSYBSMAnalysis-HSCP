@@ -224,7 +224,6 @@ struct Tuple {
   TH1F* N1_Eta;
   TH1F* N1_Chi2oNdof;
   TH1F* N1_Qual;
-  TH1F* N1_TNOH;
   TH1F* N1_TNOPH;
   TH1F* N1_TNOHFraction;
   TH1F* N1_TNOM;
@@ -287,7 +286,6 @@ struct Tuple {
 
   TH1F* BefPreS_Chi2oNdof;
   TH1F* BefPreS_Qual;
-  TH1F* BefPreS_TNOH;
   TH1F* BefPreS_TNOH_PUA;
   TH1F* BefPreS_TNOH_PUB;
   TH1F* BefPreS_TNOHFraction;
@@ -475,10 +473,10 @@ struct Tuple {
   TH2F* PostPreS_EoPVsGenID;
   TH2F* PostPreS_IhVsGenID;
   TH2F* PostPreS_IasVsGenID;
-  TH1F* PostPreS_TNOH;
   TH2F* PostPreS_massTVsGenID;
   TH2F* PostPreS_miniIsoChgVsGenID;
   TH2F* PostPreS_miniIsoAllVsGenID;
+  TH2F* PostPreS_MassVsGenID;
 
   TH2F* PostPreS_EtaVsMomGenID;
   TH2F* PostPreS_ProbQVsMomGenID;
@@ -490,6 +488,7 @@ struct Tuple {
   TH2F* PostPreS_massTVsMomGenID;
   TH2F* PostPreS_miniIsoChgVsMomGenID;
   TH2F* PostPreS_miniIsoAllVsMomGenID;
+  TH2F* PostPreS_MassVsMomGenID;
 
   TH2F* PostPreS_EtaVsSiblingGenID;
   TH2F* PostPreS_ProbQVsSiblingGenID;
@@ -499,6 +498,7 @@ struct Tuple {
   TH2F* PostPreS_IhVsSiblingGenID;
   TH2F* PostPreS_IasVsSiblingGenID;
   TH2F* PostPreS_massTVsSiblingGenID;
+  TH2F* PostPreS_MassVsSiblingGenID;
 
   TH2F* PostPreS_EtaVsGenAngle;
   TH2F* PostPreS_ProbQVsGenAngle;
@@ -510,6 +510,7 @@ struct Tuple {
   TH2F* PostPreS_massTVsGenAngle;
   TH2F* PostPreS_miniIsoChgVsGenAngle;
   TH2F* PostPreS_miniIsoAllVsGenAngle;
+  TH2F* PostPreS_MassVsGenAngle;
 
   TH2F* PostPreS_EtaVsGenMomAngle;
   TH2F* PostPreS_ProbQVsGenMomAngle;
@@ -521,6 +522,7 @@ struct Tuple {
   TH2F* PostPreS_massTVsGenMomAngle;
   TH2F* PostPreS_miniIsoChgVsGenMomAngle;
   TH2F* PostPreS_miniIsoAllVsGenMomAngle;
+  TH2F* PostPreS_MassVsGenMomAngle;
 
   TH2F* PostPreS_EtaVsGenNumSibling;
   TH2F* PostPreS_ProbQVsGenNumSibling;
@@ -533,6 +535,25 @@ struct Tuple {
   TH2F* PostPreS_miniIsoChgVsGenNumSibling;
   TH2F* PostPreS_miniIsoAllVsGenNumSibling;
   TH2F* PostPreS_EoPVsPfType;
+
+
+  TH1F* PostPreS_Mass;
+  TH2F* PostPreS_MassVsPfType;
+  TH2F* PostPreS_MassVsPt;
+  TH2F* PostPreS_MassVsP;
+  TH2F* PostPreS_MassVsTNOHFraction;
+  TH2F* PostPreS_MassVsTNOPH;
+  TH2F* PostPreS_MassVsTNOM;
+  TH2F* PostPreS_MassVsProbQNoL1;
+  TH2F* PostPreS_MassVsProbXYNoL1;
+  TH2F* PostPreS_MassVsEoP;
+  TH2F* PostPreS_MassVsSumpTOverpT;
+  TH2F* PostPreS_MassVsPtErrOverPt;
+  TH2F* PostPreS_MassVsTIsol;
+  TH2F* PostPreS_MassVsIh;
+  TH2F* PostPreS_MassVsMassT;
+  TH2F* PostPreS_MassVsMiniRelIsoAll;
+  TH2F* PostPreS_MassVsMassErr;
   
   TH1F* CutFlow;
   TH1F* CutFlowReverse;
@@ -621,7 +642,6 @@ struct Tuple {
   TH1D* Hist_Is;
   TH1D* Hist_TOF;
 
-  //FIXME ------ To be modified for Number Of Hits (NOH)
   TH3F* Pred_EtaP;
   TH2F* Pred_I;
   TH3F* Pred_EtaI;
@@ -671,14 +691,12 @@ struct Tuple {
   std::map<std::string, TH1D*> H_F_Binned_Flip;  //TH1D* H_F_Binned_Flip[MaxPredBins];
   std::map<std::string, TH1D*> H_H_Binned_Flip;  //TH1D* H_H_Binned_Flip[MaxPredBins];
 
-  //FIXME ------ To be modified for Number Of Hits (NOH)
   TH3F* Pred_EtaP_Flip;
   TH2F* Pred_I_Flip;
   TH2F* Pred_TOF_Flip;
   TH2F* Pred_EtaB_Flip;
   TH2F* Pred_EtaS_Flip;
   TH2F* Pred_EtaS2_Flip;
-  // end FIXME
 
   TH2F* RegionD_P_Flip;
   TH2F* RegionD_I_Flip;
