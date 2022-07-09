@@ -23,7 +23,7 @@ BackgroundSamples = [
 "crab_Analysis_2018_QCD_Pt-600To800_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_QCD_Pt-800To1000_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_QCD_Pt-1000_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_WJetsToLNu_0J_wProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_WJetsToLNu_woProbQ_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_TTToHadronic_wProbQ_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_TTToSemiLeptonic_wProbQ_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_TTTo2L2Nu_wProbQ_CodeV"+codeVersion+"_v1.root",
@@ -45,7 +45,7 @@ crossSectionArray = [
  182.2, #+-0.05471, 2018_QCD_Pt-600To800_MuEnrichedPt5
  32.5, #+-0.0148, 2018_QCD_Pt-600To800_MuEnrichedPt5
  16.1, #+-, 2018_QCD_Pt-1000_MuEnrichedPt5
- 53330.0, #+-	61526.7, WJetsToLNu
+ 52850.0, #+-  	121.6, WJetsToLNu
  687.1, # or 377.96, # or , TTtoHadronic or 382.53600
  719.1, # or 65.34, TTtoSemiLeptonic or 365.90400
  88.29, # or 687.1, TTto2L2N or 91.47600
@@ -58,11 +58,12 @@ for sample in BackgroundSamples:
 for index,fileIn in enumerate(fileInArray):
   if not (fileIn.Get("analyzer/BaseName/NumEvents")):
     continue
-  
+ 
+  nEvetsPreTrig = fileIn.Get("analyzer/BaseName/NumEvents").GetBinContent(1) 
   nEvetsPostTrig = fileIn.Get("analyzer/BaseName/NumEvents").GetBinContent(2)
-  if (nEvetsPostTrig == 0):
+  if (nEvetsPreTrig == 0):
     continue
-  weight = intLumi*crossSectionArray[index]/nEvetsPostTrig
+  weight = intLumi*crossSectionArray[index]/nEvetsPreTrig
   
   for i in range(0, fileIn.GetListOfKeys().GetEntries()):
     dirname = fileIn.GetListOfKeys().At(i).GetName()

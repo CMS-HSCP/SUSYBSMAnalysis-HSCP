@@ -12,8 +12,8 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_woProbQ_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
-config.JobType.maxMemoryMB = 3500
-config.JobType.inputFiles = ['templateMC.root','CMS_GeomTree.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
+config.JobType.maxMemoryMB = 4000
+config.JobType.inputFiles = ['templateMC.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'
