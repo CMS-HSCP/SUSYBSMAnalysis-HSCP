@@ -482,7 +482,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool HLT_PFMET120_PFMHT120_IDTight = false;
   bool HLT_PFHT500_PFMET100_PFMHT100_IDTight = false;
   bool HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = false;
-  bool HLT_MET105_isoTrk50 = false;
+  bool HLT_MET105_IsoTrk50 = false;
 
   for (unsigned int i = 0; i < triggerH->size(); i++) {
     if (TString(triggerNames.triggerName(i)).Contains("HLT_Mu50") && triggerH->accept(i))
@@ -494,8 +494,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (TString(triggerNames.triggerName(i)).Contains("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60") &&
         triggerH->accept(i))
       HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_isoTrk50") && triggerH->accept(i))
-      HLT_MET105_isoTrk50 = true;
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50") && triggerH->accept(i))
+      HLT_MET105_IsoTrk50 = true;
   }
   // Number of (re-weighted) events
   tuple->NumEvents->Fill(0.5, EventWeight_);
@@ -1969,7 +1969,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                 HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
-                                HLT_MET105_isoTrk50,
+                                HLT_MET105_IsoTrk50,
                                 CaloMET,
                                 RecoPFMET_et,
                                 RecoPFMHT,
@@ -2202,7 +2202,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
     ->setComment("Add the list of muon triggers");
-  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_isoTrk50_v"})
+  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
   desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   desc.addUntracked("TypeMode", 0)
