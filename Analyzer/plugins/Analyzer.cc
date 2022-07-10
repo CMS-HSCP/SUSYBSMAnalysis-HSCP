@@ -1578,8 +1578,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                 CutPt_Flip_,
                                                 CutI_Flip_,
                                                 CutTOF_Flip_);
-    } else {
-      // Preselection not passed, skipping it
+    } else if (saveTree_ < 1) {
+      // Preselection not passed,
+      // skipping it if the ntuple is not used
       continue;
     }
 
