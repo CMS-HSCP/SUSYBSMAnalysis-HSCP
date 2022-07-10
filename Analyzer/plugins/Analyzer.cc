@@ -482,7 +482,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool HLT_PFMET120_PFMHT120_IDTight = false;
   bool HLT_PFHT500_PFMET100_PFMHT100_IDTight = false;
   bool HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = false;
-  bool HLT_MET105_IsoTrk50 = false;
+  bool HLT_MET105_isoTrk50 = false;
 
   for (unsigned int i = 0; i < triggerH->size(); i++) {
     if (TString(triggerNames.triggerName(i)).Contains("HLT_Mu50") && triggerH->accept(i))
@@ -494,8 +494,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (TString(triggerNames.triggerName(i)).Contains("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60") &&
         triggerH->accept(i))
       HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50") && triggerH->accept(i))
-      HLT_MET105_IsoTrk50 = true;
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_isoTrk50") && triggerH->accept(i))
+      HLT_MET105_isoTrk50 = true;
   }
   // Number of (re-weighted) events
   tuple->NumEvents->Fill(0.5, EventWeight_);
@@ -716,12 +716,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ndof;
   std::vector<float> HSCP_Chi2;
   std::vector<int>   HSCP_QualityMask;
-  std::vector<bool>  HSCP_IsHighPurity;
-  std::vector<bool>  HSCP_IsMuon;
+  std::vector<bool>  HSCP_isHighPurity;
+  std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
-  std::vector<bool>  HSCP_IsElectron;
-  std::vector<bool>  HSCP_IsChHadron;
-  std::vector<bool>  HSCP_IsNeutHadron;
+  std::vector<bool>  HSCP_isElectron;
+  std::vector<bool>  HSCP_isChHadron;
+  std::vector<bool>  HSCP_isNeutHadron;
   std::vector<float> HSCP_ECAL_energy;
   std::vector<float> HSCP_HCAL_energy;
   std::vector<float> HSCP_TOF;
@@ -752,9 +752,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_FOVHD;
   // Number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
   std::vector<unsigned int> HSCP_NOM;
-  std::vector<float> HSCP_Iso_TK;
-  std::vector<float> HSCP_Iso_ECAL;
-  std::vector<float> HSCP_Iso_HCAL;
+  std::vector<float> HSCP_iso_TK;
+  std::vector<float> HSCP_iso_ECAL;
+  std::vector<float> HSCP_iso_HCAL;
   std::vector<float> HSCP_track_PFIsolationR005_sumChargedHadronPt;
   std::vector<float> HSCP_track_PFIsolationR005_sumNeutralHadronPt;
   std::vector<float> HSCP_track_PFIsolationR005_sumPhotonPt;
@@ -787,8 +787,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<std::vector<bool>> HSCP_clust_sat254;
   std::vector<std::vector<bool>> HSCP_clust_sat255;
   std::vector<std::vector<uint32_t>> HSCP_clust_detid;
-  std::vector<std::vector<bool>> HSCP_clust_IsStrip;  //is it a SiStrip cluster?
-  std::vector<std::vector<bool>> HSCP_clust_IsPixel;  //is it a Pixel hit?
+  std::vector<std::vector<bool>> HSCP_clust_isStrip;  //is it a SiStrip cluster?
+  std::vector<std::vector<bool>> HSCP_clust_isPixel;  //is it a Pixel hit?
   std::vector<float> HSCP_GenId;
   std::vector<float> HSCP_GenCharge;
   std::vector<float> HSCP_GenMass;
@@ -1061,7 +1061,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     unsigned int idx_pf_RMin = 9999;
 
     // This is again repeated in the preselection
-    bool pf_IsMuon = false, pf_IsElectron = false, pf_IsChHadron = false, pf_IsNeutHadron = false;
+    bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
     int pf_muon_selector = -1;
     float pf_ecal_energy = 0, pf_hcal_energy = 0;
 
@@ -1081,10 +1081,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       for(unsigned int i=0;i<pf->size();i++){
         const reco::PFCandidate* pfCand = &(*pf)[i];
         if(i == idx_pf_RMin) {
-            pf_IsMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-            pf_IsElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
-            pf_IsChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-            pf_IsNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+            pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+            pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+            pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+            pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
             pf_ecal_energy = pfCand->ecalEnergy();
             pf_hcal_energy = pfCand->hcalEnergy();
         }
@@ -1129,8 +1129,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_sat254;
     std::vector<bool> clust_sat255;
     std::vector<uint32_t> clust_detid;
-    std::vector<bool> clust_IsStrip;
-    std::vector<bool> clust_IsPixel;
+    std::vector<bool> clust_isStrip;
+    std::vector<bool> clust_isPixel;
     
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
     float pixelProbs[5] = {0.0,0.0,0.0,0.0,0.0};
@@ -1202,8 +1202,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
-      clust_IsStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
-      clust_IsPixel.push_back(dedxHits->detId(i) >= 3 ? false : true);
+      clust_isStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
+      clust_isPixel.push_back(dedxHits->detId(i) >= 3 ? false : true);
       clust_detid.push_back(dedxHits->detId(i));
       DetId detid(dedxHits->detId(i));
   
@@ -1452,7 +1452,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debug_ > 5 ) LogPrint(MOD) << "     >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
     // Check if we pass the preselection
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
-    bool Ih_Iso_cut = true;
+    bool Ih_iso_cut = true;
 
     bool passPre = passPreselection(
                           track,
@@ -1470,11 +1470,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           0,
                           MassErr,
-                          Ih_Iso_cut,
+                          Ih_iso_cut,
                           closestBackgroundPDGsIDs);
  
 
-    Ih_Iso_cut = false;
+    Ih_iso_cut = false;
     bool passPre_noIh_noIso = false;
 /*
     bool passPre_noIh_noIso = passPreselection(
@@ -1493,7 +1493,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           0,
                           MassErr,
-                          Ih_Iso_cut,
+                          Ih_iso_cut,
                           closestBackgroundPDGsIDs);*/
     
       // Dont do TOF only is isCosmicSB is true
@@ -1875,12 +1875,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ndof.push_back(track->ndof());
     HSCP_Chi2.push_back(track->chi2());
     HSCP_QualityMask.push_back(track->qualityMask());
-    HSCP_IsHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
-    HSCP_IsMuon.push_back(pf_IsMuon);
+    HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
+    HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
-    HSCP_IsElectron.push_back(pf_IsElectron);
-    HSCP_IsChHadron.push_back(pf_IsChHadron);
-    HSCP_IsNeutHadron.push_back(pf_IsNeutHadron);
+    HSCP_isElectron.push_back(pf_isElectron);
+    HSCP_isChHadron.push_back(pf_isChHadron);
+    HSCP_isNeutHadron.push_back(pf_isNeutHadron);
     HSCP_ECAL_energy.push_back(pf_ecal_energy);
     HSCP_HCAL_energy.push_back(pf_hcal_energy);
     HSCP_TOF.push_back(tof ? tof->inverseBeta() : -99);
@@ -1905,9 +1905,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_NOMH.push_back(nomh);
     HSCP_FOVHD.push_back(fovhd);
     HSCP_NOM.push_back(nom);
-    HSCP_Iso_TK.push_back(iso_TK);
-    HSCP_Iso_ECAL.push_back(iso_ECAL);
-    HSCP_Iso_HCAL.push_back(iso_HCAL);
+    HSCP_iso_TK.push_back(iso_TK);
+    HSCP_iso_ECAL.push_back(iso_ECAL);
+    HSCP_iso_HCAL.push_back(iso_HCAL);
     HSCP_track_PFIsolationR005_sumChargedHadronPt.push_back(track_PFIso005_sumCharHadPt);
     HSCP_track_PFIsolationR005_sumNeutralHadronPt.push_back(track_PFIso005_sumNeutHadPt);
     HSCP_track_PFIsolationR005_sumPhotonPt.push_back(track_PFIso005_sumPhotonPt);
@@ -1941,8 +1941,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_clust_sat254.push_back(clust_sat254);
     HSCP_clust_sat255.push_back(clust_sat255);
     HSCP_clust_detid.push_back(clust_detid);
-    HSCP_clust_IsStrip.push_back(clust_IsStrip);
-    HSCP_clust_IsPixel.push_back(clust_IsPixel);
+    HSCP_clust_isStrip.push_back(clust_isStrip);
+    HSCP_clust_isPixel.push_back(clust_isPixel);
     HSCP_GenId.push_back(genid);
     HSCP_GenCharge.push_back(gencharge);
     HSCP_GenMass.push_back(genmass);
@@ -1969,7 +1969,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                 HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
-                                HLT_MET105_IsoTrk50,
+                                HLT_MET105_isoTrk50,
                                 CaloMET,
                                 RecoPFMET_et,
                                 RecoPFMHT,
@@ -2008,12 +2008,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ndof,
                                 HSCP_Chi2,
                                 HSCP_QualityMask,
-                                HSCP_IsHighPurity,
-                                HSCP_IsMuon,
+                                HSCP_isHighPurity,
+                                HSCP_isMuon,
                                 HSCP_MuonSelector,
-                                HSCP_IsElectron,
-                                HSCP_IsChHadron,
-                                HSCP_IsNeutHadron,
+                                HSCP_isElectron,
+                                HSCP_isChHadron,
+                                HSCP_isNeutHadron,
                                 HSCP_ECAL_energy,
                                 HSCP_HCAL_energy,
                                 HSCP_TOF,
@@ -2038,9 +2038,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_NOMH,
                                 HSCP_FOVHD,
                                 HSCP_NOM,
-                                HSCP_Iso_TK,
-                                HSCP_Iso_ECAL,
-                                HSCP_Iso_HCAL,
+                                HSCP_iso_TK,
+                                HSCP_iso_ECAL,
+                                HSCP_iso_HCAL,
                                 HSCP_track_PFIsolationR005_sumChargedHadronPt,
                                 HSCP_track_PFIsolationR005_sumNeutralHadronPt,
                                 HSCP_track_PFIsolationR005_sumPhotonPt,
@@ -2073,8 +2073,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_clust_sat254,
                                 HSCP_clust_sat255,
                                 HSCP_clust_detid,
-                                HSCP_clust_IsStrip,
-                                HSCP_clust_IsPixel,
+                                HSCP_clust_isStrip,
+                                HSCP_clust_isPixel,
                                 HSCP_GenId,
                                 HSCP_GenCharge,
                                 HSCP_GenMass,
@@ -2202,7 +2202,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
     ->setComment("Add the list of muon triggers");
-  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_isoTrk50_v"})
   desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   desc.addUntracked("TypeMode", 0)
@@ -2533,7 +2533,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 const float RescaleI,
                                 const float RescaleT,
                                 float MassErr,
-                                const bool Ih_Iso_cut,
+                                const bool Ih_iso_cut,
                                 const float closestBackgroundPDGsIDs[]) {
   using namespace edm;
     
@@ -2750,7 +2750,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
 //  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
   float EoP = pf_energy / track->p();
-  float IsoTK_SumEt = (Ih_Iso_cut) ? hscpIso.Get_TK_SumEt() : 0.0;
+  float IsoTK_SumEt = (Ih_iso_cut) ? hscpIso.Get_TK_SumEt() : 0.0;
   
   float Ih = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
   float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
@@ -3723,7 +3723,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
                              Tuple* tuple,
                              const float GenBeta,
                              float MassErr,
-                             const bool Ih_Iso_cut,
+                             const bool Ih_iso_cut,
                              const float closestBackgroundPDGsIDs[]) {
   //FIXME to be measured on 2015 data, currently assume 2012
   bool PRescale = true;
@@ -3732,7 +3732,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
   float TRescale = -0.015;  //-0.005 (used in 2012); // added to the 1/beta value
 
   // compute systematic due to momentum scale
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, Ih_iso_cut, closestBackgroundPDGsIDs)) {
     float RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
     
     float Mass = -1;
@@ -3806,7 +3806,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to dEdx
   // compute systematic due to Mass shift ??????????
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_iso_cut, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -3836,7 +3836,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to Mass shift
   // compute systematic due to TOF
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, Ih_iso_cut, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -3866,7 +3866,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End condition for compute systematic due to TOF
   // compute systematics due to PU
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_Iso_cut, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, Ih_iso_cut, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
