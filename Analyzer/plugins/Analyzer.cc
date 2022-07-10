@@ -64,7 +64,7 @@
 // - 20p5: - Add ErrorHisto, TriggerType, possible fix pfType plots by interoducing the ForIdx version
 // - 20p6: - Further fix for pfType?
 // - 20p7: - Add PostPreS_EoPVsPfType plot, cleanup gen print-outs, move them after the preS
-// - 20p8: - Add not special in CPE and !pf_IasPhoton to cutflow, Extended numJetPf to 30 jets
+// - 20p8: - Add not special in CPE and !pf_isPhoton to cutflow, Extended numJetPf to 30 jets
 // - 20p9: - Fix for num of mothers, not cut on special in CPE, cut on EoP < 0.3, shift the integers with 0.5 for nicer plots
 // - 21p0: - Cut on ProbXY > 0.001
 //v22.1 Dylan
@@ -716,12 +716,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ndof;
   std::vector<float> HSCP_Chi2;
   std::vector<int>   HSCP_QualityMask;
-  std::vector<bool>  HSCP_IsHighPurity;
-  std::vector<bool>  HSCP_IsMuon;
+  std::vector<bool>  HSCP_isHighPurity;
+  std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
-  std::vector<bool>  HSCP_IsElectron;
-  std::vector<bool>  HSCP_IsChHadron;
-  std::vector<bool>  HSCP_IsNeutHadron;
+  std::vector<bool>  HSCP_isElectron;
+  std::vector<bool>  HSCP_isChHadron;
+  std::vector<bool>  HSCP_isNeutHadron;
   std::vector<float> HSCP_ECAL_energy;
   std::vector<float> HSCP_HCAL_energy;
   std::vector<float> HSCP_TOF;
@@ -752,9 +752,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_FOVHD;
   // Number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
   std::vector<unsigned int> HSCP_NOM;
-  std::vector<float> HSCP_Iso_TK;
-  std::vector<float> HSCP_Iso_ECAL;
-  std::vector<float> HSCP_Iso_HCAL;
+  std::vector<float> HSCP_iso_TK;
+  std::vector<float> HSCP_iso_ECAL;
+  std::vector<float> HSCP_iso_HCAL;
   std::vector<float> HSCP_track_PFIsolationR005_sumChargedHadronPt;
   std::vector<float> HSCP_track_PFIsolationR005_sumNeutralHadronPt;
   std::vector<float> HSCP_track_PFIsolationR005_sumPhotonPt;
@@ -787,8 +787,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<std::vector<bool>> HSCP_clust_sat254;
   std::vector<std::vector<bool>> HSCP_clust_sat255;
   std::vector<std::vector<uint32_t>> HSCP_clust_detid;
-  std::vector<std::vector<bool>> HSCP_clust_IsStrip;  //is it a SiStrip cluster?
-  std::vector<std::vector<bool>> HSCP_clust_IsPixel;  //is it a Pixel hit?
+  std::vector<std::vector<bool>> HSCP_clust_isStrip;  //is it a SiStrip cluster?
+  std::vector<std::vector<bool>> HSCP_clust_isPixel;  //is it a Pixel hit?
   std::vector<float> HSCP_GenId;
   std::vector<float> HSCP_GenCharge;
   std::vector<float> HSCP_GenMass;
@@ -1061,7 +1061,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     unsigned int idx_pf_RMin = 9999;
 
     // This is again repeated in the preselection
-    bool pf_IsMuon = false, pf_IsElectron = false, pf_IsChHadron = false, pf_IsNeutHadron = false;
+    bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
     int pf_muon_selector = -1;
     float pf_ecal_energy = 0, pf_hcal_energy = 0;
 
@@ -1081,10 +1081,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       for(unsigned int i=0;i<pf->size();i++){
         const reco::PFCandidate* pfCand = &(*pf)[i];
         if(i == idx_pf_RMin) {
-            pf_IsMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-            pf_IsElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
-            pf_IsChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-            pf_IsNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+            pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+            pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+            pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+            pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
             pf_ecal_energy = pfCand->ecalEnergy();
             pf_hcal_energy = pfCand->hcalEnergy();
         }
@@ -1129,8 +1129,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_sat254;
     std::vector<bool> clust_sat255;
     std::vector<uint32_t> clust_detid;
-    std::vector<bool> clust_IsStrip;
-    std::vector<bool> clust_IsPixel;
+    std::vector<bool> clust_isStrip;
+    std::vector<bool> clust_isPixel;
     
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
     float pixelProbs[5] = {0.0,0.0,0.0,0.0,0.0};
@@ -1202,8 +1202,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
-      clust_IsStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
-      clust_IsPixel.push_back(dedxHits->detId(i) >= 3 ? false : true);
+      clust_isStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
+      clust_isPixel.push_back(dedxHits->detId(i) >= 3 ? false : true);
       clust_detid.push_back(dedxHits->detId(i));
       DetId detid(dedxHits->detId(i));
   
@@ -1875,12 +1875,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ndof.push_back(track->ndof());
     HSCP_Chi2.push_back(track->chi2());
     HSCP_QualityMask.push_back(track->qualityMask());
-    HSCP_IsHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
-    HSCP_IsMuon.push_back(pf_IsMuon);
+    HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
+    HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
-    HSCP_IsElectron.push_back(pf_IsElectron);
-    HSCP_IsChHadron.push_back(pf_IsChHadron);
-    HSCP_IsNeutHadron.push_back(pf_IsNeutHadron);
+    HSCP_isElectron.push_back(pf_isElectron);
+    HSCP_isChHadron.push_back(pf_isChHadron);
+    HSCP_isNeutHadron.push_back(pf_isNeutHadron);
     HSCP_ECAL_energy.push_back(pf_ecal_energy);
     HSCP_HCAL_energy.push_back(pf_hcal_energy);
     HSCP_TOF.push_back(tof ? tof->inverseBeta() : -99);
@@ -1905,9 +1905,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_NOMH.push_back(nomh);
     HSCP_FOVHD.push_back(fovhd);
     HSCP_NOM.push_back(nom);
-    HSCP_Iso_TK.push_back(iso_TK);
-    HSCP_Iso_ECAL.push_back(iso_ECAL);
-    HSCP_Iso_HCAL.push_back(iso_HCAL);
+    HSCP_iso_TK.push_back(iso_TK);
+    HSCP_iso_ECAL.push_back(iso_ECAL);
+    HSCP_iso_HCAL.push_back(iso_HCAL);
     HSCP_track_PFIsolationR005_sumChargedHadronPt.push_back(track_PFIso005_sumCharHadPt);
     HSCP_track_PFIsolationR005_sumNeutralHadronPt.push_back(track_PFIso005_sumNeutHadPt);
     HSCP_track_PFIsolationR005_sumPhotonPt.push_back(track_PFIso005_sumPhotonPt);
@@ -1941,8 +1941,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_clust_sat254.push_back(clust_sat254);
     HSCP_clust_sat255.push_back(clust_sat255);
     HSCP_clust_detid.push_back(clust_detid);
-    HSCP_clust_IsStrip.push_back(clust_IsStrip);
-    HSCP_clust_IsPixel.push_back(clust_IsPixel);
+    HSCP_clust_isStrip.push_back(clust_isStrip);
+    HSCP_clust_isPixel.push_back(clust_isPixel);
     HSCP_GenId.push_back(genid);
     HSCP_GenCharge.push_back(gencharge);
     HSCP_GenMass.push_back(genmass);
@@ -2008,12 +2008,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ndof,
                                 HSCP_Chi2,
                                 HSCP_QualityMask,
-                                HSCP_IsHighPurity,
-                                HSCP_IsMuon,
+                                HSCP_isHighPurity,
+                                HSCP_isMuon,
                                 HSCP_MuonSelector,
-                                HSCP_IsElectron,
-                                HSCP_IsChHadron,
-                                HSCP_IsNeutHadron,
+                                HSCP_isElectron,
+                                HSCP_isChHadron,
+                                HSCP_isNeutHadron,
                                 HSCP_ECAL_energy,
                                 HSCP_HCAL_energy,
                                 HSCP_TOF,
@@ -2038,9 +2038,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_NOMH,
                                 HSCP_FOVHD,
                                 HSCP_NOM,
-                                HSCP_Iso_TK,
-                                HSCP_Iso_ECAL,
-                                HSCP_Iso_HCAL,
+                                HSCP_iso_TK,
+                                HSCP_iso_ECAL,
+                                HSCP_iso_HCAL,
                                 HSCP_track_PFIsolationR005_sumChargedHadronPt,
                                 HSCP_track_PFIsolationR005_sumNeutralHadronPt,
                                 HSCP_track_PFIsolationR005_sumPhotonPt,
@@ -2073,8 +2073,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_clust_sat254,
                                 HSCP_clust_sat255,
                                 HSCP_clust_detid,
-                                HSCP_clust_IsStrip,
-                                HSCP_clust_IsPixel,
+                                HSCP_clust_isStrip,
+                                HSCP_clust_isPixel,
                                 HSCP_GenId,
                                 HSCP_GenCharge,
                                 HSCP_GenMass,
@@ -2613,9 +2613,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }
   
   // Loop on PF candidates
-  bool pf_IasPfTrack = false;
-  bool pf_IasPhoton = false, pf_IasElectron = false, pf_IasMuon = false;
-  bool pf_IasChHadron = false, pf_IasNeutHadron = false, pf_IasUndefined = false;
+  bool pf_isPfTrack = false;
+  bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
+  bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumLeptonPt = 0, track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
   float pf_energy = 0.0;
     
@@ -2632,36 +2632,36 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
       const reco::PFCandidate* pfCand = &(*pf)[i];
 
-      bool pf_IasElectronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
-      bool pf_IasMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-      bool pf_IasPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
-      bool pf_IasChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-      bool pf_IasNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+      bool pf_isElectronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+      bool pf_isMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+      bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+      bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+      bool pf_isNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
 
       if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
-        pf_IasElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
-        pf_IasMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-        pf_IasPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+        pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+        pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+        pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
         
-        pf_IasChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-        pf_IasNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
-        pf_IasUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
-        pf_IasPfTrack = true;
+        pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+        pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+        pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
+        pf_isPfTrack = true;
         pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to general track
             tuple->BefPreS_pfType->Fill(1.5, EventWeight_);
-          if (pf_IasElectron) {
+          if (pf_isElectron) {
             tuple->BefPreS_pfType->Fill(2.5, EventWeight_);
-          } else if (pf_IasMuon) {
+          } else if (pf_isMuon) {
             tuple->BefPreS_pfType->Fill(3.5, EventWeight_);
-          } else if (pf_IasPhoton) {
+          } else if (pf_isPhoton) {
             tuple->BefPreS_pfType->Fill(4.5, EventWeight_);
-          } else if (pf_IasChHadron) {
+          } else if (pf_isChHadron) {
            tuple->BefPreS_pfType->Fill(5.5, EventWeight_);
-          } else if (pf_IasNeutHadron) {
+          } else if (pf_isNeutHadron) {
             tuple->BefPreS_pfType->Fill(6.5, EventWeight_);
-          } else if (pf_IasUndefined) {
+          } else if (pf_isUndefined) {
             tuple->BefPreS_pfType->Fill(7.5, EventWeight_);
           } else {
            tuple->BefPreS_pfType->Fill(8.5, EventWeight_);
@@ -2686,15 +2686,15 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       }
       if (dr<drForMiniIso) {
         // Leptons get added to trackIso (this is not in the official definition)
-        if (pf_IasElectronForIdx || pf_IasMuonForIdx) track_PFMiniIso_sumLeptonPt+=pt;
+        if (pf_isElectronForIdx || pf_isMuonForIdx) track_PFMiniIso_sumLeptonPt+=pt;
         // charged cands from PV get added to trackIso
-        if(pf_IasChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
+        if(pf_isChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
         // charged cands not from PV get added to pileup iso
-        else if(pf_IasChHadronForIdx) track_PFMiniIso_sumPUPt+=pt;
+        else if(pf_isChHadronForIdx) track_PFMiniIso_sumPUPt+=pt;
         // neutral hadron iso
-        if(pf_IasNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
+        if(pf_isNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
         // photon iso
-        if(pf_IasPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
+        if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
       }
     }
   }//end loop PFCandidates
@@ -2799,7 +2799,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the PF based mini-isolation
   passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
-  passedCutsArray[14] = ( !pf_IasElectron  && !pf_IasPhoton) ? true : false;
+  passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
@@ -2865,7 +2865,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //    // Cut on the PF based mini-isolation
 //    passedCutsArray2[15] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
 //    // Cut on the PF electron ID
-//    passedCutsArray2[16] = ( !pf_IasElectron && !pf_IasPhoton) ? true : false;
+//    passedCutsArray2[16] = ( !pf_isElectron && !pf_isPhoton) ? true : false;
 //    // Cut on Ih
 //    passedCutsArray2[17] = (  (typeMode_ != 5 && Ih > globalMinIh_)
 //                           || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
@@ -3178,22 +3178,22 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==13) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
         if (i==14) {
           tuple->N1_pfType->Fill(0.5, EventWeight_);
-          if (pf_IasPfTrack) {
+          if (pf_isPfTrack) {
             tuple->N1_pfType->Fill(1.5, EventWeight_);
           } else {
             tuple->N1_pfType->Fill(8.5, EventWeight_);
           }
-          if (pf_IasElectron) {
+          if (pf_isElectron) {
             tuple->N1_pfType->Fill(2.5, EventWeight_);
-          } else if (pf_IasMuon) {
+          } else if (pf_isMuon) {
             tuple->N1_pfType->Fill(3.5, EventWeight_);
-          } else if (pf_IasPhoton) {
+          } else if (pf_isPhoton) {
             tuple->N1_pfType->Fill(4.5, EventWeight_);
-          } else if (pf_IasChHadron) {
+          } else if (pf_isChHadron) {
            tuple->N1_pfType->Fill(5.5, EventWeight_);
-          } else if (pf_IasNeutHadron) {
+          } else if (pf_isNeutHadron) {
             tuple->N1_pfType->Fill(6.5, EventWeight_);
-          } else if (pf_IasUndefined) {
+          } else if (pf_isUndefined) {
             tuple->N1_pfType->Fill(7.5, EventWeight_);
           }
         }
@@ -3217,22 +3217,22 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if (tuple) {
         tuple->CutFlowEta->Fill(track->eta(), i+0.5, EventWeight_);
         tuple->CutFlowPfType->Fill(0.5, i+0.5, EventWeight_);
-        if (pf_IasPfTrack) {
+        if (pf_isPfTrack) {
           tuple->CutFlowPfType->Fill(1.5, i+0.5, EventWeight_);
         } else {
           tuple->CutFlowPfType->Fill(8.5, i+0.5, EventWeight_);
         }
-        if (pf_IasElectron) {
+        if (pf_isElectron) {
           tuple->CutFlowPfType->Fill(2.5, i+0.5, EventWeight_);
-        } else if (pf_IasMuon) {
+        } else if (pf_isMuon) {
           tuple->CutFlowPfType->Fill(3.5, i+0.5, EventWeight_);
-        } else if (pf_IasPhoton) {
+        } else if (pf_isPhoton) {
           tuple->CutFlowPfType->Fill(4.5, i+0.5, EventWeight_);
-        } else if (pf_IasChHadron) {
+        } else if (pf_isChHadron) {
           tuple->CutFlowPfType->Fill(5.5, i+0.5, EventWeight_);
-        } else if (pf_IasNeutHadron) {
+        } else if (pf_isNeutHadron) {
           tuple->CutFlowPfType->Fill(6.5, i+0.5, EventWeight_);
-        } else if (pf_IasUndefined) {
+        } else if (pf_isUndefined) {
           tuple->CutFlowPfType->Fill(7.5, i+0.5, EventWeight_);
         }
       }
@@ -3248,29 +3248,29 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (tuple) {
       tuple->PostPreS_pfType->Fill(0.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(0.5, Ias, EventWeight_);
-    if (pf_IasPfTrack) {
+    if (pf_isPfTrack) {
       tuple->PostPreS_pfType->Fill(1.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(1.5, Ias, EventWeight_);
     } else {
       tuple->PostPreS_pfType->Fill(8.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(8.5, Ias, EventWeight_);
     }
-    if (pf_IasElectron) {
+    if (pf_isElectron) {
       tuple->PostPreS_pfType->Fill(2.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(2.5, Ias, EventWeight_);
-    } else if (pf_IasMuon) {
+    } else if (pf_isMuon) {
       tuple->PostPreS_pfType->Fill(3.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(3.5, Ias, EventWeight_);
-    } else if (pf_IasPhoton) {
+    } else if (pf_isPhoton) {
       tuple->PostPreS_pfType->Fill(4.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(4.5, Ias, EventWeight_);
-    } else if (pf_IasChHadron) {
+    } else if (pf_isChHadron) {
       tuple->PostPreS_pfType->Fill(5.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(5.5, Ias, EventWeight_);
-    } else if (pf_IasNeutHadron) {
+    } else if (pf_isNeutHadron) {
       tuple->PostPreS_pfType->Fill(6.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(6.5, Ias, EventWeight_);
-    } else if (pf_IasUndefined) {
+    } else if (pf_isUndefined) {
       tuple->PostPreS_pfType->Fill(7.5, EventWeight_);
       tuple->PostPreS_pfTypeVsIas->Fill(7.5, Ias, EventWeight_);
     }
@@ -3425,29 +3425,29 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     tuple->PostPreS_EoPVsPfType->Fill(EoP, 0.5, EventWeight_);
     tuple->PostPreS_MassVsPfType->Fill(Mass, 0.5, EventWeight_);
-    if (pf_IasPfTrack) {
+    if (pf_isPfTrack) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 1.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 1.5, EventWeight_);
     } else {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 8.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 8.5, EventWeight_);
     }
-    if (pf_IasElectron) {
+    if (pf_isElectron) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 2.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 2.5, EventWeight_);
-    } else if (pf_IasMuon) {
+    } else if (pf_isMuon) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 3.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 3.5, EventWeight_);
-    } else if (pf_IasPhoton) {
+    } else if (pf_isPhoton) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 4.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 4.5, EventWeight_);
-    } else if (pf_IasChHadron) {
+    } else if (pf_isChHadron) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 5.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 5.5, EventWeight_);
-    } else if (pf_IasNeutHadron) {
+    } else if (pf_isNeutHadron) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 6.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 6.5, EventWeight_);
-    } else if (pf_IasUndefined) {
+    } else if (pf_isUndefined) {
       tuple->PostPreS_EoPVsPfType->Fill(EoP, 7.5, EventWeight_);
       tuple->PostPreS_MassVsPfType->Fill(Mass, 7.5, EventWeight_);
     }
