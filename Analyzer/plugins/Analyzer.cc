@@ -84,6 +84,7 @@
 // - 22p9: - (probXYonTrackNoLayer1 > 0.1) 
 // - 23p0: - (probXYonTrackNoLayer1 > 0.01)
 // - 23p4: - Add cluster-based probXY, probQ, size per layer plots
+// - 23p5: - Fix the order of probs
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1210,7 +1211,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     int nofClust_dEdxLowerThan = 0;
 
-    // Loop through the rechits on the given track
+    // Loop through the rechits on the given track before preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
@@ -1234,8 +1235,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Get the local vector for the track direction
         LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
         // Re-run the CPE on this cluster with the lv above
-        auto reCPE = std::get<2>(pixelCPE->getParameters(
-                                                         *pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, track->charge())));
+        auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, track->charge())));
         // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
@@ -1297,12 +1297,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     pixelProbs[1] = combineProbs(probXYonTrackWMulti, numRecHits);
     pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
     pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+    //TODO
+//    cout << "probQonTrackWMultiNoLayer1"
 
 
     // I need to do some debug here
 //    if (debug_> -1)
-    LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1 << 
-                     " numRecHits = " << numRecHits << " numRecHitsNoLayer1 = " << numRecHitsNoLayer1 ;
+    LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1
+                  << " numRecHits = " << numRecHits << " numRecHitsNoLayer1 = " << numRecHitsNoLayer1 ;
     LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
 
     if (specialInCPE) {
@@ -1319,8 +1321,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     TreeprobQonTrack = pixelProbs[0];
-    TreeprobQonTracknoL1 = pixelProbs[1];
-    TreeprobXYonTrack = pixelProbs[2];
+    TreeprobXYonTrack = pixelProbs[1];
+    TreeprobQonTracknoL1 = pixelProbs[2];
     TreeprobXYonTracknoL1 = pixelProbs[3];
 
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
@@ -1645,9 +1647,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
+    // Some printouts to undertand ProbQ vs ProbQNoL1
+    bool debugProbQvsProbQNoL1 = false;
+    if (fabs(pixelProbs[2]-pixelProbs[0])/pixelProbs[2] > 0.015 ) debugProbQvsProbQNoL1 = true;
+    if (debugProbQvsProbQNoL1 && debug_ > 9) {
+      LogPrint(MOD) << " Rel diff of (CombProbQ - CombProbQNoL1)/CombProbQNoL1: " <<  fabs(pixelProbs[2]-pixelProbs[0])/pixelProbs[2];
+      LogPrint(MOD) << " CombProbQ: " << pixelProbs[0] << " CombProbQNoL1: " << pixelProbs[2] ;
+    }
+    
     auto genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
     // 0.31623 [Bichsel's smallest entry]
     if (isSignal && genGammaBeta > 0.31623) {
+    // Loop through the deDx hits after the preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       DetId detid(dedxHits->detId(i));
 
@@ -1657,9 +1668,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Get the local angles (axproximate from global)
         const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
         LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
-        
-        auto reCPE = std::get<2>(pixelCPE->getParameters(
-                                                         *pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, track->charge())));
+        // Let's redo CPE too
+        auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, track->charge())));
           // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
@@ -1672,11 +1682,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
-
-        // Layer 1 was very noisy in 2017/2018
         
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
+          
+          if (debugProbQvsProbQNoL1 && debug_ > 9) {
+            LogPrint(MOD) << " For Layer " << pixLayerIndex << ", ClustProbQ = " << probQ;
+          }
           tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
           tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
           tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize, pixLayerIndex-0.5, EventWeight_);
@@ -1705,6 +1717,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       } 
 
+    } else {
+      LogPrint(MOD) << "BetaGamma is too low for Bischel";
     }
     
       // TODO this
@@ -1771,7 +1785,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
 
-    // Loop through the rechits on the given track
+    // Loop through the rechits on the given track in the preselection function
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
         DetId detid(dedxHits->detId(i));
         float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
@@ -1784,13 +1798,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
               pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
               if (pixLayerIndex == 1 && Ias >= 0.7) {
-                tuple->PostPreS_HighIasPixelL1ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+                tuple->PostPreS_HighIasPixelL1ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
               } else if (pixLayerIndex == 1 && Ias < 0.7) {
-                tuple->PostPreS_LowIasPixelL1ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+                tuple->PostPreS_LowIasPixelL1ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
               } else if (pixLayerIndex == 2 && Ias >= 0.7) {
-                tuple->PostPreS_HighIasPixelL2ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+                tuple->PostPreS_HighIasPixelL2ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
               } else if (pixLayerIndex == 2 && Ias < 0.7) {
-                tuple->PostPreS_LowIasPixelL2ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[3], EventWeight_);
+                tuple->PostPreS_LowIasPixelL2ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
               }
             } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
                 pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
@@ -2812,8 +2826,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     track->found() <= 0 ? -1 : track->found() / float(track->found() + missingHitsTillLast);
   
   float probQonTrack = pixelProbs[0];
-  float probQonTrackNoLayer1 = pixelProbs[1];
-  float probXYonTrack = pixelProbs[2];
+  float probXYonTrack = pixelProbs[1];
+  float probQonTrackNoLayer1 = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
   
   bool specialInCPE = false;
