@@ -5,8 +5,8 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('analysis')
 
 # defaults
-options.outputFile = 'HSCP.root'
-options.maxEvents = 1000 # -1 means all events
+options.outputFile = 'HSCP_EDM.root'
+options.maxEvents = -1 # -1 means all events
 
 options.register('GTAG', '123X_mcRun3_2021_realistic_v4',
     VarParsing.multiplicity.singleton,
@@ -135,7 +135,7 @@ process.Out = cms.OutputModule("PoolOutputModule",
      outputCommands = cms.untracked.vstring(
          "keep *"
     ),
-    fileName = cms.untracked.string(options.outputFile),
+    fileName = cms.untracked.string('HSCP_EDM.root'),
     SelectEvents = cms.untracked.PSet(
        SelectEvents = cms.vstring('*')
     ),
