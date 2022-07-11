@@ -260,7 +260,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
 
-  cout << "Init CutFlow plots" << endl;
   Name = "CutFlow";
   tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
   Name = "CutFlowReverse";
@@ -270,7 +269,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "CutFlowPfType";
   tuple->CutFlowPfType = dir.make<TH2F>(Name.c_str(), Name.c_str(), 9, 0., 9., 21, 0.,21.);
 
-  cout << "Init N1_ plots" << endl;
   Name = "N1_Eta";
   tuple->N1_Eta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6);
   Name = "N1_Chi2oNdof";
@@ -343,7 +341,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_pfType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 9, 0, 9);
   tuple->N1_pfType->Sumw2();
 
-  cout << "Init Systematics plots" << endl;
   Name = "HSCPE";
   tuple->HSCPE = dir.make<TH1F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
   tuple->HSCPE->Sumw2();
@@ -369,7 +366,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->HSCPE_SystHDown = dir.make<TH1F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts);
   tuple->HSCPE_SystHDown->Sumw2();
 
-  cout << "Init Mass plots" << endl;
   Name = "Mass";
   tuple->Mass = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
   tuple->Mass->Sumw2();
@@ -500,7 +496,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   if (SkipSelectionPlot)
     return;
 
-  cout << "Init Gen level plots" << endl;
   Name = "Gen_DecayLength";
   tuple->Gen_DecayLength = dir.make<TH1F>(Name.c_str(), Name.c_str(), 1000, 0, 1000);
   tuple->Gen_DecayLength->Sumw2();
@@ -536,11 +531,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Beta_SelectedT = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 20, 0, 1);
   tuple->Beta_SelectedT->Sumw2();
 
-  cout << "Init BS plots" << endl;
 
   Name = "BefPreS_GenPtVsdRMinBckg";
   tuple->BefPreS_GenPtVsdRMinBckg = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
   tuple->BefPreS_GenPtVsdRMinBckg->Sumw2();
+  tuple->BefPreS_GendRMin = dir.make<TH1F>("BefPreS_GendRMin",";dR_min;Gen candidate",100,0.,5.);
+  tuple->BefPreS_GendRMin->Sumw2();
   Name = "BefPreS_GenPtVsdRMinBckgPostCut";
   tuple->BefPreS_GenPtVsdRMinBckgPostCut = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
   tuple->BefPreS_GenPtVsdRMinBckgPostCut->Sumw2();
@@ -846,7 +842,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->BefPreS_ProbQVsIas->Sumw2();
   
-  cout << "Init PostPreSelection plots" << endl;
 
   Name = "PostPreS_TriggerType";
   tuple->PostPreS_TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
@@ -1127,7 +1122,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MassErrVsIas = dir.make<TH2F>("PostPreS_MassErrVsIas","PostPreS_MassErrVsIas;PostPreS_MassErrVsIas;PostPreS_MassErrVsIas",50, 0., 10.,20,0.,1.);
   tuple->PostPreS_MassErrVsIas->Sumw2();
 
-  cout << "Init PostPreSelectionVsGenID plots" << endl;
   Name = "PostPreS_EtaVsGenID";
   tuple->PostPreS_EtaVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(),  50, -2.6, 2.6, 4000, 0.0, 4000.0);
   tuple->PostPreS_EtaVsGenID->Sumw2();
@@ -1381,8 +1375,19 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_LowIasPixelL2ProbQVsProbXY";
   tuple->PostPreS_LowIasPixelL2ProbQVsProbXY = dir.make<TH3F>(Name.c_str(), Name.c_str(), 200, 0., dEdxM_UpLim,  100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->PostPreS_LowIasPixelL2ProbQVsProbXY->Sumw2();
-
-  cout << "Init gen level plots" << endl;
+  tuple->PostPreS_CluProbQVsPixelLayer = dir.make<TH2F>("PostPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",100,0.,1.,4,0.,4.);
+  tuple->PostPreS_CluProbQVsPixelLayer->Sumw2();
+  tuple->PostPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("PostPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
+  tuple->PostPreS_CluProbXYVsPixelLayer->Sumw2();
+  tuple->PostPreS_CluSizeVsPixelLayer = dir.make<TH2F>("PostPreS_CluSizeVsPixelLayer",";CluSize;Layer",10,0.,10.,4,0.,4.);
+  tuple->PostPreS_CluSizeVsPixelLayer->Sumw2();
+  tuple->PostPreS_CluSizeXVsPixelLayer = dir.make<TH2F>("PostPreS_CluSizeXVsPixelLayer",";CluSizeX;Layer",10,0.,10.,4,0.,4.);
+  tuple->PostPreS_CluSizeXVsPixelLayer->Sumw2();
+  tuple->PostPreS_CluSizeYVsPixelLayer = dir.make<TH2F>("PostPreS_CluSizeYVsPixelLayer",";CluSizeY;Layer",10,0.,10.,4,0.,4.);
+  tuple->PostPreS_CluSizeYVsPixelLayer->Sumw2();
+  tuple->PostPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
+  tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
+  
   Name = "genlevelpT";
   tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   tuple->genlevelpT->Sumw2();
@@ -1392,9 +1397,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "genlevelbeta";
   tuple->genlevelbeta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
   tuple->genlevelbeta->Sumw2();
+  tuple->genlevelbetagamma = dir.make<TH1F>("genlevelbetagamma",";#beta #gamma;Gen canidate",4500,0.,450.);
+  tuple->genlevelbetagamma->Sumw2();
 
   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
-  cout << "Init prediction plots" << endl;
   for (int i = 0; i < PredBins; i++) {
     char Suffix[1024];
     sprintf(Suffix, "_%i", i);
@@ -1408,7 +1414,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TOF_Binned[std::to_string(i)]->Sumw2();
   }
 
-  cout << "Init AS plots" << endl;
   Name = "AS_Eta_RegionA";
   tuple->AS_Eta_RegionA = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 52, -2.6, 2.6);
   tuple->AS_Eta_RegionA->Sumw2();
@@ -1762,7 +1767,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
         dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
     tuple->RegionH_Ias_Flip->Sumw2();
 
-    cout << "Init ctrl plots" << endl;
     Name = "CtrlPt_S1_Is";
     tuple->CtrlPt_S1_Is = dir.make<TH1D>(Name.c_str(), Name.c_str(), 200, 0, dEdxS_UpLim);
     tuple->CtrlPt_S1_Is->Sumw2();
@@ -1855,7 +1859,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   //  HSCPCandidates ttree: different saving-levels
   //
   //===================================================
-  cout << "Init make tree" << endl;
   tuple->Tree = dir.make<TTree>("HscpCandidates", "HscpCandidates");
   ///tuple->Tree->SetDirectory(0);
   if (saveTree > 0) {
@@ -2447,7 +2450,6 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       bin = muonStations(track->hitPattern()) + 1;
   }
 
-  // std::cout << "Init Fill out the control plots" << std::endl;
   if (!isCosmicSB) {
     if (track->pt() > PtLimits[0]) {
       tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
@@ -2513,7 +2515,6 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (dedxMObj)
     Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(float I, bool MC, float dEdxK, float dEdxC)
 
-  // std::cout << "Init Loop on the cut index for signal region" << std::endl;
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {
     if (MuonTOF < GlobalMinTOF)
       continue;

@@ -165,7 +165,7 @@ public:
                      const edm::Event& iEvent,
                      const float Event_Weight,
                      const int& CutIndex,
-                     Tuple*& tuple,
+                     Tuple* tuple,
                      const bool isFlip,
                      const float GenBeta,
                      const bool RescaleP,
@@ -176,6 +176,7 @@ public:
   GlobalPoint getOuterHitPos(const edm::EventSetup& iSetup, const reco::DeDxHitInfo* dedxHits);
   float SegSep(const reco::TrackRef track, const edm::Event& iEvent, float& minPhi, float& minEta);
   float combineProbs(float probOnTrackWMulti, int numRecHits) const;
+  bool isHSCPgenID(const reco::GenParticle& gen);
   void calculateSyst(const reco::TrackRef track,
                      const reco::DeDxHitInfo* dedxHits,
                      const reco::DeDxData* dedxSObj,
