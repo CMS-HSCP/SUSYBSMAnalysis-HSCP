@@ -14,19 +14,19 @@ ROOT.gStyle.SetPadBottomMargin(0.14);
 ROOT.gStyle.SetPadLeftMargin(0.15);
 
 BackgroundSamples = [
-"crab_Analysis_2018_QCD_Pt-50To80_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-80To120_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-120To170_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-170To300_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-300To470_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-470To600_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-600To800_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-800To1000_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_QCD_Pt-1000_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-50To80_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-80To120_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-120To170_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-170To300_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-300To470_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-470To600_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-600To800_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-800To1000_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_QCD_Pt-1000_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_WJetsToLNu_woProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_TTToHadronic_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_TTToSemiLeptonic_wProbQ_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_TTTo2L2Nu_wProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_TTToHadronic_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_TTToSemiLeptonic_woProbQ_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_TTTo2L2Nu_woProbQ_CodeV"+codeVersion+"_v1.root",
 ]
 
 intLumi = 10.0 # 137.0
@@ -86,13 +86,13 @@ for index,fileIn in enumerate(fileInArray):
           if (keyname2=="HscpCandidates" or keyname2=="GenHscpCandidates"):
             continue
           if obj.InheritsFrom("TObject"):
-            obj.Scale(weight)
+            obj.Multiply(weight)
   fileIn.Write("",ROOT.TObject.kOverwrite)
   fileIn.Close()
 
-os.system("hadd crab_Analysis_2018_AllBackground_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-50To80_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-80To120_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-120To170_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-170To300_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-300To470_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-470To600_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-600To800_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-800To1000_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-1000_MuEnrichedPt5_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_WJetsToLNu_0J_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_TTToHadronic_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_TTToSemiLeptonic_wProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_TTTo2L2Nu_wProbQ_CodeV"+codeVersion+"_v1.root")
+os.system("hadd crab_Analysis_2018_AllBackground_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-50To80_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-80To120_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-120To170_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-170To300_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-300To470_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-470To600_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-600To800_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-800To1000_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_QCD_Pt-1000_MuEnrichedPt5_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_WJetsToLNu_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_TTToHadronic_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_TTToSemiLeptonic_woProbQ_CodeV"+codeVersion+"_v1.root crab_Analysis_2018_TTTo2L2Nu_woProbQ_CodeV"+codeVersion+"_v1.root")
 
 if not os.path.exists("CodeV"+codeVersion): os.mkdir("CodeV"+codeVersion)
 
 os.system("mv *"+codeVersion+"*root "+ "CodeV"+codeVersion+"/.")
-os.system("mv CodeV"+codeVersion+"/crab_Analysis_2018_AllBackground_wProbQ_CodeV"+codeVersion+"_v1.root .")
+os.system("mv CodeV"+codeVersion+"/crab_Analysis_2018_AllBackground_woProbQ_CodeV"+codeVersion+"_v1.root .")

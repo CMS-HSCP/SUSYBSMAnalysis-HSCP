@@ -21,7 +21,7 @@ options.register('SAMPLE', 'isSignal',
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
 )
-options.register('YEAR', '2017',
+options.register('YEAR', '2018',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Year. Use: 2017 or 2018"
@@ -75,8 +75,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
-   fileNames = cms.untracked.vstring("file:EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
+   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
+#   fileNames = cms.untracked.vstring("file:EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -190,7 +190,7 @@ elif options.SAMPLE=='isBckg':
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
@@ -206,7 +206,7 @@ else :
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
@@ -222,7 +222,6 @@ process.analyzer.SampleType = SampleType
 process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
-process.analyzer.Geometry="CMS_GeomTree.root"
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
 process.analyzer.TrackProbQCut = 0.1
 process.analyzer.Period = "2018"

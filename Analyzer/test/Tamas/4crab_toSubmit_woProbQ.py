@@ -3,7 +3,7 @@ from CRABClient.UserUtilities import config
 config = config()
 
 config.section_('General')
-config.General.requestName = 'Analysis_2018_ROVIDMINTA_woProbQ_CodeVVERZIO_v1'
+config.General.requestName = 'Analysis_2018_QCD_Pt-50To80_MuEnrichedPt5_woProbQ_CodeV23p0_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 
@@ -16,7 +16,7 @@ config.JobType.maxMemoryMB = 4000
 config.JobType.inputFiles = ['templateMC.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
 
 config.section_('Data')
-config.Data.inputDataset = 'MINTA'
+config.Data.inputDataset = '/QCD_Pt-50To80_MuEnrichedPt5_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v1/AODSIM'
 #config.Data.inputDBS = 'phys03'
 #config.Data.splitting = 'Automatic'
 config.Data.splitting = 'LumiBased'

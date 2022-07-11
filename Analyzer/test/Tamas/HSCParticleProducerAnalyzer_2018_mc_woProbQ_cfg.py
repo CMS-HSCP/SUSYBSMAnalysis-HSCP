@@ -21,7 +21,7 @@ options.register('SAMPLE', 'isBckg',
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
 )
-options.register('YEAR', '2017',
+options.register('YEAR', '2018',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Year. Use: 2017 or 2018"
@@ -232,7 +232,7 @@ else :
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
@@ -248,7 +248,6 @@ process.analyzer.SampleType = SampleType
 process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
-process.analyzer.Geometry="CMS_GeomTree.root"
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
 process.analyzer.TrackProbQCut = 1.0
 process.analyzer.Period = "2018"
@@ -262,7 +261,6 @@ process.analyzer.GlobalMinIh = C
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
-###process.analyzer.OutputFile = 'Data_2017_UL'
 
 process.analysis = cms.Path(process.analyzer)
 
