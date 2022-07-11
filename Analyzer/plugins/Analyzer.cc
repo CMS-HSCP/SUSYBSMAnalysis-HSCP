@@ -85,6 +85,7 @@
 // - 23p0: - (probXYonTrackNoLayer1 > 0.01)
 // - 23p4: - Add cluster-based probXY, probQ, size per layer plots
 // - 23p5: - Fix the order of probs
+// - 23p6: - Restore the default CutFlow from Dylan's test cutflow after Dylan version v25
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -167,7 +168,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
       globalMiniRelIsoAll_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoAll")),
-      globalMassT_(iConfig.getUntrackedParameter<double>("GlobalMassT")),
       globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
       trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
       minMuStations_(iConfig.getUntrackedParameter<int>("MinMuStations")),
@@ -1745,6 +1745,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
+        auto clustCharge = pixelCluster->charge();
+        
+        float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
+        float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
+        int isFlippedModule = 0;
+        if (tmp2 < tmp1) isFlippedModule = 1;
         
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
@@ -1774,8 +1780,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           wasAtL2Already = true;
 
-          LogPrint(MOD) << "cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY: " << 
-              cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY;
+          LogPrint(MOD) << "isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
+            << isFlippedModule << " / "
+            << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
           }
         }
       } 
@@ -2430,7 +2437,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
-  desc.addUntracked("GlobalMinNOH",8)->setComment("Cut on number of (valid) track pixel+strip hits");
   desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
@@ -2438,10 +2444,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
-  desc.addUntracked("GlobalMaxPtErr",0.25)->setComment("Cut on error on track pT measurement");
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMiniRelIsoAll",0.1)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMassT",0.0)->setComment("Cut on the transverse mass");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
@@ -2795,7 +2799,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0 ,track_PFMiniIso_sumLeptonPt = 0;
-  //float pf_energy = 0.0;
+  float pf_energy = 0.0;
     
   // number of tracks as the first bin
   if (tuple) {
@@ -2825,7 +2829,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
         pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
         pf_isPfTrack = true;
-        //pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
+        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to general track
             tuple->BefPreS_pfType->Fill(1.5, EventWeight_);
@@ -2880,23 +2884,18 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }//end loop PFCandidates
   
   // Calculate PF mini relative isolation
-  //float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
-  float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
-//  float RecoPFMET_eta = -1, RecoPFMET_significance = -1;
 
   if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
     for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
       const reco::PFMET* pfMet = &(*pfMETHandle)[i];
       RecoPFMET_et = pfMet->et();
-//      RecoPFMET_eta = pfMet->eta();
       RecoPFMET_phi = pfMet->phi();
-//      RecoPFMET_significance = pfMet->significance();
     }
   }
   float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
@@ -2930,8 +2929,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
   susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
   
-  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
-  //float EoP = pf_energy / track->p();
+//  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
+  float EoP = pf_energy / track->p();
   float IsoTK_SumEt = (Ih_Iso_cut) ? hscpIso.Get_TK_SumEt() : 0.0;
   
   float Ih = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
@@ -2976,9 +2975,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
   passedCutsArray[12] = (!isMaterialTrack) ? true : false;
-  passedCutsArray[13] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+//  passedCutsArray[13] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  //passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+  passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
   passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
