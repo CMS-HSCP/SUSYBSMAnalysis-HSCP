@@ -88,6 +88,12 @@
 // - v23 fix clust infos
 // - add Ih and Ias Pixel only no BPIXL1
 // - new step2 bkg estimate
+// v24 Dylan
+// - add miniIso with muon contribution
+// - add miniIso in the tuple
+// v25 Dylan
+// - add EoP in the ntuple
+// - add jets info in the ntuple
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -603,6 +609,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float pfJetHT = 0;
   unsigned int pfNumJets = 0;
   unsigned int Jets_count = 0;
+  
+  std::vector<float> Jets_pt;
+  std::vector<float> Jets_eta;
+  std::vector<float> Jets_phi;
+  std::vector<float> Jets_mass;
+  std::vector<float> Jets_E;
+  std::vector<float> Jets_pdgId;
+  std::vector<float> Jets_et;
+  std::vector<float> Jets_chargedEmEnergyFraction;
+  std::vector<float> Jets_neutralEmEnergyFraction;
+  
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
@@ -610,11 +627,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     TLorentzVector pMHT;
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
-      Jets_count++;
       if (jet->pt() < 20 || abs(jet->eta()) > 5 ||
           jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9) {
         continue;
       }
+      Jets_count++;
+      Jets_pt.push_back(jet->pt());
+      Jets_eta.push_back(jet->eta());
+      Jets_phi.push_back(jet->phi());
+      Jets_mass.push_back(jet->mass());
+      Jets_E.push_back(jet->energy());
+      Jets_pdgId.push_back(jet->pdgId());
+      Jets_et.push_back(jet->et());
+      Jets_chargedEmEnergyFraction.push_back(jet->chargedEmEnergyFraction());
+      Jets_neutralEmEnergyFraction.push_back(jet->neutralEmEnergyFraction());
       pfJetHT += jet->pt();
       TLorentzVector p4(jet->pt() * cos(jet->phi()), jet->pt() * sin(jet->phi()), 0, jet->et());
       pMHT += p4;
@@ -717,6 +743,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Chi2;
   std::vector<int>   HSCP_QualityMask;
   std::vector<bool>  HSCP_isHighPurity;
+  std::vector<float> HSCP_EoverP;
   std::vector<bool>  HSCP_isMuon;
   std::vector<int>   HSCP_MuonSelector;
   std::vector<bool>  HSCP_isElectron;
@@ -755,6 +782,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_iso_TK;
   std::vector<float> HSCP_iso_ECAL;
   std::vector<float> HSCP_iso_HCAL;
+  std::vector<float> HSCP_PFMiniIso_relative;
+  std::vector<float> HSCP_PFMiniIso_wMuon_relative;
   std::vector<float> HSCP_track_PFIsolationR005_sumChargedHadronPt;
   std::vector<float> HSCP_track_PFIsolationR005_sumNeutralHadronPt;
   std::vector<float> HSCP_track_PFIsolationR005_sumPhotonPt;
@@ -1057,6 +1086,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float track_PFIso03_sumCharHadPt = 0, track_PFIso03_sumNeutHadPt = 0, track_PFIso03_sumPhotonPt = 0, track_PFIso03_sumPUPt = 0;
     float track_PFIso05_sumCharHadPt = 0, track_PFIso05_sumNeutHadPt = 0, track_PFIso05_sumPhotonPt = 0, track_PFIso05_sumPUPt = 0;
 
+    float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0;
+    float pf_energy=0;
+
     float RMin = 9999.;
     unsigned int idx_pf_RMin = 9999;
 
@@ -1088,6 +1120,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             pf_ecal_energy = pfCand->ecalEnergy();
             pf_hcal_energy = pfCand->hcalEnergy();
         }
+        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
+
+        bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+        bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+        bool pf_isNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+        bool pf_isMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+
         if(i == idx_pf_RMin) continue; //don't count itself
         float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
         bool fromPV = (fabs(dz) < pfIsolation_DZ_);
@@ -1118,8 +1157,35 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if(id == 130) track_PFIso05_sumNeutHadPt+=pt;
             if(id == 22) track_PFIso05_sumPhotonPt+=pt;
         }
+
+        float drForMiniIso = 0.0;
+        if (track->pt() < 50 ) {
+          drForMiniIso = 0.2;
+        } else if (track->pt() < 200) {
+          drForMiniIso = 10/track->pt();
+        } else {
+          drForMiniIso = 0.05;
+        }
+        if (dr<drForMiniIso) {
+            // charged cands from PV get added to trackIso
+            if(pf_isChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
+            // charged cands not from PV get added to pileup iso
+            else if(pf_isChHadronForIdx) track_PFMiniIso_sumPUPt+=pt;
+            // neutral hadron iso
+            if(pf_isNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
+            // photon iso
+            if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
+            // muon iso
+            if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
+        }
       }//end loop PFCandidates
     }
+    
+  // Calculate PF mini relative isolation
+  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+
+
 
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
@@ -1582,6 +1648,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Preselection not passed,
       // skipping it if the ntuple is not used
       continue;
+
     }
 
     tuple->PostPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
@@ -1877,6 +1944,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Chi2.push_back(track->chi2());
     HSCP_QualityMask.push_back(track->qualityMask());
     HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
+    HSCP_EoverP.push_back(pf_energy/track->p());
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_MuonSelector.push_back(pf_muon_selector);
     HSCP_isElectron.push_back(pf_isElectron);
@@ -1909,6 +1977,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_iso_TK.push_back(iso_TK);
     HSCP_iso_ECAL.push_back(iso_ECAL);
     HSCP_iso_HCAL.push_back(iso_HCAL);
+    HSCP_PFMiniIso_relative.push_back(miniRelIsoAll);
+    HSCP_PFMiniIso_wMuon_relative.push_back(miniRelIsoAll_wMuon);
     HSCP_track_PFIsolationR005_sumChargedHadronPt.push_back(track_PFIso005_sumCharHadPt);
     HSCP_track_PFIsolationR005_sumNeutralHadronPt.push_back(track_PFIso005_sumNeutHadPt);
     HSCP_track_PFIsolationR005_sumPhotonPt.push_back(track_PFIso005_sumPhotonPt);
@@ -1985,6 +2055,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 maxPtMuon2,
                                 etaMuon2,
                                 phiMuon2,
+                                Jets_pt,
+                                Jets_eta,
+                                Jets_phi,
+                                Jets_mass,
+                                Jets_E,
+                                Jets_pdgId,
+                                Jets_et,
+                                Jets_chargedEmEnergyFraction,
+                                Jets_neutralEmEnergyFraction,
                                 HSCP_mT,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection_noIsolation_noIh,
@@ -2010,6 +2089,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Chi2,
                                 HSCP_QualityMask,
                                 HSCP_isHighPurity,
+                                HSCP_EoverP,
                                 HSCP_isMuon,
                                 HSCP_MuonSelector,
                                 HSCP_isElectron,
@@ -2042,6 +2122,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_iso_TK,
                                 HSCP_iso_ECAL,
                                 HSCP_iso_HCAL,
+                                HSCP_PFMiniIso_relative,
+                                HSCP_PFMiniIso_wMuon_relative,
                                 HSCP_track_PFIsolationR005_sumChargedHadronPt,
                                 HSCP_track_PFIsolationR005_sumNeutralHadronPt,
                                 HSCP_track_PFIsolationR005_sumPhotonPt,
@@ -2617,7 +2699,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool pf_isPfTrack = false;
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
+
   float track_PFMiniIso_sumLeptonPt = 0, track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0;
+
   float pf_energy = 0.0;
     
   // number of tracks as the first bin
@@ -2638,6 +2722,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
       bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
       bool pf_isNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+      bool pf_isMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
 
       if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
         pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
@@ -2696,6 +2781,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if(pf_isNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
         // photon iso
         if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
+        // muon iso
+        if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
       }
     }
   }//end loop PFCandidates
@@ -2704,6 +2791,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   //float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
+
+  float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
@@ -3211,7 +3300,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
 
-  // Return false in the function is a given cut is not passed
+  // Return false in the function if a given cut is not passed
   for (size_t i=0;i<sizeof(passedCutsArray);i++) {
     if (passedCutsArray[i]) {
         // Plot Eta after each cut

@@ -67,6 +67,15 @@ public:
                         const float &Muon2_Pt,
                         const float &Muon2_eta,
                         const float &Muon2_phi,
+                        const std::vector<float> &vect_jet_pt,
+                        const std::vector<float> &vect_jet_eta,
+                        const std::vector<float> &vect_jet_phi,
+                        const std::vector<float> &vect_jet_mass,
+                        const std::vector<float> &vect_jet_energy,
+                        const std::vector<float> &vect_jet_pdgId,
+                        const std::vector<float> &vect_jet_et,
+                        const std::vector<float> &vect_jet_chargedEmEnergyFraction,
+                        const std::vector<float> &vect_jet_neutralEmEnergyFraction,
                         const std::vector<float> &vect_mT,
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection_noIsolation_noIh,
@@ -92,6 +101,7 @@ public:
                         const std::vector<float> &Chi2,
                         const std::vector<int>   &QualityMask,
                         const std::vector<bool>  &isHighPurity,
+                        const std::vector<float>  &EoverP,
                         const std::vector<bool>  &isMuon,
                         const std::vector<int>   &MuonSelector,
                         const std::vector<bool>  &isElectron,
@@ -124,6 +134,8 @@ public:
                         const std::vector<float> &iso_TK,
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
+                        const std::vector<float> &PFMiniIso_relative,
+                        const std::vector<float> &PFMiniIso_wMuon_relative,
                         const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
                         const std::vector<float> &track_PFIsolationR005_sumNeutralHadronPt,
                         const std::vector<float> &track_PFIsolationR005_sumPhotonPt,
@@ -1895,6 +1907,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Muon2_Pt", &tuple->Tree_Muon2_Pt, "Muon2_Pt/F");
     tuple->Tree->Branch("Muon2_eta", &tuple->Tree_Muon2_eta, "Muon2_eta/F");
     tuple->Tree->Branch("Muon2_phi", &tuple->Tree_Muon2_phi, "Muon2_phi/F");
+    if (saveTree > 3) {
+      tuple->Tree->Branch("Jet_pt", &tuple->Tree_jet_pt);
+      tuple->Tree->Branch("Jet_eta", &tuple->Tree_jet_eta);
+      tuple->Tree->Branch("Jet_phi", &tuple->Tree_jet_phi);
+      tuple->Tree->Branch("Jet_mass", &tuple->Tree_jet_mass);
+      tuple->Tree->Branch("Jet_energy", &tuple->Tree_jet_energy);
+      tuple->Tree->Branch("Jet_pdgId", &tuple->Tree_jet_pdgId);
+      tuple->Tree->Branch("Jet_et", &tuple->Tree_jet_et);
+      tuple->Tree->Branch("Jet_chargedEmEnergyFraction", &tuple->Tree_jet_chargedEmEnergyFraction);
+      tuple->Tree->Branch("Jet_neutralEmEnergyFraction", &tuple->Tree_jet_neutralEmEnergyFraction);
+    }
     tuple->Tree->Branch("mT", &tuple->Tree_vect_mT);
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
@@ -1922,6 +1945,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Chi2", &tuple->Tree_Chi2);
     tuple->Tree->Branch("QualityMask", &tuple->Tree_QualityMask);
     tuple->Tree->Branch("isHighPurity", &tuple->Tree_isHighPurity);
+    tuple->Tree->Branch("EoverP", &tuple->Tree_EoverP);
     tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
     tuple->Tree->Branch("MuonSelector", &tuple->Tree_Muon_selector);
     tuple->Tree->Branch("isElectron", &tuple->Tree_isElectron);
@@ -1955,6 +1979,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     if (saveTree > 1) {
+      tuple->Tree->Branch("PFMiniIso_relative", &tuple->Tree_PFMiniIso_relative);
+      tuple->Tree->Branch("PFMiniIso_wMuon_relative", &tuple->Tree_PFMiniIso_wMuon_relative);
       tuple->Tree->Branch("TrackPFIsolationR005_sumChargedHadronPt", &tuple->Tree_track_PFIsolationR005_sumChargedHadronPt);
       tuple->Tree->Branch("TrackPFIsolationR005_sumNeutralHadronPt", &tuple->Tree_track_PFIsolationR005_sumNeutralHadronPt);
       tuple->Tree->Branch("TrackPFIsolationR005_sumPhotonPt", &tuple->Tree_track_PFIsolationR005_sumPhotonPt);
@@ -1992,7 +2018,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("clust_isStrip", &tuple->Tree_clust_isStrip);
       tuple->Tree->Branch("clust_isPixel", &tuple->Tree_clust_isPixel);
     }
-    if (saveTree > 3) {
+    if (saveTree > 4) {
       tuple->Tree->Branch("GenId", &tuple->Tree_GenId);
       tuple->Tree->Branch("GenCharge", &tuple->Tree_GenCharge);
       tuple->Tree->Branch("GenMass", &tuple->Tree_GenMass);
@@ -2087,6 +2113,15 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &Muon2_Pt,
                                   const float &Muon2_eta,
                                   const float &Muon2_phi,
+                                  const std::vector<float> &Jet_pt,
+                                  const std::vector<float> &Jet_eta,
+                                  const std::vector<float> &Jet_phi,
+                                  const std::vector<float> &Jet_mass,
+                                  const std::vector<float> &Jet_energy,
+                                  const std::vector<float> &Jet_pdgId,
+                                  const std::vector<float> &Jet_et,
+                                  const std::vector<float> &Jet_chargedEmEnergyFraction,
+                                  const std::vector<float> &Jet_neutralEmEnergyFraction,
                                   const std::vector<float> &vect_mT,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection_noIsolation_noIh,
@@ -2112,6 +2147,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Chi2,
                                   const std::vector<int>   &QualityMask,
                                   const std::vector<bool>  &isHighPurity,
+                                  const std::vector<float>  &EoverP,
                                   const std::vector<bool>  &isMuon,
                                   const std::vector<int>   &MuonSelector,
                                   const std::vector<bool>  &isElectron,
@@ -2144,6 +2180,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_TK,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
+                                  const std::vector<float> &PFMiniIso_relative,
+                                  const std::vector<float> &PFMiniIso_wMuon_relative,
                                   const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
                                   const std::vector<float> &track_PFIsolationR005_sumNeutralHadronPt,
                                   const std::vector<float> &track_PFIsolationR005_sumPhotonPt,
@@ -2215,6 +2253,15 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Muon2_Pt = Muon2_Pt;
   tuple->Tree_Muon2_eta = Muon2_eta;
   tuple->Tree_Muon2_phi = Muon2_phi;
+  tuple->Tree_jet_pt = Jet_pt;
+  tuple->Tree_jet_eta = Jet_eta;
+  tuple->Tree_jet_phi = Jet_phi;
+  tuple->Tree_jet_mass = Jet_mass;
+  tuple->Tree_jet_energy = Jet_energy;
+  tuple->Tree_jet_pdgId = Jet_pdgId;
+  tuple->Tree_jet_et = Jet_et;
+  tuple->Tree_jet_chargedEmEnergyFraction = Jet_chargedEmEnergyFraction;
+  tuple->Tree_jet_neutralEmEnergyFraction = Jet_neutralEmEnergyFraction;
   tuple->Tree_vect_mT = vect_mT;
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
@@ -2240,6 +2287,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Chi2 = Chi2;
   tuple->Tree_QualityMask = QualityMask;
   tuple->Tree_isHighPurity = isHighPurity;
+  tuple->Tree_EoverP = EoverP;
   tuple->Tree_isMuon = isMuon;
   tuple->Tree_Muon_selector = MuonSelector;
   tuple->Tree_isElectron = isElectron;
@@ -2272,6 +2320,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_iso_TK = iso_TK;
   tuple->Tree_iso_ECAL = iso_ECAL;
   tuple->Tree_iso_HCAL = iso_HCAL;
+  tuple->Tree_PFMiniIso_relative = PFMiniIso_relative;
+  tuple->Tree_PFMiniIso_wMuon_relative = PFMiniIso_wMuon_relative;
   tuple->Tree_track_PFIsolationR005_sumChargedHadronPt = track_PFIsolationR005_sumChargedHadronPt;
   tuple->Tree_track_PFIsolationR005_sumNeutralHadronPt = track_PFIsolationR005_sumNeutralHadronPt;
   tuple->Tree_track_PFIsolationR005_sumPhotonPt = track_PFIsolationR005_sumPhotonPt;
