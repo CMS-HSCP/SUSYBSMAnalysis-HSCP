@@ -37,11 +37,11 @@ void step2_backgroundPrediction(){
     // histograms used for the mass prediction
     //------------
 
-    std::string dir = "analyzer/BaseName";
-    TH2F* eta_cutIndex_regA = (TH2F*)f->Get((dir+"Pred_EtaB").c_str())->Clone(); 
-    TH2F* eta_cutIndex_regB = (TH2F*)f->Get((dir+"Pred_EtaS").c_str())->Clone(); 
-    TH3F* ih_eta_cutIndex_regB = (TH3F*)f->Get((dir+"Pred_EtaI").c_str())->Clone(); 
-    TH3F* eta_p_cutIndex_regC = (TH3F*)f->Get((dir+"Pred_EtaP").c_str())->Clone(); 
+    std::string dir = "analyzer/BaseName/";
+    TH2F* eta_cutIndex_regA = (TH2F*)ifile->Get((dir+"Pred_EtaB").c_str())->Clone(); 
+    TH2F* eta_cutIndex_regB = (TH2F*)ifile->Get((dir+"Pred_EtaS").c_str())->Clone(); 
+    TH3F* ih_eta_cutIndex_regB = (TH3F*)ifile->Get((dir+"Pred_EtaI").c_str())->Clone(); 
+    TH3F* eta_p_cutIndex_regC = (TH3F*)ifile->Get((dir+"Pred_EtaP").c_str())->Clone(); 
 
     //------------
 
@@ -119,14 +119,16 @@ void step2_backgroundPrediction(){
     
     // bkg estimate for a selected cut index 
     // cutIndex = 3 --> pT > 60 GeV & Ias > 0.05
-    bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutIndex, true, nPE)->Write();
+    //bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutIndex, true, nPE)->Write();
 
-    // 2D-histograms PredMass_Vs_CutIndex used in later steps to compare to data //FIXME not yet finished
+    //TODO not yet finished
+    // 2D-histograms PredMass_Vs_CutIndex used in later steps to compare to data 
     int n_cutIndex = 1;
     TH2F* mass_cutIndex = new TH2F();
 
     for(int cutI = 0; cutI < n_cutIndex; cutI++){
-        bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutI, true, nPE);
+        //bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutI, true, nPE);
+
     }
 
     delete ofile;

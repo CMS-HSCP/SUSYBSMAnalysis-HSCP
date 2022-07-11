@@ -79,7 +79,7 @@ Don't forget to copy needed files:
 ```bash
 cp HSCP/data/CorrFact*Pix*.txt .
 cp HSCP/data/template*.root .
-cp HSCP/data/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt .
+cp HSCP/test/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt .
 cp HSCP/data/MuonTimeOffset.txt .
 cp HSCP/data/CMS_GeomTree.root .
 ```
