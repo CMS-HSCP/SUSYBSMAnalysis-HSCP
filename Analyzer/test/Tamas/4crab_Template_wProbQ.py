@@ -3,16 +3,16 @@ from CRABClient.UserUtilities import config
 config = config()
 
 config.section_('General')
-config.General.requestName = 'Analysis_2018_ROVIDMINTA_woProbQ_CodeVVERZIO_v1'
+config.General.requestName = 'Analysis_2018_ROVIDMINTA_wProbQ_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_woProbQ_cfg.py'
+config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_wProbQ_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
-config.JobType.maxMemoryMB = 4000
+config.JobType.maxMemoryMB = 3500
 config.JobType.inputFiles = ['templateMC.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
 
 config.section_('Data')

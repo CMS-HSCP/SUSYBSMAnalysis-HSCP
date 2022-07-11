@@ -21,7 +21,7 @@ options.register('SAMPLE', 'isBckg',
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
 )
-options.register('YEAR', '2017',
+options.register('YEAR', '2018',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Year. Use: 2017 or 2018"
@@ -216,7 +216,7 @@ elif options.SAMPLE=='isBckg':
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
@@ -232,7 +232,7 @@ else :
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
     
-   if options.YEAR=='2017' :
+   if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
        SF0 = 1.0047
