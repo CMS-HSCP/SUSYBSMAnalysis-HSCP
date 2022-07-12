@@ -584,6 +584,13 @@ struct Tuple {
   TH3F* PostPreS_HighIasPixelL2ProbQVsProbXY;
   TH3F* PostPreS_LowIasPixelL2ProbQVsProbXY;
 
+  TH2F* PostPreS_CluProbQVsPixelLayer;
+  TH2F* PostPreS_CluProbXYVsPixelLayer;
+  TH2F* PostPreS_CluSizeVsPixelLayer;
+  TH2F* PostPreS_CluSizeXVsPixelLayer;
+  TH2F* PostPreS_CluSizeYVsPixelLayer;
+  TH2F* PostPreS_CluSpecInCPEVsPixelLayer;
+
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
   TH2F* AS_Eta_RegionC;
@@ -723,6 +730,7 @@ struct Tuple {
   TH2F* H_D_DzSidebands;
 
   TH2F* BefPreS_GenPtVsdRMinBckg;
+  TH1F* BefPreS_GendRMin;
   TH2F* BefPreS_GenPtVsdRMinBckgPostCut;
   TH2F* BefPreS_GenPtVsGenMinPt;
   TH2F* BefPreS_GenPtVsRecoPt;
@@ -730,6 +738,7 @@ struct Tuple {
   TH1F* genlevelpT;
   TH1F* genleveleta;
   TH1F* genlevelbeta;
+  TH1F* genlevelbetagamma;
 
   TH1D* CtrlPt_S1_Is;
   TH1D* CtrlPt_S2_Is;
