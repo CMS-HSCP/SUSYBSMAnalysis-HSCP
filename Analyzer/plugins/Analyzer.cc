@@ -86,6 +86,7 @@
 // - 23p4: - Add cluster-based probXY, probQ, size per layer plots
 // - 23p5: - Fix the order of probs
 // - 23p6: - Restore the default CutFlow from Dylan's test cutflow after Dylan version v25
+// - 23p7: - Makde the probs vs layers for data and signal too, (probXYonTrackNoLayer1 > 0.1  
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1719,8 +1720,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     auto genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
-    // 0.31623 [Bichsel's smallest entry]
-    if (isSignal && genGammaBeta > 0.31623) {
     // Loop through the deDx hits after the preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       DetId detid(dedxHits->detId(i));
@@ -1779,14 +1778,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
           }
           wasAtL2Already = true;
-
+            // 0.31623 [Bichsel's smallest entry]
+          if (isSignal && genGammaBeta > 0.31623) {
           LogPrint(MOD) << "isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
             << isFlippedModule << " / "
             << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
           }
         }
-      } 
-
+      }
     } else {
       LogPrint(MOD) << "BetaGamma is too low for Bischel";
     }
@@ -2984,7 +2983,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
   // Cut away background events based on the probXY
-  passedCutsArray[16] = ((probXYonTrackNoLayer1 > 0.01 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+  passedCutsArray[16] = ((probXYonTrackNoLayer1 > 0.1 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
   passedCutsArray[17] = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   //passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
