@@ -463,6 +463,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->genlevelpT->Fill(gen.pt(), EventWeight_);
         tuple->genleveleta->Fill(gen.eta(), EventWeight_);
         tuple->genlevelbeta->Fill(gen.p() / gen.energy(), EventWeight_);
+        tuple->genlevelbetagamma->Fill(gen.p() / gen.mass(), EventWeight_);
         // TODO: I'm not sure if this needs to be weighted
 
         // Variables for the tuple gen tree branch
