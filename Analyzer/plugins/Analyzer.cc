@@ -948,7 +948,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_GendRMin->Fill(dRMinBckg);
       tuple->BefPreS_GenPtVsdRMinBckg->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
     }
-    if (isBckg && dRMinBckg > 0.1 ) {
+    if (!isData && dRMinBckg > 0.1 ) {
       // dont look at events where we didnt find the gen canidate close enough
       if (debug_ > 4 ) LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinBckg << "), skipping the track";
       // 6-th bin of the error histo, didnt find the gen canidate
@@ -1783,11 +1783,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           LogPrint(MOD) << "isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
             << isFlippedModule << " / "
             << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+          } else {
+            LogPrint(MOD) << "BetaGamma is too low for Bischel";
           }
         }
       }
-    } else {
-      LogPrint(MOD) << "BetaGamma is too low for Bischel";
     }
     
       // TODO this
