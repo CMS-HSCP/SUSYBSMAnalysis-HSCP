@@ -86,7 +86,8 @@
 // - 23p4: - Add cluster-based probXY, probQ, size per layer plots
 // - 23p5: - Fix the order of probs
 // - 23p6: - Restore the default CutFlow from Dylan's test cutflow after Dylan version v25
-// - 23p7: - Makde the probs vs layers for data and signal too, (probXYonTrackNoLayer1 > 0.1  
+// - 23p7: - Make the probs vs layers for data and signal too, (probXYonTrackNoLayer1 > 0.1
+// - 23p9: - Move printouts for Morris' study to the preselection
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -543,7 +544,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (doTriggering_ && TrigInfo_ > 0) {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
       tuple->BefPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
-  } else {
+  } else if (doTriggering_ && TrigInfo_ == 0)  {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
@@ -1278,6 +1279,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     int nofClust_dEdxLowerThan = 0;
+    auto genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
+    unsigned int closestGenId = abs(genColl[closestGenIndex].pdgId());
 
     // Loop through the rechits on the given track before preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
@@ -1310,6 +1313,56 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        auto cotAlpha = lv.x()/lv.z();
+        auto cotBeta = lv.y()/lv.z();
+        auto momentum = track->p();
+        auto clustSize = pixelCluster->size();
+        auto clustSizeX = pixelCluster->sizeX();
+        auto clustSizeY = pixelCluster->sizeY();
+        auto clustCharge = pixelCluster->charge();
+        
+        float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
+        float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
+        int isFlippedModule = 0;
+        if (tmp2 < tmp1) isFlippedModule = 1;
+
+        if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
+          auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
+          tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
+          tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
+          tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
+          tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
+          tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
+          if (isOnEdge) {
+            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
+          } else if (hasBadPixels) {
+            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex-0.5, EventWeight_);
+          } else if (spansTwoROCs) {
+            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
+          }
+        }
+        
+        // Some printouts to compair with PixelAV
+        bool wasAtL2Already = false;
+        if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
+          if (wasAtL2Already) {
+            LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
+          }
+          wasAtL2Already = true;
+          // 0.31623 [Bichsel's smallest entry]
+          if (isSignal && genGammaBeta > 0.31623) {
+            LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
+            << genGammaBeta << " / " << isFlippedModule << " / "
+            << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+          } else {
+            LogPrint(MOD) << "BetaGamma is too low for Bischel";
+          }
+          if (isBckg && genGammaBeta > 0.31623 && closestGenId == 211) {
+            LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
+            << genGammaBeta << " / " << isFlippedModule << " / "
+            << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+          }
+        }
         
         if (isOnEdge || hasBadPixels || spansTwoROCs) {
           specialInCPE = true;
@@ -1720,7 +1773,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       LogPrint(MOD) << " CombProbQ: " << pixelProbs[0] << " CombProbQNoL1: " << pixelProbs[2] ;
     }
     
-    auto genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
     // Loop through the deDx hits after the preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       DetId detid(dedxHits->detId(i));
@@ -1739,18 +1791,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
-        auto cotAlpha = lv.x()/lv.z();
-        auto cotBeta = lv.y()/lv.z();
-        auto momentum = track->p();
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
-        auto clustCharge = pixelCluster->charge();
-        
-        float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
-        float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
-        int isFlippedModule = 0;
-        if (tmp2 < tmp1) isFlippedModule = 1;
         
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
@@ -1760,9 +1803,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
           tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluSizeXVsPixelLayer->Fill(clustSizeX, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluSizeYVsPixelLayer->Fill(clustSizeY, pixLayerIndex-0.5, EventWeight_);
+          tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
+          tuple->PostPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
+          tuple->PostPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
           if (isOnEdge) {
             tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
           } else if (hasBadPixels) {
@@ -1771,28 +1814,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
           }
         }
-        
-        // Some printouts to compair with PixelAV
-        bool wasAtL2Already = false;
-        if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
-          if (wasAtL2Already) { 
-            LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
-          }
-          wasAtL2Already = true;
-            // 0.31623 [Bichsel's smallest entry]
-          if (isSignal && genGammaBeta > 0.31623) {
-          LogPrint(MOD) << "isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
-            << isFlippedModule << " / "
-            << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-          } else {
-            LogPrint(MOD) << "BetaGamma is too low for Bischel";
-          }
-        }
       }
     }
     
       // TODO this
-    
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
     if (isBckg || isData) {

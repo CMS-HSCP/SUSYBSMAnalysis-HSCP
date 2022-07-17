@@ -378,6 +378,12 @@ struct Tuple {
   TH1F* BefPreS_MassErr;
   TH2F* BefPreS_ProbQVsIas;
 
+  TH2F* BefPreS_CluProbQVsPixelLayer;
+  TH2F* BefPreS_CluProbXYVsPixelLayer;
+  TH2F* BefPreS_CluSizeVsPixelLayer;
+  TH2F* BefPreS_CluSizeXVsPixelLayer;
+  TH2F* BefPreS_CluSizeYVsPixelLayer;
+  TH2F* BefPreS_CluSpecInCPEVsPixelLayer;
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;

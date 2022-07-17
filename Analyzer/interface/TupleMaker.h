@@ -853,6 +853,19 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_ProbQVsIas";
   tuple->BefPreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->BefPreS_ProbQVsIas->Sumw2();
+
+  tuple->BefPreS_CluProbQVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",100,0.,1.,4,0.,4.);
+  tuple->BefPreS_CluProbQVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
+  tuple->BefPreS_CluProbXYVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSizeVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeVsPixelLayer",";CluSize;Layer",10,0.,10.,4,0.,4.);
+  tuple->BefPreS_CluSizeVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSizeXVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeXVsPixelLayer",";CluSizeX;Layer",10,0.,10.,4,0.,4.);
+  tuple->BefPreS_CluSizeXVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSizeYVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeYVsPixelLayer",";CluSizeY;Layer",10,0.,10.,4,0.,4.);
+  tuple->BefPreS_CluSizeYVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
+  tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
   
 
   Name = "PostPreS_TriggerType";
