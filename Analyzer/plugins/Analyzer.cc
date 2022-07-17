@@ -88,6 +88,7 @@
 // - 23p6: - Restore the default CutFlow from Dylan's test cutflow after Dylan version v25
 // - 23p7: - Make the probs vs layers for data and signal too, (probXYonTrackNoLayer1 > 0.1
 // - 23p9: - Move printouts for Morris' study to the preselection
+// - 24p0: - CluSpecInCPEVsPixelLayer add all clusters, add pthat histo, gen enviroment ID plots
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -368,7 +369,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const edm::Handle<GenEventInfoProduct> genEvt = iEvent.getHandle(genEventToken_);
       if (genEvt.isValid()){
           GeneratorWeight_ = genEvt->weight();
-          if(genEvt->binningValues().size()>0) GeneratorBinningValues_ = genEvt->binningValues()[0];
+        if(genEvt->binningValues().size()>0) {
+          GeneratorBinningValues_ = genEvt->binningValues()[0];
+          tuple->GenLevelBinning->Fill(GeneratorBinningValues_);
+        }
       }
   }
 
@@ -447,10 +451,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }  // count other R-hadrons
       
         // Fill up pT, eta, and beta plots for gen-level HSCP particles
-        tuple->genlevelpT->Fill(gen.pt(), SignalEventWeight);
-        tuple->genleveleta->Fill(gen.eta(), SignalEventWeight);
-        tuple->genlevelbeta->Fill(gen.p() / gen.energy(), SignalEventWeight);
-        tuple->genlevelbetagamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
+        tuple->GenLevelpT->Fill(gen.pt(), SignalEventWeight);
+        tuple->GenLevelEta->Fill(gen.eta(), SignalEventWeight);
+        tuple->GenLevelBeta->Fill(gen.p() / gen.energy(), SignalEventWeight);
+        tuple->GenLevelBetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
       
         // Variables for the tuple gen tree branch
         genid.push_back(gen.pdgId());
@@ -461,10 +465,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         genphi.push_back(gen.phi());
       } else if (isBckg) {
         // Fill up pT, eta, and beta plots for gen-level background particles
-        tuple->genlevelpT->Fill(gen.pt(), EventWeight_);
-        tuple->genleveleta->Fill(gen.eta(), EventWeight_);
-        tuple->genlevelbeta->Fill(gen.p() / gen.energy(), EventWeight_);
-        tuple->genlevelbetagamma->Fill(gen.p() / gen.mass(), EventWeight_);
+        tuple->GenLevelpT->Fill(gen.pt(), EventWeight_);
+        tuple->GenLevelEta->Fill(gen.eta(), EventWeight_);
+        tuple->GenLevelBeta->Fill(gen.p() / gen.energy(), EventWeight_);
+        tuple->GenLevelBetaGamma->Fill(gen.p() / gen.mass(), EventWeight_);
         // TODO: I'm not sure if this needs to be weighted
 
         // Variables for the tuple gen tree branch
@@ -1340,6 +1344,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           } else if (spansTwoROCs) {
             tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
           }
+          tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
         }
         
         // Some printouts to compair with PixelAV
@@ -1744,7 +1749,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              std::cout << " (dR = " << siblingDr << ") , ";
+              float siblingpT = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+              std::cout << " (dR = " << siblingDr << ", pt = " << siblingpT << ") , ";
             }
             break;
           } else {
@@ -1765,7 +1771,34 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
-    // Some printouts to undertand ProbQ vs ProbQNoL1
+    if (!isData) {
+      std::cout << std::endl;
+      unsigned int usignedIntclosestGenIndex = 0;
+      if (closestGenIndex>0) {
+        usignedIntclosestGenIndex = closestGenIndex;
+      }
+      for (unsigned int g = 0; g < genColl.size(); g++) {
+        if (g == usignedIntclosestGenIndex) {
+          continue;
+        }
+        if (genColl[g].pt() < 5) {
+          continue;
+        }
+        if (genColl[g].status() != 1) {
+          continue;
+        }
+        float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
+        float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
+        tuple->PostPreS_ProbQVsGenEnviromentID->Fill(pixelProbs[0], abs(genColl[g].pdgId()), EventWeight_);
+        tuple->PostPreS_IasVsGenEnviromentID->Fill(Ias, abs(genColl[g].pdgId()), EventWeight_);
+        LogPrint(MOD) << "      >> BckgMCPostPreS: Siblings from different mothers: ";
+        std::cout << "      >> " << abs(genColl[g].pdgId()) ;
+        std::cout << " (dR = " << dr << ", pT = " << genColl[g].pt() << ") , ";
+      }
+      std::cout << std::endl;
+    }
+    
+    // Some printouts to understand ProbQ vs ProbQNoL1
     bool debugProbQvsProbQNoL1 = false;
     if (fabs(pixelProbs[2]-pixelProbs[0])/pixelProbs[2] > 0.015 ) debugProbQvsProbQNoL1 = true;
     if (debugProbQvsProbQNoL1 && debug_ > 9) {
@@ -1813,6 +1846,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           } else if (spansTwoROCs) {
             tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
           }
+          tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
         }
       }
     }

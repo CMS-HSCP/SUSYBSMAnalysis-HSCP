@@ -1153,6 +1153,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbQVsGenID";
   tuple->PostPreS_ProbQVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsGenID->Sumw2();
+  tuple->PostPreS_ProbQVsGenEnviromentID = dir.make<TH2F>("PostPreS_ProbQVsGenEnviromentID",";ProbQ;GenEnviromentID",100, 0.0, 1.0, 4000, 0.0, 4000.0);
+  tuple->PostPreS_ProbQVsGenEnviromentID->Sumw2();
   Name = "PostPreS_ProbXYVsGenID";
   tuple->PostPreS_ProbXYVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbXYVsGenID->Sumw2();
@@ -1167,7 +1169,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsGenID->Sumw2();
   Name = "PostPreS_IasVsGenID";
   tuple->PostPreS_IasVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
-  tuple->PostPreS_IasVsGenID ->Sumw2();
+  tuple->PostPreS_IasVsGenID->Sumw2();
+  tuple->PostPreS_IasVsGenEnviromentID = dir.make<TH2F>("PostPreS_IasVsGenID",";Ias;GenEnviromentID", 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_IasVsGenEnviromentID->Sumw2();
   Name = "PostPreS_massTVsGenID";
   tuple->PostPreS_massTVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_massTVsGenID->Sumw2();
@@ -1413,17 +1417,16 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
   tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
   
-  Name = "genlevelpT";
-  tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
-  tuple->genlevelpT->Sumw2();
-  Name = "genleveleta";
-  tuple->genleveleta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 60, -3, 3);
-  tuple->genleveleta->Sumw2();
-  Name = "genlevelbeta";
-  tuple->genlevelbeta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
-  tuple->genlevelbeta->Sumw2();
-  tuple->genlevelbetagamma = dir.make<TH1F>("genlevelbetagamma",";#beta #gamma;Gen canidate",4500,0.,450.);
-  tuple->genlevelbetagamma->Sumw2();
+  tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
+  tuple->GenLevelBinning->Sumw2();
+  tuple->GenLevelpT = dir.make<TH1F>("GenLevelpT", "GenLevelpT;Generator p_{T} (GeV)", 50, 0, PtHistoUpperBound);
+  tuple->GenLevelpT->Sumw2();
+  tuple->GenLevelEta = dir.make<TH1F>("GenLevelEta",";Generator #eta", 60, -3, 3);
+  tuple->GenLevelEta->Sumw2();
+  tuple->GenLevelBeta = dir.make<TH1F>("GenLevelBeta",";Generator #beta", 20, 0, 1);
+  tuple->GenLevelBeta->Sumw2();
+  tuple->GenLevelBetaGamma = dir.make<TH1F>("GenLevelBetaGamma",";Generator #beta #gamma;Gen canidate",4500,0.,450.);
+  tuple->GenLevelBetaGamma->Sumw2();
 
   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
   for (int i = 0; i < PredBins; i++) {

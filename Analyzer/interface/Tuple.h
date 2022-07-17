@@ -489,11 +489,13 @@ struct Tuple {
 
   TH2F* PostPreS_EtaVsGenID;
   TH2F* PostPreS_ProbQVsGenID;
+  TH2F* PostPreS_ProbQVsGenEnviromentID;
   TH2F* PostPreS_ProbXYVsGenID;
   TH2F* PostPreS_PtVsGenID;
   TH2F* PostPreS_EoPVsGenID;
   TH2F* PostPreS_IhVsGenID;
   TH2F* PostPreS_IasVsGenID;
+  TH2F* PostPreS_IasVsGenEnviromentID;
   TH2F* PostPreS_massTVsGenID;
   TH2F* PostPreS_miniIsoChgVsGenID;
   TH2F* PostPreS_miniIsoAllVsGenID;
@@ -741,10 +743,11 @@ struct Tuple {
   TH2F* BefPreS_GenPtVsGenMinPt;
   TH2F* BefPreS_GenPtVsRecoPt;
   TH2F* PostPreS_GenPtVsRecoPt;
-  TH1F* genlevelpT;
-  TH1F* genleveleta;
-  TH1F* genlevelbeta;
-  TH1F* genlevelbetagamma;
+  TH1F* GenLevelBinning;
+  TH1F* GenLevelpT;
+  TH1F* GenLevelEta;
+  TH1F* GenLevelBeta;
+  TH1F* GenLevelBetaGamma;
 
   TH1D* CtrlPt_S1_Is;
   TH1D* CtrlPt_S2_Is;
