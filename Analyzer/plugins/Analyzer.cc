@@ -89,6 +89,8 @@
 // - 23p7: - Make the probs vs layers for data and signal too, (probXYonTrackNoLayer1 > 0.1
 // - 23p9: - Move printouts for Morris' study to the preselection
 // - 24p0: - CluSpecInCPEVsPixelLayer add all clusters, add pthat histo, gen enviroment ID plots
+// - 24p1: - Change high Ias to be Ias > 0.6
+// - 24p2: - Add nearest jet distance
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1220,8 +1222,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<bool> clust_isPixel;
     
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
-    float pixelProbs[5] = {0.0,0.0,0.0,0.0,0.0};
-    bool specialInCPE = false;
+    float pixelProbs[4] = {0.0,0.0,0.0,0.0};
     int numRecHits = 0;
     int numRecHitsNoLayer1 = 0;
     float probQonTrackWMulti = 1;
@@ -1349,6 +1350,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         // Some printouts to compair with PixelAV
         bool wasAtL2Already = false;
+      if (debug_> 10) {
         if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
           if (wasAtL2Already) {
             LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
@@ -1359,19 +1361,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
             << genGammaBeta << " / " << isFlippedModule << " / "
             << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-          } else {
+          } else if (isSignal && genGammaBeta <= 0.31623)  {
             LogPrint(MOD) << "BetaGamma is too low for Bischel";
           }
-          if (isBckg && genGammaBeta > 0.31623 && closestGenId == 211) {
-            LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
-            << genGammaBeta << " / " << isFlippedModule << " / "
+          if (isBckg) {
+            LogPrint(MOD) << "closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
+            << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
             << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
           }
         }
-        
-        if (isOnEdge || hasBadPixels || spansTwoROCs) {
-          specialInCPE = true;
-        }
+      }
         
         if (probQ > 0.f) {
           numRecHits++;
@@ -1429,12 +1428,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                   << " numRecHits = " << numRecHits << " numRecHitsNoLayer1 = " << numRecHitsNoLayer1 ;
     LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
 
-    if (specialInCPE) {
-      pixelProbs[4] = 1.0;
-    } else {
-      pixelProbs[4] = 0.0;
-    }
-      
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (pixelProbs[0] <= 0.0 || pixelProbs[1] <= 0.0 || pixelProbs[0] >= 1.00000001 || pixelProbs[1] >= 1.000000001) {
       if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
@@ -1777,6 +1770,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (closestGenIndex>0) {
         usignedIntclosestGenIndex = closestGenIndex;
       }
+      LogPrint(MOD) << "      >> BckgMCPostPreS: Siblings from different mothers: ";
       for (unsigned int g = 0; g < genColl.size(); g++) {
         if (g == usignedIntclosestGenIndex) {
           continue;
@@ -1791,7 +1785,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
         tuple->PostPreS_ProbQVsGenEnviromentID->Fill(pixelProbs[0], abs(genColl[g].pdgId()), EventWeight_);
         tuple->PostPreS_IasVsGenEnviromentID->Fill(Ias, abs(genColl[g].pdgId()), EventWeight_);
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Siblings from different mothers: ";
         std::cout << "      >> " << abs(genColl[g].pdgId()) ;
         std::cout << " (dR = " << dr << ", pT = " << genColl[g].pt() << ") , ";
       }
@@ -1926,13 +1919,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             unsigned int pixLayerIndex = 0;
             if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
               pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
-              if (pixLayerIndex == 1 && Ias >= 0.7) {
+              if (pixLayerIndex == 1 && Ias >= 0.6) {
                 tuple->PostPreS_HighIasPixelL1ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
-              } else if (pixLayerIndex == 1 && Ias < 0.7) {
+              } else if (pixLayerIndex == 1 && Ias < 0.6) {
                 tuple->PostPreS_LowIasPixelL1ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
-              } else if (pixLayerIndex == 2 && Ias >= 0.7) {
+              } else if (pixLayerIndex == 2 && Ias >= 0.6) {
                 tuple->PostPreS_HighIasPixelL2ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
-              } else if (pixLayerIndex == 2 && Ias < 0.7) {
+              } else if (pixLayerIndex == 2 && Ias < 0.6) {
                 tuple->PostPreS_LowIasPixelL2ProbQVsProbXY->Fill(IhOnLayer, pixelProbs[0], pixelProbs[1], EventWeight_);
               }
             } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
@@ -2784,8 +2777,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
   //===================== Handle For PFMET ===================
   const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
-    //=============== Handle for secondary (displaced) vertices ===============
+  //=============== Handle for secondary (displaced) vertices ===============
   auto inclusiveSecondaryVertices = iEvent.get(inclusiveSecondaryVerticesToken_);
+    //====================== Handle for PF jets ======================
+  const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
 
   if (vertexColl.size() < 1) {
     LogPrint(MOD) << "        >> Preselection not passed: there is no vertex"
@@ -2942,6 +2937,24 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }//end loop PFCandidates
   
+  // loop on PF Jets
+  float dRMinJet = 9999.0;
+  //int closestJetIndex = -1;
+  if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
+    const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
+    for (unsigned int i = 0; i < pfJetColl->size(); i++) {
+      const reco::PFJet* jet = &(*pfJetColl)[i];
+      if (jet->pt() < 20 || jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9) {
+        continue;
+      }
+      float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
+      if (dr < dRMinJet) {
+        dRMinJet = dr;
+        //closestJetIndex = i;
+      }
+    }
+  }
+  
   // Calculate PF mini relative isolation
   // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
@@ -2971,15 +2984,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float probXYonTrack = pixelProbs[1];
   float probQonTrackNoLayer1 = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
-  
-  bool specialInCPE = false;
-  if (pixelProbs[4] > 0.5) {
-    specialInCPE = true;
-  }
-  if (specialInCPE) {
-    if (debug_ > 7) LogPrint(MOD) << "        >> This track is special in the CPE";
-  }
-  
   
   // TODO: what do PUA and PUB stand for??
   bool PUA = (vertexColl.size() < 15);
@@ -3195,6 +3199,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_PVsIh->Fill(track->p(), Ih, Event_Weight);
     tuple->BefPreS_PtVsIas->Fill(track->pt(), Ias, Event_Weight);
     tuple->BefPreS_PtVsIh->Fill(track->pt(), Ih, Event_Weight);
+    tuple->BefPreS_dRMinJet->Fill(dRMinJet, Event_Weight);
 
   }
   
@@ -3670,17 +3675,37 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsMassT->Fill(Mass, massT, Event_Weight);
     tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, Event_Weight);
     tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, Event_Weight);
+    tuple->PostPreS_dRMinJet->Fill(dRMinJet, Event_Weight);
       
   }
  
-  if (Ias > 0.7 || Mass > 1000 ) {
-    if (Ias > 0.7)    { LogPrint(MOD) << "\n\n        >> After passing preselection, the Ias > 0.7";}
+  if (Ias > 0.6 || Mass > 1000 ) {
+    if (Ias > 0.6)    { LogPrint(MOD) << "\n\n        >> After passing preselection, the Ias > 0.6";}
     if (Mass > 1000 ) { LogPrint(MOD) << "\n\n        >> After passing preselection, the Mass > 1000";}
     LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
     LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
     LogPrint(MOD) << "        >> probQonTrack " << probQonTrack << " probXYonTrack: " << probXYonTrack;
     LogPrint(MOD) << "        >> -----------------------------------------------";
-  } 
+    LogPrint(MOD) << "        >> Trigger passed!";
+    LogPrint(MOD) << "        >> track->eta()  " <<   track->eta() ;
+    LogPrint(MOD) << "        >> track->pt()  " <<   track->pt() ;
+    LogPrint(MOD) << "        >> track->found()  " <<   track->found() ;
+    LogPrint(MOD) << "        >> track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
+    LogPrint(MOD) << "        >> track->validFraction()  " <<   track->validFraction() ;
+    LogPrint(MOD) << "        >> numDeDxHits  " <<   numDeDxHits ;
+    LogPrint(MOD) << "        >> probXYonTrack  " <<   probXYonTrack ;
+    LogPrint(MOD) << "        >> track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
+    LogPrint(MOD) << "        >> EoP   " <<   EoP  ;
+    LogPrint(MOD) << "        >> dz  " <<   dz ;
+    LogPrint(MOD) << "        >> dxy  " <<   dxy ;
+    LogPrint(MOD) << "        >> track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
+    LogPrint(MOD) << "        >> pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
+    LogPrint(MOD) << "        >> IsoTK_SumEt   " <<   IsoTK_SumEt  ;
+    LogPrint(MOD) << "        >> miniRelIsoAll   " <<   miniRelIsoAll  ;
+    LogPrint(MOD) << "        >> Ih  " <<   Ih ;
+    LogPrint(MOD) << "        >> probQonTrack   " <<   probQonTrack  ;
+    LogPrint(MOD) << "        >> dRMinJet   " <<   dRMinJet;
+  }
   
   // After preselection print-outs
   if (debug_ > 7 ) {
@@ -3858,32 +3883,6 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   }
   return true;
 }
-
-// TODO: remove this
-////=============================================================
-////
-////     Check if track is from pixel
-////
-////=============================================================
-//void Analyzer::isPixelTrack(const edm::Ref<std::vector<Trajectory>>& refTraj, bool& isBpixtrack, bool& isFpixtrack) {
-//  // Used in analyze() to see if it is pixel track
-//  std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
-//  std::vector<TrajectoryMeasurement>::const_iterator tmeasIt;
-//  for (tmeasIt = tmeasColl.begin(); tmeasIt != tmeasColl.end(); tmeasIt++) {
-//    if (!tmeasIt->updatedState().isValid())
-//      continue;
-//    TransientTrackingRecHit::ConstRecHitPointer testhit = tmeasIt->recHit();
-//    if (!testhit->isValid() || testhit->geographicalId().det() != DetId::Tracker)
-//      continue;
-//    uint testSubDetID = (testhit->geographicalId().subdetId());
-//    if (testSubDetID == PixelSubdetector::PixelBarrel)
-//      isBpixtrack = true;
-//    if (testSubDetID == PixelSubdetector::PixelEndcap)
-//      isFpixtrack = true;
-//    if (isBpixtrack && isFpixtrack)
-//      break;
-//  }
-//}
 
 //=============================================================
 //

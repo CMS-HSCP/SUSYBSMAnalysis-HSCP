@@ -385,6 +385,8 @@ struct Tuple {
   TH2F* BefPreS_CluSizeYVsPixelLayer;
   TH2F* BefPreS_CluSpecInCPEVsPixelLayer;
 
+  TH1F* BefPreS_dRMinJet;
+
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_pfType;
@@ -598,6 +600,8 @@ struct Tuple {
   TH2F* PostPreS_CluSizeXVsPixelLayer;
   TH2F* PostPreS_CluSizeYVsPixelLayer;
   TH2F* PostPreS_CluSpecInCPEVsPixelLayer;
+
+  TH1F* PostPreS_dRMinJet;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
