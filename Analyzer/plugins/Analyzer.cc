@@ -1742,7 +1742,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              float siblingpT = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+              float siblingpT = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pt();
               std::cout << " (dR = " << siblingDr << ", pt = " << siblingpT << ") , ";
             }
             break;
