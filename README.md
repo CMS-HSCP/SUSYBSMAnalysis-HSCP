@@ -25,12 +25,6 @@ For more information, see [connecting-to-github-with-ssh-key](https://docs.githu
 ```bash
 git clone -b master git@github.com:CMS-HSCP/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
 ```
-<!--
-# Before compile, hide BigNTuplizer 
-pushd SUSYBSMAnalysis/HSCP/plugins
-mv BigNtuplizer.cc BigNtuplizer.cc.bkp
-popd
--->
 
 To compile the code, run
 ```bash
