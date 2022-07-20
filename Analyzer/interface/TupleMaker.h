@@ -866,7 +866,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
   tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
-  tuple->BefPreS_dRMinJet= dir.make<TH1F>("BefPreS_dRMinJet",";dRMinJet",100,0.,5.);
+  tuple->BefPreS_dRMinJet= dir.make<TH1F>("BefPreS_dRMinJet",";dRMinJet",100,0.,1.5);
   tuple->BefPreS_dRMinJet->Sumw2();
   
 
@@ -1418,7 +1418,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->PostPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
   tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
-  tuple->PostPreS_dRMinJet = dir.make<TH1F>("PostPreS_dRMinJet",";dRMinJet",100,0.,5.);
+  tuple->PostPreS_dRMinJet = dir.make<TH1F>("PostPreS_dRMinJet",";dRMinJet",100,0.,1.5);
   tuple->PostPreS_dRMinJet->Sumw2();
   
   tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
