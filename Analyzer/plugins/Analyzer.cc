@@ -91,6 +91,9 @@
 // - 24p0: - CluSpecInCPEVsPixelLayer add all clusters, add pthat histo, gen enviroment ID plots
 // - 24p1: - Change high Ias to be Ias > 0.6
 // - 24p2: - Add nearest jet distance
+// - 23p3: - Same as 24p2
+// - 24p4: - Zoom in the dR jet plot
+// - 24p5: - Fix definition for dRMinJet
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2944,7 +2947,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
-      if (jet->pt() < 20 || jet->chargedEmEnergyFraction() + jet->neutralEmEnergyFraction() > 0.9) {
+      if (jet->pt() < 20 || jet->muonEnergyFraction() > 0.7 || 
+        jet->electronEnergyFraction() > 0.6 || jet->photonEnergyFraction() > 0.6) {
         continue;
       }
       float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
