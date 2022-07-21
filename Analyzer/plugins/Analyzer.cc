@@ -94,6 +94,7 @@
 // - 23p3: - Same as 24p2
 // - 24p4: - Zoom in the dR jet plot
 // - 24p5: - Fix definition for dRMinJet
+// - 24p6: - Tighten MiniIso cut
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2500,7 +2501,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMiniRelIsoAll",0.1)->setComment("Cut on the PF based mini-isolation");
+  desc.addUntracked("GlobalMiniRelIsoAll",0.05)->setComment("Cut on the PF based mini-isolation");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
