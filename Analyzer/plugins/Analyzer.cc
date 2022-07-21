@@ -95,6 +95,7 @@
 // - 24p4: - Zoom in the dR jet plot
 // - 24p5: - Fix definition for dRMinJet
 // - 24p6: - Tighten MiniIso cut
+// - 24p7: - NOMoNOH plot, MiniIso plot boundaries, add globalMinTrackProb variables, reverse cutflow code change
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -126,8 +127,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
           consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("MuonCscSegmentCollection"))),
       offlinePrimaryVerticesToken_(
           consumes<vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("OfflinePrimaryVerticesCollection"))),
-      inclusiveSecondaryVerticesToken_(
-          consumes< reco::VertexCollection >(iConfig.getParameter<edm::InputTag>("InclusiveSecondaryVertices"))),
       lumiScalersToken_(consumes<LumiScalersCollection>(iConfig.getParameter<edm::InputTag>("LumiScalers"))),
       refittedStandAloneMuonsToken_(
           consumes<vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("RefittedStandAloneMuonsCollection"))),
@@ -178,7 +177,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
       globalMiniRelIsoAll_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoAll")),
       globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
-      trackProbQCut_(iConfig.getUntrackedParameter<double>("TrackProbQCut")),
+      globalMinTrackProbQCut_(iConfig.getUntrackedParameter<double>("GlobalMinTrackProbQCut")),
+      globalMaxTrackProbQCut_(iConfig.getUntrackedParameter<double>("GlobalMaxTrackProbQCut")),
+      globalMinTrackProbXYCut_(iConfig.getUntrackedParameter<double>("GlobalMinTrackProbXYCut")),
       minMuStations_(iConfig.getUntrackedParameter<int>("MinMuStations")),
       globalMinIs_(iConfig.getUntrackedParameter<double>("GlobalMinIs")),
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
@@ -633,7 +634,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //===================== Handle For PFJet ===================
   float pfJetHT = 0;
-  unsigned int pfNumJets = 0;
   unsigned int Jets_count = 0;
   
   std::vector<float> Jets_pt;
@@ -649,7 +649,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
-    pfNumJets = pfJetColl->size();
     TLorentzVector pMHT;
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
@@ -675,7 +674,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   
   tuple->BefPreS_RecoPFHT->Fill(pfJetHT);
-  tuple->BefPreS_RecoPFNumJets->Fill(pfNumJets);
   
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
@@ -1354,7 +1352,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         // Some printouts to compair with PixelAV
         bool wasAtL2Already = false;
-      if (debug_> 10) {
+      if (debug_> 3) {
         if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
           if (wasAtL2Already) {
             LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
@@ -2409,8 +2407,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("OfflinePrimaryVerticesCollection", edm::InputTag("offlinePrimaryVertices"))
     ->setComment("A");
-  desc.add("InclusiveSecondaryVertices", edm::InputTag("inclusiveSecondaryVertices"))
-  ->setComment("A");
   desc.add("LumiScalers", edm::InputTag("scalersRawToDigi"))
     ->setComment("A");
   desc.add("RefittedStandAloneMuonsCollection", edm::InputTag("refittedStandAloneMuons"))
@@ -2503,7 +2499,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMiniRelIsoAll",0.05)->setComment("Cut on the PF based mini-isolation");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
-  desc.addUntracked("TrackProbQCut",1.0)->setComment("Cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
+  desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMinTrackProbXYCut",0.1)->setComment("Min cut for probXY, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
 //  desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
@@ -2781,8 +2779,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
   //===================== Handle For PFMET ===================
   const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
-  //=============== Handle for secondary (displaced) vertices ===============
-  auto inclusiveSecondaryVertices = iEvent.get(inclusiveSecondaryVerticesToken_);
     //====================== Handle for PF jets ======================
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
 
@@ -2829,28 +2825,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  TreeDXY = dxy;
 //  TreeDZ = dz;
 //
-  bool isMaterialTrack = false;
-  
-  // Loop on the secondary vertices to find tracks that original from the pixel layers
-  // i.e. are due to NI
-  for (unsigned int i = 0; i < inclusiveSecondaryVertices.size(); i++) {
-    if (inclusiveSecondaryVertices[i].isFake()) {
-      continue;
-    }
-    auto rho = inclusiveSecondaryVertices[i].position().rho();
-    if ( (( 2.80-0.075 ) < rho && rho < ( 3.10+0.075 )) || (( 6.60-0.075 ) < rho && rho < ( 7.00+0.075 ))
-        || (( 10.9-0.075 ) < rho && rho < ( 10.9+0.075 )) || (( 16.0-0.075 ) < rho && rho < ( 16.0+0.075 )) ) {
-      for( const auto& rf_track : inclusiveSecondaryVertices[i].refittedTracks() ) {
-        const reco::Track& origTrk = *( inclusiveSecondaryVertices[i].originalTrack( rf_track ));
-        if( track->pt() == origTrk.pt() ){
-          isMaterialTrack = true;
-          break;
-        }
-      }
-    } else {
-      continue;
-    }
-  }
   
   // Loop on PF candidates
   bool pf_isPfTrack = false;
@@ -2943,19 +2917,19 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   // loop on PF Jets
   float dRMinJet = 9999.0;
-  //int closestJetIndex = -1;
+  int pfNumJets = 0;
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
-      if (jet->pt() < 20 || jet->muonEnergyFraction() > 0.7 || 
+      if (jet->pt() < 50 || jet->muonEnergyFraction() > 0.7 ||
         jet->electronEnergyFraction() > 0.6 || jet->photonEnergyFraction() > 0.6) {
         continue;
       }
+      pfNumJets++;
       float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
       if (dr < dRMinJet) {
         dRMinJet = dr;
-        //closestJetIndex = i;
       }
     }
   }
@@ -3025,7 +2999,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Check the min fraction of valid hits
   passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits
-  passedCutsArray[5]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+  passedCutsArray[5]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // Select only high purity tracks
   passedCutsArray[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
@@ -3042,8 +3016,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the uncertainty of the pt measurement
   passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[12] = (!isMaterialTrack) ? true : false;
-//  passedCutsArray[13] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  passedCutsArray[12] = (true) ? true : false;
+//  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
@@ -3052,10 +3026,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
   // Cut away background events based on the probXY
-  passedCutsArray[16] = ((probXYonTrackNoLayer1 > 0.1 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
-  passedCutsArray[17] = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
-  //passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  passedCutsArray[17] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
   // TOF only cuts
   passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
   passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -3087,9 +3060,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     
     // CutFlow in a single plot when the order is reversed
     if (tuple) {
-        for (size_t i = sizeof(passedCutsArray)-1; i>0; i--) {
+      for (int i = sizeof(passedCutsArray)-1; i>=0; i--) {
         bool allCutsPassedSoFar = true;
-        for (size_t j = sizeof(passedCutsArray)-1; j>i; j--) {
+        for (int j = sizeof(passedCutsArray)-1; j>=i; j--) {
           if (!passedCutsArray[j]) {
             allCutsPassedSoFar = false;
           }
@@ -3168,6 +3141,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
     tuple->BefPreS_Pt->Fill(track->pt(), Event_Weight);
     tuple->BefPreS_P->Fill(track->p(), Event_Weight);
+    tuple->BefPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), Event_Weight);
     tuple->BefPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
     tuple->BefPreS_Dxy->Fill(dxy, Event_Weight);
     tuple->BefPreS_Dz->Fill(dz, Event_Weight);
@@ -3204,6 +3178,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_PVsIh->Fill(track->p(), Ih, Event_Weight);
     tuple->BefPreS_PtVsIas->Fill(track->pt(), Ias, Event_Weight);
     tuple->BefPreS_PtVsIh->Fill(track->pt(), Ih, Event_Weight);
+    tuple->BefPreS_RecoPFNumJets->Fill(pfNumJets,Event_Weight);
     tuple->BefPreS_dRMinJet->Fill(dRMinJet, Event_Weight);
 
   }
@@ -3526,6 +3501,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), Ias, Event_Weight);
     tuple->PostPreS_Pt->Fill(track->pt(), Event_Weight);
     tuple->PostPreS_PtVsIas->Fill(track->pt(), Ias, Event_Weight);
+    tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), Event_Weight);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
     tuple->PostPreS_Dz->Fill(dz, Event_Weight);
     tuple->PostPreS_Dxy->Fill(dxy, Event_Weight);
@@ -3681,6 +3657,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, Event_Weight);
     tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, Event_Weight);
     tuple->PostPreS_dRMinJet->Fill(dRMinJet, Event_Weight);
+    tuple->PostPreS_RecoPFNumJets->Fill(pfNumJets, Event_Weight);
       
   }
  

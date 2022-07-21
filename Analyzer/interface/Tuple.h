@@ -311,6 +311,7 @@ struct Tuple {
   TH1F* BefPreS_TNOM;
   TH1F* BefPreS_TNOM_PUA;
   TH1F* BefPreS_TNOM_PUB;
+  TH1F* BefPreS_NOMoNOH;
   TProfile* BefPreS_NOMoNOHvsPV;
   TH1F* BefPreS_nDof;
   TH1F* BefPreS_TOFError;
@@ -417,6 +418,7 @@ struct Tuple {
   TH2F* PostPreS_TNOMVsIas;
   TH1F* PostPreS_TNOM_PUA;
   TH1F* PostPreS_TNOM_PUB;
+  TH1F* PostPreS_NOMoNOH;
   TProfile* PostPreS_NOMoNOHvsPV;
   TH1F* PostPreS_nDof;
   TH1F* PostPreS_TOFError;

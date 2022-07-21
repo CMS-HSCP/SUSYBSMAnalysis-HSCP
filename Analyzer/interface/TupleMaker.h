@@ -567,12 +567,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0);
   tuple->BefPreS_massT->Sumw2();
 
-  Name = "BefPreS_MiniRelIsoAll";
-  tuple->BefPreS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0.0, 10.0);
+  tuple->BefPreS_MiniRelIsoAll = dir.make<TH1F>("BefPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->BefPreS_MiniRelIsoAll->Sumw2();
-  
-  Name = "BefPreS_MiniRelIsoChg";
-  tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
+  tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>("BefPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
   tuple->BefPreS_MiniRelIsoChg->Sumw2();
 
   Name = "BefPreS_RecoPFMET";
@@ -754,6 +751,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_PV_NoEventWeight";
   tuple->BefPreS_PV_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->BefPreS_PV_NoEventWeight->Sumw2();
+  tuple->BefPreS_NOMoNOH = dir.make<TH1F>("BefPreS_NOMoNOH",";Num of measurment / num of hits;Tracks/bin",10,0.,1.0);
+  tuple->BefPreS_NOMoNOH->Sumw2();
   Name = "BefPreS_NOMoNOHvsPV";
   tuple->BefPreS_NOMoNOHvsPV = dir.make<TProfile>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->BefPreS_NOMoNOHvsPV->Sumw2();
@@ -886,14 +885,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_massTVsIas = dir.make<TH2F>("PostPreS_massTVsIas","PostPreS_massTVsIas",50, 0.0, 250.0, 20, 0., 1.);
   tuple->PostPreS_massTVsIas->Sumw2();
   
-  Name = "PostPreS_MiniRelIsoAll";
-  tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0.0, 10.0);
+  tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>("PostPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoAll->Sumw2();
-  tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 200, 0.0, 10.0, 20, 0.,1.);
+  tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 150, 0.0, 1.5, 20, 0.,1.);
   tuple->PostPreS_MiniRelIsoAllVsIas->Sumw2();
-  
-  Name = "PostPreS_MiniRelIsoChg";
-  tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
+  tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>("PostPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoChg->Sumw2();
   
   Name = "PostPreS_RecoPFMET";
@@ -902,8 +898,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_RecoPFHT";
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT->Sumw2();
-  Name = "PostPreS_RecoPFNumJets";
-  tuple->PostPreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  150, 0.0, 15.0);
+  tuple->PostPreS_RecoPFNumJets = dir.make<TH1F>("PostPreS_RecoPFNumJets",";Number of PF jets;Jets/bin",  30, 0.0, 30.0);
   tuple->PostPreS_RecoPFNumJets->Sumw2();
   
   Name = "PostPreS_Chi2oNdof";
@@ -1048,6 +1043,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_PV_NoEventWeight";
   tuple->PostPreS_PV_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->PostPreS_PV_NoEventWeight->Sumw2();
+  tuple->PostPreS_NOMoNOH = dir.make<TH1F>("PostPreS_NOMoNOH",";Num of measurment / num of hits;Tracks/bin",10,0.,1.0);
+  tuple->PostPreS_NOMoNOH->Sumw2();
   Name = "PostPreS_NOMoNOHvsPV";
   tuple->PostPreS_NOMoNOHvsPV = dir.make<TProfile>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->PostPreS_NOMoNOHvsPV->Sumw2();
