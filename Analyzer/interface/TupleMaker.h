@@ -53,14 +53,20 @@ public:
                         const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                         const bool &HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
                         const bool &HLT_MET105_IsoTrk50,
-                        const float &CaloMET,
+                        const float &RecoCaloMET,
+			const float &RecoCaloMET_phi,
+			const float &RecoCaloMET_significance,
                         const float &RecoPFMET,
-                        const float &RecoPFMHT,
-                        const float &HLTPFMET,
-                        const float &HLTPFMHT,
-                        const float &RecoPFMET_eta,
                         const float &RecoPFMET_phi,
                         const float &RecoPFMET_significance,
+                        const float &RecoPFMHT,
+			const float &HLTCaloMET,
+			const float &HLTCaloMET_phi,
+			const float &HLTCaloMET_significance,
+                        const float &HLTPFMET,
+			const float &HLTPFMET_phi,
+			const float &HLTPFMET_significance,
+                        const float &HLTPFMHT,
                         const float &Muon1_Pt,
                         const float &Muon1_eta,
                         const float &Muon1_phi,
@@ -1896,14 +1902,20 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                         &tuple->Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
                         "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60/O");
     tuple->Tree->Branch("HLT_MET105_IsoTrk50", &tuple->Tree_HLT_MET105_IsoTrk50, "HLT_MET105_IsoTrk50/O");
-    tuple->Tree->Branch("CaloMET", &tuple->Tree_CaloMET, "CaloMET/F");
+    tuple->Tree->Branch("RecoCaloMET", &tuple->Tree_RecoCaloMET, "RecoCaloMET/F");
+    tuple->Tree->Branch("RecoCaloMET_phi", &tuple->Tree_RecoCaloMET_phi, "RecoCaloMET_phi/F");
+    tuple->Tree->Branch("RecoCaloMET_significance", &tuple->Tree_RecoCaloMET_significance, "RecoCaloMET_significance/F");
     tuple->Tree->Branch("RecoPFMET", &tuple->Tree_RecoPFMET, "RecoPFMET/F");
-    tuple->Tree->Branch("RecoPFMHT", &tuple->Tree_RecoPFMHT, "RecoPFMHT/F");
-    tuple->Tree->Branch("HLTPFMET", &tuple->Tree_HLTPFMET, "HLTPFMET/F");
-    tuple->Tree->Branch("HLTPFMHT", &tuple->Tree_HLTPFMHT, "HLTPFMHT/F");
-    tuple->Tree->Branch("RecoPFMET_eta", &tuple->Tree_RecoPFMET_eta, "RecoPFMET_eta/F");
     tuple->Tree->Branch("RecoPFMET_phi", &tuple->Tree_RecoPFMET_phi, "RecoPFMET_phi/F");
     tuple->Tree->Branch("RecoPFMET_significance", &tuple->Tree_RecoPFMET_significance, "RecoPFMET_significance/F");
+    tuple->Tree->Branch("RecoPFMHT", &tuple->Tree_RecoPFMHT, "RecoPFMHT/F");
+    tuple->Tree->Branch("HLTCaloMET", &tuple->Tree_HLTCaloMET, "HLTCaloMET/F");
+    tuple->Tree->Branch("HLTCaloMET_phi", &tuple->Tree_HLTCaloMET_phi, "HLTCaloMET_phi/F");
+    tuple->Tree->Branch("HLTCaloMET_significance", &tuple->Tree_HLTCaloMET_significance, "HLTCaloMET_significance/F");
+    tuple->Tree->Branch("HLTPFMET", &tuple->Tree_HLTPFMET, "HLTPFMET/F");
+    tuple->Tree->Branch("HLTPFMET_phi", &tuple->Tree_HLTPFMET_phi, "HLTPFMET_phi/F");
+    tuple->Tree->Branch("HLTPFMET_significance", &tuple->Tree_HLTPFMET_significance, "HLTPFMET_significance/F");
+    tuple->Tree->Branch("HLTPFMHT", &tuple->Tree_HLTPFMHT, "HLTPFMHT/F");
     tuple->Tree->Branch("Muon1_Pt", &tuple->Tree_Muon1_Pt, "Muon1_Pt/F");
     tuple->Tree->Branch("Muon1_eta", &tuple->Tree_Muon1_eta, "Muon1_eta/F");
     tuple->Tree->Branch("Muon1_phi", &tuple->Tree_Muon1_phi, "Muon1_phi/F");
@@ -2102,14 +2114,20 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                   const bool &HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
                                   const bool &HLT_MET105_IsoTrk50,
-                                  const float &CaloMET,
+                                  const float &RecoCaloMET,
+				  const float &RecoCaloMET_phi,
+				  const float &RecoCaloMET_significance,
                                   const float &RecoPFMET,
-                                  const float &RecoPFMHT,
-                                  const float &HLTPFMET,
-                                  const float &HLTPFMHT,
-                                  const float &RecoPFMET_eta,
                                   const float &RecoPFMET_phi,
                                   const float &RecoPFMET_significance,
+                                  const float &RecoPFMHT,
+				  const float &HLTCaloMET,
+				  const float &HLTCaloMET_phi,
+				  const float &HLTCaloMET_significance,
+                                  const float &HLTPFMET,
+                                  const float &HLTPFMET_phi,
+                                  const float &HLTPFMET_significance,
+                                  const float &HLTPFMHT,
                                   const float &Muon1_Pt,
                                   const float &Muon1_eta,
                                   const float &Muon1_phi,
@@ -2242,14 +2260,20 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
   tuple->Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60;
   tuple->Tree_HLT_MET105_IsoTrk50 = HLT_MET105_IsoTrk50;
-  tuple->Tree_CaloMET = CaloMET;
+  tuple->Tree_RecoCaloMET = RecoCaloMET;
+  tuple->Tree_RecoCaloMET_phi = RecoCaloMET_phi;
+  tuple->Tree_RecoCaloMET_significance = RecoCaloMET_significance;
   tuple->Tree_RecoPFMET = RecoPFMET;
-  tuple->Tree_RecoPFMHT = RecoPFMHT;
-  tuple->Tree_HLTPFMET = HLTPFMET;
-  tuple->Tree_HLTPFMHT = HLTPFMHT;
-  tuple->Tree_RecoPFMET_eta = RecoPFMET_eta;
   tuple->Tree_RecoPFMET_phi = RecoPFMET_phi;
   tuple->Tree_RecoPFMET_significance = RecoPFMET_significance;
+  tuple->Tree_RecoPFMHT = RecoPFMHT;
+  tuple->Tree_HLTCaloMET = HLTCaloMET;
+  tuple->Tree_HLTCaloMET_phi = HLTCaloMET_phi;
+  tuple->Tree_HLTCaloMET_significance = HLTCaloMET_significance;
+  tuple->Tree_HLTPFMET = HLTPFMET;
+  tuple->Tree_HLTPFMET_phi = HLTPFMET_phi;
+  tuple->Tree_HLTPFMET_significance = HLTPFMET_significance;
+  tuple->Tree_HLTPFMHT = HLTPFMHT;
   tuple->Tree_Muon1_Pt = Muon1_Pt;
   tuple->Tree_Muon1_eta = Muon1_eta;
   tuple->Tree_Muon1_phi = Muon1_phi;

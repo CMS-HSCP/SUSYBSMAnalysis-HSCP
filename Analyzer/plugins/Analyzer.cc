@@ -593,29 +593,32 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
 
-  float CaloMET = -1, RecoPFMET_et = -1, RecoPFMHT = -1, HLTPFMET = -1, HLTPFMHT = -1;
-  float RecoPFMET_eta = -1, RecoPFMET_phi = -1, RecoPFMET_significance = -1;
+  float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_significance = -10; 
+  float RecoPFMET = -10, RecoPFMET_phi = -10, RecoPFMET_significance = -10, RecoPFMHT = -10;
+  float HLTCaloMET = -10, HLTCaloMET_phi = -10, HLTCaloMET_significance = -10;
+  float HLTPFMET = -10, HLTPFMET_phi = -10, HLTPFMET_significance = -10, HLTPFMHT = -10;
 
-  //===================== Handle For PFMET ===================
-  const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
-  if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
-    for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
-      const reco::PFMET* pfMet = &(*pfMETHandle)[i];
-      RecoPFMET_et = pfMet->et();
-      RecoPFMET_eta = pfMet->eta();
-      RecoPFMET_phi = pfMet->phi();
-      RecoPFMET_significance = pfMet->significance();
+  //===================== Handle For RecoPFMET ===================
+  const edm::Handle<std::vector<reco::PFMET>> recoPFMETHandle = iEvent.getHandle(pfMETToken_);
+  if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
+    for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
+      const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
+      RecoPFMET = recoPFMet->et();
+      RecoPFMET_phi = recoPFMet->phi();
+      RecoPFMET_significance = recoPFMet->significance();
     }
   }
 
-  tuple->BefPreS_RecoPFMET->Fill(RecoPFMET_et);
+  tuple->BefPreS_RecoPFMET->Fill(RecoPFMET);
 
-  //===================== Handle For CaloMET ===================
-  const edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle = iEvent.getHandle(CaloMETToken_);
-  if (CaloMETHandle.isValid() && !CaloMETHandle->empty()) {
-    for (unsigned int i = 0; i < CaloMETHandle->size(); i++) {
-      const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
-      CaloMET = calomet->et();
+  //===================== Handle For RecoCaloMET ===================
+  const edm::Handle<std::vector<reco::CaloMET>> recoCaloMETHandle = iEvent.getHandle(CaloMETToken_);
+  if (recoCaloMETHandle.isValid() && !recoCaloMETHandle->empty()) {
+    for (unsigned int i = 0; i < recoCaloMETHandle->size(); i++) {
+      const reco::CaloMET* recoCaloMet = &(*recoCaloMETHandle)[i];
+      RecoCaloMET = recoCaloMet->et();
+      RecoCaloMET_phi = recoCaloMet->phi();
+      RecoCaloMET_significance = recoCaloMet->significance();
     }
   }
 
@@ -1090,7 +1093,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
 
     // Compute transverse mass mT between HSCP with and MET
-    float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi))); 
+    float massT = sqrt(2*track->pt()*RecoPFMET*(1-cos(track->phi()-RecoPFMET_phi))); 
     HSCP_mT.push_back(massT);
   
     // Save PF informations and isolation
@@ -2140,14 +2143,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                 HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
                                 HLT_MET105_IsoTrk50,
-                                CaloMET,
-                                RecoPFMET_et,
+                                RecoCaloMET,
+				RecoCaloMET_phi,
+				RecoCaloMET_significance,
+                                RecoPFMET,
+				RecoPFMET_phi,
+				RecoPFMET_significance,
                                 RecoPFMHT,
+				HLTCaloMET,
+				HLTCaloMET_phi,
+				HLTCaloMET_significance,
                                 HLTPFMET,
+				HLTPFMET_phi,
+				HLTPFMET_significance,
                                 HLTPFMHT,
-                                RecoPFMET_eta,
-                                RecoPFMET_phi,
-                                RecoPFMET_significance,
                                 maxPtMuon1,
                                 etaMuon1,
                                 phiMuon1,
@@ -2723,7 +2732,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
   //===================== Handle For PFMET ===================
-  const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
+  const edm::Handle<std::vector<reco::PFMET>> recoPFMETHandle = iEvent.getHandle(pfMETToken_);
     //=============== Handle for secondary (displaced) vertices ===============
   auto inclusiveSecondaryVertices = iEvent.get(inclusiveSecondaryVerticesToken_);
 
@@ -2888,16 +2897,16 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
-  float RecoPFMET_et = -1, RecoPFMET_phi = -1;
+  float RecoPFMET = -10, RecoPFMET_phi = -10;
 
-  if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
-    for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
-      const reco::PFMET* pfMet = &(*pfMETHandle)[i];
-      RecoPFMET_et = pfMet->et();
-      RecoPFMET_phi = pfMet->phi();
+  if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
+    for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
+      const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
+      RecoPFMET = recoPFMet->et();
+      RecoPFMET_phi = recoPFMet->phi();
     }
   }
-  float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
+  float massT = sqrt(2*track->pt()*RecoPFMET*(1-cos(track->phi()-RecoPFMET_phi)));
 
   // Number of DeDx hits
   unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 0;
