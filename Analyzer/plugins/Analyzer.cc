@@ -96,6 +96,7 @@
 // - 24p5: - Fix definition for dRMinJet
 // - 24p6: - Tighten MiniIso cut
 // - 24p7: - NOMoNOH plot, MiniIso plot boundaries, add globalMinTrackProb variables, reverse cutflow code change
+// - 24p8: - Tighten MiniIso cut to 0.02
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2497,7 +2498,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMiniRelIsoAll",0.05)->setComment("Cut on the PF based mini-isolation");
+  desc.addUntracked("GlobalMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
