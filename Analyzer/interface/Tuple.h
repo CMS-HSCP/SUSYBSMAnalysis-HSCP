@@ -297,7 +297,7 @@ struct Tuple {
   TH1F* BefPreS_MiniRelIsoChg;
   TH1F* BefPreS_RecoPFMET;
   TH1F* BefPreS_RecoPFHT;
-  TH1F* BefPreS_RecoPFNumJets;
+  TH1F* BefPreS_CaloNumJets;
 
   TH1F* BefPreS_Chi2oNdof;
   TH1F* BefPreS_Qual;
@@ -386,7 +386,8 @@ struct Tuple {
   TH2F* BefPreS_CluSizeYVsPixelLayer;
   TH2F* BefPreS_CluSpecInCPEVsPixelLayer;
 
-  TH1F* BefPreS_dRMinJet;
+  TH1F* BefPreS_dRMinPfJet;
+  TH1F* BefPreS_dRMinCaloJet;
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
@@ -399,7 +400,7 @@ struct Tuple {
   TH1F* PostPreS_MiniRelIsoChg;
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
-  TH1F* PostPreS_RecoPFNumJets;
+  TH1F* PostPreS_CaloNumJets;
   
   TH1F* PostPreS_Chi2oNdof;
   TH2F* PostPreS_Chi2oNdofVsIas;
@@ -603,7 +604,8 @@ struct Tuple {
   TH2F* PostPreS_CluSizeYVsPixelLayer;
   TH2F* PostPreS_CluSpecInCPEVsPixelLayer;
 
-  TH1F* PostPreS_dRMinJet;
+  TH1F* PostPreS_dRMinPfJet;
+  TH1F* PostPreS_dRMinCaloJet;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;

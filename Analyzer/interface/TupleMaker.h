@@ -578,9 +578,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_RecoPFHT";
   tuple->BefPreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->BefPreS_RecoPFHT->Sumw2();
-  Name = "BefPreS_RecoPFNumJets";
-  tuple->BefPreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  70, 0.0, 70.0);
-  tuple->BefPreS_RecoPFNumJets->Sumw2();
+  tuple->BefPreS_CaloNumJets = dir.make<TH1F>("BefPreS_CaloNumJets", ";Number of calo jets;Jets/bin",  70, 0.0, 70.0);
+  tuple->BefPreS_CaloNumJets->Sumw2();
 
   Name = "BefPreS_Chi2oNdof";
   tuple->BefPreS_Chi2oNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
@@ -865,8 +864,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
   tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
-  tuple->BefPreS_dRMinJet= dir.make<TH1F>("BefPreS_dRMinJet",";dRMinJet",100,0.,1.5);
-  tuple->BefPreS_dRMinJet->Sumw2();
+  tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
+  tuple->BefPreS_dRMinPfJet->Sumw2();
+  tuple->BefPreS_dRMinCaloJet= dir.make<TH1F>("BefPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
+  tuple->BefPreS_dRMinCaloJet->Sumw2();
   
 
   Name = "PostPreS_TriggerType";
@@ -898,8 +899,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_RecoPFHT";
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT->Sumw2();
-  tuple->PostPreS_RecoPFNumJets = dir.make<TH1F>("PostPreS_RecoPFNumJets",";Number of PF jets;Jets/bin",  30, 0.0, 30.0);
-  tuple->PostPreS_RecoPFNumJets->Sumw2();
+  tuple->PostPreS_CaloNumJets = dir.make<TH1F>("PostPreS_CaloNumJets",";Number of calo jets;Jets/bin",  30, 0.0, 30.0);
+  tuple->PostPreS_CaloNumJets->Sumw2();
   
   Name = "PostPreS_Chi2oNdof";
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
@@ -1415,8 +1416,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->PostPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
   tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
-  tuple->PostPreS_dRMinJet = dir.make<TH1F>("PostPreS_dRMinJet",";dRMinJet",100,0.,1.5);
-  tuple->PostPreS_dRMinJet->Sumw2();
+  tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
+  tuple->PostPreS_dRMinPfJet->Sumw2();
+  tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
+  tuple->PostPreS_dRMinCaloJet->Sumw2();
   
   tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
   tuple->GenLevelBinning->Sumw2();

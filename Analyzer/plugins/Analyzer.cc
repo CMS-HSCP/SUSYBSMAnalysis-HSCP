@@ -97,6 +97,7 @@
 // - 24p6: - Tighten MiniIso cut
 // - 24p7: - NOMoNOH plot, MiniIso plot boundaries, add globalMinTrackProb variables, reverse cutflow code change
 // - 24p8: - Tighten MiniIso cut to 0.02
+// - 24p9: - Add distance to Calo jets
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -136,7 +137,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
-      CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
+      caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
+      caloJetToken_(consumes<std::vector<reco::CaloJet>>(iConfig.getParameter<edm::InputTag>("CaloJet"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("PileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("GenParticleCollection"))),
@@ -625,7 +627,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->BefPreS_RecoPFMET->Fill(RecoPFMET_et);
 
   //===================== Handle For CaloMET ===================
-  const edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle = iEvent.getHandle(CaloMETToken_);
+  const edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle = iEvent.getHandle(caloMETToken_);
   if (CaloMETHandle.isValid() && !CaloMETHandle->empty()) {
     for (unsigned int i = 0; i < CaloMETHandle->size(); i++) {
       const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
@@ -2425,7 +2427,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
     ->setComment("A");
   desc.add("CaloMET", edm::InputTag("caloMet"))
-    ->setComment("A");
+    ->setComment("Take MET from the calorimeters");
+  desc.add("CaloJet", edm::InputTag("ak4CaloJets"))
+  ->setComment("Take jets from the calorimeters");
   desc.add("PileupInfo", edm::InputTag("addPileupInfo"))
     ->setComment("A");
   desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
@@ -2780,8 +2784,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
   //===================== Handle For PFMET ===================
   const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
-    //====================== Handle for PF jets ======================
+  //====================== Handle for PF jets ======================
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
+  //===================== Handle For CaloJet ===================
+  const edm::Handle<std::vector<reco::CaloJet>> caloJetHandle = iEvent.getHandle(caloJetToken_);
+
 
   if (vertexColl.size() < 1) {
     LogPrint(MOD) << "        >> Preselection not passed: there is no vertex"
@@ -2917,7 +2924,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }//end loop PFCandidates
   
   // loop on PF Jets
-  float dRMinJet = 9999.0;
+  float dRMinPfJet = 9999.0;
   int pfNumJets = 0;
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
@@ -2929,8 +2936,25 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       }
       pfNumJets++;
       float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
-      if (dr < dRMinJet) {
-        dRMinJet = dr;
+      if (dr < dRMinPfJet) {
+        dRMinPfJet = dr;
+      }
+    }
+  }
+
+  // loop on Calo jets
+  float dRMinCaloJet = 9999.0;
+  int caloNumJets = 0;
+  if (caloJetHandle.isValid() && !caloJetHandle->empty()) {
+    for (unsigned int i = 0; i < caloJetHandle->size(); i++) {
+      const reco::CaloJet* jet = &(*caloJetHandle)[i];
+      if (jet->pt() < 50 || jet->emEnergyFraction() > 0.9) {
+        continue;
+      }
+      caloNumJets++;
+      float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
+      if (dr < dRMinCaloJet) {
+        dRMinCaloJet = dr;
       }
     }
   }
@@ -3179,8 +3203,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_PVsIh->Fill(track->p(), Ih, Event_Weight);
     tuple->BefPreS_PtVsIas->Fill(track->pt(), Ias, Event_Weight);
     tuple->BefPreS_PtVsIh->Fill(track->pt(), Ih, Event_Weight);
-    tuple->BefPreS_RecoPFNumJets->Fill(pfNumJets,Event_Weight);
-    tuple->BefPreS_dRMinJet->Fill(dRMinJet, Event_Weight);
+    tuple->BefPreS_CaloNumJets->Fill(caloNumJets,Event_Weight);
+    tuple->BefPreS_dRMinPfJet->Fill(dRMinPfJet, Event_Weight);
+    tuple->BefPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
 
   }
   
@@ -3657,8 +3682,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsMassT->Fill(Mass, massT, Event_Weight);
     tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, Event_Weight);
     tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, Event_Weight);
-    tuple->PostPreS_dRMinJet->Fill(dRMinJet, Event_Weight);
-    tuple->PostPreS_RecoPFNumJets->Fill(pfNumJets, Event_Weight);
+    tuple->PostPreS_dRMinPfJet->Fill(dRMinPfJet, Event_Weight);
+    tuple->PostPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
+    tuple->PostPreS_CaloNumJets->Fill(caloNumJets, Event_Weight);
       
   }
  
@@ -3687,7 +3713,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >> Ih  " <<   Ih ;
     LogPrint(MOD) << "        >> probQonTrack   " <<   probQonTrack  ;
-    LogPrint(MOD) << "        >> dRMinJet   " <<   dRMinJet;
+    LogPrint(MOD) << "        >> dRMinCaloJet   " <<   dRMinCaloJet;
+    LogPrint(MOD) << "        >> dRMinPfJet   " <<   dRMinPfJet;
   }
   
   // After preselection print-outs
