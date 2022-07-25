@@ -3,28 +3,27 @@ from CRABClient.UserUtilities import config
 config = config()
 
 config.section_('General')
-config.General.requestName = 'Analysis_2018_ROVIDMINTA_woProbQ_CodeVVERZIO_v1'
+config.General.requestName = 'Analysis_2018_MyHSCPgluino_M_1800_woProbQ_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 config.General.transferLogs = True
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_woProbQ_cfg.py'
+config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_MySignalMC_woProbQ_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
-config.JobType.maxMemoryMB = 4000
+config.JobType.maxMemoryMB = 3500
 config.JobType.inputFiles = ['templateMC.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
 
 config.section_('Data')
-config.Data.inputDataset = 'MINTA'
-#config.Data.inputDBS = 'phys03'
-#config.Data.splitting = 'Automatic'
+config.Data.inputDBS = 'phys03'
+config.Data.inputDataset = '/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3-0bfbad649d32c05924b5bfd4b5874292/USER'
 config.Data.splitting = 'LumiBased'
-    #config.Data.unitsPerJob = 1 #20
+#config.Data.unitsPerJob = 1 #20
 #config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 50
-config.Data.totalUnits = config.Data.unitsPerJob * 800
+#config.Data.totalUnits = config.Data.unitsPerJob * 1000
 config.Data.publication = True
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
