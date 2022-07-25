@@ -1284,14 +1284,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // skip tracks without hits otherwise there will be a crash
     if (!dedxHits) {
       if (debug_> 3) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
-      // 7-th bin of the error histo, didnt find the gen canidate
+      // 7-th bin of the error histo, No dedxHits associated to this track
       tuple->ErrorHisto->Fill(6.5);
       continue;
     }
 
     int nofClust_dEdxLowerThan = 0;
-    auto genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
-    unsigned int closestGenId = abs(genColl[closestGenIndex].pdgId());
+    float genGammaBeta = 0.0;
+    unsigned int closestGenId = 0;
+    if (!isData) {
+      genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
+      closestGenId = abs(genColl[closestGenIndex].pdgId());
+    }
 
     // Loop through the rechits on the given track before preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
