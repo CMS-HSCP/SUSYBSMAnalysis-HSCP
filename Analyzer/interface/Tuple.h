@@ -388,6 +388,7 @@ struct Tuple {
 
   TH1F* BefPreS_dRMinPfJet;
   TH1F* BefPreS_dRMinCaloJet;
+  TH2F* BefPreS_dRVsPtPfJet;
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;

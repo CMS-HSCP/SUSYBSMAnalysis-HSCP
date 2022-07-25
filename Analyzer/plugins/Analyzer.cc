@@ -98,6 +98,7 @@
 // - 24p7: - NOMoNOH plot, MiniIso plot boundaries, add globalMinTrackProb variables, reverse cutflow code change
 // - 24p8: - Tighten MiniIso cut to 0.02
 // - 24p9: - Add distance to Calo jets
+// - 25p1: - Add BefPreS_dRVsPtPfJet
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -969,7 +970,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     
-    if (!isData) {
+    if (!isData && debug_ > 5) {
       LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinBckg;
     }
     
@@ -1428,11 +1429,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
     pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
 
-//    if (debug_> -1)
-    LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1
-                  << " numRecHits = " << numRecHits << " numRecHitsNoLayer1 = " << numRecHitsNoLayer1 ;
-    LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
-
+    if (debug_> 7) {
+      LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1
+                    << " numRecHits = " << numRecHits << " numRecHitsNoLayer1 = " << numRecHitsNoLayer1 ;
+      LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
+    }
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (pixelProbs[0] <= 0.0 || pixelProbs[1] <= 0.0 || pixelProbs[0] >= 1.00000001 || pixelProbs[1] >= 1.000000001) {
       if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
@@ -2839,6 +2840,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
   bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0 ,track_PFMiniIso_sumLeptonPt = 0;
+  float track_PFMiniIso_otherPt = 0;
   float pf_energy = 0.0;
     
   // number of tracks as the first bin
@@ -2889,6 +2891,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
            tuple->BefPreS_pfType->Fill(8.5, EventWeight_);
           }
         }
+        LogPrint(MOD) << "      >> HSCP candidate track has ID " << pfCand->pdgId() << " categoriezed by PF as " << pfCand->translatePdgIdToType(pfCand->pdgId());
         // The sum of the pt in the cone does not contain the pt of the track
         // just the pt of the surrounding tracks in the cone
         continue;
@@ -2919,26 +2922,43 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
         // muon iso
         if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
+        if (!pf_isElectronForIdx && !pf_isMuonForIdx && !pf_isChHadronForIdx && !pf_isNeutHadronForIdx && !pf_isPhotonForIdx) {
+          track_PFMiniIso_otherPt+=pt;
+          LogPrint(MOD) << "PF cand ID " << pfCand->pdgId() << " is not in the std categories, it's " << pfCand->translatePdgIdToType(pfCand->pdgId()); 
+        }
       }
     }
   }//end loop PFCandidates
   
   // loop on PF Jets
   float dRMinPfJet = 9999.0;
+  float dRMinPfJetTemp = 9999.0;
+  int nearestJetIndex = -1;
   int pfNumJets = 0;
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
+      float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
+      
+      if (dr < dRMinPfJetTemp) {
+        dRMinPfJetTemp = dr;
+        nearestJetIndex = i;
+      }
+      
       if (jet->pt() < 50 || jet->muonEnergyFraction() > 0.7 ||
         jet->electronEnergyFraction() > 0.6 || jet->photonEnergyFraction() > 0.6) {
         continue;
       }
       pfNumJets++;
-      float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
+      
       if (dr < dRMinPfJet) {
         dRMinPfJet = dr;
       }
+    }
+    if (tuple) {
+      const reco::PFJet* jet = &(*pfJetColl)[nearestJetIndex];
+      tuple->BefPreS_dRVsPtPfJet->Fill(dRMinPfJetTemp, jet->pt(), EventWeight_);
     }
   }
 
@@ -2962,6 +2982,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Calculate PF mini relative isolation
   // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  if (miniRelIsoAll == 0) {
+    LogPrint(MOD) << "      >> track_PFMiniIso_sumLeptonPt: " << track_PFMiniIso_sumLeptonPt << " track_PFMiniIso_sumCharHadPt: " << track_PFMiniIso_sumCharHadPt << " track_PFMiniIso_sumNeutHadPt " << track_PFMiniIso_sumNeutHadPt << " track_PFMiniIso_sumPhotonPt " << track_PFMiniIso_sumPhotonPt << " track_PFMiniIso_sumPUPt: " << track_PFMiniIso_sumPUPt << " track_PFMiniIso_otherPt: " << track_PFMiniIso_otherPt ; 
+  }
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
@@ -3118,6 +3141,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+    LogPrint(MOD) << "        >>   Ias  " << Ias;
   }
   
   // Before (pre)selection plots
@@ -3712,6 +3736,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> IsoTK_SumEt   " <<   IsoTK_SumEt  ;
     LogPrint(MOD) << "        >> miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >> Ih  " <<   Ih ;
+    LogPrint(MOD) << "        >> Ias  " << Ias;
     LogPrint(MOD) << "        >> probQonTrack   " <<   probQonTrack  ;
     LogPrint(MOD) << "        >> dRMinCaloJet   " <<   dRMinCaloJet;
     LogPrint(MOD) << "        >> dRMinPfJet   " <<   dRMinPfJet;
@@ -3737,6 +3762,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+    LogPrint(MOD) << "        >>   Ias  " << Ias;
   }
   
   // Fill up gen based beta histo after preselection

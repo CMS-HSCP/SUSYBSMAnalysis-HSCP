@@ -868,6 +868,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_dRMinPfJet->Sumw2();
   tuple->BefPreS_dRMinCaloJet= dir.make<TH1F>("BefPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
   tuple->BefPreS_dRMinCaloJet->Sumw2();
+  tuple->BefPreS_dRVsPtPfJet = dir.make<TH2F>("BefPreS_dRVsPtPfJet",";dR(cand,jet);p_{T}",100,0.,1.5,100,0.,1000.);
+  tuple->BefPreS_dRVsPtPfJet->Sumw2();
   
 
   Name = "PostPreS_TriggerType";
