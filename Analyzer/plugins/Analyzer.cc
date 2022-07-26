@@ -129,6 +129,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       CaloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
+      TriggerSummaryToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("PileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("GenParticleCollection"))),
@@ -322,6 +323,7 @@ void Analyzer::beginJob() {
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   static constexpr const char* const MOD = "Analyzer";
   using namespace edm;
+  using namespace trigger;
 
   //if run change, update conditions
   if (CurrentRun_ != iEvent.id().run()) {
@@ -593,23 +595,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
 
-  float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_significance = -10; 
-  float RecoPFMET = -10, RecoPFMET_phi = -10, RecoPFMET_significance = -10, RecoPFMHT = -10;
-  float HLTCaloMET = -10, HLTCaloMET_phi = -10, HLTCaloMET_significance = -10;
-  float HLTPFMET = -10, HLTPFMET_phi = -10, HLTPFMET_significance = -10, HLTPFMHT = -10;
-
-  //===================== Handle For RecoPFMET ===================
-  const edm::Handle<std::vector<reco::PFMET>> recoPFMETHandle = iEvent.getHandle(pfMETToken_);
-  if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
-    for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
-      const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
-      RecoPFMET = recoPFMet->et();
-      RecoPFMET_phi = recoPFMet->phi();
-      RecoPFMET_significance = recoPFMet->significance();
-    }
-  }
-
-  tuple->BefPreS_RecoPFMET->Fill(RecoPFMET);
+  float RecoCaloMET = -100, RecoCaloMET_phi = -100, RecoCaloMET_sigf = -100; 
+  float RecoPFMET = -100, RecoPFMET_phi = -100, RecoPFMET_sigf = -100, RecoPFMHT = -100;
+  float HLTCaloMET = -100, HLTCaloMET_phi = -100, HLTCaloMET_sigf = -100;
+  float HLTCaloMETClean = -100, HLTCaloMETClean_phi = -100, HLTCaloMETClean_sigf = -100;
+  float HLTCaloMETCleanJetID = -100, HLTCaloMETCleanJetID_phi = -100, HLTCaloMETCleanJetID_sigf = -100;
+  float HLTPFMET = -100, HLTPFMET_phi = -100, HLTPFMET_sigf = -100, HLTPFMHT = -100;
 
   //===================== Handle For RecoCaloMET ===================
   const edm::Handle<std::vector<reco::CaloMET>> recoCaloMETHandle = iEvent.getHandle(CaloMETToken_);
@@ -618,9 +609,61 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const reco::CaloMET* recoCaloMet = &(*recoCaloMETHandle)[i];
       RecoCaloMET = recoCaloMet->et();
       RecoCaloMET_phi = recoCaloMet->phi();
-      RecoCaloMET_significance = recoCaloMet->significance();
+      RecoCaloMET_sigf = recoCaloMet->significance();
     }
   }
+
+  //===================== Handle For RecoPFMET ===================
+  const edm::Handle<std::vector<reco::PFMET>> recoPFMETHandle = iEvent.getHandle(pfMETToken_);
+  if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
+    for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
+      const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
+      RecoPFMET = recoPFMet->et();
+      RecoPFMET_phi = recoPFMet->phi();
+      RecoPFMET_sigf = recoPFMet->significance();
+    }
+  }
+
+  tuple->BefPreS_RecoPFMET->Fill(RecoPFMET);
+
+
+  //===================== Handle For HLT Trigger Summary ===================
+  // there could be more robust ways to get these values, so to be updated as needed...
+
+  const edm::Handle<trigger::TriggerEvent> hltTriggerSummaryHandle = iEvent.getHandle(TriggerSummaryToken_);
+  if (hltTriggerSummaryHandle.isValid()) {
+
+    int caloKey = 0, caloCleanKey = 0, caloCleanJetIDKey = 0, pfKey = 0;
+    // loop over trigger object collections to find HLT CaloMET, CaloMETClean, CaloMETCleanJetID, PFMET collections
+    for (int iC = 0; iC < hltTriggerSummaryHandle->sizeCollections(); iC++) {
+      if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMet::HLT") {
+	// collectionKey(iC) gives trigger object key ONE PAST the object collection of interest
+        caloKey = hltTriggerSummaryHandle->collectionKey(iC); 
+	// HLT MET object collections ALWAYS have four objects {MET, TET, MET significance, ELongitudinal}, hence -4 for MET value
+	HLTCaloMET = hltTriggerSummaryHandle->getObjects()[caloKey-4].pt();
+	HLTCaloMET_phi = hltTriggerSummaryHandle->getObjects()[caloKey-4].phi();
+	// and -2 for MET significance
+	// significance  saved as .pt() but obviously pt holds no meaning here
+	HLTCaloMET_sigf = hltTriggerSummaryHandle->getObjects()[caloKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMetClean::HLT") {
+	caloCleanKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTCaloMETClean = hltTriggerSummaryHandle->getObjects()[caloCleanKey-4].pt();
+	HLTCaloMETClean_phi = hltTriggerSummaryHandle->getObjects()[caloCleanKey-4].phi();
+	HLTCaloMETClean_sigf = hltTriggerSummaryHandle->getObjects()[caloCleanKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMetCleanUsingJetID::HLT") {
+	caloCleanJetIDKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTCaloMETCleanJetID = hltTriggerSummaryHandle->getObjects()[caloCleanJetIDKey-4].pt();
+	HLTCaloMETCleanJetID_phi = hltTriggerSummaryHandle->getObjects()[caloCleanJetIDKey-4].phi();
+	HLTCaloMETCleanJetID_sigf = hltTriggerSummaryHandle->getObjects()[caloCleanJetIDKey-2].pt();
+      }if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltPFMETProducer::HLT") {
+	pfKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTPFMET = hltTriggerSummaryHandle->getObjects()[pfKey-4].pt();
+	HLTPFMET_phi = hltTriggerSummaryHandle->getObjects()[pfKey-4].phi();
+	HLTPFMET_sigf = hltTriggerSummaryHandle->getObjects()[pfKey-2].pt();
+      }
+    }
+  }
+
 
   //===================== Handle For PFJet ===================
   float pfJetHT = 0;
@@ -2145,17 +2188,23 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLT_MET105_IsoTrk50,
                                 RecoCaloMET,
 				RecoCaloMET_phi,
-				RecoCaloMET_significance,
+				RecoCaloMET_sigf,
                                 RecoPFMET,
 				RecoPFMET_phi,
-				RecoPFMET_significance,
+				RecoPFMET_sigf,
                                 RecoPFMHT,
 				HLTCaloMET,
 				HLTCaloMET_phi,
-				HLTCaloMET_significance,
+				HLTCaloMET_sigf,
+				HLTCaloMETClean,
+				HLTCaloMETClean_phi,
+				HLTCaloMETClean_sigf,
+				HLTCaloMETCleanJetID,
+				HLTCaloMETCleanJetID_phi,
+				HLTCaloMETCleanJetID_sigf,
                                 HLTPFMET,
 				HLTPFMET_phi,
-				HLTPFMET_significance,
+				HLTPFMET_sigf,
                                 HLTPFMHT,
                                 maxPtMuon1,
                                 etaMuon1,
@@ -2381,6 +2430,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("CaloMET", edm::InputTag("caloMet"))
     ->setComment("A");
+  desc.add("TriggerSummary", edm::InputTag("hltTriggerSummaryAOD"))
+    ->setComment("A"); //**RSK**
   desc.add("PileupInfo", edm::InputTag("addPileupInfo"))
     ->setComment("A");
   desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
@@ -2897,7 +2948,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
-  float RecoPFMET = -10, RecoPFMET_phi = -10;
+  float RecoPFMET = -1, RecoPFMET_phi = -1;
 
   if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
     for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
