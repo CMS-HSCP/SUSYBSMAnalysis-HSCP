@@ -595,12 +595,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
 
-  float RecoCaloMET = -100, RecoCaloMET_phi = -100, RecoCaloMET_sigf = -100; 
-  float RecoPFMET = -100, RecoPFMET_phi = -100, RecoPFMET_sigf = -100, RecoPFMHT = -100;
-  float HLTCaloMET = -100, HLTCaloMET_phi = -100, HLTCaloMET_sigf = -100;
-  float HLTCaloMETClean = -100, HLTCaloMETClean_phi = -100, HLTCaloMETClean_sigf = -100;
-  float HLTCaloMETCleanJetID = -100, HLTCaloMETCleanJetID_phi = -100, HLTCaloMETCleanJetID_sigf = -100;
-  float HLTPFMET = -100, HLTPFMET_phi = -100, HLTPFMET_sigf = -100, HLTPFMHT = -100;
+  float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_sigf = -10; 
+  float RecoPFMET = -10, RecoPFMET_phi = -10, RecoPFMET_sigf = -10, RecoPFMHT = -10;
+  float HLTCaloMET = -10, HLTCaloMET_phi = -10, HLTCaloMET_sigf = -10;
+  float HLTCaloMETClean = -10, HLTCaloMETClean_phi = -10, HLTCaloMETClean_sigf = -10;
+  float HLTCaloMETCleanJetID = -10, HLTCaloMETCleanJetID_phi = -10, HLTCaloMETCleanJetID_sigf = -10;
+  float HLTPFMET = -10, HLTPFMET_phi = -10, HLTPFMET_sigf = -10, HLTPFMHT = -10;
 
   //===================== Handle For RecoCaloMET ===================
   const edm::Handle<std::vector<reco::CaloMET>> recoCaloMETHandle = iEvent.getHandle(CaloMETToken_);
@@ -2948,16 +2948,16 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
-  float RecoPFMET = -1, RecoPFMET_phi = -1;
+  float RecoPFMET_et = -1, RecoPFMET_phi = -1;
 
   if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
     for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
       const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
-      RecoPFMET = recoPFMet->et();
+      RecoPFMET_et = recoPFMet->et();
       RecoPFMET_phi = recoPFMet->phi();
     }
   }
-  float massT = sqrt(2*track->pt()*RecoPFMET*(1-cos(track->phi()-RecoPFMET_phi)));
+  float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
 
   // Number of DeDx hits
   unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 0;
