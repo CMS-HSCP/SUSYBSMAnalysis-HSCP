@@ -99,6 +99,7 @@
 // - 24p8: - Tighten MiniIso cut to 0.02
 // - 24p9: - Add distance to Calo jets
 // - 25p1: - Add BefPreS_dRVsPtPfJet
+// - 25p2: - Tighten GlobalMinFOVH to 0.9
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2500,7 +2501,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
   desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
-  desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
+  desc.addUntracked("GlobalMinFOVH",0.9)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P)");
