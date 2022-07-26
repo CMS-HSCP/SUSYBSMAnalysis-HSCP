@@ -588,7 +588,8 @@ struct Tuple {
   TH1F* CutFlowReverse;
   
   TH2F* CutFlowEta;
-  TH2F* CutFlowPfType; 
+  TH2F* CutFlowPfType;
+  TH2F* CutFlowProbQ;
 
   TH3F* PostPreS_IasAllIhVsLayer;
   TH3F* PostPreS_IasPixelIhVsLayer;
@@ -746,9 +747,9 @@ struct Tuple {
 
   TH2F* H_D_DzSidebands;
 
-  TH2F* BefPreS_GenPtVsdRMinBckg;
+  TH2F* BefPreS_GenPtVsdRMinGen;
   TH1F* BefPreS_GendRMin;
-  TH2F* BefPreS_GenPtVsdRMinBckgPostCut;
+  TH2F* BefPreS_GenPtVsdRMinGenPostCut;
   TH2F* BefPreS_GenPtVsGenMinPt;
   TH2F* BefPreS_GenPtVsRecoPt;
   TH2F* PostPreS_GenPtVsRecoPt;

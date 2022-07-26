@@ -58,7 +58,7 @@
 // - 20p1: - Add check if secondaries are coming from pixel NI
 // - 20p2: - Add RecoPFHT and RecoPFNumJets plots, add CutFlowPfType
 // - 20p3: - Change the logic of CutFlowPfType and CutFlowEta plots,
-//         - add BefPreS_GenPtVsGenMinPt, and BefPreS_GenPtVsdRMinBckg
+//         - add BefPreS_GenPtVsGenMinPt, and BefPreS_GenPtVsdRMinGen
 //         - change the logic, that the if the closest gen in not status=1 then it's not the match
 // - 20p4: - Fix20p3, move the status check out of the OR
 // - 20p5: - Add ErrorHisto, TriggerType, possible fix pfType plots by interoducing the ForIdx version
@@ -100,6 +100,7 @@
 // - 24p9: - Add distance to Calo jets
 // - 25p1: - Add BefPreS_dRVsPtPfJet
 // - 25p2: - Tighten GlobalMinFOVH to 0.9
+// - 25p3: - CutFlowProbQ plot, match pt of gen candidate, tighten dRMinGen to 0.01
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -928,7 +929,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Reco - GEN track matching
     // For signal only, make sure that the candidate is associated to a true HSCP
     int closestGenIndex = -1;
-    float dRMinBckg = 9999.0;
+    float dRMinGen = 9999.0;
     float dPtMinBcg = 9999.0;
     unsigned int closestHSCPsPDGsID = 0;
     if (!isData) {
@@ -943,8 +944,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
-        if (dr < dRMinBckg) {
-          dRMinBckg = dr;
+        if (dPt < 0.4 && dr < dRMinGen) {
+          dRMinGen = dr;
           closestGenIndex = g;
         }
         if (dPt < dPtMinBcg) {
@@ -960,23 +961,23 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     if (!isData) {
-      tuple->BefPreS_GendRMin->Fill(dRMinBckg);
-      tuple->BefPreS_GenPtVsdRMinBckg->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
+      tuple->BefPreS_GendRMin->Fill(dRMinGen);
+      tuple->BefPreS_GenPtVsdRMinGen->Fill(genColl[closestGenIndex].pt(), dRMinGen);
     }
-    if (!isData && dRMinBckg > 0.1 ) {
+    if (!isData && dRMinGen > 0.01 ) {
       // dont look at events where we didnt find the gen canidate close enough
-      if (debug_ > 4 ) LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinBckg << "), skipping the track";
+      if (debug_ > 4 ) LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinGen << "), skipping the track";
       // 6-th bin of the error histo, didnt find the gen canidate
       tuple->ErrorHisto->Fill(5.5);
       continue;
     }
     
     if (!isData && debug_ > 5) {
-      LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinBckg;
+      LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen;
     }
     
     if (!isData) {
-      tuple->BefPreS_GenPtVsdRMinBckgPostCut->Fill(genColl[closestGenIndex].pt(), dRMinBckg);
+      tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genColl[closestGenIndex].pt(), dRMinGen);
       tuple->BefPreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
       // 2D plot to compare gen pt vs reco pt
       tuple->BefPreS_GenPtVsRecoPt->Fill(genColl[closestGenIndex].pt(), track->pt());
@@ -1031,8 +1032,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
       float genEta = genColl[closestGenIndex].eta();
       float genPhi = genColl[closestGenIndex].phi();
-      float dRMinBckgAndSibling = 9999.0;
-      float dRMinBckgAndMom = 9999.0;
+      float dRMinGenAndSibling = 9999.0;
+      float dRMinGenAndMom = 9999.0;
       float numSiblingsF = 9999.0;
       for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
         if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
@@ -1043,18 +1044,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
             float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-            if( (siblingDr != 0.0) && (siblingDr < dRMinBckgAndSibling)) {
-              dRMinBckgAndSibling = siblingDr;
+            if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
+              dRMinGenAndSibling = siblingDr;
               closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId());
             }
           }
           float momEta = genColl[closestGenIndex].mother(numMomIndx)->eta();
           float momPhi = genColl[closestGenIndex].mother(numMomIndx)->phi();
-          dRMinBckgAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+          dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
           break;
         } else {
-          dRMinBckgAndSibling = 0.0;
-          dRMinBckgAndMom = 0.0;
+          dRMinGenAndSibling = 0.0;
+          dRMinGenAndMom = 0.0;
         }
       }
       if (genColl[closestGenIndex].numberOfMothers()==1) {
@@ -1065,17 +1066,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           float siblingEta = genColl[closestGenIndex].mother()->daughter(daughterIndx)->eta();
           float siblingPhi = genColl[closestGenIndex].mother()->daughter(daughterIndx)->phi();
           float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-          if( (siblingDr != 0.0) && (siblingDr < dRMinBckgAndSibling)) {
-            dRMinBckgAndSibling = siblingDr;
+          if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
+            dRMinGenAndSibling = siblingDr;
             closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother()->daughter(daughterIndx)->pdgId());
           }
         }
         float momEta = genColl[closestGenIndex].mother()->eta();
         float momPhi = genColl[closestGenIndex].mother()->phi();
-        dRMinBckgAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+        dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
       }
-      closestBackgroundPDGsIDs[3] = dRMinBckgAndSibling;
-      closestBackgroundPDGsIDs[4] = dRMinBckgAndMom;
+      closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
+      closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
       closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
       closestBackgroundPDGsIDs[6] = numSiblingsF;
     }
@@ -2896,7 +2897,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
            tuple->BefPreS_pfType->Fill(8.5, EventWeight_);
           }
         }
-        LogPrint(MOD) << "      >> HSCP candidate track has ID " << pfCand->pdgId() << " categoriezed by PF as " << pfCand->translatePdgIdToType(pfCand->pdgId());
+        if (debug_ > 4) LogPrint(MOD) << "      >> HSCP candidate track has ID " << pfCand->pdgId() << " categoriezed by PF as " << pfCand->translatePdgIdToType(pfCand->pdgId());
         // The sum of the pt in the cone does not contain the pt of the track
         // just the pt of the surrounding tracks in the cone
         continue;
@@ -3458,6 +3459,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         // Plot Eta after each cut
       if (tuple) {
         tuple->CutFlowEta->Fill(track->eta(), i+0.5, EventWeight_);
+        tuple->CutFlowProbQ->Fill(probQonTrack, i+0.5, EventWeight_);
         tuple->CutFlowPfType->Fill(0.5, i+0.5, EventWeight_);
         if (pf_isPfTrack) {
           tuple->CutFlowPfType->Fill(1.5, i+0.5, EventWeight_);

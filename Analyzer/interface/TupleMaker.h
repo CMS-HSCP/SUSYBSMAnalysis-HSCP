@@ -272,14 +272,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
 
-  Name = "CutFlow";
-  tuple->CutFlow = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
-  Name = "CutFlowReverse";
-  tuple->CutFlowReverse = dir.make<TH1F>(Name.c_str(), Name.c_str(), 22, 0, 22);
-  Name = "CutFlowEta";
-  tuple->CutFlowEta = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6, 21, 0.0,21.0);
-  Name = "CutFlowPfType";
-  tuple->CutFlowPfType = dir.make<TH2F>(Name.c_str(), Name.c_str(), 9, 0., 9., 21, 0.,21.);
+  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 22, 0, 22);
+  tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 22, 0, 22);
+  tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;CutFlowIndex",10, 0., 1., 21, 0.0, 21.0);
+  tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";Eta;CutFlowIndex", 50, -2.6, 2.6, 21, 0.0,21.0);
+  tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";PfType;CutFlowIndex", 9, 0., 9., 21, 0.,21.);
 
   Name = "N1_Eta";
   tuple->N1_Eta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6);
@@ -544,14 +541,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Beta_SelectedT->Sumw2();
 
 
-  Name = "BefPreS_GenPtVsdRMinBckg";
-  tuple->BefPreS_GenPtVsdRMinBckg = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
-  tuple->BefPreS_GenPtVsdRMinBckg->Sumw2();
+  Name = "BefPreS_GenPtVsdRMinGen";
+  tuple->BefPreS_GenPtVsdRMinGen = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
+  tuple->BefPreS_GenPtVsdRMinGen->Sumw2();
   tuple->BefPreS_GendRMin = dir.make<TH1F>("BefPreS_GendRMin",";dR_min;Gen candidate",100,0.,5.);
   tuple->BefPreS_GendRMin->Sumw2();
-  Name = "BefPreS_GenPtVsdRMinBckgPostCut";
-  tuple->BefPreS_GenPtVsdRMinBckgPostCut = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
-  tuple->BefPreS_GenPtVsdRMinBckgPostCut->Sumw2();
+  Name = "BefPreS_GenPtVsdRMinGenPostCut";
+  tuple->BefPreS_GenPtVsdRMinGenPostCut = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0., 1.);
+  tuple->BefPreS_GenPtVsdRMinGenPostCut->Sumw2();
   Name = "BefPreS_GenPtVsGenMinPt";
   tuple->BefPreS_GenPtVsGenMinPt = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, 1.);
   tuple->BefPreS_GenPtVsGenMinPt->Sumw2();
@@ -633,7 +630,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_Pt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
   tuple->BefPreS_Pt->Sumw2();
   Name = "BefPreS_Ias";
-  tuple->BefPreS_Ias = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim);
+  tuple->BefPreS_Ias = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0., 1.);
   tuple->BefPreS_Ias->Sumw2();
   Name = "BefPreS_Ih";
   tuple->BefPreS_Ih = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
@@ -890,7 +887,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>("PostPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoAll->Sumw2();
-  tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 150, 0.0, 1.5, 20, 0.,1.);
+  tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 150, 0.0, 1.5, 10, 0.,1.);
   tuple->PostPreS_MiniRelIsoAllVsIas->Sumw2();
   tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>("PostPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoChg->Sumw2();
@@ -907,7 +904,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_Chi2oNdof";
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
   tuple->PostPreS_Chi2oNdof->Sumw2();
-  tuple->PostPreS_Chi2oNdofVsIas = dir.make<TH2F>("PostPreS_Chi2oNdofVsIas","PostPreS_Chi2oNdofVsIas",20, 0, 20,20,0.,1.);
+  tuple->PostPreS_Chi2oNdofVsIas = dir.make<TH2F>("PostPreS_Chi2oNdofVsIas","PostPreS_Chi2oNdofVsIas",20, 0, 20,10,0.,1.);
   tuple->PostPreS_Chi2oNdofVsIas->Sumw2();
   Name = "PostPreS_Qual";
   tuple->PostPreS_Qual = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
@@ -921,7 +918,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_TNOHFraction";
   tuple->PostPreS_TNOHFraction = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 1);
   tuple->PostPreS_TNOHFraction->Sumw2();
-  tuple->PostPreS_TNOHFractionVsIas = dir.make<TH2F>("PostPreS_TNOHFractionVsIas","PostPreS_TNOHFractionVsIas",50, 0, 1,20,0.,1.);
+  tuple->PostPreS_TNOHFractionVsIas = dir.make<TH2F>("PostPreS_TNOHFractionVsIas","PostPreS_TNOHFractionVsIas",50, 0, 1,10,0.,1.);
   tuple->PostPreS_TNOHFractionVsIas->Sumw2();
   Name = "PostPreS_TNOPH";
   tuple->PostPreS_TNOPH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 8, 0, 8);
@@ -968,10 +965,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PtVsIas = dir.make<TH2F>("PostPreS_PtVsIas","PostPreS_PtVsIas", 50, 0, PtHistoUpperBound, 20, 0., 1.);
   tuple->PostPreS_PtVsIas->Sumw2();
   Name = "PostPreS_Ias";
-  tuple->PostPreS_Ias = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim);
+  tuple->PostPreS_Ias = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0, dEdxS_UpLim);
   tuple->PostPreS_Ias->Sumw2();
   Name = "PostPreS_Ias_NoEventWeight";
-  tuple->PostPreS_Ias_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim);
+  tuple->PostPreS_Ias_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0, dEdxS_UpLim);
   tuple->PostPreS_Ias_NoEventWeight->Sumw2();
   Name = "PostPreS_Ih";
   tuple->PostPreS_Ih = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
@@ -987,7 +984,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_TIsol";
   tuple->PostPreS_TIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 100);
   tuple->PostPreS_TIsol->Sumw2();
-  tuple->PostPreS_TIsolVsIas = dir.make<TH2F>("PostPreS_TIsolVsIas","PostPreS_TIsolVsIas",25, 0, 100, 20, 0., 1.);
+  tuple->PostPreS_TIsolVsIas = dir.make<TH2F>("PostPreS_TIsolVsIas","PostPreS_TIsolVsIas",25, 0, 100, 10, 0., 1.);
   tuple->PostPreS_TIsolVsIas->Sumw2();
   Name = "PostPreS_EoP";
   tuple->PostPreS_EoP = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 1.5);
@@ -1131,7 +1128,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbXY";
   tuple->PostPreS_ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
   tuple->PostPreS_ProbXY->Sumw2();
-  tuple->PostPreS_ProbXYVsIas = dir.make<TH2F>("PostPreS_ProbXYVsIas","PostPreS_ProbXYVsIas",  100, 0, 1, 20, 0., 1.);
+  tuple->PostPreS_ProbXYVsIas = dir.make<TH2F>("PostPreS_ProbXYVsIas","PostPreS_ProbXYVsIas",  100, 0, 1, 10, 0., 1.);
   tuple->PostPreS_ProbXYVsIas->Sumw2();
   Name = "PostPreS_ProbQNoL1";
   tuple->PostPreS_ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
@@ -1146,7 +1143,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_MassErr";
   tuple->PostPreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 10.);
   tuple->PostPreS_MassErr->Sumw2();
-  tuple->PostPreS_MassErrVsIas = dir.make<TH2F>("PostPreS_MassErrVsIas","PostPreS_MassErrVsIas;PostPreS_MassErrVsIas;PostPreS_MassErrVsIas",50, 0., 10.,20,0.,1.);
+  tuple->PostPreS_MassErrVsIas = dir.make<TH2F>("PostPreS_MassErrVsIas","PostPreS_MassErrVsIas;PostPreS_MassErrVsIas;PostPreS_MassErrVsIas",50, 0., 10.,10,0.,1.);
   tuple->PostPreS_MassErrVsIas->Sumw2();
 
   Name = "PostPreS_EtaVsGenID";
@@ -1170,9 +1167,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0, 4000.0);
   tuple->PostPreS_IhVsGenID->Sumw2();
   Name = "PostPreS_IasVsGenID";
-  tuple->PostPreS_IasVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_IasVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 10, 0., 1., 4000, 0.0, 4000.0);
   tuple->PostPreS_IasVsGenID->Sumw2();
-  tuple->PostPreS_IasVsGenEnviromentID = dir.make<TH2F>("PostPreS_IasVsGenID",";Ias;GenEnviromentID", 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_IasVsGenEnviromentID = dir.make<TH2F>("PostPreS_IasVsGenID",";Ias;GenEnviromentID", 10, 0., 1., 4000, 0.0, 4000.0);
   tuple->PostPreS_IasVsGenEnviromentID->Sumw2();
   Name = "PostPreS_massTVsGenID";
   tuple->PostPreS_massTVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
@@ -1205,7 +1202,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0, 4000.0);
   tuple->PostPreS_IhVsMomGenID->Sumw2();
   Name = "PostPreS_IasVsMomGenID";
-  tuple->PostPreS_IasVsMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_IasVsMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 10, 0., 1., 4000, 0.0, 4000.0);
   tuple->PostPreS_IasVsMomGenID ->Sumw2();
   Name = "PostPreS_massTVsMomGenID";
   tuple->PostPreS_massTVsMomGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
@@ -1238,7 +1235,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsSiblingGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 4000, 0.0, 4000.0);
   tuple->PostPreS_IhVsSiblingGenID->Sumw2();
   Name = "PostPreS_IasVsSiblingGenID";
-  tuple->PostPreS_IasVsSiblingGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_IasVsSiblingGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 10, 0., 1., 4000, 0.0, 4000.0);
   tuple->PostPreS_IasVsSiblingGenID ->Sumw2();
   Name = "PostPreS_massTVsSiblingGenID";
   tuple->PostPreS_massTVsSiblingGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
@@ -1265,7 +1262,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsGenAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 100, 0.0, 1.0);
   tuple->PostPreS_IhVsGenAngle->Sumw2();
   Name = "PostPreS_IasVsGenAngle";
-  tuple->PostPreS_IasVsGenAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 100, 0.0, 1.0);
+  tuple->PostPreS_IasVsGenAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 10, 0., 1., 100, 0.0, 1.0);
   tuple->PostPreS_IasVsGenAngle ->Sumw2();
   Name = "PostPreS_massTVsGenAngle";
   tuple->PostPreS_massTVsGenAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 100, 0.0, 1.0);
@@ -1298,7 +1295,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsGenMomAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 100, 0.0, 1.0);
   tuple->PostPreS_IhVsGenMomAngle->Sumw2();
   Name = "PostPreS_IasVsGenMomAngle";
-  tuple->PostPreS_IasVsGenMomAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 100, 0.0, 1.0);
+  tuple->PostPreS_IasVsGenMomAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 10, 0., 1., 100, 0.0, 1.0);
   tuple->PostPreS_IasVsGenMomAngle ->Sumw2();
   Name = "PostPreS_massTVsGenMomAngle";
   tuple->PostPreS_massTVsGenMomAngle = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 100, 0.0, 1.0);
@@ -1335,7 +1332,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim, 100, 0.0, 10.0);
   tuple->PostPreS_IhVsGenNumSibling->Sumw2();
   Name = "PostPreS_IasVsGenNumSibling";
-  tuple->PostPreS_IasVsGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 100, 0.0, 10.0);
+  tuple->PostPreS_IasVsGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 10, 0., 1., 100, 0.0, 10.0);
   tuple->PostPreS_IasVsGenNumSibling ->Sumw2();
   Name = "PostPreS_massTVsGenNumSibling";
   tuple->PostPreS_massTVsGenNumSibling = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 100, 0.0, 10.0);
@@ -1480,7 +1477,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->AS_Pt = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound);
   tuple->AS_Pt->Sumw2();
   Name = "AS_Ias";
-  tuple->AS_Ias = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, dEdxS_UpLim);
+  tuple->AS_Ias = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 10, 0., 1.);
   tuple->AS_Ias->Sumw2();
   Name = "AS_Ih";
   tuple->AS_Ih = dir.make<TH2F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 100, 0, dEdxM_UpLim);
@@ -1490,7 +1487,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->AS_TOF->Sumw2();
 
   Name = "BefPreS_EtaVsIas";
-  tuple->BefPreS_EtaVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 50, 0, dEdxS_UpLim);
+  tuple->BefPreS_EtaVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 10, 0., 1.);
   Name = "BefPreS_EtaVsIh";
   tuple->BefPreS_EtaVsIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, -3, 3, 100, 0, dEdxM_UpLim);
   Name = "BefPreS_EtaVsP";
@@ -1510,37 +1507,37 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_PVsIh";
   tuple->BefPreS_PVsIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "BefPreS_PtVsIas";
-  tuple->BefPreS_PtVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+  tuple->BefPreS_PtVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 10, 0., 1.);
   Name = "BefPreS_PtVsIh";
   tuple->BefPreS_PtVsIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "BefPreS_PtTOF";
   tuple->BefPreS_PtTOF = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound, 50, 0, 5);
   //   Name = "BefPreS_TOFIs"; tuple->BefPreS_TOFIs = dir.make<TH2F>(Name.c_str(), Name.c_str(),                   100, 1, 5, 100, 0, dEdxS_UpLim);
   Name = "BefPreS_TOFIs";
-  tuple->BefPreS_TOFIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, 5, 50, 0, dEdxS_UpLim);
+  tuple->BefPreS_TOFIs = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, 5, 10, 0., 1.);
   //   Name = "BefPreS_TOFIh"; BefPreS_TOFIm = dir.make<TH2F>(Name.c_str(), Name.c_str(),                   100, 1, 5, 200, 0, dEdxM_UpLim);
   Name = "BefPreS_TOFIh";
   tuple->BefPreS_TOFIh = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, 5, 100, 0, dEdxM_UpLim);
 
-  //   Name = "AS_EtaIs"; AS_EtaIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, dEdxS_UpLim);
+  //   Name = "AS_EtaIs"; AS_EtaIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 10, 0., 1.);
   //   Name = "AS_EtaIh"; AS_EtaIm = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3,100, 0, dEdxM_UpLim);
   //   Name = "AS_EtaP" ; AS_EtaP  = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
   //   Name = "AS_EtaPt"; AS_EtaPt = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, PtHistoUpperBound);
   //   Name = "AS_EtaTOF"; AS_EtaTOF = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0,  NCuts, 50,-3, 3, 50, 0, 3);
   Name = "AS_PIs";
   tuple->AS_PIs =
-      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 10, 0., 1.);
   Name = "AS_PIh";
   tuple->AS_PIh =
       dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "AS_PtIs";
   tuple->AS_PtIs =
-      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 50, 0, dEdxS_UpLim);
+      dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 10, 0., 1.);
   Name = "AS_PtIh";
   tuple->AS_PtIh =
       dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   Name = "AS_TOFIs";
-  tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 50, 0, dEdxS_UpLim);
+  tuple->AS_TOFIs = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 10, 0., 1.);
   Name = "AS_TOFIh";
   tuple->AS_TOFIh = dir.make<TH3F>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
 
