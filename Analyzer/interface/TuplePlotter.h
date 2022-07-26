@@ -646,12 +646,12 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "PostPreS_massTVsGenAngle";
   tuple->PostPreS_massTVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
-  Name = "genlevelpT";
-  tuple->genlevelpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "genleveleta";
-  tuple->genleveleta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "genlevelbeta";
-  tuple->genlevelbeta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "GenLevelpT";
+  tuple->GenLevelpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "GenLevelEta";
+  tuple->GenLevelEta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "GenLevelBeta";
+  tuple->GenLevelBeta = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   //Initialize histograms for number of bins.
   for (int i = 0; i < 6; i++) {

@@ -579,12 +579,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_massT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0);
   tuple->BefPreS_massT->Sumw2();
 
-  Name = "BefPreS_MiniRelIsoAll";
-  tuple->BefPreS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0.0, 10.0);
+  tuple->BefPreS_MiniRelIsoAll = dir.make<TH1F>("BefPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->BefPreS_MiniRelIsoAll->Sumw2();
-  
-  Name = "BefPreS_MiniRelIsoChg";
-  tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
+  tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>("BefPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
   tuple->BefPreS_MiniRelIsoChg->Sumw2();
 
   Name = "BefPreS_RecoPFMET";
@@ -593,9 +590,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_RecoPFHT";
   tuple->BefPreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->BefPreS_RecoPFHT->Sumw2();
-  Name = "BefPreS_RecoPFNumJets";
-  tuple->BefPreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  70, 0.0, 70.0);
-  tuple->BefPreS_RecoPFNumJets->Sumw2();
+  tuple->BefPreS_CaloNumJets = dir.make<TH1F>("BefPreS_CaloNumJets", ";Number of calo jets;Jets/bin",  70, 0.0, 70.0);
+  tuple->BefPreS_CaloNumJets->Sumw2();
 
   Name = "BefPreS_Chi2oNdof";
   tuple->BefPreS_Chi2oNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
@@ -766,6 +762,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_PV_NoEventWeight";
   tuple->BefPreS_PV_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->BefPreS_PV_NoEventWeight->Sumw2();
+  tuple->BefPreS_NOMoNOH = dir.make<TH1F>("BefPreS_NOMoNOH",";Num of measurment / num of hits;Tracks/bin",10,0.,1.0);
+  tuple->BefPreS_NOMoNOH->Sumw2();
   Name = "BefPreS_NOMoNOHvsPV";
   tuple->BefPreS_NOMoNOHvsPV = dir.make<TProfile>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->BefPreS_NOMoNOHvsPV->Sumw2();
@@ -865,6 +863,25 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "BefPreS_ProbQVsIas";
   tuple->BefPreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->BefPreS_ProbQVsIas->Sumw2();
+
+  tuple->BefPreS_CluProbQVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",100,0.,1.,4,0.,4.);
+  tuple->BefPreS_CluProbQVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
+  tuple->BefPreS_CluProbXYVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSizeVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeVsPixelLayer",";CluSize;Layer",10,0.,10.,4,0.,4.);
+  tuple->BefPreS_CluSizeVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSizeXVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeXVsPixelLayer",";CluSizeX;Layer",10,0.,10.,4,0.,4.);
+  tuple->BefPreS_CluSizeXVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSizeYVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeYVsPixelLayer",";CluSizeY;Layer",10,0.,10.,4,0.,4.);
+  tuple->BefPreS_CluSizeYVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
+  tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
+  tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
+  tuple->BefPreS_dRMinPfJet->Sumw2();
+  tuple->BefPreS_dRMinCaloJet= dir.make<TH1F>("BefPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
+  tuple->BefPreS_dRMinCaloJet->Sumw2();
+  tuple->BefPreS_dRVsPtPfJet = dir.make<TH2F>("BefPreS_dRVsPtPfJet",";dR(cand,jet);p_{T}",100,0.,1.5,100,0.,1000.);
+  tuple->BefPreS_dRVsPtPfJet->Sumw2();
   
 
   Name = "PostPreS_TriggerType";
@@ -883,14 +900,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_massTVsIas = dir.make<TH2F>("PostPreS_massTVsIas","PostPreS_massTVsIas",50, 0.0, 250.0, 20, 0., 1.);
   tuple->PostPreS_massTVsIas->Sumw2();
   
-  Name = "PostPreS_MiniRelIsoAll";
-  tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0.0, 10.0);
+  tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>("PostPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoAll->Sumw2();
-  tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 200, 0.0, 10.0, 20, 0.,1.);
+  tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 150, 0.0, 1.5, 20, 0.,1.);
   tuple->PostPreS_MiniRelIsoAllVsIas->Sumw2();
-  
-  Name = "PostPreS_MiniRelIsoChg";
-  tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 10.0);
+  tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>("PostPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoChg->Sumw2();
   
   Name = "PostPreS_RecoPFMET";
@@ -899,9 +913,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_RecoPFHT";
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>(Name.c_str(), Name.c_str(),  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT->Sumw2();
-  Name = "PostPreS_RecoPFNumJets";
-  tuple->PostPreS_RecoPFNumJets = dir.make<TH1F>(Name.c_str(), Name.c_str(),  150, 0.0, 15.0);
-  tuple->PostPreS_RecoPFNumJets->Sumw2();
+  tuple->PostPreS_CaloNumJets = dir.make<TH1F>("PostPreS_CaloNumJets",";Number of calo jets;Jets/bin",  30, 0.0, 30.0);
+  tuple->PostPreS_CaloNumJets->Sumw2();
   
   Name = "PostPreS_Chi2oNdof";
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 20);
@@ -1045,6 +1058,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_PV_NoEventWeight";
   tuple->PostPreS_PV_NoEventWeight = dir.make<TH1F>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->PostPreS_PV_NoEventWeight->Sumw2();
+  tuple->PostPreS_NOMoNOH = dir.make<TH1F>("PostPreS_NOMoNOH",";Num of measurment / num of hits;Tracks/bin",10,0.,1.0);
+  tuple->PostPreS_NOMoNOH->Sumw2();
   Name = "PostPreS_NOMoNOHvsPV";
   tuple->PostPreS_NOMoNOHvsPV = dir.make<TProfile>(Name.c_str(), Name.c_str(), 60, 0, 60);
   tuple->PostPreS_NOMoNOHvsPV->Sumw2();
@@ -1152,6 +1167,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbQVsGenID";
   tuple->PostPreS_ProbQVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsGenID->Sumw2();
+  tuple->PostPreS_ProbQVsGenEnviromentID = dir.make<TH2F>("PostPreS_ProbQVsGenEnviromentID",";ProbQ;GenEnviromentID",100, 0.0, 1.0, 4000, 0.0, 4000.0);
+  tuple->PostPreS_ProbQVsGenEnviromentID->Sumw2();
   Name = "PostPreS_ProbXYVsGenID";
   tuple->PostPreS_ProbXYVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbXYVsGenID->Sumw2();
@@ -1166,7 +1183,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IhVsGenID->Sumw2();
   Name = "PostPreS_IasVsGenID";
   tuple->PostPreS_IasVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
-  tuple->PostPreS_IasVsGenID ->Sumw2();
+  tuple->PostPreS_IasVsGenID->Sumw2();
+  tuple->PostPreS_IasVsGenEnviromentID = dir.make<TH2F>("PostPreS_IasVsGenID",";Ias;GenEnviromentID", 50, 0, dEdxS_UpLim, 4000, 0.0, 4000.0);
+  tuple->PostPreS_IasVsGenEnviromentID->Sumw2();
   Name = "PostPreS_massTVsGenID";
   tuple->PostPreS_massTVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 50, 0.0, 250.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_massTVsGenID->Sumw2();
@@ -1411,18 +1430,21 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->PostPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
   tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
+  tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
+  tuple->PostPreS_dRMinPfJet->Sumw2();
+  tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
+  tuple->PostPreS_dRMinCaloJet->Sumw2();
   
-  Name = "genlevelpT";
-  tuple->genlevelpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
-  tuple->genlevelpT->Sumw2();
-  Name = "genleveleta";
-  tuple->genleveleta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 60, -3, 3);
-  tuple->genleveleta->Sumw2();
-  Name = "genlevelbeta";
-  tuple->genlevelbeta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 20, 0, 1);
-  tuple->genlevelbeta->Sumw2();
-  tuple->genlevelbetagamma = dir.make<TH1F>("genlevelbetagamma",";#beta #gamma;Gen canidate",4500,0.,450.);
-  tuple->genlevelbetagamma->Sumw2();
+  tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
+  tuple->GenLevelBinning->Sumw2();
+  tuple->GenLevelpT = dir.make<TH1F>("GenLevelpT", "GenLevelpT;Generator p_{T} (GeV)", 50, 0, PtHistoUpperBound);
+  tuple->GenLevelpT->Sumw2();
+  tuple->GenLevelEta = dir.make<TH1F>("GenLevelEta",";Generator #eta", 60, -3, 3);
+  tuple->GenLevelEta->Sumw2();
+  tuple->GenLevelBeta = dir.make<TH1F>("GenLevelBeta",";Generator #beta", 20, 0, 1);
+  tuple->GenLevelBeta->Sumw2();
+  tuple->GenLevelBetaGamma = dir.make<TH1F>("GenLevelBetaGamma",";Generator #beta #gamma;Gen canidate",4500,0.,450.);
+  tuple->GenLevelBetaGamma->Sumw2();
 
   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
   for (int i = 0; i < PredBins; i++) {
