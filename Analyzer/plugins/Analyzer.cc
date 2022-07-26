@@ -2493,8 +2493,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.add("CaloMET", edm::InputTag("caloMet"))
     ->setComment("Take MET from the calorimeters");
   desc.add("CaloJet", edm::InputTag("ak4CaloJets"))
-  ->setComment("Take jets from the calorimeters");
-    ->setComment("A");
+    ->setComment("Take jets from the calorimeters");
   desc.add("TriggerSummary", edm::InputTag("hltTriggerSummaryAOD"))
     ->setComment("A");
   desc.add("PileupInfo", edm::InputTag("addPileupInfo"))
