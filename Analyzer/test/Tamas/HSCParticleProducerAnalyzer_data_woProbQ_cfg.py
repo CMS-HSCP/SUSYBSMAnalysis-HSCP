@@ -242,7 +242,6 @@ process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.TrackProbQCut = 1.0
 process.analyzer.DebugLevel = 7
 process.analyzer.Period = "2018"
 process.analyzer.DeDxK = K
