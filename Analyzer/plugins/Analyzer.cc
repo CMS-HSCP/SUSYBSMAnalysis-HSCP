@@ -103,6 +103,7 @@
 // - 25p3: - CutFlowProbQ plot, match pt of gen candidate, tighten dRMinGen to 0.01
 // - 25p4: - No cut on pt_err/pt
 // - 25p5: - Add dRMinJet vs Ias plots, loosen the cut on probXY
+// - 25p6: - Cut on dRMinJet
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -3070,7 +3071,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[11] = (true) ? true : false;
   //passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[12] = (true) ? true : false;
+  passedCutsArray[12] = ( dRMinPfJet > 0.3) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
