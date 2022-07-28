@@ -17,6 +17,8 @@ SamplesArray = []
 
 bin = 3
 
+codeVersion = sampleInFile[sampleInFile.find("Code")+4:sampleInFile.find("Code")+8]
+
 with open(sampleInFile, "r") as a_file:
   for line in a_file:
     stripped_line = line.strip()
@@ -42,12 +44,20 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
           newname = dirname + "/" + keyname+ "/" + keyname2
           obj = fileInArray[0].Get(newname)
           obj.SetMarkerStyle(20)
+          
+          tex5 = ROOT.TLatex(0.07,0.04,"Code version: "+codeVersion);
+          tex5.SetNDC();
+          tex5.SetTextFont(52);
+          tex5.SetTextSize(0.0185);
+          tex5.SetLineWidth(2);
+          
           if (keyname2=="HscpCandidates" or keyname2=="GenHscpCandidates"):
             continue
           if ("Total" in keyname2 or "IntLumi" in keyname2 or "XSection" in keyname2) :
             continue
           if obj.InheritsFrom("TObject"):
               if not os.path.exists(os.path.dirname("Compare"+sampleInFile[:-4]+"/")): os.makedirs(os.path.dirname("Compare"+sampleInFile[:-4]+"/"))
+#              print(keyname2)
               if (obj.GetEntries() == 0 ) :
                 continue
               if (obj.ClassName() == "TH3F" or obj.ClassName() == "TH3D"):
@@ -127,29 +137,28 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
                     histoArray[index].GetXaxis().SetBinLabel(1,"Trigger")
                     histoArray[index].GetXaxis().SetBinLabel(2,"Eta")
                     histoArray[index].GetXaxis().SetBinLabel(3,"pT")
-                    histoArray[index].GetXaxis().SetBinLabel(4,"NumHits")
-                    histoArray[index].GetXaxis().SetBinLabel(5,"NumPixHits")
-                    histoArray[index].GetXaxis().SetBinLabel(6,"ValidFract")
-                    histoArray[index].GetXaxis().SetBinLabel(7,"NumDeDx")
-                    histoArray[index].GetXaxis().SetBinLabel(8,"ProbXY")
-                    histoArray[index].GetXaxis().SetBinLabel(9,"HighPurity")
-                    histoArray[index].GetXaxis().SetBinLabel(10,"Chi2oDOF")
-                    histoArray[index].GetXaxis().SetBinLabel(11,"EoP")
-                    histoArray[index].GetXaxis().SetBinLabel(12,"dz")
-                    histoArray[index].GetXaxis().SetBinLabel(13,"dxy")
-                    histoArray[index].GetXaxis().SetBinLabel(14,"pTerrOverpT")
-                    histoArray[index].GetXaxis().SetBinLabel(15,"SVfromNI")
-                    histoArray[index].GetXaxis().SetBinLabel(16,"MiniIso")
-                    histoArray[index].GetXaxis().SetBinLabel(17,"PFid")
-                    histoArray[index].GetXaxis().SetBinLabel(18,"Ih")
-                    histoArray[index].GetXaxis().SetBinLabel(19,"ProbQ")
-                    histoArray[index].GetXaxis().SetBinLabel(20,"MuStat")
-                    histoArray[index].GetXaxis().SetBinLabel(21,"PhiTOF")
-                    histoArray[index].GetXaxis().SetBinLabel(22,"EtaTOF")
+                    histoArray[index].GetXaxis().SetBinLabel(4,"NumPixHits")
+                    histoArray[index].GetXaxis().SetBinLabel(5,"ValidFract")
+                    histoArray[index].GetXaxis().SetBinLabel(6,"NumDeDx")
+                    histoArray[index].GetXaxis().SetBinLabel(7,"HighPurity")
+                    histoArray[index].GetXaxis().SetBinLabel(8,"Chi2oDOF")
+                    histoArray[index].GetXaxis().SetBinLabel(9,"EoP")
+                    histoArray[index].GetXaxis().SetBinLabel(10,"dz")
+                    histoArray[index].GetXaxis().SetBinLabel(11,"dxy")
+                    histoArray[index].GetXaxis().SetBinLabel(12,"pTerrOverpT")
+                    histoArray[index].GetXaxis().SetBinLabel(13,"N/A")
+                    histoArray[index].GetXaxis().SetBinLabel(14,"MiniIso")
+                    histoArray[index].GetXaxis().SetBinLabel(15,"PFid")
+                    histoArray[index].GetXaxis().SetBinLabel(16,"Ih")
+                    histoArray[index].GetXaxis().SetBinLabel(17,"ProbXY")
+                    histoArray[index].GetXaxis().SetBinLabel(18,"ProbQ")
+                    histoArray[index].GetXaxis().SetBinLabel(19,"MuStat")
+                    histoArray[index].GetXaxis().SetBinLabel(20,"PhiTOF")
+                    histoArray[index].GetXaxis().SetBinLabel(21,"EtaTOF")
                     histoArray[index].GetXaxis().SetTitle("")
                     histoArray[index].GetYaxis().SetTitle("")
                     histoArray[index].SetMaximum(1.4)
-                  elif (keyname2== "CutFlowProbQFirst") :
+                  elif (keyname2== "CutFlowReverse") :
                     histoArray[index].SetMarkerStyle(20)
                     histoArray[index].SetStats(0)
                     histoArray[index].Scale(1/histoArray[index].GetMaximum())
@@ -157,25 +166,40 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
                     histoArray[index].GetXaxis().SetBinLabel(1,"Trigger")
                     histoArray[index].GetXaxis().SetBinLabel(2,"Eta")
                     histoArray[index].GetXaxis().SetBinLabel(3,"pT")
-                    histoArray[index].GetXaxis().SetBinLabel(4,"ProbQ")
-                    histoArray[index].GetXaxis().SetBinLabel(5,"NumHits")
-                    histoArray[index].GetXaxis().SetBinLabel(6,"NumPixHits")
-                    histoArray[index].GetXaxis().SetBinLabel(7,"ValidFract")
-                    histoArray[index].GetXaxis().SetBinLabel(8,"NumDeDx")
-                    histoArray[index].GetXaxis().SetBinLabel(9,"ProbXY")
-                    histoArray[index].GetXaxis().SetBinLabel(10,"HighPurity")
-                    histoArray[index].GetXaxis().SetBinLabel(11,"Chi2oDOF")
-                    histoArray[index].GetXaxis().SetBinLabel(12,"EoP")
-                    histoArray[index].GetXaxis().SetBinLabel(13,"dz")
-                    histoArray[index].GetXaxis().SetBinLabel(14,"dxy")
-                    histoArray[index].GetXaxis().SetBinLabel(15,"pTerrOverpT")
-                    histoArray[index].GetXaxis().SetBinLabel(16,"SVfromNI")
-                    histoArray[index].GetXaxis().SetBinLabel(17,"MiniIso")
-                    histoArray[index].GetXaxis().SetBinLabel(18,"PFid")
-                    histoArray[index].GetXaxis().SetBinLabel(19,"Ih")
-                    histoArray[index].GetXaxis().SetBinLabel(20,"MuStat")
-                    histoArray[index].GetXaxis().SetBinLabel(21,"PhiTOF")
-                    histoArray[index].GetXaxis().SetBinLabel(22,"EtaTOF")
+                    histoArray[index].GetXaxis().SetBinLabel(4,"NumPixHits")
+                    histoArray[index].GetXaxis().SetBinLabel(5,"ValidFract")
+                    histoArray[index].GetXaxis().SetBinLabel(6,"NumDeDx")
+                    histoArray[index].GetXaxis().SetBinLabel(7,"HighPurity")
+                    histoArray[index].GetXaxis().SetBinLabel(8,"Chi2oDOF")
+                    histoArray[index].GetXaxis().SetBinLabel(9,"EoP")
+                    histoArray[index].GetXaxis().SetBinLabel(10,"dz")
+                    histoArray[index].GetXaxis().SetBinLabel(11,"dxy")
+                    histoArray[index].GetXaxis().SetBinLabel(12,"pTerrOverpT")
+                    histoArray[index].GetXaxis().SetBinLabel(13,"N/A")
+                    histoArray[index].GetXaxis().SetBinLabel(14,"MiniIso")
+                    histoArray[index].GetXaxis().SetBinLabel(15,"PFid")
+                    histoArray[index].GetXaxis().SetBinLabel(16,"Ih")
+                    histoArray[index].GetXaxis().SetBinLabel(17,"ProbXY")
+                    histoArray[index].GetXaxis().SetBinLabel(18,"ProbQ")
+                    histoArray[index].GetXaxis().SetBinLabel(19,"MuStat")
+                    histoArray[index].GetXaxis().SetBinLabel(20,"PhiTOF")
+                    histoArray[index].GetXaxis().SetBinLabel(21,"EtaTOF")
+                    histoArray[index].GetXaxis().SetTitle("")
+                    histoArray[index].GetYaxis().SetTitle("")
+                    histoArray[index].SetMaximum(1.4)
+                  elif (keyname2 == "ErrorHisto") :
+                    histoArray[index].SetMarkerStyle(20)
+                    histoArray[index].SetStats(0)
+                    histoArray[index].Scale(1/histoArray[index].GetMaximum())
+                    histoArray[index].GetYaxis().SetRangeUser(0.,1.4)
+                    histoArray[index].GetXaxis().SetBinLabel(1,"All tracks")
+                    histoArray[index].GetXaxis().SetBinLabel(2,"No track/glob muon")
+                    histoArray[index].GetXaxis().SetBinLabel(3,"Track is null")
+                    histoArray[index].GetXaxis().SetBinLabel(4,"No PV")
+                    histoArray[index].GetXaxis().SetBinLabel(5,"No gen match")
+                    histoArray[index].GetXaxis().SetBinLabel(6,"Gen match too far")
+                    histoArray[index].GetXaxis().SetBinLabel(7,"No dEdx")
+                    histoArray[index].GetXaxis().SetBinLabel(8,"Cosmic track")
                     histoArray[index].GetXaxis().SetTitle("")
                     histoArray[index].GetYaxis().SetTitle("")
                     histoArray[index].SetMaximum(1.4)
@@ -273,6 +297,8 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
                 legend.Draw("SAME")
                 tex2.Draw("SAME")
                 tex3.Draw("SAME")
+                tex4.Draw("SAME")
+                tex5.Draw("SAME")
 
                 canvas.SaveAs("Compare"+sampleInFile[:-4]+"/"+keyname2+".png")
 
@@ -291,6 +317,7 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
                 tex2.Draw("SAME")
                 tex3.Draw("SAME")
                 tex4.Draw("SAME")
+                tex5.Draw("SAME")
 
                 cstackPlots.SaveAs("Compare"+sampleInFile[:-4]+"/"+keyname2+"_log.png")
               
