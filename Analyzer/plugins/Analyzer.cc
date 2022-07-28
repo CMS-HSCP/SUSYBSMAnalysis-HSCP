@@ -102,6 +102,7 @@
 // - 25p2: - Tighten GlobalMinFOVH to 0.9
 // - 25p3: - CutFlowProbQ plot, match pt of gen candidate, tighten dRMinGen to 0.01
 // - 25p4: - No cut on pt_err/pt
+// - 25p5: - Add dRMinJet vs Ias plots, loosen the cut on probXY
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2514,7 +2515,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
-  desc.addUntracked("GlobalMinTrackProbXYCut",0.1)->setComment("Min cut for probXY, 0.0 means no cuts applied");
+  desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
 //  desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
@@ -2522,9 +2523,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 //  desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
 //  desc.addUntracked("GlobalMaxTOFErr",0.15)->setComment("Cut on error on muon TOF measurement");
 //  desc.addUntracked("globalMinTOF_",1.0)->setComment("Cut on minimal TOF");
-  /*
-   float  = 50;          // c
-   */
 
  descriptions.add("HSCParticleAnalyzer",desc);
 }
@@ -3237,6 +3235,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_PtVsIh->Fill(track->pt(), Ih, Event_Weight);
     tuple->BefPreS_CaloNumJets->Fill(caloNumJets,Event_Weight);
     tuple->BefPreS_dRMinPfJet->Fill(dRMinPfJet, Event_Weight);
+    tuple->BefPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, Ias, Event_Weight);
     tuple->BefPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
 
   }
@@ -3716,6 +3715,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, Event_Weight);
     tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, Event_Weight);
     tuple->PostPreS_dRMinPfJet->Fill(dRMinPfJet, Event_Weight);
+    tuple->PostPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, Ias, Event_Weight);
     tuple->PostPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
     tuple->PostPreS_CaloNumJets->Fill(caloNumJets, Event_Weight);
       

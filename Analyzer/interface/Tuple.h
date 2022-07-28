@@ -387,6 +387,7 @@ struct Tuple {
   TH2F* BefPreS_CluSpecInCPEVsPixelLayer;
 
   TH1F* BefPreS_dRMinPfJet;
+  TH2F* BefPreS_dRMinPfJetVsIas;
   TH1F* BefPreS_dRMinCaloJet;
   TH2F* BefPreS_dRVsPtPfJet;
 
@@ -607,6 +608,7 @@ struct Tuple {
   TH2F* PostPreS_CluSpecInCPEVsPixelLayer;
 
   TH1F* PostPreS_dRMinPfJet;
+  TH2F* PostPreS_dRMinPfJetVsIas;
   TH1F* PostPreS_dRMinCaloJet;
 
   TH2F* AS_Eta_RegionA;

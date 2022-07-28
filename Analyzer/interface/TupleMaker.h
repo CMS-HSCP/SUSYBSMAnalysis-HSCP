@@ -863,6 +863,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
   tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->BefPreS_dRMinPfJet->Sumw2();
+  tuple->BefPreS_dRMinPfJetVsIas =  dir.make<TH2F>("BefPreS_dRMinPfJetVsIas",";dRMinPfJet;Ias",100,0.,1.5,10,0.,1.);
+  tuple->BefPreS_dRMinPfJetVsIas->Sumw2();
   tuple->BefPreS_dRMinCaloJet= dir.make<TH1F>("BefPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
   tuple->BefPreS_dRMinCaloJet->Sumw2();
   tuple->BefPreS_dRVsPtPfJet = dir.make<TH2F>("BefPreS_dRVsPtPfJet",";dR(cand,jet);p_{T}",100,0.,1.5,100,0.,1000.);
@@ -1417,6 +1419,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
   tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->PostPreS_dRMinPfJet->Sumw2();
+  tuple->PostPreS_dRMinPfJetVsIas = dir.make<TH2F>("PostPreS_dRMinPfJetVsIas", ";dRMinPfJet;Ias",100,0.,1.5,10,0.,1.);
+  tuple->PostPreS_dRMinPfJetVsIas->Sumw2();
   tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
   tuple->PostPreS_dRMinCaloJet->Sumw2();
   
