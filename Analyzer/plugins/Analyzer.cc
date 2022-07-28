@@ -104,6 +104,7 @@
 // - 25p4: - No cut on pt_err/pt
 // - 25p5: - Add dRMinJet vs Ias plots, loosen the cut on probXY
 // - 25p6: - Cut on dRMinJet
+// - 25p7: - Restrict track level pixel probs by their cluster level info
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1234,8 +1235,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
     float pixelProbs[4] = {0.0,0.0,0.0,0.0};
-    int numRecHits = 0;
-    int numRecHitsNoLayer1 = 0;
+    int numRecHitsQ = 0, numRecHitsXY = 0;
+    int numRecHitsQNoLayer1 = 0, numRecHitsXYNoLayer1 = 0;
     float probQonTrackWMulti = 1;
     float probXYonTrackWMulti = 1;
     float probQonTrackWMultiNoLayer1 = 1;
@@ -1387,10 +1388,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
         
-        if (probQ > 0.f) {
-          numRecHits++;
+        if (probQ > 0.f && probXY > 0.1) {
+          numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
+        }
+        
+        if (probQ > 0.f && probXY > 0.f && probQ < 0.75) {
+          numRecHitsXY++;
+            // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
         }
         
@@ -1401,9 +1407,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
           if (probQNoLayer1 > 0.f) {  // only save the non-zero rechits
-            numRecHitsNoLayer1++;
+            numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
+          }
+          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQNoLayer1 < 0.75) {
+            numRecHitsXYNoLayer1++;
+              // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
           }
         }
@@ -1433,14 +1443,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     } // end loop on rechits on the given track
 
     // Combine probQ-s into HSCP candidate (track) level quantity
-    pixelProbs[0] = combineProbs(probQonTrackWMulti, numRecHits);
-    pixelProbs[1] = combineProbs(probXYonTrackWMulti, numRecHits);
-    pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsNoLayer1);
-    pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsNoLayer1);
+    pixelProbs[0] = combineProbs(probQonTrackWMulti, numRecHitsQ);
+    pixelProbs[1] = combineProbs(probXYonTrackWMulti, numRecHitsXY);
+    pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsQNoLayer1);
+    pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsXYNoLayer1);
 
     if (debug_> 7) {
       LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1
-                    << " numRecHits = " << numRecHits << " numRecHitsNoLayer1 = " << numRecHitsNoLayer1 ;
+                    << " numRecHitsQ = " << numRecHitsQ << " numRecHitsQNoLayer1 = " << numRecHitsQNoLayer1
+                    << " numRecHitsXY = " << numRecHitsXY << " numRecHitsXYNoLayer1 = " << numRecHitsXYNoLayer1;
       LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
     }
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
@@ -1785,7 +1796,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (closestGenIndex>0) {
         usignedIntclosestGenIndex = closestGenIndex;
       }
-      LogPrint(MOD) << "      >> BckgMCPostPreS: Siblings from different mothers: ";
+      if (debug_> 7) LogPrint(MOD) << "      >> BckgMCPostPreS: Siblings from different mothers: ";
       for (unsigned int g = 0; g < genColl.size(); g++) {
         if (g == usignedIntclosestGenIndex) {
           continue;
@@ -1800,10 +1811,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
         tuple->PostPreS_ProbQVsGenEnviromentID->Fill(pixelProbs[0], abs(genColl[g].pdgId()), EventWeight_);
         tuple->PostPreS_IasVsGenEnviromentID->Fill(Ias, abs(genColl[g].pdgId()), EventWeight_);
-        std::cout << "      >> " << abs(genColl[g].pdgId()) ;
-        std::cout << " (dR = " << dr << ", pT = " << genColl[g].pt() << ") , ";
+        if (debug_> 7) {
+          std::cout << "      >> " << abs(genColl[g].pdgId()) ;
+          std::cout << " (dR = " << dr << ", pT = " << genColl[g].pt() << ") , ";
+        }
       }
-      std::cout << std::endl;
+      if (debug_> 7) {
+        std::cout << std::endl;
+      }
     }
     
     // Some printouts to understand ProbQ vs ProbQNoL1
