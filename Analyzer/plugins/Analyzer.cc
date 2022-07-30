@@ -105,6 +105,7 @@
 // - 25p5: - Add dRMinJet vs Ias plots, loosen the cut on probXY
 // - 25p6: - Cut on dRMinJet
 // - 25p7: - Restrict track level pixel probs by their cluster level info
+// - 25p8: - ProbQ with <.75 probs, dRVsPtPfJet with 20 GeV jets
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1388,7 +1389,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
         
-        if (probQ > 0.f && probXY > 0.1) {
+//        if (probQ > 0.f && probXY > 0.1) {
+        if (probQ > 0.f && probQ < 0.75) {
           numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
@@ -1406,7 +1408,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probQNoLayer1 > 0.f) {  // only save the non-zero rechits
+          if (probQNoLayer1 > 0.f && probQNoLayer1 < 0.75) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
@@ -2967,7 +2969,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         nearestJetIndex = i;
       }
       
-      if (jet->pt() < 50 || jet->muonEnergyFraction() > 0.7 ||
+      if (jet->pt() < 20 || jet->muonEnergyFraction() > 0.7 ||
         jet->electronEnergyFraction() > 0.6 || jet->photonEnergyFraction() > 0.6) {
         continue;
       }
