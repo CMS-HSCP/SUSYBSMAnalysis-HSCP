@@ -106,6 +106,7 @@
 // - 25p6: - Cut on dRMinJet
 // - 25p7: - Restrict track level pixel probs by their cluster level info
 // - 25p8: - ProbQ with <.75 probs, dRVsPtPfJet with 20 GeV jets
+// - 25p9: - ProbQ with <.9 probs
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1390,13 +1391,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
         
 //        if (probQ > 0.f && probXY > 0.1) {
-        if (probQ > 0.f && probQ < 0.75) {
+        if (probQ > 0.f && probQ < 0.9) {
           numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
         }
         
-        if (probQ > 0.f && probXY > 0.f && probQ < 0.75) {
+        if (probQ > 0.f && probXY > 0.f && probQ < 0.9) {
           numRecHitsXY++;
             // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
@@ -1408,12 +1409,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probQNoLayer1 > 0.f && probQNoLayer1 < 0.75) {
+          if (probQNoLayer1 > 0.f && probQNoLayer1 < 0.9) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
           }
-          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQNoLayer1 < 0.75) {
+          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQNoLayer1 < 0.9) {
             numRecHitsXYNoLayer1++;
               // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
