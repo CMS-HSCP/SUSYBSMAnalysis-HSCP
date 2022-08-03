@@ -250,6 +250,7 @@ struct Tuple {
   TH1F* TIsol;
   TH1F* N1_EoP;
   TH1F* N1_SumpTOverpT;
+  TH1F* N1_dRMinPfJet;
   TH1F* Pt;
   TH1F* N1_PtErrOverPt;
   TH1F* I;

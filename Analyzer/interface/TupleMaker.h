@@ -272,11 +272,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
 
-  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 22, 0, 22);
-  tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 22, 0, 22);
-  tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;CutFlowIndex",10, 0., 1., 21, 0.0, 21.0);
-  tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";Eta;CutFlowIndex", 50, -2.6, 2.6, 21, 0.0,21.0);
-  tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";PfType;CutFlowIndex", 9, 0., 9., 21, 0.,21.);
+  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, 0., 17.);
+  tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 17, 0., 17.);
+  tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;CutFlowIndex",10, 0., 1., 17, 0., 17.);
+  tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";Eta;CutFlowIndex", 50, -2.6, 2.6, 17, 0., 17.);
+  tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";PfType;CutFlowIndex", 9, 0., 9., 17, 0., 17.);
 
   Name = "N1_Eta";
   tuple->N1_Eta = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, -2.6, 2.6);
@@ -297,6 +297,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->TIsol = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 100);
   Name = "N1_EoP";
   tuple->N1_EoP = dir.make<TH1F>(Name.c_str(), Name.c_str(), 25, 0, 1.5);
+  tuple->N1_dRMinPfJet= dir.make<TH1F>("N1_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
+  tuple->N1_dRMinPfJet->Sumw2();
   Name = "N1_SumpTOverpT";
   tuple->N1_SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
   Name = "N1_Pt";
@@ -859,7 +861,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluSizeXVsPixelLayer->Sumw2();
   tuple->BefPreS_CluSizeYVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeYVsPixelLayer",";CluSizeY;Layer",10,0.,10.,4,0.,4.);
   tuple->BefPreS_CluSizeYVsPixelLayer->Sumw2();
-  tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",3,0.,3.,4,0.,4.);
+  tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",4,0.,4.,4,0.,4.);
   tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
   tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->BefPreS_dRMinPfJet->Sumw2();

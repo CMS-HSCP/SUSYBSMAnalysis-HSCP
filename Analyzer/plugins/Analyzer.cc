@@ -107,6 +107,9 @@
 // - 25p7: - Restrict track level pixel probs by their cluster level info
 // - 25p8: - ProbQ with <.75 probs, dRVsPtPfJet with 20 GeV jets
 // - 25p9: - ProbQ with <.9 probs
+// - 26p0: - Cleaner cutflow
+// - 26p1: - Restrict track level pixel probs by their cluster level info (specInCPE)
+// - 26p2: - ProbQ with <.8 probs, cut on MassErr
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -187,7 +190,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMaxDZ_(iConfig.getUntrackedParameter<double>("GlobalMaxDZ")),
       globalMaxDXY_(iConfig.getUntrackedParameter<double>("GlobalMaxDXY")),
       globalMaxTIsol_(iConfig.getUntrackedParameter<double>("GlobalMaxTIsol")),
-      globalMiniRelIsoAll_(iConfig.getUntrackedParameter<double>("GlobalMiniRelIsoAll")),
+      globalMinDeltaRminJet_(iConfig.getUntrackedParameter<double>("GlobaMinDeltaRminJet")),
+      globalMaxMiniRelIsoAll_(iConfig.getUntrackedParameter<double>("GlobalMaxMiniRelIsoAll")),
       globalMinIh_(iConfig.getUntrackedParameter<double>("GlobalMinIh")),
       globalMinTrackProbQCut_(iConfig.getUntrackedParameter<double>("GlobalMinTrackProbQCut")),
       globalMaxTrackProbQCut_(iConfig.getUntrackedParameter<double>("GlobalMaxTrackProbQCut")),
@@ -1368,36 +1372,36 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         // Some printouts to compair with PixelAV
         bool wasAtL2Already = false;
-      if (debug_> 3) {
-        if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
-          if (wasAtL2Already) {
-            LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
-          }
-          wasAtL2Already = true;
-          // 0.31623 [Bichsel's smallest entry]
-          if (isSignal && genGammaBeta > 0.31623) {
-            LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
-            << genGammaBeta << " / " << isFlippedModule << " / "
-            << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-          } else if (isSignal && genGammaBeta <= 0.31623)  {
-            LogPrint(MOD) << "BetaGamma is too low for Bischel";
-          }
-          if (isBckg) {
-            LogPrint(MOD) << "closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
-            << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
-            << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+        if (debug_> 3) {
+          if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
+            if (wasAtL2Already) {
+              LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
+            }
+            wasAtL2Already = true;
+            // 0.31623 [Bichsel's smallest entry]
+            if (isSignal && genGammaBeta > 0.31623) {
+              LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
+              << genGammaBeta << " / " << isFlippedModule << " / "
+              << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+            } else if (isSignal && genGammaBeta <= 0.31623)  {
+              LogPrint(MOD) << "BetaGamma is too low for Bischel";
+            }
+            if (isBckg) {
+              LogPrint(MOD) << "closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
+              << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
+              << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+            }
           }
         }
-      }
         
 //        if (probQ > 0.f && probXY > 0.1) {
-        if (probQ > 0.f && probQ < 0.9) {
+        if (probQ > 0.f && probQ < 0.8) {
           numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
         }
         
-        if (probQ > 0.f && probXY > 0.f && probQ < 0.9) {
+        if (probQ > 0.f && probXY > 0.f && probQ < 0.8) {
           numRecHitsXY++;
             // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
@@ -1409,12 +1413,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probQNoLayer1 > 0.f && probQNoLayer1 < 0.9) {
+          if (probQNoLayer1 > 0.f && probQ < 0.8) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
           }
-          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQNoLayer1 < 0.9) {
+          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQ < 0.8) {
             numRecHitsXYNoLayer1++;
               // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
@@ -2530,18 +2534,19 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
+  desc.addUntracked("GlobaMinDeltaRminJet",0.3)->setComment("Min distance in dR to the nearest jet");
+  desc.addUntracked("GlobalMaxMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
-//  desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
-//  desc.addUntracked("GlobalMinNDOFDT",6.0)->setComment("Cut on number of DT DegreeOfFreedom used for muon TOF measurement");
-//  desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
-//  desc.addUntracked("GlobalMaxTOFErr",0.15)->setComment("Cut on error on muon TOF measurement");
-//  desc.addUntracked("globalMinTOF_",1.0)->setComment("Cut on minimal TOF");
+  desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
+  desc.addUntracked("GlobalMinNDOFDT",6.0)->setComment("Cut on number of DT DegreeOfFreedom used for muon TOF measurement");
+  desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
+  desc.addUntracked("GlobalMaxTOFErr",0.15)->setComment("Cut on error on muon TOF measurement");
+  desc.addUntracked("globalMinTOF_",1.0)->setComment("Cut on minimal TOF");
 
  descriptions.add("HSCParticleAnalyzer",desc);
 }
@@ -3057,7 +3062,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[21];
+  bool passedCutsArray[17];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3089,24 +3094,25 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[11] = (true) ? true : false;
   //passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[12] = ( dRMinPfJet > 0.3) ? true : false;
+  passedCutsArray[12] = ( dRMinPfJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+  passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
   // Cut on the PF electron ID
   passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
+  passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
-  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+//  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
-  passedCutsArray[17] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
-  // TOF only cuts
-  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
-  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
-  passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
-  
+//  passedCutsArray[17] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
+//  // TOF only cuts
+//  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
+//  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
+//  passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
+//
   // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
   // bool cutMinNumOfMissingHits = (typeMode_ != 3 && missingHitsTillLast > GlobalMaxNOMHTillLast) ? true : false;
@@ -3436,8 +3442,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==8) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
         if (i==9) { tuple->N1_Dz->Fill(dz, Event_Weight); };
         if (i==10) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
-        if (i==11) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
-        if (i==12) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
+        if (i==11) {
+          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
+          tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
+        };
+        if (i==12) { tuple->N1_dRMinPfJet->Fill(dRMinPfJet, Event_Weight); };
         if (i==13) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
         if (i==14) {
           tuple->N1_pfType->Fill(0.5, EventWeight_);
@@ -3461,14 +3470,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           }
         }
         if (i==15) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
-        if (i==16)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
-        if (i==17) {
-          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
-          tuple->N1_ProbQVsIas->Fill(probQonTrack, Ias, EventWeight_);
-        };
-        if (i==18) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
-        if (i==19) { LogDebug("Analyzer") << "cutPhiTOFOnly"; };
-        if (i==20) { LogDebug("Analyzer") << "cutEtaTOFOnly"; };
+//        if (i==16)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
+//        if (i==17) {
+//          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
+//          tuple->N1_ProbQVsIas->Fill(probQonTrack, Ias, EventWeight_);
+//        };
+//        if (i==18) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
+//        if (i==19) { LogDebug("Analyzer") << "cutPhiTOFOnly"; };
+//        if (i==20) { LogDebug("Analyzer") << "cutEtaTOFOnly"; };
       }
     }
   }
