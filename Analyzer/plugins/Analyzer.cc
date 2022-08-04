@@ -110,6 +110,7 @@
 // - 26p0: - Cleaner cutflow
 // - 26p1: - Restrict track level pixel probs by their cluster level info (specInCPE)
 // - 26p2: - ProbQ with <.8 probs, cut on MassErr
+// - 26p3: - ProbQ with <.8 probs and no SpansTwoRocs, some printouts for Morris, dRMinJet jet def change 
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1373,35 +1374,39 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Some printouts to compair with PixelAV
         bool wasAtL2Already = false;
         if (debug_> 3) {
-          if ((detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) == 2)) {
+          if ((detid.subdetId() == PixelSubdetector::PixelBarrel)) {
             if (wasAtL2Already) {
               LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
             }
             wasAtL2Already = true;
             // 0.31623 [Bichsel's smallest entry]
             if (isSignal && genGammaBeta > 0.31623) {
-              LogPrint(MOD) << "genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
-              << genGammaBeta << " / " << isFlippedModule << " / "
+              LogPrint(MOD) << "LayerID/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: L"
+              << tTopo->pxbLayer(detid) << " / " << genGammaBeta << " / " << isFlippedModule << " / "
               << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+              LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
+              << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
             } else if (isSignal && genGammaBeta <= 0.31623)  {
               LogPrint(MOD) << "BetaGamma is too low for Bischel";
             }
             if (isBckg) {
-              LogPrint(MOD) << "closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: "
-              << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
+              LogPrint(MOD) << "LayerID/closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: L"
+              << tTopo->pxbLayer(detid) << " / " << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
               << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
+              LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
+              << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
             }
           }
         }
         
 //        if (probQ > 0.f && probXY > 0.1) {
-        if (probQ > 0.f && probQ < 0.8) {
+        if (probQ > 0.f && probQ < 0.8 && !spansTwoROCs) {
           numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
         }
         
-        if (probQ > 0.f && probXY > 0.f && probQ < 0.8) {
+        if (probQ > 0.f && probXY > 0.f && probQ < 0.8 && !spansTwoROCs) {
           numRecHitsXY++;
             // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
@@ -1413,12 +1418,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probQNoLayer1 > 0.f && probQ < 0.8) {
+          if (probQNoLayer1 > 0.f && probQ < 0.8 && !spansTwoROCs) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
           }
-          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQ < 0.8) {
+          if (probQNoLayer1 > 0.f && probXYNoLayer1 > 0.f && probQ < 0.8 && !spansTwoROCs) {
             numRecHitsXYNoLayer1++;
               // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
@@ -2974,8 +2979,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         dRMinPfJetTemp = dr;
         nearestJetIndex = i;
       }
-      
-      if (jet->pt() < 20 || jet->muonEnergyFraction() > 0.7 ||
+      //if (jet->pt() < 20 || jet->muonEnergyFraction() > 0.7 || 
+      if ((track->pt() - jet->pt() < 15) ||
         jet->electronEnergyFraction() > 0.6 || jet->photonEnergyFraction() > 0.6) {
         continue;
       }
@@ -2997,7 +3002,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (caloJetHandle.isValid() && !caloJetHandle->empty()) {
     for (unsigned int i = 0; i < caloJetHandle->size(); i++) {
       const reco::CaloJet* jet = &(*caloJetHandle)[i];
-      if (jet->pt() < 50 || jet->emEnergyFraction() > 0.9) {
+      if (jet->pt() < 20 || jet->emEnergyFraction() > 0.9) {
         continue;
       }
       caloNumJets++;
@@ -3172,6 +3177,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+    LogPrint(MOD) << "        >>   probXYonTrack   " <<  probXYonTrack  ;
     LogPrint(MOD) << "        >>   Ias  " << Ias;
   }
   
