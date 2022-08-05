@@ -111,6 +111,7 @@
 // - 26p1: - Restrict track level pixel probs by their cluster level info (specInCPE)
 // - 26p2: - ProbQ with <.8 probs, cut on MassErr
 // - 26p3: - ProbQ with <.8 probs and no SpansTwoRocs, some printouts for Morris, dRMinJet jet def change 
+// - 25p5: - Remove MassErr cut
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -3002,7 +3003,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (caloJetHandle.isValid() && !caloJetHandle->empty()) {
     for (unsigned int i = 0; i < caloJetHandle->size(); i++) {
       const reco::CaloJet* jet = &(*caloJetHandle)[i];
-      if (jet->pt() < 20 || jet->emEnergyFraction() > 0.9) {
+      //if (jet->pt() < 20 || jet->emEnergyFraction() > 0.9) {
+      if ((track->pt() - jet->pt() < 15) || jet->emEnergyFraction() > 0.9) {
         continue;
       }
       caloNumJets++;
@@ -3108,7 +3110,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-  passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
+  passedCutsArray[16] = ( true ) ? true : false;
+  //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
 //  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
