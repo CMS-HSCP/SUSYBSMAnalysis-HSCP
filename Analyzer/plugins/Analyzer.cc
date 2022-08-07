@@ -1654,139 +1654,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     //fill the ABCD histograms and a few other control plots
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
-    if (!isData) {
-        //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
-      closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
-      float genEta = genColl[closestGenIndex].eta();
-      float genPhi = genColl[closestGenIndex].phi();
-      float dRMinGenAndSibling = 9999.0;
-      float dRMinGenAndMom = 9999.0;
-      float numSiblingsF = 9999.0;
-      bool motherFound = false;
-      reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex];
-      
-      if (genCandidateUnderStudy.numberOfMothers() == 0) {
-        LogPrint(MOD) << "There are zero mothers, track ID" << abs(genCandidateUnderStudy.pdgId()) <<
-        " Eta: " << genEta << " Phi: " << genPhi ;
-      }
-      // TODO remove
-      if (genCandidateUnderStudy.numberOfMothers()>1) {
-        cout << "genColl[closestGenIndex].numberOfMothers(): " << genCandidateUnderStudy.numberOfMothers() << endl;
-      }
-      
-      // Loop through all the mothers of the gen particle
-      for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
-        if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
-          closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId());
-          unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
-          numSiblingsF  = float(numSiblings);
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
-          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-            std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
-            float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
-            float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
-            float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-            std::cout << " (dR = " << siblingDr << ") , ";
-            if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
-              dRMinGenAndSibling = siblingDr;
-              closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
-            }
-          }
-          float momEta = genCandidateUnderStudy.mother(numMomIndx)->eta();
-          float momPhi = genCandidateUnderStudy.mother(numMomIndx)->phi();
-          dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
-          motherFound = true;
-          break;
-        }
-      }
-      std::cout << std::endl;
-      // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
-      if (!motherFound) {
-        LogPrint(MOD) << "      >> BckgMCBefPreS: All moms had the same ID as the candidate, let's look at the grammas";
-
-        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
-          for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
-            if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
-              closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
-              unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
-              numSiblingsF  = float(numSiblings);
-              LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
-              for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
-                float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
-                float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
-                float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                std::cout << " (dR = " << siblingDr << ") , ";
-                if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
-                  dRMinGenAndSibling = siblingDr;
-                  closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
-                }
-              }
-              float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->eta();
-              float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->phi();
-              dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
-              motherFound = true;
-              break;
-            }
-          }
-        }
-        std::cout << std::endl;
-      }
-        // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
-      if (!motherFound) {
-        LogPrint(MOD) << "      >> BckgMCBefPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
-        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
-          for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->numberOfMothers(); numGramMomIndx++) {
-            for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
-              if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
-                closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId());
-                unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
-                numSiblingsF  = float(numSiblings);
-                LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
-                for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
-                  float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
-                  float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
-                  float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                  std::cout << " (dR = " << siblingDr << ") , ";
-                  if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
-                    dRMinGenAndSibling = siblingDr;
-                    closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
-                  }
-                }
-                float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->eta();
-                float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->phi();
-                dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
-                motherFound = true;
-                break;
-              }
-            }
-          }
-        }
-        std::cout << std::endl;
-      }
-      if (!motherFound) {
-        LogPrint(MOD) << "All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
-      }
-        // I'm sure this could be done better, if you agree and feel like it, please fix it
-        // issue with a while loop and a recursive I faced is tha that mom doesnt have the same type as the genParticle
-      
-      closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
-      closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
-      closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
-      closestBackgroundPDGsIDs[6] = numSiblingsF;
-      
-      if (debug_> 2) {
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
-      }
-    }
-    
+     
     if (passPre) {
       if (debug_ > 2) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2) LogPrint(MOD) << "      >> Fill control and prediction histos";
@@ -1819,16 +1687,133 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->PostPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
     
     // Let's do some printouts after preselections for gen particles
-    if (!isData) {
-      if (debug_> 0) {
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
+    if (passPre) {
+      if (!isData) {
+        //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
+        closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
+        float genEta = genColl[closestGenIndex].eta();
+        float genPhi = genColl[closestGenIndex].phi();
+        float dRMinGenAndSibling = 9999.0;
+        float dRMinGenAndMom = 9999.0;
+        float numSiblingsF = 9999.0;
+        bool motherFound = false;
+        reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex];
+        
+        if (genCandidateUnderStudy.numberOfMothers() == 0) {
+          LogPrint(MOD) << "There are zero mothers, track ID" << abs(genCandidateUnderStudy.pdgId()) <<
+          " Eta: " << genEta << " Phi: " << genPhi ;
+        }
+          // TODO remove
+        if (genCandidateUnderStudy.numberOfMothers()>1) {
+          cout << "genColl[closestGenIndex].numberOfMothers(): " << genCandidateUnderStudy.numberOfMothers() << endl;
+        }
+        
+          // Loop through all the mothers of the gen particle
+        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+          if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+            closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId());
+            unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
+            numSiblingsF  = float(numSiblings);
+            LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+              std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+              float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
+              float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
+              float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+              std::cout << " (dR = " << siblingDr << ") , ";
+              if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+                dRMinGenAndSibling = siblingDr;
+                closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
+              }
+            }
+            float momEta = genCandidateUnderStudy.mother(numMomIndx)->eta();
+            float momPhi = genCandidateUnderStudy.mother(numMomIndx)->phi();
+            dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+            motherFound = true;
+            break;
+          }
+        }
+        std::cout << std::endl;
+          // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
+        if (!motherFound) {
+          LogPrint(MOD) << "      >> BckgMCBefPreS: All moms had the same ID as the candidate, let's look at the grammas";
+          
+          for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+            for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
+              if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+                closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
+                unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
+                numSiblingsF  = float(numSiblings);
+                LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+                  std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
+                  float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
+                  float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+                  std::cout << " (dR = " << siblingDr << ") , ";
+                  if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+                    dRMinGenAndSibling = siblingDr;
+                    closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
+                  }
+                }
+                float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->eta();
+                float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->phi();
+                dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+                motherFound = true;
+                break;
+              }
+            }
+            if (motherFound) break;
+          }
+          std::cout << std::endl;
+        }
+          // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
+        if (!motherFound) {
+          LogPrint(MOD) << "      >> BckgMCBefPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
+          for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+            for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->numberOfMothers(); numGramMomIndx++) {
+              for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
+                if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+                  closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId());
+                  unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
+                  numSiblingsF  = float(numSiblings);
+                  closestBackgroundPDGsIDs[2] = 0;
+                  dRMinGenAndSibling = 9999.9;
+                  float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->eta();
+                  float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->phi();
+                  dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+                  motherFound = true;
+                  break;
+                }
+              }
+              if (motherFound) break;
+            }
+            if (motherFound) break;
+          }
+          std::cout << std::endl;
+        }
+        if (!motherFound) {
+          LogPrint(MOD) << "All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
+        }
+          // I'm sure this could be done better, if you agree and feel like it, please fix it
+          // issue with a while loop and a recursive I faced is tha that mom doesnt have the same type as the genParticle
+        
+        closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
+        closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
+        closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
+        closestBackgroundPDGsIDs[6] = numSiblingsF;
+        
+        if (debug_> 2) {
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
+        }
       }
+
     }
     
     if (!isData) {
