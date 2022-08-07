@@ -114,6 +114,7 @@
 // - 25p5: - Remove MassErr cut
 // - 25p6: - Remove calo jet requirements for EM fraction, cut on dRMinCaloJet
 // - 25p7: - Fix out of bound probXY, remove some unused 3D histos, temp remove the cut on dRMinCaloJet, put back probXYonTrackNoLayer1 cut
+// - 25p8: - Tighten cut on probXYonTrackNoLayer1 to 0.1
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1041,62 +1042,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->HSCPCandidateType->Fill(5.5, EventWeight_);
       }
     }
-    if (!isData) {
-//      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
-      closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
-      float genEta = genColl[closestGenIndex].eta();
-      float genPhi = genColl[closestGenIndex].phi();
-      float dRMinGenAndSibling = 9999.0;
-      float dRMinGenAndMom = 9999.0;
-      float numSiblingsF = 9999.0;
-      // here
-      for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
-        if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
-          closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId());
-          unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
-          numSiblingsF  = float(numSiblings);
-          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-            float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
-            float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
-            float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-            if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
-              dRMinGenAndSibling = siblingDr;
-              closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId());
-            }
-          }
-          float momEta = genColl[closestGenIndex].mother(numMomIndx)->eta();
-          float momPhi = genColl[closestGenIndex].mother(numMomIndx)->phi();
-          dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
-          break;
-        } else {
-          dRMinGenAndSibling = 0.0;
-          dRMinGenAndMom = 0.0;
-        }
-      }
-      if (genColl[closestGenIndex].numberOfMothers()==1) {
-        // TODO remove
-        cout << "This gen has a single mother, ID = " << genColl[closestGenIndex].mother()->pdgId() << endl;
-        closestBackgroundPDGsIDs[1] = (float)abs(genColl[closestGenIndex].mother()->pdgId());
-        unsigned int numSiblings = genColl[closestGenIndex].mother()->numberOfDaughters() -1;
-        numSiblingsF  = float(numSiblings);
-        for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-          float siblingEta = genColl[closestGenIndex].mother()->daughter(daughterIndx)->eta();
-          float siblingPhi = genColl[closestGenIndex].mother()->daughter(daughterIndx)->phi();
-          float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-          if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
-            dRMinGenAndSibling = siblingDr;
-            closestBackgroundPDGsIDs[2] = (float)abs(genColl[closestGenIndex].mother()->daughter(daughterIndx)->pdgId());
-          }
-        }
-        float momEta = genColl[closestGenIndex].mother()->eta();
-        float momPhi = genColl[closestGenIndex].mother()->phi();
-        dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
-      }
-      closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
-      closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
-      closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
-      closestBackgroundPDGsIDs[6] = numSiblingsF;
-    }
    
 //    if (debug_> 0) LogPrint(MOD) << "  >> Loop on the vertices in the event"; 
     // TODO this is repeated in the pre-selection
@@ -1709,36 +1654,131 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     //fill the ABCD histograms and a few other control plots
     //WAIT//else if(isBckg) Analysis_FillControlAndPredictionHist(hscp, dedxSObj, dedxMObj, tof, MCTrPlots);
-    // Let's do some gen printouts befre preselections for gen particles
-    if (isBckg) {
-      if (debug_> 2) {
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
-        float genEta = genColl[closestGenIndex].eta();
-        float genPhi = genColl[closestGenIndex].phi();
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track eta: " << genEta << " and phi: " << genPhi;
-        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-        for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
-          if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
-            unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
-            LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings;
-            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-              std::cout << "      >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
-              float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
-              float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
-              float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              std::cout << " (dR = " << siblingDr << ") , ";
+    if (!isData) {
+        //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
+      closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
+      float genEta = genColl[closestGenIndex].eta();
+      float genPhi = genColl[closestGenIndex].phi();
+      float dRMinGenAndSibling = 9999.0;
+      float dRMinGenAndMom = 9999.0;
+      float numSiblingsF = 9999.0;
+      bool motherFound = false;
+      reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex];
+      
+      if (genCandidateUnderStudy.numberOfMothers() == 0) {
+        LogPrint(MOD) << "There are zero mothers, track ID" << abs(genCandidateUnderStudy.pdgId()) <<
+        " Eta: " << genEta << " Phi: " << genPhi ;
+      }
+      // TODO remove
+      if (genCandidateUnderStudy.numberOfMothers()>1) {
+        cout << "genColl[closestGenIndex].numberOfMothers(): " << genCandidateUnderStudy.numberOfMothers() << endl;
+      }
+      
+      // Loop through all the mothers of the gen particle
+      for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+        if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+          closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId());
+          unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
+          numSiblingsF  = float(numSiblings);
+          LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+            std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+            float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
+            float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
+            float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+            std::cout << " (dR = " << siblingDr << ") , ";
+            if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+              dRMinGenAndSibling = siblingDr;
+              closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
             }
-            break;
-          } else {
-            LogPrint(MOD) << "      >> BckgMCBefPreS: This track has no mother than itself";
-            LogPrint(MOD) << "      >> BckgMCBefPreS: The number of mothers is: " << genColl[closestGenIndex].numberOfMothers();
+          }
+          float momEta = genCandidateUnderStudy.mother(numMomIndx)->eta();
+          float momPhi = genCandidateUnderStudy.mother(numMomIndx)->phi();
+          dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+          motherFound = true;
+          break;
+        }
+      }
+      std::cout << std::endl;
+      // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
+      if (!motherFound) {
+        LogPrint(MOD) << "      >> BckgMCBefPreS: All moms had the same ID as the candidate, let's look at the grammas";
+
+        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+          for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
+            if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+              closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
+              unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
+              numSiblingsF  = float(numSiblings);
+              LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+              for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+                std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
+                float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
+                float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+                std::cout << " (dR = " << siblingDr << ") , ";
+                if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+                  dRMinGenAndSibling = siblingDr;
+                  closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
+                }
+              }
+              float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->eta();
+              float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->phi();
+              dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+              motherFound = true;
+              break;
+            }
           }
         }
-        if (genColl[closestGenIndex].numberOfMothers() == 0) {
-          LogPrint(MOD) << "There are zero mothers, track ID" << abs(genColl[closestGenIndex].pdgId()) <<
-          " Eta: " << genEta << " Phi: " << genPhi ;
+        std::cout << std::endl;
+      }
+        // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
+      if (!motherFound) {
+        LogPrint(MOD) << "      >> BckgMCBefPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
+        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+          for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->numberOfMothers(); numGramMomIndx++) {
+            for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
+              if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+                closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId());
+                unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
+                numSiblingsF  = float(numSiblings);
+                LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+                  std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
+                  float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
+                  float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+                  std::cout << " (dR = " << siblingDr << ") , ";
+                  if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+                    dRMinGenAndSibling = siblingDr;
+                    closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
+                  }
+                }
+                float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->eta();
+                float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->phi();
+                dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+                motherFound = true;
+                break;
+              }
+            }
+          }
         }
         std::cout << std::endl;
+      }
+      if (!motherFound) {
+        LogPrint(MOD) << "All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
+      }
+        // I'm sure this could be done better, if you agree and feel like it, please fix it
+        // issue with a while loop and a recursive I faced is tha that mom doesnt have the same type as the genParticle
+      
+      closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
+      closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
+      closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
+      closestBackgroundPDGsIDs[6] = numSiblingsF;
+      
+      if (debug_> 2) {
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
         LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
         LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
         LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
@@ -1781,44 +1821,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Let's do some printouts after preselections for gen particles
     if (!isData) {
       if (debug_> 0) {
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track ID: " << closestBackgroundPDGsIDs[0];
-        float genEta = genColl[closestGenIndex].eta();
-        float genPhi = genColl[closestGenIndex].phi();
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track eta: " << genEta << " and phi: " << genPhi;
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-        for (unsigned int numMomIndx = 0; numMomIndx < genColl[closestGenIndex].numberOfMothers(); numMomIndx++) {
-          if (abs(genColl[closestGenIndex].mother(numMomIndx)->pdgId())  != abs(genColl[closestGenIndex].pdgId())) {
-            unsigned int numSiblings = genColl[closestGenIndex].mother(numMomIndx)->numberOfDaughters() -1;
-            LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings;
-            for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-              std::cout << "      >> " << genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
-              float siblingEta = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->eta();
-              float siblingPhi = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->phi();
-              float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              float siblingpT = genColl[closestGenIndex].mother(numMomIndx)->daughter(daughterIndx)->pt();
-              std::cout << " (dR = " << siblingDr << ", pt = " << siblingpT << ") , ";
-            }
-            break;
-          } else {
-            LogPrint(MOD) << "      >> BckgMCPostPreS: This track has no mother than itself";
-            LogPrint(MOD) << "      >> BckgMCPostPreS: The number of mothers is: " << genColl[closestGenIndex].numberOfMothers();
-          }
-        }
-        if (genColl[closestGenIndex].numberOfMothers() == 0) {
-          LogPrint(MOD) << "There are zero mothers, track ID" << abs(genColl[closestGenIndex].pdgId()) <<
-          " Eta: " << genEta << " Phi: " << genPhi ;
-        }
-        std::cout << std::endl;
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
-        LogPrint(MOD) << "      >> BckgMCPostPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
+        LogPrint(MOD) << "      >> BckgMCBefPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
       }
     }
     
     if (!isData) {
-      std::cout << std::endl;
       unsigned int usignedIntclosestGenIndex = 0;
       if (closestGenIndex>0) {
         usignedIntclosestGenIndex = closestGenIndex;
@@ -2550,7 +2563,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
-  desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, 0.0 means no cuts applied");
+  desc.addUntracked("GlobalMinTrackProbXYCut",0.1)->setComment("Min cut for probXY, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
   desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
@@ -3175,7 +3188,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
     LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
     LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
-    LogPrint(MOD) << "        >>   probXYonTrack  " <<   probXYonTrack ;
     LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
     LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
     LogPrint(MOD) << "        >>   dz  " <<   dz ;
@@ -3772,8 +3784,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (Ias > 0.6)    { LogPrint(MOD) << "\n\n        >> After passing preselection, the Ias > 0.6";}
     if (Mass > 1000 ) { LogPrint(MOD) << "\n\n        >> After passing preselection, the Mass > 1000";}
     LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
-    LogPrint(MOD) << "        >> pt: " << track->pt() << " eta: " << track->eta() << " EoP:  " << EoP;
-    LogPrint(MOD) << "        >> probQonTrack " << probQonTrack << " probXYonTrack: " << probXYonTrack;
     LogPrint(MOD) << "        >> -----------------------------------------------";
     LogPrint(MOD) << "        >> Trigger passed!";
     LogPrint(MOD) << "        >> track->eta()  " <<   track->eta() ;
@@ -3782,7 +3792,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
     LogPrint(MOD) << "        >> track->validFraction()  " <<   track->validFraction() ;
     LogPrint(MOD) << "        >> numDeDxHits  " <<   numDeDxHits ;
-    LogPrint(MOD) << "        >> probXYonTrack  " <<   probXYonTrack ;
     LogPrint(MOD) << "        >> track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
     LogPrint(MOD) << "        >> EoP   " <<   EoP  ;
     LogPrint(MOD) << "        >> dz  " <<   dz ;
@@ -3794,6 +3803,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> Ih  " <<   Ih ;
     LogPrint(MOD) << "        >> Ias  " << Ias;
     LogPrint(MOD) << "        >> probQonTrack   " <<   probQonTrack  ;
+    LogPrint(MOD) << "        >> probXYonTrack  " <<   probXYonTrack ;
     LogPrint(MOD) << "        >> dRMinCaloJet   " <<   dRMinCaloJet;
     LogPrint(MOD) << "        >> dRMinPfJet   " <<   dRMinPfJet;
   }
@@ -3807,7 +3817,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
     LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
     LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
-    LogPrint(MOD) << "        >>   probXYonTrack  " <<   probXYonTrack ;
     LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
     LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
     LogPrint(MOD) << "        >>   dz  " <<   dz ;
@@ -3818,6 +3827,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+    LogPrint(MOD) << "?|  ?|  ?|  ?|  >>?|   probXYonTrack  " <<   probXYonTrack ;
     LogPrint(MOD) << "        >>   Ias  " << Ias;
   }
   
