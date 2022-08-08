@@ -115,6 +115,7 @@
 // - 25p6: - Remove calo jet requirements for EM fraction, cut on dRMinCaloJet
 // - 25p7: - Fix out of bound probXY, remove some unused 3D histos, temp remove the cut on dRMinCaloJet, put back probXYonTrackNoLayer1 cut
 // - 25p8: - Tighten cut on probXYonTrackNoLayer1 to 0.1
+// - 25p9: - Dont cut on probXYonTrackNoLayer1, change to 1D template CPE (instead of CR)
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2536,7 +2537,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Ias vs Pt templates in eta binning");
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
-  desc.add<std::string>("PixelCPE","PixelCPEClusterRepair")
+  //desc.add<std::string>("PixelCPE","PixelCPEClusterRepair")
+  desc.add<std::string>("PixelCPE","PixelCPETemplateReco")
     ->setComment("CPE used in the pixel reco, cluster repair is the best available so far ");
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
@@ -3124,7 +3126,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-  passedCutsArray[16] = ( probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ ) ? true : false;
+  passedCutsArray[16] = ( true ) ? true : false;
   //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
 //  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
