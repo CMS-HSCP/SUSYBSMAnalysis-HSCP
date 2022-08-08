@@ -1339,8 +1339,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               LogPrint(MOD) << "LayerID/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: L"
               << tTopo->pxbLayer(detid) << " / " << genGammaBeta << " / " << isFlippedModule << " / "
               << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-              LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
-              << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
+              // LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
+              // << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
             } else if (isSignal && genGammaBeta <= 0.31623)  {
               LogPrint(MOD) << "BetaGamma is too low for Bischel";
             }
@@ -1348,8 +1348,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               LogPrint(MOD) << "LayerID/closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: L"
               << tTopo->pxbLayer(detid) << " / " << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
               << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-              LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
-              << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
+              // LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
+              // << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
             }
           }
         }
@@ -1734,7 +1734,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }
         std::cout << std::endl;
-          // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
+        
+        // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
         if (!motherFound) {
           LogPrint(MOD) << "      >> BckgMCBefPreS: All moms had the same ID as the candidate, let's look at the grammas";
           
@@ -1767,18 +1768,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           std::cout << std::endl;
         }
-          // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
+
+        // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
         if (!motherFound) {
           LogPrint(MOD) << "      >> BckgMCBefPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
-            for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->numberOfMothers(); numGramMomIndx++) {
+            for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
                 if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
-                  closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId());
                   unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                   numSiblingsF  = float(numSiblings);
-                  closestBackgroundPDGsIDs[2] = 0;
-                  dRMinGenAndSibling = 9999.9;
+                  LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                  for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+                    std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                    float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
+                    float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
+                    float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+                    std::cout << " (dR = " << siblingDr << ") , ";
+                    if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+                      dRMinGenAndSibling = siblingDr;
+                      closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
+                    }
+                  }
                   float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->eta();
                   float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->phi();
                   dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
@@ -1790,7 +1801,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             }
             if (motherFound) break;
           }
-          std::cout << std::endl;
         }
         if (!motherFound) {
           LogPrint(MOD) << "All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
