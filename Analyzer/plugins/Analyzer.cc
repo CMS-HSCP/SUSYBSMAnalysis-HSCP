@@ -1001,7 +1001,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     // the pt of the candidate and the number of siblings
-    float closestBackgroundPDGsIDs[7] = {0.,0.,0.,9999.,9999.,0.,9999.};
+    float closestBackgroundPDGsIDs[8] = {0.,0.,0.,9999.,9999.,0.,9999.,0.};
     // Look at the properties of the closes gen candidate
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
@@ -1264,6 +1264,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     // Loop through the rechits on the given track before preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
+      // TODO debug
+      if (i>3) {
+        cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i)*265 /  dedxHits->pathlength(i)  << endl;
+      } else {
+        cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i) /  dedxHits->pathlength(i)  << endl;
+      }
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
       clust_isStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
@@ -1409,6 +1415,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         clust_nstrip.push_back(ampl.size());
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
+        
+        
         if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < theFMIPX_)
           nofClust_dEdxLowerThan++;
       }
@@ -1427,7 +1435,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
     }
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
-    if (pixelProbs[0] < 0.0 || pixelProbs[1] < 0.0 || pixelProbs[0] >= 1.00000001 || pixelProbs[1] >= 1.000000001) {
+    if (pixelProbs[0] < 0.0 || pixelProbs[1] < 0.0 || pixelProbs[0] > 1.f || pixelProbs[1] > 1.f) {
       if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
         " ProbQ = " << pixelProbs[0] << " ProbXY = " << pixelProbs[1] <<  " ProbQNoL1 = "<< pixelProbs[2] << " ProbXYNoL1 = " << pixelProbs[3];
 //      continue;
@@ -1708,20 +1716,31 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (genCandidateUnderStudy.numberOfMothers()>1) {
           cout << "genColl[closestGenIndex].numberOfMothers(): " << genCandidateUnderStudy.numberOfMothers() << endl;
         }
+        cout << "genCandidateUnderStudy.pdgId(): " << genCandidateUnderStudy.pdgId() << endl;
+        cout << "genCandidateUnderStudy.pt(): " << genCandidateUnderStudy.pt() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->pt(): " << genCandidateUnderStudy.mother(0)->pt() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pt() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
+        cout << "genCandidateUnderStudy.mother(1)->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother(1)->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pt() << endl;
         
           // Loop through all the mothers of the gen particle
         for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
           if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
             closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId());
+            closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pt());
             unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
             numSiblingsF  = float(numSiblings);
-            LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+            LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
             for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
               std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
+              float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              std::cout << " (dR = " << siblingDr << ") , ";
+              std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
               if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
                 dRMinGenAndSibling = siblingDr;
                 closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
@@ -1738,21 +1757,23 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
         if (!motherFound) {
-          LogPrint(MOD) << "      >> BckgMCBefPreS: All moms had the same ID as the candidate, let's look at the grammas";
+          LogPrint(MOD) << "      >> BckgMCPostPreS: All moms had the same ID as the candidate, let's look at the grammas";
           
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
                 closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
+                closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pt());
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
-                LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
                   std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
+                  float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pt();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                  std::cout << " (dR = " << siblingDr << ") , ";
+                  std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
                   if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
                     dRMinGenAndSibling = siblingDr;
                     closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -1772,20 +1793,23 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
         if (!motherFound) {
-          LogPrint(MOD) << "      >> BckgMCBefPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
+          LogPrint(MOD) << "      >> BckgMCPostPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
                 if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+                  closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId());
+                  closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pt());
                   unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                   numSiblingsF  = float(numSiblings);
-                  LogPrint(MOD) << "      >> BckgMCBefPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                  LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
                   for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
                     std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                     float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                     float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
+                    float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pt();
                     float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                    std::cout << " (dR = " << siblingDr << ") , ";
+                    std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
                     if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
                       dRMinGenAndSibling = siblingDr;
                       closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -1815,13 +1839,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         closestBackgroundPDGsIDs[6] = numSiblingsF;
         
         if (debug_> 2) {
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track ID: " << closestBackgroundPDGsIDs[0];
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
-          LogPrint(MOD) << "      >> BckgMCBefPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track ID: " << closestBackgroundPDGsIDs[0];
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
+          
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's mom pt: " << closestBackgroundPDGsIDs[7];
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
+
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
+          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
         }
       }
 
@@ -1880,6 +1907,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+        
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
@@ -1997,16 +2027,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 // up to 25 in histo
             unsigned int stripLayerIndex = 0;
             if (detid.subdetId() == StripSubdetector::TIB) {
-                stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+              stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+              cout << "Strips TIB L" << abs(int(tTopo->tibLayer(detid)))<< " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
             if (detid.subdetId() == StripSubdetector::TOB) {
-                stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+              stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+              cout << "Strips TOB L" << abs(int(tTopo->tobLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
             else if (detid.subdetId() == StripSubdetector::TID) {
-                stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+              stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+              cout << "Strips TID D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
             else if (detid.subdetId() == StripSubdetector::TEC) {
-                stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+              stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+              cout << "Strips TEC D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
 
             if (tuple) {
@@ -2047,11 +2081,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                            false,
                            0,
                            0)) {
-          if (debug_ > 6 ) LogPrint(MOD) << "        >> Selection failed, skipping this CutIndex = " << CutIndex;
           continue;
-        } else {
-          if (debug_ > 6 ) LogPrint(MOD) << "        >> Selection passed with CutIndex = " << CutIndex;
         }
+        
         if (CutIndex != 0)
           PassNonTrivialSelection = true;
         HSCPTk[CutIndex] = true;
@@ -3187,6 +3219,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
     LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
     LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
+    LogPrint(MOD) << "        >>   PF E = " << pf_energy <<  " Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy();
     LogPrint(MOD) << "        >>   dz  " <<   dz ;
     LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
     LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
@@ -3824,7 +3857,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
-    LogPrint(MOD) << "?|  ?|  ?|  ?|  >>?|   probXYonTrack  " <<   probXYonTrack ;
+    LogPrint(MOD) << "        >>   RrobXYonTrack  " <<   probXYonTrack ;
     LogPrint(MOD) << "        >>   Ias  " << Ias;
   }
   
@@ -3931,7 +3964,6 @@ bool Analyzer::passSelection(const reco::TrackRef track,
       return false;
   } else {
     if (track->pt() < PtCut) {
-      if (debug_ > 6) LogPrint(MOD) << "        >> @passSelection: p_T less than p_T cut (" << PtCut << ")";
       return false;
     }
   }
@@ -3943,7 +3975,6 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   }
 
   if (typeMode_ != 3 && Ias + RescaleI < ICut) {
-    if (debug_ > 6) LogPrint(MOD) << "        >> @passSelection: I_s less than I_s cut (" << ICut << ")";
     return false;
   }
 

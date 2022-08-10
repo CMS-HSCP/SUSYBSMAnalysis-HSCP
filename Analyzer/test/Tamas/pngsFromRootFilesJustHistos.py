@@ -36,6 +36,8 @@ fileOut = open("SignalBackgroundEff.txt", "a")
 isData = False
 if ("SingleMuon" in fileName) : isData = True
 
+iDontWannaRunPlots = False
+
 dirs = []
 for i in range(0, f.GetListOfKeys().GetEntries()):
   # Remove/modify unnecessary stuff from the name of the plot that was required by SmartHistos to ditinguish plots
@@ -95,7 +97,8 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
           tex4.SetLineWidth(2);
           
           codeVersion = fileName[fileName.find("CodeV")+5:fileName.find("CodeV")+9]
-          tex5 = ROOT.TLatex(0.07,0.04,"Code version: "+codeVersion);
+          fileVersion = fileName[fileName.find("2018")+5:fileName.find("CodeV")+9]
+          tex5 = ROOT.TLatex(0.07,0.03,fileVersion);
           tex5.SetNDC();
           tex5.SetTextFont(52);
           tex5.SetTextSize(0.0185);
@@ -119,8 +122,8 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
               if (obj.GetEntries() == 0 ) :
                 continue
                 
-              # when I dont want to plot everything
-#              if (True) : continue
+#             when I dont want to plot everything
+              if (iDontWannaRunPlots) : continue
                 
               if ("Gen" in keyname2 and isData) : continue
 #                 print(obj.ClassName())
@@ -455,16 +458,16 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 obj.GetXaxis().SetBinLabel(9,"EoP")
                 obj.GetXaxis().SetBinLabel(10,"dz")
                 obj.GetXaxis().SetBinLabel(11,"dxy")
-                obj.GetXaxis().SetBinLabel(12,"pTerrOverpT")
-                obj.GetXaxis().SetBinLabel(13,"N/A")
+                obj.GetXaxis().SetBinLabel(12,"") #pTerrOverpT
+                obj.GetXaxis().SetBinLabel(13,"dRminPfJet")
                 obj.GetXaxis().SetBinLabel(14,"MiniIso")
                 obj.GetXaxis().SetBinLabel(15,"PFid")
                 obj.GetXaxis().SetBinLabel(16,"Ih")
                 obj.GetXaxis().SetBinLabel(17,"ProbXY")
-                obj.GetXaxis().SetBinLabel(18,"ProbQ")
-                obj.GetXaxis().SetBinLabel(19,"MuStat")
-                obj.GetXaxis().SetBinLabel(20,"PhiTOF")
-                obj.GetXaxis().SetBinLabel(21,"EtaTOF")
+                obj.GetXaxis().SetBinLabel(18,"") #ProbQ
+                obj.GetXaxis().SetBinLabel(19,"") #MuStat
+                obj.GetXaxis().SetBinLabel(20,"") #PhiTOF
+                obj.GetXaxis().SetBinLabel(21,"") #EtaTOF
                 obj.Draw("COLZ L")
                 tex2.Draw("SAME")
                 tex3.Draw("SAME")
@@ -489,16 +492,16 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 obj.GetXaxis().SetBinLabel(9,"EoP")
                 obj.GetXaxis().SetBinLabel(10,"dz")
                 obj.GetXaxis().SetBinLabel(11,"dxy")
-                obj.GetXaxis().SetBinLabel(12,"pTerrOverpT")
-                obj.GetXaxis().SetBinLabel(13,"SVfromNI")
+                obj.GetXaxis().SetBinLabel(12,"")
+                obj.GetXaxis().SetBinLabel(13,"dRminPfJet")
                 obj.GetXaxis().SetBinLabel(14,"MiniIso")
                 obj.GetXaxis().SetBinLabel(15,"PFid")
                 obj.GetXaxis().SetBinLabel(16,"Ih")
                 obj.GetXaxis().SetBinLabel(17,"ProbXY")
-                obj.GetXaxis().SetBinLabel(18,"ProbQ")
-                obj.GetXaxis().SetBinLabel(19,"MuStat")
-                obj.GetXaxis().SetBinLabel(20,"PhiTOF")
-                obj.GetXaxis().SetBinLabel(21,"EtaTOF")
+                obj.GetXaxis().SetBinLabel(18,"")
+                obj.GetXaxis().SetBinLabel(19,"")
+                obj.GetXaxis().SetBinLabel(20,"")
+                obj.GetXaxis().SetBinLabel(21,"")
                 tex4.Draw("SAME")
                 tex5.Draw("SAME")
                 obj.Draw("COLZ L")
@@ -533,16 +536,16 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 obj.GetYaxis().SetBinLabel(9,"EoP")
                 obj.GetYaxis().SetBinLabel(10,"dz")
                 obj.GetYaxis().SetBinLabel(11,"dxy")
-                obj.GetYaxis().SetBinLabel(12,"pTerrOverpT")
-                obj.GetYaxis().SetBinLabel(13,"N/A")
+                obj.GetYaxis().SetBinLabel(12,"")
+                obj.GetYaxis().SetBinLabel(13,"dRminPfJet")
                 obj.GetYaxis().SetBinLabel(14,"MiniIso")
                 obj.GetYaxis().SetBinLabel(15,"PFid")
                 obj.GetYaxis().SetBinLabel(16,"Ih")
                 obj.GetYaxis().SetBinLabel(17,"ProbXY")
-                obj.GetYaxis().SetBinLabel(18,"ProbQ")
-                obj.GetYaxis().SetBinLabel(19,"MuStat")
-                obj.GetYaxis().SetBinLabel(20,"PhiTOF")
-                obj.GetYaxis().SetBinLabel(21,"EtaTOF")
+                obj.GetYaxis().SetBinLabel(18,"")
+                obj.GetYaxis().SetBinLabel(19,"")
+                obj.GetYaxis().SetBinLabel(20,"")
+                obj.GetYaxis().SetBinLabel(21,"")
                 obj.GetYaxis().SetTitle("")
                 if (keyname2 == "CutFlowPfType"):
                   obj.Scale(1/obj.GetMaximum())
@@ -630,7 +633,7 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
 Mass = f.Get("/analyzer/BaseName/Mass")
 Mass_wPred = f.Get("/analyzer/BaseName/Pred_Mass_CB")
 if Mass_wPred :
-  tex5m = ROOT.TLatex(0.07,0.01,"Code version: "+codeVersion);
+  tex5m = ROOT.TLatex(0.07,0.01,fileVersion)
   tex5m.SetNDC();
   tex5m.SetTextFont(52);
   tex5m.SetTextSize(0.0185);
@@ -752,7 +755,7 @@ if Mass_wPred :
 
   cMass_projY = ROOT.TCanvas('cMass_projY', 'cMass_projY',800,800)
 
-  rp = ROOT.TRatioPlot(Mass_projY,Mass_wPred_projY, "diffsig")
+  rp = ROOT.TRatioPlot(Mass_projY,Mass_wPred_projY, "diffsigerrasym")
 
   rp.SetH1DrawOpt("P");
   rp.SetH2DrawOpt("P");
@@ -804,7 +807,7 @@ if Mass_wPred :
   cMass_projY_log = ROOT.TCanvas('cMass_projY_log', 'cMass_projY_log',800,800)
   cMass_projY_log.SetLogy()
 
-  rp2 = ROOT.TRatioPlot(Mass_projY,Mass_wPred_projY, "diffsig")
+  rp2 = ROOT.TRatioPlot(Mass_projY,Mass_wPred_projY, "diffsigerrasym")
 
   rp2.SetH1DrawOpt("P");
   rp2.SetH2DrawOpt("P");
@@ -854,7 +857,7 @@ if Mass_wPred :
   cMass_projY_log.SaveAs(name)
   
   cMassOrig_projY = ROOT.TCanvas('cMassOrig_projY', 'cMassOrig_projY',800,800)
-  rp0 = ROOT.TRatioPlot(Mass_projY_NotRebinned,Mass_wPred_projY_NotRebinned, "diffsig")
+  rp0 = ROOT.TRatioPlot(Mass_projY_NotRebinned,Mass_wPred_projY_NotRebinned, "diffsigerrasym")
   rp0.Draw()
   rp0.SetH1DrawOpt("P");
   rp0.SetH2DrawOpt("P");

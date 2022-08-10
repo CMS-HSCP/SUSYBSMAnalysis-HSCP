@@ -19,15 +19,14 @@ for fname in os.listdir("crab_projects") :
     datasetList.append("crab_projects/"+fname)
 
 def task(i):
-  print("Download for sample "+i)
-  outTask = "crab out -d "+i+" --checksum=no --jobids 12"
+  outTask = "crab out -d "+i+" --checksum=no --jobids 2"
   os.system(outTask)
   haddTask = "hadd "+i[(i.find('crab_projects'))+14:]+".root "+i[(i.find('crab_projects')):]+"/results/*root"
-#  os.system(haddTask)
+  #os.system(haddTask)
   backgroundPred = "BackgroundPrediction -f "+i[(i.find('crab_projects'))+14:]+".root"
-#  os.system(backgroundPred)
-  print("Done for sample "+i)
+  #os.system(backgroundPred)
 
 for dataset in datasetList:
   t = Thread(target=task, args=(dataset,))
   t.start()
+
