@@ -250,6 +250,7 @@ struct Tuple {
   TH1F* TIsol;
   TH1F* N1_EoP;
   TH1F* N1_SumpTOverpT;
+  TH1F* N1_dRMinPfJet;
   TH1F* Pt;
   TH1F* N1_PtErrOverPt;
   TH1F* I;
@@ -387,7 +388,9 @@ struct Tuple {
   TH2F* BefPreS_CluSpecInCPEVsPixelLayer;
 
   TH1F* BefPreS_dRMinPfJet;
+  TH2F* BefPreS_dRMinPfJetVsIas;
   TH1F* BefPreS_dRMinCaloJet;
+  TH2F* BefPreS_dRMinCaloJetVsIas;
   TH2F* BefPreS_dRVsPtPfJet;
 
   // Post preselection plots
@@ -486,10 +489,12 @@ struct Tuple {
   TH2F* PostPreS_ProbQVsIas;
   TH1F* PostPreS_ProbXY;
   TH2F* PostPreS_ProbXYVsIas;
+  TH2F* PostPreS_ProbXYVsProbQ;
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
   TH1F* PostPreS_ProbXYNoL1;
   TH2F* PostPreS_ProbXYNoL1VsIas;
+  TH2F* PostPreS_ProbXYNoL1VsProbQNoL1;
   TH1F* PostPreS_MassErr;
   TH2F* PostPreS_MassErrVsIas;
 
@@ -588,15 +593,12 @@ struct Tuple {
   TH1F* CutFlowReverse;
   
   TH2F* CutFlowEta;
-  TH2F* CutFlowPfType; 
+  TH2F* CutFlowPfType;
+  TH2F* CutFlowProbQ;
 
   TH3F* PostPreS_IasAllIhVsLayer;
   TH3F* PostPreS_IasPixelIhVsLayer;
   TH3F* PostPreS_IasStripIhVsLayer;
-  TH3F* PostPreS_HighIasPixelL1ProbQVsProbXY;
-  TH3F* PostPreS_LowIasPixelL1ProbQVsProbXY;
-  TH3F* PostPreS_HighIasPixelL2ProbQVsProbXY;
-  TH3F* PostPreS_LowIasPixelL2ProbQVsProbXY;
 
   TH2F* PostPreS_CluProbQVsPixelLayer;
   TH2F* PostPreS_CluProbXYVsPixelLayer;
@@ -606,7 +608,9 @@ struct Tuple {
   TH2F* PostPreS_CluSpecInCPEVsPixelLayer;
 
   TH1F* PostPreS_dRMinPfJet;
+  TH2F* PostPreS_dRMinPfJetVsIas;
   TH1F* PostPreS_dRMinCaloJet;
+  TH2F* PostPreS_dRMinCaloJetVsIas;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
@@ -746,9 +750,9 @@ struct Tuple {
 
   TH2F* H_D_DzSidebands;
 
-  TH2F* BefPreS_GenPtVsdRMinBckg;
+  TH2F* BefPreS_GenPtVsdRMinGen;
   TH1F* BefPreS_GendRMin;
-  TH2F* BefPreS_GenPtVsdRMinBckgPostCut;
+  TH2F* BefPreS_GenPtVsdRMinGenPostCut;
   TH2F* BefPreS_GenPtVsGenMinPt;
   TH2F* BefPreS_GenPtVsRecoPt;
   TH2F* PostPreS_GenPtVsRecoPt;

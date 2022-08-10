@@ -31,8 +31,8 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-#options.register('LUMITOPROCESS', '',
-options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
+options.register('LUMITOPROCESS', '',
+#options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -69,7 +69,7 @@ process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.options   = cms.untracked.PSet(
-      wantSummary = cms.untracked.bool(True),
+      wantSummary = cms.untracked.bool(False),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
@@ -81,6 +81,7 @@ process.source = cms.Source("PoolSource",
 )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
+process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -251,6 +252,7 @@ process.analyzer.DeDxC = C
 process.analyzer.DeDxSF_0 = SF0
 process.analyzer.DeDxSF_1 = SF1
 process.analyzer.GlobalMinIh = C
+process.analyzer.DoTriggering = False
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
@@ -273,5 +275,5 @@ for mod in process.filters_().itervalues():
 
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
-process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
+process.schedule = cms.Schedule(process.HSCPTuplePath) #, process.endjob_step)
 

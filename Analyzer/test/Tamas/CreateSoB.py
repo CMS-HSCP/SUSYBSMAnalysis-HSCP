@@ -6,7 +6,7 @@ parser = OptionParser(usage="Usage: python3 %prog sample.txt")
 
 sampleInFile = sys.argv[1]
 
-backFile = ROOT.TFile.Open("crab_Analysis_2018_AllBackground_wProbQ_CodeV20p8_v1.root")
+backFile = ROOT.TFile.Open("crab_Analysis_2018_AllBackground_woProbQ_CodeV23p8_v1.root")
 
 ROOT.gROOT.SetBatch(True)
 #ROOT.gStyle.SetPalette(1)
@@ -118,8 +118,8 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
                   SoB = Signal/numpy.sqrt(Signal+Background)
                 else :
                   SoB = 0
-#                if ("Dxy" in keyname2) :
-#                  print("For ",x," the S = ",Signal," and B = ",Background, " and the S/sqrt(S+B)",Signal/numpy.sqrt(Signal+Background))
+                if ("Dxy" in keyname2) :
+                  print("For ",x," the S = ",Signal," and B = ",Background, " and the S/sqrt(S+B)",Signal/numpy.sqrt(Signal+Background))
                 
                 SignalOverNoise[index].SetBinContent(histoArray[index].GetXaxis().FindBin(x),SoB)
               SignalOverNoise[index].Scale(1/SignalOverNoise[index].GetMaximum())
