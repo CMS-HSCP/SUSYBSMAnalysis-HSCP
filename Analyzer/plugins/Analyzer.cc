@@ -118,6 +118,7 @@
 // - 26p9: - Dont cut on probXYonTrackNoLayer1, change to 1D template CPE (instead of CR)
 // - 27p0: - Run with new CPE templates
 // - 27p1: - Add new plot to check pt diff for PF and Calo jets, go back to probQ def w specInCPE, cut on dRMinCaloJet > 0.4
+// - 27p2: - dont cut on dRMinCaloJet, high stat version
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1268,9 +1269,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       // TODO debug
 //      if (i>3 ) {
-//        if (Ias < 0.03 && Ias > 0.035) cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i)*265 /  dedxHits->pathlength(i)  << endl;
+//        if (Ias < 0.03 && Ias > 0.025) cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i)*265 /  dedxHits->pathlength(i)  << endl;
 //      } else {
-//        if (Ias < 0.03 && Ias > 0.035) cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i) /  dedxHits->pathlength(i)  << endl;
+//        if (Ias < 0.03 && Ias > 0.025) cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i) /  dedxHits->pathlength(i)  << endl;
 //      }
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
@@ -1722,17 +1723,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           LogPrint(MOD) << "There are zero mothers, track ID" << abs(genCandidateUnderStudy.pdgId()) <<
           " Eta: " << genEta << " Phi: " << genPhi ;
         }
-
-//        cout << "genCandidateUnderStudy.pdgId(): " << genCandidateUnderStudy.pdgId() << endl;
-//        cout << "genCandidateUnderStudy.pt(): " << genCandidateUnderStudy.pt() << endl;
-//        cout << "genCandidateUnderStudy.mother(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->pdgId() << endl;
-//        cout << "genCandidateUnderStudy.mother(0)->pt(): " << genCandidateUnderStudy.mother(0)->pt() << endl;
-//        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pdgId() << endl;
-//        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pt() << endl;
-//        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
-//        cout << "genCandidateUnderStudy.mother(1)->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pdgId() << endl;
-//        cout << "genCandidateUnderStudy.mother(1)->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pt() << endl;
-        
+/*
+        // HSCP muon
+        cout << "genCandidateUnderStudy.pdgId(): " << genCandidateUnderStudy.pdgId() << endl;
+        cout << "genCandidateUnderStudy.pt(): " << genCandidateUnderStudy.pt() << endl;
+        cout << "genCandidateUnderStudy.vx/vy/vz(): " << genCandidateUnderStudy.vx() << "/" << genCandidateUnderStudy.vy() << "/" << genCandidateUnderStudy.vz() << endl;
+        // mother muon
+        cout << "genCandidateUnderStudy.mother(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->pt(): " << genCandidateUnderStudy.mother(0)->pt() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->vx/vy/vz(): " << genCandidateUnderStudy.mother()->vx() << "/" << genCandidateUnderStudy.mother()->vy() << "/" << genCandidateUnderStudy.mother()->vz() << endl;
+        // photon
+        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pt() << endl;
+        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
+        // neutrino 
+        cout << "genCandidateUnderStudy.mother()->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother()->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pt() << endl;
+        // kaon
+        cout << "genCandidateUnderStudy.mother()->mother()->pdgId(): " << genCandidateUnderStudy.mother()->mother()->pdgId() << endl;
+        cout << "genCandidateUnderStudy.mother()->mother()->vx/vy/vz(): " << genCandidateUnderStudy.mother()->mother()->vx() << "/" << genCandidateUnderStudy.mother()->mother()->vy() << "/" << genCandidateUnderStudy.mother()->mother()->vz() << endl;
+*/        
           // Loop through all the mothers of the gen particle
         for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
           if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
@@ -2024,7 +2034,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
             pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
-            if (Ias < 0.03 && Ias > 0.035) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
+            if (Ias < 0.03 && Ias > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
           }
           if (tuple) {
             tuple->PostPreS_IasPixelIhVsLayer->Fill(Ias, IhOnLayer, pixLayerIndex-0.5, EventWeight_);
@@ -2036,19 +2046,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             unsigned int stripLayerIndex = 0;
             if (detid.subdetId() == StripSubdetector::TIB) {
               stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
-              if (Ias < 0.03 && Ias > 0.035) cout << "Strips TIB L" << abs(int(tTopo->tibLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
+              if (Ias < 0.03 && Ias > 0.025) cout << "Strips TIB L" << abs(int(tTopo->tibLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
             }
             if (detid.subdetId() == StripSubdetector::TOB) {
               stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
-              if (Ias < 0.03 && Ias > 0.035) cout << "Strips TOB L" << abs(int(tTopo->tobLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
+              if (Ias < 0.03 && Ias > 0.025) cout << "Strips TOB L" << abs(int(tTopo->tobLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
             }
             else if (detid.subdetId() == StripSubdetector::TID) {
               stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
-              if (Ias < 0.03 && Ias > 0.035) cout << "Strips TID D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
+              if (Ias < 0.03 && Ias > 0.025) cout << "Strips TID D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
             }
             else if (detid.subdetId() == StripSubdetector::TEC) {
               stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-              if (Ias < 0.03 && Ias > 0.035) cout << "Strips TEC D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
+              if (Ias < 0.03 && Ias > 0.025) cout << "Strips TEC D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << " e/um"  << endl;
             }
 
             if (tuple) {
@@ -3172,8 +3182,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[11] = (true) ? true : false;
   //passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-//  passedCutsArray[12] = (true) ? true : false;
-  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
+  passedCutsArray[12] = (true) ? true : false;
+//  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
