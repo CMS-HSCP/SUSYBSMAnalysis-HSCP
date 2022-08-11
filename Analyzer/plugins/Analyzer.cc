@@ -119,6 +119,7 @@
 // - 27p0: - Run with new CPE templates
 // - 27p1: - Add new plot to check pt diff for PF and Calo jets, go back to probQ def w specInCPE, cut on dRMinCaloJet > 0.4
 // - 27p2: - dont cut on dRMinCaloJet, high stat version
+// - 27p3: - cut on probXY > 0.01, high stat version
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1341,20 +1342,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         
         // Some printouts to compair with PixelAV
-        bool wasAtL2Already = false;
         if (debug_> 3) {
           if ((detid.subdetId() == PixelSubdetector::PixelBarrel)) {
-            if (wasAtL2Already) {
-              LogPrint(MOD) << "This is a problem we have two hits from a high pT track on L2";
-            }
-            wasAtL2Already = true;
             // 0.31623 [Bichsel's smallest entry]
             if (isSignal && genGammaBeta > 0.31623) {
               LogPrint(MOD) << "LayerID/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: L"
               << tTopo->pxbLayer(detid) << " / " << genGammaBeta << " / " << isFlippedModule << " / "
               << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-              // LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
-              // << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
+               LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
+               << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
             } else if (isSignal && genGammaBeta <= 0.31623)  {
               LogPrint(MOD) << "BetaGamma is too low for Bischel";
             }
@@ -1362,8 +1358,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               LogPrint(MOD) << "LayerID/closestGenId/genGammaBeta/isFlippedModule/cotAlpha/cotBeta/momentum/clustSizeX/clustSizeY/clustCharge: L"
               << tTopo->pxbLayer(detid) << " / " << closestGenId << " / " << genGammaBeta << " / " << isFlippedModule << " / "
               << cotAlpha << " / " << cotBeta << " / " << momentum<< " / " << clustSizeX << " / " << clustSizeY << " / " << clustCharge;
-              // LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
-              // << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
+               LogPrint(MOD) << "isOnEdge/hasBadPixels/spansTwoROCs/ProbXY: "
+               << isOnEdge  << " / " << hasBadPixels  << " / " << spansTwoROCs << " / " << probXY;
             }
           }
         }
@@ -1807,7 +1803,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           std::cout << std::endl;
         }
+        
+        // TODO come back here
+        float candidateEta = genCandidateUnderStudy.eta();
+        float candidatePhi = genCandidateUnderStudy.phi();
+        
+        cout << "ID , distance, pt and status from the canidate particle: " << endl;
+        for (unsigned int g = 0; g < genColl.size(); g++) {
+          float status = genColl[g].status();
+          float pt = genColl[g].pt();
+          float ID = genColl[g].pdgId();
+          
+          float muonDr = deltaR(genColl[g].eta(), genColl[g].phi(), candidateEta, candidatePhi);
+          
+          if (muonDr > 0.1) continue;
 
+          cout << "ID = " << ID;
+          std::cout << " | dR = " << muonDr << " | pt =  " << pt <<  " | status = " <<  status << ", " << endl;
+        }
+  
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
         if (!motherFound) {
           LogPrint(MOD) << "      >> BckgMCPostPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
@@ -1884,17 +1898,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (genColl[g].pt() < 5) {
           continue;
         }
+        
+        float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
+
+        if (debug_> 7 && dr < 0.05) {
+          std::cout << "      >> " << abs(genColl[g].pdgId()) ;
+          std::cout << " (dR = " << dr << ", pT = " << genColl[g].pt() << ", status = " << genColl[g].status() << ") , ";
+        }
+        
+        // for the rest dont consider non-status 1 particles
         if (genColl[g].status() != 1) {
           continue;
         }
-        float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
+        
         float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
         tuple->PostPreS_ProbQVsGenEnviromentID->Fill(pixelProbs[0], abs(genColl[g].pdgId()), EventWeight_);
         tuple->PostPreS_IasVsGenEnviromentID->Fill(Ias, abs(genColl[g].pdgId()), EventWeight_);
-        if (debug_> 7) {
-          std::cout << "      >> " << abs(genColl[g].pdgId()) ;
-          std::cout << " (dR = " << dr << ", pT = " << genColl[g].pt() << ") , ";
-        }
       }
       if (debug_> 7) {
         std::cout << std::endl;
@@ -2570,7 +2589,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
-  desc.addUntracked("GlobalMinTOF",1.0)->setComment("A");
   desc.addUntracked("SkipPixel",true)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
@@ -2601,7 +2619,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinFOVH",0.9)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
-  desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P)");
+  desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
@@ -2610,15 +2628,15 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
-  desc.addUntracked("GlobalMinTrackProbXYCut",0.1)->setComment("Min cut for probXY, 0.0 means no cuts applied");
+  desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Ias,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
   desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMinNDOFDT",6.0)->setComment("Cut on number of DT DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMaxTOFErr",0.15)->setComment("Cut on error on muon TOF measurement");
-  desc.addUntracked("globalMinTOF_",1.0)->setComment("Cut on minimal TOF");
-
+  desc.addUntracked("GlobalMinTOF",1.0)->setComment("Cut on the min time-of-flight");
+  
  descriptions.add("HSCParticleAnalyzer",desc);
 }
 
@@ -3192,10 +3210,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-  passedCutsArray[16] = ( true ) ? true : false;
+//  passedCutsArray[16] = ( true ) ? true : false;
   //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
-//  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
   // Cut away background events based on the probQ
 //  passedCutsArray[17] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
 //  // TOF only cuts
