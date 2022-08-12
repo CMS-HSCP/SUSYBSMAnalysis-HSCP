@@ -855,6 +855,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluProbQVsPixelLayer->Sumw2();
   tuple->BefPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
   tuple->BefPreS_CluProbXYVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluNormChargeVsPixelLayer = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer",";CluNormCharge;Layer",1000,0.,4000000.,4,0.,4.);
+  tuple->BefPreS_CluNormChargeVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma",";CluNormCharge;Layer",1000,0.,4000000.,4,0.,4.);
+  tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Sumw2();
   tuple->BefPreS_CluSizeVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeVsPixelLayer",";CluSize;Layer",10,0.,10.,4,0.,4.);
   tuple->BefPreS_CluSizeVsPixelLayer->Sumw2();
   tuple->BefPreS_CluSizeXVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeXVsPixelLayer",";CluSizeX;Layer",10,0.,10.,4,0.,4.);
@@ -863,6 +867,19 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->BefPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("BefPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",4,0.,4.,4,0.,4.);
   tuple->BefPreS_CluSpecInCPEVsPixelLayer->Sumw2();
+
+  tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY = dir.make<TH2F>("BefPreS_CluCotBetaVsPixelLayer_lowProbXY",";CotBeta;Layer",200,-10.,10.,4,0.,4.);
+  tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Sumw2();
+  tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY = dir.make<TH2F>("BefPreS_CluCotAlphaVsPixelLayer_lowProbXY",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
+  tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Sumw2();
+  tuple->BefPreS_CluCotBetaVsPixelLayer = dir.make<TH2F>("BefPreS_CluCotBetaVsPixelLayer",";CotBeta;Layer",200,-10.,10.,4,0.,4.);
+  tuple->BefPreS_CluCotBetaVsPixelLayer->Sumw2();
+  tuple->BefPreS_CluCotAlphaVsPixelLayer = dir.make<TH2F>("BefPreS_CluCotAlphaVsPixelLayer",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
+  tuple->BefPreS_CluCotAlphaVsPixelLayer->Sumw2();
+
+  tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",1000,0.,4000000.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Sumw2();
+
   tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->BefPreS_dRMinPfJet->Sumw2();
   tuple->BefPreS_dRMinPfJetVsIas =  dir.make<TH2F>("BefPreS_dRMinPfJetVsIas",";dRMinPfJet;Ias",100,0.,1.5,10,0.,1.);
@@ -1425,6 +1442,29 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluSizeYVsPixelLayer->Sumw2();
   tuple->PostPreS_CluSpecInCPEVsPixelLayer = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer",";CluSpecInCPE;Layer",4,0.,4.,4,0.,4.);
   tuple->PostPreS_CluSpecInCPEVsPixelLayer->Sumw2();
+
+  tuple->PostPreS_CluProbQVsPixelLayer_highIas = dir.make<TH2F>("PostPreS_CluProbQVsPixelLayer_highIas",";CluProbQ;Layer",20,0.,1.,4,0.,4.);
+  tuple->PostPreS_CluProbQVsPixelLayer_highIas->Sumw2();
+  tuple->PostPreS_CluProbXYVsPixelLayer_highIas = dir.make<TH2F>("PostPreS_CluProbXYVsPixelLayer_highIas",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
+  tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Sumw2();
+  tuple->PostPreS_CluSizeVsPixelLayer_highIas = dir.make<TH2F>("PostPreS_CluSizeVsPixelLayer_highIas",";CluSize;Layer",10,0.,10.,4,0.,4.);
+  tuple->PostPreS_CluSizeVsPixelLayer_highIas->Sumw2();
+  tuple->PostPreS_CluSizeXVsPixelLayer_highIas = dir.make<TH2F>("PostPreS_CluSizeXVsPixelLayer_highIas",";CluSizeX;Layer",10,0.,10.,4,0.,4.);
+  tuple->PostPreS_CluSizeXVsPixelLayer_highIas->Sumw2();
+  tuple->PostPreS_CluSizeYVsPixelLayer_highIas = dir.make<TH2F>("PostPreS_CluSizeYVsPixelLayer_highIas",";CluSizeY;Layer",10,0.,10.,4,0.,4.);
+  tuple->PostPreS_CluSizeYVsPixelLayer_highIas->Sumw2();
+  tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas = dir.make<TH2F>("PostPreS_CluSpecInCPEVsPixelLayer_highIas",";CluSpecInCPE;Layer",4,0.,4.,4,0.,4.);
+  tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Sumw2();
+
+  tuple->PostPreS_CluCotBetaVsPixelLayer_lowProbXY = dir.make<TH2F>("PostPreS_CluCotBetaVsPixelLayer_lowProbXY",";CotBeta;Layer",200,-10.,10.,4,0.,4.);
+  tuple->PostPreS_CluCotBetaVsPixelLayer_lowProbXY->Sumw2();
+  tuple->PostPreS_CluCotAlphaVsPixelLayer_lowProbXY = dir.make<TH2F>("PostPreS_CluCotAlphaVsPixelLayer_lowProbXY",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
+  tuple->PostPreS_CluCotAlphaVsPixelLayer_lowProbXY->Sumw2();
+  tuple->PostPreS_CluCotBetaVsPixelLayer = dir.make<TH2F>("PostPreS_CluCotBetaVsPixelLayer",";CotBeta;Layer",200,-10.,10.,4,0.,4.);
+  tuple->PostPreS_CluCotBetaVsPixelLayer->Sumw2();
+  tuple->PostPreS_CluCotAlphaVsPixelLayer = dir.make<TH2F>("PostPreS_CluCotAlphaVsPixelLayer",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
+  tuple->PostPreS_CluCotAlphaVsPixelLayer->Sumw2();
+
   tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->PostPreS_dRMinPfJet->Sumw2();
   tuple->PostPreS_dRMinPfJetVsIas = dir.make<TH2F>("PostPreS_dRMinPfJetVsIas", ";dRMinPfJet;Ias",100,0.,1.5,10,0.,1.);

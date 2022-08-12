@@ -121,6 +121,7 @@
 // - 27p2: - dont cut on dRMinCaloJet, high stat version
 // - 27p3: - cut on probXY > 0.01, high stat version
 // - 27p4: - ProbXY plots when Ias > 0.6
+// - 27p5: - CluProbXY plots when Ias > 0.6, local angle plots when probXY less/more than minCut, lowBetaGamma plots for pixels and strips
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1319,6 +1320,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
         auto clustCharge = pixelCluster->charge();
+        auto pixelNormCharge = dedxHits->charge(i) / dedxHits->pathlength(i);
         
         float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
         float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
@@ -1329,8 +1331,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
           tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
+          tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex-0.5, EventWeight_);
           tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
           tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
+          
           tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
           if (isOnEdge) {
             tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
@@ -1340,6 +1344,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
           }
           tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
+          
+          if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
+            tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+          } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
+            tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+          }
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+            tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex-0.5, EventWeight_);
+          }
+          
         }
         
         // Some printouts to compair with PixelAV
@@ -1423,6 +1439,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         clust_nstrip.push_back(ampl.size());
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
+        
+        float stripNormCharge = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
+        if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+          tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, i-3.5, EventWeight_);
+        }
         
         
         if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < theFMIPX_)
@@ -1950,14 +1971,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        auto cotAlpha = lv.x()/lv.z();
+        auto cotBeta = lv.y()/lv.z();
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
         
+        bool specInCPE = false;
+        (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
+        
         float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
         
         // TODO come back to this and double the plots for highIas
-        if ( detid.subdetId() == PixelSubdetector::PixelBarrel && Ias > 0.6) {
+        if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           
           if (debugProbQvsProbQNoL1 && debug_ > 9) {
@@ -1976,6 +2002,30 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
           }
           tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
+          if (Ias > 0.6) {
+            tuple->PostPreS_CluProbQVsPixelLayer_highIas->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSizeVsPixelLayer_highIas->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSizeXVsPixelLayer_highIas->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSizeYVsPixelLayer_highIas->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
+            if (isOnEdge) {
+              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
+            } else if (hasBadPixels) {
+              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(1.5, pixLayerIndex-0.5, EventWeight_);
+            } else if (spansTwoROCs) {
+              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
+            }
+            tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
+          }
+
+          if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
+            tuple->PostPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+          } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
+            tuple->PostPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+          }
+          
         }
       }
     }
@@ -2042,6 +2092,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool PassNonTrivialSelection = false;
 
     float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
+    
+    if (Ias < 0.03 && Ias > 0.025) {
+      cout <<  " Ias: " << Ias << " LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event() << endl;
+    }
 
     // Loop through the rechits on the given track in the preselection function
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
