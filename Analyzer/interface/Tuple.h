@@ -61,6 +61,8 @@ struct Tuple {
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
   std::vector<bool> Tree_passPreselection;
   std::vector<bool> Tree_passSelection;
+  std::vector<bool> Tree_isPFMuon;
+  std::vector<bool> Tree_PFMuonPt;
   std::vector<float> Tree_Charge;
   std::vector<float> Tree_Pt;
   std::vector<float> Tree_PtErr;

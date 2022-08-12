@@ -736,6 +736,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<bool> HSCP_passPreselection_noIsolation_noIh;
   std::vector<bool> HSCP_passPreselection;
   std::vector<bool> HSCP_passSelection;
+  std::vector<bool> HSCP_isPFMuon;
+  std::vector<bool> HSCP_PFMuonPt;
   std::vector<float> HSCP_Charge;
   std::vector<float> HSCP_Pt;
   std::vector<float> HSCP_PtErr;
@@ -1111,6 +1113,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     int pf_muon_selector = -1;
     float pf_ecal_energy = 0, pf_hcal_energy = 0;
 
+    bool hscp_is_muon = false;
+    float hscp_pfmuon_pt = 0;
+
     if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
       const reco::PFCandidateCollection* pf = pfCandHandle.product();
       for (unsigned int i = 0; i < pf->size(); i++){
@@ -1121,6 +1126,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               idx_pf_RMin = i;
            }
        }//end loop PFCandidates
+      const reco::PFCandidate* pfCandHscp = &(*pf)[idx_pf_RMin];
+      if(pfCandHscp->translatePdgIdToType(pfCandHscp->pdgId()) == reco::PFCandidate::ParticleType::mu) {
+          hscp_is_muon = true;
+          hscp_pfmuon_pt = pfCandHscp->p4().pt();
+      }
 
       // https://github.com/cms-sw/cmssw/blob/72d0fc00976da53d1fb745eb7f37b2a4ad965d7e/
       // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
@@ -1199,7 +1209,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
-
+  //minimal selection
+    if(!hscp_is_muon) continue;
 
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
@@ -2024,6 +2035,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_passPreselection_noIsolation_noIh.push_back(passPre_noIh_noIso);
     HSCP_passPreselection.push_back(passPre);
     HSCP_passSelection.push_back(PassNonTrivialSelection);
+    HSCP_isPFMuon.push_back(hscp_is_muon);
+    HSCP_PFMuonPt.push_back(hscp_pfmuon_pt);
     HSCP_Charge.push_back(track->charge());
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
@@ -2169,6 +2182,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_passPreselection_noIsolation_noIh,
                                 HSCP_passPreselection,
                                 HSCP_passSelection,
+                                HSCP_isPFMuon,
+                                HSCP_PFMuonPt,
                                 HSCP_Charge,
                                 HSCP_Pt,
                                 HSCP_PtErr,
@@ -2437,7 +2452,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
-  desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
+  desc.addUntracked("GlobalMinNOPH",10)->setComment("Cut on number of (valid) track pixel hits");
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits");
   desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
@@ -2733,6 +2748,21 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                   << " -- this should never happen as there was a check before";
     return false;
   }
+  //===================== Handle For PFJet ===================
+  const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
+
+  bool vetoJet = false;
+
+  if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
+    const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
+    for (unsigned int i = 0; i < pfJetColl->size(); i++) {
+      const reco::PFJet* jet = &(*pfJetColl)[i];
+      if(jet->pt()<30) continue;
+      float dr = deltaR(jet->eta(),jet->phi(),track->eta(),track->phi());
+      if(dr<0.3) vetoJet=true;
+    }
+  }
+  
   
   // This is a repeated code here
   int highestPtGoodVertex = -1;
@@ -2806,7 +2836,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_pfType->Fill(0.5, EventWeight_);
   }
   
-  
+  float isoTK_PVconstrain_dr03 = 0.;
+ 
+
   if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
     const reco::PFCandidateCollection* pf = pfCandHandle.product();
     for (unsigned int i = 0; i < pf->size(); i++){
@@ -2856,6 +2888,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
       float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
       bool fromPV = (fabs(dz) < 0.1);
+
+      if(fromPV && dr<0.3) isoTK_PVconstrain_dr03 += pfCand->p4().pt();
 
       float pt = pfCand->p4().pt();
       float drForMiniIso = 0.0;
@@ -2945,7 +2979,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Preselection cuts
   bool passedCutsArray[21];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
-  
+ 
+  //WIP Minimal selection 
+
   // No cut, i.e. events after trigger
   passedCutsArray[0]  = true;
   // Check if eta is inside the max eta cut
@@ -2953,7 +2989,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on number of matched muon stations
   passedCutsArray[2]  = (track->pt() > globalMinPt_) ? true : false;
   // Check the number of pixel hits
-  passedCutsArray[3]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+  //passedCutsArray[3]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+  passedCutsArray[3]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidHits()) > globalMinNOPH_) ? true : false;
   // Check the min fraction of valid hits
   passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits
@@ -2963,7 +3000,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the chi2 / ndof
   passedCutsArray[7] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-  passedCutsArray[8] = (EoP < globalMaxEoP_) ? true : false;
+  //passedCutsArray[8] = (EoP < globalMaxEoP_) ? true : false;
+  passedCutsArray[8] = (numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits())) > 0.7 ? true : false;
   // Cut on the impact parameter
   // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
@@ -2975,18 +3013,22 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
   passedCutsArray[12] = (!isMaterialTrack) ? true : false;
-//  passedCutsArray[13] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
+  passedCutsArray[13] = ( isoTK_PVconstrain_dr03 < 15) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
+  //passedCutsArray[13] = ( miniRelIsoAll < globalMiniRelIsoAll_) ? true : false;
   // Cut on the PF electron ID
   passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
   // Cut away background events based on the probXY
-  passedCutsArray[16] = ((probXYonTrackNoLayer1 > 0.01 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+  //passedCutsArray[16] = ((probXYonTrackNoLayer1 > 0.01 && probXYonTrackNoLayer1 < 1.0))  ? true : false;
+  // Veto on jets with pT>30 GeV in a size cone dR<0.3 
+  passedCutsArray[16] = vetoJet;
   // Cut away background events based on the probQ
-  passedCutsArray[17] = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  //passedCutsArray[17] = (probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
+  // Max value on momentum at 3 TeV 
+  passedCutsArray[17] = track->p()<3000 ? true : false;
   //passedCutsArray[17]  = (probQonTrack < trackProbQCut_ || probQonTrackNoLayer1 < trackProbQCut_) ? true : false;
   // TOF only cuts
   passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;

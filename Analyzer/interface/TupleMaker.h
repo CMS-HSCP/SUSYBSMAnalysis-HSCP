@@ -81,6 +81,8 @@ public:
                         const std::vector<bool> &passPreselection_noIsolation_noIh,
                         const std::vector<bool> &passPreselection,
                         const std::vector<bool> &passSelection,
+                        const std::vector<bool> &isPFMuon,
+                        const std::vector<bool> &PFMuonPt,
                         const std::vector<float> &Charge,
                         const std::vector<float> &Pt,
                         const std::vector<float> &PtErr,
@@ -1928,6 +1930,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("passPreselection", &tuple->Tree_passPreselection);
       tuple->Tree->Branch("passSelection", &tuple->Tree_passSelection);
     }
+    tuple->Tree->Branch("isPFMuon", &tuple->Tree_isPFMuon);
+    tuple->Tree->Branch("PFMuonPt", &tuple->Tree_PFMuonPt);
     tuple->Tree->Branch("Charge", &tuple->Tree_Charge);
     tuple->Tree->Branch("Pt", &tuple->Tree_Pt);
     tuple->Tree->Branch("PtErr", &tuple->Tree_PtErr);
@@ -2130,6 +2134,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<bool> &passPreselection_noIsolation_noIh,
                                   const std::vector<bool> &passPreselection,
                                   const std::vector<bool> &passSelection,
+                                  const std::vector<bool> &isPFMuon,
+                                  const std::vector<bool> &PFMuonPt,
                                   const std::vector<float> &Charge,
                                   const std::vector<float> &Pt,
                                   const std::vector<float> &PtErr,
@@ -2270,6 +2276,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
   tuple->Tree_passPreselection = passPreselection;
   tuple->Tree_passSelection = passSelection;
+  tuple->Tree_isPFMuon = isPFMuon;
+  tuple->Tree_PFMuonPt = PFMuonPt;
   tuple->Tree_Charge = Charge;
   tuple->Tree_Pt = Pt;
   tuple->Tree_PtErr = PtErr;
