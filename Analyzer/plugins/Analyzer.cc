@@ -127,6 +127,9 @@
 // v25 Dylan
 // - add EoP in the ntuple
 // - add jets info in the ntuple
+// v27 Dylan
+// - minimal preselection
+// - add N-1 plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -174,6 +177,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       period_(iConfig.getUntrackedParameter<string>("Period")),
       skipSelectionPlot_(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot")),
       ptHistoUpperBound_(iConfig.getUntrackedParameter<double>("PtHistoUpperBound")),
+      pHistoUpperBound_(iConfig.getUntrackedParameter<double>("PHistoUpperBound")),
       massHistoUpperBound_(iConfig.getUntrackedParameter<double>("MassHistoUpperBound")),
       massNBins_(iConfig.getUntrackedParameter<int>("MassNBins")),
       cutOnIPbound_(iConfig.getUntrackedParameter<double>("IPbound")),
@@ -188,8 +192,11 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       numDzRegions_(iConfig.getUntrackedParameter<int>("DzRegions")),
       globalMaxEta_(iConfig.getUntrackedParameter<double>("GlobalMaxEta")),
       globalMinPt_(iConfig.getUntrackedParameter<double>("GlobalMinPt")),
+      globalMaxP_(iConfig.getUntrackedParameter<double>("GlobalMaxP")),
       globalMinNOPH_(iConfig.getUntrackedParameter<int>("GlobalMinNOPH")),
+      globalMinNOH_(iConfig.getUntrackedParameter<int>("GlobalMinNOH")),
       globalMinFOVH_(iConfig.getUntrackedParameter<double>("GlobalMinFOVH")),
+      globalMinFOVM_(iConfig.getUntrackedParameter<double>("GlobalMinFOVM")),
       globalMinNOM_(iConfig.getUntrackedParameter<int>("GlobalMinNOM")),
       globalMaxChi2_(iConfig.getUntrackedParameter<double>("GlobalMaxChi2")),
       globalMaxEoP_(iConfig.getUntrackedParameter<double>("GlobalMaxEoP")),
@@ -2552,6 +2559,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
+  desc.addUntracked("PHistoUpperBound",10000.0)->setComment("A");
   desc.addUntracked("MassHistoUpperBound",4000.0)->setComment("A");
   desc.addUntracked("MassNBins",400)->setComment("Number of bins in the mass plot");
   desc.addUntracked("IPbound",1.0)
@@ -2594,11 +2602,14 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
+  desc.addUntracked("GlobalMaxP",3000.0)->setComment("Cut on p    at PRE-SELECTION");
   desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
+  desc.addUntracked("GlobalMinNOH",10)->setComment("Cut on number of (valid) track hits");
   desc.addUntracked("GlobalMinFOVH",0.9)->setComment("Cut on fraction of valid track hits");
+  desc.addUntracked("GlobalMinFOVM",0.7)->setComment("Cut on fraction of valid measurements");
   desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
-  desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P)");
+  desc.addUntracked("GlobalMaxEoP",9999.)->setComment("Cut on calorimeter isolation (E/P)");
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
@@ -2894,7 +2905,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     return false;
   }
 
-  bool vetoJet = false;
+/*  bool vetoJet = false;
 
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
     const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
@@ -2905,7 +2916,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if(dr<0.3) vetoJet=true;
     }
   }
-  
+*/
   
   // This is a repeated code here
   int highestPtGoodVertex = -1;
@@ -3148,7 +3159,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[17];
+  bool passedCutsArray[19];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
  
   //WIP Minimal selection 
@@ -3157,45 +3168,50 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[0]  = true;
   // Check if eta is inside the max eta cut
   passedCutsArray[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
-  // Cut on number of matched muon stations
+  // Cut on transverse momentum
   passedCutsArray[2]  = (track->pt() > globalMinPt_) ? true : false;
+  // Cut on maximal momentum
+  passedCutsArray[3]  = (track->p() < globalMaxP_) ? true : false;
   // Check the number of pixel hits
-  //passedCutsArray[3]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
-  passedCutsArray[3]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidHits()) > globalMinNOPH_) ? true : false;
+  passedCutsArray[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
+  // Check the number of hits 
+  passedCutsArray[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidHits()) > globalMinNOH_) ? true : false;
   // Check the min fraction of valid hits
-  passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+  passedCutsArray[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+  // Check the min fraction of valid measurements
+  passedCutsArray[7] = (numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits()) > globalMinFOVM_) ? true : false;
   // Cut for the number of dEdx hits
-  passedCutsArray[5]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+  passedCutsArray[8]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // Select only high purity tracks
-  passedCutsArray[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+  passedCutsArray[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof
-  passedCutsArray[7] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
+  passedCutsArray[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
   // Cut on the energy over momenta
-  //passedCutsArray[8] = (EoP < globalMaxEoP_) ? true : false;
-  passedCutsArray[8] = (numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits())) > 0.7 ? true : false;
+  passedCutsArray[11] = (EoP < globalMaxEoP_) ? true : false;
   // Cut on the impact parameter
   // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-  passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+  passedCutsArray[12] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
                         || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
   // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-  passedCutsArray[10] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+  passedCutsArray[13] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
-  passedCutsArray[11] = (true) ? true : false;
-  //passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
-  // Cut on the tracker based isolation
-  passedCutsArray[12] = (true) ? true : false;
-//  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
+  //passedCutsArray[14] = (true) ? true : false;
+  passedCutsArray[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+  // Veto on jet with pT > 30 GeV in a cone of dR=0.3
+  //passedCutsArray[12] = (true) ? true : false;
+  //passedCutsArray[15] = ( vetoJet ) ? false : true;
+  passedCutsArray[15] = ( dRMinPfJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
-  //passedCutsArray[13] = ( isoTK_PVconstrain_dr03 < 15) ? true : false;
+  //passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  // Cut on the tracker based isolation
+  passedCutsArray[16] = ( isoTK_PVconstrain_dr03 < globalMaxTIsol_) ? true : false;
   // Cut on the PF electron ID
-  passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
+  passedCutsArray[17] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
-  passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
+  passedCutsArray[18] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-  passedCutsArray[16] = ( vetoJet ) ? false : true;
   //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
 
@@ -3207,8 +3223,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
 //  passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
 //
- // passedCutsArray[16] = vetoJet;
- // passedCutsArray[17] = track->p()<3000 ? true : false;
   
   // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
@@ -3254,9 +3268,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> Trigger passed!";
     LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
     LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
+    LogPrint(MOD) << "        >>   track->p()  " <<   track->p() ;
     LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
     LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
+    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidHits()  " <<   track->hitPattern().numberOfValidHits() ;
     LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
+    LogPrint(MOD) << "        >>   numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits())  " <<   numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits()) ;
     LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
     LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
     LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
@@ -3266,6 +3283,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
     LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
     LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
+    LogPrint(MOD) << "        >>   isoTK_PVconstrain_dr03   " <<   isoTK_PVconstrain_dr03  ;
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
     LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
@@ -3517,7 +3535,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
   }
 
-  
   // N-1 plots
   if (tuple) {
     for (size_t i=1;i<sizeof(passedCutsArray);i++) {
@@ -3533,21 +3550,23 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if (allOtherCutsPassed) {
         if (i==1)  { tuple->N1_Eta->Fill(track->eta(), Event_Weight); };
         if (i==2)  { tuple->N1_Pt->Fill(track->pt(), Event_Weight); };
-        if (i==3)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
-        if (i==4)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
-        if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
-        if (i==6)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
-        if (i==7)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
-        if (i==8) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
-        if (i==9) { tuple->N1_Dz->Fill(dz, Event_Weight); };
-        if (i==10) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
-        if (i==11) {
-          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
-          tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
-        };
-        if (i==12) { tuple->N1_dRMinPfJet->Fill(dRMinPfJet, Event_Weight); };
-        if (i==13) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
-        if (i==14) {
+        if (i==3)  { tuple->N1_P->Fill(track->p(), Event_Weight); };
+        if (i==4)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
+        if (i==5)  { tuple->N1_TNOH->Fill(track->hitPattern().numberOfValidHits()-.5, Event_Weight); };
+        if (i==6)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
+        if (i==7)  { tuple->N1_TNOMFraction->Fill(numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits()), Event_Weight); };
+        if (i==8)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
+        if (i==9)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
+        if (i==10)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
+        if (i==11) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
+        if (i==12) { tuple->N1_Dz->Fill(dz, Event_Weight); };
+        if (i==13) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
+        if (i==14) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
+        if (i==15) { tuple->N1_dRMinPfJet->Fill(dRMinPfJet, Event_Weight); };
+        if (i==16) { tuple->TIsol->Fill(isoTK_PVconstrain_dr03, Event_Weight); };
+        //if (i==16) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
+        //if (i==1) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
+        if (i==17) {
           tuple->N1_pfType->Fill(0.5, EventWeight_);
           if (pf_isPfTrack) {
             tuple->N1_pfType->Fill(1.5, EventWeight_);
@@ -3568,7 +3587,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->N1_pfType->Fill(7.5, EventWeight_);
           }
         }
-        if (i==15) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
+        if (i==18) { tuple->N1_Ih->Fill(Ih, Event_Weight); };
 //        if (i==16)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
 //        if (i==17) {
 //          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);

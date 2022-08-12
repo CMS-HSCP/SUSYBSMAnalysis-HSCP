@@ -6,9 +6,9 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
-#"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
+"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
 #"/MET/Run2017C-09Aug2019_UL2017_rsb-v1/AOD",
-"/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
+#"/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
 #"/MET/Run2018C-15Feb2022_UL2018-v1/AOD",
 ]
 
@@ -45,12 +45,12 @@ config.Data.splitting = 'LumiBased'
 config.Data.unitsPerJob = 50
 config.Data.publication = True
 config.Data.outputDatasetTag = config.General.requestName
-config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
+config.Data.outLFNDirBase = '/store/user/dapparu/HSCP/Analysis/CMSSW_10_6_27'
 config.Data.ignoreLocality = True
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
-config.Site.storageSite = 'T2_HU_Budapest'
+config.Site.storageSite = 'T2_FR_IPHC'
 #config.Site.storageSite = 'T3_US_FNALLPC'
   '''
 

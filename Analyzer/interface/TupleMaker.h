@@ -289,8 +289,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_TNOM = dir.make<TH1F>("N1_TNOM", "N1_TNOM;Number of measurments", 40, 0, 40);
   Name = "N1_TNOPH";
   tuple->N1_TNOPH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 8, 0, 8);
+  Name = "N1_TNOH";
+  tuple->N1_TNOH = dir.make<TH1F>(Name.c_str(), Name.c_str(), 30, 0, 30);
   Name = "N1_TNOHFraction";
   tuple->N1_TNOHFraction = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 1);
+  Name = "N1_TNOMFraction";
+  tuple->N1_TNOMFraction = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 1);
   Name = "nDof";
   tuple->nDof = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 40);
   Name = "tofError";
@@ -305,6 +309,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_SumpTOverpT = dir.make<TH1F>(Name.c_str(), Name.c_str(), 80, 0, 2);
   Name = "N1_Pt";
   tuple->N1_Pt = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
+  Name = "N1_P";
+  tuple->N1_P = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, 10000);
   Name = "N1_Ih";
   tuple->N1_Ih = dir.make<TH1F>(Name.c_str(), Name.c_str(), 200, 0, dEdxM_UpLim);
   Name = "MTOF";

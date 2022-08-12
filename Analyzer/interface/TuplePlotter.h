@@ -49,10 +49,14 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->N1_Qual = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_TNOPH";
   tuple->N1_TNOPH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_TNOH";
+  tuple->N1_TNOH = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_TNOM";
   tuple->N1_TNOM = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_TNOHFraction";
   tuple->N1_TNOHFraction = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_TNOMFraction";
+  tuple->N1_TNOMFraction = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "nDof";
   tuple->nDof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -68,6 +72,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->N1_SumpTOverpT = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_Pt";
   tuple->N1_Pt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
+  Name = "N1_P";
+  tuple->N1_P = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_Ih";
   tuple->N1_Ih = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_MiniRelIsoAll";

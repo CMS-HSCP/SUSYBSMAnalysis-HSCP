@@ -275,6 +275,7 @@ private:
 
   // binning for the pT, mass, IP distributions
   float ptHistoUpperBound_ = 4000;
+  float pHistoUpperBound_ = 10000;
   float massHistoUpperBound_ = 4000;
   unsigned int massNBins_ = 400;
   float cutOnIPbound_ = 1.0;
@@ -306,9 +307,11 @@ private:
   float minSegEtaSep = 0.1;  //Minimum eta separation between SA track and muon segment on opposite side of detector
 
   // Thresholds for candidate preselection
-  float globalMaxEta_, globalMinPt_;
+  float globalMaxEta_, globalMinPt_, globalMaxP_;
   unsigned int globalMinNOPH_;
+  unsigned int globalMinNOH_;
   float globalMinFOVH_;
+  float globalMinFOVM_;
   unsigned int globalMinNOM_;
   float globalMaxChi2_, globalMaxEoP_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_, globalMinDeltaRminJet_, globalMaxMiniRelIsoAll_, globalMinIh_, globalMinTrackProbQCut_, globalMaxTrackProbQCut_, globalMinTrackProbXYCut_;
   unsigned int minMuStations_;
