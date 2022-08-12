@@ -851,7 +851,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_ProbQVsIas = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->BefPreS_ProbQVsIas->Sumw2();
 
-  tuple->BefPreS_CluProbQVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",100,0.,1.,4,0.,4.);
+  tuple->BefPreS_CluProbQVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",20,0.,1.,4,0.,4.);
   tuple->BefPreS_CluProbQVsPixelLayer->Sumw2();
   tuple->BefPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
   tuple->BefPreS_CluProbXYVsPixelLayer->Sumw2();
@@ -1132,24 +1132,35 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_ProbQ->Sumw2();
   tuple->PostPreS_ProbQVsIas = dir.make<TH2F>("PostPreS_ProbQVsIas",";ProbQ;I_{as}", 20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbQVsIas->Sumw2();
-  Name = "PostPreS_ProbXY";
-  tuple->PostPreS_ProbXY = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->PostPreS_ProbXY = dir.make<TH1F>("PostPreS_ProbXY", ";ProbXY", 100, 0, 1);
   tuple->PostPreS_ProbXY->Sumw2();
-  tuple->PostPreS_ProbXYVsIas = dir.make<TH2F>("PostPreS_ProbXYVsIas","PostPreS_ProbXYVsIas",  100, 0, 1, 10, 0., 1.);
+  tuple->PostPreS_ProbXY_highIas = dir.make<TH1F>("PostPreS_ProbXY_highIas",";ProbXY (I_{as} > 0.6)", 100, 0, 1);
+  tuple->PostPreS_ProbXY_highIas->Sumw2();
+  tuple->PostPreS_ProbXYVsIas = dir.make<TH2F>("PostPreS_ProbXYVsIas",";ProbXY;Ias",  100, 0, 1, 10, 0., 1.);
   tuple->PostPreS_ProbXYVsIas->Sumw2();
+  tuple->PostPreS_ProbXYVsIas_highIas = dir.make<TH2F>("PostPreS_ProbXYVsIas_highIas",";ProbXY (I_{as} > 0.6);Ias (I_{as} > 0.6)",  100, 0, 1, 10, 0., 1.);
+  tuple->PostPreS_ProbXYVsIas_highIas->Sumw2();
   tuple->PostPreS_ProbXYVsProbQ = dir.make<TH2F>("PostPreS_ProbXYVsProbQ",";ProbXY;ProbQ",  100, 0., 1., 10, 0., 1.);
   tuple->PostPreS_ProbXYVsProbQ->Sumw2();
-  Name = "PostPreS_ProbQNoL1";
-  tuple->PostPreS_ProbQNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->PostPreS_ProbXYVsProbQ_highIas = dir.make<TH2F>("PostPreS_ProbXYVsProbQ_highIas",";ProbXY (I_{as} > 0.6);ProbQ (I_{as} > 0.6)",  100, 0., 1., 10, 0., 1.);
+  tuple->PostPreS_ProbXYVsProbQ_highIas->Sumw2();
+  tuple->PostPreS_ProbQNoL1 = dir.make<TH1F>("PostPreS_ProbQNoL1",";ProbQNoL1", 20, 0., 1.);
   tuple->PostPreS_ProbQNoL1->Sumw2();
   tuple->PostPreS_ProbQNoL1VsIas = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas","PostPreS_ProbQNoL1VsIas;PostPreS_ProbQNoL1VsIas;PostPreS_ProbQNoL1VsIas",20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbQNoL1VsIas->Sumw2();
-  Name = "PostPreS_ProbXYNoL1";
-  tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>(Name.c_str(), Name.c_str(), 100, 0, 1);
+  tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>("PostPreS_ProbXYNoL1", ";ProbXYNoL1", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1->Sumw2();
+  tuple->PostPreS_ProbXYNoL1_highIas = dir.make<TH1F>("PostPreS_ProbXYNoL1_highIas", ";ProbXYNoL1 (I_{as} > 0.6)", 100, 0, 1);
+  tuple->PostPreS_ProbXYNoL1_highIas->Sumw2();
   tuple->PostPreS_ProbXYNoL1VsIas = dir.make<TH2F>("PostPreS_ProbXYNoL1VsIas",";ProbXYNoL1;Ias", 100, 0., 1., 20, 0.,1.);
   tuple->PostPreS_ProbXYNoL1VsIas->Sumw2();
+  tuple->PostPreS_ProbXYNoL1VsIas_highIas = dir.make<TH2F>("PostPreS_ProbXYNoL1VsIas_highIas",";ProbXYNoL1 (I_{as} > 0.6);Ias (I_{as} > 0.6)", 100, 0., 1., 20, 0.,1.);
+  tuple->PostPreS_ProbXYNoL1VsIas_highIas->Sumw2();
   tuple->PostPreS_ProbXYNoL1VsProbQNoL1  = dir.make<TH2F>("PostPreS_ProbXYNoL1VsProbQNoL1",";ProbXYNoL1;ProbQNoL1", 100, 0., 1., 20,0.,1.);
+  tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Sumw2();
+  tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas  = dir.make<TH2F>("PostPreS_ProbXYNoL1VsProbQNoL1_highIas",";ProbXYNoL1 (I_{as} > 0.6);ProbQNoL1 (I_{as} > 0.6)", 100, 0., 1., 20,0.,1.);
+  tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas->Sumw2();
+
   Name = "PostPreS_MassErr";
   tuple->PostPreS_MassErr = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0., 10.);
   tuple->PostPreS_MassErr->Sumw2();
@@ -1371,9 +1382,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MassVsTNOPH->Sumw2();
   tuple->PostPreS_MassVsTNOM = dir.make<TH2F>("PostPreS_MassVsTNOM", ";Mass (GeV);", 80,0.,4000.,40, 0, 40);
   tuple->PostPreS_MassVsTNOM->Sumw2();
-  tuple->PostPreS_MassVsProbQNoL1 = dir.make<TH2F>("PostPreS_MassVsProbQNoL1", ";Mass (GeV);", 80,0.,4000.,100,0.,1.);
+  tuple->PostPreS_MassVsProbQNoL1 = dir.make<TH2F>("PostPreS_MassVsProbQNoL1", ";Mass (GeV);", 80,0.,4000.,20,0.,1.);
   tuple->PostPreS_MassVsProbQNoL1->Sumw2();
-  tuple->PostPreS_MassVsProbXYNoL1 = dir.make<TH2F>("PostPreS_MassVsProbXYNoL1", ";Mass (GeV);", 80,0.,4000.,100,0.,1.);
+  tuple->PostPreS_MassVsProbXYNoL1 = dir.make<TH2F>("PostPreS_MassVsProbXYNoL1", ";Mass (GeV);", 80,0.,4000.,20,0.,1.);
   tuple->PostPreS_MassVsProbXYNoL1->Sumw2();
   tuple->PostPreS_MassVsEoP = dir.make<TH2F>("PostPreS_MassVsEoP", ";Mass (GeV);", 80,0.,4000.,30, 0, 0.3);
   tuple->PostPreS_MassVsEoP->Sumw2();
@@ -1402,7 +1413,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IasStripIhVsLayer = dir.make<TH3F>(Name.c_str(), Name.c_str(), 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 25, 0.,25.);
   tuple->PostPreS_IasStripIhVsLayer->Sumw2();
 
-  tuple->PostPreS_CluProbQVsPixelLayer = dir.make<TH2F>("PostPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",100,0.,1.,4,0.,4.);
+  tuple->PostPreS_CluProbQVsPixelLayer = dir.make<TH2F>("PostPreS_CluProbQVsPixelLayer",";CluProbQ;Layer",20,0.,1.,4,0.,4.);
   tuple->PostPreS_CluProbQVsPixelLayer->Sumw2();
   tuple->PostPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("PostPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
   tuple->PostPreS_CluProbXYVsPixelLayer->Sumw2();

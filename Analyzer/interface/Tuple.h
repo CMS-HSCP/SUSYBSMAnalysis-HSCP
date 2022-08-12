@@ -489,13 +489,19 @@ struct Tuple {
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
   TH1F* PostPreS_ProbXY;
+  TH1F* PostPreS_ProbXY_highIas;
   TH2F* PostPreS_ProbXYVsIas;
+  TH2F* PostPreS_ProbXYVsIas_highIas;
   TH2F* PostPreS_ProbXYVsProbQ;
+  TH2F* PostPreS_ProbXYVsProbQ_highIas;
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
   TH1F* PostPreS_ProbXYNoL1;
+  TH1F* PostPreS_ProbXYNoL1_highIas;
   TH2F* PostPreS_ProbXYNoL1VsIas;
+  TH2F* PostPreS_ProbXYNoL1VsIas_highIas;
   TH2F* PostPreS_ProbXYNoL1VsProbQNoL1;
+  TH2F* PostPreS_ProbXYNoL1VsProbQNoL1_highIas;
   TH1F* PostPreS_MassErr;
   TH2F* PostPreS_MassErrVsIas;
 

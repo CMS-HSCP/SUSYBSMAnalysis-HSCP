@@ -120,6 +120,7 @@
 // - 27p1: - Add new plot to check pt diff for PF and Calo jets, go back to probQ def w specInCPE, cut on dRMinCaloJet > 0.4
 // - 27p2: - dont cut on dRMinCaloJet, high stat version
 // - 27p3: - cut on probXY > 0.01, high stat version
+// - 27p4: - ProbXY plots when Ias > 0.6
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1953,7 +1954,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
         
-        if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
+        float Ias = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
+        
+        // TODO come back to this and double the plots for highIas
+        if ( detid.subdetId() == PixelSubdetector::PixelBarrel && Ias > 0.6) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           
           if (debugProbQvsProbQNoL1 && debug_ > 9) {
@@ -3688,6 +3692,15 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoLayer1, Ias, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
+    
+    if (Ias > 0.6) {
+      tuple->PostPreS_ProbXY_highIas->Fill(probXYonTrack, EventWeight_);
+      tuple->PostPreS_ProbXYVsIas_highIas->Fill(probXYonTrack, Ias, EventWeight_);
+      tuple->PostPreS_ProbXYVsProbQ_highIas->Fill(probXYonTrack, probQonTrack, EventWeight_);
+      tuple->PostPreS_ProbXYNoL1_highIas->Fill(probXYonTrackNoLayer1, EventWeight_);
+      tuple->PostPreS_ProbXYNoL1VsIas_highIas->Fill(probXYonTrackNoLayer1, Ias, EventWeight_);
+      tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
+    }
     if (tof) {
       tuple->PostPreS_nDof->Fill(tof->nDof()-.5, Event_Weight);
       tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
