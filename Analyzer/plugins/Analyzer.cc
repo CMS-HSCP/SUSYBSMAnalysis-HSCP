@@ -2893,8 +2893,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                   << " -- this should never happen as there was a check before";
     return false;
   }
-  //===================== Handle For PFJet ===================
-  const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
 
   bool vetoJet = false;
 
@@ -3197,7 +3195,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
   passedCutsArray[15] = (  (typeMode_ != 5 &&  Ih > globalMinIh_)
                         || (typeMode_ == 5 && Ih < globalMinIh_)) ? true : false;
-  passedCutsArray[16] = ( true ) ? true : false;
+  passedCutsArray[16] = ( vetoJet ) ? false : true;
   //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
 
@@ -3211,6 +3209,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //
  // passedCutsArray[16] = vetoJet;
  // passedCutsArray[17] = track->p()<3000 ? true : false;
+  
   // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
   // bool cutMinNumOfMissingHits = (typeMode_ != 3 && missingHitsTillLast > GlobalMaxNOMHTillLast) ? true : false;
