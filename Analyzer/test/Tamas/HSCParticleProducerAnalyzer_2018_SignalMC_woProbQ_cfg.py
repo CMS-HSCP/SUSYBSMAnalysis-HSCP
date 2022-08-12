@@ -11,7 +11,8 @@ options.outputFile = 'Histos.root'
 # -1 means all events
 options.maxEvents = -1
 
-options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+#options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
@@ -75,8 +76,9 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
-#   fileNames = cms.untracked.vstring("file:EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
+#   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
+   fileNames = cms.untracked.vstring("file:HSCP_Gluino_Mass1800_AOD_1.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -223,7 +225,6 @@ process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.TrackProbQCut = 1.0
 process.analyzer.Period = "2018"
 process.analyzer.DebugLevel = 6 
 process.analyzer.DeDxK = K

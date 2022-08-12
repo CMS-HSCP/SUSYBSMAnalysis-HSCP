@@ -6,16 +6,9 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
-"/HSCPgluino_M-1000_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-1400_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2000_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2200_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2400_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-500_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v1/AODSIM",
+"/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v1/AODSIM",
 ]
 
 codeVersion = sys.argv[1]
@@ -27,7 +20,7 @@ if(didVoms):
 
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
-if not os.path.exists("4crab_Signal_Template_wProbQ.py"):
+if not os.path.exists("4crab_Signal_Template_wProbQ_TAPERECALL.py"):
   TEMPLATE = '''
 from CRABClient.UserUtilities import config
 config = config()
@@ -52,33 +45,32 @@ config.Data.inputDataset = 'MINTA'
 config.Data.splitting = 'LumiBased'
     #config.Data.unitsPerJob = 1 #20
 #config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 50
+config.Data.unitsPerJob = 100
 config.Data.totalUnits = config.Data.unitsPerJob * 1000
 config.Data.publication = True
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 config.Data.ignoreLocality = True
-config.Data.runRange = '0'
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
 config.Site.storageSite = 'T2_HU_Budapest'
   '''
 
-  with open("4crab_Signal_Template_wProbQ.py", "w") as text_file:
+  with open("4crab_Signal_Template_wProbQ_TAPERECALL.py", "w") as text_file:
       text_file.write(TEMPLATE)
 
 for i in datasetList:
   print("Submit for sample "+i)
-  os.system("cp 4crab_Signal_Template_wProbQ.py 4crab_Signal_toSubmit_wProbQ.py")
-  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_Signal_toSubmit_wProbQ.py"
+  os.system("cp 4crab_Signal_Template_wProbQ_TAPERECALL.py 4crab_Signal_toSubmit_wProbQ_TAPERECALL.py")
+  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_Signal_toSubmit_wProbQ_TAPERECALL.py"
   os.system(replaceVERZIO)
   shortSampleName = i[1:(i.find('TuneCP5'))-1]
-  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_Signal_toSubmit_wProbQ.py"
+  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_Signal_toSubmit_wProbQ_TAPERECALL.py"
   os.system(replaceROVIDMINTA)
-  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_Signal_toSubmit_wProbQ.py"
+  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_Signal_toSubmit_wProbQ_TAPERECALL.py"
   os.system(replaceMINTA)
-  os.system("crab submit -c 4crab_Signal_toSubmit_wProbQ.py")
-  os.system("mv 4crab_Signal_toSubmit_wProbQ.py submittedConfigs/.")
+  os.system("crab submit -c 4crab_Signal_toSubmit_wProbQ_TAPERECALL.py")
+  os.system("mv 4crab_Signal_toSubmit_wProbQ_TAPERECALL.py submittedConfigs/.")
 
 

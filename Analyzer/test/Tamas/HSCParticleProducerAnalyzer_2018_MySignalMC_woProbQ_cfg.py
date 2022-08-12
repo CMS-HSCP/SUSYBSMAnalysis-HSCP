@@ -2,6 +2,8 @@ import sys, os
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
+from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
+
 options = VarParsing('analysis')
 
 # defaults
@@ -9,12 +11,13 @@ options.outputFile = 'Histos.root'
 # -1 means all events
 options.maxEvents = -1
 
-options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
+#options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isBckg',
+options.register('SAMPLE', 'isSignal',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
@@ -38,6 +41,7 @@ options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_
 options.parseArguments()
 
 process = cms.Process("HSCPAnalysis")
+#process = cms.Process("HSCPAnalysis",Run2_2018)
 
 #diventano var parsing
 #The following parameters need to be provided
@@ -65,34 +69,98 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
+process.options   = cms.untracked.PSet(
+      wantSummary = cms.untracked.bool(True),
+)
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   #fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
-  # fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
-#   fileNames = cms.untracked.vstring("file:F8A9F740-F226-D443-A132-45CBC706B908.root"),
-#   fileNames = cms.untracked.vstring("file:D49DD2CE-E848-9E42-9CB0-AE4E6C60280A.root"),
-  # fileNames = cms.untracked.vstring("file:589444D4-2FA5-2D42-B952-F719D35D1EF4.root"),
-  # fileNames = cms.untracked.vstring("file:3A0707EB-0FC4-E74B-9491-27C51157FB89.root"),
- #  fileNames = cms.untracked.vstring("file:B406DEC6-85A0-E342-A677-281FC853ABEE.root"),
- #  fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-1000_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/100000/215F439C-73BF-8D47-AE10-681B747F764F.root"),
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-170To300_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2430000/E09ACB33-2178-7346-9B8F-1B2E37A01299.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
+#   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
+   fileNames = cms.untracked.vstring("/store/user/tvami/HSCP/HSCPgluino_M_1800/crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3/220712_195931/0000/HSCP_Gluino_Mass1800_RECO_1.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
-
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:29057:317155112')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:30965:337976289')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:34335:374762778')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:9798:91439758')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:1707:15925987')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:21841:165597238')
-process.source.eventsToProcess = cms.untracked.VEventRange('1:30134:441662388')
-
-
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
 process.HSCPTuplePath = cms.Path() 
+
+#Run the HSCP EDM-tuple Sequence on skimmed sample
+process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
+process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff") 
+process.HSCPTuplePath += process.nEventsBefEDM + process.HSCParticleProducerSeq
+
+########################################################################  
+# Only for MC samples, save skimmed genParticles
+
+if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
+   process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
+   process.genParticlesSkimmed = cms.EDFilter("GenParticleSelector",
+        filter = cms.bool(False),
+        src = cms.InputTag("genParticles"),
+        cut = cms.string('pt > 5.0'),
+        stableOnly = cms.bool(True)
+   )
+
+   process.HSCPTuplePath += process.genParticlesSkimmed
+
+########################################################################
+
+#make the pool output
+process.Out = cms.OutputModule("PoolOutputModule",
+     outputCommands = cms.untracked.vstring(
+         "drop *",
+         "keep EventAux_*_*_*",
+         "keep LumiSummary_*_*_*",
+         "keep edmMergeableCounter_*_*_*",
+         "keep GenRunInfoProduct_*_*_*",
+         "keep GenEventInfoProduct_generator_*_*",
+         "keep *_genParticlesSkimmed_*_*",
+         "keep *_genParticlePlusGeant_*_*",
+         "keep *_offlinePrimaryVertices_*_*",
+         "keep recoTracks_generalTracks_*_*",
+         "keep recoTracks_standAloneMuons_*_*",
+         "keep recoTrackExtras_standAloneMuons_*_*",
+         "keep TrackingRecHitsOwned_standAloneMuons_*_*",
+         "keep recoTracks_globalMuons_*_*",  
+         "keep recoTrackExtras_globalMuons_*_*",
+         "keep recoMuons_muons_*_*",
+         "keep recoMuonTimeExtraedmValueMap_muons_*_*",
+         "keep edmTriggerResults_TriggerResults_*_*",
+         "keep *_ak4PFJetsCHS__*", 
+         "keep recoPFMETs_pfMet__*",     
+         "keep *_HSCParticleProducer_*_*",
+         "keep *_HSCPIsolation*_*_*",
+         "keep *_dedxHitInfo*_*_*",
+         "keep triggerTriggerEvent_hltTriggerSummaryAOD_*_*",
+         "keep *_offlineBeamSpot_*_*",
+         "keep *_MuonSegmentProducer_*_*",
+         "keep *_g4SimHits_StoppedParticles*_*",
+         "keep PileupSummaryInfos_addPileupInfo_*_*",
+         "keep *_dt4DSegments__*",  
+         "keep *_cscSegments__*",  
+         "keep *_scalersRawToDigi_*_*", 
+         "keep *_caloMet_*_*",
+    ),
+    fileName = cms.untracked.string(options.outputFile),
+    SelectEvents = cms.untracked.PSet(
+       SelectEvents = cms.vstring('*')
+    ),
+)
+
+if(options.SAMPLE=='isData' and len(options.LUMITOPROCESS)>0):
+   import FWCore.PythonUtilities.LumiList as LumiList
+   process.source.lumisToProcess = LumiList.LumiList(filename = options.LUMITOPROCESS).getVLuminosityBlockRange()
+   #process.source.lumisToProcess = LumiList.LumiList(url = https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt).getVLuminosityBlockRange()
+
+if(options.SAMPLE=='isBckg' or options.SAMPLE=='isData'):
+   process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')  #take just the skimmed ones
+   process.Out.outputCommands.extend(["drop triggerTriggerEvent_hltTriggerSummaryAOD_*_*"])
+else:
+   process.Out.SelectEvents = cms.untracked.PSet()
+
 
 ########################################################################
 
@@ -157,18 +225,20 @@ process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.TrackProbQCut = 1.0
 process.analyzer.Period = "2018"
-process.analyzer.DebugLevel = 10 
+process.analyzer.DebugLevel = 6 
 process.analyzer.DeDxK = K
 process.analyzer.DeDxC = C
 process.analyzer.DeDxSF_0 = SF0
 process.analyzer.DeDxSF_1 = SF1
 process.analyzer.GlobalMinIh = C
+process.analyzer.TriggerResults = cms.InputTag('TriggerResults','','RECO')
+process.analyzer.DoTriggering = False
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
+###process.analyzer.OutputFile = 'Data_2017_UL'
 
 process.analysis = cms.Path(process.analyzer)
 
@@ -177,6 +247,15 @@ process.endjob_step = cms.EndPath(process.endOfProcess)
 
 process.HSCPTuplePath += process.analyzer
 
+########################################################################
+
+process.tsk = cms.Task()
+for mod in process.producers_().itervalues():
+    process.tsk.add(mod)
+for mod in process.filters_().itervalues():
+    process.tsk.add(mod)
+
 #schedule the sequence
+process.endPath1 = cms.EndPath(process.Out)
 process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
 
