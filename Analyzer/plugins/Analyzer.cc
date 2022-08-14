@@ -122,6 +122,7 @@
 // - 27p3: - cut on probXY > 0.01, high stat version
 // - 27p4: - ProbXY plots when Ias > 0.6
 // - 27p5: - CluProbXY plots when Ias > 0.6, local angle plots when probXY less/more than minCut, lowBetaGamma plots for pixels and strips
+// - 27p6: - probs with  && probQ < 0.8
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1383,14 +1384,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
 //        if (probQ > 0.f && probXY > 0.1) {
 //        if (probQ < 0.8 && !spansTwoROCs) {
-        if (!specInCPE) {
+        if (!specInCPE && probQ < 0.8) {
           numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
         }
         
 //        if (probQ < 0.8 && !spansTwoROCs) {
-        if (!specInCPE) {
+        if (!specInCPE && probQ < 0.8) {
           numRecHitsXY++;
             // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
@@ -1407,13 +1408,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
           
 //          if (probQNoLayer1 < 1.f && probQNoLayer1 < 0.8 && !spansTwoROCs) {
-          if (!specInCPE) {
+          if (!specInCPE && probQ < 0.8) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
           }
 //          if (probQNoLayer1 < 0.8 && !spansTwoROCs) {
-          if (!specInCPE) {
+          if (!specInCPE && probQ < 0.8) {
             numRecHitsXYNoLayer1++;
               // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
@@ -1440,7 +1441,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
         
-        float stripNormCharge = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
+        float stripNormCharge = dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
           tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, i-3.5, EventWeight_);
         }
