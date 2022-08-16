@@ -123,6 +123,7 @@
 // - 27p4: - ProbXY plots when Ias > 0.6
 // - 27p5: - CluProbXY plots when Ias > 0.6, local angle plots when probXY less/more than minCut, lowBetaGamma plots for pixels and strips
 // - 27p6: - probs with  && probQ < 0.8
+// - 27p7: - Change histo boundary for strips 
 //  
 //v23 Dylan 
 // - v23 fix clust infos
