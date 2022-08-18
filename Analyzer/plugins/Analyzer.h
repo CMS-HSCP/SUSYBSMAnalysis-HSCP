@@ -335,6 +335,8 @@ private:
   float dEdxSF[2] = {dEdxSF_0_, dEdxSF_1_};
   float dEdxK_;
   float dEdxC_;
+  float globalIas_;
+  float globalIh_;
 
   dedxGainCorrector trackerCorrector;
   string dEdxTemplate_;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
