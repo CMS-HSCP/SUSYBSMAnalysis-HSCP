@@ -382,16 +382,26 @@ struct Tuple {
 
   TH2F* BefPreS_CluProbQVsPixelLayer;
   TH2F* BefPreS_CluProbXYVsPixelLayer;
+  TH2F* BefPreS_CluNormChargeVsPixelLayer;
+  TH2F* BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma;
   TH2F* BefPreS_CluSizeVsPixelLayer;
   TH2F* BefPreS_CluSizeXVsPixelLayer;
   TH2F* BefPreS_CluSizeYVsPixelLayer;
   TH2F* BefPreS_CluSpecInCPEVsPixelLayer;
+
+  TH2F* BefPreS_CluCotBetaVsPixelLayer_lowProbXY;
+  TH2F* BefPreS_CluCotAlphaVsPixelLayer_lowProbXY;
+  TH2F* BefPreS_CluCotBetaVsPixelLayer;
+  TH2F* BefPreS_CluCotAlphaVsPixelLayer;
+
+  TH2F* BefPreS_CluNormChargeVsStripLayer_lowBetaGamma;
 
   TH1F* BefPreS_dRMinPfJet;
   TH2F* BefPreS_dRMinPfJetVsIas;
   TH1F* BefPreS_dRMinCaloJet;
   TH2F* BefPreS_dRMinCaloJetVsIas;
   TH2F* BefPreS_dRVsPtPfJet;
+  TH2F* BefPreS_dRVsdPtPfCaloJet;
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
@@ -488,13 +498,19 @@ struct Tuple {
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
   TH1F* PostPreS_ProbXY;
+  TH1F* PostPreS_ProbXY_highIas;
   TH2F* PostPreS_ProbXYVsIas;
+  TH2F* PostPreS_ProbXYVsIas_highIas;
   TH2F* PostPreS_ProbXYVsProbQ;
+  TH2F* PostPreS_ProbXYVsProbQ_highIas;
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
   TH1F* PostPreS_ProbXYNoL1;
+  TH1F* PostPreS_ProbXYNoL1_highIas;
   TH2F* PostPreS_ProbXYNoL1VsIas;
+  TH2F* PostPreS_ProbXYNoL1VsIas_highIas;
   TH2F* PostPreS_ProbXYNoL1VsProbQNoL1;
+  TH2F* PostPreS_ProbXYNoL1VsProbQNoL1_highIas;
   TH1F* PostPreS_MassErr;
   TH2F* PostPreS_MassErrVsIas;
 
@@ -606,6 +622,17 @@ struct Tuple {
   TH2F* PostPreS_CluSizeXVsPixelLayer;
   TH2F* PostPreS_CluSizeYVsPixelLayer;
   TH2F* PostPreS_CluSpecInCPEVsPixelLayer;
+  TH2F* PostPreS_CluProbQVsPixelLayer_highIas;
+  TH2F* PostPreS_CluProbXYVsPixelLayer_highIas;
+  TH2F* PostPreS_CluSizeVsPixelLayer_highIas;
+  TH2F* PostPreS_CluSizeXVsPixelLayer_highIas;
+  TH2F* PostPreS_CluSizeYVsPixelLayer_highIas;
+  TH2F* PostPreS_CluSpecInCPEVsPixelLayer_highIas;
+
+  TH2F* PostPreS_CluCotBetaVsPixelLayer_lowProbXY;
+  TH2F* PostPreS_CluCotAlphaVsPixelLayer_lowProbXY;
+  TH2F* PostPreS_CluCotBetaVsPixelLayer;
+  TH2F* PostPreS_CluCotAlphaVsPixelLayer;
 
   TH1F* PostPreS_dRMinPfJet;
   TH2F* PostPreS_dRMinPfJetVsIas;
