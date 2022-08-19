@@ -125,6 +125,7 @@
 // - 27p6: - probs with  && probQ < 0.8
 // - 27p7: - Change histo boundary for strips
 // - 27p8: - Rewrite computedEdx(), add PostPreS_closestPfJet*Fraction plots, change PF def back to >20 GeV jets, strips lowBetaGamma plots with layers
+// - 27p9: - Change charges to e/um, intro genGammaBetaVsProbXYNoL1, for bad CPE default probXY to probXY = 0.009
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -354,6 +355,7 @@ void Analyzer::beginJob() {
 // ------------ method called for each event  ------------
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   static constexpr const char* const MOD = "Analyzer";
+  static constexpr const float cm2umUnit = 0.0001;
   using namespace edm;
 
   //if run change, update conditions
@@ -989,6 +991,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     
+    float genGammaBeta = 0.0;
+    if (!isData) {
+      genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
+    }
+    
     if (!isData && debug_ > 5) {
       LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen;
     }
@@ -1256,10 +1263,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     int nofClust_dEdxLowerThan = 0;
-    float genGammaBeta = 0.0;
-    if (!isData) {
-      genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
-    }
 
     // Loop through the rechits on the given track **before** preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
@@ -1296,11 +1299,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
-        if (probQ <= 0.0 || probQ >= 1.f)  {
-          if (probQ < 0.0 || probQ >= 1.f) LogPrint(MOD) << "(probQ <= 0.0 || probQ >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
-          probQ = 1.f;
-        }
-        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+        if (probQ < 0.0 || probQ >= 1.f) LogPrint(MOD) << "(probQ <= 0.0 || probQ >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.009;
         
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
@@ -1315,7 +1316,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
         auto clustCharge = pixelCluster->charge();
-        auto pixelNormCharge = dedxHits->charge(i) / dedxHits->pathlength(i);
+        
+        auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
         
         if (clustCharge != dedxHits->charge(i)) {
           LogPrint(MOD) << "clustCharge != dedxHits->charge(i) -- this shouldnt happen";
@@ -1346,9 +1348,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
             tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
           }
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
             tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex-0.5, EventWeight_);
           }
-        
+        } // end of IF on barrel pixel
+
 //      if (probQ > 0.f && probXY > 0.1) {
         if (!specInCPE && probQ < 0.8) {
           numRecHitsQ++;
@@ -1368,12 +1372,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+          if (probQNoLayer1 < 0.0 || probQNoLayer1 >= 1.f) LogPrint(MOD) << "(probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
           
-          if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) {
-            if (probQNoLayer1 < 0.0 || probQNoLayer1 >= 1.f) LogPrint(MOD) << "(probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
-            probQNoLayer1 = 1.f;
-          }
-          if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
+          if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) probQNoLayer1 = 1.f;
+          if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.009;
           
 //        if (probQNoLayer1 < 1.f && probQNoLayer1 < 0.8 && !spansTwoROCs) {
           if (!specInCPE && probQ < 0.8) {
@@ -1410,7 +1412,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
         
-        float stripNormCharge = dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+        float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
 
           unsigned int stripLayerIndex = 0;
@@ -1432,6 +1434,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     pixelProbs[1] = combineProbs(probXYonTrackWMulti, numRecHitsXY);
     pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsQNoLayer1);
     pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsXYNoLayer1);
+  
 
     if (debug_> 7) {
       LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1
@@ -1439,6 +1442,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     << " numRecHitsXY = " << numRecHitsXY << " numRecHitsXYNoLayer1 = " << numRecHitsXYNoLayer1;
       LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
     }
+    
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (pixelProbs[0] < 0.0 || pixelProbs[1] < 0.0 || pixelProbs[0] > 1.f || pixelProbs[1] > 1.f) {
       if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
@@ -1446,6 +1450,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 //      continue;
 //      tuple->ErrorHisto->Fill(8.5);
     }
+    
+    tuple->BefPreS_genGammaBetaVsProbXYNoL1->Fill(genGammaBeta, pixelProbs[3], EventWeight_);
     
     TreeprobQonTrack = pixelProbs[0];
     TreeprobXYonTrack = pixelProbs[1];
@@ -1910,7 +1916,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
-        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.009;
         
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
@@ -1921,7 +1927,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
-        auto pixelNormCharge = dedxHits->charge(i) / dedxHits->pathlength(i);
+        auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
         
         float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
         float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
@@ -1974,8 +1980,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
           if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.025 && globalIas_ < 0.03))) {
             if (!headerPixPrintedAlready) {
-              std::cout << " | globalIas_ | Pixel LayerID | genGammaBeta | isFlippedModule | cotAlpha | cotBeta | momentum | clustSizeX | clustSizeY";
-              std::cout << " | pixelNormCharge | isOnEdge | hasBadPixels | spansTwoROCs | cProbXY | cProbQ | " << std::endl;
+              std::cout << " | $I_{as}$ | Pixel Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
+              std::cout << " | Norm. Charge | onEdge | badPix | spansTwoROCs | cProbXY | cProbQ | " << std::endl;
               std::cout << " |--- | ---| " << std::endl;
               
               headerPixPrintedAlready = true;
@@ -1985,7 +1991,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             std::cout << cotAlpha << " | " << cotBeta << " | " << momentum<< " | " << clustSizeX << " | " << clustSizeY << " | ";
             std::cout << pixelNormCharge << " e/um | " << isOnEdge  << " | " << hasBadPixels  << " | " << spansTwoROCs << " | " << probXY << " | " << probQ <<  " | " << std::endl;
           } else if (isSignal && genGammaBeta <= 0.31623)  {
-            LogPrint(MOD) << "BetaGamma is too low for Bischel";
+            LogPrint(MOD) << "BetaGamma is too low for Bichsel";
           }
         }
 
@@ -1998,13 +2004,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         unsigned int clusterCleaned = (clusterCleaning(amplitudesPrim, 1)) ? 0 : 1;
         
       
-        float stripNormCharge = dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+        float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
         float stripSize = stripsCluster->amplitudes().size();
         if (!isData) {
           unsigned int isGlued = 0;
           (tTopo->glued(detid) > 0) ? isGlued = 1 : isGlued = 0;
           if (!headerStripsPrintedAlready) {
-            std::cout << " | globalIas_ | Strips LayerIndex | genGammaBeta | eta | stripNormCharge | stripSize | isStereo | isGlued | clusterCleaned | " << std::endl;
+            std::cout << " | $I_{as}$  | Strips LayerIndex | gammaBeta | eta | Norm. Charge | stripSize | isStereo | isGlued | Cluster Cleaned | " << std::endl;
             std::cout << " |--- | ---| " << std::endl;
             headerStripsPrintedAlready = true;
           }
@@ -2635,9 +2641,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("globalIas_ vs Pt templates in eta binning");
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
-  //desc.add<std::string>("PixelCPE","PixelCPEClusterRepair")
   desc.add<std::string>("PixelCPE","PixelCPETemplateReco")
-    ->setComment("CPE used in the pixel reco, cluster repair is the best available so far ");
+    ->setComment("CPE used in the pixel reco, PixelCPEClusterRepair is the best available so far, template only is PixelCPETemplateReco ");
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
@@ -2655,12 +2660,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
   desc.addUntracked("GlobalMinDeltaRminJet",0.4)->setComment("Min distance in dR to the nearest jet");
   desc.addUntracked("GlobalMaxMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,globalIh_,etc)");
+  desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, -0.01 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbXYCut",1.0)->setComment("Max cut for probXY, 1.0 means no cuts applied");
-  desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (globalIas_,globalIas_,etc)");
+  desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Is,etc)");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
   desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMinNDOFDT",6.0)->setComment("Cut on number of DT DegreeOfFreedom used for muon TOF measurement");
@@ -2938,6 +2943,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   //===================== Handle For CaloJet ===================
   const edm::Handle<std::vector<reco::CaloJet>> caloJetHandle = iEvent.getHandle(caloJetToken_);
 
+  cout << " EventWeight_ " << EventWeight_ << endl;
 
   if (vertexColl.size() < 1) {
     LogPrint(MOD) << "        >> Preselection not passed: there is no vertex"
@@ -3408,7 +3414,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, globalIas_, Event_Weight);
     tuple->BefPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
     tuple->BefPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, Event_Weight);
-
   }
   
   //For TOF only analysis match to a SA track without vertex constraint for IP cuts

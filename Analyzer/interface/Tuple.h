@@ -399,6 +399,7 @@ struct Tuple {
   TH2F* BefPreS_dRMinPfJetVsIas;
   TH1F* BefPreS_dRMinCaloJet;
   TH2F* BefPreS_dRMinCaloJetVsIas;
+  TH2F* BefPreS_genGammaBetaVsProbXYNoL1;
   TH2F* BefPreS_dRVsPtPfJet;
   TH2F* BefPreS_dRVsdPtPfCaloJet;
 
