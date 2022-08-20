@@ -1483,8 +1483,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_dRMinPfJetVsIas->Sumw2();
   tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
   tuple->PostPreS_dRMinCaloJet->Sumw2();
+  tuple->PostPreS_dRMinPfMet = dir.make<TH1F>("PostPreS_dRMinPfMet",";dRMinPfMet",100,0.,1.5);
+  tuple->PostPreS_dRMinPfMet->Sumw2();
+
   tuple->PostPreS_dRMinCaloJetVsIas =  dir.make<TH2F>("PostPreS_dRMinCaloJetVsIas",";dRMinCaloJet;Ias",100,0.,1.5,10,0.,1.);
   tuple->PostPreS_dRMinCaloJetVsIas->Sumw2();
+  tuple->PostPreS_dRMinPfMetVsIas =  dir.make<TH2F>("PostPreS_dRMinPfMetVsIas",";dRMinPfMet;Ias",100,0.,1.5,10,0.,1.);
+  tuple->PostPreS_dRMinPfMetVsIas->Sumw2();
   
   tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
   tuple->GenLevelBinning->Sumw2();

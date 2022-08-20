@@ -645,7 +645,9 @@ struct Tuple {
   TH2F* PostPreS_closestPfJetPhotonFractionVsIas;
 
   TH1F* PostPreS_dRMinCaloJet;
+  TH1F* PostPreS_dRMinPfMet;
   TH2F* PostPreS_dRMinCaloJetVsIas;
+  TH2F* PostPreS_dRMinPfMetVsIas;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
