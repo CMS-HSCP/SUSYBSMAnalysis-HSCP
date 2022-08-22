@@ -78,7 +78,6 @@ public:
                         const std::vector<float> &vect_jet_neutralEmEnergyFraction,
                         const std::vector<float> &vect_mT,
                         const std::vector<bool> &passCutPt55,
-                        const std::vector<bool> &passPreselection_noIsolation_noIh,
                         const std::vector<bool> &passPreselection,
                         const std::vector<bool> &passSelection,
                         const std::vector<float> &Charge,
@@ -96,7 +95,6 @@ public:
                         const std::vector<float> &ProbXY_noL1,
                         const std::vector<float> &ProbQ,
                         const std::vector<float> &ProbQ_noL1,
-                        const std::vector<float> &ProbQ_dEdx,
                         const std::vector<float> &Ndof,
                         const std::vector<float> &Chi2,
                         const std::vector<int>   &QualityMask,
@@ -181,7 +179,6 @@ public:
                            const unsigned int &Run,
                            const unsigned long &Event,
                            const unsigned int &Lumi,
-                           /*const unsigned int &Hscp,*/
                            const float &weight,
                            const float &generator_weight,
                            const float &generator_binning_values,
@@ -1466,6 +1463,20 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->PostPreS_dRMinPfJet->Sumw2();
+  tuple->PostPreS_closestPfJetMuonFraction = dir.make<TH1F>("PostPreS_closestPfJetMuonFraction",":closestPfJetMuonFraction",20,0.,1.);
+  tuple->PostPreS_closestPfJetMuonFraction->Sumw2();
+  tuple->PostPreS_closestPfJetElectronFraction = dir.make<TH1F>("PostPreS_closestPfJetElectronFraction",";closestPfJetElectronFraction",20,0.,1.);
+  tuple->PostPreS_closestPfJetElectronFraction->Sumw2();
+  tuple->PostPreS_closestPfJetPhotonFraction = dir.make<TH1F>("PostPreS_closestPfJetPhotonFraction",";closestPfJetPhotonFraction",20,0.,1.);
+  tuple->PostPreS_closestPfJetPhotonFraction->Sumw2();
+
+  tuple->PostPreS_closestPfJetMuonFractionVsIas = dir.make<TH2F>("PostPreS_closestPfJetMuonFractionVsIas",":closestPfJetMuonFraction;Ias",20,0.,1.,20,0.,1.);
+  tuple->PostPreS_closestPfJetMuonFractionVsIas->Sumw2();
+  tuple->PostPreS_closestPfJetElectronFractionVsIas = dir.make<TH2F>("PostPreS_closestPfJetElectronFractionVsIas",";closestPfJetElectronFraction;Ias",20,0.,1.,20,0.,1.);
+  tuple->PostPreS_closestPfJetElectronFractionVsIas->Sumw2();
+  tuple->PostPreS_closestPfJetPhotonFractionVsIas = dir.make<TH2F>("PostPreS_closestPfJetPhotonFractionVsIas",";closestPfJetPhotonFraction;Ias",20,0.,1.,20,0.,1.);
+  tuple->PostPreS_closestPfJetPhotonFractionVsIas->Sumw2();
+
   tuple->PostPreS_dRMinPfJetVsIas = dir.make<TH2F>("PostPreS_dRMinPfJetVsIas", ";dRMinPfJet;Ias",100,0.,1.5,10,0.,1.);
   tuple->PostPreS_dRMinPfJetVsIas->Sumw2();
   tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
@@ -1996,7 +2007,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("mT", &tuple->Tree_vect_mT);
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
-      tuple->Tree->Branch("passPreselection_noIsolation_noIh", &tuple->Tree_passPreselection_noIsolation_noIh);
       tuple->Tree->Branch("passPreselection", &tuple->Tree_passPreselection);
       tuple->Tree->Branch("passSelection", &tuple->Tree_passSelection);
     }
@@ -2015,7 +2025,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("ProbXY_noL1", &tuple->Tree_ProbXY_noL1);
     tuple->Tree->Branch("ProbQ", &tuple->Tree_ProbQ);
     tuple->Tree->Branch("ProbQ_noL1", &tuple->Tree_ProbQ_noL1);
-    tuple->Tree->Branch("ProbQ_dEdx", &tuple->Tree_ProbQ_dEdx);
     tuple->Tree->Branch("Ndof", &tuple->Tree_Ndof);
     tuple->Tree->Branch("Chi2", &tuple->Tree_Chi2);
     tuple->Tree->Branch("QualityMask", &tuple->Tree_QualityMask);
@@ -2199,7 +2208,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Jet_neutralEmEnergyFraction,
                                   const std::vector<float> &vect_mT,
                                   const std::vector<bool> &passCutPt55,
-                                  const std::vector<bool> &passPreselection_noIsolation_noIh,
                                   const std::vector<bool> &passPreselection,
                                   const std::vector<bool> &passSelection,
                                   const std::vector<float> &Charge,
@@ -2217,7 +2225,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &ProbXY_noL1,
                                   const std::vector<float> &ProbQ,
                                   const std::vector<float> &ProbQ_noL1,
-                                  const std::vector<float> &ProbQ_dEdx,
                                   const std::vector<float> &Ndof,
                                   const std::vector<float> &Chi2,
                                   const std::vector<int>   &QualityMask,
@@ -2339,7 +2346,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_jet_neutralEmEnergyFraction = Jet_neutralEmEnergyFraction;
   tuple->Tree_vect_mT = vect_mT;
   tuple->Tree_passCutPt55 = passCutPt55;
-  tuple->Tree_passPreselection_noIsolation_noIh = passPreselection_noIsolation_noIh;
   tuple->Tree_passPreselection = passPreselection;
   tuple->Tree_passSelection = passSelection;
   tuple->Tree_Charge = Charge;
@@ -2357,7 +2363,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_ProbXY_noL1 = ProbXY_noL1;
   tuple->Tree_ProbQ = ProbQ;
   tuple->Tree_ProbQ_noL1 = ProbQ_noL1;
-  tuple->Tree_ProbQ = ProbQ_dEdx;
   tuple->Tree_Ndof = Ndof;
   tuple->Tree_Chi2 = Chi2;
   tuple->Tree_QualityMask = QualityMask;

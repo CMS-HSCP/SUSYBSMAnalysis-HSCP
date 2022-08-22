@@ -76,7 +76,6 @@ struct Tuple {
   std::vector<float> Tree_ProbXY_noL1;
   std::vector<float> Tree_ProbQ;
   std::vector<float> Tree_ProbQ_noL1;
-  std::vector<float> Tree_ProbQ_dEdx;
   std::vector<float> Tree_Ndof;
   std::vector<float> Tree_Chi2;
   std::vector<int>   Tree_QualityMask;
@@ -635,7 +634,15 @@ struct Tuple {
   TH2F* PostPreS_CluCotAlphaVsPixelLayer;
 
   TH1F* PostPreS_dRMinPfJet;
+  TH1F* PostPreS_closestPfJetMuonFraction;
+  TH1F* PostPreS_closestPfJetElectronFraction;
+  TH1F* PostPreS_closestPfJetPhotonFraction;
+
   TH2F* PostPreS_dRMinPfJetVsIas;
+  TH2F* PostPreS_closestPfJetMuonFractionVsIas;
+  TH2F* PostPreS_closestPfJetElectronFractionVsIas;
+  TH2F* PostPreS_closestPfJetPhotonFractionVsIas;
+
   TH1F* PostPreS_dRMinCaloJet;
   TH2F* PostPreS_dRMinCaloJetVsIas;
 
