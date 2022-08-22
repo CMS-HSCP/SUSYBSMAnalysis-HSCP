@@ -1573,10 +1573,8 @@ reco::DeDxData computedEdx(const int& run_number,
       std::vector<int> amplitudes = convert(cluster->amplitudes());
       std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
 
-      // why is this hardcoded now?
-      //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
-      if (useClusterCleaning && !clusterCleaning(amplitudesPrim, 1))
-        continue;
+      //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo)) continue;
+      if (useClusterCleaning && !clusterCleaning(amplitudes, 1)) continue;
 
       //////////////////////////////////////////////////////////////
       //

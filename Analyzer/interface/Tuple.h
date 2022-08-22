@@ -648,6 +648,8 @@ struct Tuple {
   TH1F* PostPreS_dRMinPfMet;
   TH2F* PostPreS_dRMinCaloJetVsIas;
   TH2F* PostPreS_dRMinPfMetVsIas;
+  TH1F* PostPreS_PfMet;
+  TH1F* PostPreS_PfMetPhi;
 
   TH2F* AS_Eta_RegionA;
   TH2F* AS_Eta_RegionB;
