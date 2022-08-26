@@ -395,6 +395,9 @@ struct Tuple {
 
   TH2F* BefPreS_CluNormChargeVsStripLayer_lowBetaGamma;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma;
+  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91; 
+  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91;
+  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2;
 
   TH1F* BefPreS_dRMinPfJet;
   TH2F* BefPreS_dRMinPfJetVsIas;
@@ -519,6 +522,7 @@ struct Tuple {
   TH2F* PostPreS_ProbQVsGenID;
 
   TH1F* PostPreS_IasForStatus91;
+  TH1F* PostPreS_IasForStatusNot91;
 
   TH2F* PostPreS_ProbQVsGenEnviromentID;
   TH2F* PostPreS_ProbXYVsGenID;

@@ -128,6 +128,7 @@
 // - 27p9: - Change charges to e/um, intro genGammaBetaVsProbXYNoL1, for bad CPE default probXY to probXY = 0.009 add dRMinPfMet plot
 // - 28p0: - PfMetPhi and PfMet plots, dPhi PfMet plots, protection for gen history with vertex, for bad CPE default probXY to probXY = 0, and dont use it
 //         - BefPreS_CluNormChargeVsStripLayer_higherBetaGamma plot,
+// - 28p1: - NormClu vs layer plots for diff status particles, modify the phi distribution
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1264,6 +1265,30 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
 
+    // Loop on the gen particles (again) to find if the 0.1 enviroment of the candidate has 91 or >2
+    bool candidateEnvHasStatus91 = false;
+    bool candidateEnvHasStatusHigherThan2 = false;
+    if (!isData) {
+      unsigned int usignedIntclosestGenIndex = 0;
+      if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
+      
+      for (unsigned int g = 0; g < genColl.size(); g++) {
+          // Exclude the canidate when looking at its envirment
+        if (g == usignedIntclosestGenIndex) continue;
+          // Look only at the R=0.1 enviroment of the candidate
+        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
+        
+        if (genColl[g].status() == 91) {
+          candidateEnvHasStatus91 = true;
+        }
+        if (genColl[g].status() > 2) {
+          candidateEnvHasStatusHigherThan2 = true;
+        }
+          // Consider non-status 1 particles
+        if (genColl[g].status() != 1) continue;
+      }
+    }
+
     int nofClust_dEdxLowerThan = 0;
 
     // Loop through the rechits on the given track **before** preselection
@@ -1421,7 +1446,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
           tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
         } else if (!isData && genGammaBeta > 0.6 ) {
+          // TODO1
           tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+          if (candidateEnvHasStatus91) {
+            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+          } else {
+            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+          }
+          if (candidateEnvHasStatusHigherThan2) {
+            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+          }
         }
 
         if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < theFMIPX_)
@@ -1869,7 +1903,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }
         if (!motherFound) {
-          LogPrint(MOD) << "All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
+          LogPrint(MOD) << "      >> All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
         }
           // I'm sure this could be done better, if you agree and feel like it, please fix it
           // issue with a while loop and a recursive I faced is tha that mom doesnt have the same type as the genParticle
@@ -1894,8 +1928,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           
           float candidateEta = genColl[closestGenIndex].eta();
           float candidatePhi = genColl[closestGenIndex].phi();
-          cout << "      >>  | ID  | distance | pt | status | " << endl;
-          std::cout << "      >>  |--- | ---| " << std::endl;
+          cout << "          | ID  | distance | pt | status | " << endl;
+          std::cout << "          |--- | ---| " << std::endl;
           for (unsigned int g = 0; g < genColl.size(); g++) {
             float status = genColl[g].status();
             float pt = genColl[g].pt();
@@ -1913,6 +1947,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     if (!isData) {
+      bool hasStatus91Around = false;
       unsigned int usignedIntclosestGenIndex = 0;
       if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
 
@@ -1920,16 +1955,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Exclude the canidate when looking at its envirment
         if (g == usignedIntclosestGenIndex) continue;
         // Look only at the R=0.1 enviroment of the candidate
-        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.1) continue;
+        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
         
-        if (genColl[g].status() == 91) {
-          tuple->PostPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
-        }
+        if (genColl[g].status() == 91) hasStatus91Around = true;
         // Consider non-status 1 particles
         if (genColl[g].status() != 1) continue;
-        
         tuple->PostPreS_ProbQVsGenEnviromentID->Fill(pixelProbs[0], abs(genColl[g].pdgId()), EventWeight_);
         tuple->PostPreS_IasVsGenEnviromentID->Fill(globalIas_, abs(genColl[g].pdgId()), EventWeight_);
+      }
+      if (hasStatus91Around) {
+        tuple->PostPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
+      } else {
+        tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, EventWeight_);
       }
     }
     
@@ -2022,14 +2059,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
           if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.02 && globalIas_ < 0.03))) {
             if (!headerPixPrintedAlready) {
-              std::cout << std::endl << " | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
+              std::cout << std::endl << "        | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
               std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
-              std::cout << " |--- | ---| " << std::endl;
+              std::cout << "        |--- | ---| " << std::endl;
               
               headerPixPrintedAlready = true;
             }
             
-            std::cout  << " | " <<  globalIas_ << " | L" << tTopo->pxbLayer(detid) << " | " << genGammaBeta << " | " << isFlippedModule << " | ";
+            std::cout  << "        | " <<  globalIas_ << " | L" << tTopo->pxbLayer(detid) << " | " << genGammaBeta << " | " << isFlippedModule << " | ";
             std::cout << cotAlpha << " | " << cotBeta << " | " << momentum<< " | " << clustSizeX << " | " << clustSizeY << " | ";
             std::cout << pixelNormCharge << " e/um | " << isOnEdge  << " | " << hasBadPixels  << " | " << spansTwoROCs << " | " << probXY << " | " << probQ <<  " | " << std::endl;
           } else if (isSignal && genGammaBeta <= 0.31623)  {
@@ -3220,7 +3257,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   }
   
   float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
-  dPhiMinPfMet = fabs(RecoPFMET_phi-track->phi());
+  dPhiMinPfMet = fabs(reco::deltaPhi(RecoPFMET_phi,track->phi()));
 
   // Number of DeDx hits
   unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 0;
