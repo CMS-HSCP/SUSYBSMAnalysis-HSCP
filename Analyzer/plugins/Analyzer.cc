@@ -126,7 +126,8 @@
 // - 27p7: - Change histo boundary for strips
 // - 27p8: - Rewrite computedEdx(), add PostPreS_closestPfJet*Fraction plots, change PF def back to >20 GeV jets, strips lowBetaGamma plots with layers
 // - 27p9: - Change charges to e/um, intro genGammaBetaVsProbXYNoL1, for bad CPE default probXY to probXY = 0.009 add dRMinPfMet plot
-// - 28p0: - PfMetPhi and PfMet plots, protection for gen history with vertex
+// - 28p0: - PfMetPhi and PfMet plots, dPhi PfMet plots, protection for gen history with vertex, for bad CPE default probXY to probXY = 0, and dont use it
+//         - BefPreS_CluNormChargeVsStripLayer_higherBetaGamma plot,
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1302,7 +1303,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
-        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.009;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
         
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
@@ -1361,7 +1362,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           probQonTrackWMulti *= probQ;
         }
         
-        if (!specInCPE && probQ < 0.8) {
+        if (!specInCPE && probQ < 0.8 && probXY > 0.f) {
           numRecHitsXY++;
           // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
@@ -1376,16 +1377,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
           
           if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) probQNoLayer1 = 1.f;
-          if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.009;
+          if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
           
-//        if (probQNoLayer1 < 1.f && probQNoLayer1 < 0.8 && !spansTwoROCs) {
           if (!specInCPE && probQ < 0.8) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
           }
-//          if (probQNoLayer1 < 0.8 && !spansTwoROCs) {
-          if (!specInCPE && probQ < 0.8) {
+          if (!specInCPE && probQ < 0.8 && probXYNoLayer1 > 0.f) {
             numRecHitsXYNoLayer1++;
             // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
@@ -1414,15 +1413,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         clust_sat255.push_back(sat255);
         
         float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+        unsigned int stripLayerIndex = 0;
+        if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+        if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+        if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+        if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-
-          unsigned int stripLayerIndex = 0;
-          if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
-          if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
-          if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
-          if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-          
           tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+        } else if (!isData && genGammaBeta > 0.6 ) {
+          tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
         }
 
         if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < theFMIPX_)
@@ -1744,14 +1743,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->vx() << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->vy() << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->vz()
           << " | " << sqrt(genCandidateUnderStudy.mother()->mother()->mother()->mother()->vx()*genCandidateUnderStudy.mother()->mother()->mother()->mother()->vx() + genCandidateUnderStudy.mother()->mother()->mother()->mother()->vy()*genCandidateUnderStudy.mother()->mother()->mother()->mother()->vy()) << " | "  << endl;
         }
+
         if ( genCandidateUnderStudy.mother(0)->numberOfDaughters() > 1) {
           cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
         }
-        if (genCandidateUnderStudy.mother(0)->mother(0)->numberOfDaughters() > 1 ) {
-          cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
-        }
-        if (genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() > 0) {
-          cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
+        
+        if (genCandidateUnderStudy.mother(0)->numberOfMothers() > 0) {
+          if (genCandidateUnderStudy.mother(0)->mother(0)->numberOfDaughters() > 1 ) {
+            cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
+            if (genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() > 0) {
+              cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
+            }
+          }
         }
           // Loop through all the mothers of the gen particle
         for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
@@ -1918,6 +1921,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (g == usignedIntclosestGenIndex) continue;
         // Look only at the R=0.1 enviroment of the candidate
         if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.1) continue;
+        
+        if (genColl[g].status() == 91) {
+          tuple->PostPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
+        }
         // Consider non-status 1 particles
         if (genColl[g].status() != 1) continue;
         
@@ -1951,7 +1958,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
-        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.009;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
         
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
@@ -2013,7 +2020,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
           }
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
-          if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.025 && globalIas_ < 0.03))) {
+          if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.02 && globalIas_ < 0.03))) {
             if (!headerPixPrintedAlready) {
               std::cout << std::endl << " | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
               std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
@@ -3199,22 +3206,21 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
-  float dRMinPfMet = 9999.0;
+  float dPhiMinPfMet = 9999.0;
 
   if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
+    if (pfMETHandle->size() > 1) {
+    cout << "pfMETHandle->size() " << pfMETHandle->size() << endl;
+    }
     for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
       const reco::PFMET* pfMet = &(*pfMETHandle)[i];
       RecoPFMET_et = pfMet->et();
       RecoPFMET_phi = pfMet->phi();
-      
-      float dr = deltaR(pfMet->eta(), pfMet->phi(), track->eta(), track->phi());
-      if (dr < dRMinPfMet) {
-        dRMinPfMet = dr;
-      }
     }
   }
   
   float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
+  dPhiMinPfMet = fabs(RecoPFMET_phi-track->phi());
 
   // Number of DeDx hits
   unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 0;
@@ -3952,10 +3958,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_closestPfJetElectronFractionVsIas->Fill(closestPfJetElectronFraction, globalIas_, EventWeight_);
     tuple->PostPreS_closestPfJetPhotonFractionVsIas->Fill(closestPfJetPhotonFraction, globalIas_, EventWeight_);
     tuple->PostPreS_dRMinCaloJet->Fill(dRMinCaloJet, EventWeight_);
-    tuple->PostPreS_dRMinPfMet->Fill(dRMinPfMet, EventWeight_);
+    tuple->PostPreS_dPhiMinPfMet->Fill(dPhiMinPfMet, EventWeight_);
     tuple->PostPreS_CaloNumJets->Fill(caloNumJets, EventWeight_);
     tuple->PostPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, EventWeight_);
-    tuple->PostPreS_dRMinPfMetVsIas->Fill(dRMinPfMet, globalIas_, EventWeight_);
+    tuple->PostPreS_dPhiMinPfMetVsIas->Fill(dPhiMinPfMet, globalIas_, EventWeight_);
     tuple->PostPreS_PfMet->Fill(RecoPFMET_et, EventWeight_);
     tuple->PostPreS_PfMetPhi->Fill(RecoPFMET_phi, EventWeight_);
       

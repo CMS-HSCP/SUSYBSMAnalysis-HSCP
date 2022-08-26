@@ -17,7 +17,7 @@ options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_0
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isBckg',
+options.register('SAMPLE', 'isSignal',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
@@ -32,8 +32,8 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-options.register('LUMITOPROCESS', '',
-#options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
+#options.register('LUMITOPROCESS', '',
+options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -50,6 +50,7 @@ process = cms.Process("HSCPAnalysis")
 #isBckg = False
 #isData = False
 #isSkimmedSample = False
+#GTAG = 'START72_V1::All'
 
 ## print configuration:
 print('\nCMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
@@ -69,59 +70,22 @@ process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.options   = cms.untracked.PSet(
-      wantSummary = cms.untracked.bool(False),
+      wantSummary = cms.untracked.bool(True),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-170To300_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2430000/E09ACB33-2178-7346-9B8F-1B2E37A01299.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-170To300_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/250000/0D04C22E-0391-534F-84D1-673F519CDE00.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40004/3EA4FB46-684A-A344-B8FD-C49E604413CA.root"),
-#   fileNames = cms.untracked.vstring("file:3EA4FB46-684A-A344-B8FD-C49E604413CA.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/00002/8A680DB7-DC98-1B4C-9BE8-0BF6B95B25F5.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/240008/50D6866F-AF83-1545-BA76-D696B7B7BF6E.root"),
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40003/12DD9D3F-118A-D044-B4A1-4EF7372EA686.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
+   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
+#   fileNames = cms.untracked.vstring("file:HSCP_Gluino_Mass1800_AOD_1.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
-
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:37737:411896098')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:115188:115187134')
-#process.source.eventsToProcess = cms.untracked.VEventRange('1:183264:183263902')
-process.source.eventsToProcess = cms.untracked.VEventRange('1:25539:278749947')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
 process.HSCPTuplePath = cms.Path() 
-
-########################################################################
-#Run the Skim sequence if necessary
-if(not options.isSkimmedSample):
-   process.nEventsBefSkim  = cms.EDProducer("EventCountProducer")
-
-   process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
-   process.HSCPTrigger = process.hltHighLevel.clone()
-   process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLT" )
-   process.HSCPTrigger.andOr = cms.bool( True ) #OR
-   process.HSCPTrigger.throw = cms.bool( False )
-   if(options.SAMPLE=='isData'):
-      process.HSCPTrigger.HLTPaths = [ #check triggers
-          "HLT_PFMET120_PFMHT120_IDTight_v*",
-          "HLT_Mu50_v*",
-          "HLT_PFHT500_PFMET100_PFMHT100_IDTight_v*",
-          "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v*",
-          "HLT_MET105_IsoTrk50_v*",
-      ]
-   else:
-      #do not apply trigger filter on signal
-      process.HSCPTrigger.HLTPaths = ["*"]  
-   
-   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger 
-
-########################################################################
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
@@ -137,7 +101,7 @@ if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
         filter = cms.bool(False),
         src = cms.InputTag("genParticles"),
         cut = cms.string('pt > 5.0'),
-#        stableOnly = cms.bool(True)
+        stableOnly = cms.bool(True)
    )
 
    process.HSCPTuplePath += process.genParticlesSkimmed
@@ -190,6 +154,13 @@ if(options.SAMPLE=='isData' and len(options.LUMITOPROCESS)>0):
    import FWCore.PythonUtilities.LumiList as LumiList
    process.source.lumisToProcess = LumiList.LumiList(filename = options.LUMITOPROCESS).getVLuminosityBlockRange()
    #process.source.lumisToProcess = LumiList.LumiList(url = https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt).getVLuminosityBlockRange()
+
+if(options.SAMPLE=='isBckg' or options.SAMPLE=='isData'):
+   process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')  #take just the skimmed ones
+   process.Out.outputCommands.extend(["drop triggerTriggerEvent_hltTriggerSummaryAOD_*_*"])
+else:
+   process.Out.SelectEvents = cms.untracked.PSet()
+
 
 ########################################################################
 
@@ -245,34 +216,34 @@ else :
        IasTemplate = "templateMC.root"
 
 
-process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
-### set your configirattion here (default: python/HSCParticleAnalyzer_cff.py)
-#process.analyzer.SampleTxtFile=options.sampleTxtFile
-process.analyzer.TypeMode = 0 # 0: Tracker only
-process.analyzer.SampleType = SampleType 
-process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
-process.analyzer.SaveGenTree = 0
-process.analyzer.DeDxTemplate=IasTemplate
-process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.Period = "2018"
-process.analyzer.DebugLevel = 100 
-process.analyzer.DeDxK = K
-process.analyzer.DeDxC = C
-process.analyzer.DeDxSF_0 = SF0
-process.analyzer.DeDxSF_1 = SF1
-process.analyzer.GlobalMinIh = C
-process.analyzer.DoTriggering = False
+process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
+process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
+process.HSCParticleAnalyzer.SampleType = SampleType 
+process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
+process.HSCParticleAnalyzer.SaveGenTree = 0
+process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
+process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
+process.HSCParticleAnalyzer.Period = "2018"
+process.HSCParticleAnalyzer.DebugLevel = 0
+#process.HSCParticleAnalyzer.DebugLevel = 100
+process.HSCParticleAnalyzer.DeDxK = K
+process.HSCParticleAnalyzer.DeDxC = C
+process.HSCParticleAnalyzer.DeDxSF_0 = SF0
+process.HSCParticleAnalyzer.DeDxSF_1 = SF1
+process.HSCParticleAnalyzer.GlobalMinIh = C
+process.HSCParticleAnalyzer.GlobalMinTrackProbXYCut = -1 
+process.HSCParticleAnalyzer.GlobalMaxTrackProbXYCut = 0.000001
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
 
-process.analysis = cms.Path(process.analyzer)
+process.analysis = cms.Path(process.HSCParticleAnalyzer)
 
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.endjob_step = cms.EndPath(process.endOfProcess)
 
-process.HSCPTuplePath += process.analyzer
+process.HSCPTuplePath += process.HSCParticleAnalyzer
 
 ########################################################################
 
@@ -284,5 +255,5 @@ for mod in process.filters_().itervalues():
 
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
-process.schedule = cms.Schedule(process.HSCPTuplePath) #, process.endjob_step)
+process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
 

@@ -394,6 +394,7 @@ struct Tuple {
   TH2F* BefPreS_CluCotAlphaVsPixelLayer;
 
   TH2F* BefPreS_CluNormChargeVsStripLayer_lowBetaGamma;
+  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma;
 
   TH1F* BefPreS_dRMinPfJet;
   TH2F* BefPreS_dRMinPfJetVsIas;
@@ -516,6 +517,9 @@ struct Tuple {
 
   TH2F* PostPreS_EtaVsGenID;
   TH2F* PostPreS_ProbQVsGenID;
+
+  TH1F* PostPreS_IasForStatus91;
+
   TH2F* PostPreS_ProbQVsGenEnviromentID;
   TH2F* PostPreS_ProbXYVsGenID;
   TH2F* PostPreS_PtVsGenID;
@@ -645,9 +649,9 @@ struct Tuple {
   TH2F* PostPreS_closestPfJetPhotonFractionVsIas;
 
   TH1F* PostPreS_dRMinCaloJet;
-  TH1F* PostPreS_dRMinPfMet;
+  TH1F* PostPreS_dPhiMinPfMet;
   TH2F* PostPreS_dRMinCaloJetVsIas;
-  TH2F* PostPreS_dRMinPfMetVsIas;
+  TH2F* PostPreS_dPhiMinPfMetVsIas;
   TH1F* PostPreS_PfMet;
   TH1F* PostPreS_PfMetPhi;
 

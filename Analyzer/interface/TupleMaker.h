@@ -875,6 +875,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Sumw2();
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Sumw2();
 
   tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->BefPreS_dRMinPfJet->Sumw2();
@@ -1188,6 +1190,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbQVsGenID";
   tuple->PostPreS_ProbQVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsGenID->Sumw2();
+
+  tuple->PostPreS_IasForStatus91 = dir.make<TH1F>("PostPreS_IasForStatus91",";I_{as} when status=91", 10, 0., 1.);
+  tuple->PostPreS_IasForStatus91->Sumw2();
+
   tuple->PostPreS_ProbQVsGenEnviromentID = dir.make<TH2F>("PostPreS_ProbQVsGenEnviromentID",";ProbQ;GenEnviromentID",20, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsGenEnviromentID->Sumw2();
   Name = "PostPreS_ProbXYVsGenID";
@@ -1483,13 +1489,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_dRMinPfJetVsIas->Sumw2();
   tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
   tuple->PostPreS_dRMinCaloJet->Sumw2();
-  tuple->PostPreS_dRMinPfMet = dir.make<TH1F>("PostPreS_dRMinPfMet",";dRMinPfMet",100,0.,1.5);
-  tuple->PostPreS_dRMinPfMet->Sumw2();
+  tuple->PostPreS_dPhiMinPfMet = dir.make<TH1F>("PostPreS_dPhiMinPfMet",";dPhiMinPfMet",100,0.,1.5);
+  tuple->PostPreS_dPhiMinPfMet->Sumw2();
 
   tuple->PostPreS_dRMinCaloJetVsIas =  dir.make<TH2F>("PostPreS_dRMinCaloJetVsIas",";dRMinCaloJet;Ias",100,0.,1.5,10,0.,1.);
   tuple->PostPreS_dRMinCaloJetVsIas->Sumw2();
-  tuple->PostPreS_dRMinPfMetVsIas =  dir.make<TH2F>("PostPreS_dRMinPfMetVsIas",";dRMinPfMet;Ias",100,0.,1.5,10,0.,1.);
-  tuple->PostPreS_dRMinPfMetVsIas->Sumw2();
+  tuple->PostPreS_dPhiMinPfMetVsIas =  dir.make<TH2F>("PostPreS_dPhiMinPfMetVsIas",";dPhiMinPfMet;Ias",100,0.,1.5,10,0.,1.);
+  tuple->PostPreS_dPhiMinPfMetVsIas->Sumw2();
 
   tuple->PostPreS_PfMet = dir.make<TH1F>("PostPreS_PfMet",";PfMet",200,0.,2000.);
   tuple->PostPreS_PfMet->Sumw2();

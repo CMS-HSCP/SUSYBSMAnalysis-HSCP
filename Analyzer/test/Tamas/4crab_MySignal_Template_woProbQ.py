@@ -3,7 +3,8 @@ from CRABClient.UserUtilities import config
 config = config()
 
 config.section_('General')
-config.General.requestName = 'Analysis_2018_MyHSCPgluino_NoRew_NoCust_M_1800_woProbQ_CodeV27p0_v1'
+#config.General.requestName = 'Analysis_2018_MyHSCPgluino_NoRew_NoCust_M_1800_woProbQ_CodeV27p0_v1'
+config.General.requestName = 'Analysis_2018_MyHSCPgluino_NoRew_M_1800_woProbQ_CodeV27p5_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 config.General.transferLogs = True
@@ -18,10 +19,9 @@ config.JobType.inputFiles = ['templateMC.root','MuonTimeOffset.txt','Cert_294927
 
 config.section_('Data')
 config.Data.inputDBS = 'phys03'
-#"/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3-0bfbad649d32c05924b5bfd4b5874292/USER",
-#"/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_NoRew_v1-e88ed05559facf15902f2fe2f6141103/USER",
-#"/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_NoRewGT_v1-a007e86beae864f0107e60af996b4558/USER"
-config.Data.inputDataset ="/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_NoRew_NoCust_v1-e88ed05559facf15902f2fe2f6141103/USER"
+#config.Data.inputDataset = '/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3-0bfbad649d32c05924b5bfd4b5874292/USER'
+config.Data.inputDataset = '/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_NoRew_v1-e88ed05559facf15902f2fe2f6141103/USER'
+#config.Data.inputDataset = '/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_NoRewGT_v1-a007e86beae864f0107e60af996b4558/USER'
 #config.Data.inputDataset = '/HSCPgluino_M_1800/tvami-crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3-0bfbad649d32c05924b5bfd4b5874292/USER'
 config.Data.splitting = 'LumiBased'
 #config.Data.unitsPerJob = 1 #20
