@@ -1197,7 +1197,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
   //minimal selection
-    if(!hscp_is_muon) continue;
+    //if(!hscp_is_muon) continue;
 
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
@@ -1283,11 +1283,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Loop through the rechits on the given track before preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       // TODO debug
-      if (i>3) {
+      /*if (i>3) {
         cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i)*265 /  dedxHits->pathlength(i)  << endl;
       } else {
         cout << "dedxHits->charge(" << i << ") /  dedxHits->pathlength(i) : "  << dedxHits->charge(i) /  dedxHits->pathlength(i)  << endl;
-      }
+      }*/
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
       clust_isStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
@@ -1485,7 +1485,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dEdxErr = 0;
     auto dedxSObjTmp =
         computedEdx(run_number, year, dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, typeMode_ == 5, false, trackerCorrector.TrackerGains,
-                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, skipPixel_, useTemplateLayer_);
+                    true, true, 99, false, 1, 0.00, nullptr, 0, closestHSCPsPDGsID, false, useTemplateLayer_);
     
     reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
 
@@ -1635,6 +1635,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           MassErr,
                           Ih_Iso_cut,
                           closestBackgroundPDGsIDs);
+
+    if(!hscp_is_muon) passPre=false;
  
 
     Ih_Iso_cut = false;
@@ -2046,19 +2048,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             unsigned int stripLayerIndex = 0;
             if (detid.subdetId() == StripSubdetector::TIB) {
               stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
-              cout << "Strips TIB L" << abs(int(tTopo->tibLayer(detid)))<< " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
+              //cout << "Strips TIB L" << abs(int(tTopo->tibLayer(detid)))<< " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
             if (detid.subdetId() == StripSubdetector::TOB) {
               stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
-              cout << "Strips TOB L" << abs(int(tTopo->tobLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
+              //cout << "Strips TOB L" << abs(int(tTopo->tobLayer(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
             else if (detid.subdetId() == StripSubdetector::TID) {
               stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
-              cout << "Strips TID D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
+              //cout << "Strips TID D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
             else if (detid.subdetId() == StripSubdetector::TEC) {
               stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-              cout << "Strips TEC D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
+              //cout << "Strips TEC D" << abs(int(tTopo->tidWheel(detid))) << " Norm Charge: " << dedxHits->charge(i) * 265 / dedxHits->pathlength(i) << endl;
             }
 
             if (tuple) {
@@ -2336,10 +2338,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Pt,
                                 HSCP_PtErr,
                                 HSCP_Ias,
+                                HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ias_PixelOnly,
                                 HSCP_Ias_StripOnly,
                                 HSCP_Ias_PixelOnly_noL1,
-                                HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ih,
                                 HSCP_Ick,
                                 HSCP_Fmip,
@@ -2576,7 +2578,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("GlobalMinTOF",1.0)->setComment("A");
-  desc.addUntracked("SkipPixel",true)->setComment("A");
+  desc.addUntracked("SkipPixel",false)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
