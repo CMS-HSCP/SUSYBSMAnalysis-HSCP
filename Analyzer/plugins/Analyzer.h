@@ -156,7 +156,6 @@ public:
                         const float RescaleI,
                         const float RescaleT,
                         float MassErr,
-                        const bool Ih_Iso_cut,
                         const float closestBackgroundPDGsIDs[]);
 
   bool passSelection(const reco::TrackRef track,
@@ -190,7 +189,6 @@ public:
                      Tuple* tuple,
                      const float GenBeta,
                      float MassErr,
-                     const bool Ih_Iso_cut,
                      const float closestBackgroundPDGsIDs[]);
 
 private:
@@ -314,6 +312,7 @@ private:
   float globalMinFOVM_;
   unsigned int globalMinNOM_;
   float globalMaxChi2_, globalMaxEoP_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_, globalMinDeltaRminJet_, globalMaxMiniRelIsoAll_, globalMinIh_, globalMinTrackProbQCut_, globalMaxTrackProbQCut_, globalMinTrackProbXYCut_;
+  float globalMaxTrackProbXYCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
@@ -321,7 +320,6 @@ private:
   float GlobalMinNDOFCSC = 6;         // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
   float GlobalMaxTOFErr = 0.15;       //0.07;   // cut on error on muon TOF measurement
 
-  bool skipPixel_ = true;
   bool useTemplateLayer_ = false;
 
   // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
@@ -338,11 +336,13 @@ private:
   float dEdxSF[2] = {dEdxSF_0_, dEdxSF_1_};
   float dEdxK_;
   float dEdxC_;
+  float globalIas_;
+  float globalIh_;
 
   dedxGainCorrector trackerCorrector;
   string dEdxTemplate_;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
   bool enableDeDxCalibration_;
-  string dEdxCalibration_, geometry_, timeOffset_;
+  string timeOffset_;
   muonTimingCalculator tofCalculator;
 
   float theFMIPX_ = 4;
