@@ -129,6 +129,7 @@
 // - 28p0: - PfMetPhi and PfMet plots, dPhi PfMet plots, protection for gen history with vertex, for bad CPE default probXY to probXY = 0, and dont use it
 //         - BefPreS_CluNormChargeVsStripLayer_higherBetaGamma plot,
 // - 28p1: - NormClu vs layer plots for diff status particles, modify the phi distribution
+// - 28p2: - Skip the track if mom ID = cand ID and has 91 status
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1265,7 +1266,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
 
-    // Loop on the gen particles (again) to find if the 0.1 enviroment of the candidate has 91 or >2
+    // Loop on the gen particles (again) to find if the 0.001 enviroment of the candidate has 91 or >2
     bool candidateEnvHasStatus91 = false;
     bool candidateEnvHasStatusHigherThan2 = false;
     if (!isData) {
@@ -1290,7 +1291,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     int nofClust_dEdxLowerThan = 0;
-
+    if (genColl[closestGenIndex].mother()->pdgId() == genColl[closestGenIndex].pdgId() && candidateEnvHasStatus91) continue;
     // Loop through the rechits on the given track **before** preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       // TODO debug
