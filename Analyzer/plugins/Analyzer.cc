@@ -1310,7 +1310,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
         if (probQ <= 0.0 || probQ >= 1.f)  {
-          if (probQ < 0.0 || probQ >= 1.f) LogPrint(MOD) << "(probQ <= 0.0 || probQ >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+          if (probQ < 0.0 || probQ >= 1.f) {
+              if (debug_>0) LogPrint(MOD) << "(probQ <= 0.0 || probQ >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+          }
           probQ = 1.f;
         }
         if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
@@ -1383,7 +1385,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
           
           if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) {
-            if (probQNoLayer1 < 0.0 || probQNoLayer1 >= 1.f) LogPrint(MOD) << "(probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+            if (probQNoLayer1 < 0.0 || probQNoLayer1 >= 1.f) {
+                if(debug_>0) LogPrint(MOD) << "(probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+            }
             probQNoLayer1 = 1.f;
           }
           if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
@@ -1569,7 +1573,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //globalIas_ without TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
@@ -1583,7 +1587,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //globalIas_ Strip only
     auto dedxIas_StripOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
@@ -1600,7 +1604,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
     
     //Choose of Ias definition - strips only
-    dedxSObj = dedxIas_StripOnly;
+    //dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
     
     float MassErr = GetMassErr(track->p(),
@@ -3263,7 +3267,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Check the min fraction of valid hits
   passedCutsArray[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Check the min fraction of valid measurements
-  passedCutsArray[7] = (numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits()) > globalMinFOVM_) ? true : false;
+  passedCutsArray[7] = ((numDeDxHits-track->hitPattern().numberOfValidPixelHits())/(float)fabs(track->hitPattern().numberOfValidStripHits()) > globalMinFOVM_) ? true : false;
   // Cut for the number of dEdx hits
   passedCutsArray[8]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // Select only high purity tracks
@@ -3285,7 +3289,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Veto on jet with pT > 30 GeV in a cone of dR=0.3
   //passedCutsArray[12] = (true) ? true : false;
   //passedCutsArray[15] = ( vetoJet ) ? false : true;
-  passedCutsArray[15] = ( dRMinPfJet > globalMinDeltaRminJet_ ) ? true : false;
+  //passedCutsArray[15] = ( dRMinPfJet > globalMinDeltaRminJet_ ) ? true : false;
+  passedCutsArray[15] = true;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
   //passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
@@ -3373,10 +3378,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
     LogPrint(MOD) << "        >>   isoTK_PVconstrain_dr03   " <<   isoTK_PVconstrain_dr03  ;
     LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
-    LogPrint(MOD) << "        >>   Ih  " <<   Ih ;
+    LogPrint(MOD) << "        >>   Ih  " <<   globalIh_ ;
     LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
     LogPrint(MOD) << "        >>   probXYonTrack   " <<  probXYonTrack  ;
-    LogPrint(MOD) << "        >>   Ias  " << Ias;
+    LogPrint(MOD) << "        >>   Ias  " << globalIas_ ;
   }
 
   
