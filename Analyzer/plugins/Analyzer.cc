@@ -130,6 +130,8 @@
 //         - BefPreS_CluNormChargeVsStripLayer_higherBetaGamma plot,
 // - 28p1: - NormClu vs layer plots for diff status particles, modify the phi distribution
 // - 28p2: - Skip the track if mom ID = cand ID and has 91 status
+// - 28p3: - Skip the track if it has 91 status in the env
+// - 28p4: - Dont skip, but increase binning for charge vs layer
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1291,7 +1293,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     int nofClust_dEdxLowerThan = 0;
-    if (genColl[closestGenIndex].mother()->pdgId() == genColl[closestGenIndex].pdgId() && candidateEnvHasStatus91) continue;
+
+//    if (!isData && candidateEnvHasStatus91) continue;
+//    if (!isData && genColl[closestGenIndex].mother()->pdgId() == genColl[closestGenIndex].pdgId() && candidateEnvHasStatus91) continue;
     // Loop through the rechits on the given track **before** preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       // TODO debug

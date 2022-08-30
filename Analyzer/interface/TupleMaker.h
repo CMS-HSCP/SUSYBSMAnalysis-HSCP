@@ -873,15 +873,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluCotAlphaVsPixelLayer = dir.make<TH2F>("BefPreS_CluCotAlphaVsPixelLayer",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
   tuple->BefPreS_CluCotAlphaVsPixelLayer->Sumw2();
 
-  tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",1000,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Sumw2();
-  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma",";CluNormCharge;Layer",1000,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Sumw2();
-  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91",";CluNormCharge;Layer",1000,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Sumw2();
-  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91",";CluNormCharge;Layer",1000,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Sumw2();
-  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2",";CluNormCharge;Layer",100,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2",";CluNormCharge;Layer",1000,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Sumw2();
 
   tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
