@@ -132,6 +132,7 @@
 // - 28p2: - Skip the track if mom ID = cand ID and has 91 status
 // - 28p3: - Skip the track if it has 91 status in the env
 // - 28p4: - Dont skip, but increase binning for charge vs layer
+// - 28p5: - Dont skip, add charge vs layer after preS for 91 statuses
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1451,7 +1452,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
           tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
         } else if (!isData && genGammaBeta > 0.6 ) {
-          // TODO1
           tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
           if (candidateEnvHasStatus91) {
             tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
@@ -2091,6 +2091,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
         float stripSize = stripsCluster->amplitudes().size();
         if (!isData) {
+          unsigned int stripLayerIndex = 0;
+          if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+          if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+          if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+          if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+          
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+            tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+          } else if (!isData && genGammaBeta > 0.6 ) {
+            tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+            if (candidateEnvHasStatus91) {
+              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+            } else {
+              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+            }
+            if (candidateEnvHasStatusHigherThan2) {
+              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+            }
+          }
+          
           unsigned int isGlued = 0;
           (tTopo->glued(detid) > 0) ? isGlued = 1 : isGlued = 0;
           if (!headerStripsPrintedAlready) {
