@@ -21,10 +21,6 @@ datasetList = [
 codeVersion = sys.argv[1]
 #just the number, like 18p2
 
-didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -valid 192:00 otherwise say no and do it\n")
-if(didVoms):
- sys.exit()
-
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
 if not os.path.exists("4crab_Signal_Template_woProbQ.py"):
@@ -63,6 +59,7 @@ config.Data.runRange = '0'
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
+config.Site.blacklist = ['T2_US_Nebraska']
 config.Site.storageSite = 'T2_HU_Budapest'
   '''
 

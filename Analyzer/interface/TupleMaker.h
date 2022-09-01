@@ -851,9 +851,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluProbQVsPixelLayer->Sumw2();
   tuple->BefPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbXYVsPixelLayer",";CluProbXY;Layer",100,0.,1.,4,0.,4.);
   tuple->BefPreS_CluProbXYVsPixelLayer->Sumw2();
-  tuple->BefPreS_CluNormChargeVsPixelLayer = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer",";CluNormCharge;Layer",500,0.,6000000.,4,0.,4.);
+  tuple->BefPreS_CluNormChargeVsPixelLayer = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer",";CluNormCharge;Layer",100,0.,600.,4,0.,4.);
   tuple->BefPreS_CluNormChargeVsPixelLayer->Sumw2();
-  tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma",";CluNormCharge;Layer",500,0.,6000000.,4,0.,4.);
+  tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma",";CluNormCharge;Layer",100,0.,600.,4,0.,4.);
   tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Sumw2();
   tuple->BefPreS_CluSizeVsPixelLayer = dir.make<TH2F>("BefPreS_CluSizeVsPixelLayer",";CluSize;Layer",10,0.,10.,4,0.,4.);
   tuple->BefPreS_CluSizeVsPixelLayer->Sumw2();
@@ -873,8 +873,16 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluCotAlphaVsPixelLayer = dir.make<TH2F>("BefPreS_CluCotAlphaVsPixelLayer",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
   tuple->BefPreS_CluCotAlphaVsPixelLayer->Sumw2();
 
-  tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",500,0.,6000000.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
   tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Sumw2();
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Sumw2();
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Sumw2();
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Sumw2();
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Sumw2();
 
   tuple->BefPreS_dRMinPfJet= dir.make<TH1F>("BefPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->BefPreS_dRMinPfJet->Sumw2();
@@ -884,6 +892,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_dRMinCaloJet->Sumw2();
   tuple->BefPreS_dRMinCaloJetVsIas =  dir.make<TH2F>("BefPreS_dRMinCaloJetVsIas",";dRMinCaloJet;Ias",100,0.,1.5,10,0.,1.);
   tuple->BefPreS_dRMinCaloJetVsIas->Sumw2();
+  tuple->BefPreS_genGammaBetaVsProbXYNoL1 =  dir.make<TH2F>("BefPreS_genGammaBetaVsProbXYNoL1", ";#gamma #beta;ProbXYNoL1",10,0.,1.3,20,0.,1.);
+  tuple->BefPreS_genGammaBetaVsProbXYNoL1->Sumw2();
   tuple->BefPreS_dRVsPtPfJet = dir.make<TH2F>("BefPreS_dRVsPtPfJet",";dR(cand,jet);p_{T}",100,0.,1.5,100,0.,1000.);
   tuple->BefPreS_dRVsPtPfJet->Sumw2();
   tuple->BefPreS_dRVsdPtPfCaloJet = dir.make<TH2F>("BefPreS_dRVsdPtPfCaloJet",";dRmin;dPtPfCaloJet",100,0.,1.5,20,0.,100.);
@@ -1186,6 +1196,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "PostPreS_ProbQVsGenID";
   tuple->PostPreS_ProbQVsGenID = dir.make<TH2F>(Name.c_str(), Name.c_str(), 100, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsGenID->Sumw2();
+
+  tuple->PostPreS_IasForStatus91 = dir.make<TH1F>("PostPreS_IasForStatus91",";I_{as} when status=91", 10, 0., 1.);
+  tuple->PostPreS_IasForStatus91->Sumw2();
+  tuple->PostPreS_IasForStatusNot91 = dir.make<TH1F>("PostPreS_IasForStatusNot91",";I_{as} when status!=91", 10, 0., 1.);
+  tuple->PostPreS_IasForStatusNot91->Sumw2();
+
   tuple->PostPreS_ProbQVsGenEnviromentID = dir.make<TH2F>("PostPreS_ProbQVsGenEnviromentID",";ProbQ;GenEnviromentID",20, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsGenEnviromentID->Sumw2();
   Name = "PostPreS_ProbXYVsGenID";
@@ -1461,6 +1477,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_CluCotAlphaVsPixelLayer = dir.make<TH2F>("PostPreS_CluCotAlphaVsPixelLayer",";CotAlpha;Layer",100,-1.,1.,4,0.,4.);
   tuple->PostPreS_CluCotAlphaVsPixelLayer->Sumw2();
 
+  tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_lowBetaGamma",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Sumw2();
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Sumw2();
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Sumw2();
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Sumw2();
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2",";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Sumw2();
+
   tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet",";dRMinPfJet",100,0.,1.5);
   tuple->PostPreS_dRMinPfJet->Sumw2();
   tuple->PostPreS_closestPfJetMuonFraction = dir.make<TH1F>("PostPreS_closestPfJetMuonFraction",":closestPfJetMuonFraction",20,0.,1.);
@@ -1481,8 +1508,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_dRMinPfJetVsIas->Sumw2();
   tuple->PostPreS_dRMinCaloJet = dir.make<TH1F>("PostPreS_dRMinCaloJet",";dRMinCaloJet",100,0.,1.5);
   tuple->PostPreS_dRMinCaloJet->Sumw2();
+  tuple->PostPreS_dPhiMinPfMet = dir.make<TH1F>("PostPreS_dPhiMinPfMet",";dPhiMinPfMet",100,0.,3.2);
+  tuple->PostPreS_dPhiMinPfMet->Sumw2();
+
   tuple->PostPreS_dRMinCaloJetVsIas =  dir.make<TH2F>("PostPreS_dRMinCaloJetVsIas",";dRMinCaloJet;Ias",100,0.,1.5,10,0.,1.);
   tuple->PostPreS_dRMinCaloJetVsIas->Sumw2();
+  tuple->PostPreS_dPhiMinPfMetVsIas =  dir.make<TH2F>("PostPreS_dPhiMinPfMetVsIas",";dPhiMinPfMet;Ias",100,0.,3.2,10,0.,1.);
+  tuple->PostPreS_dPhiMinPfMetVsIas->Sumw2();
+
+  tuple->PostPreS_PfMet = dir.make<TH1F>("PostPreS_PfMet",";PfMet",200,0.,2000.);
+  tuple->PostPreS_PfMet->Sumw2();
+  tuple->PostPreS_PfMetPhi = dir.make<TH1F>("PostPreS_PfMetPhi",";PfMetPhi",30,0.,3.2);
+  tuple->PostPreS_PfMetPhi->Sumw2();
   
   tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
   tuple->GenLevelBinning->Sumw2();
