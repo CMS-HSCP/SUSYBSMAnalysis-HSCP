@@ -282,6 +282,7 @@ private:
   
   // Ias quantiles and pT_cut used to validate the background estimate method in data
   float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
+  //float Ias_quantiles[5]={ 0.037, 0.042, 0.048, 0.056, 0.066 }; //data or signal //WIP new quantiles determined with new preselection cuts
   float pT_cut = 60;
   
   // binning for eta, ih, p, mass distributions used to validate the background estimate method in data

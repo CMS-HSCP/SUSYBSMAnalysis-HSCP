@@ -213,7 +213,7 @@ public:
 
   void fillRegions(Tuple *&tuple,
                    float pt_cut,
-                   float Ias_quantiles[6],
+                   float Ias_quantiles[5],
                    float eta,
                    float p,
                    float pt,
@@ -2837,7 +2837,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
 
 void TupleMaker::fillRegions(Tuple *&tuple,
                              float pt_cut,
-                             float Ias_quantiles[6],
+                             float Ias_quantiles[5],
                              float eta,
                              float p,
                              float pt,
@@ -2854,7 +2854,7 @@ void TupleMaker::fillRegions(Tuple *&tuple,
         if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[4])                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
     }else{
         if(ias<Ias_quantiles[0]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w); 
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[1]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
@@ -2862,7 +2862,7 @@ void TupleMaker::fillRegions(Tuple *&tuple,
         if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) {m<500?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
+        if(ias>=Ias_quantiles[4])        {m<500?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
     }
 }
 
