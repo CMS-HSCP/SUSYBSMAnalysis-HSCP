@@ -133,6 +133,7 @@
 // - 28p3: - Skip the track if it has 91 status in the env
 // - 28p4: - Dont skip, but increase binning for charge vs layer
 // - 28p5: - Dont skip, add charge vs layer after preS for 91 statuses
+// - 28p6: - Clean the logs, skip if it has 91 status in the env
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1277,25 +1278,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
       
       for (unsigned int g = 0; g < genColl.size(); g++) {
-          // Exclude the canidate when looking at its envirment
+        // Exclude the canidate when looking at its envirment
         if (g == usignedIntclosestGenIndex) continue;
-          // Look only at the R=0.1 enviroment of the candidate
-        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
-        
+        // Look only at the R=0.001 enviroment of the candidate
+        if (deltaR(genColl[g].eta(),genColl[g].phi(),genColl[usignedIntclosestGenIndex].eta(),genColl[usignedIntclosestGenIndex].phi()) > 0.001) continue;
         if (genColl[g].status() == 91) {
           candidateEnvHasStatus91 = true;
         }
         if (genColl[g].status() > 2) {
           candidateEnvHasStatusHigherThan2 = true;
         }
-          // Consider non-status 1 particles
+        // Consider non-status 1 particles
         if (genColl[g].status() != 1) continue;
       }
     }
 
     int nofClust_dEdxLowerThan = 0;
 
-//    if (!isData && candidateEnvHasStatus91) continue;
+    if (!isData && candidateEnvHasStatus91) continue;
 //    if (!isData && genColl[closestGenIndex].mother()->pdgId() == genColl[closestGenIndex].pdgId() && candidateEnvHasStatus91) continue;
     // Loop through the rechits on the given track **before** preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
@@ -1332,7 +1332,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
-        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+//        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
         if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
         
@@ -1405,7 +1405,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+//          if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
           
           if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) probQNoLayer1 = 1.f;
           if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
