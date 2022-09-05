@@ -1604,7 +1604,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
     
     //Choose of Ias definition - strips only
-    //dedxSObj = dedxIas_StripOnly;
+    dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
     
     float MassErr = GetMassErr(track->p(),
