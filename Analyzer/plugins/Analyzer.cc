@@ -332,8 +332,6 @@ void Analyzer::beginJob() {
   dttof = nullptr;
   csctof = nullptr;
 
-  TrigInfo_ = 0;
-
   CurrentRun_ = 0;
   RNG = new TRandom3();
 
@@ -543,6 +541,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Get trigger results for this event
   const edm::Handle<edm::TriggerResults> triggerH = iEvent.getHandle(triggerResultsToken_);
   const auto triggerNames = iEvent.triggerNames(*triggerH);
+  
+  //0: neither mu nor met, 1: mu only, 2: met only, 3: mu and met
+  unsigned int trigInfo_ = 0;
 
   // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
   bool HLT_Mu50 = false;
@@ -573,23 +574,35 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (debug_ > 1) LogPrint(MOD) << "Checking if the event is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
+  
+  cout << "muTrig: " << muTrig << endl;
+  cout << "metTrig: " << metTrig << endl;
+  
+  cout << "HLT_Mu50: " << HLT_Mu50 << endl;
+  cout << "HLT_PFMET120_PFMHT120_IDTight: " << HLT_PFMET120_PFMHT120_IDTight << endl;
+  cout << "HLT_PFHT500_PFMET100_PFMHT100_IDTight: " << HLT_PFHT500_PFMET100_PFMHT100_IDTight << endl;
+  cout << "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60: " << HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 << endl;
+  cout << "HLT_MET105_IsoTrk50: " << HLT_MET105_IsoTrk50 << endl;
+  
+  if (!metTrig && !muTrig) cout << iEvent.id().event() << endl;
 
   if (!metTrig && muTrig) {
     // mu only
-    TrigInfo_ = 1;
+    trigInfo_ = 1;
   } else if (metTrig && !muTrig) {
     // met only
-    TrigInfo_ = 2;  // met only
+    trigInfo_ = 2;
   } else if (metTrig && muTrig) {
     // mu and met
-    TrigInfo_ = 3;
+    trigInfo_ = 3;
   }
 
+  tuple->BefPreS_TriggerType->Fill(trigInfo_+0.5, EventWeight_);
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
-  if (doTriggering_ && TrigInfo_ > 0) {
-      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
-      tuple->BefPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
-  } else if (doTriggering_ && TrigInfo_ == 0)  {
+  if (doTriggering_ && trigInfo_ > 0) {
+      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
+  }
+  if (doTriggering_ && trigInfo_ == 0)  {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
@@ -1723,7 +1736,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    tuple->PostPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
+    tuple->PostPreS_TriggerType->Fill(trigInfo_+0.5, EventWeight_);
     
     // Let's do some printouts after preselections for gen particles
     if (passPre) {
@@ -1787,14 +1800,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
         if ( genCandidateUnderStudy.mother(0)->numberOfDaughters() > 1) {
-          cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
+          cout << "   genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
         }
         
         if (genCandidateUnderStudy.mother(0)->numberOfMothers() > 0) {
           if (genCandidateUnderStudy.mother(0)->mother(0)->numberOfDaughters() > 1 ) {
-            cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
+            cout << "   genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
             if (genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() > 0) {
-              cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
+              cout << "   genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
             }
           }
         }
@@ -2451,7 +2464,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }  //END loop over HSCP candidates
 
   tuple_maker->fillTreeBranches(tuple,
-                                TrigInfo_,
+                                trigInfo_,
                                 iEvent.id().run(),
                                 iEvent.id().event(),
                                 iEvent.id().luminosityBlock(),

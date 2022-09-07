@@ -357,8 +357,6 @@ private:
 
   vector<float> PUSystFactor_;
 
-  unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met
-
   TRandom3* RNG = nullptr;
   bool is2016;
   bool is2016G;
