@@ -263,8 +263,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "ErrorHisto";
   tuple->ErrorHisto = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0., 10.);
   tuple->ErrorHisto->Sumw2();
-  Name = "BefPreS_TriggerType";
-  tuple->BefPreS_TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;", 4, 0., 4.);
   tuple->BefPreS_TriggerType->Sumw2();
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
