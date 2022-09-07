@@ -134,6 +134,7 @@
 // - 28p4: - Dont skip, but increase binning for charge vs layer
 // - 28p5: - Dont skip, add charge vs layer after preS for 91 statuses
 // - 28p6: - Clean the logs, skip if it has 91 status in the env
+// - 28p7: - add PostPreS_P, dont cut on mini-iso and see status 91
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1296,7 +1297,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     int nofClust_dEdxLowerThan = 0;
 
     if (!isData && candidateEnvHasStatus91) continue;
+    // I should add this to the error histo
 //    if (!isData && genColl[closestGenIndex].mother()->pdgId() == genColl[closestGenIndex].pdgId() && candidateEnvHasStatus91) continue;
+    
     // Loop through the rechits on the given track **before** preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       // TODO debug
@@ -3351,7 +3354,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  passedCutsArray[13] =  (true) ? true : false;
+//  passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
   // Cut on the PF electron ID
   passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
@@ -3856,6 +3860,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), globalIas_, EventWeight_);
     tuple->PostPreS_Pt->Fill(track->pt(), EventWeight_);
     tuple->PostPreS_PtVsIas->Fill(track->pt(), globalIas_, EventWeight_);
+    tuple->PostPreS_P->Fill(track->p(), EventWeight_);
     tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), EventWeight_);
     tuple->PostPreS_Dz->Fill(dz, EventWeight_);

@@ -1037,8 +1037,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_LastHitD3D->Sumw2();
   tuple->PostPreS_LastHitD3DVsEta = dir.make<TH2F>("PostPreS_LastHitD3DVsEta","PostPreS_LastHitD3DVsEta;LastHitD3D;Eta", 175, 0, 350, 20, 0.,1.);
   tuple->PostPreS_LastHitD3DVsEta->Sumw2();
-  Name = "PostPreS_P";
-  tuple->PostPreS_P = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
+  tuple->PostPreS_P = dir.make<TH1F>("PostPreS_P", ";Momentum (GeV)", 50, 0, PtHistoUpperBound);
   tuple->PostPreS_P->Sumw2();
   Name = "PostPreS_dR_NVTrack";
   tuple->PostPreS_dR_NVTrack = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);
