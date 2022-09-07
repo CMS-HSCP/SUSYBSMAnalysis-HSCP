@@ -133,6 +133,9 @@
 // - 28p3: - Skip the track if it has 91 status in the env
 // - 28p4: - Dont skip, but increase binning for charge vs layer
 // - 28p5: - Dont skip, add charge vs layer after preS for 91 statuses
+// - 28p6: - Clean the logs, skip if it has 91 status in the env
+// - 28p7: - add PostPreS_P, dont cut on mini-iso and see status 91
+// - 28p8: - add back mini-iso, fix the trigInfo_ (not a global variable anymore)
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -236,7 +239,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
-      doTriggering_(iConfig.getUntrackedParameter<bool>("DoTriggering")),
       calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics"))
  {
   //now do what ever initialization is needed
@@ -329,8 +331,6 @@ void Analyzer::beginJob() {
   tof = nullptr;
   dttof = nullptr;
   csctof = nullptr;
-
-  TrigInfo_ = 0;
 
   CurrentRun_ = 0;
   RNG = new TRandom3();
@@ -541,6 +541,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Get trigger results for this event
   const edm::Handle<edm::TriggerResults> triggerH = iEvent.getHandle(triggerResultsToken_);
   const auto triggerNames = iEvent.triggerNames(*triggerH);
+  
+  //0: neither mu nor met, 1: mu only, 2: met only, 3: mu and met
+  unsigned int trigInfo_ = 0;
 
   // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
   bool HLT_Mu50 = false;
@@ -571,23 +574,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (debug_ > 1) LogPrint(MOD) << "Checking if the event is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
-
+  
   if (!metTrig && muTrig) {
     // mu only
-    TrigInfo_ = 1;
+    trigInfo_ = 1;
   } else if (metTrig && !muTrig) {
     // met only
-    TrigInfo_ = 2;  // met only
+    trigInfo_ = 2;
   } else if (metTrig && muTrig) {
     // mu and met
-    TrigInfo_ = 3;
+    trigInfo_ = 3;
   }
 
+  tuple->BefPreS_TriggerType->Fill(trigInfo_+0.5, EventWeight_);
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
-  if (doTriggering_ && TrigInfo_ > 0) {
-      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
-      tuple->BefPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
-  } else if (doTriggering_ && TrigInfo_ == 0)  {
+  if (saveTree_ > 0 && trigInfo_ > 0) {
+      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
+  }
+  if (saveTree_ > 0 && trigInfo_ == 0)  {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
       return;
      //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
@@ -1277,26 +1281,27 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
       
       for (unsigned int g = 0; g < genColl.size(); g++) {
-          // Exclude the canidate when looking at its envirment
+        // Exclude the canidate when looking at its envirment
         if (g == usignedIntclosestGenIndex) continue;
-          // Look only at the R=0.1 enviroment of the candidate
-        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
-        
+        // Look only at the R=0.001 enviroment of the candidate
+        if (deltaR(genColl[g].eta(),genColl[g].phi(),genColl[usignedIntclosestGenIndex].eta(),genColl[usignedIntclosestGenIndex].phi()) > 0.001) continue;
         if (genColl[g].status() == 91) {
           candidateEnvHasStatus91 = true;
         }
         if (genColl[g].status() > 2) {
           candidateEnvHasStatusHigherThan2 = true;
         }
-          // Consider non-status 1 particles
+        // Consider non-status 1 particles
         if (genColl[g].status() != 1) continue;
       }
     }
 
     int nofClust_dEdxLowerThan = 0;
 
-//    if (!isData && candidateEnvHasStatus91) continue;
+    if (!isData && candidateEnvHasStatus91) continue;
+    // I should add this to the error histo
 //    if (!isData && genColl[closestGenIndex].mother()->pdgId() == genColl[closestGenIndex].pdgId() && candidateEnvHasStatus91) continue;
+    
     // Loop through the rechits on the given track **before** preselection
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
       // TODO debug
@@ -1332,7 +1337,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
-        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+//        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
         if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
         
@@ -1405,7 +1410,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                                      tTopo->pxbLayer(detid) != 1)) {
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+//          if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
           
           if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) probQNoLayer1 = 1.f;
           if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
@@ -1720,7 +1725,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    tuple->PostPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
+    tuple->PostPreS_TriggerType->Fill(trigInfo_+0.5, EventWeight_);
     
     // Let's do some printouts after preselections for gen particles
     if (passPre) {
@@ -1784,14 +1789,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
         if ( genCandidateUnderStudy.mother(0)->numberOfDaughters() > 1) {
-          cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
+          cout << "   genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
         }
         
         if (genCandidateUnderStudy.mother(0)->numberOfMothers() > 0) {
           if (genCandidateUnderStudy.mother(0)->mother(0)->numberOfDaughters() > 1 ) {
-            cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
+            cout << "   genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
             if (genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() > 0) {
-              cout << "genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
+              cout << "   genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
             }
           }
         }
@@ -2448,7 +2453,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }  //END loop over HSCP candidates
 
   tuple_maker->fillTreeBranches(tuple,
-                                TrigInfo_,
+                                trigInfo_,
                                 iEvent.id().run(),
                                 iEvent.id().event(),
                                 iEvent.id().luminosityBlock(),
@@ -2750,7 +2755,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
-  desc.addUntracked("DoTriggering",true)->setComment("Boolean to eecide whether we want to use triggers");
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
@@ -3856,6 +3860,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), globalIas_, EventWeight_);
     tuple->PostPreS_Pt->Fill(track->pt(), EventWeight_);
     tuple->PostPreS_PtVsIas->Fill(track->pt(), globalIas_, EventWeight_);
+    tuple->PostPreS_P->Fill(track->p(), EventWeight_);
     tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), EventWeight_);
     tuple->PostPreS_Dz->Fill(dz, EventWeight_);

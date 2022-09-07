@@ -263,8 +263,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   Name = "ErrorHisto";
   tuple->ErrorHisto = dir.make<TH1F>(Name.c_str(), Name.c_str(), 10, 0., 10.);
   tuple->ErrorHisto->Sumw2();
-  Name = "BefPreS_TriggerType";
-  tuple->BefPreS_TriggerType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 3, 0., 3.);
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;", 4, 0., 4.);
   tuple->BefPreS_TriggerType->Sumw2();
   Name = "HSCPCandidateType";
   tuple->HSCPCandidateType = dir.make<TH1F>(Name.c_str(), Name.c_str(), 6, 0., 6.);
@@ -1037,8 +1036,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_LastHitD3D->Sumw2();
   tuple->PostPreS_LastHitD3DVsEta = dir.make<TH2F>("PostPreS_LastHitD3DVsEta","PostPreS_LastHitD3DVsEta;LastHitD3D;Eta", 175, 0, 350, 20, 0.,1.);
   tuple->PostPreS_LastHitD3DVsEta->Sumw2();
-  Name = "PostPreS_P";
-  tuple->PostPreS_P = dir.make<TH1F>(Name.c_str(), Name.c_str(), 50, 0, PtHistoUpperBound);
+  tuple->PostPreS_P = dir.make<TH1F>("PostPreS_P", ";Momentum (GeV)", 50, 0, PtHistoUpperBound);
   tuple->PostPreS_P->Sumw2();
   Name = "PostPreS_dR_NVTrack";
   tuple->PostPreS_dR_NVTrack = dir.make<TH1F>(Name.c_str(), Name.c_str(), 40, 0, 1);

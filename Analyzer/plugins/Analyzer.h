@@ -357,8 +357,6 @@ private:
 
   vector<float> PUSystFactor_;
 
-  unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met
-
   TRandom3* RNG = nullptr;
   bool is2016;
   bool is2016G;
@@ -369,7 +367,7 @@ private:
 
   const std::string pixelCPE_;
   const int debug_;
-  const bool hasMCMatch_, doTriggering_,calcSyst_;
+  const bool hasMCMatch_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
 
