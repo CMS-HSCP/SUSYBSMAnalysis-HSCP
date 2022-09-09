@@ -600,11 +600,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   // Number of events that pass the trigger
-<<<<<<< HEAD
   tuple->NumEvents->Fill(2., EventWeight_);
-=======
-  tuple->NumEvents->Fill(2, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
 
   //keep beta distribution for signal after the trigger
   if (isSignal) {
@@ -1040,11 +1036,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           || closestHSCPsPDGsID == 1000622 || closestHSCPsPDGsID == 1000642
           || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
           || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
-<<<<<<< HEAD
         tuple->HSCPCandidateType->Fill(1., EventWeight_);
-=======
-        tuple->HSCPCandidateType->Fill(1, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
       }
       // Single-charged HSCP
       else if (   closestHSCPsPDGsID == 1009213 || closestHSCPsPDGsID == 1009323
@@ -1055,11 +1047,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                || closestHSCPsPDGsID == 1000652 || closestHSCPsPDGsID == 1006211
                || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
                || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
-<<<<<<< HEAD
         tuple->HSCPCandidateType->Fill(2., EventWeight_);
-=======
-        tuple->HSCPCandidateType->Fill(2, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
       }
       // Double-charged R-hadrons
       else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
@@ -1313,11 +1301,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     int nofClust_dEdxLowerThan = 0;
 
     if (!isData && candidateEnvHasStatus91) {
-<<<<<<< HEAD
       tuple->ErrorHisto->Fill(8.);
-=======
-      tuple->ErrorHisto->Fill(8.5);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
       continue;
     }
     
@@ -1377,7 +1361,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
-<<<<<<< HEAD
           tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
           tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
           tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
@@ -1403,33 +1386,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
             tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
-=======
-          tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0, EventWeight_);
-          tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0, EventWeight_);
-          tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex-0, EventWeight_);
-          tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0, EventWeight_);
-          tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0, EventWeight_);
-          
-          tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0, EventWeight_);
-          if (isOnEdge) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0, EventWeight_);
-          } else if (hasBadPixels) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex-0, EventWeight_);
-          } else if (spansTwoROCs) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0, EventWeight_);
-          }
-          tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0, EventWeight_);
-          
-          if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex-0, EventWeight_);
-            tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex-0, EventWeight_);
-          } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0, EventWeight_);
-            tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0, EventWeight_);
-          }
-          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-            tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex-0, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
           }
         } // end of IF on barrel pixel
 
@@ -1498,7 +1454,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
         if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-<<<<<<< HEAD
           tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
         } else if (!isData && genGammaBeta > 0.6 ) {
           tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
@@ -1509,18 +1464,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
           if (candidateEnvHasStatusHigherThan2) {
             tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-=======
-          tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-        } else if (!isData && genGammaBeta > 0.6 ) {
-          tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-          if (candidateEnvHasStatus91) {
-            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-          } else {
-            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-          }
-          if (candidateEnvHasStatusHigherThan2) {
-            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
           }
         }
 
@@ -2086,7 +2029,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           
-<<<<<<< HEAD
           tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
           tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
           tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex, EventWeight_);
@@ -2122,43 +2064,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
             tuple->PostPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex, EventWeight_);
             tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
-=======
-          tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0, EventWeight_);
-          tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0, EventWeight_);
-          tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0, EventWeight_);
-          tuple->PostPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0, EventWeight_);
-          tuple->PostPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0, EventWeight_);
-          if (isOnEdge) {
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0, EventWeight_);
-          } else if (hasBadPixels) {
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex-0, EventWeight_);
-          } else if (spansTwoROCs) {
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0, EventWeight_);
-          }
-          tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0, EventWeight_);
-          if (globalIas_ > 0.6) {
-            tuple->PostPreS_CluProbQVsPixelLayer_highIas->Fill(probQ, pixLayerIndex-0, EventWeight_);
-            tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Fill(probXY, pixLayerIndex-0, EventWeight_);
-            tuple->PostPreS_CluSizeVsPixelLayer_highIas->Fill(clustSize-0.5, pixLayerIndex-0, EventWeight_);
-            tuple->PostPreS_CluSizeXVsPixelLayer_highIas->Fill(clustSizeX-0.5, pixLayerIndex-0, EventWeight_);
-            tuple->PostPreS_CluSizeYVsPixelLayer_highIas->Fill(clustSizeY-0.5, pixLayerIndex-0, EventWeight_);
-            if (isOnEdge) {
-              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(0.5, pixLayerIndex-0, EventWeight_);
-            } else if (hasBadPixels) {
-              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(1.5, pixLayerIndex-0, EventWeight_);
-            } else if (spansTwoROCs) {
-              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(2.5, pixLayerIndex-0, EventWeight_);
-            }
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(3.5, pixLayerIndex-0, EventWeight_);
-          }
-
-          if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->PostPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex-0, EventWeight_);
-            tuple->PostPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex-0, EventWeight_);
-          } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->PostPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0, EventWeight_);
-            tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
           }
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
           if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.02 && globalIas_ < 0.03))) {
@@ -2197,7 +2102,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
           
           if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-<<<<<<< HEAD
             tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
           } else if (!isData && genGammaBeta > 0.6 ) {
             tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
@@ -2208,18 +2112,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             }
             if (candidateEnvHasStatusHigherThan2) {
               tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-=======
-            tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-          } else if (!isData && genGammaBeta > 0.6 ) {
-            tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-            if (candidateEnvHasStatus91) {
-              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-            } else {
-              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
-            }
-            if (candidateEnvHasStatusHigherThan2) {
-              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex-0, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
             }
           }
           
@@ -2326,11 +2218,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if (globalIas_ < 0.03 && globalIas_ > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
           }
           if (tuple) {
-<<<<<<< HEAD
             tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex, EventWeight_);
-=======
-            tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex-0, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
           }
         }
         // another for the strips
@@ -2343,11 +2231,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
 
             if (tuple) {
-<<<<<<< HEAD
                 tuple->PostPreS_IasStripIhVsLayer->Fill(globalIas_, IhOnLayer, stripLayerIndex, EventWeight_);
-=======
-                tuple->PostPreS_IasStripIhVsLayer->Fill(globalIas_, IhOnLayer, stripLayerIndex-0, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
             }
         }
     }
@@ -3268,7 +3152,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to HSCP candidate track
-<<<<<<< HEAD
             tuple->BefPreS_pfType->Fill(1., EventWeight_);
           if (pf_isElectron) {
             tuple->BefPreS_pfType->Fill(2., EventWeight_);
@@ -3284,23 +3167,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->BefPreS_pfType->Fill(7., EventWeight_);
           } else {
            tuple->BefPreS_pfType->Fill(8., EventWeight_);
-=======
-            tuple->BefPreS_pfType->Fill(1, EventWeight_);
-          if (pf_isElectron) {
-            tuple->BefPreS_pfType->Fill(2, EventWeight_);
-          } else if (pf_isMuon) {
-            tuple->BefPreS_pfType->Fill(3, EventWeight_);
-          } else if (pf_isPhoton) {
-            tuple->BefPreS_pfType->Fill(4, EventWeight_);
-          } else if (pf_isChHadron) {
-           tuple->BefPreS_pfType->Fill(5, EventWeight_);
-          } else if (pf_isNeutHadron) {
-            tuple->BefPreS_pfType->Fill(6, EventWeight_);
-          } else if (pf_isUndefined) {
-            tuple->BefPreS_pfType->Fill(7, EventWeight_);
-          } else {
-           tuple->BefPreS_pfType->Fill(8, EventWeight_);
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
           }
         }
         if (debug_ > 4) LogPrint(MOD) << "      >> HSCP candidate track has ID " << pfCand->pdgId() << " categoriezed by PF as " << pfCand->translatePdgIdToType(pfCand->pdgId());
@@ -3443,12 +3309,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   for (unsigned int i = 0; i < dedxHits->size(); i++) {
     DetId detid(dedxHits->detId(i));
     if (detid.subdetId() < 3) {
-<<<<<<< HEAD
       if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) != 1)) {
-=======
-      if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel &&
-                                                                   tTopo->pxbLayer(detid) != 1)) {
->>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
         nonL1PixHits++;
       }
     }
