@@ -258,23 +258,23 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->IntLumi = dir.make<TProfile>("IntLumi", ";IntLumi", 1, 0, 1);
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
-  tuple->NumEvents = dir.make<TH1F>("NumEvents",";NumEvents", 3, 0., 3.);
-  tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 10, 0., 10.);
-  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;", 4, 0., 4.);
+  tuple->NumEvents = dir.make<TH1F>("NumEvents",";NumEvents", 3, -0.5, 2.5);
+  tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;", 4, -0.5, 3.5);
   tuple->HSCPCandidateType = dir.make<TH1F>("HSCPCandidateType",";;", 6, 0., 6.);
   // Can I do setBinLabel at this point?
 
   tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, 0., 17.);
-  tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 17, 0., 17.);
-  tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;CutFlowIndex",10, 0., 1., 17, 0., 17.);
-  tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";#eta;CutFlowIndex", 50, -2.6, 2.6, 17, 0., 17.);
-  tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";PfType;CutFlowIndex", 9, 0., 9., 17, 0., 17.);
+  tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 17, -0.5, 16.5);
+  tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;CutFlowIndex",10, 0., 1.,17, -0.5, 16.5);
+  tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";#eta;CutFlowIndex", 50, -2.6, 2.6, 17, -0.5, 16.5);
+  tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";PfType;CutFlowIndex", 9, 0., 9., 17, -0.5, 16.5);
 
   tuple->N1_Eta = dir.make<TH1F>("N1_Eta",";#eta", 50, -2.6, 2.6);
   tuple->N1_Pt = dir.make<TH1F>("N1_Pt", ";p_{T} (GeV)", 50, 0, PtHistoUpperBound);
   tuple->N1_Pt_lowPt = dir.make<TH1F>("N1_Pt_lowPt", ";p_{T} (GeV)", 50, 0, 500);
   tuple->N1_Chi2oNdof = dir.make<TH1F>("N1_Chi2oNdof", ";#chi^2 / N_{dof}", 20, 0, 20);
-  tuple->N1_Qual = dir.make<TH1F>("N1_Qual",";Quality", 20, -0.5, 19.5);
+  tuple->N1_Qual = dir.make<TH1F>("N1_Qual",";Quality", 2, -0.5, 1.5);
   tuple->N1_TNOM = dir.make<TH1F>("N1_TNOM", "N1_TNOM;Number of measurments", 40, -0.5, 39.5);
   tuple->N1_TNOPH = dir.make<TH1F>("N1_TNOPH",";Number of pixel hits", 8, -0.5, 7.5);
   tuple->N1_TNOHFraction = dir.make<TH1F>("N1_TNOHFraction",";Number of valid hit fraction", 50, 0, 1);
@@ -413,7 +413,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->BefPreS_Chi2oNdof = dir.make<TH1F>("BefPreS_Chi2oNdof", "BefPreS_Chi2oNdof", 20, 0, 20);
   // This should just be a 2-bin plot where high-purity is not present = 0 or present = 1
-  tuple->BefPreS_Qual = dir.make<TH1F>("BefPreS_Qual", "BefPreS_Qual", 20, -0.5, 1.5);
+  tuple->BefPreS_Qual = dir.make<TH1F>("BefPreS_Qual", "BefPreS_Qual", 2, -0.5, 1.5);
   tuple->BefPreS_TNOH_PUA = dir.make<TH1F>("BefPreS_TNOH_PUA", "BefPreS_TNOH_PUA",  40, -0.5, 39.5);
   tuple->BefPreS_TNOH_PUB = dir.make<TH1F>("BefPreS_TNOH_PUB", "BefPreS_TNOH_PUB", 40, -0.5, 39.5);
   tuple->BefPreS_TNOHFraction = dir.make<TH1F>("BefPreS_TNOHFraction", "BefPreS_TNOHFraction", 50, 0., 1.);
@@ -554,8 +554,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", "PostPreS_TriggerType", 3, 0., 3.);
 
-  tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, 0, 9);
-  tuple->PostPreS_pfTypeVsIas = dir.make<TH2F>("PostPreS_pfTypeVsIas","PostPreS_pfTypeVsIas", 9, 0, 9.,20,0.,1.);
+  tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, -0.5, 8.5);
+  tuple->PostPreS_pfTypeVsIas = dir.make<TH2F>("PostPreS_pfTypeVsIas","PostPreS_pfTypeVsIas", 9, -0.5, 8.5,20,0.,1.);
 
   tuple->PostPreS_massT = dir.make<TH1F>("PostPreS_massT", "PostPreS_massT", 50, 0.0, 250.0);
   tuple->PostPreS_massTVsIas = dir.make<TH2F>("PostPreS_massTVsIas","PostPreS_massTVsIas",50, 0.0, 250.0, 20, 0., 1.);
@@ -570,7 +570,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>("PostPreS_Chi2oNdof", ";#chi^2/Ndof", 20, 0, 20);
   tuple->PostPreS_Chi2oNdofVsIas = dir.make<TH2F>("PostPreS_Chi2oNdofVsIas",";#chi^2/Ndof;I_{as}",20, 0, 20,10,0.,1.);
-  tuple->PostPreS_Qual = dir.make<TH1F>("PostPreS_Qual","PostPreS_Qual", 20, -0.5, 19.5);
+  tuple->PostPreS_Qual = dir.make<TH1F>("PostPreS_Qual","PostPreS_Qual", 2, -0.5, 1.5);
   tuple->PostPreS_TNOH_PUA = dir.make<TH1F>("PostPreS_TNOH_PUA", "Number of hits (low PU)", 40, -0.5, 39.5);
   tuple->PostPreS_TNOH_PUB = dir.make<TH1F>("PostPreS_TNOH_PUB", "Number of hits (high PU)", 40, -0.5, 39.5);
   tuple->PostPreS_TNOHFraction = dir.make<TH1F>("PostPreS_TNOHFraction", ";TNOHFraction", 20, 0, 1);
