@@ -3,11 +3,6 @@
   <use name="SUSYBSMAnalysis/Analyzer"/>
 </bin>
 
-<bin file="MakePlots.cpp">
-  <use name="SUSYBSMAnalysis/HSCP"/>
-  <use name="SUSYBSMAnalysis/Analyzer"/>
-</bin>
-
 <bin file="LimitComputation.cpp">
   <use name="SUSYBSMAnalysis/HSCP"/>
   <use name="SUSYBSMAnalysis/Analyzer"/>
