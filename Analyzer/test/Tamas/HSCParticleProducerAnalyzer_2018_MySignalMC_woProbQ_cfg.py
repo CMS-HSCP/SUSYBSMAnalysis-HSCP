@@ -233,7 +233,6 @@ process.analyzer.DeDxSF_0 = SF0
 process.analyzer.DeDxSF_1 = SF1
 process.analyzer.GlobalMinIh = C
 process.analyzer.TriggerResults = cms.InputTag('TriggerResults','','RECO')
-process.analyzer.DoTriggering = False
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
