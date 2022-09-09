@@ -244,16 +244,16 @@ struct Tuple {
   TH1F* nDof;
   TH1F* tofError;
   TH1F* N1_Pt;
+  TH1F* N1_Pt_lowPt;
   TH1F* N1_Ih;
-  TH1F* MTOF;
-  TH1F* TIsol;
+  TH1F* N1_MTOF;
+  TH1F* N1_TIsol;
   TH1F* N1_EoP;
   TH1F* N1_SumpTOverpT;
   TH1F* N1_dRMinPfJet;
-  TH1F* Pt;
   TH1F* N1_PtErrOverPt;
-  TH1F* I;
-  TH1F* TOF;
+  TH1F* N1_I;
+  TH1F* N1_TOF;
   TH1F* NVTrack;
   TH1F* N1_Stations;
   TH1F* N1_Dxy;
@@ -262,11 +262,10 @@ struct Tuple {
   TH1F* FailDz;
   TH1F* N1_ProbQ;
   TH2F* N1_ProbQVsIas;
-  TH1F* ProbQNoL1;
   TH1F* N1_ProbXY;
   TH1F* N1_pfType;
   TH1F* N1_MiniRelIsoAll;
-  TH1F* ProbXYNoL1;
+  TH1F* N1_MiniRelIsoAll_lowMiniRelIso;
 
   TH1F* BefPreS_pfType;
 
@@ -288,9 +287,6 @@ struct Tuple {
   TH1F* Beta_PreselectedA;
   TH1F* Beta_PreselectedB;
   TH1F* Beta_PreselectedC;
-  TH2F* Beta_SelectedP;
-  TH2F* Beta_SelectedI;
-  TH2F* Beta_SelectedT;
 
   TH1F* BefPreS_massT;
   TH1F* BefPreS_MiniRelIsoAll;
@@ -318,6 +314,7 @@ struct Tuple {
   TH1F* BefPreS_PtErrOverPt;
   TH1F* BefPreS_PtErrOverPt2;
   TH1F* BefPreS_Pt;
+  TH1F* BefPreS_Pt_lowPt;
   TH1F* BefPreS_Pt_PUA;
   TH1F* BefPreS_Pt_PUB;
   TH1F* BefPreS_Ias;
@@ -406,6 +403,34 @@ struct Tuple {
   TH2F* BefPreS_genGammaBetaVsProbXYNoL1;
   TH2F* BefPreS_dRVsPtPfJet;
   TH2F* BefPreS_dRVsdPtPfCaloJet;
+  
+  TH1F* BefPreS_P;
+  TH1F* BefPreS_Pt_DT;
+  TH1F* BefPreS_Pt_CSC;
+  TH1F* BefPreS_TOF;
+  TH1F* BefPreS_TOF_PUA;
+  TH1F* BefPreS_TOF_PUB;
+  TH1F* BefPreS_TOF_DT;
+  TH1F* BefPreS_TOF_CSC;
+  TH1F* BefPreS_Ias_Cosmic;
+  TH1F* BefPreS_Ih_Cosmic;
+  TH1F* BefPreS_Pt_Cosmic;
+  TH2F* BefPreS_EtaVsIas;   //TH3F*  PostS_EtaIas;
+  TH2F* BefPreS_EtaVsIh;   //TH3F*  PostS_EtaIh;
+  TH2F* BefPreS_EtaVsP;    //TH3F*  PostS_EtaP;
+  TH2F* BefPreS_EtaVsPt;   //TH3F*  PostS_EtaPt;
+  TH2F* BefPreS_EtaVsTOF;  //TH3F*  PostS_EtaTOF;
+  TH2F* BefPreS_EtaVsDz;
+  TH2F* BefPreS_EtaVsNBH;  // number of bad hits vs Eta
+  
+  TH2F* BefPreS_PVsIas;
+  TH2F* BefPreS_IhVsIas;
+  TH2F* BefPreS_PVsIh;
+  TH2F* BefPreS_PtVsIas;
+  TH2F* BefPreS_PtVsIh;
+  TH2F* BefPreS_PtTOF;
+  TH2F* BefPreS_TOFIs;
+  TH2F* BefPreS_TOFIh;
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
@@ -445,6 +470,7 @@ struct Tuple {
   TH2F* PostPreS_PtErrOverPtVsIas;
   TH1F* PostPreS_PtErrOverPt2;
   TH1F* PostPreS_Pt;
+  TH1F* PostPreS_Pt_lowPt;
   TH2F* PostPreS_PtVsIas;
   TH1F* PostPreS_P;
   TH1F* PostPreS_Ias;
@@ -665,54 +691,31 @@ struct Tuple {
   TH1F* PostPreS_PfMet;
   TH1F* PostPreS_PfMetPhi;
 
-  TH2F* AS_Eta_RegionA;
-  TH2F* AS_Eta_RegionB;
-  TH2F* AS_Eta_RegionC;
-  TH2F* AS_Eta_RegionD;
-  TH2F* AS_Eta_RegionE;
-  TH2F* AS_Eta_RegionF;
-  TH2F* AS_Eta_RegionG;
-  TH2F* AS_Eta_RegionH;
+  // Post Selection plots
+  TH2F* PostS_CutIdVsEta_RegionA;
+  TH2F* PostS_CutIdVsEta_RegionB;
+  TH2F* PostS_CutIdVsEta_RegionC;
+  TH2F* PostS_CutIdVsEta_RegionD;
+  TH2F* PostS_CutIdVsEta_RegionE;
+  TH2F* PostS_CutIdVsEta_RegionF;
+  TH2F* PostS_CutIdVsEta_RegionG;
+  TH2F* PostS_CutIdVsEta_RegionH;
+  
+  TH2F* PostS_CutIdVsP;
+  TH2F* PostS_CutIdVsPt;
+  TH2F* PostS_CutIdVsIas;
+  TH2F* PostS_CutIdVsIh;
+  TH2F* PostS_CutIdVsTOF;
 
-  TH1F* BefPreS_P;
-  TH2F* AS_P;
-  TH2F* AS_Pt;
-  TH1F* BefPreS_Pt_DT;
-  TH1F* BefPreS_Pt_CSC;
-  TH2F* AS_Ias;
-  TH2F* AS_Ih;
-  TH1F* BefPreS_TOF;
-  TH2F* AS_TOF;
-  TH1F* BefPreS_TOF_PUA;
-  TH1F* BefPreS_TOF_PUB;
-  TH1F* BefPreS_TOF_DT;
-  TH1F* BefPreS_TOF_CSC;
-  TH1F* BefPreS_Ias_Cosmic;
-  TH1F* BefPreS_Ih_Cosmic;
-  TH1F* BefPreS_Pt_Cosmic;
-
-  TH2F* BefPreS_EtaVsIas;   //TH3F*  AS_EtaIas;
-  TH2F* BefPreS_EtaVsIh;   //TH3F*  AS_EtaIh;
-  TH2F* BefPreS_EtaVsP;    //TH3F*  AS_EtaP;
-  TH2F* BefPreS_EtaVsPt;   //TH3F*  AS_EtaPt;
-  TH2F* BefPreS_EtaVsTOF;  //TH3F*  AS_EtaTOF;
-  TH2F* BefPreS_EtaVsDz;
-  TH2F* BefPreS_EtaVsNBH;  // number of bad hits vs Eta
-
-  TH2F* BefPreS_PVsIas;
-  TH3F* AS_PIs;
-  TH2F* BefPreS_IhVsIas;
-  TH2F* BefPreS_PVsIh;
-  TH3F* AS_PIh;
-  TH2F* BefPreS_PtVsIas;
-  TH3F* AS_PtIs;
-  TH2F* BefPreS_PtVsIh;
-  TH3F* AS_PtIh;
-  TH2F* BefPreS_PtTOF;
-  TH2F* BefPreS_TOFIs;
-  TH3F* AS_TOFIs;
-  TH2F* BefPreS_TOFIh;
-  TH3F* AS_TOFIh;
+  TH3F* PostS_CutIdVsPVsIas;
+  TH3F* PostS_CutIdVsPVsIh;
+  TH3F* PostS_CutIdVsPtVsIas;
+  TH3F* PostS_CutIdVsPtVsIh;
+  TH3F* PostS_CutIdVsTOFVsIas;
+  TH3F* PostS_CutIdVsTOFVsIh;
+  TH2F* PostS_CutIdVsBeta_postPt;
+  TH2F* PostS_CutIdVsBeta_postPtAndIas;
+  TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
 
   //Prediction histograms
   TH1D* H_A;

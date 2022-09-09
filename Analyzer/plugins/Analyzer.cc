@@ -136,6 +136,7 @@
 // - 28p6: - Clean the logs, skip if it has 91 status in the env
 // - 28p7: - add PostPreS_P, dont cut on mini-iso and see status 91
 // - 28p8: - add back mini-iso, fix the trigInfo_ (not a global variable anymore)
+// - 28p9: - add lowPt pt plots, fix some boundaries
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -3443,9 +3444,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->Beta_Matched->Fill(GenBeta, EventWeight_);
     }
     tuple->BefPreS_Eta->Fill(track->eta(), EventWeight_);
-    tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, EventWeight_);
-    tuple->BefPreS_NVertex->Fill(vertexColl.size()-.5, EventWeight_);
-    tuple->BefPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
+    tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern()), EventWeight_);
+    tuple->BefPreS_NVertex->Fill(vertexColl.size(), EventWeight_);
+    tuple->BefPreS_NVertex_NoEventWeight->Fill(vertexColl.size());
     if (PUA) {
       tuple->BefPreS_TNOH_PUA->Fill(track->found(), EventWeight_);
       tuple->BefPreS_TNOM_PUA->Fill(numDeDxHits, EventWeight_);
@@ -3462,10 +3463,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->BefPreS_Pt_PUB->Fill(track->pt(), EventWeight_);
     }
     tuple->BefPreS_TNOHFraction->Fill(track->validFraction(), EventWeight_);
-    tuple->BefPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, EventWeight_);
+    tuple->BefPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), EventWeight_);
     tuple->BefPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
     tuple->BefPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
-    tuple->BefPreS_TNOM->Fill(numDeDxHits-.5, EventWeight_);
+    tuple->BefPreS_TNOM->Fill(numDeDxHits, EventWeight_);
     if (track->found() - numDeDxHits) {
       tuple->BefPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, EventWeight_);
     }
@@ -3474,7 +3475,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
     tuple->BefPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     if (tof) {
-      tuple->BefPreS_nDof->Fill(tof->nDof()-.5, EventWeight_);
+      tuple->BefPreS_nDof->Fill(tof->nDof(), EventWeight_);
       tuple->BefPreS_MTOF->Fill(tof->inverseBeta(), EventWeight_);
       tuple->BefPreS_TOFError->Fill(tof->inverseBetaErr(), EventWeight_);
       tuple->BefPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), EventWeight_);
@@ -3482,6 +3483,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_Qual->Fill(track->qualityMask(), EventWeight_);
     tuple->BefPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_);
     tuple->BefPreS_Pt->Fill(track->pt(), EventWeight_);
+    tuple->BefPreS_Pt_lowPt->Fill(track->pt(), EventWeight_);
     tuple->BefPreS_P->Fill(track->p(), EventWeight_);
     tuple->BefPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
     tuple->BefPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), EventWeight_);
@@ -3550,19 +3552,17 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->NVTrack->Fill(0.0, EventWeight_);
     }
     
-      // Find displacement of tracks with respect to beam spot
+    // Find displacement of tracks with respect to beam spot
     const reco::BeamSpot beamSpotColl = iEvent.get(offlineBeamSpotToken_);
     float dzFromBeamSpot = NVTrack.dz(beamSpotColl.position());
     float dxyFromBeamSpot = NVTrack.dxy(beamSpotColl.position());
     if (debug_ > 8 ) LogPrint(MOD) << dzFromBeamSpot << " and " << dxyFromBeamSpot;
-      // TODO use this for TOF only analysis, instead of dxy and dz
+    // TODO use this for TOF only analysis, instead of dxy and dz
     
     if (muonStations(NVTrack.hitPattern()) < minMuStations_)
       return false;
     
-    if (tuple) {
-      tuple->MTOF->Fill(0.0, EventWeight_);
-      if (GenBeta >= 0)
+    if (tuple && GenBeta >= 0) {
         tuple->Beta_PreselectedB->Fill(GenBeta, EventWeight_);
     }
   } // End condition for TOF only analysis
@@ -3619,8 +3619,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
   const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
   
-  if (tuple) {
-    if (tof)
+  if (tuple && tof) {
       tuple->BefPreS_EtaVsTOF->Fill(track->eta(), tof->inverseBeta(), EventWeight_);
   }
   
@@ -3695,11 +3694,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       }
       if (allOtherCutsPassed) {
         if (i==1)  { tuple->N1_Eta->Fill(track->eta(), EventWeight_); };
-        if (i==2)  { tuple->N1_Pt->Fill(track->pt(), EventWeight_); };
-        if (i==3)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, EventWeight_); };
+        if (i==2)  {
+          tuple->N1_Pt->Fill(track->pt(), EventWeight_);
+          tuple->N1_Pt_lowPt->Fill(track->pt(), EventWeight_);
+        };
+        if (i==3)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), EventWeight_); };
         if (i==4)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), EventWeight_); };
-        if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, EventWeight_); };
-        if (i==6)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, EventWeight_); };
+        if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits, EventWeight_); };
+        if (i==6)  { tuple->N1_Qual->Fill(track->qualityMask(), EventWeight_); };
         if (i==7)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_EoP->Fill(EoP, EventWeight_); };
         if (i==9) { tuple->N1_Dz->Fill(dz, EventWeight_); };
@@ -3709,7 +3711,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
         };
         if (i==12) { tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_); };
-        if (i==13) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_); };
+        if (i==13) {
+          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
+        };
         if (i==14) {
           tuple->N1_pfType->Fill(0.5, EventWeight_);
           if (pf_isPfTrack) {
@@ -3811,9 +3816,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
     tuple->PostPreS_Eta->Fill(track->eta(), EventWeight_);
     tuple->PostPreS_EtaVsIas->Fill(track->eta(), globalIas_, EventWeight_);
-    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, EventWeight_);
-    tuple->PostPreS_NVertex->Fill(vertexColl.size()-.5, EventWeight_);
-    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
+    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern()), EventWeight_);
+    tuple->PostPreS_NVertex->Fill(vertexColl.size(), EventWeight_);
+    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size());
     if (PUA) {
       tuple->PostPreS_TNOH_PUA->Fill(track->found(), EventWeight_);
       tuple->PostPreS_TNOM_PUA->Fill(numDeDxHits, EventWeight_);
@@ -3824,12 +3829,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
     tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), EventWeight_);
     tuple->PostPreS_TNOHFractionVsIas->Fill(track->validFraction(), globalIas_, EventWeight_);
-    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, EventWeight_);
-    tuple->PostPreS_TNOPHVsIas->Fill(track->hitPattern().numberOfValidPixelHits()-.5, globalIas_, EventWeight_);
+    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), EventWeight_);
+    tuple->PostPreS_TNOPHVsIas->Fill(track->hitPattern().numberOfValidPixelHits(), globalIas_, EventWeight_);
     tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
     tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
-    tuple->PostPreS_TNOM->Fill(numDeDxHits-.5, EventWeight_);
-    tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits-.5, globalIas_, EventWeight_);
+    tuple->PostPreS_TNOM->Fill(numDeDxHits, EventWeight_);
+    tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits, globalIas_, EventWeight_);
     tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
     tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
@@ -3850,15 +3855,16 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
     }
     if (tof) {
-      tuple->PostPreS_nDof->Fill(tof->nDof()-.5, EventWeight_);
+      tuple->PostPreS_nDof->Fill(tof->nDof(), EventWeight_);
       tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), EventWeight_);
       tuple->PostPreS_TOFError->Fill(tof->inverseBetaErr(), EventWeight_);
       tuple->PostPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), EventWeight_);
     }
-    tuple->PostPreS_Qual->Fill(track->qualityMask()-.5, EventWeight_);
+    tuple->PostPreS_Qual->Fill(track->qualityMask(), EventWeight_);
     tuple->PostPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_);
     tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), globalIas_, EventWeight_);
     tuple->PostPreS_Pt->Fill(track->pt(), EventWeight_);
+    tuple->PostPreS_Pt_lowPt->Fill(track->pt(), EventWeight_);
     tuple->PostPreS_PtVsIas->Fill(track->pt(), globalIas_, EventWeight_);
     tuple->PostPreS_P->Fill(track->p(), EventWeight_);
     tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
@@ -4004,8 +4010,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsPt->Fill(Mass, track->pt(), EventWeight_);
     tuple->PostPreS_MassVsP->Fill(Mass, track->p(), EventWeight_);
     tuple->PostPreS_MassVsTNOHFraction->Fill(Mass, track->validFraction(), EventWeight_);
-    tuple->PostPreS_MassVsTNOPH->Fill(Mass, track->hitPattern().numberOfValidPixelHits()-.5, EventWeight_);
-    tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits-.5, EventWeight_);
+    tuple->PostPreS_MassVsTNOPH->Fill(Mass, track->hitPattern().numberOfValidPixelHits(), EventWeight_);
+    tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits, EventWeight_);
     tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,probQonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_MassVsProbXYNoL1->Fill(Mass,probXYonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_MassVsEoP->Fill(Mass, EoP, EventWeight_);
@@ -4156,65 +4162,66 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   tof ? MuonTOF = tof->inverseBeta(): MuonTOF= globalMinTOF_ ;
 
   float PtCut = CutPt_[CutIndex];
-  float ICut = CutI_[CutIndex];
+  float IasCut = CutI_[CutIndex];
   float TOFCut = CutTOF_[CutIndex];
   if (isFlip) {
     PtCut = CutPt_Flip_[CutIndex];
-    ICut = CutI_Flip_[CutIndex];
+    IasCut = CutI_Flip_[CutIndex];
     TOFCut = CutTOF_Flip_[CutIndex];
   }
 
+  // Check if we pass the momentum selection
   if (RescaleP) {
     if (RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < PtCut)
       return false;
-  } else {
-    if (track->pt() < PtCut) {
+  } else if (track->pt() < PtCut) {
       return false;
-    }
   }
   
-  if (tuple) {
-    tuple->Pt->Fill(CutIndex, EventWeight_);
-    if (GenBeta >= 0)
-      tuple->Beta_SelectedP->Fill(CutIndex, GenBeta, EventWeight_);
+  // Distribtution of GenBeta after Pt selection is passed
+  if (tuple && GenBeta >= 0) {
+    tuple->PostS_CutIdVsBeta_postPt->Fill(CutIndex, GenBeta, EventWeight_);
+  }
+  
+  // Check if we pass the (rescalled) Ias selection
+  if (typeMode_ != 3 && globalIas_ + RescaleI < IasCut) {
+    return false;
   }
 
-  if (typeMode_ != 3 && globalIas_ + RescaleI < ICut) {
+  // Distribtution of GenBeta after Pt and Ias selection is passed
+  if (tuple && GenBeta >= 0) {
+      tuple->PostS_CutIdVsBeta_postPtAndIas->Fill(CutIndex, GenBeta, EventWeight_);
+  }
+
+  // Check if we pass the TOF selection
+  if ((typeMode_ > 1 && typeMode_ != 5) && !isFlip && MuonTOF + RescaleT < TOFCut) {
+    return false;
+  }
+  if ((typeMode_ > 1 && typeMode_ != 5) && isFlip && MuonTOF + RescaleT > TOFCut) {
     return false;
   }
 
   if (tuple) {
-    tuple->I->Fill(CutIndex, EventWeight_);
-    if (GenBeta >= 0)
-      tuple->Beta_SelectedI->Fill(CutIndex, GenBeta, EventWeight_);
-  }
-
-  if ((typeMode_ > 1 && typeMode_ != 5) && !isFlip && MuonTOF + RescaleT < TOFCut)
-    return false;
-  if ((typeMode_ > 1 && typeMode_ != 5) && isFlip && MuonTOF + RescaleT > TOFCut)
-    return false;
-
-  if (tuple) {
-    tuple->TOF->Fill(CutIndex, EventWeight_);
-    if (GenBeta >= 0)
-      tuple->Beta_SelectedT->Fill(CutIndex, GenBeta, EventWeight_);
-    tuple->AS_P->Fill(CutIndex, track->p(), EventWeight_);
-    tuple->AS_Pt->Fill(CutIndex, track->pt(), EventWeight_);
-    tuple->AS_Ias->Fill(CutIndex, globalIas_, EventWeight_);
-    tuple->AS_Ih->Fill(CutIndex, globalIh_, EventWeight_);
-    tuple->AS_TOF->Fill(CutIndex, MuonTOF, EventWeight_);
+    if (GenBeta >= 0) {
+      tuple->PostS_CutIdVsBeta_postPtAndIasAndTOF->Fill(CutIndex, GenBeta, EventWeight_);
+    }
+    tuple->PostS_CutIdVsP->Fill(CutIndex, track->p(), EventWeight_);
+    tuple->PostS_CutIdVsPt->Fill(CutIndex, track->pt(), EventWeight_);
+    tuple->PostS_CutIdVsIas->Fill(CutIndex, globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsIh->Fill(CutIndex, globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsTOF->Fill(CutIndex, MuonTOF, EventWeight_);
     // TODO:
-    //tuple->AS_EtaIs->Fill(CutIndex,track->eta(),globalIas_,EventWeight_);
-    //tuple->AS_EtaIh->Fill(CutIndex,track->eta(),globalIh_,EventWeight_);
-    //tuple->AS_EtaP ->Fill(CutIndex,track->eta(),track->p(),EventWeight_);
-    //tuple->AS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),EventWeight_);
+    //tuple->PostS_EtaIs->Fill(CutIndex,track->eta(),globalIas_,EventWeight_);
+    //tuple->PostS_EtaIh->Fill(CutIndex,track->eta(),globalIh_,EventWeight_);
+    //tuple->PostS_EtaP ->Fill(CutIndex,track->eta(),track->p(),EventWeight_);
+    //tuple->PostS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),EventWeight_);
     // TODO: until here
-    tuple->AS_PIs->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
-    tuple->AS_PIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
-    tuple->AS_PtIs->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
-    tuple->AS_PtIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
-    tuple->AS_TOFIs->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
-    tuple->AS_TOFIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsPVsIas->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsPVsIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsPtVsIas->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsPtVsIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsTOFVsIas->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsTOFVsIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
   }
   return true;
 }
