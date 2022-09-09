@@ -259,7 +259,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->IntLumi = dir.make<TProfile>("IntLumi", ";IntLumi", 1, 0, 1);
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
   tuple->NumEvents = dir.make<TH1F>("NumEvents",";NumEvents", 3, -0.5, 2.5);
+<<<<<<< HEAD
   tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
+=======
+  tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, 0., 11.);
+>>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
   tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;", 4, -0.5, 3.5);
   tuple->HSCPCandidateType = dir.make<TH1F>("HSCPCandidateType",";;", 6, 0., 6.);
   // Can I do setBinLabel at this point?
@@ -554,7 +558,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", "PostPreS_TriggerType", 3, 0., 3.);
 
+<<<<<<< HEAD
   tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, -0.5, 8.5);
+=======
+  tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, -0.5, 8);
+>>>>>>> 3dc7b76413d00609ac11040c14d04835930224f2
   tuple->PostPreS_pfTypeVsIas = dir.make<TH2F>("PostPreS_pfTypeVsIas","PostPreS_pfTypeVsIas", 9, -0.5, 8.5,20,0.,1.);
 
   tuple->PostPreS_massT = dir.make<TH1F>("PostPreS_massT", "PostPreS_massT", 50, 0.0, 250.0);
