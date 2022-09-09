@@ -136,7 +136,7 @@
 // - 28p6: - Clean the logs, skip if it has 91 status in the env
 // - 28p7: - add PostPreS_P, dont cut on mini-iso and see status 91
 // - 28p8: - add back mini-iso, fix the trigInfo_ (not a global variable anymore)
-// - 28p9: - add lowPt pt plots, fix some boundaries
+// - 28p9: - add lowPt pt plots, fix some boundaries, fix trigInfo_ logic on return
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -587,15 +587,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     trigInfo_ = 3;
   }
 
-  tuple->BefPreS_TriggerType->Fill(trigInfo_+0.5, EventWeight_);
+  tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
-  if (saveTree_ > 0 && trigInfo_ > 0) {
+    //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+  if (trigInfo_ > 0) {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
   }
-  if (saveTree_ > 0 && trigInfo_ == 0)  {
-      if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
-      return;
-     //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+  else {
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
+    if (saveTree_ == 0)  return;
   }
 
   // Number of events that pass the trigger
