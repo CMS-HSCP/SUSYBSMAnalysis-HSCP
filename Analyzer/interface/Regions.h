@@ -368,7 +368,8 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
         float A = a_ih_eta.Integral();
         float B = b_ih_eta.Integral();
         float C = c_ih_eta.Integral();
-        float normalisationABC = B*C/A;
+        float normalisationABC = 1.;
+        if(A>0) normalisationABC = B*C/A;
         bc.fillPredMass();
         scale(bc.pred_mass);
         massNormalisation(bc.pred_mass,normalisationABC);
@@ -388,15 +389,18 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
     delete RNG;
 }
 
-TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, int cutIndex=3, bool mass_rebin=true, int nPE=100){
-    TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_proj",cutIndex+1,cutIndex+1);
-    TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_proj",cutIndex+1,cutIndex+1);
+void bckgEstimate_fromHistos(TH2F* mass_cutIndex, TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, TH1F* H_A, TH1F* H_B, TH1F* H_C, int cutIndex=3, int nPE=100){
+    TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_projA",cutIndex+1,cutIndex+1);
+    TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_projB",cutIndex+1,cutIndex+1);
     ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
-    TH2F* ih_eta_regB =  (TH2F*)ih_eta_cutIndex_regB->Project3D("zy");
+    TH2F* ih_eta_regB =  (TH2F*)ih_eta_cutIndex_regB->Project3D("zyB");
     eta_p_cutIndex_regC->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
-    TH2F* eta_p_regC = (TH2F*)eta_p_cutIndex_regC->Project3D("zy"); 
+    TH2F* eta_p_regC = (TH2F*)eta_p_cutIndex_regC->Project3D("yzC"); 
+    TH1F* mass_obs = (TH1F*)mass_cutIndex->ProjectionY("_projD",cutIndex+1,cutIndex+1);
 
     Region rBC;
+    rBC.pred_mass = (TH1F*)mass_obs->Clone();
+    rBC.pred_mass->Reset();
 
     std::vector<TH1F> vPE;
     TRandom3* RNG = new TRandom3();
@@ -405,24 +409,41 @@ TH1F* bckgEstimate_fromHistos(TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, 
         poissonHisto(*eta_regB,RNG);
         poissonHisto(*ih_eta_regB,RNG);
         poissonHisto(*eta_p_regC,RNG);
+        poissonHisto(*H_A,RNG);
+        poissonHisto(*H_B,RNG);
+        poissonHisto(*H_C,RNG);
         etaReweighingP(eta_p_regC, eta_regB);
         rBC.eta_p = eta_p_regC; rBC.ih_eta = ih_eta_regB;
-        float A = eta_regA->Integral();
+        /*float A = eta_regA->Integral();
         float B = eta_regB->Integral();
-        float C = eta_p_regC->Integral();
-        float norm = B*C/A;
+        float C = eta_p_regC->Integral();*/
+        float A = H_A->Integral(cutIndex+1,cutIndex+1);
+        float B = H_B->Integral(cutIndex+1,cutIndex+1);
+        float C = H_C->Integral(cutIndex+1,cutIndex+1);
+        float norm = 1;
+        if(A>0) norm = B*C/A;
+        //std::cout << " A: " << A << " B: " << B << " C: " << C << " norm: " << norm << " D: " << mass_obs->Integral() << std::endl;
         rBC.fillPredMass();
         scale(rBC.pred_mass);
         massNormalisation(rBC.pred_mass,norm);
+        //massNormalisation(rBC.pred_mass,mass_obs->Integral());
         vPE.push_back(*rBC.pred_mass);
     }
     TH1F h_tmp = meanHistoPE(vPE);
     if(nPE>1) rBC.pred_mass = &h_tmp;
-    if(mass_rebin) rebinHisto(rBC.pred_mass); 
-    else overflowLastBin(rBC.pred_mass);
-    rBC.pred_mass->SetName(("pred_mass_cutIndex_"+to_string(cutIndex)).c_str());
+
+    std::string st = "cutIndex"+to_string(cutIndex);
+    
+    saveHistoRatio(mass_obs,rBC.pred_mass,("mass_obs_"+st).c_str(),("mass_predBC_"+st).c_str(),("mass_predBCR_"+st).c_str());
+    saveHistoRatio(mass_obs,rBC.pred_mass,("mass_obs_"+st).c_str(),("mass_predBC_"+st).c_str(),("mass_predBCR_"+st).c_str(),true);
+    
+    overflowLastBin(mass_obs);
+    overflowLastBin(rBC.pred_mass);
+    
+    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
+    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+
     delete RNG;
-    return rBC.pred_mass;
 }
 
 #endif
