@@ -21,11 +21,10 @@ jobs:
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         shell: bash 
         run: |
-          #cd /cvmfs/cms.cern.ch/
-          #source cmsset_default.sh
-          #cd -
           source /cvmfs/cms.cern.ch/cmsset_default.sh
           cmsenv
+          cd SUSYBSMAnalysis/Analyzer/test/Tamas/
+          cmsRun HSCParticleProducerAnalyzer_2018_mc_woProbQ_cfg_SingleEvent.py
       - name: Cleaning up
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
