@@ -19,16 +19,18 @@ jobs:
           scram b -j
       - name: Source enviroment, run the code (next step)
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
-        shell: bash
+        shell: bash 
         run: |
-          ./cvmfs/cms.cern.ch/cmsset_default.sh
-          eval `scramv1 runtime -csh` 
+          #cd /cvmfs/cms.cern.ch/
+          #source cmsset_default.sh
+          #cd -
+          source /cvmfs/cms.cern.ch/cmsset_default.sh
+          cmsenv
       - name: Cleaning up
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
           pwd
           ls
           rm -rf SUSYBSMAnalysis
-          ls
           scram b clear
           scram b clean
