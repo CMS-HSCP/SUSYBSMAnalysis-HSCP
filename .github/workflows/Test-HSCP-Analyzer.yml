@@ -10,7 +10,8 @@ jobs:
       - name: Move SUSYBSMAnalysis under CMSSW
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
-          cp -r /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/SUSYBSMAnalysis-HSCP/SUSYBSMAnalysis-HSCP SUSYBSMAnalysis
+          cp -r /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/SUSYBSMAnalysis-HSCP/SUSYBSMAnalysis-HSCP .
+          mv SUSYBSMAnalysis-HSCP SUSYBSMAnalysis
       - name: Compile the code
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
@@ -18,7 +19,7 @@ jobs:
       - name: Source enviroment, run the code (next step)
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
-          cmsenv
+          eval `scramv1 runtime -csh` 
       - name: Cleaning up
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
