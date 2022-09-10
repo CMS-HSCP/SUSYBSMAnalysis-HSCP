@@ -138,6 +138,7 @@
 // - 28p8: - add back mini-iso, fix the trigInfo_ (not a global variable anymore)
 // - 28p9: - add lowPt pt plots, fix some boundaries, fix trigInfo_ logic on return
 // - 29p0: - Frozen preselection as agreed on Sept 8
+// - 29p1: - PtErrOverPt a la Dylan, plus N1 plots to study it
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -3349,7 +3350,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[10];
+  bool passedCutsArray[11];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3376,13 +3377,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
+  // Cut on the uncertainty of the pt measurement
+  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
     // Cut on the energy over momenta
 //  passedCutsArray[8] = (EoP <= globalMaxEoP_) ? true : false;
-  // Cut on the uncertainty of the pt measurement
-//  passedCutsArray[11] = (true) ? true : false;
-  //passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+
   // Cut on the tracker based isolation
-//  passedCutsArray[12] = (true) ? true : false;
 //  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
@@ -3730,7 +3730,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if (allOtherCutsPassed) {
         // Put the not used variables to the i==0, this will be always true
         if (i==0)  {
-          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
           tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
           tuple->N1_pfType->Fill(0., EventWeight_);
           if (pf_isPfTrack) {
@@ -3779,7 +3778,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
         if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
-//        if (i==10) {};
+        if (i==10) {
+          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+        };
 //        if (i==11) { };
 //        if (i==12) { };
 //        if (i==13) { };

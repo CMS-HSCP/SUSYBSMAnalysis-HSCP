@@ -294,7 +294,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_Dxy = dir.make<TH1F>("N1_Dxy",";d_{xy} (cm)", 200, -0.1, 0.1);
   tuple->N1_Dz = dir.make<TH1F>("N1_Dz",";d_{z} (cm)", 200, -0.3, 0.3);
 
-  tuple->N1_PtErrOverPt = dir.make<TH1F>("N1_PtErrOverPt", ";PtErrOverPt", 40, 0, 1);
+  tuple->N1_PtErrOverPt = dir.make<TH1F>("N1_PtErrOverPt", ";#sigma_{p_{T}}/p_{T}", 40, 0, 1);
+  tuple->N1_PtErrOverPt2 = dir.make<TH1F>("N1_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^2", 40, 0, 1);
+  tuple->N1_PtErrOverPtVsPt = dir.make<TH2F>("N1_PtErrOverPtVsPt", ";#sigma_{p_{T}}/p_{T};p_{T}",  40, 0., 1., 40, 0., 4000);
 
   tuple->N1_SegSep = dir.make<TH1F>("N1_SegSep", ";SegSep", 1, 0, 1);
 
@@ -426,8 +428,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_TNOM_PUB = dir.make<TH1F>("BefPreS_TNOM_PUB",";Number of measurements (high PU)", 40, -0.5, 39.5);
   tuple->BefPreS_nDof = dir.make<TH1F>("BefPreS_nDof",";Number of DF", 40, -0.5, 39.5);
   tuple->BefPreS_TOFError = dir.make<TH1F>("BefPreS_TOFError", "BefPreS_TOFError", 25, 0, 0.25);
-  tuple->BefPreS_PtErrOverPt = dir.make<TH1F>("BefPreS_PtErrOverPt", "BefPreS_PtErrOverPt", 40, 0, 1);
-  tuple->BefPreS_PtErrOverPt2 = dir.make<TH1F>("BefPreS_PtErrOverPt2", "BefPreS_PtErrOverPt2", 40, 0, 0.003);
+  tuple->BefPreS_PtErrOverPt = dir.make<TH1F>("BefPreS_PtErrOverPt", ";#sigma_{p_{T}}/p_{T}", 40, 0, 1);
+  tuple->BefPreS_PtErrOverPt2 = dir.make<TH1F>("BefPreS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^2", 40, 0, 0.003);
   tuple->BefPreS_Pt = dir.make<TH1F>("BefPreS_Pt", ";p_{T} (GeV)", 50, 0, PtHistoUpperBound);
   tuple->BefPreS_Pt_lowPt = dir.make<TH1F>("BefPreS_Pt_lowPt", ";p_{T} (GeV)", 50, 0, 500);
   tuple->BefPreS_Ias = dir.make<TH1F>("BefPreS_Ias", "BefPreS_Ias", 10, 0., 1.);
@@ -495,8 +497,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_TOF_FailDz_DT = dir.make<TH1F>("BefPreS_TOF_FailDz_DT", "BefPreS_TOF_FailDz_DT", 150, -1, 5);
   tuple->BefPreS_TOF_FailDz_CSC = dir.make<TH1F>("BefPreS_TOF_FailDz_CSC", "BefPreS_TOF_FailDz_CSC", 150, -1, 5);
   tuple->BefPreS_GenPtVsRecoPt = dir.make<TH2F>("BefPreS_GenPtVsRecoPt", "BefPreS_GenPtVsRecoPt", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
-  tuple->BefPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>("BefPreS_PtErrOverPtVsPtErrOverPt2", "BefPreS_PtErrOverPtVsPtErrOverPt2",  40, 0., 1., 40, 0., 0.003);
-  tuple->BefPreS_PtErrOverPtVsPt = dir.make<TH2F>("BefPreS_PtErrOverPtVsPt", "BefPreS_PtErrOverPtVsPt",  40, 0., 1., 40, 0., 4000);
+  tuple->BefPreS_PtErrOverPtVsPt = dir.make<TH2F>("BefPreS_PtErrOverPtVsPt",  ";#sigma_{p_{T}}/p_{T};p_{T}",  40, 0., 1., 40, 0., 4000);
+  tuple->BefPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>("BefPreS_PtErrOverPtVsPtErrOverPt2",  ";#sigma_{p_{T}}/p_{T};p_{T}^2",  40, 0., 1., 40, 0., 0.003);
   
   tuple->BefPreS_ProbQ = dir.make<TH1F>("BefPreS_ProbQ", "BefPreS_ProbQ", 100, 0, 1);
   tuple->BefPreS_ProbXY = dir.make<TH1F>("BefPreS_ProbXY", "BefPreS_ProbXY", 100, 0, 1);
@@ -587,9 +589,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TNOM_PUB = dir.make<TH1F>("PostPreS_TNOM_PUB",  ";Number of measurement (high PU)",  40, -0.5, 39.5);
   tuple->PostPreS_nDof = dir.make<TH1F>("PostPreS_nDof", ";nDof",  40, -0.5, 39.5);
   tuple->PostPreS_TOFError = dir.make<TH1F>("PostPreS_TOFError", "PostPreS_TOFError", 25, 0, 0.25);
-  tuple->PostPreS_PtErrOverPt = dir.make<TH1F>("PostPreS_PtErrOverPt", "PostPreS_PtErrOverPt", 40, 0, 1);
-  tuple->PostPreS_PtErrOverPtVsIas =  dir.make<TH2F>("PostPreS_PtErrOverPtVsIas","PostPreS_PtErrOverPtVsIas", 40, 0, 1, 20, 0.,1.);
-  tuple->PostPreS_PtErrOverPt2 = dir.make<TH1F>("PostPreS_PtErrOverPt2", "PostPreS_PtErrOverPt2", 40, 0, 0.003);
+  tuple->PostPreS_PtErrOverPt = dir.make<TH1F>("PostPreS_PtErrOverPt", ";#sigma_{p_{T}}/p_{T}", 40, 0, 1);
+  tuple->PostPreS_PtErrOverPtVsIas =  dir.make<TH2F>("PostPreS_PtErrOverPtVsIas",";#sigma_{p_{T}}/p_{T};I_{as}", 40, 0, 1, 20, 0.,1.);
+  tuple->PostPreS_PtErrOverPt2 = dir.make<TH1F>("PostPreS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^2", 40, 0, 0.003);
   tuple->PostPreS_Pt = dir.make<TH1F>("PostPreS_Pt", ";p_{T} (GeV)", 50, 0, PtHistoUpperBound);
   tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt",";p_{T} (GeV)", 50, 0, 500);
   tuple->PostPreS_PtVsIas = dir.make<TH2F>("PostPreS_PtVsIas","PostPreS_PtVsIas", 50, 0, PtHistoUpperBound, 20, 0., 1.);
@@ -646,8 +648,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TOF_FailDz = dir.make<TH1F>("PostPreS_TOF_FailDz", "PostPreS_TOF_FailDz", 150, -1, 5);
   tuple->PostPreS_TOF_FailDz_DT = dir.make<TH1F>("PostPreS_TOF_FailDz_DT", "PostPreS_TOF_FailDz_DT", 150, -1, 5);
   tuple->PostPreS_TOF_FailDz_CSC = dir.make<TH1F>("PostPreS_TOF_FailDz_CSC", "PostPreS_TOF_FailDz_CSC", 150, -1, 5);
-  tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>("PostPreS_PtErrOverPtVsPtErrOverPt2", "PostPreS_PtErrOverPtVsPtErrOverPt2",  40, 0., 1., 40, 0., 0.003);
-  tuple->PostPreS_PtErrOverPtVsPt = dir.make<TH2F>("PostPreS_PtErrOverPtVsPt", "PostPreS_PtErrOverPtVsPt",  40, 0., 1., 40, 0., 4000);
+  tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>("PostPreS_PtErrOverPtVsPtErrOverPt2",  ";#sigma_{p_{T}}/p_{T};p_{T}^2",  40, 0., 1., 40, 0., 0.003);
+  tuple->PostPreS_PtErrOverPtVsPt = dir.make<TH2F>("PostPreS_PtErrOverPtVsPt",  ";#sigma_{p_{T}}/p_{T};p_{T}",  40, 0., 1., 40, 0., 4000);
   tuple->PostPreS_GenPtVsRecoPt = dir.make<TH2F>("PostPreS_GenPtVsRecoPt", "PostPreS_GenPtVsRecoPt", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
   
   tuple->PostPreS_ProbQ = dir.make<TH1F>("PostPreS_ProbQ", ";ProbQ", 20, 0., 1.);

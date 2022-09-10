@@ -2,23 +2,28 @@ name: Test HSCP Analyzer
 on: [push,pull_request]
 jobs:
   Test-HSCP-Analyzer:
-    runs-on: self-hosted 
+    runs-on: self-hosted
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
       - name: Check out repository code
         uses: actions/checkout@v3
-      - name: Check where we are
+      - name: Move SUSYBSMAnalysis under CMSSW
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
-          source /cvmfs/cms.cern.ch/cmsset_default.sh
-          cmsenv
           cp -r /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/SUSYBSMAnalysis-HSCP/SUSYBSMAnalysis-HSCP SUSYBSMAnalysis
-          cmsenv
-          scram b -j
-#SCRAM_ARCH=slc3_ia32_gcc323_dbg; export SCRAM_ARCH
-#      - name: Check where we are 
-#        run: scram b -j
-      - name: Cleaning
+      - name: Compile the code
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
-        run: rm -rf SUSYBSMAnalysis
-
+        run: |
+          scram b -j
+      - name: Source enviroment, run the code (next step)
+        working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
+        run: |
+          cmsenv
+      - name: Cleaning up
+        working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
+        run: |
+          ls
+          rm -rf SUSYBSMAnalysis
+          ls
+          scram b clear
+          scram b clean
