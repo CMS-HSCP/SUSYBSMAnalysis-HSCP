@@ -139,6 +139,7 @@
 // - 28p9: - add lowPt pt plots, fix some boundaries, fix trigInfo_ logic on return
 // - 29p0: - Frozen preselection as agreed on Sept 8
 // - 29p1: - PtErrOverPt a la Dylan, plus N1 plots to study it
+// - 29p2: - TNOPH plots show the nonL1Pix hits, cut on ptErr/pt2 before PtErrOverPt a la Dylan
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2396,7 +2397,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_eta.push_back(track->eta());
     HSCP_phi.push_back(track->phi());
     HSCP_NOH.push_back(track->found());
-    HSCP_NOPH.push_back(track->hitPattern().numberOfValidPixelHits());
+    HSCP_NOPH.push_back(nonL1PixHits);
     HSCP_FOVH.push_back(track->validFraction());
     HSCP_NOMH.push_back(nomh);
     HSCP_FOVHD.push_back(fovhd);
@@ -3350,7 +3351,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[11];
+  bool passedCutsArray[12];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3378,7 +3379,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
-  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
+  passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
     // Cut on the energy over momenta
 //  passedCutsArray[8] = (EoP <= globalMaxEoP_) ? true : false;
 
@@ -3493,7 +3495,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->BefPreS_Pt_PUB->Fill(track->pt(), EventWeight_);
     }
     tuple->BefPreS_TNOHFraction->Fill(track->validFraction(), EventWeight_);
-    tuple->BefPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), EventWeight_);
+    tuple->BefPreS_TNOPH->Fill(nonL1PixHits, EventWeight_);
     tuple->BefPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
     tuple->BefPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
     tuple->BefPreS_TNOM->Fill(numDeDxHits, EventWeight_);
@@ -3765,7 +3767,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_Pt_lowPt->Fill(track->pt(), EventWeight_);
         };
         if (i==2)  { tuple->N1_Eta->Fill(track->eta(), EventWeight_); };
-        if (i==3)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), EventWeight_); };
+        if (i==3)  { tuple->N1_TNOPH->Fill(nonL1PixHits, EventWeight_); };
         if (i==4)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), EventWeight_); };
         if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits, EventWeight_); };
         if (i==6)  {
@@ -3778,7 +3780,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
         if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
-        if (i==10) {
+        if (i==11) {
           tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
           tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
           tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
@@ -3876,8 +3878,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     }
     tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), EventWeight_);
     tuple->PostPreS_TNOHFractionVsIas->Fill(track->validFraction(), globalIas_, EventWeight_);
-    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits(), EventWeight_);
-    tuple->PostPreS_TNOPHVsIas->Fill(track->hitPattern().numberOfValidPixelHits(), globalIas_, EventWeight_);
+    tuple->PostPreS_TNOPH->Fill(nonL1PixHits, EventWeight_);
+    tuple->PostPreS_TNOPHVsIas->Fill(nonL1PixHits, globalIas_, EventWeight_);
     tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
     tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
     tuple->PostPreS_TNOM->Fill(numDeDxHits, EventWeight_);
@@ -4061,7 +4063,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsPt->Fill(Mass, track->pt(), EventWeight_);
     tuple->PostPreS_MassVsP->Fill(Mass, track->p(), EventWeight_);
     tuple->PostPreS_MassVsTNOHFraction->Fill(Mass, track->validFraction(), EventWeight_);
-    tuple->PostPreS_MassVsTNOPH->Fill(Mass, track->hitPattern().numberOfValidPixelHits(), EventWeight_);
+    tuple->PostPreS_MassVsTNOPH->Fill(Mass, nonL1PixHits, EventWeight_);
     tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits, EventWeight_);
     tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,probQonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_MassVsProbXYNoL1->Fill(Mass,probXYonTrackNoLayer1, EventWeight_);

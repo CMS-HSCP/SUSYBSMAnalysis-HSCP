@@ -12,18 +12,21 @@ jobs:
         run: |
           cp -r /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/SUSYBSMAnalysis-HSCP/SUSYBSMAnalysis-HSCP .
           mv SUSYBSMAnalysis-HSCP SUSYBSMAnalysis
+# copy could be with ${{ github.workspace }} ?
       - name: Compile the code
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
           scram b -j
       - name: Source enviroment, run the code (next step)
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
+        shell: bash
         run: |
-          source /cvmfs/cms.cern.ch/cmsset_default.sh
+          ./cvmfs/cms.cern.ch/cmsset_default.sh
           eval `scramv1 runtime -csh` 
       - name: Cleaning up
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
+          pwd
           ls
           rm -rf SUSYBSMAnalysis
           ls
