@@ -17,7 +17,7 @@ jobs:
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         run: |
           scram b -j
-      - name: Source enviroment, run the code (next step)
+      - name: Source enviroment, run the code 
         working-directory: /afs/cern.ch/work/t/tvami/public/HSCP/GithubCI/actions-runner/_work/CMSSW_10_6_30/src/
         shell: bash 
         run: |

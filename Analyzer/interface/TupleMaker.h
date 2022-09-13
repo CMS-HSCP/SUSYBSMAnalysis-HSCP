@@ -260,8 +260,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
   tuple->NumEvents = dir.make<TH1F>("NumEvents",";NumEvents", 3, -0.5, 2.5);
   tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
-  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;", 4, -0.5, 3.5);
-  tuple->HSCPCandidateType = dir.make<TH1F>("HSCPCandidateType",";;", 6, 0., 6.);
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 4, -0.5, 3.5);
+  tuple->HSCPCandidateType = dir.make<TH1F>("HSCPCandidateType",";;", 6, -0.5, 5.5);
   // Can I do setBinLabel at this point?
 
   tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, 0., 17.);
@@ -307,51 +307,40 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_ProbXY = dir.make<TH1F>("N1_ProbXY",";ProbXY", 100, 0, 1);
   tuple->N1_MiniRelIsoAll = dir.make<TH1F>("N1_MiniRelIsoAll", ";MiniRelIsoAll",  150, 0.0, 1.5);
   tuple->N1_MiniRelIsoAll_lowMiniRelIso = dir.make<TH1F>("N1_MiniRelIsoAll_lowMiniRelIso", ";MiniRelIsoAll",  100, 0.0, 0.1);
+  tuple->N1_MiniRelTkIso = dir.make<TH1F>("N1_MiniRelTkIso", ";MiniRelTkIso",  150, 0.0, 1.5);
+  tuple->N1_MiniRelTkIso_lowMiniRelIso = dir.make<TH1F>("N1_MiniRelTkIso_lowMiniRelIso", ";MiniRelTkIso",  100, 0.0, 0.1);
+  tuple->N1_MiniTkIso = dir.make<TH1F>("N1_MiniTkIso", ";MiniTkIso",  150, 0.0, 50.);
+  tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA = dir.make<TH1F>("N1_MiniRelTkIso_lowMiniRelIso_PUA", ";MiniRelTkIso (PU < 15)",  100, 0.0, 0.1);
+  tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB = dir.make<TH1F>("N1_MiniRelTkIso_lowMiniRelIso_PUB", ";MiniRelTkIso (15 =< PU < 30)",  100, 0.0, 0.1);
+  tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC = dir.make<TH1F>("N1_MiniRelTkIso_lowMiniRelIso_PUC", ";MiniRelTkIso (PU >= 30)",  100, 0.0, 0.1);
+  tuple->N1_MiniTkIso_PUA = dir.make<TH1F>("N1_MiniTkIso_PUA", ";MiniTkIso (PU < 15)",  150, 0.0, 50.);
+  tuple->N1_MiniTkIso_PUB = dir.make<TH1F>("N1_MiniTkIso_PUB", ";MiniTkIso (15 =< PU < 30)",  150, 0.0, 50.);
+  tuple->N1_MiniTkIso_PUC = dir.make<TH1F>("N1_MiniTkIso_PUC", ";MiniTkIso (PU >= 30)",  150, 0.0, 50.);
 
   tuple->N1_pfType = dir.make<TH1F>("N1_pfType", ";pfType", 9, 0, 9);
 
-
   tuple->HSCPE = dir.make<TH1F>("HSCPE", ";NCuts;HSCPE", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystP = dir.make<TH1F>("HSCPE_SystP", ";NCuts;HSCPE_SystP", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystI = dir.make<TH1F>("HSCPE_SystI", ";NCuts;HSCPE_SystI", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystM = dir.make<TH1F>("HSCPE_SystM", ";NCuts;HSCPE_SystM", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystT = dir.make<TH1F>("HSCPE_SystT", ";NCuts;HSCPE_SystT", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystPU = dir.make<TH1F>("HSCPE_SystPU", ";NCuts;HSCPE_SystPU", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystHUp = dir.make<TH1F>("HSCPE_SystHUp", ";NCuts;HSCPE_SystHUp", NCuts, 0, NCuts);
-
   tuple->HSCPE_SystHDown = dir.make<TH1F>("HSCPE_SystHDown", ";NCuts;HSCPE_SystHDown", NCuts, 0, NCuts);
 
-
   tuple->Mass = dir.make<TH2F>("Mass", ";NCuts;Mass", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MassTOF = dir.make<TH2F>("MassTOF", ";NCuts;MassTOF", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MassComb = dir.make<TH2F>("MassComb", ";NCuts;MassComb", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MaxEventMass = dir.make<TH2F>("MaxEventMass", ";NCuts;MaxEventMass", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
 
-
   tuple->Mass_SystP = dir.make<TH2F>("Mass_SystP", ";NCuts;Mass_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MassTOF_SystP = dir.make<TH2F>("MassTOF_SystP", ";NCuts;MassTOF_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MassComb_SystP = dir.make<TH2F>("MassComb_SystP", ";NCuts;MassComb_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MaxEventMass_SystP = dir.make<TH2F>("MaxEventMass_SystP", ";NCuts;MaxEventMass_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
 
-
   tuple->Mass_SystI = dir.make<TH2F>("Mass_SystI", ";NCuts;Mass_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MassTOF_SystI = dir.make<TH2F>("MassTOF_SystI", ";NCuts;MassTOF_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MassComb_SystI = dir.make<TH2F>("MassComb_SystI", ";NCuts;MassComb_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
   tuple->MaxEventMass_SystI = dir.make<TH2F>("MaxEventMass_SystI", ";NCuts;MaxEventMass_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
 
   tuple->Mass_SystM = dir.make<TH2F>("Mass_SystM", ";NCuts;Mass_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
@@ -397,7 +386,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
 
   tuple->BefPreS_GenPtVsdRMinGen = dir.make<TH2F>("BefPreS_GenPtVsdRMinGen", "BefPreS_GenPtVsdRMinGen", 50, 0, PtHistoUpperBound, 100, 0., 1.);
-  tuple->BefPreS_GendRMin = dir.make<TH1F>("BefPreS_GendRMin",";dR_min;Gen candidate",100,0.,5.);
+  tuple->BefPreS_GendRMin = dir.make<TH1F>("BefPreS_GendRMin",";dR_min;Gen candidate",100,0.,3.2);
   tuple->BefPreS_GenPtVsdRMinGenPostCut = dir.make<TH2F>("BefPreS_GenPtVsdRMinGenPostCut", ";GenPt (GeV);dRMinGen (after cut)", 50, 0, PtHistoUpperBound, 50, 0., 0.05);
   tuple->BefPreS_GenPtVsGenMinPt = dir.make<TH2F>("BefPreS_GenPtVsGenMinPt", "BefPreS_GenPtVsGenMinPt", 50, 0, PtHistoUpperBound, 100, 0, 1.);
   tuple->BefPreS_GenPtVsRecoPt = dir.make<TH2F>("BefPreS_GenPtVsRecoPt", "BefPreS_GenPtVsRecoPt", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
@@ -408,6 +397,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->BefPreS_MiniRelIsoAll = dir.make<TH1F>("BefPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>("BefPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
+  tuple->BefPreS_MiniRelTkIso = dir.make<TH1F>("BefPreS_MiniRelTkIso",";MiniRelTkIso;Tracks/bin",  150, 0.0, 1.5);
+  tuple->BefPreS_MiniTkIso = dir.make<TH1F>("BefPreS_MiniTkIso",";MiniTkIso;Tracks/bin",  150, 0.0, 50);
 
   tuple->BefPreS_RecoPFMET = dir.make<TH1F>("BefPreS_RecoPFMET", "BefPreS_RecoPFMET",  200, 0.0, 2000.0);
   tuple->BefPreS_RecoPFHT = dir.make<TH1F>("BefPreS_RecoPFHT", "BefPreS_RecoPFHT",  200, 0.0, 2000.0);
@@ -554,7 +545,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_dRVsdPtPfCaloJet = dir.make<TH2F>("BefPreS_dRVsdPtPfCaloJet",";dRmin;dPtPfCaloJet",100,0.,1.5,20,0.,100.);
   
 
-  tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", "PostPreS_TriggerType", 3, 0., 3.);
+  tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events/category", 4, -0.5, 3.5);
 
   tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, -0.5, 8.5);
   tuple->PostPreS_pfTypeVsIas = dir.make<TH2F>("PostPreS_pfTypeVsIas","PostPreS_pfTypeVsIas", 9, -0.5, 8.5,20,0.,1.);
@@ -565,6 +556,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>("PostPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 150, 0.0, 1.5, 10, 0.,1.);
   tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>("PostPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
+  tuple->PostPreS_MiniTkIso = dir.make<TH1F>("PostPreS_MiniTkIso",";MiniTkIso;Tracks/bin", 150, 0.0, 50.);
+  tuple->PostPreS_MiniRelTkIso = dir.make<TH1F>("PostPreS_MiniRelTkIso",";MiniRelTkIso;Tracks/bin", 150, 0.0, 1.5);
   
   tuple->PostPreS_RecoPFMET = dir.make<TH1F>("PostPreS_RecoPFMET", "PostPreS_RecoPFMET",  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>("PostPreS_RecoPFHT", "PostPreS_RecoPFHT",  200, 0.0, 2000.0);

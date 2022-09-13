@@ -268,6 +268,15 @@ struct Tuple {
   TH1F* N1_pfType;
   TH1F* N1_MiniRelIsoAll;
   TH1F* N1_MiniRelIsoAll_lowMiniRelIso;
+  TH1F* N1_MiniRelTkIso;
+  TH1F* N1_MiniRelTkIso_lowMiniRelIso;
+  TH1F* N1_MiniRelTkIso_lowMiniRelIso_PUA;
+  TH1F* N1_MiniRelTkIso_lowMiniRelIso_PUB;
+  TH1F* N1_MiniRelTkIso_lowMiniRelIso_PUC;
+  TH1F* N1_MiniTkIso;
+  TH1F* N1_MiniTkIso_PUA;
+  TH1F* N1_MiniTkIso_PUB;
+  TH1F* N1_MiniTkIso_PUC;
 
   TH1F* BefPreS_pfType;
 
@@ -293,6 +302,9 @@ struct Tuple {
   TH1F* BefPreS_massT;
   TH1F* BefPreS_MiniRelIsoAll;
   TH1F* BefPreS_MiniRelIsoChg;
+  TH1F* BefPreS_MiniRelTkIso;
+  TH1F* BefPreS_MiniTkIso;
+  
   TH1F* BefPreS_RecoPFMET;
   TH1F* BefPreS_RecoPFHT;
   TH1F* BefPreS_CaloNumJets;
@@ -443,6 +455,9 @@ struct Tuple {
   TH1F* PostPreS_MiniRelIsoAll;
   TH2F* PostPreS_MiniRelIsoAllVsIas;
   TH1F* PostPreS_MiniRelIsoChg;
+  TH1F* PostPreS_MiniTkIso;
+  TH1F* PostPreS_MiniRelTkIso;
+  
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
   TH1F* PostPreS_CaloNumJets;

@@ -140,6 +140,7 @@
 // - 29p0: - Frozen preselection as agreed on Sept 8
 // - 29p1: - PtErrOverPt a la Dylan, plus N1 plots to study it
 // - 29p2: - TNOPH plots show the nonL1Pix hits, cut on ptErr/pt2 before PtErrOverPt a la Dylan
+// - 29p3: - Dont cut on ptErrOverPt, add genTrack based iso plots, plots w PU bins
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -157,6 +158,7 @@
 Analyzer::Analyzer(const edm::ParameterSet& iConfig)
     // Read config file
     : hscpToken_(consumes<vector<susybsm::HSCParticle>>(iConfig.getParameter<edm::InputTag>("HscpCollection"))),
+      genTrackToken_(consumes<reco::TrackCollection>(edm::InputTag("generalTracks"))),
       hscpIsoToken_(
           consumes<edm::ValueMap<susybsm::HSCPIsolation>>(iConfig.getParameter<edm::InputTag>("HscpIsoCollection"))),
       muonSegmentToken_(
@@ -571,6 +573,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   // Number of (re-weighted) events
   tuple->NumEvents->Fill(0., EventWeight_);
+  tuple->CutFlow->Fill(0., EventWeight_);
   // Number of (re-weighted with PU syst fact) events
   tuple->NumEvents->Fill(1., EventWeight_ * PUSystFactor_[0]);
 
@@ -891,13 +894,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //====================loop over HSCP candidates===================
   if (debug_ > 0 ) LogPrint(MOD) << "Loop over HSCP candidates:";
-  unsigned int genTrack_count = 0;
+  unsigned int candidate_count = 0;
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     if (debug_> 0) LogPrint(MOD) << "  --------------------------------------------";
-    genTrack_count++;
+    candidate_count++;
     // First bin of the error histo is all tracks
     tuple->ErrorHisto->Fill(0.);
-    if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << genTrack_count;
+    if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << candidate_count;
     
     // Tracker only analysis must have either a tracker muon or a global muon
     if (typeMode_ == 1 &&
@@ -3055,6 +3058,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 const float closestBackgroundPDGsIDs[]) {
   using namespace edm;
     
+  const edm::Handle<reco::TrackCollection> trackCollectionHandle = iEvent.getHandle(genTrackToken_);;
   //===================== Handle For vertex ===============
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
   //===================== Handle For PFCandidate ===================
@@ -3114,6 +3118,27 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  TreeDXY = dxy;
 //  TreeDZ = dz;
 //
+  // Loop on generalTracks
+  float track_genTrackMiniIsoSumPt = 0;
+  for(unsigned int c=0;c<trackCollectionHandle->size();c++){
+    reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
+    // Dont count the HSCP candidate in
+    if (genTrackRef.isNonnull() && genTrackRef.key() == track.key()) {
+      float drForMiniIso = 0.0;
+      if (track->pt() < 50 ) {
+        drForMiniIso = 0.2;
+      } else if (track->pt() < 200) {
+        drForMiniIso = 10/track->pt();
+      } else {
+        drForMiniIso = 0.05;
+      }
+      float pt = genTrackRef->pt();
+      float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
+      if (dr<drForMiniIso) {
+        track_genTrackMiniIsoSumPt+=pt;
+      }
+    }
+  }
   
   // Loop on PF candidates
   bool pf_isPfTrack = false;
@@ -3127,8 +3152,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   if (tuple) {
     tuple->BefPreS_pfType->Fill(0., EventWeight_);
   }
-  
-  
+
   if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
     const reco::PFCandidateCollection* pf = pfCandHandle.product();
     for (unsigned int i = 0; i < pf->size(); i++){
@@ -3285,10 +3309,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   // Calculate PF mini relative isolation
   // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  if (miniRelIsoAll == 0) {
-    if (debug_ > 4) LogPrint(MOD) << "      >> track_PFMiniIso_sumLeptonPt: " << track_PFMiniIso_sumLeptonPt << " track_PFMiniIso_sumCharHadPt: " << track_PFMiniIso_sumCharHadPt << " track_PFMiniIso_sumNeutHadPt " << track_PFMiniIso_sumNeutHadPt << " track_PFMiniIso_sumPhotonPt " << track_PFMiniIso_sumPhotonPt << " track_PFMiniIso_sumPUPt: " << track_PFMiniIso_sumPUPt << " track_PFMiniIso_otherPt: " << track_PFMiniIso_otherPt ; 
-  }
+  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_otherPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
@@ -3333,9 +3354,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float probQonTrackNoLayer1 = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
   
-  // TODO: what do PUA and PUB stand for??
+  // A,B,C for 3 cat of PU
   bool PUA = (vertexColl.size() < 15);
-  bool PUB = (vertexColl.size() >= 15);
+  bool PUB = (vertexColl.size() >= 15 && vertexColl.size() < 30);
+  bool PUC = (vertexColl.size() >= 30 );
   
   const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
   susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
@@ -3351,7 +3373,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[12];
+  bool passedCutsArray[10];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3366,7 +3388,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Check the min fraction of valid hits to ensure good stats on the hits
   passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits to ensure good stats on the hits
-  passedCutsArray[5]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+  passedCutsArray[5]  = (numDeDxHits > globalMinNOM_)  ? true : false;
   // Select only high purity tracks to ensure good quality tracks
   passedCutsArray[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof to ensure good quality tracks
@@ -3379,8 +3401,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the uncertainty of the pt measurement
-  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
-  passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
+//  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
+//  passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
     // Cut on the energy over momenta
 //  passedCutsArray[8] = (EoP <= globalMaxEoP_) ? true : false;
 
@@ -3424,7 +3446,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         }
       }
       if (allCutsPassedSoFar) {
-        tuple->CutFlow->Fill((i), EventWeight_);
+        tuple->CutFlow->Fill((i+1), EventWeight_);
       }
     }
   }
@@ -3485,7 +3507,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->BefPreS_Ias_PUA->Fill(globalIas_, EventWeight_);
       tuple->BefPreS_Ih_PUA->Fill(globalIh_, EventWeight_);
       tuple->BefPreS_Pt_PUA->Fill(track->pt(), EventWeight_);
-        
     }
     if (PUB) {
       tuple->BefPreS_TNOH_PUB->Fill(track->found(), EventWeight_);
@@ -3544,6 +3565,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
     tuple->BefPreS_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
     tuple->BefPreS_MiniRelIsoChg->Fill(miniRelIsoChg, EventWeight_);
+    tuple->BefPreS_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+    tuple->BefPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
     tuple->BefPreS_SegSep->Fill(segSep, EventWeight_);
     tuple->BefPreS_SegMinPhiSep->Fill(minPhi, EventWeight_);
     tuple->BefPreS_SegMinEtaSep->Fill(minEta, EventWeight_);
@@ -3734,6 +3757,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==0)  {
           tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
           tuple->N1_pfType->Fill(0., EventWeight_);
+          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
           if (pf_isPfTrack) {
             tuple->N1_pfType->Fill(1., EventWeight_);
           } else {
@@ -3759,8 +3785,25 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_Stations->Fill(muonStations(track->hitPattern()), EventWeight_);
           tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
           tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          tuple->N1_MiniRelTkIso_lowMiniRelIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
           tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
           tuple->N1_EoP->Fill(EoP, EventWeight_);
+          
+          if (PUA) {
+            tuple->N1_MiniTkIso_PUA->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUB) {
+            tuple->N1_MiniTkIso_PUB->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUC) {
+            tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          }
+            
+          
+          
         };
         if (i==1)  {
           tuple->N1_Pt->Fill(track->pt(), EventWeight_);
@@ -3780,11 +3823,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
         if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
-        if (i==11) {
-          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
-          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
-          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
-        };
 //        if (i==11) { };
 //        if (i==12) { };
 //        if (i==13) { };
@@ -3951,6 +3989,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
     tuple->PostPreS_MiniRelIsoAllVsIas->Fill(miniRelIsoAll, globalIas_, EventWeight_);
     tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, EventWeight_);
+    tuple->PostPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+    tuple->PostPreS_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+    
     tuple->PostPreS_MassErr->Fill(MassErr, EventWeight_);
     tuple->PostPreS_MassErrVsIas->Fill(MassErr, globalIas_, EventWeight_);
     
