@@ -197,6 +197,7 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<vector<susybsm::HSCParticle>> hscpToken_;
+  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_; 
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
   edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;

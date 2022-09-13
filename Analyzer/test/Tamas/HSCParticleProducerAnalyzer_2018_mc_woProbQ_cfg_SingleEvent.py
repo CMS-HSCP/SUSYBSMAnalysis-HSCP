@@ -90,7 +90,7 @@ process.source = cms.Source("PoolSource",
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:37737:411896098')
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:115188:115187134')
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:183264:183263902')
-process.source.eventsToProcess = cms.untracked.VEventRange('1:25539:278749947')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:25539:278749947')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
