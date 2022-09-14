@@ -319,18 +319,27 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
 TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name="", std::string leg1="", std::string leg2="", bool rebin=false){
     if(rebin) h1=rebinHisto(h1);
     if(rebin) h2=rebinHisto(h2);
-    TCanvas* c1 = new TCanvas(("plotting_"+name).c_str(),"");
+    std::string canvName;
+    if(rebin) {
+      canvName = "plotting_"+name+"_rebin";
+    } else {
+      canvName = "plotting_"+name;
+    }
+    TCanvas* c1 = new TCanvas(canvName.c_str(),"", 800,800);
     c1->Divide(1,2);
     gStyle->SetOptStat(0);
     c1->cd(1);
+    TPad* p1 = (TPad*)(c1->cd(1));
+    p1->SetLogy();
     TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
     leg->AddEntry(h1,leg1.c_str(),"lep");
     leg->AddEntry(h2,leg2.c_str(),"lep");
+    h1->SetStats(0);
     h1->Draw();
     h2->SetLineColor(2);
+    h2->SetStats(0);
     h2->Draw("esame");
     leg->Draw("same");
-    c1->SetLogy();
     c1->cd(2);
     TH1F* tmp = (TH1F*) h1->Clone(); tmp->Reset();
     if(ratioSimple){
@@ -345,6 +354,7 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     }
     tmp->GetYaxis()->SetRangeUser(0,2);
     tmp->Draw();
+    c1->SaveAs((canvName+".png").c_str());
     return c1;
 }
 

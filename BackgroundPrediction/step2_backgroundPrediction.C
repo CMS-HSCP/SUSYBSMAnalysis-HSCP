@@ -1,3 +1,6 @@
+// Usage:
+// root -l -q -b step2_backgroundPrediction.C
+
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
