@@ -141,6 +141,7 @@
 // - 29p1: - PtErrOverPt a la Dylan, plus N1 plots to study it
 // - 29p2: - TNOPH plots show the nonL1Pix hits, cut on ptErr/pt2 before PtErrOverPt a la Dylan
 // - 29p3: - Dont cut on ptErrOverPt, add genTrack based iso plots, plots w PU bins
+// - 29p4: - As 29p3 but bug fixed
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -179,6 +180,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       offlineBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("OfflineBeamSpotCollection"))),
       muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("MuonCollection"))),
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
+//      trigEventToken_(consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD","","HLT"))),
+//      filterName_(iConfig.getParameter<std::string>("FilterName")),
+//      pathName_(iConfig.getParameter<std::string>("PathName")),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
@@ -2694,6 +2698,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("TriggerResults", edm::InputTag("TriggerResults","","HLT"))
     ->setComment("A");
+//  desc.add<std::string>("FilterName",std::string("hltL1sSingleMu22or25"))
+//    ->setComment("A");
+//  desc.add<std::string>("PathName","HLT_Mu50_v9")
+//    ->setComment("A");
   desc.add("PfMET", edm::InputTag("pfMet"))
     ->setComment("A");
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
@@ -3123,7 +3131,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   for(unsigned int c=0;c<trackCollectionHandle->size();c++){
     reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
     // Dont count the HSCP candidate in
-    if (genTrackRef.isNonnull() && genTrackRef.key() == track.key()) {
+    if (genTrackRef.isNonnull() && genTrackRef.key() != track.key()) {
       float drForMiniIso = 0.0;
       if (track->pt() < 50 ) {
         drForMiniIso = 0.2;
