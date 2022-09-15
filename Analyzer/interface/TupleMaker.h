@@ -66,13 +66,15 @@ public:
 			const float &HLTCaloMETClean,
 			const float &HLTCaloMETClean_phi,
 			const float &HLTCaloMETClean_sigf,
-			const float &HLTCaloMETCleanJetID,
-			const float &HLTCaloMETCleanJetID_phi,
-			const float &HLTCaloMETCleanJetID_sigf,
+			const float &HLTCaloMHT,
+			const float &HLTCaloMHT_phi,
+			const float &HLTCaloMHT_sigf,
                         const float &HLTPFMET,
 			const float &HLTPFMET_phi,
 			const float &HLTPFMET_sigf,
                         const float &HLTPFMHT,
+			const float &HLTPFMHT_phi,
+			const float &HLTPFMHT_sigf,
                         const float &Muon1_Pt,
                         const float &Muon1_eta,
                         const float &Muon1_phi,
@@ -1943,13 +1945,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("HLTCaloMETClean", &tuple->Tree_HLTCaloMETClean, "HLTCaloMETClean/F");
     tuple->Tree->Branch("HLTCaloMETClean_phi", &tuple->Tree_HLTCaloMETClean_phi, "HLTCaloMETClean_phi/F");
     tuple->Tree->Branch("HLTCaloMETClean_sigf", &tuple->Tree_HLTCaloMETClean_sigf, "HLTCaloMETClean_sigf/F");
-    tuple->Tree->Branch("HLTCaloMETCleanJetID", &tuple->Tree_HLTCaloMETCleanJetID, "HLTCaloMETCleanJetID/F");
-    tuple->Tree->Branch("HLTCaloMETCleanJetID_phi", &tuple->Tree_HLTCaloMETCleanJetID_phi, "HLTCaloMETCleanJetID_phi/F");
-    tuple->Tree->Branch("HLTCaloMETCleanJetID_sigf", &tuple->Tree_HLTCaloMETCleanJetID_sigf, "HLTCaloMETCleanJetID_sigf/F");
+    tuple->Tree->Branch("HLTCaloMHT", &tuple->Tree_HLTCaloMHT, "HLTCaloMHT/F");
+    tuple->Tree->Branch("HLTCaloMHT_phi", &tuple->Tree_HLTCaloMHT_phi, "HLTCaloMHT_phi/F");
+    tuple->Tree->Branch("HLTCaloMHT_sigf", &tuple->Tree_HLTCaloMHT_sigf, "HLTCaloMHT_sigf/F");
     tuple->Tree->Branch("HLTPFMET", &tuple->Tree_HLTPFMET, "HLTPFMET/F");
     tuple->Tree->Branch("HLTPFMET_phi", &tuple->Tree_HLTPFMET_phi, "HLTPFMET_phi/F");
     tuple->Tree->Branch("HLTPFMET_sigf", &tuple->Tree_HLTPFMET_sigf, "HLTPFMET_sigf/F");
     tuple->Tree->Branch("HLTPFMHT", &tuple->Tree_HLTPFMHT, "HLTPFMHT/F");
+    tuple->Tree->Branch("HLTPFMHT_phi", &tuple->Tree_HLTPFMHT_phi, "HLTPFMHT_phi/F");
+    tuple->Tree->Branch("HLTPFMHT_sigf", &tuple->Tree_HLTPFMHT_sigf, "HLTPFMHT_sigf/F");
     tuple->Tree->Branch("Muon1_Pt", &tuple->Tree_Muon1_Pt, "Muon1_Pt/F");
     tuple->Tree->Branch("Muon1_eta", &tuple->Tree_Muon1_eta, "Muon1_eta/F");
     tuple->Tree->Branch("Muon1_phi", &tuple->Tree_Muon1_phi, "Muon1_phi/F");
@@ -2161,13 +2165,15 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
 				  const float &HLTCaloMETClean,
 				  const float &HLTCaloMETClean_phi,
 				  const float &HLTCaloMETClean_sigf,
-				  const float &HLTCaloMETCleanJetID,
-				  const float &HLTCaloMETCleanJetID_phi,
-				  const float &HLTCaloMETCleanJetID_sigf,
+				  const float &HLTCaloMHT,
+				  const float &HLTCaloMHT_phi,
+				  const float &HLTCaloMHT_sigf,
                                   const float &HLTPFMET,
                                   const float &HLTPFMET_phi,
                                   const float &HLTPFMET_sigf,
                                   const float &HLTPFMHT,
+				  const float &HLTPFMHT_phi,
+				  const float &HLTPFMHT_sigf,
                                   const float &Muon1_Pt,
                                   const float &Muon1_eta,
                                   const float &Muon1_phi,
@@ -2313,13 +2319,15 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_HLTCaloMETClean = HLTCaloMETClean;
   tuple->Tree_HLTCaloMETClean_phi = HLTCaloMETClean_phi;
   tuple->Tree_HLTCaloMETClean_sigf = HLTCaloMETClean_sigf;
-  tuple->Tree_HLTCaloMETCleanJetID = HLTCaloMETCleanJetID;
-  tuple->Tree_HLTCaloMETCleanJetID_phi = HLTCaloMETCleanJetID_phi;
-  tuple->Tree_HLTCaloMETCleanJetID_sigf = HLTCaloMETCleanJetID_sigf;
+  tuple->Tree_HLTCaloMHT = HLTCaloMHT;
+  tuple->Tree_HLTCaloMHT_phi = HLTCaloMHT_phi;
+  tuple->Tree_HLTCaloMHT_sigf = HLTCaloMHT_sigf;
   tuple->Tree_HLTPFMET = HLTPFMET;
   tuple->Tree_HLTPFMET_phi = HLTPFMET_phi;
   tuple->Tree_HLTPFMET_sigf = HLTPFMET_sigf;
   tuple->Tree_HLTPFMHT = HLTPFMHT;
+  tuple->Tree_HLTPFMHT_phi = HLTPFMHT_phi;
+  tuple->Tree_HLTPFMHT_sigf = HLTPFMHT_sigf;
   tuple->Tree_Muon1_Pt = Muon1_Pt;
   tuple->Tree_Muon1_eta = Muon1_eta;
   tuple->Tree_Muon1_phi = Muon1_phi;

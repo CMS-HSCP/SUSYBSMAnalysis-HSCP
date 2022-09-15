@@ -44,13 +44,15 @@ struct Tuple {
   float Tree_HLTCaloMETClean;
   float Tree_HLTCaloMETClean_phi;
   float Tree_HLTCaloMETClean_sigf;
-  float Tree_HLTCaloMETCleanJetID;
-  float Tree_HLTCaloMETCleanJetID_phi;
-  float Tree_HLTCaloMETCleanJetID_sigf;
+  float Tree_HLTCaloMHT;
+  float Tree_HLTCaloMHT_phi;
+  float Tree_HLTCaloMHT_sigf;
   float Tree_HLTPFMET;
   float Tree_HLTPFMET_phi;
   float Tree_HLTPFMET_sigf;
   float Tree_HLTPFMHT;
+  float Tree_HLTPFMHT_phi;
+  float Tree_HLTPFMHT_sigf;
   float Tree_Muon1_Pt;
   float Tree_Muon1_eta;
   float Tree_Muon1_phi;

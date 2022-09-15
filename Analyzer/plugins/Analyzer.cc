@@ -616,8 +616,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float RecoPFMET = -10, RecoPFMET_phi = -10, RecoPFMET_sigf = -10, RecoPFMHT = -10;
   float HLTCaloMET = -10, HLTCaloMET_phi = -10, HLTCaloMET_sigf = -10;
   float HLTCaloMETClean = -10, HLTCaloMETClean_phi = -10, HLTCaloMETClean_sigf = -10;
-  float HLTCaloMETCleanJetID = -10, HLTCaloMETCleanJetID_phi = -10, HLTCaloMETCleanJetID_sigf = -10;
-  float HLTPFMET = -10, HLTPFMET_phi = -10, HLTPFMET_sigf = -10, HLTPFMHT = -10;
+  float HLTCaloMHT = -10, HLTCaloMHT_phi = -10, HLTCaloMHT_sigf = -10;
+  float HLTPFMET = -10, HLTPFMET_phi = -10, HLTPFMET_sigf = -10;
+  float HLTPFMHT = -10, HLTPFMHT_phi = -10, HLTPFMHT_sigf = -10;
 
   //===================== Handle For RecoCaloMET ===================
   const edm::Handle<std::vector<reco::CaloMET>> recoCaloMETHandle = iEvent.getHandle(caloMETToken_);
@@ -646,38 +647,45 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 
   //===================== Handle For HLT Trigger Summary ===================
-  // there could be more robust ways to get these values, so to be updated as needed...
 
   const edm::Handle<trigger::TriggerEvent> hltTriggerSummaryHandle = iEvent.getHandle(TriggerSummaryToken_);
   if (hltTriggerSummaryHandle.isValid()) {
 
-    int caloKey = 0, caloCleanKey = 0, caloCleanJetIDKey = 0, pfKey = 0;
-    // loop over trigger object collections to find HLT CaloMET, CaloMETClean, CaloMETCleanJetID, PFMET collections
+    int caloMETKey = 0, caloMETCleanKey = 0, caloMHTKey = 0, pfMHTKey = 0, pfMETKey = 0;
+    // loop over trigger object collections to find HLT CaloMET, CaloMETClean, CaloMHT, PFMHT, PFMET collections
     for (int iC = 0; iC < hltTriggerSummaryHandle->sizeCollections(); iC++) {
       if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMet::HLT") {
 	// collectionKey(iC) gives trigger object key ONE PAST the object collection of interest
-        caloKey = hltTriggerSummaryHandle->collectionKey(iC); 
+        caloMETKey = hltTriggerSummaryHandle->collectionKey(iC); 
 	// HLT MET object collections ALWAYS have four objects {MET, TET, MET significance, ELongitudinal}, hence -4 for MET value
-	HLTCaloMET = hltTriggerSummaryHandle->getObjects()[caloKey-4].pt();
-	HLTCaloMET_phi = hltTriggerSummaryHandle->getObjects()[caloKey-4].phi();
+	HLTCaloMET = hltTriggerSummaryHandle->getObjects()[caloMETKey-4].pt();
+	HLTCaloMET_phi = hltTriggerSummaryHandle->getObjects()[caloMETKey-4].phi();
 	// and -2 for MET significance
 	// significance  saved as .pt() but obviously pt holds no meaning here
-	HLTCaloMET_sigf = hltTriggerSummaryHandle->getObjects()[caloKey-2].pt();
+	HLTCaloMET_sigf = hltTriggerSummaryHandle->getObjects()[caloMETKey-2].pt();
       } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMetClean::HLT") {
-	caloCleanKey = hltTriggerSummaryHandle->collectionKey(iC);
-	HLTCaloMETClean = hltTriggerSummaryHandle->getObjects()[caloCleanKey-4].pt();
-	HLTCaloMETClean_phi = hltTriggerSummaryHandle->getObjects()[caloCleanKey-4].phi();
-	HLTCaloMETClean_sigf = hltTriggerSummaryHandle->getObjects()[caloCleanKey-2].pt();
-      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMetCleanUsingJetID::HLT") {
-	caloCleanJetIDKey = hltTriggerSummaryHandle->collectionKey(iC);
-	HLTCaloMETCleanJetID = hltTriggerSummaryHandle->getObjects()[caloCleanJetIDKey-4].pt();
-	HLTCaloMETCleanJetID_phi = hltTriggerSummaryHandle->getObjects()[caloCleanJetIDKey-4].phi();
-	HLTCaloMETCleanJetID_sigf = hltTriggerSummaryHandle->getObjects()[caloCleanJetIDKey-2].pt();
-      }if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltPFMETProducer::HLT") {
-	pfKey = hltTriggerSummaryHandle->collectionKey(iC);
-	HLTPFMET = hltTriggerSummaryHandle->getObjects()[pfKey-4].pt();
-	HLTPFMET_phi = hltTriggerSummaryHandle->getObjects()[pfKey-4].phi();
-	HLTPFMET_sigf = hltTriggerSummaryHandle->getObjects()[pfKey-2].pt();
+	caloMETCleanKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTCaloMETClean = hltTriggerSummaryHandle->getObjects()[caloMETCleanKey-4].pt();
+	HLTCaloMETClean_phi = hltTriggerSummaryHandle->getObjects()[caloMETCleanKey-4].phi();
+	HLTCaloMETClean_sigf = hltTriggerSummaryHandle->getObjects()[caloMETCleanKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMht::HLT") {
+	caloMHTKey = hltTriggerSummaryHandle->collectionKey(iC);
+	// HLT MHT object collections ALWAYS have four objects {MHT, THT, MHT significance, HLongitudinal}, hence -4 for MHT value
+	HLTCaloMHT = hltTriggerSummaryHandle->getObjects()[caloMHTKey-4].pt();
+	HLTCaloMHT_phi = hltTriggerSummaryHandle->getObjects()[caloMHTKey-4].phi();
+	// and -2 for MHT significance
+	// significance  saved as .pt() but obviously pt holds no meaning here
+	HLTCaloMHT_sigf = hltTriggerSummaryHandle->getObjects()[caloMHTKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltPFMHTTightID::HLT") {
+	pfMHTKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTPFMHT = hltTriggerSummaryHandle->getObjects()[pfMHTKey-4].pt();
+	HLTPFMHT_phi = hltTriggerSummaryHandle->getObjects()[pfMHTKey-4].phi();
+	HLTPFMHT_sigf = hltTriggerSummaryHandle->getObjects()[pfMHTKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltPFMETProducer::HLT") {
+	pfMETKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTPFMET = hltTriggerSummaryHandle->getObjects()[pfMETKey-4].pt();
+	HLTPFMET_phi = hltTriggerSummaryHandle->getObjects()[pfMETKey-4].phi();
+	HLTPFMET_sigf = hltTriggerSummaryHandle->getObjects()[pfMETKey-2].pt();
       }
     }
   }
@@ -2263,13 +2271,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 				HLTCaloMETClean,
 				HLTCaloMETClean_phi,
 				HLTCaloMETClean_sigf,
-				HLTCaloMETCleanJetID,
-				HLTCaloMETCleanJetID_phi,
-				HLTCaloMETCleanJetID_sigf,
+				HLTCaloMHT,
+				HLTCaloMHT_phi,
+				HLTCaloMHT_sigf,
                                 HLTPFMET,
 				HLTPFMET_phi,
 				HLTPFMET_sigf,
                                 HLTPFMHT,
+				HLTPFMHT_phi,
+				HLTPFMHT_sigf,
                                 maxPtMuon1,
                                 etaMuon1,
                                 phiMuon1,
