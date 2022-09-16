@@ -144,6 +144,7 @@
 // - 29p4: - As 29p3 but bug fixed
 // - 29p5: - Add HLT matching
 // - 29p6: - Add cut on PFMiniIso
+// - 29p7: - Address the question about trigger effs (temp commit)
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -935,7 +936,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Continue if no matching was found
-    if (dr_min_hlt_hscp > 0.1) continue;
+    // TODO for 29p8
+//    if (dr_min_hlt_hscp > 0.1) continue;
     
     // Tracker + Muon analysis  must have a global muon
     if ((typeMode_ == 2 || typeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
@@ -2789,9 +2791,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Choice of HLT_Mu50_v is to simplify analysis
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
   ->setComment("Add the list of muon triggers");
-    //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+    desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
     // Possibly used in a next version of the analysis
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+//  desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
   ->setComment("Add the list of MET triggers");
   // Cut values
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
