@@ -142,7 +142,8 @@
 // - 29p2: - TNOPH plots show the nonL1Pix hits, cut on ptErr/pt2 before PtErrOverPt a la Dylan
 // - 29p3: - Dont cut on ptErrOverPt, add genTrack based iso plots, plots w PU bins
 // - 29p4: - As 29p3 but bug fixed
-// - 29p6: - Add HLT matching
+// - 29p5: - Add HLT matching
+// - 29p6: - Add cut on PFMiniIso
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -3402,7 +3403,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[10];
+  bool passedCutsArray[11];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3429,6 +3430,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
+  //Cut on the PF based mini-isolation
+  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
   // Cut on the uncertainty of the pt measurement
 //  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
 //  passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
@@ -3438,8 +3441,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the tracker based isolation
 //  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
-  // Cut on the PF based mini-isolation
-//  passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+
   // Cut on the PF electron ID
 //  passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
   // Cut on min Ih (or max for fractionally charged)
@@ -3812,27 +3814,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
           tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
           tuple->N1_Stations->Fill(muonStations(track->hitPattern()), EventWeight_);
-          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
-          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
-          tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          tuple->N1_MiniRelTkIso_lowMiniRelIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
           tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
           tuple->N1_EoP->Fill(EoP, EventWeight_);
-          
-          if (PUA) {
-            tuple->N1_MiniTkIso_PUA->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          } else if (PUB) {
-            tuple->N1_MiniTkIso_PUB->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          } else if (PUC) {
-            tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          }
-            
-          
-          
+
         };
         if (i==1)  {
           tuple->N1_Pt->Fill(track->pt(), EventWeight_);
@@ -3852,7 +3836,23 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
         if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
-//        if (i==11) { };
+        if (i==10) {
+          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          tuple->N1_MiniRelTkIso_lowMiniRelIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+          if (PUA) {
+            tuple->N1_MiniTkIso_PUA->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUB) {
+            tuple->N1_MiniTkIso_PUB->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUC) {
+            tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          }
+        };
 //        if (i==12) { };
 //        if (i==13) { };
 //        if (i==14) { };
