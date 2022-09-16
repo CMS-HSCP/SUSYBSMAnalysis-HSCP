@@ -142,6 +142,7 @@
 // - 29p2: - TNOPH plots show the nonL1Pix hits, cut on ptErr/pt2 before PtErrOverPt a la Dylan
 // - 29p3: - Dont cut on ptErrOverPt, add genTrack based iso plots, plots w PU bins
 // - 29p4: - As 29p3 but bug fixed
+// - 29p6: - Add HLT matching
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -180,9 +181,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       offlineBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("OfflineBeamSpotCollection"))),
       muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("MuonCollection"))),
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
-//      trigEventToken_(consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD","","HLT"))),
-//      filterName_(iConfig.getParameter<std::string>("FilterName")),
-//      pathName_(iConfig.getParameter<std::string>("PathName")),
+      trigEventToken_(consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD","","HLT"))),
+      filterName_(iConfig.getParameter<std::string>("FilterName")),
+      pathName_(iConfig.getParameter<std::string>("PathName")),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
@@ -767,6 +768,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
   iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
   
+  // Get handle for trigEvent
+  edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
+  
   //reinitialize the bookeeping array for each event
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk[CutIndex] = false;
@@ -915,7 +919,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     
-    // Tracker + Muon analysis  must have either a global muon
+    // Match candidate track to HLT muon
+    std::vector<TLorentzVector> trigObjP4s;
+    trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
+
+    float dr_min_hlt_hscp = 9999.0;
+    if(hscp.type() == susybsm::HSCParticleType::globalMuon) {
+      for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+        float dr_hltmu_hscp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),hscp.trackRef()->eta(),hscp.trackRef()->phi());
+        if (dr_hltmu_hscp < dr_min_hlt_hscp){
+          dr_min_hlt_hscp = dr_hltmu_hscp;
+        }
+      }
+    }
+    
+    // Continue if no matching was found
+    if (dr_min_hlt_hscp > 0.1) continue;
+    
+    // Tracker + Muon analysis  must have a global muon
     if ((typeMode_ == 2 || typeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker + Muon analysis w/o a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
@@ -1619,14 +1640,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //globalIas_ Pixel only
     auto dedxIas_PixelOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
     //globalIas_ Strip only
     auto dedxIas_StripOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
@@ -2698,10 +2719,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("TriggerResults", edm::InputTag("TriggerResults","","HLT"))
     ->setComment("A");
-//  desc.add<std::string>("FilterName",std::string("hltL1sSingleMu22or25"))
-//    ->setComment("A");
-//  desc.add<std::string>("PathName","HLT_Mu50_v9")
-//    ->setComment("A");
+  desc.add<std::string>("FilterName",std::string("hltL1sSingleMu22or25"))
+    ->setComment("A");
+  desc.add<std::string>("PathName","HLT_Mu50_v9")
+    ->setComment("A");
   desc.add("PfMET", edm::InputTag("pfMet"))
     ->setComment("A");
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
@@ -2783,9 +2804,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits for track cleaning");
   // Choice of >9 is motivated by N1_TNOM
   desc.addUntracked("GlobalMinNOM",9)->setComment("Cut on number of dEdx hits (#strip+#pixel-#ClusterCleaned-#BPixL1 hits)");
-  // Choice of <5 is motivate by N1_Chi2oNdof
+  // Choice of <5 is motivated by N1_Chi2oNdof
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
-  // Choice of <0.1 per tracking/muon group recommendation
+  // Choice of <0.1 motivated by looking at N1 plot N1 plot
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
   // Choice of <0.02 per tracking/muon group recommendation
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
@@ -4576,3 +4597,5 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   }  // End compute systematics due to PU
 }
+
+
