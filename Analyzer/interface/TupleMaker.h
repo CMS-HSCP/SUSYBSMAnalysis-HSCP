@@ -258,10 +258,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->IntLumi = dir.make<TProfile>("IntLumi", ";IntLumi", 1, 0, 1);
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
-  tuple->NumEvents = dir.make<TH1F>("NumEvents",";NumEvents", 3, -0.5, 2.5);
+  tuple->NumEvents = dir.make<TH1F>("NumEvents",";Number of events/category", 4, -0.5, 3.5);
+  tuple->dRMinHLTMuon = dir.make<TH1F>("dRMinHLTMuon",";dR_min;Number of events/bin",100,0.,1.0);
   tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
-  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 4, -0.5, 3.5);
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
   tuple->HSCPCandidateType = dir.make<TH1F>("HSCPCandidateType",";;", 6, -0.5, 5.5);
+  tuple->BefPreS_RecoHSCParticleType = dir.make<TH1F>("BefPreS_RecoHSCParticleType",";;Track/category", 6, -0.5, 5.5);
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"trackerMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"matchedStandAloneMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"standAloneMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"innerTrack");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"unknown");
   // Can I do setBinLabel at this point?
 
   tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, 0., 17.);
@@ -546,6 +553,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
 
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events/category", 4, -0.5, 3.5);
+  tuple->PostPreS_RecoHSCParticleType = dir.make<TH1F>("PostPreS_RecoHSCParticleType",";;Track/category", 6, -0.5, 5.5);
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"trackerMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"matchedStandAloneMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"standAloneMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"innerTrack");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"unknown");
 
   tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, -0.5, 8.5);
   tuple->PostPreS_pfTypeVsIas = dir.make<TH2F>("PostPreS_pfTypeVsIas","PostPreS_pfTypeVsIas", 9, -0.5, 8.5,20,0.,1.);

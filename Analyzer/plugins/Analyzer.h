@@ -218,6 +218,7 @@ private:
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
   string filterName_;
   string pathName_;
+  bool matchToHLTTrigger_;
   edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
   edm::EDGetTokenT<std::vector<reco::CaloMET>> caloMETToken_;

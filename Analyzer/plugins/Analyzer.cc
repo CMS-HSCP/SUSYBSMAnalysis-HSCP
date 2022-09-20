@@ -146,6 +146,7 @@
 // - 29p6: - Add cut on PFMiniIso
 // - 29p7: - Address the question about trigger effs (temp commit)
 // - 29p8: - Revert 29p7 changes, add cut on genTrack based variable cone size abs isolation
+// - 29p9: - Event level matching of muon to HLT muon, add RecoHSCParticleType plots
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -187,6 +188,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       trigEventToken_(consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD","","HLT"))),
       filterName_(iConfig.getParameter<std::string>("FilterName")),
       pathName_(iConfig.getParameter<std::string>("PathName")),
+      matchToHLTTrigger_(iConfig.getUntrackedParameter<bool>("MatchToHLTTrigger")),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
@@ -383,16 +385,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (CurrentRun_ != iEvent.id().run()) {
     CurrentRun_ = iEvent.id().run();
     tofCalculator.setRun(CurrentRun_);
-
-    /* FIXME is it still relevant to use this function ?
-    loadDeDxParameters(CurrentRun_, sampleType_, dEdxSF_0_, dEdxSF_1_, dEdxK_, dEdxC_);
-    */
     dEdxSF[0] = dEdxSF_0_;
     dEdxSF[1] = dEdxSF_1_;
-    //LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
   }
     
-
   // Compute event weight
   if (!isData) {
     float PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_, PUSystFactor_);
@@ -413,7 +409,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   } else {
     if (debug_> 0) LogPrint(MOD) << "This is syst studies";
   }
-  
   
   float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
@@ -590,20 +585,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
   
-  if (!metTrig && muTrig) {
-    // mu only
+  if (muTrig) {
+    // mu trigger passed
     trigInfo_ = 1;
-  } else if (metTrig && !muTrig) {
-    // met only
+  } else if (metTrig) {
+    // met trigger passed
     trigInfo_ = 2;
+  } else if (metTrig || muTrig) {
+    // mu or met
+    trigInfo_ = 3;
   } else if (metTrig && muTrig) {
     // mu and met
-    trigInfo_ = 3;
+    trigInfo_ = 4;
   }
 
   tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
-  // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
-    //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+  // If triggering is intended (not the case when we make ntuples)
   if (trigInfo_ > 0) {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
   }
@@ -611,9 +608,68 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
     if (saveTree_ == 0)  return;
   }
+    // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
 
   // Number of events that pass the trigger
   tuple->NumEvents->Fill(2., EventWeight_);
+  
+  // Get handle for trigEvent
+  edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
+  
+  //===================== Collection For Muons ===================
+  // Get muon collections
+  vector<reco::Muon> muonColl = iEvent.get(muonToken_);
+  unsigned int Muons_count = 0;
+  float maxPtMuon1 = 0, maxPtMuon2 = 0;
+  float etaMuon1 = 0, phiMuon1 = 0;
+  float etaMuon2 = 0, phiMuon2 = 0;
+  unsigned int muon1 = 0;
+  for (unsigned int i = 0; i < muonColl.size(); i++) {
+    const reco::Muon* mu = &(muonColl)[i];
+    Muons_count++;
+    if (mu->pt() > maxPtMuon1) {
+      maxPtMuon1 = mu->pt();
+      etaMuon1 = mu->eta();
+      phiMuon1 = mu->phi();
+      muon1 = i;
+    }
+  }
+  for (unsigned int i = 0; i < muonColl.size(); i++) {
+    if (i == muon1) continue;
+    const reco::Muon* mu = &(muonColl)[i];
+    if (mu->pt() > maxPtMuon2) {
+      maxPtMuon2 = mu->pt();
+      etaMuon2 = mu->eta();
+      phiMuon2 = mu->phi();
+    }
+  }
+  
+  // Match candidate track to HLT muon
+  std::vector<TLorentzVector> trigObjP4s;
+  trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
+  
+  float dr_min_hlt_muon = 9999.0;
+  for (unsigned int i = 0; i < muonColl.size(); i++) {
+    const reco::Muon* mu = &(muonColl)[i];
+    for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+      float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+      if (dr_hltmu_muon < dr_min_hlt_muon){
+        dr_min_hlt_muon = dr_hltmu_muon;
+      }
+    }
+  }
+  
+  tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon, EventWeight_);
+
+  
+  if (matchToHLTTrigger_ && dr_min_hlt_muon < 0.1) {
+    // Exit if no match was found
+    if (saveTree_ == 0) return;
+    // TODO_Ntuple add a variable to the ntuple
+  } else {
+    // Number of events that pass the matching
+    tuple->NumEvents->Fill(3., EventWeight_);
+  }
 
   //keep beta distribution for signal after the trigger
   if (isSignal) {
@@ -730,33 +786,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
 
-  //===================== Collection For Muons ===================
-  // Get muon collections
-  vector<reco::Muon> muonColl = iEvent.get(muonToken_);
-  unsigned int Muons_count = 0; 
-  float maxPtMuon1 = 0, maxPtMuon2 = 0;
-  float etaMuon1 = 0, phiMuon1 = 0;
-  float etaMuon2 = 0, phiMuon2 = 0;
-  unsigned int muon1 = 0;
-  for (unsigned int i = 0; i < muonColl.size(); i++) {
-    const reco::Muon* mu = &(muonColl)[i];
-    Muons_count++;
-    if (mu->pt() > maxPtMuon1) {
-      maxPtMuon1 = mu->pt();
-      etaMuon1 = mu->eta();
-      phiMuon1 = mu->phi();
-      muon1 = i;
-    }
-  }
-  for (unsigned int i = 0; i < muonColl.size(); i++) {
-    if (i == muon1) continue;
-    const reco::Muon* mu = &(muonColl)[i];
-    if (mu->pt() > maxPtMuon2) {
-      maxPtMuon2 = mu->pt();
-      etaMuon2 = mu->eta();
-      phiMuon2 = mu->phi();
-    }
-  }
   
   // Retrieve tracker topology from the event setup
   edm::ESHandle<TrackerTopology> TopoHandle;
@@ -770,9 +799,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Retrieve CPE from the event setup
   edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
   iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
-  
-  // Get handle for trigEvent
-  edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
   
   //reinitialize the bookeeping array for each event
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
@@ -902,6 +928,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_GenPt;
   std::vector<float> HSCP_GenEta;
   std::vector<float> HSCP_GenPhi;
+  
 
   //====================loop over HSCP candidates===================
   if (debug_ > 0 ) LogPrint(MOD) << "Loop over HSCP candidates:";
@@ -911,6 +938,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     candidate_count++;
     // First bin of the error histo is all tracks
     tuple->ErrorHisto->Fill(0.);
+    
+    if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(0.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(1.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::matchedStandAloneMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(2.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::standAloneMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(3.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::innerTrack) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(4.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::unknown) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(5.);
+    }
+    
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << candidate_count;
     
     // Tracker only analysis must have either a tracker muon or a global muon
@@ -921,24 +963,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->ErrorHisto->Fill(1.);
       continue;
     }
-    
-    // Match candidate track to HLT muon
-    std::vector<TLorentzVector> trigObjP4s;
-    trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
-
-    float dr_min_hlt_hscp = 9999.0;
-    if(hscp.type() == susybsm::HSCParticleType::globalMuon) {
-      for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
-        float dr_hltmu_hscp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),hscp.trackRef()->eta(),hscp.trackRef()->phi());
-        if (dr_hltmu_hscp < dr_min_hlt_hscp){
-          dr_min_hlt_hscp = dr_hltmu_hscp;
-        }
-      }
-    }
-    
-    // Continue if no matching was found
-    // TODO for 29p8
-//    if (dr_min_hlt_hscp > 0.1) continue;
     
     // Tracker + Muon analysis  must have a global muon
     if ((typeMode_ == 2 || typeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
@@ -1984,7 +2008,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }
       }
-
+      if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(0.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(1.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::matchedStandAloneMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(2.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::standAloneMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(3.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::innerTrack) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(4.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::unknown) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(5.);
+      }
     }
     
     if (!isData) {
@@ -2728,6 +2764,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add<std::string>("PathName","HLT_Mu50_v9")
     ->setComment("A");
+
   desc.add("PfMET", edm::InputTag("pfMet"))
     ->setComment("A");
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
@@ -2788,6 +2825,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
+  desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide whether we want to calculate the systematics");
   
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
@@ -2796,10 +2834,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 //    desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
     // Possibly used in a next version of the analysis
   desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
-  ->setComment("Add the list of MET triggers");
-  // TODO: We should add a boolean if we'd like to match to HLT muon or not
-  // Cut values
-  desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
+    ->setComment("Add the list of MET triggers");
+  // Decide if want to match the muon to HLT at event level
+  desc.addUntracked("MatchToHLTTrigger",true)->setComment("If we want to make sure the event has a muon at HLT");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
@@ -2820,8 +2857,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   
   desc.addUntracked("GlobalMaxTIsol",10.0)->setComment("Cut on tracker isolation (SumPt of genTracks with variable cone)");
-
-  // To be considered:
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
   desc.addUntracked("GlobalMaxMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
 
