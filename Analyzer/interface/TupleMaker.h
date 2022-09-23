@@ -275,11 +275,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
   
   tuple->BefPreS_RecoHSCParticleType = dir.make<TH1F>("BefPreS_RecoHSCParticleType",";;Track/category", 6, -0.5, 5.5);
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"trackerMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"matchedStandAloneMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"standAloneMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"innerTrack");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"unknown");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"trackerMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"matchedStandAloneMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"standAloneMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"innerTrack");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(6,"unknown");
   // Can I do setBinLabel at this point?
 
   tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, 0., 17.);
@@ -296,6 +297,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlow->GetXaxis()->SetBinLabel(12,"MiniRelIsoAll");
   tuple->CutFlow->GetXaxis()->SetBinLabel(13,"MiniRelTkIso");
   tuple->CutFlow->GetXaxis()->SetBinLabel(14,"E/p");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(15,"pT_err / pT");
   
   tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 17, -0.5, 16.5);
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(1,"Trigger");
@@ -311,6 +313,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(13,"E/p");
+  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(14,"pT_err / pT");
   
   tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;",10, 0., 1.,17, -0.5, 16.5);
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(1,"Trigger");
@@ -326,6 +329,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(13,"E/p");
+  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(14,"pT_err / pT");
   
   tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";#eta;", 50, -2.6, 2.6, 17, -0.5, 16.5);
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(1,"Trigger");
@@ -341,6 +345,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(13,"E/p");
+  tuple->CutFlowEta->GetYaxis()->SetBinLabel(14,"pT_err / pT");
   
   tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";;", 9, -0.5, 8.5, 17, -0.5, 16.5);
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(1,"Trigger");
@@ -356,6 +361,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(13,"E/p");
+  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(14,"pT_err / pT");
   
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(1,"AllTracks");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(2,"PFtracks");
@@ -648,11 +654,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events/category", 4, -0.5, 3.5);
   tuple->PostPreS_RecoHSCParticleType = dir.make<TH1F>("PostPreS_RecoHSCParticleType",";;Track/category", 6, -0.5, 5.5);
-  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"trackerMuon");
-  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"matchedStandAloneMuon");
-  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"standAloneMuon");
-  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"innerTrack");
-  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"unknown");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"trackerMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"matchedStandAloneMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"standAloneMuon");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"innerTrack");
+  tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(6,"unknown");
 
   tuple->PostPreS_pfType = dir.make<TH1F>("PostPreS_pfType", "PostPreS_pfType", 9, -0.5, 8.5);
   tuple->PostPreS_pfTypeVsIas = dir.make<TH2F>("PostPreS_pfTypeVsIas","PostPreS_pfTypeVsIas", 9, -0.5, 8.5,20,0.,1.);

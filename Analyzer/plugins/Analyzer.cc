@@ -149,6 +149,7 @@
 // - 29p9: - Event level matching of muon to HLT muon, add RecoHSCParticleType plots
 // - 30p0: - Cut on rel PF mini iso then on TK mini iso
 // - 30p1: - Cut on E/p
+// - 30p2: - Add back ptErr/pt a la Dylan
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -2843,12 +2844,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
-  // Excluding the L1 in BPix because of hardware problems, require >1 hits for track-probQ
-  desc.addUntracked("GlobalMinNOPH",1)->setComment("Cut on number of (valid) track pixel hits");
+  // Excluding the L1 in BPix because of hardware problems, require >=2 hits for track-probQ
+  desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
   // Choice >0.8 is motivated by looking at N1 plot N1_TNOHFraction
   desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits for track cleaning");
-  // Choice of >9 is motivated by N1_TNOM
-  desc.addUntracked("GlobalMinNOM",9)->setComment("Cut on number of dEdx hits (#strip+#pixel-#ClusterCleaned-#BPixL1 hits)");
+  // Choice of >=10 is motivated by N1_TNOM
+  desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (#strip+#pixel-#ClusterCleaned-#BPixL1 hits)");
   // Use high purity tracks to ensure good quality tracks
   desc.addUntracked("GlobalUseHighPurity",true)->setComment("Cut on the quality of the track");
   // Choice of <5 is motivated by N1_Chi2oNdof
@@ -3450,7 +3451,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[13];
+  bool passedCutsArray[14];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3461,11 +3462,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Check if eta is inside the max eta cut for detector homogeneity
   passedCutsArray[2]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
   // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
-  passedCutsArray[3]  = (typeMode_ != 3 && nonL1PixHits > globalMinNOPH_) ? true : false;
+  passedCutsArray[3]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
   // Check the min fraction of valid hits to ensure good stats on the hits
   passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
   // Cut for the number of dEdx hits to ensure good stats on the hits
-  passedCutsArray[5]  = (numDeDxHits > globalMinNOM_)  ? true : false;
+  passedCutsArray[5]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
   // Select only high purity tracks to ensure good quality tracks
   passedCutsArray[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
   // Cut on the chi2 / ndof to ensure good quality tracks
@@ -3482,13 +3483,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on the absolute pT-dependent cone size TkIsolation
   passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
   // Cut on the uncertainty of the pt measurement
-//  passedCutsArray[10] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
-//  passedCutsArray[11] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
-    // Cut on the energy over momenta
-  passedCutsArray[12] = (EoP <= globalMaxEoP_) ? true : false;
+//  passedCutsArray[12] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
 
+    // Cut on the energy over momenta
+  passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
+  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-//  passedCutsArray[12] = ( dRMinCaloJet > globalMinDeltaRminJet_ ) ? true : false;
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
 
   // Cut on the PF electron ID
@@ -3496,7 +3496,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut on min Ih (or max for fractionally charged)
 //  passedCutsArray[15] = (  (typeMode_ != 5 &&  globalIh_ > globalMinIh_)
 //                        || (typeMode_ == 5 && globalIh_ < globalMinIh_)) ? true : false;
-//  passedCutsArray[16] = ( true ) ? true : false;
   //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
 //  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_) && (probXYonTrackNoLayer1 < globalMaxTrackProbXYCut_))  ? true : false;
@@ -3836,9 +3835,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         // Put the not used variables to the i==0, this will be always true
         if (i==0)  {
           tuple->N1_pfType->Fill(0., EventWeight_);
-          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
-          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
-          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
           if (pf_isPfTrack) {
             tuple->N1_pfType->Fill(1., EventWeight_);
           } else {
@@ -3907,7 +3903,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==12) {
           tuple->N1_EoP->Fill(EoP, EventWeight_);
         };
-//        if (i==13) { };
+        if (i==13) {
+          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+        };
 //        if (i==14) { };
 //        if (i==15) { };
 //        if (i==16) { };
