@@ -293,14 +293,14 @@ struct Tuple {
   TH1F* HSCPE_SystHDown;
 
   TH1F* Gen_DecayLength;
-  TH1F* Beta_Gen;
-  TH1F* Beta_GenCharged;
-  TH1F* Beta_Triggered;
+  TH1F* Gen_Beta_Charged;
+  TH1F* Gen_Beta_Triggered;
   
-  TH1F* Beta_Matched;
-  TH1F* Beta_PreselectedA;
-  TH1F* Beta_PreselectedB;
-  TH1F* Beta_PreselectedC;
+  TH1F* Gen_Binning;
+  TH1F* Gen_pT;
+  TH1F* Gen_Eta;
+  TH1F* Gen_Beta;
+  TH1F* Gen_BetaGamma;
 
   TH1F* BefPreS_massT;
   TH1F* BefPreS_MiniRelIsoAll;
@@ -448,6 +448,8 @@ struct Tuple {
   TH2F* BefPreS_PtTOF;
   TH2F* BefPreS_TOFIs;
   TH2F* BefPreS_TOFIh;
+  TH1F* BefPreS_GenBeta;
+
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
@@ -737,6 +739,8 @@ struct Tuple {
   TH2F* PostS_CutIdVsBeta_postPt;
   TH2F* PostS_CutIdVsBeta_postPtAndIas;
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
+  
+  TH1F* PostPreS_GenBeta;
 
   //Prediction histograms
   TH1D* H_A;
@@ -833,11 +837,6 @@ struct Tuple {
   TH2F* BefPreS_GenPtVsGenMinPt;
   TH2F* BefPreS_GenPtVsRecoPt;
   TH2F* PostPreS_GenPtVsRecoPt;
-  TH1F* GenLevelBinning;
-  TH1F* GenLevelpT;
-  TH1F* GenLevelEta;
-  TH1F* GenLevelBeta;
-  TH1F* GenLevelBetaGamma;
 
   TH1D* CtrlPt_S1_Is;
   TH1D* CtrlPt_S2_Is;

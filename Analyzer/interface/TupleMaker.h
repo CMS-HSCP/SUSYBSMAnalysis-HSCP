@@ -283,85 +283,91 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(6,"unknown");
   // Can I do setBinLabel at this point?
 
-  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, 0., 17.);
+  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";CutFlowIndex", 17, -0.5, 16.5);
+  tuple->CutFlow->GetXaxis()->SetBinLabel(1,"All tracks");
   tuple->CutFlow->GetXaxis()->SetBinLabel(2,"Trigger");
   tuple->CutFlow->GetXaxis()->SetBinLabel(3,"p_{T}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(4,"#eta");
   tuple->CutFlow->GetXaxis()->SetBinLabel(5,"N_{no-L1 pixel hits}");
-  tuple->CutFlow->GetXaxis()->SetBinLabel(6,"N_{valid hit}/N_{all hits}");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(6,"f_{valid/all hits}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(7,"N_{dEdx hits}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(8,"HighPurity");
-  tuple->CutFlow->GetXaxis()->SetBinLabel(9,"#chi^2 / N_{dof}");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(9,"#chi^{2} / N_{dof}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(10,"d_{z}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(11,"d_{xy}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(12,"MiniRelIsoAll");
   tuple->CutFlow->GetXaxis()->SetBinLabel(13,"MiniRelTkIso");
   tuple->CutFlow->GetXaxis()->SetBinLabel(14,"E/p");
-  tuple->CutFlow->GetXaxis()->SetBinLabel(15,"pT_err / pT");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(15,"#sigma_{p_{T}} / p_{T}");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(16,"probQ");
   
   tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 17, -0.5, 16.5);
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(2,"p_{T}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(3,"#eta");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(4,"N_{no-L1 pixel hits}");
-  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(5,"N_{valid hit}/N_{all hits}");
+  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(5,"f_{valid/all hits}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(6,"N_{dEdx hits}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(7,"HighPurity");
-  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(8,"#chi^2 / N_{dof}");
+  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(8,"#chi^{2} / N_{dof}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(9,"d_{z}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(10,"d_{xy}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(13,"E/p");
-  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(14,"pT_err / pT");
+  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}");
+  tuple->CutFlowReverse->GetXaxis()->SetBinLabel(15,"probQ");
   
   tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ",";ProbQ;",10, 0., 1.,17, -0.5, 16.5);
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(2,"p_{T}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(3,"#eta");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(4,"N_{no-L1 pixel hits}");
-  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(5,"N_{valid hit}/N_{all hits}");
+  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(5,"f_{valid/all hits}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(6,"N_{dEdx hits}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(7,"HighPurity");
-  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(8,"#chi^2 / N_{dof}");
+  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(8,"#chi^{2} / N_{dof}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(9,"d_{z}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(10,"d_{xy}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(13,"E/p");
-  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(14,"pT_err / pT");
+  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}");
+  tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(15,"probQ");
   
   tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";#eta;", 50, -2.6, 2.6, 17, -0.5, 16.5);
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(2,"p_{T}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(3,"#eta");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(4,"N_{no-L1 pixel hits}");
-  tuple->CutFlowEta->GetYaxis()->SetBinLabel(5,"N_{valid hit}/N_{all hits}");
+  tuple->CutFlowEta->GetYaxis()->SetBinLabel(5,"f_{valid/all hits}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(6,"N_{dEdx hits}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(7,"HighPurity");
-  tuple->CutFlowEta->GetYaxis()->SetBinLabel(8,"#chi^2 / N_{dof}");
+  tuple->CutFlowEta->GetYaxis()->SetBinLabel(8,"#chi^{2} / N_{dof}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(9,"d_{z}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(10,"d_{xy}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(13,"E/p");
-  tuple->CutFlowEta->GetYaxis()->SetBinLabel(14,"pT_err / pT");
+  tuple->CutFlowEta->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}");
+  tuple->CutFlowEta->GetYaxis()->SetBinLabel(15,"probQ");
   
   tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";;", 9, -0.5, 8.5, 17, -0.5, 16.5);
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(2,"p_{T}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(3,"#eta");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(4,"N_{no-L1 pixel hits}");
-  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(5,"N_{valid hit}/N_{all hits}");
+  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(5,"f_{valid/all hits}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(6,"N_{dEdx hits}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(7,"HighPurity");
-  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(8,"#chi^2 / N_{dof}");
+  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(8,"#chi^{2} / N_{dof}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(9,"d_{z}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(10,"d_{xy}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(13,"E/p");
-  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(14,"pT_err / pT");
+  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}");
+  tuple->CutFlowPfType->GetYaxis()->SetBinLabel(15,"probQ");
   
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(1,"AllTracks");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(2,"PFtracks");
@@ -482,14 +488,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     return;
 
   tuple->Gen_DecayLength = dir.make<TH1F>("Gen_DecayLength", "Gen_DecayLength", 1000, 0, 1000);
-  tuple->Beta_Gen = dir.make<TH1F>("Beta_Gen", "Beta_Gen", 100, 0, 1);
-  tuple->Beta_GenCharged = dir.make<TH1F>("Beta_GenChaged", "Beta_GenChaged", 20, 0, 1);
-  tuple->Beta_Triggered = dir.make<TH1F>("Beta_Triggered", "Beta_Triggered", 20, 0, 1);
+  tuple->Gen_Beta_Charged = dir.make<TH1F>("Beta_GenCharged", ";#beta (GenCharged)", 20, 0, 1);
+  tuple->Gen_Beta_Triggered = dir.make<TH1F>("Beta_Triggered", ";#beta (Triggered)", 20, 0, 1);
 
-  tuple->Beta_Matched = dir.make<TH1F>("Beta_Matched", "Beta_Matched", 20, 0, 1);
-  tuple->Beta_PreselectedA = dir.make<TH1F>("Beta_PreselectedA", "Beta_PreselectedA", 20, 0, 1);
-  tuple->Beta_PreselectedB = dir.make<TH1F>("Beta_PreselectedB", "Beta_PreselectedB", 20, 0, 1);
-  tuple->Beta_PreselectedC = dir.make<TH1F>("Beta_PreselectedC", "Beta_PreselectedC", 20, 0, 1);
+  tuple->Gen_Binning = dir.make<TH1F>("Gen_Binning",";Gen_Binning",1200,0.,1200.);
+  tuple->Gen_pT = dir.make<TH1F>("Gen_pT", ";Generator p_{T} (GeV)", 50, 0, PtHistoUpperBound);
+  tuple->Gen_Eta = dir.make<TH1F>("Gen_Eta",";Generator #eta", 60, -3, 3);
+  tuple->Gen_Beta = dir.make<TH1F>("Gen_Beta",";Generator #beta", 20, 0, 1);
+  tuple->Gen_BetaGamma = dir.make<TH1F>("Gen_BetaGamma",";Generator #beta #gamma;Gen canidate",4500,0.,450.);
 
 
   tuple->BefPreS_GenPtVsdRMinGen = dir.make<TH2F>("BefPreS_GenPtVsdRMinGen", "BefPreS_GenPtVsdRMinGen", 50, 0, PtHistoUpperBound, 100, 0., 1.);
@@ -498,9 +504,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_GenPtVsGenMinPt = dir.make<TH2F>("BefPreS_GenPtVsGenMinPt", "BefPreS_GenPtVsGenMinPt", 50, 0, PtHistoUpperBound, 100, 0, 1.);
   tuple->BefPreS_GenPtVsRecoPt = dir.make<TH2F>("BefPreS_GenPtVsRecoPt", "BefPreS_GenPtVsRecoPt", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
 
-  tuple->BefPreS_pfType = dir.make<TH1F>("BefPreS_pfType", "BefPreS_pfType", 9, 0, 9);
-
-  tuple->BefPreS_massT = dir.make<TH1F>("BefPreS_massT", "BefPreS_massT", 50, 0.0, 250.0);
+  tuple->BefPreS_pfType = dir.make<TH1F>("BefPreS_pfType", ";pfType", 9, -0.5, 8.5);
+  tuple->BefPreS_massT = dir.make<TH1F>("BefPreS_massT", ";m_{T} (GeV)", 50, 0.0, 250.0);
 
   tuple->BefPreS_MiniRelIsoAll = dir.make<TH1F>("BefPreS_MiniRelIsoAll",";MiniRelIsoAll;Tracks/bin", 150, 0.0, 1.5);
   tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>("BefPreS_MiniRelIsoChg",";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
@@ -651,6 +656,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_dRVsPtPfJet = dir.make<TH2F>("BefPreS_dRVsPtPfJet",";dR(cand,jet);p_{T}",100,0.,1.5,100,0.,1000.);
   tuple->BefPreS_dRVsdPtPfCaloJet = dir.make<TH2F>("BefPreS_dRVsdPtPfCaloJet",";dRmin;dPtPfCaloJet",100,0.,1.5,20,0.,100.);
   
+  tuple->BefPreS_GenBeta = dir.make<TH1F>("BefPreS_GenBeta", ";#beta", 20, 0, 1);
+
+  
 
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events/category", 4, -0.5, 3.5);
   tuple->PostPreS_RecoHSCParticleType = dir.make<TH1F>("PostPreS_RecoHSCParticleType",";;Track/category", 6, -0.5, 5.5);
@@ -735,8 +743,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_NOMoNOHvsPV = dir.make<TProfile>("PostPreS_NOMoNOHvsPV", "PostPreS_NOMoNOHvsPV", 60, 0, 60);
   tuple->PostPreS_dzAll = dir.make<TH1F>("PostPreS_dzAll", "PostPreS_dzAll", 200, -10, 10);
   tuple->PostPreS_dxyAll = dir.make<TH1F>("PostPreS_dxyAll", "PostPreS_dxyAll", 200, -0.2, 0.2);
-  tuple->PostPreS_Dz = dir.make<TH1F>( "PostPreS_Dz", ";dz (cm)", 200, -0.3, 0.3);
-  tuple->PostPreS_Dxy = dir.make<TH1F>("PostPreS_Dxy", "PostPreS_Dxy", 200, -0.1, 0.1);
+  tuple->PostPreS_Dz = dir.make<TH1F>( "PostPreS_Dz", ";d_{z} (cm)", 200, -0.3, 0.3);
+  tuple->PostPreS_Dxy = dir.make<TH1F>("PostPreS_Dxy", ";d_{xy} (cm)", 200, -0.1, 0.1);
   
   tuple->PostPreS_SegSep = dir.make<TH1F>("PostPreS_SegSep", "PostPreS_SegSep", 50, 0, 2.5);
   tuple->PostPreS_SegMinEtaSep = dir.make<TH1F>("PostPreS_SegMinEtaSep", "PostPreS_SegMinEtaSep", 50, -1., 1.);
@@ -924,12 +932,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PfMet = dir.make<TH1F>("PostPreS_PfMet",";PfMet",200,0.,2000.);
   tuple->PostPreS_PfMetPhi = dir.make<TH1F>("PostPreS_PfMetPhi",";PfMetPhi",30,0.,3.2);
   
-  tuple->GenLevelBinning = dir.make<TH1F>("GenLevelBinning","GenLevelBinning",1200,0.,1200.);
-  tuple->GenLevelpT = dir.make<TH1F>("GenLevelpT", "GenLevelpT;Generator p_{T} (GeV)", 50, 0, PtHistoUpperBound);
-  tuple->GenLevelEta = dir.make<TH1F>("GenLevelEta",";Generator #eta", 60, -3, 3);
-  tuple->GenLevelBeta = dir.make<TH1F>("GenLevelBeta",";Generator #beta", 20, 0, 1);
-  tuple->GenLevelBetaGamma = dir.make<TH1F>("GenLevelBetaGamma",";Generator #beta #gamma;Gen canidate",4500,0.,450.);
-
+  tuple->PostPreS_GenBeta = dir.make<TH1F>("PostPreS_GenBeta", ";#beta", 20, 0, 1);
   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
   for (int i = 0; i < PredBins; i++) {
     char Suffix[1024];
