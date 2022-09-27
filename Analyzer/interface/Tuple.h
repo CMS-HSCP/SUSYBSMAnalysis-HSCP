@@ -580,9 +580,9 @@ struct Tuple {
   TH2F* PostPreS_IhVsGenID;
   TH2F* PostPreS_IasVsGenID;
   TH2F* PostPreS_IasVsGenEnviromentID;
-  TH2F* PostPreS_massTVsGenID;
-  TH2F* PostPreS_miniIsoChgVsGenID;
-  TH2F* PostPreS_miniIsoAllVsGenID;
+  TH2F* PostPreS_MassTVsGenID;
+  TH2F* PostPreS_MiniIsoChgVsGenID;
+  TH2F* PostPreS_MiniIsoAllVsGenID;
   TH2F* PostPreS_MassVsGenID;
 
   TH2F* PostPreS_EtaVsMomGenID;
@@ -592,9 +592,9 @@ struct Tuple {
   TH2F* PostPreS_EoPVsMomGenID;
   TH2F* PostPreS_IhVsMomGenID;
   TH2F* PostPreS_IasVsMomGenID;
-  TH2F* PostPreS_massTVsMomGenID;
-  TH2F* PostPreS_miniIsoChgVsMomGenID;
-  TH2F* PostPreS_miniIsoAllVsMomGenID;
+  TH2F* PostPreS_MassTVsMomGenID;
+  TH2F* PostPreS_MiniIsoChgVsMomGenID;
+  TH2F* PostPreS_MiniIsoAllVsMomGenID;
   TH2F* PostPreS_MassVsMomGenID;
 
   TH2F* PostPreS_EtaVsSiblingGenID;
@@ -604,7 +604,7 @@ struct Tuple {
   TH2F* PostPreS_EoPVsSiblingGenID;
   TH2F* PostPreS_IhVsSiblingGenID;
   TH2F* PostPreS_IasVsSiblingGenID;
-  TH2F* PostPreS_massTVsSiblingGenID;
+  TH2F* PostPreS_MassTVsSiblingGenID;
   TH2F* PostPreS_MassVsSiblingGenID;
 
   TH2F* PostPreS_EtaVsGenAngle;
@@ -614,9 +614,9 @@ struct Tuple {
   TH2F* PostPreS_EoPVsGenAngle;
   TH2F* PostPreS_IhVsGenAngle;
   TH2F* PostPreS_IasVsGenAngle;
-  TH2F* PostPreS_massTVsGenAngle;
-  TH2F* PostPreS_miniIsoChgVsGenAngle;
-  TH2F* PostPreS_miniIsoAllVsGenAngle;
+  TH2F* PostPreS_MassTVsGenAngle;
+  TH2F* PostPreS_MiniIsoChgVsGenAngle;
+  TH2F* PostPreS_MiniIsoAllVsGenAngle;
   TH2F* PostPreS_MassVsGenAngle;
 
   TH2F* PostPreS_EtaVsGenMomAngle;
@@ -626,9 +626,9 @@ struct Tuple {
   TH2F* PostPreS_EoPVsGenMomAngle;
   TH2F* PostPreS_IhVsGenMomAngle;
   TH2F* PostPreS_IasVsGenMomAngle;
-  TH2F* PostPreS_massTVsGenMomAngle;
-  TH2F* PostPreS_miniIsoChgVsGenMomAngle;
-  TH2F* PostPreS_miniIsoAllVsGenMomAngle;
+  TH2F* PostPreS_MassTVsGenMomAngle;
+  TH2F* PostPreS_MiniIsoChgVsGenMomAngle;
+  TH2F* PostPreS_MiniIsoAllVsGenMomAngle;
   TH2F* PostPreS_MassVsGenMomAngle;
 
   TH2F* PostPreS_EtaVsGenNumSibling;
@@ -638,9 +638,9 @@ struct Tuple {
   TH2F* PostPreS_EoPVsGenNumSibling;
   TH2F* PostPreS_IhVsGenNumSibling;
   TH2F* PostPreS_IasVsGenNumSibling;
-  TH2F* PostPreS_massTVsGenNumSibling;
-  TH2F* PostPreS_miniIsoChgVsGenNumSibling;
-  TH2F* PostPreS_miniIsoAllVsGenNumSibling;
+  TH2F* PostPreS_MassTVsGenNumSibling;
+  TH2F* PostPreS_MiniIsoChgVsGenNumSibling;
+  TH2F* PostPreS_MiniIsoAllVsGenNumSibling;
   TH2F* PostPreS_EoPVsPfType;
 
 
