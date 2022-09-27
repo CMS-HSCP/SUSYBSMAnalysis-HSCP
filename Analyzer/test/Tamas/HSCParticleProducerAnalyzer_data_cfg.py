@@ -2,22 +2,19 @@ import sys, os
 import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
-from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
-
 options = VarParsing('analysis')
 
 # defaults
 options.outputFile = 'Histos.root'
-# -1 means all events
-options.maxEvents = -1
+options.maxEvents = -1 # -1 means all events
 
-options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
-#options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+# was 106X_dataRun2_v20
+options.register('GTAG', '106X_dataRun2_v36',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isSignal',
+options.register('SAMPLE', 'isData',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
@@ -40,20 +37,9 @@ options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_
 )
 options.parseArguments()
 
+
 process = cms.Process("HSCPAnalysis")
-#process = cms.Process("HSCPAnalysis",Run2_2018)
 
-#diventano var parsing
-#The following parameters need to be provided
-#isSignal, isBckg, isData, isSkimmedSample, GTAG, InputFileList
-#isSignal = True
-#isBckg = False
-#isData = False
-#isSkimmedSample = False
-#GTAG = 'START72_V1::All'
-
-## print configuration:
-print('\nCMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
 print('Global Tag    : {}'.format(options.GTAG))
 if options.SAMPLE=='isData':
    print('Lumi File     : {}'.format(options.LUMITOPROCESS))
@@ -70,26 +56,53 @@ process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.options   = cms.untracked.PSet(
-      wantSummary = cms.untracked.bool(True),
+      wantSummary = cms.untracked.bool(False),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
-#   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
-   fileNames = cms.untracked.vstring("/store/user/tvami/HSCP/HSCPgluino_M_1800/crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3/220712_195931/0000/HSCP_Gluino_Mass1800_RECO_1.root"),
+   fileNames = cms.untracked.vstring("/store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/270002/64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
+
+#The duplicateCheckMode works only if we submit with Condor - not with Crab - checks process history, run number, lumi number
+process.source.duplicateCheckMode = cms.untracked.string("checkAllFilesOpened")
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
-process.HSCPTuplePath = cms.Path() 
+process.HSCPTuplePath = cms.Path()
+
+########################################################################
+#Run the Skim sequence if necessary
+if(not options.isSkimmedSample):
+   process.nEventsBefSkim  = cms.EDProducer("EventCountProducer")
+
+   process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
+   process.HSCPTrigger = process.hltHighLevel.clone()
+   process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLT" )
+   process.HSCPTrigger.andOr = cms.bool( True ) #OR
+   process.HSCPTrigger.throw = cms.bool( False )
+   if(options.SAMPLE=='isData'):
+      process.HSCPTrigger.HLTPaths = [ #check triggers
+          "HLT_PFMET120_PFMHT120_IDTight_v*",
+          "HLT_Mu50_v*",
+          "HLT_PFHT500_PFMET100_PFMHT100_IDTight_v*",
+          "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v*",
+          "HLT_MET105_IsoTrk50_v*",
+      ]
+   else:
+      #do not apply trigger filter on signal
+      process.HSCPTrigger.HLTPaths = ["*"]
+
+   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger
+
+########################################################################
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
-process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff") 
+process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff")
 process.HSCPTuplePath += process.nEventsBefEDM + process.HSCParticleProducerSeq
 
 ########################################################################  
@@ -124,13 +137,13 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep recoTracks_standAloneMuons_*_*",
          "keep recoTrackExtras_standAloneMuons_*_*",
          "keep TrackingRecHitsOwned_standAloneMuons_*_*",
-         "keep recoTracks_globalMuons_*_*",  
+         "keep recoTracks_globalMuons_*_*",
          "keep recoTrackExtras_globalMuons_*_*",
          "keep recoMuons_muons_*_*",
          "keep recoMuonTimeExtraedmValueMap_muons_*_*",
          "keep edmTriggerResults_TriggerResults_*_*",
-         "keep *_ak4PFJetsCHS__*", 
-         "keep recoPFMETs_pfMet__*",     
+         "keep *_ak4PFJetsCHS__*",
+         "keep recoPFMETs_pfMet__*",
          "keep *_HSCParticleProducer_*_*",
          "keep *_HSCPIsolation*_*_*",
          "keep *_dedxHitInfo*_*_*",
@@ -139,9 +152,9 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep *_MuonSegmentProducer_*_*",
          "keep *_g4SimHits_StoppedParticles*_*",
          "keep PileupSummaryInfos_addPileupInfo_*_*",
-         "keep *_dt4DSegments__*",  
-         "keep *_cscSegments__*",  
-         "keep *_scalersRawToDigi_*_*", 
+         "keep *_dt4DSegments__*",
+         "keep *_cscSegments__*",
+         "keep *_scalersRawToDigi_*_*",
          "keep *_caloMet_*_*",
     ),
     fileName = cms.untracked.string(options.outputFile),
@@ -161,11 +174,6 @@ if(options.SAMPLE=='isBckg' or options.SAMPLE=='isData'):
 else:
    process.Out.SelectEvents = cms.untracked.PSet()
 
-
-########################################################################
-
-# run the EDAnalyzer
-
 if options.SAMPLE=='isData' :
    SampleType = 0
    if options.YEAR=='2017' :
@@ -173,8 +181,8 @@ if options.SAMPLE=='isData' :
        C = 3.17
        SF0 = 1.0
        SF1 = 1.0325
-       IasTemplate = "template_2017C.root" 
-   
+       IasTemplate = "template_2017C.root"
+
    if options.YEAR=='2018' :
        K = 2.27
        C = 3.16
@@ -191,7 +199,7 @@ elif options.SAMPLE=='isBckg':
        SF0 = 1.0079
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
-    
+
    if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
@@ -207,7 +215,7 @@ else :
        SF0 = 1.0079
        SF1 = 1.0875
        IasTemplate = "templateMC.root"
-    
+
    if options.YEAR=='2018' :
        K = 2.27
        C = 3.22
@@ -215,37 +223,30 @@ else :
        SF1 = 1.1429
        IasTemplate = "templateMC.root"
 
-
-process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
-### set your configirattion here (default: python/HSCParticleAnalyzer_cff.py)
-#process.analyzer.SampleTxtFile=options.sampleTxtFile
-process.analyzer.TypeMode = 0 # 0: Tracker only
-process.analyzer.SampleType = SampleType 
-process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
-process.analyzer.SaveGenTree = 0
-process.analyzer.DeDxTemplate=IasTemplate
-process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.Period = "2018"
-process.analyzer.DebugLevel = 6 
-process.analyzer.DeDxK = K
-process.analyzer.DeDxC = C
-process.analyzer.DeDxSF_0 = SF0
-process.analyzer.DeDxSF_1 = SF1
-process.analyzer.GlobalMinIh = C
-process.analyzer.TriggerResults = cms.InputTag('TriggerResults','','RECO')
-process.analyzer.DoTriggering = False
+process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
+process.HSCParticleAnalyzer.SampleType = SampleType
+process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
+process.HSCParticleAnalyzer.SaveGenTree = 0
+process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
+process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
+process.HSCParticleAnalyzer.DebugLevel = 7
+process.HSCParticleAnalyzer.Period = "2018"
+process.HSCParticleAnalyzer.DeDxK = K
+process.HSCParticleAnalyzer.DeDxC = C
+process.HSCParticleAnalyzer.DeDxSF_0 = SF0
+process.HSCParticleAnalyzer.DeDxSF_1 = SF1
+process.HSCParticleAnalyzer.GlobalMinIh = C
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
-###process.analyzer.OutputFile = 'Data_2017_UL'
 
-process.analysis = cms.Path(process.analyzer)
+process.analysis = cms.Path(process.HSCParticleAnalyzer)
 
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.endjob_step = cms.EndPath(process.endOfProcess)
 
-process.HSCPTuplePath += process.analyzer
+process.HSCPTuplePath += process.HSCParticleAnalyzer
 
 ########################################################################
 
@@ -258,4 +259,5 @@ for mod in process.filters_().itervalues():
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
 process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
+
 

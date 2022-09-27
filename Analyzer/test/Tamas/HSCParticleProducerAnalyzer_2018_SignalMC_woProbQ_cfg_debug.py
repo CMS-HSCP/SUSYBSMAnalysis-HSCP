@@ -11,8 +11,8 @@ options.outputFile = 'Histos.root'
 # -1 means all events
 options.maxEvents = -1
 
-options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
 #options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
@@ -76,11 +76,15 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root"),
 #   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
-   fileNames = cms.untracked.vstring("/store/user/tvami/HSCP/HSCPgluino_M_1800/crab_PrivateHSCP_2018_Gluino_Mass1800_DIGI2AOD_NoPU_v3/220712_195931/0000/HSCP_Gluino_Mass1800_RECO_1.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2560000/F6D6EB63-9383-3545-8322-893B2C166861.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
+   fileNames = cms.untracked.vstring("file:9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
+
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18081')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -232,8 +236,6 @@ process.analyzer.DeDxC = C
 process.analyzer.DeDxSF_0 = SF0
 process.analyzer.DeDxSF_1 = SF1
 process.analyzer.GlobalMinIh = C
-process.analyzer.TriggerResults = cms.InputTag('TriggerResults','','RECO')
-process.analyzer.DoTriggering = False
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)

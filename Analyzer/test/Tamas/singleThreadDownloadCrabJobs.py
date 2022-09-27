@@ -9,9 +9,9 @@ datasetList = []
 codeVersion = sys.argv[1]
 #just the number, like 18p2
 
-#didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -valid 192:00 otherwise say no and do it\n")
-#if(didVoms):
-# sys.exit()
+didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -valid 192:00 otherwise say no and do it\n")
+if(didVoms):
+ sys.exit()
  
 for fname in os.listdir("crab_projects") :
   if (fname.find(codeVersion)>0) :
@@ -25,9 +25,9 @@ for i in datasetList:
   outTask = "crab out -d "+i+" --checksum=no --jobids 2"
   os.system(outTask)
 #  print(outTask)
-#  haddTask = "hadd "+i[(i.find('crab_projects'))+14:]+".root "+i[(i.find('crab_projects')):]+"/results/*root"
+  haddTask = "hadd "+i[(i.find('crab_projects'))+14:]+".root "+i[(i.find('crab_projects')):]+"/results/*root"
 #  os.system(haddTask)
 #  print(haddTask)
-#  backgroundPred = "BackgroundPrediction -f "+i[(i.find('crab_projects'))+14:]+".root"
+  backgroundPred = "BackgroundPrediction -f "+i[(i.find('crab_projects'))+14:]+".root"
 #  os.system(backgroundPred)
 #  print(backgroundPred)
