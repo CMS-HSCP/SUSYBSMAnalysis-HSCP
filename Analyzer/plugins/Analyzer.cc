@@ -152,6 +152,7 @@
 // - 30p2: - Add back ptErr/pt a la Dylan
 // - 30p3: - Add a very loose cut on tProbQ (0.7)
 // - 30p4: - Fix logic for trigger matching, change filter to final filter, go back to no isolation cuts
+// - 30p5: - Cut on rel PF mini iso
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -1045,6 +1046,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
+        // We need to make this gen charge dependent for TauPrime2e
 //        cout << "genColl[g].charge(): " << genColl[g].charge() << endl;
         if (dPt < 0.4 && dr < dRMinGen) {
           dRMinGen = dr;
@@ -3572,7 +3574,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[10];
+  bool passedCutsArray[11];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3600,7 +3602,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the PF based mini-isolation
-//  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
   // Cut on the absolute pT-dependent cone size TkIsolation
 //  passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
   // Cut on the uncertainty of the pt measurement
@@ -3993,8 +3995,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
             tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
           }
-          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
-          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
         };
         
         if (i==1)  {
@@ -4015,8 +4015,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
         if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
-//        if (i==10) {
-//        }
+        if (i==10) {
+          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
+        }
 //        if (i==11) {
 //        };
 //        if (i==12) {
