@@ -154,6 +154,7 @@
 // - 30p4: - Fix logic for trigger matching, change filter to final filter, go back to no isolation cuts
 // - 30p5: - Cut on rel PF mini iso
 // - 30p6: - Dont cut on PF, go back to 30p4 but no cut on the distance of the HLT and muons
+// - 30p7: - Fix to not have nonGlobal but standalone muons as a match, cut on dR < 0.15
 
 //  
 //v23 Dylan 
@@ -667,7 +668,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (trigObjP4s[objNr].Pt() < 50) continue;
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
-      if (mu->isStandAloneMuon()) continue;
+      if (mu->isStandAloneMuon() && !mu->isGlobalMuon())  continue;
 
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       if (dr_hltmu_muon < dr_min_hlt_muon){
@@ -678,12 +679,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon, EventWeight_);
 
-  if (matchToHLTTrigger_ && dr_min_hlt_muon > 3.2) {
+  if (matchToHLTTrigger_ && dr_min_hlt_muon > 0.15) {
     // Exit if no match was found
     if (saveTree_ == 0) return;
-
   } else {
-    // TODO_Ntuple add a variable to the ntuple
+    // TODO_Ntuple add this variable to the ntuple
     matchedMuonWasFound = true;
     // Number of events that pass the matching
     tuple->NumEvents->Fill(3., EventWeight_);
