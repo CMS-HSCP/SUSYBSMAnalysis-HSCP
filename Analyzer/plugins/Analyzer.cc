@@ -155,6 +155,8 @@
 // - 30p5: - Cut on rel PF mini iso
 // - 30p6: - Dont cut on PF, go back to 30p4 but no cut on the distance of the HLT and muons
 // - 30p7: - Fix to not have nonGlobal but standalone muons as a match, cut on dR < 0.15
+// - 30p8: - Add mini-Iso
+// - 30p9: - Add TkIso, add E/p cut
 
 //  
 //v23 Dylan 
@@ -2993,12 +2995,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   
   desc.addUntracked("GlobalMaxMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMaxTIsol",10.0)->setComment("Cut on tracker isolation (SumPt of genTracks with variable cone)");
+  desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt of genTracks with variable cone)");
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
+  
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",0.7)->setComment("Max cut for probQ, 1.0 means no cuts applied");
-
-  
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, -0.01 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbXYCut",1.0)->setComment("Max cut for probXY, 1.0 means no cuts applied");
@@ -3584,7 +3585,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[10];
+  bool passedCutsArray[13];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3612,14 +3613,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the PF based mini-isolation
-//  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
   // Cut on the absolute pT-dependent cone size TkIsolation
-//  passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
+  passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
   // Cut on the uncertainty of the pt measurement
 //  passedCutsArray[12] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
 
     // Cut on the energy over momenta
-//  passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
+  passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
 //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
@@ -3984,7 +3985,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_);
           tuple->N1_Stations->Fill(muonStations(track->hitPattern()), EventWeight_);
           tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
-          tuple->N1_EoP->Fill(EoP, EventWeight_);
           tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
           tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
           tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
@@ -4031,8 +4031,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
             tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
           }
         };
-//        if (i==12) {
-//        };
+        if (i==12) {
+          tuple->N1_EoP->Fill(EoP, EventWeight_);
+        };
 //        if (i==13) {
 //
 //        };
