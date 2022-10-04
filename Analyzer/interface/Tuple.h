@@ -257,6 +257,8 @@ struct Tuple {
   TH1F* N1_PtErrOverPt;
   TH1F* N1_PtErrOverPt2;
   TH2F* N1_PtErrOverPtVsPt;
+  TH2F* N1_PtErrOverPtVsPt_lowPt;
+  TH2F* N1_PtErrOverPtVsGenBeta;
   TH1F* N1_I;
   TH1F* N1_TOF;
   TH1F* NVTrack;
