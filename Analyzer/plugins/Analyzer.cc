@@ -152,6 +152,14 @@
 // - 30p2: - Add back ptErr/pt a la Dylan
 // - 30p3: - Add a very loose cut on tProbQ (0.7)
 // - 30p4: - Fix logic for trigger matching, change filter to final filter, go back to no isolation cuts
+// - 30p5: - Cut on rel PF mini iso
+// - 30p6: - Dont cut on PF, go back to 30p4 but no cut on the distance of the HLT and muons
+// - 30p7: - Fix to not have nonGlobal but standalone muons as a match, cut on dR < 0.15
+// - 30p8: - Add mini-Iso
+// - 30p9: - Add TkIso, add E/p cut
+// - 40p0: - Add probQ cut
+// - 40p1: - Add ptErr/pT2 cut
+
 //  
 //v23 Dylan 
 // - v23 fix clust infos
@@ -657,13 +665,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<TLorentzVector> trigObjP4s;
   trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
   
+  bool matchedMuonWasFound = false;
+  
   float dr_min_hlt_muon = 9999.0;
   for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
     if (trigObjP4s[objNr].Pt() < 50) continue;
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
-      if (mu->isStandAloneMuon()) continue;
-      
+      if (mu->isStandAloneMuon() && !mu->isGlobalMuon())  continue;
+
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       if (dr_hltmu_muon < dr_min_hlt_muon){
         dr_min_hlt_muon = dr_hltmu_muon;
@@ -673,13 +683,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon, EventWeight_);
 
-  if (matchToHLTTrigger_ && dr_min_hlt_muon > 0.1) {
+  if (matchToHLTTrigger_ && dr_min_hlt_muon > 0.15) {
     // Exit if no match was found
     if (saveTree_ == 0) return;
-    // TODO_Ntuple add a variable to the ntuple
   } else {
+    // TODO_Ntuple add this variable to the ntuple
+    matchedMuonWasFound = true;
     // Number of events that pass the matching
     tuple->NumEvents->Fill(3., EventWeight_);
+  }
+  
+  if (!matchedMuonWasFound) {
+    if (debug_> 0) edm::LogPrint(MOD) << "Matched muon was not found, but we continue for the ntuple";
   }
 
   //keep beta distribution for signal after the trigger
@@ -1045,6 +1060,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
+        // We need to make this gen charge dependent for TauPrime2e
 //        cout << "genColl[g].charge(): " << genColl[g].charge() << endl;
         if (dPt < 0.4 && dr < dRMinGen) {
           dRMinGen = dr;
@@ -2888,7 +2904,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.add("TriggerResults", edm::InputTag("TriggerResults","","HLT"))
     ->setComment("A");
   desc.add<std::string>("FilterName",std::string("hltL3fL1sMu22Or25L1f0L2f10QL3Filtered50Q"))
-    ->setComment("A");
+  ->setComment("Meaning of this is: L1f0  = L1 filtered with threshold 0, L2f10Q = L2 filtered at 10 GeV with quality cuts, L3Filtered50Q = L3 filtered at 50 GeV with quality cuts");
   desc.add("PfMET", edm::InputTag("pfMet"))
     ->setComment("A");
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
@@ -2981,12 +2997,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
   
   desc.addUntracked("GlobalMaxMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMaxTIsol",10.0)->setComment("Cut on tracker isolation (SumPt of genTracks with variable cone)");
+  desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt of genTracks with variable cone)");
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
+  
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbQCut",0.7)->setComment("Max cut for probQ, 1.0 means no cuts applied");
-
-  
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, -0.01 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbXYCut",1.0)->setComment("Max cut for probXY, 1.0 means no cuts applied");
@@ -3572,7 +3587,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[10];
+  bool passedCutsArray[15];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3600,14 +3615,13 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
   // Cut on the PF based mini-isolation
-//  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
   // Cut on the absolute pT-dependent cone size TkIsolation
-//  passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
-  // Cut on the uncertainty of the pt measurement
-//  passedCutsArray[12] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.001)) ? true : false;
-
+  passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
     // Cut on the energy over momenta
-//  passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
+  passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
+    // Cut on the uncertainty of the pt measurement
+  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008)) ? true : false;
 //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
 //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
@@ -3621,7 +3635,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut away background events based on the probXY
 //  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_) && (probXYonTrackNoLayer1 < globalMaxTrackProbXYCut_))  ? true : false;
   // Cut away background events based on the probQ
-//  passedCutsArray[14] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
+  passedCutsArray[14] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
 //  // TOF only cuts
 //  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
 //  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -3972,29 +3986,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_);
           tuple->N1_Stations->Fill(muonStations(track->hitPattern()), EventWeight_);
           tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
-          tuple->N1_EoP->Fill(EoP, EventWeight_);
-          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
-          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
-          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
-          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
-          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
           tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
-          tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-          
-          tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          tuple->N1_MiniRelTkIso_lowMiniRelIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          if (PUA) {
-            tuple->N1_MiniTkIso_PUA->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          } else if (PUB) {
-            tuple->N1_MiniTkIso_PUB->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          } else if (PUC) {
-            tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-          }
-          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
-          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
         };
         
         if (i==1)  {
@@ -4015,18 +4007,41 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
         if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
         if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
-//        if (i==10) {
-//        }
-//        if (i==11) {
-//        };
-//        if (i==12) {
-//        };
-//        if (i==13) {
-//
-//        };
-//        if (i==14) {
-//
-//        };
+        if (i==10) {
+          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
+        }
+        if (i==11) {
+          tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+          
+          tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          tuple->N1_MiniRelTkIso_lowMiniRelIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          if (PUA) {
+            tuple->N1_MiniTkIso_PUA->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUB) {
+            tuple->N1_MiniTkIso_PUB->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUC) {
+            tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          }
+        };
+        if (i==12) {
+          tuple->N1_EoP->Fill(EoP, EventWeight_);
+        };
+        if (i==13) {
+          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt_lowPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), GenBeta, EventWeight_);
+          //TODO
+        };
+        if (i==14) {
+          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
+          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+        };
 //        if (i==15) { };
 //        if (i==16) { };
 //        if (i==17) { };
