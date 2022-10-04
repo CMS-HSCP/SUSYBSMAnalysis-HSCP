@@ -157,6 +157,7 @@
 // - 30p7: - Fix to not have nonGlobal but standalone muons as a match, cut on dR < 0.15
 // - 30p8: - Add mini-Iso
 // - 30p9: - Add TkIso, add E/p cut
+// - 40p0: - Add probQ cut
 
 //  
 //v23 Dylan 
@@ -3585,7 +3586,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[13];
+  bool passedCutsArray[14];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
   
   // No cut, i.e. events after trigger
@@ -3634,7 +3635,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // Cut away background events based on the probXY
 //  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_) && (probXYonTrackNoLayer1 < globalMaxTrackProbXYCut_))  ? true : false;
   // Cut away background events based on the probQ
-//  passedCutsArray[14] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
+  passedCutsArray[14] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
 //  // TOF only cuts
 //  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
 //  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -3988,8 +3989,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
           tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
           tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
-          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
-          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
           tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
         };
         
@@ -4034,9 +4033,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if (i==12) {
           tuple->N1_EoP->Fill(EoP, EventWeight_);
         };
-//        if (i==13) {
-//
-//        };
+        if (i==13) {
+          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
+          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+        };
 //        if (i==14) {
 //
 //        };
