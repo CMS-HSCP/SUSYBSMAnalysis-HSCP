@@ -2005,6 +2005,70 @@ void GetGenHSCPDecayLength(const std::vector<reco::GenParticle>& genColl,
   }
 }
 
+// Same as above but not forcing it to be HSCP
+void GetGenBcgDecayLength(const std::vector<reco::GenParticle>& genColl,
+                           float& length1,
+                           float& length2,
+                           bool onlyCharged) {
+  length1 = -1;
+  length2 = -1;
+  for (auto const& mcParticle : genColl) {
+
+    const reco::Candidate* mother = &mcParticle;
+    const reco::Candidate* daughter = mother;  // FIXME
+
+    // Descend the decay chain until no daughters have the same PDG ID as mcParticle.
+    while (true) {
+      bool foundDauSamePdgId = false;
+      for (uint i = 0; i < daughter->numberOfDaughters(); i++) {
+        if (daughter->daughter(i)->pdgId() == mcParticle.pdgId()) {
+          foundDauSamePdgId = true;
+          mother = daughter;
+          daughter = daughter->daughter(i);
+          break;
+        }
+      }
+      if (!foundDauSamePdgId)
+        break;
+    }
+
+    // Now daughter has no daughters with the same PDG ID as mcParticle.
+    // Next choose the daughter with the outermost production vertex, in case there are multiple vertices
+    // (e.g., an electron delta ray can produce a vertex before the decay vertex)
+    float radiusLastVtx = -99;
+    int idxDauLastVtx = -99;
+    for (uint i = 0; i < daughter->numberOfDaughters(); i++) {
+      float radius = daughter->daughter(i)->vertex().R();
+      if (radius > radiusLastVtx) {
+        radiusLastVtx = radius;
+        idxDauLastVtx = i;
+      }
+    }
+    if (idxDauLastVtx < 0)
+      continue;
+
+    mother = daughter;
+    daughter = daughter->daughter(idxDauLastVtx);
+
+    TVector3 source(mcParticle.vx(), mcParticle.vy(), mcParticle.vz());
+    TVector3 decay(daughter->vx(), daughter->vy(), daughter->vz());
+    float ctau = (decay - source).Mag() / (mcParticle.p4().Beta() * mcParticle.p4().Gamma());
+
+    if (length1 < 0) {
+      length1 = ctau;
+    } else if (length2 < 0) {
+      length2 = ctau;
+      return;
+    }
+  }
+  if (length1 < 0) {
+    length1 = 9999;
+  }
+  if (length2 < 0) {
+    length2 = 9999;
+  }
+}
+
 //=============================================================
 //
 //     Returns the generated beta of the two firsts HSCP in the events

@@ -74,8 +74,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DataFormats/Common/interface/ValueMap.h"
-
 #include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
@@ -112,6 +112,7 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
@@ -122,6 +123,7 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
+
 
 using namespace std;
 
@@ -201,6 +203,7 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<vector<susybsm::HSCParticle>> hscpToken_;
+  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_; 
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
   edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;
@@ -216,6 +219,10 @@ private:
   edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;
   edm::EDGetTokenT<vector<reco::Muon>> muonToken_;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
+  edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
+  string filterName_;
+  string pathName_;
+  bool matchToHLTTrigger_;
   edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
   edm::EDGetTokenT<std::vector<reco::CaloMET>> caloMETToken_;

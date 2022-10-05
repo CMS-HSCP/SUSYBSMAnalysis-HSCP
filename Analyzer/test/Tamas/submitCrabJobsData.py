@@ -21,19 +21,19 @@ if(didVoms):
 
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
-if not os.path.exists("4crab_Template_Data_wProbQ.py"):
+if not os.path.exists("4crab_Template_Data.py"):
   TEMPLATE = '''
 from CRABClient.UserUtilities import config
 config = config()
 
 config.section_('General')
-config.General.requestName = 'Analysis_ROVIDMINTA_wProbQ_CodeVVERZIO_v1'
+config.General.requestName = 'Analysis_ROVIDMINTA_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'HSCParticleProducerAnalyzer_data_wProbQ_cfg.py'
+config.JobType.psetName = 'HSCParticleProducerAnalyzer_data_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 3500
@@ -54,20 +54,21 @@ config.Site.storageSite = 'T2_HU_Budapest'
 #config.Site.storageSite = 'T3_US_FNALLPC'
   '''
 
-  with open("4crab_Template_Data_wProbQ.py", "w") as text_file:
+  with open("4crab_Template_Data.py", "w") as text_file:
       text_file.write(TEMPLATE)
 
 for i in datasetList:
   print("Submit for sample "+i)
-  os.system("cp 4crab_Template_Data_wProbQ.py 4crab_toSubmit_Data_wProbQ.py")
-  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_toSubmit_Data_wProbQ.py"
+  os.system("cp 4crab_Template_Data.py 4crab_toSubmit_Data.py")
+  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceVERZIO)
   shortSampleName = i[1:(i.find('-'))-1].replace("/","_")
-  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_toSubmit_Data_wProbQ.py"
+  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceROVIDMINTA)
-  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_toSubmit_Data_wProbQ.py"
+  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceMINTA)
-  os.system("crab submit -c 4crab_toSubmit_Data_wProbQ.py")
-  os.system("mv 4crab_toSubmit_Data_wProbQ.py submittedConfigs/.")
+  os.system("crab submit -c 4crab_toSubmit_Data.py")
+  os.system("mv 4crab_toSubmit_Data.py submittedConfigs/.")
 
 
+os.system("rm 4crab_Template_Data.py")

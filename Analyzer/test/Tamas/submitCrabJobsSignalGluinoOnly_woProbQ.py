@@ -16,6 +16,8 @@ datasetList = [
 "/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-500_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-1599_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+
 ]
 
 codeVersion = sys.argv[1]
@@ -59,7 +61,6 @@ config.Data.runRange = '0'
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
-config.Site.blacklist = ['T2_US_Nebraska']
 config.Site.storageSite = 'T2_HU_Budapest'
   '''
 

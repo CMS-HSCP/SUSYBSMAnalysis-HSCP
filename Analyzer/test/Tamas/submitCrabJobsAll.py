@@ -13,11 +13,11 @@ didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -va
 if(didVoms):
  sys.exit()
 
-os.system("python3 submitCrabJobsData_woProbQ.py "+str(codeVersion))
-os.system("python3 submitCrabJobsBackgroundWJetsOnly_woProbQ.py "+str(codeVersion))
-os.system("python3 submitCrabJobsBackgroundQCDOnly_woProbQ.py "+str(codeVersion))
-os.system("python3 submitCrabJobsBackgroundTTbarOnly_woProbQ.py "+str(codeVersion))
-os.system("python3 submitCrabJobsSignalGluinoOnly_woProbQ.py "+str(codeVersion))
+os.system("python3 submitCrabJobsData.py "+str(codeVersion))
+os.system("python3 submitCrabJobsBackgroundWJetsOnly.py "+str(codeVersion))
+os.system("python3 submitCrabJobsBackgroundQCDOnly.py "+str(codeVersion))
+os.system("python3 submitCrabJobsBackgroundTTbarOnly.py "+str(codeVersion))
+os.system("python3 submitCrabJobsSignalGluinoOnly.py "+str(codeVersion))
 
 
 
