@@ -153,14 +153,12 @@ public:
                         const edm::Event& iEvent,
                         const edm::EventSetup& iSetup,
                         const float pixelProbs[],
-                        const float Event_Weight,
                         Tuple* tuple,
                         const float GenBeta,
                         const bool RescaleP,
                         const float RescaleI,
                         const float RescaleT,
                         float MassErr,
-                        const bool Ih_Iso_cut,
                         const float closestBackgroundPDGsIDs[]);
 
   bool passSelection(const reco::TrackRef track,
@@ -168,7 +166,6 @@ public:
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
-                     const float Event_Weight,
                      const int& CutIndex,
                      Tuple* tuple,
                      const bool isFlip,
@@ -190,11 +187,9 @@ public:
                      const edm::Event& iEvent,
                      const edm::EventSetup& iSetup,
                      const float pixelProbs[],
-                     const float Event_Weight,
                      Tuple* tuple,
                      const float GenBeta,
                      float MassErr,
-                     const bool Ih_Iso_cut,
                      const float closestBackgroundPDGsIDs[]);
 
 private:
@@ -315,7 +310,8 @@ private:
   unsigned int globalMinNOPH_;
   float globalMinFOVH_;
   unsigned int globalMinNOM_;
-  float globalMaxChi2_, globalMaxEoP_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_, globalMiniRelIsoAll_, globalMinIh_, globalMinTrackProbQCut_, globalMaxTrackProbQCut_, globalMinTrackProbXYCut_;
+  float globalMaxChi2_, globalMaxEoP_, globalMaxDZ_, globalMaxDXY_, globalMaxTIsol_, globalMinDeltaRminJet_, globalMaxMiniRelIsoAll_, globalMinIh_, globalMinTrackProbQCut_, globalMaxTrackProbQCut_, globalMinTrackProbXYCut_;
+  float globalMaxTrackProbXYCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
@@ -323,7 +319,6 @@ private:
   float GlobalMinNDOFCSC = 6;         // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
   float GlobalMaxTOFErr = 0.15;       //0.07;   // cut on error on muon TOF measurement
 
-  bool skipPixel_ = true;
   bool useTemplateLayer_ = false;
 
   // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
@@ -340,11 +335,13 @@ private:
   float dEdxSF[2] = {dEdxSF_0_, dEdxSF_1_};
   float dEdxK_;
   float dEdxC_;
+  float globalIas_;
+  float globalIh_;
 
   dedxGainCorrector trackerCorrector;
   string dEdxTemplate_;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
   bool enableDeDxCalibration_;
-  string dEdxCalibration_, geometry_, timeOffset_;
+  string timeOffset_;
   muonTimingCalculator tofCalculator;
 
   float theFMIPX_ = 4;
@@ -365,8 +362,6 @@ private:
 
   vector<float> PUSystFactor_;
 
-  unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met
-
   TRandom3* RNG = nullptr;
   bool is2016;
   bool is2016G;
@@ -377,7 +372,7 @@ private:
 
   const std::string pixelCPE_;
   const int debug_;
-  const bool hasMCMatch_, doTriggering_,calcSyst_;
+  const bool hasMCMatch_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
 

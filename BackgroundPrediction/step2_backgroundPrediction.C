@@ -42,6 +42,10 @@ void step2_backgroundPrediction(){
     TH2F* eta_cutIndex_regB = (TH2F*)ifile->Get((dir+"Pred_EtaS").c_str())->Clone(); 
     TH3F* ih_eta_cutIndex_regB = (TH3F*)ifile->Get((dir+"Pred_EtaI").c_str())->Clone(); 
     TH3F* eta_p_cutIndex_regC = (TH3F*)ifile->Get((dir+"Pred_EtaP").c_str())->Clone(); 
+    TH1F* H_A = (TH1F*)ifile->Get((dir+"H_A").c_str())->Clone();
+    TH1F* H_B = (TH1F*)ifile->Get((dir+"H_B").c_str())->Clone();
+    TH1F* H_C = (TH1F*)ifile->Get((dir+"H_C").c_str())->Clone();
+    TH2F* mass_cutIndex = (TH2F*)ifile->Get((dir+"Mass").c_str())->Clone();
 
     //------------
 
@@ -108,28 +112,22 @@ void step2_backgroundPrediction(){
     // estimate the background in different Ias slices, each containing 10% of the statistic 
     // ------------------------------------------------------------------------------------------------------
     
-    bckgEstimate(rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", nPE);
+    /*bckgEstimate(rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", nPE);
     bckgEstimate(rb_60ias70, rc_ias50, rbc_60ias70, ra_ias50, rd_60ias70, "60ias70", nPE);
     bckgEstimate(rb_70ias80, rc_ias50, rbc_70ias80, ra_ias50, rd_70ias80, "70ias80", nPE);
     bckgEstimate(rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", nPE);
     bckgEstimate(rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", nPE);
-    bckgEstimate(rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", nPE);
+    bckgEstimate(rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", nPE);*/
     
     // ------------------------------------------------------------------------------------------------------
-    
+   
     // bkg estimate for a selected cut index 
     // cutIndex = 3 --> pT > 60 GeV & Ias > 0.05
-    //bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutIndex, true, nPE)->Write();
-
-    //TODO not yet finished
-    // 2D-histograms PredMass_Vs_CutIndex used in later steps to compare to data 
-    int n_cutIndex = 1;
-    TH2F* mass_cutIndex = new TH2F();
-
-    for(int cutI = 0; cutI < n_cutIndex; cutI++){
-        //bckgEstimate_fromHistos(eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, cutI, true, nPE);
-
-    }
+    
+    bckgEstimate_fromHistos(mass_cutIndex, eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, H_A, H_B, H_C, cutIndex, nPE=10);
+    //bckgEstimate_fromHistos(mass_cutIndex, eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, H_A, H_B, H_C, cutIndex=3, nPE);
+    //bckgEstimate_fromHistos(mass_cutIndex, eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, H_A, H_B, H_C, cutIndex=25, nPE);
+    //bckgEstimate_fromHistos(mass_cutIndex, eta_cutIndex_regA, eta_cutIndex_regB, ih_eta_cutIndex_regB, eta_p_cutIndex_regC, H_A, H_B, H_C, cutIndex=28, nPE);
 
     delete ofile;
     delete mass_cutIndex;

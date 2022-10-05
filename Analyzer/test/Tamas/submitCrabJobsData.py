@@ -37,7 +37,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_data_wProbQ_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 3500
-config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixR2.txt','SUSYBSMAnalysis/HSCP/data/template_2017C.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixR2.txt','SUSYBSMAnalysis/HSCP/data/template_2017C.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'

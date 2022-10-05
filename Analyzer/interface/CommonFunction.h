@@ -1505,23 +1505,17 @@ reco::DeDxData computedEdx(const int& run_number,
                            float* scaleFactors,
                            TH3* templateHisto = nullptr,
                            bool usePixel = false,
-                           bool useClusterCleaning = true,
-                           bool reverseProb = false,
-                           bool useTruncated = false,
-                           std::unordered_map<unsigned int, float>* TrackerGains = nullptr,
                            bool useStrip = true,
+                           bool useClusterCleaning = true,
+                           bool useTruncated = false,
                            bool mustBeInside = false,
                            size_t MaxStripNOM = 999,
                            bool correctFEDSat = false,
                            int crossTalkInvAlgo = 0,
                            float dropLowerDeDxValue = 0.0,
-                           dedxHIPEmulator* hipEmulator = nullptr,
                            float* dEdxErr = nullptr,
-                           unsigned int pdgId = 0,
-                           bool skipPixel = true,
                            bool useTemplateLayer = false,
                            bool skipPixelL1 = false,
-                           bool probQ = false,
                            int  skip_templates_ias = 0) {
 
   if (!dedxHits)
@@ -1568,7 +1562,7 @@ reco::DeDxData computedEdx(const int& run_number,
 
     int ClusterCharge = dedxHits->charge(h);
 
-    //if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1) //this decoding is for 2016 !
+    // Tav: This really should be done through the topology
     if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
       continue;
 
@@ -1579,11 +1573,10 @@ reco::DeDxData computedEdx(const int& run_number,
       std::vector<int> amplitudes = convert(cluster->amplitudes());
       std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
 
-     
+      // why is this hardcoded now?
       //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
       if (useClusterCleaning && !clusterCleaning(amplitudesPrim, 1))
         continue;
-      //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
       //////////////////////////////////////////////////////////////
       //
@@ -1607,24 +1600,13 @@ crossTalkInvAlgo=1;
         amplitudes =
             CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
 
-      int firstStrip = cluster->firstStrip();
-      int prevAPV = -1;
       float gain = 1.0;
-
       bool isSatCluster = false;
       ClusterCharge = 0;
       for (unsigned int s = 0; s < amplitudes.size(); s++) {
-        if (TrackerGains != nullptr) {  //don't reload the gain if unnecessary  since map access are slow
-          int APV = (firstStrip + s) / 128;
-          if (APV != prevAPV) {
-            gain = TrackerGains->at(detid.rawId() << 3 | APV);
-            prevAPV = APV;
-          }
-        }
-
-        gain = 1.0;
         int StripCharge = amplitudes[s];
         if (StripCharge < 254) {
+          // TAV: it's kinda funny to divide with 1.0
           StripCharge = (int)(StripCharge / gain);
           if (StripCharge >= 1024) {
             StripCharge = 255;
@@ -1660,8 +1642,6 @@ crossTalkInvAlgo=1;
       int layer = 0;
       if (detid.subdetId() < 3) {
         moduleGeometry = 15;
-        if (skipPixel)
-          continue;
       }  // 15 == pixel
       else {
         SiStripDetId SSdetId(detid);
@@ -1704,15 +1684,11 @@ crossTalkInvAlgo=1;
       int BinZ = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
       float Prob = templateHisto->GetBinContent(BinX, BinY, BinZ);
       //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
-      if (reverseProb)
-        Prob = 1.0 - Prob;
       vect.push_back(Prob);  //save probability
       //printf("%i %i %i %i  %f\n", layer, BinX, BinY, BinZ, Prob);
     } else {
       float Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
       float ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
-      //if (hipEmulator)
-        //ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
 
       vect.push_back(ChargeOverPathlength);  //save charge
       if (detid.subdetId() < 3)
@@ -1740,35 +1716,14 @@ crossTalkInvAlgo=1;
   int size = vect.size();
 
   if (size > 0) {
-    if (templateHisto) {  //dEdx discriminator
-                          //Prod discriminator
-                          //result = 1;
-                          //for(int i=0;i<size;i++){
-                          //   if(vect[i]<=0.0001){result *= pow(0.0001 , 1.0/size);}
-                          //   else               {result *= pow(vect[i], 1.0/size);}
-                          //}
-
-      //probQ discriminator
-      if (probQ) {
-        float alpha = 1;
-        for (int i = 0; i < size; i++) {
-          alpha *= vect[i];
-        }
-        float logAlpha = log(alpha);
-        float probQm = 0;
-        for (int i = 0; i < size; i++) {
-          probQm += ((pow(-logAlpha, i)) / (factorial(i)));
-        }
-        result = alpha * probQm;
-      } else {
-        //Ias discriminator
-        result = 1.0 / (12 * size);
-        std::sort(vect.begin(), vect.end(), std::less<float>());
-        for (int i = 1; i <= size; i++) {
-          result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
-        }
-        result *= (3.0 / size);
+    if (templateHisto) {
+      //Ias discriminator
+      result = 1.0 / (12 * size);
+      std::sort(vect.begin(), vect.end(), std::less<float>());
+      for (int i = 1; i <= size; i++) {
+        result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
       }
+      result *= (3.0 / size);
     } else {  //dEdx estimator
       if (useTruncated) {
         //truncated40 estimator
@@ -1780,20 +1735,17 @@ crossTalkInvAlgo=1;
         }
         result /= (size - nTrunc);
       } else {
-        //harmonic2 estimator
+        //harmonic2 estimator (Ih)
         result = 0;
         float expo = -2;
-        if (dEdxErr)
-          *dEdxErr = 0;
+        if (dEdxErr) *dEdxErr = 0;
 
         for (int i = 0; i < size; i++) {
           result += pow(vect[i], expo);
-          if (dEdxErr)
-            *dEdxErr += pow(vect[i], 2 * (expo - 1)) * pow(0.01, 2);
+          if (dEdxErr) *dEdxErr += pow(vect[i], 2 * (expo - 1)) * pow(0.01, 2);
         }
         result = pow(result / size, 1. / expo);
-        if (dEdxErr)
-          *dEdxErr = result * result * result * sqrt(*dEdxErr) / size;
+        if (dEdxErr) *dEdxErr = result * result * result * sqrt(*dEdxErr) / size;
       }
       //           printf("Ih = %f\n------------------\n",result);
     }

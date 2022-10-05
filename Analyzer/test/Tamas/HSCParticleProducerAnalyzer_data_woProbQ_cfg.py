@@ -9,7 +9,8 @@ options.outputFile = 'Histos.root'
 options.maxEvents = -1 # -1 means all events
 
 # was 106X_dataRun2_v20
-options.register('GTAG', '106X_dataRun2_v36',
+#options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
@@ -242,7 +243,6 @@ process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.TrackProbQCut = 1.0
 process.analyzer.DebugLevel = 7
 process.analyzer.Period = "2018"
 process.analyzer.DeDxK = K

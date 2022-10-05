@@ -54,14 +54,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "N1_TNOHFraction";
   tuple->N1_TNOHFraction = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
-  Name = "nDof";
-  tuple->nDof = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "tofError";
-  tuple->tofError = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_PtErrOverPt";
   tuple->N1_PtErrOverPt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "TIsol";
-  tuple->TIsol = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_EoP";
   tuple->N1_EoP = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_SumpTOverpT";
@@ -72,14 +66,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->N1_Ih = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_MiniRelIsoAll";
   tuple->N1_MiniRelIsoAll  = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "MTOF";
-  tuple->MTOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "Pt";
-  tuple->Pt = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "I";
-  tuple->I = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "TOF";
-  tuple->TOF = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "NVTrack";
   tuple->NVTrack = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
@@ -101,17 +87,8 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->CutFlowEta = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
 
 
-  Name = "N1_ProbQ";
-  tuple->N1_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "ProbQNoL1";
-  tuple->ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "N1_ProbXY";
-  tuple->N1_ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "N1_pfType";
   tuple->N1_pfType = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "ProbXYNoL1";
-  tuple->ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-
   Name = "BefPreS_pfType";
   tuple->BefPreS_pfType = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
@@ -412,15 +389,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->BefPreS_PtErrOverPtVsPtErrOverPt2 = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BefPreS_PtErrOverPtVsPt";
   tuple->BefPreS_PtErrOverPtVsPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  
-  Name = "BefPreS_ProbQ";
-  tuple->BefPreS_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "BefPreS_ProbXY";
-  tuple->BefPreS_ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "BefPreS_ProbQNoL1";
-  tuple->BefPreS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "BefPreS_ProbXYNoL1";
-  tuple->BefPreS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "BefPreS_MassErr";
   tuple->BefPreS_MassErr = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   
@@ -570,21 +538,11 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   Name = "PostPreS_PtErrOverPtVsPt";
   tuple->PostPreS_PtErrOverPtVsPt = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   
-  Name = "PostPreS_ProbQ";
-  tuple->PostPreS_ProbQ = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbXY";
-  tuple->PostPreS_ProbXY = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQNoL1";
-  tuple->PostPreS_ProbQNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbXYNoL1";
-  tuple->PostPreS_ProbXYNoL1 = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_MassErr";
   tuple->PostPreS_MassErr = (TH1F*)GetObjectFromPath(dir, path + "/" + Name);
 
   Name = "PostPreS_EtaVsGenID";
   tuple->PostPreS_EtaVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQVsGenID";
-  tuple->PostPreS_ProbQVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_ProbXYVsGenID";
   tuple->PostPreS_ProbXYVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtVsGenID";
@@ -599,8 +557,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_massTVsGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_EtaVsMomGenID";
   tuple->PostPreS_EtaVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQVsMomGenID";
-  tuple->PostPreS_ProbQVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_ProbXYVsMomGenID";
   tuple->PostPreS_ProbXYVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtVsMomGenID";
@@ -615,8 +571,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_massTVsMomGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_EtaVsSiblingGenID";
   tuple->PostPreS_EtaVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQVsSiblingGenID";
-  tuple->PostPreS_ProbQVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_ProbXYVsSiblingGenID";
   tuple->PostPreS_ProbXYVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtVsSiblingGenID";
@@ -631,8 +585,6 @@ void TuplePlotter::getObjects(Tuple*& tuple, TDirectory* dir) {
   tuple->PostPreS_massTVsSiblingGenID  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_EtaVsGenAngle";
   tuple->PostPreS_EtaVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
-  Name = "PostPreS_ProbQVsGenAngle";
-  tuple->PostPreS_ProbQVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_ProbXYVsGenAngle";
   tuple->PostPreS_ProbXYVsGenAngle  = (TH2F*)GetObjectFromPath(dir, path + "/" + Name);
   Name = "PostPreS_PtVsGenAngle";

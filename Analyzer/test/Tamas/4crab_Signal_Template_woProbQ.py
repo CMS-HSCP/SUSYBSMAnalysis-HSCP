@@ -6,7 +6,7 @@ config.section_('General')
 config.General.requestName = 'Analysis_2018_ROVIDMINTA_woProbQ_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
-config.General.instance = 'preprod'
+config.General.transferLogs = True
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
@@ -33,5 +33,6 @@ config.Data.runRange = '0'
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
+config.Site.blacklist = ['T2_US_Nebraska']
 config.Site.storageSite = 'T2_HU_Budapest'
   

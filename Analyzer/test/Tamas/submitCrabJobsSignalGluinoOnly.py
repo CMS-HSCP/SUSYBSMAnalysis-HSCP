@@ -36,7 +36,6 @@ config.section_('General')
 config.General.requestName = 'Analysis_2018_ROVIDMINTA_wProbQ_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
-config.General.instance = 'preprod'
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'

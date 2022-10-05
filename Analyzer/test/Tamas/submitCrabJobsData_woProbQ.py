@@ -8,16 +8,15 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 datasetList = [
 #"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
 #"/MET/Run2017C-09Aug2019_UL2017_rsb-v1/AOD",
+#"/SingleMuon/Run2018A-15Feb2022_UL2018-v1/AOD",
+#"/SingleMuon/Run2018B-15Feb2022_UL2018-v1/AOD",
 "/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
+#"/SingleMuon/Run2018D-15Feb2022_UL2018-v1/AOD",
 #"/MET/Run2018C-15Feb2022_UL2018-v1/AOD",
 ]
 
 codeVersion = sys.argv[1]
 #just the number, like 18p2
-
-didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -valid 192:00 otherwise say no and do it\n")
-if(didVoms):
- sys.exit()
 
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
@@ -37,7 +36,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_data_woProbQ_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 3500
-config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2017PixR2.txt','SUSYBSMAnalysis/HSCP/data/template_2017C.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFact2018PixR2.txt','SUSYBSMAnalysis/HSCP/data/template_2017C.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'
@@ -50,6 +49,7 @@ config.Data.ignoreLocality = True
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
+config.Site.blacklist = ['T2_US_Nebraska']
 config.Site.storageSite = 'T2_HU_Budapest'
 #config.Site.storageSite = 'T3_US_FNALLPC'
   '''
@@ -62,7 +62,7 @@ for i in datasetList:
   os.system("cp 4crab_Template_Data_woProbQ.py 4crab_toSubmit_Data_woProbQ.py")
   replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_toSubmit_Data_woProbQ.py"
   os.system(replaceVERZIO)
-  shortSampleName = i[1:(i.find('-'))-1].replace("/","_")
+  shortSampleName = i[1:(i.find('-'))].replace("/","_")
   replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_toSubmit_Data_woProbQ.py"
   os.system(replaceROVIDMINTA)
   replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_toSubmit_Data_woProbQ.py"
