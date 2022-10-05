@@ -77,6 +77,10 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/HLTReco/interface/TriggerObject.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -223,6 +227,7 @@ private:
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
   edm::EDGetTokenT<std::vector<reco::CaloMET>> caloMETToken_;
   edm::EDGetTokenT<std::vector<reco::CaloJet>> caloJetToken_;
+  edm::EDGetTokenT<trigger::TriggerEvent> triggerSummaryToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
   edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
