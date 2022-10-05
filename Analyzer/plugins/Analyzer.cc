@@ -205,7 +205,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
       caloJetToken_(consumes<std::vector<reco::CaloJet>>(iConfig.getParameter<edm::InputTag>("CaloJet"))),
-      TriggerSummaryToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
+      triggerSummaryToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("PileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("GenParticleCollection"))),
@@ -777,7 +777,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //===================== Handle For HLT Trigger Summary ===================
 
-  const edm::Handle<trigger::TriggerEvent> hltTriggerSummaryHandle = iEvent.getHandle(TriggerSummaryToken_);
+  const edm::Handle<trigger::TriggerEvent> hltTriggerSummaryHandle = iEvent.getHandle(triggerSummaryToken_);
   if (hltTriggerSummaryHandle.isValid()) {
 
     int caloMETKey = 0, caloMETCleanKey = 0, caloMHTKey = 0, pfMHTKey = 0, pfMETKey = 0;
@@ -3042,9 +3042,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Choice of HLT_Mu50_v is to simplify analysis
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
   ->setComment("Add the list of muon triggers");
-//    desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
     // Possibly used in a next version of the analysis
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Decide if want to match the muon to HLT at event level
   desc.addUntracked("MatchToHLTTrigger",true)->setComment("If we want to make sure the event has a muon at HLT");
