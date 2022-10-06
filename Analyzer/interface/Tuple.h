@@ -259,6 +259,8 @@ struct Tuple {
   TH2F* N1_PtErrOverPtVsPt;
   TH2F* N1_PtErrOverPtVsPt_lowPt;
   TH2F* N1_PtErrOverPtVsGenBeta;
+  TH2F* N1_PtErrOverPt2VsIas;
+  TH2F* N1_PtErrOverPt2VsProbQNoLayer1;
   TH1F* N1_I;
   TH1F* N1_TOF;
   TH1F* NVTrack;
@@ -267,8 +269,9 @@ struct Tuple {
   TH1F* N1_Dz;
   TH1F* N1_SegSep;
   TH1F* FailDz;
-  TH1F* N1_ProbQ;
-  TH2F* N1_ProbQVsIas;
+  TH1F* N1_ProbQNoLayer1;
+  TH2F* N1_ProbQNoLayer1VsIas;
+  TH3F* N1_IhVsProbQNoLayer1VsIas;
   TH1F* N1_ProbXY;
   TH1F* N1_pfType;
   TH1F* N1_MiniRelIsoAll;
@@ -395,6 +398,7 @@ struct Tuple {
   TH1F* BefPreS_MassErr;
   TH2F* BefPreS_ProbQVsIas;
 
+  TH1F* BefPreS_CluProbHasFilled;
   TH2F* BefPreS_CluProbQVsPixelLayer;
   TH2F* BefPreS_CluProbXYVsPixelLayer;
   TH2F* BefPreS_CluNormChargeVsPixelLayer;
@@ -493,6 +497,7 @@ struct Tuple {
   TH1F* PostPreS_TOFError;
   TH1F* PostPreS_PtErrOverPt;
   TH2F* PostPreS_PtErrOverPtVsIas;
+  TH2F* PostPreS_PtErrOverPt2VsIas;
   TH1F* PostPreS_PtErrOverPt2;
   TH1F* PostPreS_Pt;
   TH1F* PostPreS_Pt_lowPt;
@@ -552,6 +557,8 @@ struct Tuple {
   
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
+  TH3F* PostPreS_IhVsProbQVsIas;
+  TH3F* PostPreS_MomentumVsProbQVsIas;
   TH1F* PostPreS_ProbXY;
   TH1F* PostPreS_ProbXY_highIas;
   TH2F* PostPreS_ProbXYVsIas;

@@ -160,6 +160,7 @@
 // - 40p0: - Add probQ cut
 // - 40p1: - Add ptErr/pT2 cut
 // - 40p2: - Tighter probQ cut
+// - 40p3: - Loosen the probQCut, add plot for hasFilled, add some ptErrOverPt2 plots
 
 //  
 //v23 Dylan 
@@ -1424,12 +1425,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
-        // TODO
+        // TODO make a histo from this
         if(!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
-          cout << "SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE): " << SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE) << endl;
-          cout << "probQ: " << probQ << endl;
-          cout << "probXY: " << probXY << endl;
+          tuple->BefPreS_CluProbHasFilled->Fill(0.0, EventWeight_);
+        } else {
+          tuple->BefPreS_CluProbHasFilled->Fill(1.0, EventWeight_);
         }
+        
         
 //        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
@@ -3011,7 +3013,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
   
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
-  desc.addUntracked("GlobalMaxTrackProbQCut",0.1)->setComment("Max cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMaxTrackProbQCut",0.7)->setComment("Max cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, -0.01 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbXYCut",1.0)->setComment("Max cut for probXY, 1.0 means no cuts applied");
@@ -4046,11 +4048,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
           tuple->N1_PtErrOverPtVsPt_lowPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
           tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), GenBeta, EventWeight_);
+          tuple->N1_PtErrOverPt2VsIas->Fill(track->ptError() / (track->pt()*track->pt()), globalIas_, EventWeight_);
+          tuple->N1_PtErrOverPt2VsProbQNoLayer1->Fill(track->ptError() / (track->pt()*track->pt()), probQonTrackNoLayer1, EventWeight_);
           //TODO
         };
         if (i==14) {
-          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
-          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+          tuple->N1_ProbQNoLayer1->Fill(probQonTrack, EventWeight_);
+          tuple->N1_ProbQNoLayer1VsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+          tuple->N1_IhVsProbQNoLayer1VsIas->Fill(globalIh_, probQonTrack, globalIas_, EventWeight_);
         };
 //        if (i==15) { };
 //        if (i==16) { };
@@ -4149,6 +4154,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits, globalIas_, EventWeight_);
     tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
     tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+    tuple->PostPreS_IhVsProbQVsIas->Fill(globalIh_, globalIas_, EventWeight_);
+    tuple->PostPreS_MomentumVsProbQVsIas->Fill(track->p(), globalIas_, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
     tuple->PostPreS_ProbXYVsIas->Fill(probXYonTrack, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXYVsProbQ->Fill(probXYonTrack, probQonTrack, EventWeight_);
@@ -4196,6 +4203,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_SumpTOverpTVsIas->Fill(IsoTK_SumEt / track->pt(), globalIas_, EventWeight_);
     tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
     tuple->PostPreS_PtErrOverPtVsIas->Fill(track->ptError() / track->pt(), globalIas_, EventWeight_);
+    tuple->PostPreS_PtErrOverPt2VsIas->Fill(track->ptError() / (track->pt()*track->pt()), globalIas_, EventWeight_);
     tuple->PostPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
     tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), EventWeight_);
     tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
