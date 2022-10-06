@@ -159,6 +159,7 @@
 // - 30p9: - Add TkIso, add E/p cut
 // - 40p0: - Add probQ cut
 // - 40p1: - Add ptErr/pT2 cut
+// - 40p2: - Tighter probQ cut
 
 //  
 //v23 Dylan 
@@ -1416,10 +1417,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Get the local vector for the track direction
         LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
         // Re-run the CPE on this cluster with the lv above
+        // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
+        // from this we pick the 2nd, the QualWordType
         auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, track->charge())));
         // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+        
+        // TODO
+        if(!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+          cout << "SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE): " << SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE) << endl;
+          cout << "probQ: " << probQ << endl;
+          cout << "probXY: " << probXY << endl;
+        }
         
 //        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
@@ -3001,7 +3011,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
   
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
-  desc.addUntracked("GlobalMaxTrackProbQCut",0.7)->setComment("Max cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMaxTrackProbQCut",0.1)->setComment("Max cut for probQ, 1.0 means no cuts applied");
   desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, -0.01 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbXYCut",1.0)->setComment("Max cut for probXY, 1.0 means no cuts applied");
