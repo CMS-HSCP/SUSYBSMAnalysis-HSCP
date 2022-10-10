@@ -557,8 +557,8 @@ struct Tuple {
   
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
-  TH3F* PostPreS_IhVsProbQVsIas;
-  TH3F* PostPreS_MomentumVsProbQVsIas;
+  TH3F* PostPreS_IhVsProbQNoL1VsIas;
+  TH3F* PostPreS_MomentumVsProbQNoL1VsIas;
   TH1F* PostPreS_ProbXY;
   TH1F* PostPreS_ProbXY_highIas;
   TH2F* PostPreS_ProbXYVsIas;

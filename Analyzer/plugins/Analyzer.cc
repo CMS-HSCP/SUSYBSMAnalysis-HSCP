@@ -161,6 +161,7 @@
 // - 40p1: - Add ptErr/pT2 cut
 // - 40p2: - Tighter probQ cut
 // - 40p3: - Loosen the probQCut, add plot for hasFilled, add some ptErrOverPt2 plots
+// - 40p4: - Bugfix to 40p3
 
 //  
 //v23 Dylan 
@@ -1425,12 +1426,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
-        // TODO make a histo from this
-        if(!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
-          tuple->BefPreS_CluProbHasFilled->Fill(0.0, EventWeight_);
-        } else {
-          tuple->BefPreS_CluProbHasFilled->Fill(1.0, EventWeight_);
-        }
+        // To measure how often the CPE fails
+        tuple->BefPreS_CluProbHasFilled->Fill(SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE), EventWeight_);
+        
+        if (SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE) == 0) continue;
         
         
 //        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
@@ -4053,9 +4052,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           //TODO
         };
         if (i==14) {
-          tuple->N1_ProbQNoLayer1->Fill(probQonTrack, EventWeight_);
-          tuple->N1_ProbQNoLayer1VsIas->Fill(probQonTrack, globalIas_, EventWeight_);
-          tuple->N1_IhVsProbQNoLayer1VsIas->Fill(globalIh_, probQonTrack, globalIas_, EventWeight_);
+          tuple->N1_ProbQNoLayer1->Fill(probQonTrackNoLayer1, EventWeight_);
+          tuple->N1_ProbQNoLayer1VsIas->Fill(probQonTrackNoLayer1, globalIas_, EventWeight_);
+          tuple->N1_IhVsProbQNoLayer1VsIas->Fill(globalIh_, probQonTrackNoLayer1, globalIas_, EventWeight_);
         };
 //        if (i==15) { };
 //        if (i==16) { };
@@ -4154,8 +4153,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits, globalIas_, EventWeight_);
     tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
     tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
-    tuple->PostPreS_IhVsProbQVsIas->Fill(globalIh_, globalIas_, EventWeight_);
-    tuple->PostPreS_MomentumVsProbQVsIas->Fill(track->p(), globalIas_, EventWeight_);
+    tuple->PostPreS_IhVsProbQNoL1VsIas->Fill(globalIh_, probQonTrackNoLayer1, globalIas_, EventWeight_);
+    tuple->PostPreS_MomentumVsProbQNoL1VsIas->Fill(track->p(), probQonTrackNoLayer1, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
     tuple->PostPreS_ProbXYVsIas->Fill(probXYonTrack, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXYVsProbQ->Fill(probXYonTrack, probQonTrack, EventWeight_);

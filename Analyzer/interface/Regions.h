@@ -11,7 +11,7 @@
 
 
 
-float K = 3.20;
+float K = 2.30;
 float C = 3.17;
 
 // Scale the 1D-histogram given to the unit 
@@ -98,18 +98,18 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     masslow = 0;
     massup = 4000;
     std::string suffix = suffix_;
-    ih_p_eta = dir.make<TH3F>(("ih_p_eta"+suffix).c_str(),";#eta;p [GeV];I_{h} [MeV/cm]",neta,etalow,etaup,np,plow,pup,nih,ihlow,ihup); ih_p_eta->Sumw2();
-    eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";p [GeV];#eta",np,plow,pup,neta,etalow,etaup); eta_p->Sumw2();
-    ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup); ih_eta->Sumw2();
-    ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup); ih_p->Sumw2();
-    ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";p [GeV];I_{as}",np,plow,pup,nias,iaslow,iasup); ias_p->Sumw2();
-    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];I_{as}",npt,ptlow,ptup,nias,iaslow,iasup); ias_pt->Sumw2();
-    mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); mass->Sumw2();
-    pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); pred_mass->Sumw2();
+    ih_p_eta = dir.make<TH3F>(("ih_p_eta"+suffix).c_str(),";#eta;p [GeV];I_{h} [MeV/cm]",neta,etalow,etaup,np,plow,pup,nih,ihlow,ihup);
+    eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";p [GeV];#eta",np,plow,pup,neta,etalow,etaup);
+    ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup);
+    ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup);
+    ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";p [GeV];I_{as}",np,plow,pup,nias,iaslow,iasup);
+    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];I_{as}",npt,ptlow,ptup,nias,iaslow,iasup);
+    mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup);
+    pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup);
     mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     pred_mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
-    pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); pt_pterroverpt->Sumw2();
-    hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10); hTOF->Sumw2();
+    pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1);
+    hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10);
 }
 
 // Function which fills histograms
@@ -224,7 +224,6 @@ void etaReweighingP(TH2F* eta_p_1, TH1F* eta2)
             eta_p_1->SetBinError(i,j,err_ij*eta2->GetBinContent(j));
         }
     }
-    eta_p_1->Sumw2();
 }
 
 
@@ -326,21 +325,46 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
       canvName = "plotting_"+name;
     }
     TCanvas* c1 = new TCanvas(canvName.c_str(),"", 800,800);
-    c1->Divide(1,2);
+    //c1->Divide(1,2);
     gStyle->SetOptStat(0);
-    c1->cd(1);
-    TPad* p1 = (TPad*)(c1->cd(1));
+    //c1->cd(1);
+    //TPad* p1 = (TPad*)(c1->cd(1));
+    TPad *p1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
+    p1->Draw();
+    p1->cd();
     p1->SetLogy();
+    p1->SetTopMargin(0.05);
+    p1->SetBottomMargin(0.1);
+    p1->SetLeftMargin(0.12);
+    p1->SetRightMargin(0.05);
     TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
     leg->AddEntry(h1,leg1.c_str(),"lep");
     leg->AddEntry(h2,leg2.c_str(),"lep");
     h1->SetStats(0);
+    h1->SetMarkerStyle(20);
     h1->Draw();
+    h1->GetYaxis()->SetTitle("Tracks / bin");
+    h1->GetYaxis()->SetTitleSize(0.07);
+    h1->GetYaxis()->SetTitleOffset(.7);
+    h1->GetYaxis()->SetRangeUser(0.0001,100000);
+    h1->GetXaxis()->SetTitle("Mass (GeV)");
+    h1->GetXaxis()->SetTitleOffset(.7);
+    h1->GetXaxis()->SetTitleSize(0.07);
     h2->SetLineColor(2);
     h2->SetStats(0);
+    h2->SetMarkerStyle(20);
+    h2->SetMarkerColor(2);
     h2->Draw("esame");
     leg->Draw("same");
-    c1->cd(2);
+    c1->cd();
+    //TPad* p2 = (TPad*)(c1->cd(2));
+    TPad *p2 = new TPad("pad2", "pad2", 0, 0.05, 1, 0.3);
+    p2->Draw();
+    p2->cd();
+    p2->SetTopMargin(0.05);
+    p2->SetBottomMargin(0.01);
+    p2->SetLeftMargin(0.12);
+    p2->SetRightMargin(0.05);
     TH1F* tmp = (TH1F*) h1->Clone(); tmp->Reset();
     if(ratioSimple){
         tmp = (TH1F*)h1->Clone();
