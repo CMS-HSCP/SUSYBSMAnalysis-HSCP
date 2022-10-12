@@ -162,6 +162,7 @@
 // - 40p2: - Tighter probQ cut
 // - 40p3: - Loosen the probQCut, add plot for hasFilled, add some ptErrOverPt2 plots
 // - 40p4: - Bugfix to 40p3
+// - 40p5: - Plot 1-probQ, change naming of Ias in histos
 
 //  
 //v23 Dylan 
@@ -1427,9 +1428,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         
         // To measure how often the CPE fails
-        tuple->BefPreS_CluProbHasFilled->Fill(SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE), EventWeight_);
+        bool cpeHasFailed = false;
+        if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+          cpeHasFailed = true;
+          tuple->BefPreS_CluProbHasFilled->Fill(0., EventWeight_);
+        } else {
+          tuple->BefPreS_CluProbHasFilled->Fill(1., EventWeight_);
+        }
         
-        if (SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE) == 0) continue;
+        if (cpeHasFailed) continue;
         
         
 //        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
@@ -3317,7 +3324,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       continue;  //only consider good vertex
     goodVerts++;
     if (tuple) {
-      tuple->BefPreS_dzAll->Fill(track->dz(vertexColl[i].position()), EventWeight_);
+      tuple->BefPreS_DzAll->Fill(track->dz(vertexColl[i].position()), EventWeight_);
       tuple->BefPreS_dxyAll->Fill(track->dxy(vertexColl[i].position()), EventWeight_);
     }
     
@@ -3745,9 +3752,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (track->found() - numDeDxHits) {
       tuple->BefPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, EventWeight_);
     }
-    tuple->BefPreS_ProbQ->Fill(probQonTrack, EventWeight_);
+    tuple->BefPreS_ProbQ->Fill(1 - probQonTrack, EventWeight_);
     tuple->BefPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
-    tuple->BefPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
+    tuple->BefPreS_ProbQNoL1->Fill(1 - probQonTrackNoLayer1, EventWeight_);
     tuple->BefPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     if (tof) {
       tuple->BefPreS_nDof->Fill(tof->nDof(), EventWeight_);
@@ -3781,7 +3788,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_TIsol->Fill(IsoTK_SumEt, EventWeight_);
     tuple->BefPreS_Ih->Fill(globalIh_, EventWeight_);
     tuple->BefPreS_Ias->Fill(globalIas_, EventWeight_);
-    tuple->BefPreS_massT->Fill(massT, EventWeight_);
+    tuple->BefPreS_MassT->Fill(massT, EventWeight_);
     // Add PFCadidate based isolation info to the tuple
     // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
     // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
@@ -3794,7 +3801,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_SegMinEtaSep->Fill(minEta, EventWeight_);
     tuple->BefPreS_OpenAngle->Fill(OpenAngle, EventWeight_);
     tuple->BefPreS_MassErr->Fill(MassErr, EventWeight_);
-    tuple->BefPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+    tuple->BefPreS_ProbQVsIas->Fill(1 - probQonTrack, globalIas_, EventWeight_);
     tuple->BefPreS_EtaVsIas->Fill(track->eta(), globalIas_, EventWeight_);
     tuple->BefPreS_EtaVsIh->Fill(track->eta(), globalIh_, EventWeight_);
     tuple->BefPreS_EtaVsP->Fill(track->eta(), track->p(), EventWeight_);
@@ -3937,12 +3944,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         tuple->BefPreS_TOF_DT->Fill(dttof->inverseBeta(), EventWeight_);
       if (csctof->nDof() > 6)
         tuple->BefPreS_TOF_CSC->Fill(csctof->inverseBeta(), EventWeight_);
-      tuple->BefPreS_PtTOF->Fill(track->pt(), tof->inverseBeta(), EventWeight_);
+      tuple->BefPreS_PtVsTOF->Fill(track->pt(), tof->inverseBeta(), EventWeight_);
     }
       
     if (tof) {
-      tuple->BefPreS_TOFIs->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
-      tuple->BefPreS_TOFIh->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
+      tuple->BefPreS_TOFVsIs->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
+      tuple->BefPreS_TOFVsIh->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
     }
     
     //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
@@ -3974,29 +3981,29 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       if (allOtherCutsPassed) {
         // Put the not used variables to the i==0, this will be always true
         if (i==0)  {
-          tuple->N1_pfType->Fill(0., EventWeight_);
+          tuple->N1_PfType->Fill(0., EventWeight_);
           if (pf_isPfTrack) {
-            tuple->N1_pfType->Fill(1., EventWeight_);
+            tuple->N1_PfType->Fill(1., EventWeight_);
           } else {
-            tuple->N1_pfType->Fill(8., EventWeight_);
+            tuple->N1_PfType->Fill(8., EventWeight_);
           }
           if (pf_isElectron) {
-            tuple->N1_pfType->Fill(2., EventWeight_);
+            tuple->N1_PfType->Fill(2., EventWeight_);
           } else if (pf_isMuon) {
-            tuple->N1_pfType->Fill(3., EventWeight_);
+            tuple->N1_PfType->Fill(3., EventWeight_);
           } else if (pf_isPhoton) {
-            tuple->N1_pfType->Fill(4., EventWeight_);
+            tuple->N1_PfType->Fill(4., EventWeight_);
           } else if (pf_isChHadron) {
-            tuple->N1_pfType->Fill(5., EventWeight_);
+            tuple->N1_PfType->Fill(5., EventWeight_);
           } else if (pf_isNeutHadron) {
-            tuple->N1_pfType->Fill(6., EventWeight_);
+            tuple->N1_PfType->Fill(6., EventWeight_);
           } else if (pf_isUndefined) {
-            tuple->N1_pfType->Fill(7., EventWeight_);
+            tuple->N1_PfType->Fill(7., EventWeight_);
           }
           tuple->N1_Ih->Fill(globalIh_, EventWeight_);
           tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_);
           tuple->N1_Stations->Fill(muonStations(track->hitPattern()), EventWeight_);
-          tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
+          tuple->N1_DrMinPfJet->Fill(dRMinPfJet, EventWeight_);
           tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
         };
         
@@ -4048,13 +4055,13 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           tuple->N1_PtErrOverPtVsPt_lowPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
           tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), GenBeta, EventWeight_);
           tuple->N1_PtErrOverPt2VsIas->Fill(track->ptError() / (track->pt()*track->pt()), globalIas_, EventWeight_);
-          tuple->N1_PtErrOverPt2VsProbQNoLayer1->Fill(track->ptError() / (track->pt()*track->pt()), probQonTrackNoLayer1, EventWeight_);
+          tuple->N1_PtErrOverPt2VsProbQNoLayer1->Fill(track->ptError() / (track->pt()*track->pt()), 1 - probQonTrackNoLayer1, EventWeight_);
           //TODO
         };
         if (i==14) {
-          tuple->N1_ProbQNoLayer1->Fill(probQonTrackNoLayer1, EventWeight_);
-          tuple->N1_ProbQNoLayer1VsIas->Fill(probQonTrackNoLayer1, globalIas_, EventWeight_);
-          tuple->N1_IhVsProbQNoLayer1VsIas->Fill(globalIh_, probQonTrackNoLayer1, globalIas_, EventWeight_);
+          tuple->N1_ProbQNoLayer1->Fill(1 - probQonTrackNoLayer1, EventWeight_);
+          tuple->N1_ProbQNoLayer1VsIas->Fill(1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
+          tuple->N1_IhVsProbQNoLayer1VsIas->Fill(globalIh_, 1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
         };
 //        if (i==15) { };
 //        if (i==16) { };
@@ -4071,7 +4078,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         // Plot Eta after each cut
       if (tuple) {
         tuple->CutFlowEta->Fill(track->eta(), i, EventWeight_);
-        tuple->CutFlowProbQ->Fill(probQonTrack, i, EventWeight_);
+        tuple->CutFlowProbQ->Fill(1 - probQonTrack, i, EventWeight_);
         tuple->CutFlowPfType->Fill(0., i, EventWeight_);
         if (pf_isPfTrack) {
           tuple->CutFlowPfType->Fill(1., i, EventWeight_);
@@ -4102,33 +4109,33 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   
   // After (pre)selection plots
   if (tuple) {
-      tuple->PostPreS_pfType->Fill(0., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(0., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(0., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(0., globalIas_, EventWeight_);
     if (pf_isPfTrack) {
-      tuple->PostPreS_pfType->Fill(1., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(1., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(1., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(1., globalIas_, EventWeight_);
     } else {
-      tuple->PostPreS_pfType->Fill(8., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(8., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(8., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(8., globalIas_, EventWeight_);
     }
     if (pf_isElectron) {
-      tuple->PostPreS_pfType->Fill(2., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(2., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(2., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(2., globalIas_, EventWeight_);
     } else if (pf_isMuon) {
-      tuple->PostPreS_pfType->Fill(3., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(3., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(3., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(3., globalIas_, EventWeight_);
     } else if (pf_isPhoton) {
-      tuple->PostPreS_pfType->Fill(4., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(4., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(4., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(4., globalIas_, EventWeight_);
     } else if (pf_isChHadron) {
-      tuple->PostPreS_pfType->Fill(5., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(5., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(5., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(5., globalIas_, EventWeight_);
     } else if (pf_isNeutHadron) {
-      tuple->PostPreS_pfType->Fill(6., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(6., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(6., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(6., globalIas_, EventWeight_);
     } else if (pf_isUndefined) {
-      tuple->PostPreS_pfType->Fill(7., EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(7., globalIas_, EventWeight_);
+      tuple->PostPreS_PfType->Fill(7., EventWeight_);
+      tuple->PostPreS_PfTypeVsIas->Fill(7., globalIas_, EventWeight_);
     }
     tuple->PostPreS_Eta->Fill(track->eta(), EventWeight_);
     tuple->PostPreS_EtaVsIas->Fill(track->eta(), globalIas_, EventWeight_);
@@ -4151,26 +4158,26 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
     tuple->PostPreS_TNOM->Fill(numDeDxHits, EventWeight_);
     tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits, globalIas_, EventWeight_);
-    tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
-    tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
-    tuple->PostPreS_IhVsProbQNoL1VsIas->Fill(globalIh_, probQonTrackNoLayer1, globalIas_, EventWeight_);
-    tuple->PostPreS_MomentumVsProbQNoL1VsIas->Fill(track->p(), probQonTrackNoLayer1, globalIas_, EventWeight_);
+    tuple->PostPreS_ProbQ->Fill(1 - probQonTrack, EventWeight_);
+    tuple->PostPreS_ProbQVsIas->Fill(1 - probQonTrack, globalIas_, EventWeight_);
+    tuple->PostPreS_IhVsProbQNoL1VsIas->Fill(globalIh_, 1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
+    tuple->PostPreS_MomentumVsProbQNoL1VsIas->Fill(track->p(), 1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
     tuple->PostPreS_ProbXYVsIas->Fill(probXYonTrack, globalIas_, EventWeight_);
-    tuple->PostPreS_ProbXYVsProbQ->Fill(probXYonTrack, probQonTrack, EventWeight_);
-    tuple->PostPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
-    tuple->PostPreS_ProbQNoL1VsIas->Fill(probQonTrackNoLayer1, globalIas_, EventWeight_);
+    tuple->PostPreS_ProbXYVsProbQ->Fill(probXYonTrack, 1 - probQonTrack, EventWeight_);
+    tuple->PostPreS_ProbQNoL1->Fill(1 - probQonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoLayer1, globalIas_, EventWeight_);
-    tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoLayer1, 1 - probQonTrackNoLayer1, EventWeight_);
     
     if (globalIas_ > 0.6) {
       tuple->PostPreS_ProbXY_highIas->Fill(probXYonTrack, EventWeight_);
       tuple->PostPreS_ProbXYVsIas_highIas->Fill(probXYonTrack, globalIas_, EventWeight_);
-      tuple->PostPreS_ProbXYVsProbQ_highIas->Fill(probXYonTrack, probQonTrack, EventWeight_);
+      tuple->PostPreS_ProbXYVsProbQ_highIas->Fill(probXYonTrack, 1 - probQonTrack, EventWeight_);
       tuple->PostPreS_ProbXYNoL1_highIas->Fill(probXYonTrackNoLayer1, EventWeight_);
       tuple->PostPreS_ProbXYNoL1VsIas_highIas->Fill(probXYonTrackNoLayer1, globalIas_, EventWeight_);
-      tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
+      tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas->Fill(probXYonTrackNoLayer1, 1 - probQonTrackNoLayer1, EventWeight_);
     }
     if (tof) {
       tuple->PostPreS_nDof->Fill(tof->nDof(), EventWeight_);
@@ -4213,8 +4220,8 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_Ih_NoEventWeight->Fill(globalIh_);
     tuple->PostPreS_Ias->Fill(globalIas_, EventWeight_);
     tuple->PostPreS_Ias_NoEventWeight->Fill(globalIas_);
-    tuple->PostPreS_massT->Fill(massT, EventWeight_);
-    tuple->PostPreS_massTVsIas->Fill(massT, globalIas_, EventWeight_);
+    tuple->PostPreS_MassT->Fill(massT, EventWeight_);
+    tuple->PostPreS_MassTVsIas->Fill(massT, globalIas_, EventWeight_);
       // Add PFCadidate based isolation info to the tuple
       // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
       // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
@@ -4228,7 +4235,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassErrVsIas->Fill(MassErr, globalIas_, EventWeight_);
     
     tuple->PostPreS_EtaVsGenID->Fill(track->eta(), closestBackgroundPDGsIDs[0], EventWeight_);
-    tuple->PostPreS_ProbQVsGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_ProbQVsGenID->Fill(1 - probQonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_ProbXYVsGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_PtVsGenID->Fill(track->pt(), closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_EoPVsGenID->Fill(EoP, closestBackgroundPDGsIDs[0], EventWeight_);
@@ -4240,7 +4247,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsGenID->Fill(Mass, closestBackgroundPDGsIDs[0], EventWeight_);
     
     tuple->PostPreS_EtaVsMomGenID->Fill(track->eta(), closestBackgroundPDGsIDs[1], EventWeight_);
-    tuple->PostPreS_ProbQVsMomGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_ProbQVsMomGenID->Fill(1 - probQonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
     tuple->PostPreS_ProbXYVsMomGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
     tuple->PostPreS_PtVsMomGenID->Fill(track->pt(), closestBackgroundPDGsIDs[1], EventWeight_);
     tuple->PostPreS_EoPVsMomGenID->Fill(EoP, closestBackgroundPDGsIDs[1], EventWeight_);
@@ -4252,7 +4259,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsMomGenID->Fill(Mass, closestBackgroundPDGsIDs[1], EventWeight_);
     
     tuple->PostPreS_EtaVsSiblingGenID->Fill(track->eta(), closestBackgroundPDGsIDs[2], EventWeight_);
-    tuple->PostPreS_ProbQVsSiblingGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_ProbQVsSiblingGenID->Fill(1 - probQonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
     tuple->PostPreS_ProbXYVsSiblingGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
     tuple->PostPreS_PtVsSiblingGenID->Fill(track->pt(), closestBackgroundPDGsIDs[2], EventWeight_);
     tuple->PostPreS_EoPVsSiblingGenID->Fill(EoP, closestBackgroundPDGsIDs[2], EventWeight_);
@@ -4262,7 +4269,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsSiblingGenID->Fill(Mass, closestBackgroundPDGsIDs[2], EventWeight_);
     
     tuple->PostPreS_EtaVsGenAngle->Fill(track->eta(), closestBackgroundPDGsIDs[3], EventWeight_);
-    tuple->PostPreS_ProbQVsGenAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_ProbQVsGenAngle->Fill(1 - probQonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
     tuple->PostPreS_ProbXYVsGenAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
     tuple->PostPreS_PtVsGenAngle->Fill(track->pt(), closestBackgroundPDGsIDs[3], EventWeight_);
     tuple->PostPreS_EoPVsGenAngle->Fill(EoP, closestBackgroundPDGsIDs[3], EventWeight_);
@@ -4274,7 +4281,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsGenAngle->Fill(Mass, closestBackgroundPDGsIDs[3], EventWeight_);
     
     tuple->PostPreS_EtaVsGenMomAngle->Fill(track->eta(), closestBackgroundPDGsIDs[4], EventWeight_);
-    tuple->PostPreS_ProbQVsGenMomAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_ProbQVsGenMomAngle->Fill(1 - probQonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
     tuple->PostPreS_ProbXYVsGenMomAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
     tuple->PostPreS_PtVsGenMomAngle->Fill(track->pt(), closestBackgroundPDGsIDs[4], EventWeight_);
     tuple->PostPreS_EoPVsGenMomAngle->Fill(EoP, closestBackgroundPDGsIDs[4], EventWeight_);
@@ -4288,7 +4295,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_GenPtVsRecoPt->Fill(closestBackgroundPDGsIDs[5], track->pt());
     
     tuple->PostPreS_EtaVsGenNumSibling->Fill(track->eta(), closestBackgroundPDGsIDs[6], EventWeight_);
-    tuple->PostPreS_ProbQVsGenNumSibling->Fill(probQonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_ProbQVsGenNumSibling->Fill(1 - probQonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
     tuple->PostPreS_ProbXYVsGenNumSibling->Fill(probXYonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
     tuple->PostPreS_PtVsGenNumSibling->Fill(track->pt(), closestBackgroundPDGsIDs[6], EventWeight_);
     tuple->PostPreS_EoPVsGenNumSibling->Fill(EoP, closestBackgroundPDGsIDs[6], EventWeight_);
@@ -4338,7 +4345,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_MassVsTNOHFraction->Fill(Mass, track->validFraction(), EventWeight_);
     tuple->PostPreS_MassVsTNOPH->Fill(Mass, nonL1PixHits, EventWeight_);
     tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits, EventWeight_);
-    tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,probQonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,1 - probQonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_MassVsProbXYNoL1->Fill(Mass,probXYonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_MassVsEoP->Fill(Mass, EoP, EventWeight_);
     tuple->PostPreS_MassVsSumpTOverpT->Fill(Mass, IsoTK_SumEt / track->pt(), EventWeight_);

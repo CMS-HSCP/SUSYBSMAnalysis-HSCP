@@ -253,7 +253,7 @@ struct Tuple {
   TH1F* N1_TIsol;
   TH1F* N1_EoP;
   TH1F* N1_SumpTOverpT;
-  TH1F* N1_dRMinPfJet;
+  TH1F* N1_DrMinPfJet;
   TH1F* N1_PtErrOverPt;
   TH1F* N1_PtErrOverPt2;
   TH2F* N1_PtErrOverPtVsPt;
@@ -273,7 +273,7 @@ struct Tuple {
   TH2F* N1_ProbQNoLayer1VsIas;
   TH3F* N1_IhVsProbQNoLayer1VsIas;
   TH1F* N1_ProbXY;
-  TH1F* N1_pfType;
+  TH1F* N1_PfType;
   TH1F* N1_MiniRelIsoAll;
   TH1F* N1_MiniRelIsoAll_lowMiniRelIso;
   TH1F* N1_MiniRelTkIso;
@@ -307,7 +307,7 @@ struct Tuple {
   TH1F* Gen_Beta;
   TH1F* Gen_BetaGamma;
 
-  TH1F* BefPreS_massT;
+  TH1F* BefPreS_MassT;
   TH1F* BefPreS_MiniRelIsoAll;
   TH1F* BefPreS_MiniRelIsoChg;
   TH1F* BefPreS_MiniRelTkIso;
@@ -355,9 +355,9 @@ struct Tuple {
   TH1F* BefPreS_NVertex_NoEventWeight;
   TH1F* BefPreS_PV;
   TH1F* BefPreS_PV_NoEventWeight;
-  TH1F* BefPreS_dzAll;
+  TH1F* BefPreS_DzAll;
   TH1F* BefPreS_dxyAll;
-  TH1F* BefPreS_dzMinv3d;
+  TH1F* BefPreS_DzMinv3d;
   TH1F* BefPreS_dxyMinv3d;
   TH1F* BefPreS_SegSep;
   TH1F* BefPreS_SegMinPhiSep;
@@ -451,19 +451,19 @@ struct Tuple {
   TH2F* BefPreS_PVsIh;
   TH2F* BefPreS_PtVsIas;
   TH2F* BefPreS_PtVsIh;
-  TH2F* BefPreS_PtTOF;
-  TH2F* BefPreS_TOFIs;
-  TH2F* BefPreS_TOFIh;
+  TH2F* BefPreS_PtVsTOF;
+  TH2F* BefPreS_TOFVsIs;
+  TH2F* BefPreS_TOFVsIh;
   TH1F* BefPreS_GenBeta;
 
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
-  TH1F* PostPreS_pfType;
-  TH2F* PostPreS_pfTypeVsIas;
-  TH1F* PostPreS_massT;
-  TH2F* PostPreS_massTVsIas;
+  TH1F* PostPreS_PfType;
+  TH2F* PostPreS_PfTypeVsIas;
+  TH1F* PostPreS_MassT;
+  TH2F* PostPreS_MassTVsIas;
   TH1F* PostPreS_MiniRelIsoAll;
   TH2F* PostPreS_MiniRelIsoAllVsIas;
   TH1F* PostPreS_MiniRelIsoChg;
@@ -521,7 +521,7 @@ struct Tuple {
   TH1F* PostPreS_NVertex_NoEventWeight;
   TH1F* PostPreS_PV;
   TH1F* PostPreS_PV_NoEventWeight;
-  TH1F* PostPreS_dzAll;
+  TH1F* PostPreS_DzAll;
   TH1F* PostPreS_dxyAll;
   TH1F* PostPreS_Dz;
   TH1F* PostPreS_Dxy;
