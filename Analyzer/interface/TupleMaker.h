@@ -821,7 +821,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_DzAll = dir.make<TH1F>("PostPreS_DzAll", ";dzAll;Tracks / bin", 200, -10, 10);
   tuple->PostPreS_dxyAll = dir.make<TH1F>("PostPreS_dxyAll", ";dxyAll;Tracks / bin", 200, -0.2, 0.2);
   tuple->PostPreS_Dz = dir.make<TH1F>( "PostPreS_Dz", ";d_{z} (cm);Tracks / bin", 200, -0.3, 0.3);
+  tuple->PostPreS_DzVsIas = dir.make<TH2F>( "PostPreS_DzVsIas", ";d_{z} (cm);Prob_{Q,I_{as}} (strips);Tracks / bin", 200, -0.3, 0.3, 20, 0.0, 1.0);
+  tuple->PostPreS_DzVsGenID = dir.make<TH2F>( "PostPreS_DzVsGenID", ";d_{z} (cm);GenID;Tracks / bin", 200, -0.3, 0.3, 4000, 0.0, 4000.0);
   tuple->PostPreS_Dxy = dir.make<TH1F>("PostPreS_Dxy", ";d_{xy} (cm);Tracks / bin", 200, -0.1, 0.1);
+  tuple->PostPreS_DxyVsIas = dir.make<TH2F>("PostPreS_DxyVsIas", ";d_{xy} (cm);Prob_{Q,I_{as}} (strips);Tracks / bin", 200, -0.1, 0.1, 20, 0.0, 1.0);
+  tuple->PostPreS_DxyVsGenID = dir.make<TH2F>("PostPreS_DxyVsGenID", ";d_{xy} (cm);GenID;Tracks / bin", 200, -0.1, 0.1, 4000, 0.0, 4000.0);
   
   tuple->PostPreS_SegSep = dir.make<TH1F>("PostPreS_SegSep", ";SegSep;Tracks / bin", 50, 0, 2.5);
   tuple->PostPreS_SegMinEtaSep = dir.make<TH1F>("PostPreS_SegMinEtaSep", ";SegMinEtaSep;Tracks / bin", 50, -1., 1.);

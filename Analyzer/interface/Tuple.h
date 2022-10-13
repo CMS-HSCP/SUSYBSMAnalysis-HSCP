@@ -524,7 +524,11 @@ struct Tuple {
   TH1F* PostPreS_DzAll;
   TH1F* PostPreS_dxyAll;
   TH1F* PostPreS_Dz;
+  TH2F* PostPreS_DzVsIas;
+  TH2F* PostPreS_DzVsGenID;
   TH1F* PostPreS_Dxy;
+  TH2F* PostPreS_DxyVsIas;
+  TH2F* PostPreS_DxyVsGenID;
   TH1F* PostPreS_SegSep;
   TH1F* PostPreS_SegMinPhiSep;
   TH1F* PostPreS_SegMinEtaSep;

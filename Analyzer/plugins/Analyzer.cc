@@ -163,6 +163,7 @@
 // - 40p3: - Loosen the probQCut, add plot for hasFilled, add some ptErrOverPt2 plots
 // - 40p4: - Bugfix to 40p3
 // - 40p5: - Plot 1-probQ, change naming of Ias in histos
+// - 40p6: - Add Ias,GenID Vs Dz,Dxy postPreS plots
 
 //  
 //v23 Dylan 
@@ -4199,7 +4200,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
     tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), EventWeight_);
     tuple->PostPreS_Dz->Fill(dz, EventWeight_);
+    tuple->PostPreS_DzVsIas->Fill(dz, globalIas_, EventWeight_);
+    tuple->PostPreS_DzVsGenID->Fill(dz, closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_Dxy->Fill(dxy, EventWeight_);
+    tuple->PostPreS_DxyVsIas->Fill(dxy, globalIas_, EventWeight_);
+    tuple->PostPreS_DxyVsGenID->Fill(dxy, closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_PV->Fill(goodVerts, EventWeight_);
     tuple->PostPreS_PV_NoEventWeight->Fill(goodVerts);
     
