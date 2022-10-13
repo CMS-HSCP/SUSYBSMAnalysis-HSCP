@@ -1942,7 +1942,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  // std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (debug_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -2396,13 +2396,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
           if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.02 && globalIas_ < 0.03))) {
             if (!headerPixPrintedAlready) {
-              // std::cout << std::endl << "        | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
-              // std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
-              // std::cout << "        |--- | ---| " << std::endl;
-
+              if (debug_ > 0)
+              {
+                std::cout << std::endl << "        | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
+                std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
+                std::cout << "        |--- | ---| " << std::endl;
+              }
               headerPixPrintedAlready = true;
             }
-            if (debug_>9)
+            if (debug_ > 0)
             {
               std::cout  << "        | " <<  globalIas_ << " | L" << tTopo->pxbLayer(detid) << " | " << genGammaBeta << " | " << isFlippedModule << " | ";
               std::cout << cotAlpha << " | " << cotBeta << " | " << momentum<< " | " << clustSizeX << " | " << clustSizeY << " | ";
@@ -3927,12 +3929,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     // Add PFCadidate based isolation info to the tuple
     // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
     // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
-    // tuple->BefPreS_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
-    tuple->BefPreS_MiniRelIsoAll->Fill(miniRelIsoAll);
+    tuple->BefPreS_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
     tuple->BefPreS_MiniRelIsoChg->Fill(miniRelIsoChg, EventWeight_);
     tuple->BefPreS_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
-    // tuple->BefPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
-    tuple->BefPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt);
+    tuple->BefPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
     tuple->BefPreS_SegSep->Fill(segSep, EventWeight_);
     tuple->BefPreS_SegMinPhiSep->Fill(minPhi, EventWeight_);
     tuple->BefPreS_SegMinEtaSep->Fill(minEta, EventWeight_);
