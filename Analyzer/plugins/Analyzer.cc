@@ -619,8 +619,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
 
-  // tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
-  tuple->BefPreS_TriggerType->Fill(trigInfo_);
+  tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   // If triggering is intended (not the case when we make ntuples)
   if (trigInfo_ > 0) {
       if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;

@@ -131,9 +131,8 @@ struct Tuple {
   std::vector<float> Tree_FOVHD;  //fraction of valid hits divided by total expected hits until the last one
   std::vector<unsigned int>
       Tree_NOM;  //number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
-  std::vector<float> Tree_matchTrigMuon_minDeltaR;  //fraction of valid hits divided by total expected hits until the last one
-  std::vector<float> Tree_matchTrigMuon_pT;  //fraction of valid hits divided by total expected hits until the last one
-
+  std::vector<float> Tree_matchTrigMuon_minDeltaR;  //minDeltaR bewteen triggermuon and HSCP
+  std::vector<float> Tree_matchTrigMuon_pT;  //pt of trigger muon with minDeltaR bewteen triggermuon and HSCP
   std::vector<float> Tree_iso_TK;
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
