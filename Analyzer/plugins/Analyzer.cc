@@ -4507,7 +4507,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
   }
 
-  if ((globalIas_ > 0.6 || Mass > 1000) && debug_ > 7 ) {
+  if ((globalIas_ > 0.6 || Mass > 1000 || debug_ > 7 ) && saveTree_ == 0) {
     if (globalIas_ > 0.6)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.6";}
     if (Mass > 1000 ) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
     LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
