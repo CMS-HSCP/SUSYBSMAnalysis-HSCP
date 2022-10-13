@@ -147,6 +147,9 @@ public:
                         const std::vector<unsigned int> &nomh,
                         const std::vector<float> &fovhd,
                         const std::vector<unsigned int> &nom,
+                        const std::vector<float> &matchTrigMuon_minDeltaR,
+                        const std::vector<float> &matchTrigMuon_pT,
+
                         const std::vector<float> &iso_TK,
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
@@ -1367,6 +1370,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("NOMH", &tuple->Tree_NOMH);
     tuple->Tree->Branch("FOVHD", &tuple->Tree_FOVHD);
     tuple->Tree->Branch("NOM", &tuple->Tree_NOM);
+    tuple->Tree->Branch("matchTrigMuon_minDeltaR", &tuple->Tree_matchTrigMuon_minDeltaR);
+    tuple->Tree->Branch("matchTrigMuon_pT", &tuple->Tree_matchTrigMuon_pT);
     tuple->Tree->Branch("iso_TK", &tuple->Tree_iso_TK);
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
@@ -1587,6 +1592,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<unsigned int> &nomh,
                                   const std::vector<float> &fovhd,
                                   const std::vector<unsigned int> &nom,
+                                  const std::vector<float> &matchTrigMuon_minDeltaR,
+                                  const std::vector<float> &matchTrigMuon_pT,
                                   const std::vector<float> &iso_TK,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
@@ -1746,6 +1753,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_NOMH = nomh;
   tuple->Tree_FOVHD = fovhd;
   tuple->Tree_NOM = nom;
+  tuple->Tree_matchTrigMuon_minDeltaR = matchTrigMuon_minDeltaR;
+  tuple->Tree_matchTrigMuon_pT = matchTrigMuon_pT;
   tuple->Tree_iso_TK = iso_TK;
   tuple->Tree_iso_ECAL = iso_ECAL;
   tuple->Tree_iso_HCAL = iso_HCAL;

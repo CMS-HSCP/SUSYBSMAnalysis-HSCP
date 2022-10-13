@@ -696,7 +696,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Number of events that pass the matching
     tuple->NumEvents->Fill(3., EventWeight_);
   }
-  std::cout<<HLT_Mu50<<","<<matchedMuonWasFound<<std::endl;
   if (!matchedMuonWasFound) {
     if (debug_> 0) edm::LogPrint(MOD) << "Matched muon was not found, but we continue for the ntuple";
   }
@@ -969,6 +968,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_FOVHD;
   // Number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
   std::vector<unsigned int> HSCP_NOM;
+  std::vector<float> HSCP_matchTrigMuon_minDeltaR;
+  std::vector<float> HSCP_matchTrigMuon_pT;
+
   std::vector<float> HSCP_iso_TK;
   std::vector<float> HSCP_iso_ECAL;
   std::vector<float> HSCP_iso_HCAL;
@@ -1211,6 +1213,23 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->HSCPCandidateType->Fill(5., EventWeight_);
       }
     }
+
+
+    // Match candidate track to HLT muon
+    float dr_min_hlt_muon = 9999.0;
+    float hlt_match_pt = -9999.0;
+    float temp_dr = 9999.;
+    for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+      temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
+      // if (trigObjP4s[objNr].Pt() < 50) continue;
+      if (temp_dr < dr_min_hlt_muon)
+      {
+        dr_min_hlt_muon = temp_dr;
+        hlt_match_pt = trigObjP4s[objNr].Pt();
+      }
+    }
+
+
 
 //    if (debug_> 0) LogPrint(MOD) << "  >> Loop on the vertices in the event";
     // TODO this is repeated in the pre-selection
@@ -2716,6 +2735,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_NOMH.push_back(nomh);
     HSCP_FOVHD.push_back(fovhd);
     HSCP_NOM.push_back(nom);
+    HSCP_matchTrigMuon_minDeltaR.push_back(dr_min_hlt_muon);
+    HSCP_matchTrigMuon_pT.push_back(hlt_match_pt);
+
     HSCP_iso_TK.push_back(iso_TK);
     HSCP_iso_ECAL.push_back(iso_ECAL);
     HSCP_iso_HCAL.push_back(iso_HCAL);
@@ -2768,7 +2790,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // Trigger type after preSelection at the event level
   tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
-  cout<<matchedMuonWasFound<<endl;
   tuple_maker->fillTreeBranches(tuple,
                                 trigInfo_,
                                 iEvent.id().run(),
@@ -2809,7 +2830,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLTPFMHT,
 				HLTPFMHT_phi,
 				HLTPFMHT_sigf,
-                                true,
+                                matchedMuonWasFound,
                                 maxPtMuon1,
                                 etaMuon1,
                                 phiMuon1,
@@ -2881,6 +2902,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_NOMH,
                                 HSCP_FOVHD,
                                 HSCP_NOM,
+                                HSCP_matchTrigMuon_minDeltaR,
+                                HSCP_matchTrigMuon_pT,
                                 HSCP_iso_TK,
                                 HSCP_iso_ECAL,
                                 HSCP_iso_HCAL,
