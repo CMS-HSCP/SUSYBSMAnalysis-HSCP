@@ -1,3 +1,6 @@
+// Usage:
+// root -l -q -b step2_backgroundPrediction.C
+
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
@@ -38,7 +41,7 @@ void step2_backgroundPrediction(){
     // histograms used for the mass prediction
     //------------
 
-    //std::string dir = "analyzer/BaseName/";
+
     std::string dir = "HSCParticleAnalyzer/BaseName/";
     TH2F* eta_cutIndex_regA = (TH2F*)ifile->Get((dir+"Pred_EtaB").c_str())->Clone(); 
     TH2F* eta_cutIndex_regB = (TH2F*)ifile->Get((dir+"Pred_EtaS").c_str())->Clone(); 
@@ -183,6 +186,7 @@ void step2_backgroundPrediction(){
     //bckgEstimate(st_sample, rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", nPE);
     bckgEstimate(st_sample, rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", nPE);
     bckgEstimate(st_sample, rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", nPE);
+
     
     // ------------------------------------------------------------------------------------------------------
    

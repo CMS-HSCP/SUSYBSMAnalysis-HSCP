@@ -16,14 +16,12 @@ datasetList = [
 "/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-500_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-1599_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+
 ]
 
 codeVersion = sys.argv[1]
 #just the number, like 18p2
-
-didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -valid 192:00 otherwise say no and do it\n")
-if(didVoms):
- sys.exit()
 
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 

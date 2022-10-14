@@ -3,14 +3,13 @@ from CRABClient.UserUtilities import config
 config = config()
 
 config.section_('General')
-config.General.requestName = 'Analysis_2018_ROVIDMINTA_woProbQ_CodeVVERZIO_v1'
+config.General.requestName = 'Analysis_2018_ROVIDMINTA_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
-config.General.instance = 'preprod'
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_SignalMC_woProbQ_cfg.py'
+config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 3500

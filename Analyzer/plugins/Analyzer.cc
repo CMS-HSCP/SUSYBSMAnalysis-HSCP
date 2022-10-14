@@ -81,7 +81,7 @@
 // - 22p6: - Include reverse cutflow
 // - 22p7: - Include reverse cutflow, Variable vs globalIas_ plots ( I should do variable vs probQ too)
 // - 22p8: - (probXYonTrack > 0.1) and a later point in the cutflow
-// - 22p9: - (probXYonTrackNoLayer1 > 0.1) 
+// - 22p9: - (probXYonTrackNoLayer1 > 0.1)
 // - 23p0: - (probXYonTrackNoLayer1 > 0.01)
 // - 23p4: - Add cluster-based probXY, probQ, size per layer plots
 // - 23p5: - Fix the order of probs
@@ -110,7 +110,7 @@
 // - 26p0: - Cleaner cutflow
 // - 26p1: - Restrict track level pixel probs by their cluster level info (specInCPE)
 // - 26p2: - ProbQ with <.8 probs, cut on MassErr
-// - 26p3: - ProbQ with <.8 probs and no SpansTwoRocs, some printouts for Morris, dRMinJet jet def change 
+// - 26p3: - ProbQ with <.8 probs and no SpansTwoRocs, some printouts for Morris, dRMinJet jet def change
 // - 26p5: - Remove MassErr cut
 // - 26p6: - Remove calo jet requirements for EM fraction, cut on dRMinCaloJet
 // - 26p7: - Fix out of bound probXY, remove some unused 3D histos, temp remove the cut on dRMinCaloJet, put back probXYonTrackNoLayer1 cut
@@ -125,8 +125,43 @@
 // - 27p6: - probs with  && probQ < 0.8
 // - 27p7: - Change histo boundary for strips
 // - 27p8: - Rewrite computedEdx(), add PostPreS_closestPfJet*Fraction plots, change PF def back to >20 GeV jets, strips lowBetaGamma plots with layers
-//  
-//v23 Dylan 
+// - 27p9: - Change charges to e/um, intro genGammaBetaVsProbXYNoL1, for bad CPE default probXY to probXY = 0.009 add dRMinPfMet plot
+// - 28p0: - PfMetPhi and PfMet plots, dPhi PfMet plots, protection for gen history with vertex, for bad CPE default probXY to probXY = 0, and dont use it
+//         - BefPreS_CluNormChargeVsStripLayer_higherBetaGamma plot,
+// - 28p1: - NormClu vs layer plots for diff status particles, modify the phi distribution
+// - 28p2: - Skip the track if mom ID = cand ID and has 91 status
+// - 28p3: - Skip the track if it has 91 status in the env
+// - 28p4: - Dont skip, but increase binning for charge vs layer
+// - 28p5: - Dont skip, add charge vs layer after preS for 91 statuses
+// - 28p6: - Clean the logs, skip if it has 91 status in the env
+// - 28p7: - add PostPreS_P, dont cut on mini-iso and see status 91
+// - 28p8: - add back mini-iso, fix the trigInfo_ (not a global variable anymore)
+// - 28p9: - add lowPt pt plots, fix some boundaries, fix trigInfo_ logic on return
+// - 29p0: - Frozen preselection as agreed on Sept 8
+// - 29p1: - PtErrOverPt a la Dylan, plus N1 plots to study it
+// - 29p2: - TNOPH plots show the nonL1Pix hits, cut on ptErr/pt2 before PtErrOverPt a la Dylan
+// - 29p3: - Dont cut on ptErrOverPt, add genTrack based iso plots, plots w PU bins
+// - 29p4: - As 29p3 but bug fixed
+// - 29p5: - Add HLT matching
+// - 29p6: - Add cut on PFMiniIso
+// - 29p7: - Address the question about trigger effs (temp commit)
+// - 29p8: - Revert 29p7 changes, add cut on genTrack based variable cone size abs isolation
+// - 29p9: - Event level matching of muon to HLT muon, add RecoHSCParticleType plots
+// - 30p0: - Cut on rel PF mini iso then on TK mini iso
+// - 30p1: - Cut on E/p
+// - 30p2: - Add back ptErr/pt a la Dylan
+// - 30p3: - Add a very loose cut on tProbQ (0.7)
+// - 30p4: - Fix logic for trigger matching, change filter to final filter, go back to no isolation cuts
+// - 30p5: - Cut on rel PF mini iso
+// - 30p6: - Dont cut on PF, go back to 30p4 but no cut on the distance of the HLT and muons
+// - 30p7: - Fix to not have nonGlobal but standalone muons as a match, cut on dR < 0.15
+// - 30p8: - Add mini-Iso
+// - 30p9: - Add TkIso, add E/p cut
+// - 40p0: - Add probQ cut
+// - 40p1: - Add ptErr/pT2 cut
+
+//
+//v23 Dylan
 // - v23 fix clust infos
 // - add Ih and globalIas_ Pixel only no BPIXL1
 // - new step2 bkg estimate
@@ -145,6 +180,7 @@
 Analyzer::Analyzer(const edm::ParameterSet& iConfig)
     // Read config file
     : hscpToken_(consumes<vector<susybsm::HSCParticle>>(iConfig.getParameter<edm::InputTag>("HscpCollection"))),
+      genTrackToken_(consumes<reco::TrackCollection>(edm::InputTag("generalTracks"))),
       hscpIsoToken_(
           consumes<edm::ValueMap<susybsm::HSCPIsolation>>(iConfig.getParameter<edm::InputTag>("HscpIsoCollection"))),
       muonSegmentToken_(
@@ -165,10 +201,14 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       offlineBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("OfflineBeamSpotCollection"))),
       muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("MuonCollection"))),
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
+      trigEventToken_(consumes<trigger::TriggerEvent>(edm::InputTag("hltTriggerSummaryAOD","","HLT"))),
+      filterName_(iConfig.getParameter<std::string>("FilterName")),
+      matchToHLTTrigger_(iConfig.getUntrackedParameter<bool>("MatchToHLTTrigger")),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
       caloJetToken_(consumes<std::vector<reco::CaloJet>>(iConfig.getParameter<edm::InputTag>("CaloJet"))),
+      triggerSummaryToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
       pileupInfoToken_(consumes<std::vector<PileupSummaryInfo>>(iConfig.getParameter<edm::InputTag>("PileupInfo"))),
       genParticleToken_(
           consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("GenParticleCollection"))),
@@ -239,7 +279,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
-      doTriggering_(iConfig.getUntrackedParameter<bool>("DoTriggering")),
       calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics"))
  {
   //now do what ever initialization is needed
@@ -270,6 +309,8 @@ Analyzer::~Analyzer() {
 
 // ------------ method called once each job just before starting event loop  ------------
 void Analyzer::beginJob() {
+  static constexpr const char* const MOD = "Analyzer";
+
   // Book histograms using TFileService
   edm::Service<TFileService> fs;
   TFileDirectory dir = fs->mkdir(sampleName_.c_str(), sampleName_.c_str());
@@ -277,7 +318,7 @@ void Analyzer::beginJob() {
   // create histograms & trees
   tuple = new Tuple();
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
-  
+
   tuple_maker->initializeTuple(tuple,
                                dir,
                                saveTree_,
@@ -315,7 +356,7 @@ void Analyzer::beginJob() {
   }
 
   loadSFPixel();
-  
+
   // Set in Analyzer/interface/MCWeight.h
   // 58970.47 for 2018
   // 41809.45 for 2017
@@ -332,8 +373,6 @@ void Analyzer::beginJob() {
   tof = nullptr;
   dttof = nullptr;
   csctof = nullptr;
-
-  TrigInfo_ = 0;
 
   CurrentRun_ = 0;
   RNG = new TRandom3();
@@ -360,26 +399,33 @@ void Analyzer::beginJob() {
   MaxMass_SystPU = new float[CutPt_.size()];
   MaxMass_SystHUp = new float[CutPt_.size()];
   MaxMass_SystHDown = new float[CutPt_.size()];
+
+    // Check if we are dealing with data or MC
+  if (sampleType_ == 0 ) {
+    if (debug_> 0) edm::LogPrint(MOD) << "This is data processing";
+  } else if (sampleType_ == 1) {
+    if (debug_> 0) edm::LogPrint(MOD) << "This is background MC processing";
+  } else if (sampleType_ == 2) {
+    if (debug_> 0) edm::LogPrint(MOD) << "This is signal MC processing";
+  } else {
+    if (debug_> 0) edm::LogPrint(MOD) << "This is syst studies";
+  }
 }
 
 // ------------ method called for each event  ------------
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   static constexpr const char* const MOD = "Analyzer";
+  static constexpr const float cm2umUnit = 0.0001;
   using namespace edm;
+  using namespace trigger;
 
   //if run change, update conditions
   if (CurrentRun_ != iEvent.id().run()) {
     CurrentRun_ = iEvent.id().run();
     tofCalculator.setRun(CurrentRun_);
-
-    /* FIXME is it still relevant to use this function ?
-    loadDeDxParameters(CurrentRun_, sampleType_, dEdxSF_0_, dEdxSF_1_, dEdxK_, dEdxC_);
-    */
     dEdxSF[0] = dEdxSF_0_;
     dEdxSF[1] = dEdxSF_1_;
-    //LogInfo("Analyzer") <<"------> dEdx parameters SF for Run "<<CurrentRun_<< ": "<< dEdxSF[1];
   }
-    
 
   // Compute event weight
   if (!isData) {
@@ -388,21 +434,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   } else {
     EventWeight_ = 1.;
   }
-  
+
   if (debug_ > 1 ) LogPrint(MOD) << "\nThis is a new event. Weight factor applied: " << EventWeight_;
-  
-  // Check if we are dealing with data or MC
-  if (sampleType_ == 0 ) {
-    if (debug_> 0) LogPrint(MOD) << "This is data processing";
-  } else if (sampleType_ == 1) {
-    if (debug_> 0) LogPrint(MOD) << "This is background MC processing";
-  } else if (sampleType_ == 2) {
-    if (debug_> 0) LogPrint(MOD) << "This is signal MC processing";
-  } else {
-    if (debug_> 0) LogPrint(MOD) << "This is syst studies";
-  }
-  
-  
+
   float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
 
   //get generator weight and pthat
@@ -412,7 +446,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           GeneratorWeight_ = genEvt->weight();
         if(genEvt->binningValues().size()>0) {
           GeneratorBinningValues_ = genEvt->binningValues()[0];
-          tuple->GenLevelBinning->Fill(GeneratorBinningValues_);
+          tuple->Gen_Binning->Fill(GeneratorBinningValues_);
         }
       }
   }
@@ -428,29 +462,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       genColl = *genCollH;
     }
   }
-  
+
   float SignalEventWeight = 1.0;
   if (isSignal) {
     int NChargedHSCP = HowManyChargedHSCP(genColl);
     float HSCPDLength1 = -1, HSCPDLength2 = -1;
-    
+
     SignalEventWeight = mcWeight->getFGluinoWeight(NChargedHSCP, typeMode_);
 
     GetGenHSCPDecayLength(genColl, HSCPDLength1, HSCPDLength2, true);
+
     tuple->Gen_DecayLength->Fill(HSCPDLength1, SignalEventWeight);
     tuple->Gen_DecayLength->Fill(HSCPDLength2, SignalEventWeight);
 
-    GetGenHSCPBeta(genColl, HSCPGenBeta1, HSCPGenBeta2, false);
-    if (HSCPGenBeta1 >= 0)
-      tuple->Beta_Gen->Fill(HSCPGenBeta1, SignalEventWeight);
-    if (HSCPGenBeta2 >= 0)
-      tuple->Beta_Gen->Fill(HSCPGenBeta2, SignalEventWeight);
-
+    // Get gen level beta for charged R-hadrons only
     GetGenHSCPBeta(genColl, HSCPGenBeta1, HSCPGenBeta2, true);
     if (HSCPGenBeta1 >= 0)
-      tuple->Beta_GenCharged->Fill(HSCPGenBeta1, SignalEventWeight);
+      tuple->Gen_Beta_Charged->Fill(HSCPGenBeta1, SignalEventWeight);
     if (HSCPGenBeta2 >= 0)
-      tuple->Beta_GenCharged->Fill(HSCPGenBeta2, SignalEventWeight);
+      tuple->Gen_Beta_Charged->Fill(HSCPGenBeta2, SignalEventWeight);
 
     // R-hadron weights needed due to wrong GenId
     // Wa is additional weight for single other, Wad for other+double_charged,
@@ -462,6 +492,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // R-hadron wights needed due to wrong GenId
     // TODO: this prob is not true anymore in UL samples
   }  //End of isSignal
+  else if (isBckg) {
+    float notHSCPDLength1 = -1, notHSCPDLength2 = -1;
+
+    // This returns a lot of zeros, I think we should not stop with the fist 2 on the list, maybe the first 2 non-zero?
+    GetGenBcgDecayLength(genColl, notHSCPDLength1, notHSCPDLength2, true);
+    tuple->Gen_DecayLength->Fill(notHSCPDLength1, EventWeight_);
+    tuple->Gen_DecayLength->Fill(notHSCPDLength2, EventWeight_);
+  }
 
 
   //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
@@ -490,13 +528,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         } else if ((GenId) > 1000000) {
           na += 1;
         }  // count other R-hadrons
-      
+
         // Fill up pT, eta, and beta plots for gen-level HSCP particles
-        tuple->GenLevelpT->Fill(gen.pt(), SignalEventWeight);
-        tuple->GenLevelEta->Fill(gen.eta(), SignalEventWeight);
-        tuple->GenLevelBeta->Fill(gen.p() / gen.energy(), SignalEventWeight);
-        tuple->GenLevelBetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
-      
+        tuple->Gen_pT->Fill(gen.pt(), SignalEventWeight);
+        tuple->Gen_Eta->Fill(gen.eta(), SignalEventWeight);
+        tuple->Gen_Beta->Fill(gen.p() / gen.energy(), SignalEventWeight);
+        tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
+
         // Variables for the tuple gen tree branch
         genid.push_back(gen.pdgId());
         gencharge.push_back(gen.charge());
@@ -506,11 +544,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         genphi.push_back(gen.phi());
       } else if (isBckg) {
         // Fill up pT, eta, and beta plots for gen-level background particles
-        tuple->GenLevelpT->Fill(gen.pt(), EventWeight_);
-        tuple->GenLevelEta->Fill(gen.eta(), EventWeight_);
-        tuple->GenLevelBeta->Fill(gen.p() / gen.energy(), EventWeight_);
-        tuple->GenLevelBetaGamma->Fill(gen.p() / gen.mass(), EventWeight_);
-        // TODO: I'm not sure if this needs to be weighted
+        tuple->Gen_pT->Fill(gen.pt(), EventWeight_);
+        tuple->Gen_Eta->Fill(gen.eta(), EventWeight_);
+        tuple->Gen_Beta->Fill(gen.p() / gen.energy(), EventWeight_);
+        tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass(), EventWeight_);
 
         // Variables for the tuple gen tree branch
         genid.push_back(gen.pdgId());
@@ -544,6 +581,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   const edm::Handle<edm::TriggerResults> triggerH = iEvent.getHandle(triggerResultsToken_);
   const auto triggerNames = iEvent.triggerNames(*triggerH);
 
+  //0: neither mu nor met, 1: mu only, 2: met only, 3: mu and met
+  unsigned int trigInfo_ = 0;
+
   // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
   bool HLT_Mu50 = false;
   bool HLT_PFMET120_PFMHT120_IDTight = false;
@@ -552,58 +592,130 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool HLT_MET105_IsoTrk50 = false;
 
   for (unsigned int i = 0; i < triggerH->size(); i++) {
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_Mu50") && triggerH->accept(i))
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_Mu50_v") && triggerH->accept(i))
       HLT_Mu50 = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_PFMET120_PFMHT120_IDTight") && triggerH->accept(i))
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_PFMET120_PFMHT120_IDTight_v") && triggerH->accept(i))
       HLT_PFMET120_PFMHT120_IDTight = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_PFHT500_PFMET100_PFMHT100_IDTight") && triggerH->accept(i))
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_PFHT500_PFMET100_PFMHT100_IDTight_v") && triggerH->accept(i))
       HLT_PFHT500_PFMET100_PFMHT100_IDTight = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60") &&
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v") &&
         triggerH->accept(i))
       HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50") && triggerH->accept(i))
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50_v") && triggerH->accept(i))
       HLT_MET105_IsoTrk50 = true;
   }
   // Number of (re-weighted) events
-  tuple->NumEvents->Fill(0.5, EventWeight_);
+  tuple->NumEvents->Fill(0., EventWeight_);
+  tuple->CutFlow->Fill(0., EventWeight_);
   // Number of (re-weighted with PU syst fact) events
-  tuple->NumEvents->Fill(1.5, EventWeight_ * PUSystFactor_[0]);
+  tuple->NumEvents->Fill(1., EventWeight_ * PUSystFactor_[0]);
 
   // Check if the event is passing trigger
   if (debug_ > 1) LogPrint(MOD) << "Checking if the event is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
 
-  if (!metTrig && muTrig) {
-    // mu only
-    TrigInfo_ = 1;
-  } else if (metTrig && !muTrig) {
-    // met only
-    TrigInfo_ = 2;  // met only
+  if (muTrig) {
+    // mu trigger passed
+    trigInfo_ = 1;
+  } else if (metTrig) {
+    // met trigger passed
+    trigInfo_ = 2;
+  } else if (metTrig || muTrig) {
+    // mu or met
+    trigInfo_ = 3;
   } else if (metTrig && muTrig) {
     // mu and met
-    TrigInfo_ = 3;
+    trigInfo_ = 4;
   }
 
-  // If triggering is intended (might not be for some studies and one of the triggers is passing let's analyze the event
-  if (doTriggering_ && TrigInfo_ > 0) {
-      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! TrigInfo_ = " << TrigInfo_;
-      tuple->BefPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
-  } else if (doTriggering_ && TrigInfo_ == 0)  {
-      if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
-      return;
-     //For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+
+  tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+  // If triggering is intended (not the case when we make ntuples)
+  if (trigInfo_ > 0) {
+      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
   }
+  else {
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
+    if (saveTree_ == 0)  return;
+  }
+    // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
 
   // Number of events that pass the trigger
-  tuple->NumEvents->Fill(2.5, EventWeight_);
+  tuple->NumEvents->Fill(2., EventWeight_);
+
+  // Get handle for trigEvent
+  edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
+
+  //===================== Collection For Muons ===================
+  // Get muon collections
+  vector<reco::Muon> muonColl = iEvent.get(muonToken_);
+  unsigned int Muons_count = 0;
+  float maxPtMuon1 = 0, maxPtMuon2 = 0;
+  float etaMuon1 = 0, phiMuon1 = 0;
+  float etaMuon2 = 0, phiMuon2 = 0;
+  unsigned int muon1 = 0;
+  for (unsigned int i = 0; i < muonColl.size(); i++) {
+    const reco::Muon* mu = &(muonColl)[i];
+    Muons_count++;
+    if (mu->pt() > maxPtMuon1) {
+      maxPtMuon1 = mu->pt();
+      etaMuon1 = mu->eta();
+      phiMuon1 = mu->phi();
+      muon1 = i;
+    }
+  }
+  for (unsigned int i = 0; i < muonColl.size(); i++) {
+    if (i == muon1) continue;
+    const reco::Muon* mu = &(muonColl)[i];
+    if (mu->pt() > maxPtMuon2) {
+      maxPtMuon2 = mu->pt();
+      etaMuon2 = mu->eta();
+      phiMuon2 = mu->phi();
+    }
+  }
+
+  // Match candidate track to HLT muon
+  std::vector<TLorentzVector> trigObjP4s;
+  trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
+
+  bool matchedMuonWasFound = false;
+
+  float dr_min_hlt_muon = 9999.0;
+  for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+    if (trigObjP4s[objNr].Pt() < 50) continue;
+    for (unsigned int i = 0; i < muonColl.size(); i++) {
+      const reco::Muon* mu = &(muonColl)[i];
+      if (mu->isStandAloneMuon() && !mu->isGlobalMuon())  continue;
+
+      float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+      if (dr_hltmu_muon < dr_min_hlt_muon){
+        dr_min_hlt_muon = dr_hltmu_muon;
+      }
+    }
+  }
+
+  tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon, EventWeight_);
+
+  if (matchToHLTTrigger_ && dr_min_hlt_muon > 0.15) {
+    // Exit if no match was found
+    if (saveTree_ == 0) return;
+  } else {
+    // TODO_Ntuple add this variable to the ntuple
+    matchedMuonWasFound = true;
+    // Number of events that pass the matching
+    tuple->NumEvents->Fill(3., EventWeight_);
+  }
+  if (!matchedMuonWasFound) {
+    if (debug_> 0) edm::LogPrint(MOD) << "Matched muon was not found, but we continue for the ntuple";
+  }
 
   //keep beta distribution for signal after the trigger
   if (isSignal) {
     if (HSCPGenBeta1 >= 0)
-      tuple->Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
+      tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
     if (HSCPGenBeta2 >= 0)
-      tuple->Beta_Triggered->Fill(HSCPGenBeta2, EventWeight_);
+      tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta2, EventWeight_);
   }
 
   // Define handles for DeDx Hits, Muon TOF Combined, Muon TOF DT, Muon TOF CSC
@@ -636,40 +748,93 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     LumiScalersCollection::const_iterator scalit = lumiScalers->begin();
     pileup_fromLumi = scalit->pileup();
   }
-  
+
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
 
-  float CaloMET = -1, RecoPFMET_et = -1, RecoPFMHT = -1, HLTPFMET = -1, HLTPFMHT = -1;
-  float RecoPFMET_eta = -1, RecoPFMET_phi = -1, RecoPFMET_significance = -1;
+  float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_sigf = -10;
+  float RecoPFMET = -10, RecoPFMET_phi = -10, RecoPFMET_sigf = -10, RecoPFMHT = -10;
+  float HLTCaloMET = -10, HLTCaloMET_phi = -10, HLTCaloMET_sigf = -10;
+  float HLTCaloMETClean = -10, HLTCaloMETClean_phi = -10, HLTCaloMETClean_sigf = -10;
+  float HLTCaloMHT = -10, HLTCaloMHT_phi = -10, HLTCaloMHT_sigf = -10;
+  float HLTPFMET = -10, HLTPFMET_phi = -10, HLTPFMET_sigf = -10;
+  float HLTPFMHT = -10, HLTPFMHT_phi = -10, HLTPFMHT_sigf = -10;
 
-  //===================== Handle For PFMET ===================
-  const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
-  if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
-    for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
-      const reco::PFMET* pfMet = &(*pfMETHandle)[i];
-      RecoPFMET_et = pfMet->et();
-      RecoPFMET_eta = pfMet->eta();
-      RecoPFMET_phi = pfMet->phi();
-      RecoPFMET_significance = pfMet->significance();
+  //===================== Handle For RecoCaloMET ===================
+  const edm::Handle<std::vector<reco::CaloMET>> recoCaloMETHandle = iEvent.getHandle(caloMETToken_);
+  if (recoCaloMETHandle.isValid() && !recoCaloMETHandle->empty()) {
+    for (unsigned int i = 0; i < recoCaloMETHandle->size(); i++) {
+      const reco::CaloMET* recoCaloMet = &(*recoCaloMETHandle)[i];
+      RecoCaloMET = recoCaloMet->et();
+      RecoCaloMET_phi = recoCaloMet->phi();
+      RecoCaloMET_sigf = recoCaloMet->significance();
     }
   }
 
-  tuple->BefPreS_RecoPFMET->Fill(RecoPFMET_et);
 
-  //===================== Handle For CaloMET ===================
-  const edm::Handle<std::vector<reco::CaloMET>> CaloMETHandle = iEvent.getHandle(caloMETToken_);
-  if (CaloMETHandle.isValid() && !CaloMETHandle->empty()) {
-    for (unsigned int i = 0; i < CaloMETHandle->size(); i++) {
-      const reco::CaloMET* calomet = &(*CaloMETHandle)[i];
-      CaloMET = calomet->et();
+  //===================== Handle For RecoPFMET ===================
+  const edm::Handle<std::vector<reco::PFMET>> recoPFMETHandle = iEvent.getHandle(pfMETToken_);
+  if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
+    for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
+      const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
+      RecoPFMET = recoPFMet->et();
+      RecoPFMET_phi = recoPFMet->phi();
+      RecoPFMET_sigf = recoPFMet->significance();
     }
   }
+
+  tuple->BefPreS_RecoPFMET->Fill(RecoPFMET);
+
+
+  //===================== Handle For HLT Trigger Summary ===================
+
+  const edm::Handle<trigger::TriggerEvent> hltTriggerSummaryHandle = iEvent.getHandle(triggerSummaryToken_);
+  if (hltTriggerSummaryHandle.isValid()) {
+
+    int caloMETKey = 0, caloMETCleanKey = 0, caloMHTKey = 0, pfMHTKey = 0, pfMETKey = 0;
+    // loop over trigger object collections to find HLT CaloMET, CaloMETClean, CaloMHT, PFMHT, PFMET collections
+    for (int iC = 0; iC < hltTriggerSummaryHandle->sizeCollections(); iC++) {
+      if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMet::HLT") {
+	// collectionKey(iC) gives trigger object key ONE PAST the object collection of interest
+        caloMETKey = hltTriggerSummaryHandle->collectionKey(iC);
+	// HLT MET object collections ALWAYS have four objects {MET, TET, MET significance, ELongitudinal}, hence -4 for MET value
+	HLTCaloMET = hltTriggerSummaryHandle->getObjects()[caloMETKey-4].pt();
+	HLTCaloMET_phi = hltTriggerSummaryHandle->getObjects()[caloMETKey-4].phi();
+	// and -2 for MET significance
+	// significance  saved as .pt() but obviously pt holds no meaning here
+	HLTCaloMET_sigf = hltTriggerSummaryHandle->getObjects()[caloMETKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMetClean::HLT") {
+	caloMETCleanKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTCaloMETClean = hltTriggerSummaryHandle->getObjects()[caloMETCleanKey-4].pt();
+	HLTCaloMETClean_phi = hltTriggerSummaryHandle->getObjects()[caloMETCleanKey-4].phi();
+	HLTCaloMETClean_sigf = hltTriggerSummaryHandle->getObjects()[caloMETCleanKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltMht::HLT") {
+	caloMHTKey = hltTriggerSummaryHandle->collectionKey(iC);
+	// HLT MHT object collections ALWAYS have four objects {MHT, THT, MHT significance, HLongitudinal}, hence -4 for MHT value
+	HLTCaloMHT = hltTriggerSummaryHandle->getObjects()[caloMHTKey-4].pt();
+	HLTCaloMHT_phi = hltTriggerSummaryHandle->getObjects()[caloMHTKey-4].phi();
+	// and -2 for MHT significance
+	// significance  saved as .pt() but obviously pt holds no meaning here
+	HLTCaloMHT_sigf = hltTriggerSummaryHandle->getObjects()[caloMHTKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltPFMHTTightID::HLT") {
+	pfMHTKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTPFMHT = hltTriggerSummaryHandle->getObjects()[pfMHTKey-4].pt();
+	HLTPFMHT_phi = hltTriggerSummaryHandle->getObjects()[pfMHTKey-4].phi();
+	HLTPFMHT_sigf = hltTriggerSummaryHandle->getObjects()[pfMHTKey-2].pt();
+      } if(hltTriggerSummaryHandle->collectionTag(iC).encode()=="hltPFMETProducer::HLT") {
+	pfMETKey = hltTriggerSummaryHandle->collectionKey(iC);
+	HLTPFMET = hltTriggerSummaryHandle->getObjects()[pfMETKey-4].pt();
+	HLTPFMET_phi = hltTriggerSummaryHandle->getObjects()[pfMETKey-4].phi();
+	HLTPFMET_sigf = hltTriggerSummaryHandle->getObjects()[pfMETKey-2].pt();
+      }
+    }
+  }
+
 
   //===================== Handle For PFJet ===================
   float pfJetHT = 0;
   unsigned int Jets_count = 0;
-  
+
   std::vector<float> Jets_pt;
   std::vector<float> Jets_eta;
   std::vector<float> Jets_phi;
@@ -679,7 +844,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> Jets_et;
   std::vector<float> Jets_chargedEmEnergyFraction;
   std::vector<float> Jets_neutralEmEnergyFraction;
-  
+
   // Loop on pfJetColl for the ntuple
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
@@ -707,53 +872,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     RecoPFMHT = pMHT.Pt();
   }
-  
+
   tuple->BefPreS_RecoPFHT->Fill(pfJetHT);
-  
+
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
 
-  //===================== Collection For Muons ===================
-  // Get muon collections
-  vector<reco::Muon> muonColl = iEvent.get(muonToken_);
-  unsigned int Muons_count = 0; 
-  float maxPtMuon1 = 0, maxPtMuon2 = 0;
-  float etaMuon1 = 0, phiMuon1 = 0;
-  float etaMuon2 = 0, phiMuon2 = 0;
-  unsigned int muon1 = 0;
-  for (unsigned int i = 0; i < muonColl.size(); i++) {
-    const reco::Muon* mu = &(muonColl)[i];
-    Muons_count++;
-    if (mu->pt() > maxPtMuon1) {
-      maxPtMuon1 = mu->pt();
-      etaMuon1 = mu->eta();
-      phiMuon1 = mu->phi();
-      muon1 = i;
-    }
-  }
-  for (unsigned int i = 0; i < muonColl.size(); i++) {
-    if (i == muon1) continue;
-    const reco::Muon* mu = &(muonColl)[i];
-    if (mu->pt() > maxPtMuon2) {
-      maxPtMuon2 = mu->pt();
-      etaMuon2 = mu->eta();
-      phiMuon2 = mu->phi();
-    }
-  }
-  
+
   // Retrieve tracker topology from the event setup
   edm::ESHandle<TrackerTopology> TopoHandle;
   iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
   const TrackerTopology* tTopo = TopoHandle.product();
-  
+
   // Retrieve tracker geometry from the event setup
   edm::ESHandle<TrackerGeometry> tkGeometry;
   iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
-  
+
   // Retrieve CPE from the event setup
   edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
   iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
-  
+
   //reinitialize the bookeeping array for each event
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
     HSCPTk[CutIndex] = false;
@@ -773,7 +911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     MaxMass_SystHUp[CutIndex] = -1;
     MaxMass_SystHDown[CutIndex] = -1;
   }
-  
+
   //load all event collection that will be used later on (HSCP, dEdx and TOF)
   unsigned int HSCP_count = 0;
 
@@ -805,10 +943,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<bool>  HSCP_isHighPurity;
   std::vector<float> HSCP_EoverP;
   std::vector<bool>  HSCP_isMuon;
-  std::vector<int>   HSCP_MuonSelector;
+  std::vector<bool>  HSCP_isPhoton;
   std::vector<bool>  HSCP_isElectron;
   std::vector<bool>  HSCP_isChHadron;
   std::vector<bool>  HSCP_isNeutHadron;
+  std::vector<bool>  HSCP_isPfTrack;
+  std::vector<bool>  HSCP_isUndefined;
   std::vector<float> HSCP_ECAL_energy;
   std::vector<float> HSCP_HCAL_energy;
   std::vector<float> HSCP_TOF;
@@ -825,6 +965,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_dZ;
   std::vector<float> HSCP_dXY;
   std::vector<float> HSCP_dR;
+  std::vector<float> HSCP_p;
   std::vector<float> HSCP_eta;
   std::vector<float> HSCP_phi;
   // Number of (valid) track pixel+strip hits
@@ -839,9 +980,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_FOVHD;
   // Number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
   std::vector<unsigned int> HSCP_NOM;
+  std::vector<float> HSCP_matchTrigMuon_minDeltaR;
+  std::vector<float> HSCP_matchTrigMuon_pT;
+
   std::vector<float> HSCP_iso_TK;
   std::vector<float> HSCP_iso_ECAL;
   std::vector<float> HSCP_iso_HCAL;
+  std::vector<float> HSCP_track_genTrackMiniIsoSumPt;
   std::vector<float> HSCP_PFMiniIso_relative;
   std::vector<float> HSCP_PFMiniIso_wMuon_relative;
   std::vector<float> HSCP_track_PFIsolationR005_sumChargedHadronPt;
@@ -885,52 +1030,68 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_GenEta;
   std::vector<float> HSCP_GenPhi;
 
+
   //====================loop over HSCP candidates===================
   if (debug_ > 0 ) LogPrint(MOD) << "Loop over HSCP candidates:";
-  unsigned int genTrack_count = 0;
+  unsigned int candidate_count = 0;
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     if (debug_> 0) LogPrint(MOD) << "  --------------------------------------------";
-    genTrack_count++;
+    candidate_count++;
     // First bin of the error histo is all tracks
-    tuple->ErrorHisto->Fill(0.5);
-    if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << genTrack_count;
-    
+    tuple->ErrorHisto->Fill(0.);
+
+    if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(0.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(1.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::matchedStandAloneMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(2.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::standAloneMuon) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(3.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::innerTrack) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(4.);
+    } else if ( hscp.type() == susybsm::HSCParticleType::unknown) {
+      tuple->BefPreS_RecoHSCParticleType->Fill(5.);
+    }
+
+    if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << candidate_count;
+
     // Tracker only analysis must have either a tracker muon or a global muon
     if (typeMode_ == 1 &&
         !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.);
       continue;
     }
-    
-    // Tracker + Muon analysis  must have either a global muon
+
+    // Tracker + Muon analysis  must have a global muon
     if ((typeMode_ == 2 || typeMode_ == 4) && hscp.type() != susybsm::HSCParticleType::globalMuon) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker + Muon analysis w/o a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.);
       continue;
     }
-    
+
     // Define muon reference
     // For TOF only analysis we must have a muon connected to the HSCP candidate
     reco::MuonRef muon = hscp.muonRef();
     if (typeMode_ == 3 && muon.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> TOF only mode but no muon connected to the candidate -- skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.);
       continue;
     }
-    
+
     // Define track reference
     // For TOF only analysis use updated stand alone muon track, otherwise use inner tracker track
     reco::TrackRef track = (typeMode_ != 3) ? hscp.trackRef() : track = muon->standAloneMuon();
-    
+
     // Skip events without track
     if (track.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
       // Third bin of the error histo, no tracks
-      tuple->ErrorHisto->Fill(2.5);
+      tuple->ErrorHisto->Fill(2.);
       continue;
     }
 
@@ -938,7 +1099,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      tuple->ErrorHisto->Fill(1.5);
+      tuple->ErrorHisto->Fill(1.);
       continue;
     }
 
@@ -952,28 +1113,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (vertexColl.size() < 1) {
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
         // 4-th bin of the error histo, no PV
-        tuple->ErrorHisto->Fill(3.5);
+        tuple->ErrorHisto->Fill(3.);
         continue;
     }
-    
-    edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
-    std::vector<TLorentzVector> trigObjP4s;
-    trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,trigEventTag_.process());
 
-    bool matchHLTMuon = false;
-
-    float dr_min_hlt_hscp = 9999.;
-    if(hscp.type() == susybsm::HSCParticleType::globalMuon){
-        for(size_t objNr=0;objNr<trigObjP4s.size();objNr++){
-            float dr_hltmu_hscp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),hscp.trackRef()->eta(),hscp.trackRef()->phi());
-            if (dr_hltmu_hscp < dr_min_hlt_hscp){
-                dr_min_hlt_hscp = dr_hltmu_hscp;
-            }
-        }
-        if(dr_min_hlt_hscp<0.1) matchHLTMuon=true;
-    }
-       
-    std::cout << "matching HLT : " << matchHLTMuon << std::endl; 
     // Reco - GEN track matching
     // For signal only, make sure that the candidate is associated to a true HSCP
     int closestGenIndex = -1;
@@ -992,6 +1135,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
+        // We need to make this gen charge dependent for TauPrime2e
+//        cout << "genColl[g].charge(): " << genColl[g].charge() << endl;
         if (dPt < 0.4 && dr < dRMinGen) {
           dRMinGen = dr;
           closestGenIndex = g;
@@ -1005,7 +1150,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // dont look at events where we didnt find the gen canidate
       if (debug_ > 4 ) LogPrint(MOD) << "  >> Event where we didnt find the gen canidate";
       // 5-th bin of the error histo, didnt find the gen canidate
-      tuple->ErrorHisto->Fill(4.5);
+      tuple->ErrorHisto->Fill(4.);
       continue;
     }
     if (!isData) {
@@ -1016,14 +1161,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // dont look at events where we didnt find the gen canidate close enough
       if (debug_ > 4 ) LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinGen << "), skipping the track";
       // 6-th bin of the error histo, didnt find the gen canidate
-      tuple->ErrorHisto->Fill(5.5);
+      tuple->ErrorHisto->Fill(5.);
       continue;
     }
-    
+
+    float genGammaBeta = 0.0;
+    if (!isData) {
+      genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
+    }
+
     if (!isData && debug_ > 5) {
       LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen;
     }
-    
+
     if (!isData) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genColl[closestGenIndex].pt(), dRMinGen);
       tuple->BefPreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
@@ -1038,7 +1188,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
       // All HSCP candidates
-      tuple->HSCPCandidateType->Fill(0.5, EventWeight_);
+      tuple->HSCPCandidateType->Fill(0., EventWeight_);
       // Neutral HSCP candidates
       if (   closestHSCPsPDGsID == 1000993 || closestHSCPsPDGsID == 1009113
           || closestHSCPsPDGsID == 1009223 || closestHSCPsPDGsID == 1009313
@@ -1047,7 +1197,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           || closestHSCPsPDGsID == 1000622 || closestHSCPsPDGsID == 1000642
           || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
           || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
-        tuple->HSCPCandidateType->Fill(1.5, EventWeight_);
+        tuple->HSCPCandidateType->Fill(1., EventWeight_);
       }
       // Single-charged HSCP
       else if (   closestHSCPsPDGsID == 1009213 || closestHSCPsPDGsID == 1009323
@@ -1058,25 +1208,42 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                || closestHSCPsPDGsID == 1000652 || closestHSCPsPDGsID == 1006211
                || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
                || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
-        tuple->HSCPCandidateType->Fill(2.5, EventWeight_);
+        tuple->HSCPCandidateType->Fill(2., EventWeight_);
       }
       // Double-charged R-hadrons
       else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
-        tuple->HSCPCandidateType->Fill(3.5, EventWeight_);
+        tuple->HSCPCandidateType->Fill(3., EventWeight_);
         // Dont mix double charged R-hadrons with the rest
         // The reco pt of them is 1/2 the pt of the gen track
         continue;
       }
       // tau prime, could be single or multiple charged
       else if (closestHSCPsPDGsID == 17) {
-        tuple->HSCPCandidateType->Fill(4.5, EventWeight_);
+        tuple->HSCPCandidateType->Fill(4., EventWeight_);
       }
       else {
-        tuple->HSCPCandidateType->Fill(5.5, EventWeight_);
+        tuple->HSCPCandidateType->Fill(5., EventWeight_);
       }
     }
-   
-//    if (debug_> 0) LogPrint(MOD) << "  >> Loop on the vertices in the event"; 
+
+
+    // Match candidate track to HLT muon
+    float dr_min_hlt_muon = 9999.0;
+    float hlt_match_pt = -9999.0;
+    float temp_dr = 9999.;
+    for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+      temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
+      // if (trigObjP4s[objNr].Pt() < 50) continue;
+      if (temp_dr < dr_min_hlt_muon)
+      {
+        dr_min_hlt_muon = temp_dr;
+        hlt_match_pt = trigObjP4s[objNr].Pt();
+      }
+    }
+
+
+
+//    if (debug_> 0) LogPrint(MOD) << "  >> Loop on the vertices in the event";
     // TODO this is repeated in the pre-selection
     int highestPtGoodVertex = -1;
     int goodVerts = 0;
@@ -1101,97 +1268,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
 
     // Compute transverse mass mT between HSCP with and MET
-    float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi))); 
+    float massT = sqrt(2*track->pt()*RecoPFMET*(1-cos(track->phi()-RecoPFMET_phi)));
     HSCP_mT.push_back(massT);
-  
-    // Save PF informations and isolation
-    float pfIsolation_DZ_ = 0.1;
-   
-    float track_PFIso005_sumCharHadPt = 0, track_PFIso005_sumNeutHadPt = 0, track_PFIso005_sumPhotonPt = 0, track_PFIso005_sumPUPt = 0;
-    float track_PFIso01_sumCharHadPt = 0, track_PFIso01_sumNeutHadPt = 0, track_PFIso01_sumPhotonPt = 0, track_PFIso01_sumPUPt = 0;
-    float track_PFIso03_sumCharHadPt = 0, track_PFIso03_sumNeutHadPt = 0, track_PFIso03_sumPhotonPt = 0, track_PFIso03_sumPUPt = 0;
-    float track_PFIso05_sumCharHadPt = 0, track_PFIso05_sumNeutHadPt = 0, track_PFIso05_sumPhotonPt = 0, track_PFIso05_sumPUPt = 0;
 
-    float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0;
-    float pf_energy=0;
 
-    float RMin = 9999.;
-    unsigned int idx_pf_RMin = 9999;
+    // Loop on generalTracks
+    const edm::Handle<reco::TrackCollection> trackCollectionHandle = iEvent.getHandle(genTrackToken_);;
 
-    // This is again repeated in the preselection
-    bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
-    int pf_muon_selector = -1;
-    float pf_ecal_energy = 0, pf_hcal_energy = 0;
-
-    bool hscp_is_muon = false;
-    float hscp_pfmuon_pt = 0;
-
-    if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
-      const reco::PFCandidateCollection* pf = pfCandHandle.product();
-      for (unsigned int i = 0; i < pf->size(); i++){
-          const reco::PFCandidate* pfCand = &(*pf)[i];
-          float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
-          if(dr < RMin){
-              RMin = dr;
-              idx_pf_RMin = i;
-           }
-       }//end loop PFCandidates
-      const reco::PFCandidate* pfCandHscp = &(*pf)[idx_pf_RMin];
-      if(pfCandHscp->translatePdgIdToType(pfCandHscp->pdgId()) == reco::PFCandidate::ParticleType::mu) {
-          hscp_is_muon = true;
-          hscp_pfmuon_pt = pfCandHscp->p4().pt();
-      }
-
-      // https://github.com/cms-sw/cmssw/blob/72d0fc00976da53d1fb745eb7f37b2a4ad965d7e/
-      // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
-      for(unsigned int i=0;i<pf->size();i++){
-        const reco::PFCandidate* pfCand = &(*pf)[i];
-        if(i == idx_pf_RMin) {
-            pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-            pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
-            pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-            pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
-            pf_ecal_energy = pfCand->ecalEnergy();
-            pf_hcal_energy = pfCand->hcalEnergy();
-        }
-        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
-
-        bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
-        bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
-        bool pf_isNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
-        bool pf_isMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
-
-        if(i == idx_pf_RMin) continue; //don't count itself
-        float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
-        bool fromPV = (fabs(dz) < pfIsolation_DZ_);
-        int id = std::abs(pfCand->pdgId());
-        float pt = pfCand->p4().pt();
-        if(dr<0.05){
-            // charged cands from PV get added to trackIso
-            if(id == 211 && fromPV) track_PFIso005_sumCharHadPt+=pt;
-            // charged cands not from PV get added to pileup iso
-            else if(id == 211) track_PFIso005_sumPUPt+=pt;
-            // neutral hadron iso
-            if(id == 130) track_PFIso005_sumNeutHadPt+=pt;
-            // photon iso
-            if(id == 22) track_PFIso005_sumPhotonPt+=pt;
-        }if(dr<0.1){
-            if(id == 211 && fromPV) track_PFIso01_sumCharHadPt+=pt;
-            else if(id == 211) track_PFIso01_sumPUPt+=pt;
-            if(id == 130) track_PFIso01_sumNeutHadPt+=pt;
-            if(id == 22) track_PFIso01_sumPhotonPt+=pt;
-        }if(dr<0.3){
-            if(id == 211 && fromPV) track_PFIso03_sumCharHadPt+=pt;
-            else if(id == 211) track_PFIso03_sumPUPt+=pt;
-            if(id == 130) track_PFIso03_sumNeutHadPt+=pt;
-            if(id == 22) track_PFIso03_sumPhotonPt+=pt;
-        }if(dr<0.5){
-            if(id == 211 && fromPV) track_PFIso05_sumCharHadPt+=pt;
-            else if(id == 211) track_PFIso05_sumPUPt+=pt;
-            if(id == 130) track_PFIso05_sumNeutHadPt+=pt;
-            if(id == 22) track_PFIso05_sumPhotonPt+=pt;
-        }
-
+    float track_genTrackMiniIsoSumPt = 0;
+    for(unsigned int c=0;c<trackCollectionHandle->size();c++){
+      reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
+      // Dont count the HSCP candidate in
+      if (genTrackRef.isNonnull() && genTrackRef.key() != track.key()) {
         float drForMiniIso = 0.0;
         if (track->pt() < 50 ) {
           drForMiniIso = 0.2;
@@ -1200,27 +1288,135 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         } else {
           drForMiniIso = 0.05;
         }
+        float pt = genTrackRef->pt();
+        float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
         if (dr<drForMiniIso) {
-            // charged cands from PV get added to trackIso
-            if(pf_isChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
-            // charged cands not from PV get added to pileup iso
-            else if(pf_isChHadronForIdx) track_PFMiniIso_sumPUPt+=pt;
-            // neutral hadron iso
-            if(pf_isNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
-            // photon iso
-            if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
-            // muon iso
-            if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
+          track_genTrackMiniIsoSumPt+=pt;
         }
-      }//end loop PFCandidates
+      }
     }
-    
+
+
+    // Save PF informations and isolation
+
+  // Loop on PF candidates
+  bool pf_isPfTrack = false;
+  bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
+  bool pf_isChHadron = false, pf_isNeutHadron = false, pf_isUndefined = false;
+  float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0 ,track_PFMiniIso_sumLeptonPt = 0;
+  float track_PFMiniIso_otherPt = 0;
+  float pf_energy = 0.0, pf_hcal_energy = 0.0, pf_ecal_energy = 0.0;
+
+
+
+  float track_PFIso005_sumCharHadPt = 0, track_PFIso005_sumNeutHadPt = 0, track_PFIso005_sumPhotonPt = 0, track_PFIso005_sumPUPt = 0;
+  float track_PFIso01_sumCharHadPt = 0, track_PFIso01_sumNeutHadPt = 0, track_PFIso01_sumPhotonPt = 0, track_PFIso01_sumPUPt = 0;
+  float track_PFIso03_sumCharHadPt = 0, track_PFIso03_sumNeutHadPt = 0, track_PFIso03_sumPhotonPt = 0, track_PFIso03_sumPUPt = 0;
+  float track_PFIso05_sumCharHadPt = 0, track_PFIso05_sumNeutHadPt = 0, track_PFIso05_sumPhotonPt = 0, track_PFIso05_sumPUPt = 0;
+
+
+
+
+
+
+  if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
+    const reco::PFCandidateCollection* pf = pfCandHandle.product();
+    for (unsigned int i = 0; i < pf->size(); i++){
+    // https://github.com/cms-sw/cmssw/blob/72d0fc00976da53d1fb745eb7f37b2a4ad965d7e/
+    // PhysicsTools/PatAlgos/plugins/PATIsolatedTrackProducer.cc#L555
+      const reco::PFCandidate* pfCand = &(*pf)[i];
+
+      bool pf_isElectronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+      bool pf_isMuonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+      bool pf_isPhotonForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+      bool pf_isChHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+      bool pf_isNeutHadronForIdx = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+
+      if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
+        pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+        pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
+        pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
+
+        pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
+        pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
+        pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
+        pf_isPfTrack = true;
+        pf_ecal_energy = pfCand->ecalEnergy();
+        pf_hcal_energy = pfCand->hcalEnergy();
+        pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
+        // The sum of the pt in the cone does not contain the pt of the track
+        // just the pt of the surrounding tracks in the cone
+        continue;
+      }
+
+      int id = std::abs(pfCand->pdgId());
+      float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
+      bool fromPV = (fabs(dz) < 0.1);
+
+      float pt = pfCand->p4().pt();
+
+      if(dr<0.05){
+          // charged cands from PV get added to trackIso
+          if(id == 211 && fromPV) track_PFIso005_sumCharHadPt+=pt;
+          // charged cands not from PV get added to pileup iso
+          else if(id == 211) track_PFIso005_sumPUPt+=pt;
+          // neutral hadron iso
+          if(id == 130) track_PFIso005_sumNeutHadPt+=pt;
+          // photon iso
+          if(id == 22) track_PFIso005_sumPhotonPt+=pt;
+      }if(dr<0.1){
+          if(id == 211 && fromPV) track_PFIso01_sumCharHadPt+=pt;
+          else if(id == 211) track_PFIso01_sumPUPt+=pt;
+          if(id == 130) track_PFIso01_sumNeutHadPt+=pt;
+          if(id == 22) track_PFIso01_sumPhotonPt+=pt;
+      }if(dr<0.3){
+          if(id == 211 && fromPV) track_PFIso03_sumCharHadPt+=pt;
+          else if(id == 211) track_PFIso03_sumPUPt+=pt;
+          if(id == 130) track_PFIso03_sumNeutHadPt+=pt;
+          if(id == 22) track_PFIso03_sumPhotonPt+=pt;
+      }if(dr<0.5){
+          if(id == 211 && fromPV) track_PFIso05_sumCharHadPt+=pt;
+          else if(id == 211) track_PFIso05_sumPUPt+=pt;
+          if(id == 130) track_PFIso05_sumNeutHadPt+=pt;
+          if(id == 22) track_PFIso05_sumPhotonPt+=pt;
+      }
+
+      float drForMiniIso = 0.0;
+      if (track->pt() < 50 ) {
+        drForMiniIso = 0.2;
+      } else if (track->pt() < 200) {
+        drForMiniIso = 10/track->pt();
+      } else {
+        drForMiniIso = 0.05;
+      }
+      if (dr<drForMiniIso) {
+        // Leptons get added to trackIso (this is not in the official definition)
+        if (pf_isElectronForIdx || pf_isMuonForIdx) track_PFMiniIso_sumLeptonPt+=pt;
+        // charged cands from PV get added to trackIso
+        if(pf_isChHadronForIdx && fromPV) track_PFMiniIso_sumCharHadPt+=pt;
+        // charged cands not from PV get added to pileup iso
+        else if(pf_isChHadronForIdx) track_PFMiniIso_sumPUPt+=pt;
+        // neutral hadron iso
+        if(pf_isNeutHadronForIdx) track_PFMiniIso_sumNeutHadPt+=pt;
+        // photon iso
+        if(pf_isPhotonForIdx) track_PFMiniIso_sumPhotonPt+=pt;
+        // muon iso
+        if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
+        if (!pf_isElectronForIdx && !pf_isMuonForIdx && !pf_isChHadronForIdx && !pf_isNeutHadronForIdx && !pf_isPhotonForIdx) {
+          track_PFMiniIso_otherPt+=pt;
+        }
+      }
+    }
+  }//end loop PFCandidates
+
+
   // Calculate PF mini relative isolation
-  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_otherPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+  // float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
   float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
-  //minimal selection
-    //if(!hscp_is_muon) continue;
+
 
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
@@ -1232,7 +1428,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::vector<uint32_t> clust_detid;
     std::vector<bool> clust_isStrip;
     std::vector<bool> clust_isPixel;
-    
+
     // Include probQonTrack, probXYonTrack, probQonTrackNoLayer1, probXYonTrackNoLayer1 into one array
     float pixelProbs[4] = {0.0,0.0,0.0,0.0};
     int numRecHitsQ = 0, numRecHitsXY = 0;
@@ -1251,7 +1447,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (!trackToGenAssocHandle.isValid()) {
         // This became default from 12_0_X, in 10_6_X it's gated behind the bParking modifier
         LogPrint(MOD) << "trackToGenAssocHandle is invalid -- this should never happen in the latest AODSIM"
-                      << "Please set hasMCMatch_ to false or move to a newer campaign"; 
+                      << "Please set hasMCMatch_ to false or move to a newer campaign";
         continue;
       }
       const auto& trackToGenAssoc = *trackToGenAssocHandle;
@@ -1291,17 +1487,42 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHits) {
       if (debug_> 3) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
       // 7-th bin of the error histo, No dedxHits associated to this track
-      tuple->ErrorHisto->Fill(6.5);
+      tuple->ErrorHisto->Fill(6.);
       continue;
     }
 
-    int nofClust_dEdxLowerThan = 0;
-    float genGammaBeta = 0.0;
+    // Loop on the gen particles (again) to find if the 0.001 enviroment of the candidate has 91 or >2
+    bool candidateEnvHasStatus91 = false;
+    bool candidateEnvHasStatusHigherThan2 = false;
     if (!isData) {
-      genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
+      unsigned int usignedIntclosestGenIndex = 0;
+      if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
+
+      for (unsigned int g = 0; g < genColl.size(); g++) {
+        // Exclude the canidate when looking at its envirment
+        if (g == usignedIntclosestGenIndex) continue;
+        // Look only at the R=0.001 enviroment of the candidate
+        if (deltaR(genColl[g].eta(),genColl[g].phi(),genColl[usignedIntclosestGenIndex].eta(),genColl[usignedIntclosestGenIndex].phi()) > 0.001) continue;
+        if (genColl[g].status() == 91) {
+          candidateEnvHasStatus91 = true;
+        }
+        if (genColl[g].status() > 2) {
+          candidateEnvHasStatusHigherThan2 = true;
+        }
+        // Consider non-status 1 particles
+        if (genColl[g].status() != 1) continue;
+      }
+    }
+
+    int nofClust_dEdxLowerThan = 0;
+
+    if (!isData && candidateEnvHasStatus91) {
+      tuple->ErrorHisto->Fill(8.);
+      continue;
     }
 
     // Loop through the rechits on the given track **before** preselection
+    unsigned int nonL1PixHits = 0;
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
 
       clust_charge.push_back(dedxHits->charge(i));
@@ -1311,7 +1532,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       clust_detid.push_back(dedxHits->detId(i));
       DetId detid(dedxHits->detId(i));
       float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-  
+
       if (detid.subdetId() < 3) {
         // Calculate probQ and probXY for this pixel rechit
         // Taking the pixel cluster
@@ -1330,98 +1551,94 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-        
-        if (probQ <= 0.0 || probQ >= 1.f)  {
-          if (probQ < 0.0 || probQ >= 1.f) {
-              if (debug_>0) LogPrint(MOD) << "(probQ <= 0.0 || probQ >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
-          }
-          probQ = 1.f;
-        }
+
+
+//        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
         if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
-        
+
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
-        
+
         bool specInCPE = false;
         (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
-        
+
         auto cotAlpha = lv.x()/lv.z();
         auto cotBeta = lv.y()/lv.z();
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
         auto clustCharge = pixelCluster->charge();
-        auto pixelNormCharge = dedxHits->charge(i) / dedxHits->pathlength(i);
-        
+
+        auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
+
         if (clustCharge != dedxHits->charge(i)) {
           LogPrint(MOD) << "clustCharge != dedxHits->charge(i) -- this shouldnt happen";
         }
 
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
-          tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
-          tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
-          tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex-0.5, EventWeight_);
-          tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
-          tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
-          
-          tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
+          tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
+          tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
+          tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
+          tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex, EventWeight_);
+          tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex, EventWeight_);
+
+          tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex, EventWeight_);
           if (isOnEdge) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex, EventWeight_);
           } else if (hasBadPixels) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex, EventWeight_);
           } else if (spansTwoROCs) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex, EventWeight_);
           }
-          tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
-          
+          tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex, EventWeight_);
+
           if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
-            tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex, EventWeight_);
+            tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
-            tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+            tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex, EventWeight_);
+            tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           }
-            tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex-0.5, EventWeight_);
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+            tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
           }
-        
+        } // end of IF on barrel pixel
+
 //      if (probQ > 0.f && probXY > 0.1) {
         if (!specInCPE && probQ < 0.8) {
           numRecHitsQ++;
           // Calculate alpha term needed for the combination
           probQonTrackWMulti *= probQ;
         }
-        
-        if (!specInCPE && probQ < 0.8) {
+
+        if (!specInCPE && probQ < 0.8 && probXY > 0.f) {
           numRecHitsXY++;
           // Calculate alpha term needed for the combination
           probXYonTrackWMulti *= probXY;
         }
-        
+
         // Have a separate variable that excludes Layer 1
         // Layer 1 was very noisy in 2017/2018
         if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel &&
                                                                      tTopo->pxbLayer(detid) != 1)) {
+          nonL1PixHits++;
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
-          
-          if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) {
-            if (probQNoLayer1 < 0.0 || probQNoLayer1 >= 1.f) {
-                if(debug_>0) LogPrint(MOD) << "(probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
-            }
-            probQNoLayer1 = 1.f;
-          }
+
+//          if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
+
+          if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) probQNoLayer1 = 1.f;
           if (probXYNoLayer1 <= 0.0 || probXYNoLayer1 >= 1.f) probXYNoLayer1 = 0.f;
-          
-//        if (probQNoLayer1 < 1.f && probQNoLayer1 < 0.8 && !spansTwoROCs) {
+
           if (!specInCPE && probQ < 0.8) {
             numRecHitsQNoLayer1++;
             // Calculate alpha term needed for the combination
             probQonTrackWMultiNoLayer1 *= probQNoLayer1;
           }
-//          if (probQNoLayer1 < 0.8 && !spansTwoROCs) {
-          if (!specInCPE && probQ < 0.8) {
+          if (!specInCPE && probQ < 0.8 && probXYNoLayer1 > 0.f) {
             numRecHitsXYNoLayer1++;
             // Calculate alpha term needed for the combination
             probXYonTrackWMultiNoLayer1 *= probXYNoLayer1;
@@ -1448,17 +1665,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         clust_nstrip.push_back(ampl.size());
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
-        
-        float stripNormCharge = dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
-        if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
 
-          unsigned int stripLayerIndex = 0;
-          if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
-          if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
-          if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
-          if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-          
-          tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex-0.5, EventWeight_);
+        float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+        unsigned int stripLayerIndex = 0;
+        if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+        if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+        if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+        if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+        if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+          tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+        } else if (!isData && genGammaBeta > 0.6 ) {
+          tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          if (candidateEnvHasStatus91) {
+            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          } else {
+            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          }
+          if (candidateEnvHasStatusHigherThan2) {
+            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          }
         }
 
         if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < theFMIPX_)
@@ -1472,20 +1697,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     pixelProbs[2] = combineProbs(probQonTrackWMultiNoLayer1, numRecHitsQNoLayer1);
     pixelProbs[3] = combineProbs(probXYonTrackWMultiNoLayer1, numRecHitsXYNoLayer1);
 
+
     if (debug_> 7) {
-      LogPrint(MOD) << " probQonTrackWMulti = " << probQonTrackWMulti << " probQonTrackWMultiNoLayer1 = " << probQonTrackWMultiNoLayer1
-                    << " numRecHitsQ = " << numRecHitsQ << " numRecHitsQNoLayer1 = " << numRecHitsQNoLayer1
+      LogPrint(MOD) << "     >> numRecHitsQ = " << numRecHitsQ << " numRecHitsQNoLayer1 = " << numRecHitsQNoLayer1
                     << " numRecHitsXY = " << numRecHitsXY << " numRecHitsXYNoLayer1 = " << numRecHitsXYNoLayer1;
-      LogPrint(MOD) << " CombProbQ = " << pixelProbs[0] << " CombProbQNoL1 = "<< pixelProbs[2];
     }
+
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (pixelProbs[0] < 0.0 || pixelProbs[1] < 0.0 || pixelProbs[0] > 1.f || pixelProbs[1] > 1.f) {
       if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
         " ProbQ = " << pixelProbs[0] << " ProbXY = " << pixelProbs[1] <<  " ProbQNoL1 = "<< pixelProbs[2] << " ProbXYNoL1 = " << pixelProbs[3];
 //      continue;
-//      tuple->ErrorHisto->Fill(8.5);
+//      tuple->ErrorHisto->Fill(8.);
     }
-    
+
+    tuple->BefPreS_genGammaBetaVsProbXYNoL1->Fill(genGammaBeta, pixelProbs[3], EventWeight_);
+
     TreeprobQonTrack = pixelProbs[0];
     TreeprobXYonTrack = pixelProbs[1];
     TreeprobQonTracknoL1 = pixelProbs[2];
@@ -1518,117 +1745,117 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool skipPixelL1 = false;
     int  skip_templates_ias = 0;
     auto localdEdxTemplates = dEdxTemplates;
-
-    // Ias
-    // this right now uses pixel from usePixel and then skip pixel
     float dEdxErr = 0;
-    auto dedxSObjTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
-    
-    reco::DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements() > 0 ? &dedxSObjTmp : nullptr;
-    
+
     // Ih
-    auto dedxMObjTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true,  useStrip = true, useClusterCleaning, useTruncated,
+    auto dedxMObj_FullTrackerTmp =
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true,  useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_);
-    
-    reco::DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements() > 0 ? &dedxMObjTmp : nullptr;
+
+    reco::DeDxData* dedxMObj_FullTracker = dedxMObj_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxMObj_FullTrackerTmp : nullptr;
 
     // Ih Up
     auto dedxMUpObjTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, 0, useTemplateLayer_);
-    
+
     reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements() > 0 ? &dedxMUpObjTmp : nullptr;
 
     // Ih Down
+    // For now it's a copy of Ih Up, I doubt that's what it should be...
+    // Also I think this should be done on the top of Ih no pixel L1 not the full tracker version
     auto dedxMDownObjTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, 0, useTemplateLayer_);
-    
+
     reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements() > 0 ? &dedxMDownObjTmp : nullptr;
 
     // Ih no pixel L1
     auto dedxIh_noL1_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
-    
+
     reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
 
     // Ih 0.15 low values drop
     // Should useTruncated be true ?
     auto dedxIh_15drop_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = true,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, &dEdxErr, useTemplateLayer_);
-    
+
     reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
 
     // Ih Strip only
     auto dedxIh_StripOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_);
 
     reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
 
     // Ih Strip only and 0.15 low values drop
-    // Should useTruncated be true ?
     auto dedxIh_StripOnly_15drop_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = true,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
-    
+
     reco::DeDxData* dedxIh_StripOnly_15drop = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
 
     // Ih Pixel only no BPIXL1
     auto dedxIh_PixelOnly_noL1_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = false, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_PixelOnlyh_noL1 = dedxIh_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_PixelOnly_noL1_Tmp : nullptr;
 
     // Ih correct saturation from fits
     auto dedxIh_SaturationCorrectionFromFits_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 2, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_SaturationCorrectionFromFits = dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements() > 0 ? &dedxIh_SaturationCorrectionFromFits_Tmp : nullptr;
 
+    // globalIas_
+    auto dedxIas_FullTrackerTmp =
+    computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
+
+    reco::DeDxData* dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+
     //globalIas_ without TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
+    computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
     //globalIas_ Pixel only
     auto dedxIas_PixelOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
     //globalIas_ Strip only
     auto dedxIas_StripOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
+    computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
     //globalIas_ Pixel only no BPIXL1
     auto dedxIas_PixelOnly_noL1_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated,
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
 
     reco::DeDxData* dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
-    dedxMObj = dedxIh_noL1;
+    auto dedxMObj = dedxIh_noL1;
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
-    
+
     //Choose of Ias definition - strips only
-    dedxSObj = dedxIas_StripOnly;
+    auto dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : 0.0;
-    
+
     float MassErr = GetMassErr(track->p(),
                                 track->ptError(),
                                 dedxMObj ? dedxMObj->dEdx() : -1,
@@ -1636,18 +1863,133 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 GetMass(track->p(), dedxMObj ? dedxMObj->dEdx() : -1, dEdxK_, dEdxC_),
                                 dEdxK_,
                                 dEdxC_);
-    
+
     // ------------------------------------------------------------------------------------
     //compute systematic uncertainties on signal
     if (isSignal && calcSyst_) {
       if (debug_ > 2) LogPrint(MOD) << "      >> Compute systematic uncertainties on signal";
-      calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, tuple, -1, MassErr, closestBackgroundPDGsIDs);
+      calculateSyst(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, tuple, -1, MassErr, closestBackgroundPDGsIDs);
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
-    
+
     if (debug_ > 5 ) LogPrint(MOD) << "     >> dEdxK_: " << dEdxK_ << " dEdxC_: " << dEdxC_;
     // Check if we pass the preselection
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
+
+    // Fill up the closestBackgroundPDGsIDs array (has to be done before preselection function)
+    if (!isData) {
+        //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
+      closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
+      float genEta = genColl[closestGenIndex].eta();
+      float genPhi = genColl[closestGenIndex].phi();
+      float dRMinGenAndSibling = 9999.0;
+      float dRMinGenAndMom = 9999.0;
+      float numSiblingsF = 9999.0;
+      bool motherFound = false;
+      float dRMinGenAndAunt = 9999.0;
+        //        float dRMinGenAndGrandAunt = 9999.0;
+      reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex];
+
+        // Loop through all the mothers of the gen particle
+      for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+        if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+          closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId());
+          closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pt());
+          unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
+          numSiblingsF  = float(numSiblings);
+          for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+            if (globalIas_ > 0.6 && debug_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+            float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
+            float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
+            float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+            if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
+              dRMinGenAndSibling = siblingDr;
+              closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
+            }
+          }
+          float momEta = genCandidateUnderStudy.mother(numMomIndx)->eta();
+          float momPhi = genCandidateUnderStudy.mother(numMomIndx)->phi();
+          dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+          motherFound = true;
+          break;
+        }
+      }
+
+        // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
+      if (!motherFound) {
+
+        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+          for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
+            if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+              closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
+              closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pt());
+              unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
+
+              unsigned int numAunts = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
+              numSiblingsF  = float(numSiblings);
+              for (unsigned int daughterIndx = 0; daughterIndx < numAunts+1; daughterIndx++) {
+                float auntEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
+                float auntPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
+                float auntDr = deltaR(genEta, genPhi, auntEta, auntPhi);
+                if( (auntDr != 0.0) && (auntDr < dRMinGenAndAunt)) {
+                  dRMinGenAndAunt = auntDr;
+                  closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
+                }
+              }
+              float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->eta();
+              float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->phi();
+              dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+              motherFound = true;
+              break;
+            }
+          }
+          if (motherFound) break;
+        }
+      }
+
+        // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
+      if (!motherFound) {
+        for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
+          for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
+            for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
+              if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
+                closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pdgId());
+                closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pt());
+                unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
+                numSiblingsF  = float(numSiblings);
+                for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
+                  if (debug_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
+                  float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
+                  float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
+                  if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
+                    dRMinGenAndSibling = siblingDr;
+                    closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
+                  }
+                }
+                float momEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->eta();
+                float momPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->phi();
+                dRMinGenAndMom = deltaR(genEta, genPhi, momEta, momPhi);
+                motherFound = true;
+                break;
+              }
+            }
+            if (motherFound) break;
+          }
+          if (motherFound) break;
+        }
+      }
+
+      // I'm sure this could be done better, if you agree and feel like it, please fix it
+      // issue with a while loop and a recursive I faced is tha that mom doesnt have the same type as the genParticle
+      // This is also a dupplicate code, prob should be a function
+
+      closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
+      closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
+      closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
+      closestBackgroundPDGsIDs[6] = numSiblingsF;
+    }
+    // -- end TODO Sept 25
 
     bool passPre = passPreselection(
                           track,
@@ -1658,7 +2000,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           iEvent,
                           iSetup,
                           pixelProbs,
-                          EventWeight_,
                           tuple,
                           isSignal ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1,
                           false,
@@ -1667,28 +2008,27 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           MassErr,
                           closestBackgroundPDGsIDs);
 
-    if(!hscp_is_muon) passPre=false;
- 
+
       // Dont do TOF only is isCosmicSB is true
     if (typeMode_ == 5 && isCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, skipping it";
       // 8-th bin of the error histo, not a collision track
-      tuple->ErrorHisto->Fill(7.5);
+      tuple->ErrorHisto->Fill(7.);
       continue;
     } else if (isCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, please check what's up";
     }
-    
+
     // Dont do TOF only is isSemiCosmicSB is true
     if (typeMode_ == 5 && isSemiCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, skipping it";
       // 8-th bin of the error histo, not a collision track
-      tuple->ErrorHisto->Fill(7.5);
+      tuple->ErrorHisto->Fill(7.);
       continue;
     } else if (isSemiCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, please check what's up";
     }
-    
+
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
       if (debug_ > 2) LogPrint(MOD) << "      >> Passed pre-selection";
@@ -1719,11 +2059,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    tuple->PostPreS_TriggerType->Fill(TrigInfo_-0.5, EventWeight_);
-    
     // Let's do some printouts after preselections for gen particles
     if (passPre) {
-      if (!isData) {
+      if (!isData and debug_>0) {
         //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
         closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
         float genEta = genColl[closestGenIndex].eta();
@@ -1732,32 +2070,68 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float dRMinGenAndMom = 9999.0;
         float numSiblingsF = 9999.0;
         bool motherFound = false;
+        float dRMinGenAndAunt = 9999.0;
+//        float dRMinGenAndGrandAunt = 9999.0;
         reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex];
-        
+
         if (genCandidateUnderStudy.numberOfMothers() == 0) {
           LogPrint(MOD) << "There are zero mothers, track ID" << abs(genCandidateUnderStudy.pdgId()) <<
           " Eta: " << genEta << " Phi: " << genPhi ;
         }
-/*
+
         // HSCP muon
-        cout << "genCandidateUnderStudy.pdgId(): " << genCandidateUnderStudy.pdgId() << endl;
-        cout << "genCandidateUnderStudy.pt(): " << genCandidateUnderStudy.pt() << endl;
-        cout << "genCandidateUnderStudy.vx/vy/vz(): " << genCandidateUnderStudy.vx() << "/" << genCandidateUnderStudy.vy() << "/" << genCandidateUnderStudy.vz() << endl;
-        // mother muon
-        cout << "genCandidateUnderStudy.mother(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->pdgId() << endl;
-        cout << "genCandidateUnderStudy.mother(0)->pt(): " << genCandidateUnderStudy.mother(0)->pt() << endl;
-        cout << "genCandidateUnderStudy.mother(0)->vx/vy/vz(): " << genCandidateUnderStudy.mother()->vx() << "/" << genCandidateUnderStudy.mother()->vy() << "/" << genCandidateUnderStudy.mother()->vz() << endl;
+        cout << " | Relation | ID | $p_{T}$ | $v_{x}$ |  $v_{y}$ |  $v_{z}$ |  $R_{xy}$ | " << endl;
+        std::cout << " |--- | ---| " << std::endl;
+        cout << " | Me | " << genCandidateUnderStudy.pdgId() << " | " << genCandidateUnderStudy.pt()
+        << " | " << genCandidateUnderStudy.vx() << " | " << genCandidateUnderStudy.vy() << " | " << genCandidateUnderStudy.vz()
+        << " | " << sqrt(genCandidateUnderStudy.vx()*genCandidateUnderStudy.vx()+genCandidateUnderStudy.vy()*genCandidateUnderStudy.vy()) << " | "  << endl;
         // photon
-        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pdgId() << endl;
-        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->daughter(1)->pt() << endl;
-        cout << "genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
-        // neutrino 
-        cout << "genCandidateUnderStudy.mother()->daughter(1)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pdgId() << endl;
-        cout << "genCandidateUnderStudy.mother()->daughter(1)->pt(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pt() << endl;
-        // kaon
-        cout << "genCandidateUnderStudy.mother()->mother()->pdgId(): " << genCandidateUnderStudy.mother()->mother()->pdgId() << endl;
-        cout << "genCandidateUnderStudy.mother()->mother()->vx/vy/vz(): " << genCandidateUnderStudy.mother()->mother()->vx() << "/" << genCandidateUnderStudy.mother()->mother()->vy() << "/" << genCandidateUnderStudy.mother()->mother()->vz() << endl;
-*/        
+        if (genCandidateUnderStudy.mother(0)->numberOfDaughters() > 1) {
+          cout << " | Sibling (1) | " << genCandidateUnderStudy.mother(0)->daughter(1)->pdgId() << " | " << genCandidateUnderStudy.mother(0)->daughter(1)->pt()
+          << " | " << genCandidateUnderStudy.mother(0)->daughter(1)->vx() << " | " << genCandidateUnderStudy.mother(0)->daughter(1)->vy() << " | " << genCandidateUnderStudy.mother(0)->daughter(1)->vz()
+          << " | " << sqrt(genCandidateUnderStudy.mother(0)->daughter(1)->vx()*genCandidateUnderStudy.mother(0)->daughter(1)->vx() + genCandidateUnderStudy.mother(0)->daughter(1)->vy()*genCandidateUnderStudy.mother(0)->daughter(1)->vy()) << " | " << endl;
+        }
+        if ( genCandidateUnderStudy.numberOfMothers() > 0) {
+          // mother muon
+          cout << " | Mom | " << genCandidateUnderStudy.mother(0)->pdgId() << " | " << genCandidateUnderStudy.mother(0)->pt()
+          << " | " << genCandidateUnderStudy.mother()->vx() << " | " << genCandidateUnderStudy.mother()->vy() << " | " << genCandidateUnderStudy.mother()->vz()
+          << " | " << sqrt(genCandidateUnderStudy.mother()->vx()*genCandidateUnderStudy.mother()->vx()+genCandidateUnderStudy.mother()->vy()*genCandidateUnderStudy.mother()->vy()) << " | " << endl;
+        }
+        if (genCandidateUnderStudy.mother(0)->mother(0)->numberOfDaughters() > 1) {
+          // neutrino
+          cout << " | Aunt (1) | " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pdgId() << " | " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->pt()
+          << " | " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vx() << " | " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vy() << " | " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vz()
+          << " | " << sqrt(genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vx() * genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vx() + genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vy() * genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->vy()) << " | " << endl;
+        }
+        // kaon / D+
+        if (genCandidateUnderStudy.mother()->numberOfMothers() > 0) {
+          cout << " | Gramma |  " << genCandidateUnderStudy.mother()->mother()->pdgId()   << " | " << genCandidateUnderStudy.mother()->mother()->pt()
+          << " | " << genCandidateUnderStudy.mother()->mother()->vx() << " | " << genCandidateUnderStudy.mother()->mother()->vy() << " | " << genCandidateUnderStudy.mother()->mother()->vz()
+          << " | " << sqrt(genCandidateUnderStudy.mother()->mother()->vx()*genCandidateUnderStudy.mother()->mother()->vx() + genCandidateUnderStudy.mother()->mother()->vy()*genCandidateUnderStudy.mother()->mother()->vy()) << " | "  << endl;
+        }
+        if (genCandidateUnderStudy.mother()->mother()->numberOfMothers() > 0) {
+          cout << " | GrandGramma |  " << genCandidateUnderStudy.mother()->mother()->mother()->pdgId()   << " | " << genCandidateUnderStudy.mother()->mother()->mother()->pt()
+        << " | " << genCandidateUnderStudy.mother()->mother()->mother()->vx() << " | " << genCandidateUnderStudy.mother()->mother()->mother()->vy() << " | " << genCandidateUnderStudy.mother()->mother()->mother()->vz()
+        << " | " << sqrt(genCandidateUnderStudy.mother()->mother()->mother()->vx()*genCandidateUnderStudy.mother()->mother()->mother()->vx() + genCandidateUnderStudy.mother()->mother()->mother()->vy()*genCandidateUnderStudy.mother()->mother()->mother()->vy()) << " | "  << endl;
+        }
+        if (genCandidateUnderStudy.mother()->mother()->mother()->numberOfMothers() > 0) {
+          cout << " | GreatGrandGramma |  " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->pdgId()   << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->pt()
+          << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->vx() << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->vy() << " | " << genCandidateUnderStudy.mother()->mother()->mother()->mother()->vz()
+          << " | " << sqrt(genCandidateUnderStudy.mother()->mother()->mother()->mother()->vx()*genCandidateUnderStudy.mother()->mother()->mother()->mother()->vx() + genCandidateUnderStudy.mother()->mother()->mother()->mother()->vy()*genCandidateUnderStudy.mother()->mother()->mother()->mother()->vy()) << " | "  << endl;
+        }
+
+        if ( genCandidateUnderStudy.mother(0)->numberOfDaughters() > 1) {
+          cout << "   genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->daughter(1)->numberOfDaughters() << endl;
+        }
+
+        if (genCandidateUnderStudy.mother(0)->numberOfMothers() > 0) {
+          if (genCandidateUnderStudy.mother(0)->mother(0)->numberOfDaughters() > 1 ) {
+            cout << "   genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() << endl;
+            if (genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->numberOfDaughters() > 0) {
+              cout << "   genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId(): " << genCandidateUnderStudy.mother(0)->mother(0)->daughter(1)->daughter(0)->pdgId() << endl;
+            }
+          }
+        }
           // Loop through all the mothers of the gen particle
         for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
           if (abs(genCandidateUnderStudy.mother(numMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
@@ -1765,15 +2139,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pt());
             unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
             numSiblingsF  = float(numSiblings);
-            LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+            if (globalIas_ > 0.6) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
             for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-              std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+              if (globalIas_ > 0.6) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
               float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
-              if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+              if (globalIas_ > 0.6)std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+              if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                 dRMinGenAndSibling = siblingDr;
                 closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
               }
@@ -1785,29 +2159,40 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             break;
           }
         }
-        std::cout << std::endl;
-        
+        if (globalIas_ > 0.6) std::cout << std::endl;
+
         // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
         if (!motherFound) {
-          LogPrint(MOD) << "      >> BckgMCPostPreS: All moms had the same ID as the candidate, let's look at the grammas";
-          
+          if (globalIas_ > 0.6) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
+
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
                 closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
                 closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pt());
-                unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
-                numSiblingsF  = float(numSiblings);
-                LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
+                if (globalIas_ > 0.6) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
-                  float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
-                  float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
-                  float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pt();
+                  if (globalIas_ > 0.6) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
+                  float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
+                  float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                  std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
-                  if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
-                    dRMinGenAndSibling = siblingDr;
+                  if (globalIas_ > 0.6) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+                }
+                if (globalIas_ > 0.6) std::cout << std::endl;
+                unsigned int numAunts = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
+                numSiblingsF  = float(numSiblings);
+                if (globalIas_ > 0.6) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
+                for (unsigned int daughterIndx = 0; daughterIndx < numAunts+1; daughterIndx++) {
+                  std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  float auntEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
+                  float auntPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
+                  float auntPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pt();
+                  float auntDr = deltaR(genEta, genPhi, auntEta, auntPhi);
+                  if (globalIas_ > 0.6) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
+                  if( (auntDr != 0.0) && (auntDr < dRMinGenAndAunt)) {
+                    dRMinGenAndAunt = auntDr;
                     closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
                   }
                 }
@@ -1820,28 +2205,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             }
             if (motherFound) break;
           }
-          std::cout << std::endl;
+          if (globalIas_ > 0.6) std::cout << std::endl;
         }
-        
-        float candidateEta = genCandidateUnderStudy.eta();
-        float candidatePhi = genCandidateUnderStudy.phi();
-        cout << "      >>  | ID  | distance | pt | status | " << endl;
-        std::cout << "      >>  |--- | ---| " << std::endl;
-        for (unsigned int g = 0; g < genColl.size(); g++) {
-          float status = genColl[g].status();
-          float pt = genColl[g].pt();
-          float ID = genColl[g].pdgId();
-          
-          float muonDr = deltaR(genColl[g].eta(), genColl[g].phi(), candidateEta, candidatePhi);
-          if (muonDr > 0.1) continue;
 
-          cout << "      >>  | " << ID;
-          std::cout << " | " << muonDr << " | " << pt <<  " | " <<  status << " |  " << endl;
-        }
-  
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
         if (!motherFound) {
-          LogPrint(MOD) << "      >> BckgMCPostPreS: All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
+          LogPrint(MOD) << "      >> All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
@@ -1850,15 +2219,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                   closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pt());
                   unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                   numSiblingsF  = float(numSiblings);
-                  LogPrint(MOD) << "      >> BckgMCPostPreS: Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                  if (globalIas_ > 0.6) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
                   for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
                     std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                     float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                     float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                     float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pt();
                     float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                    std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
-                    if( (siblingDr > 0.0001) && (siblingDr < dRMinGenAndSibling)) {
+                    if (globalIas_ > 0.6) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
+                    if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                       dRMinGenAndSibling = siblingDr;
                       closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
                     }
@@ -1876,62 +2245,91 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }
         if (!motherFound) {
-          LogPrint(MOD) << "All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
+          LogPrint(MOD) << "      >> All moms' mom's moms had the same ID as the candidate -- is this realy possible at this point???";
         }
           // I'm sure this could be done better, if you agree and feel like it, please fix it
           // issue with a while loop and a recursive I faced is tha that mom doesnt have the same type as the genParticle
-        
+
         closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
         closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
         closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
         closestBackgroundPDGsIDs[6] = numSiblingsF;
-        
-        if (debug_> 2 || globalIas_ > 0.6) {
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track ID: " << closestBackgroundPDGsIDs[0];
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's gen pt: " << closestBackgroundPDGsIDs[5];
-          
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's mom ID: " << closestBackgroundPDGsIDs[1];
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's mom pt: " << closestBackgroundPDGsIDs[7];
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's gen angle wrt to mom: " << closestBackgroundPDGsIDs[4];
 
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's num siblings: " << closestBackgroundPDGsIDs[6];
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
-          LogPrint(MOD) << "      >> BckgMCPostPreS: Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
+        if (debug_> 2 || globalIas_ > 0.6) {
+          LogPrint(MOD) << "      >> Track's gen ID: " << closestBackgroundPDGsIDs[0];
+          LogPrint(MOD) << "      >> Track's gen pt: " << closestBackgroundPDGsIDs[5];
+
+          LogPrint(MOD) << "      >> Track's mom/gramma/grand-gramma ID: " << closestBackgroundPDGsIDs[1];
+          LogPrint(MOD) << "      >> Track's mom/gramma/grand-gramma pt: " << closestBackgroundPDGsIDs[7];
+          LogPrint(MOD) << "      >> Track's gen angle wrt to mom/gramma/grand-gramma: " << closestBackgroundPDGsIDs[4];
+
+          LogPrint(MOD) << "      >> Track's num siblings: " << closestBackgroundPDGsIDs[6];
+          LogPrint(MOD) << "      >> Track's closest sibling gen ID: " << closestBackgroundPDGsIDs[2];
+          LogPrint(MOD) << "      >> Track's closest sibling gen angle: " << closestBackgroundPDGsIDs[3];
+
+
+          float candidateEta = genColl[closestGenIndex].eta();
+          float candidatePhi = genColl[closestGenIndex].phi();
+          cout << "          | ID  | distance | pt | status | " << endl;
+          std::cout << "          |--- | ---| " << std::endl;
+          for (unsigned int g = 0; g < genColl.size(); g++) {
+            float status = genColl[g].status();
+            float pt = genColl[g].pt();
+            float ID = genColl[g].pdgId();
+
+            float muonDr = deltaR(genColl[g].eta(), genColl[g].phi(), candidateEta, candidatePhi);
+            if (muonDr > 0.1) continue;
+
+            cout << "          | " << ID;
+            std::cout << " | " << muonDr << " | " << pt <<  " | " <<  status << " |  " << endl;
+          }
         }
       }
-
-    }
-    
-    if (!isData) {
-      unsigned int usignedIntclosestGenIndex = 0;
-      if (closestGenIndex>0) {
-        usignedIntclosestGenIndex = closestGenIndex;
+      if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(0.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(1.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::matchedStandAloneMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(2.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::standAloneMuon) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(3.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::innerTrack) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(4.);
+      } else if ( hscp.type() == susybsm::HSCParticleType::unknown) {
+        tuple->PostPreS_RecoHSCParticleType->Fill(5.);
       }
+    }
+
+    if (!isData) {
+      bool hasStatus91Around = false;
+      unsigned int usignedIntclosestGenIndex = 0;
+      if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
 
       for (unsigned int g = 0; g < genColl.size(); g++) {
-        if (g == usignedIntclosestGenIndex) {
-          continue;
-        }
-        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) < 0.05) {
-          continue;
-        }
-        
-        // for the rest dont consider non-status 1 particles
-        if (genColl[g].status() != 1) {
-          continue;
-        }
-        
+        // Exclude the canidate when looking at its envirment
+        if (g == usignedIntclosestGenIndex) continue;
+        // Look only at the R=0.1 enviroment of the candidate
+        if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
+
+        if (genColl[g].status() == 91) hasStatus91Around = true;
+        // Consider non-status 1 particles
+        if (genColl[g].status() != 1) continue;
         tuple->PostPreS_ProbQVsGenEnviromentID->Fill(pixelProbs[0], abs(genColl[g].pdgId()), EventWeight_);
         tuple->PostPreS_IasVsGenEnviromentID->Fill(globalIas_, abs(genColl[g].pdgId()), EventWeight_);
       }
+      if (hasStatus91Around) {
+        tuple->PostPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
+      } else {
+        tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, EventWeight_);
+      }
     }
-    
+
     // Some printouts to understand ProbQ vs ProbQNoL1
     if ((fabs(pixelProbs[2]-pixelProbs[0])/pixelProbs[2] > 0.015 ) && debug_ > 9) {
       LogPrint(MOD) << " Rel diff of (CombProbQ - CombProbQNoL1)/CombProbQNoL1: " <<  fabs(pixelProbs[2]-pixelProbs[0])/pixelProbs[2];
       LogPrint(MOD) << " CombProbQ: " << pixelProbs[0] << " CombProbQNoL1: " << pixelProbs[2] ;
     }
-    
+
     // Loop through the deDx hits after the preselection
     bool headerStripsPrintedAlready = false;
     bool headerPixPrintedAlready = false;
@@ -1952,7 +2350,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
         if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
-        
+
         bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
@@ -1962,71 +2360,76 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSize = pixelCluster->size();
         auto clustSizeX = pixelCluster->sizeX();
         auto clustSizeY = pixelCluster->sizeY();
-        auto pixelNormCharge = dedxHits->charge(i) / dedxHits->pathlength(i);
-        
+        auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
+
         float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
         float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
         int isFlippedModule = 0;
         if (tmp2 < tmp1) isFlippedModule = 1;
-        
+
         bool specInCPE = false;
         (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
-        
+
         // TODO2 come back to this and double the plots for highIas
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
-          
-          tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
-          tuple->PostPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
+
+          tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
+          tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
+          tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize, pixLayerIndex, EventWeight_);
+          tuple->PostPreS_CluSizeXVsPixelLayer->Fill(clustSizeX, pixLayerIndex, EventWeight_);
+          tuple->PostPreS_CluSizeYVsPixelLayer->Fill(clustSizeY, pixLayerIndex, EventWeight_);
           if (isOnEdge) {
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(0., pixLayerIndex, EventWeight_);
           } else if (hasBadPixels) {
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(1., pixLayerIndex, EventWeight_);
           } else if (spansTwoROCs) {
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2., pixLayerIndex, EventWeight_);
           }
-          tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
+          tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3., pixLayerIndex, EventWeight_);
           if (globalIas_ > 0.6) {
-            tuple->PostPreS_CluProbQVsPixelLayer_highIas->Fill(probQ, pixLayerIndex-0.5, EventWeight_);
-            tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Fill(probXY, pixLayerIndex-0.5, EventWeight_);
-            tuple->PostPreS_CluSizeVsPixelLayer_highIas->Fill(clustSize-0.5, pixLayerIndex-0.5, EventWeight_);
-            tuple->PostPreS_CluSizeXVsPixelLayer_highIas->Fill(clustSizeX-0.5, pixLayerIndex-0.5, EventWeight_);
-            tuple->PostPreS_CluSizeYVsPixelLayer_highIas->Fill(clustSizeY-0.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluProbQVsPixelLayer_highIas->Fill(probQ, pixLayerIndex, EventWeight_);
+            tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Fill(probXY, pixLayerIndex, EventWeight_);
+            tuple->PostPreS_CluSizeVsPixelLayer_highIas->Fill(clustSize, pixLayerIndex, EventWeight_);
+            tuple->PostPreS_CluSizeXVsPixelLayer_highIas->Fill(clustSizeX, pixLayerIndex, EventWeight_);
+            tuple->PostPreS_CluSizeYVsPixelLayer_highIas->Fill(clustSizeY, pixLayerIndex, EventWeight_);
             if (isOnEdge) {
-              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(0.5, pixLayerIndex-0.5, EventWeight_);
+              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(0., pixLayerIndex, EventWeight_);
             } else if (hasBadPixels) {
-              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(1.5, pixLayerIndex-0.5, EventWeight_);
+              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(1., pixLayerIndex, EventWeight_);
             } else if (spansTwoROCs) {
-              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(2.5, pixLayerIndex-0.5, EventWeight_);
+              tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(2., pixLayerIndex, EventWeight_);
             }
-            tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(3.5, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluSpecInCPEVsPixelLayer_highIas->Fill(3., pixLayerIndex, EventWeight_);
           }
 
           if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->PostPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
-            tuple->PostPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex, EventWeight_);
+            tuple->PostPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->PostPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex-0.5, EventWeight_);
-            tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex, EventWeight_);
+            tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           }
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
-          if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.025 && globalIas_ < 0.03))) {
+          if (!isData && (globalIas_ > 0.6 || (globalIas_ > 0.02 && globalIas_ < 0.03))) {
             if (!headerPixPrintedAlready) {
-              std::cout << " | globalIas_ | Pixel LayerID | genGammaBeta | isFlippedModule | cotAlpha | cotBeta | momentum | clustSizeX | clustSizeY";
-              std::cout << " | pixelNormCharge | isOnEdge | hasBadPixels | spansTwoROCs | cProbXY | cProbQ | " << std::endl;
-              std::cout << " |--- | ---| " << std::endl;
-              
+              if (debug_ > 0)
+              {
+                std::cout << std::endl << "        | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
+                std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
+                std::cout << "        |--- | ---| " << std::endl;
+              }
               headerPixPrintedAlready = true;
             }
-            
-            std::cout  << " | " <<  globalIas_ << " | L" << tTopo->pxbLayer(detid) << " | " << genGammaBeta << " | " << isFlippedModule << " | ";
-            std::cout << cotAlpha << " | " << cotBeta << " | " << momentum<< " | " << clustSizeX << " | " << clustSizeY << " | ";
-            std::cout << pixelNormCharge << " e/um | " << isOnEdge  << " | " << hasBadPixels  << " | " << spansTwoROCs << " | " << probXY << " | " << probQ <<  " | " << std::endl;
-          } else if (isSignal && genGammaBeta <= 0.31623)  {
-            LogPrint(MOD) << "BetaGamma is too low for Bischel";
+            if (debug_ > 0)
+            {
+              std::cout  << "        | " <<  globalIas_ << " | L" << tTopo->pxbLayer(detid) << " | " << genGammaBeta << " | " << isFlippedModule << " | ";
+              std::cout << cotAlpha << " | " << cotBeta << " | " << momentum<< " | " << clustSizeX << " | " << clustSizeY << " | ";
+              std::cout << pixelNormCharge << " e/um | " << isOnEdge  << " | " << hasBadPixels  << " | " << spansTwoROCs << " | " << probXY << " | " << probQ <<  " | " << std::endl;
+
+            }
+          } else if (isSignal && genGammaBeta <= 0.31623 && debug_>0)  {
+            LogPrint(MOD) << "BetaGamma is too low for Bichsel";
           }
         }
 
@@ -2037,37 +2440,57 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
         std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
         unsigned int clusterCleaned = (clusterCleaning(amplitudesPrim, 1)) ? 0 : 1;
-        
-      
-        float stripNormCharge = dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+
+
+        float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
         float stripSize = stripsCluster->amplitudes().size();
         if (!isData) {
+          unsigned int stripLayerIndex = 0;
+          if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+          if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+          if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+          if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+            tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          } else if (!isData && genGammaBeta > 0.6 ) {
+            tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            if (candidateEnvHasStatus91) {
+              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            } else {
+              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            }
+            if (candidateEnvHasStatusHigherThan2) {
+              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            }
+          }
+
           unsigned int isGlued = 0;
           (tTopo->glued(detid) > 0) ? isGlued = 1 : isGlued = 0;
           if (!headerStripsPrintedAlready) {
-            std::cout << " | globalIas_ | Strips LayerIndex | genGammaBeta | eta | stripNormCharge | stripSize | isStereo | isGlued | clusterCleaned | " << std::endl;
-            std::cout << " |--- | ---| " << std::endl;
+          //   std::cout << std::endl <<  " | $I_{as}$  | Layer | gammaBeta | eta | Norm. Charge | size | stereo | glued | cleaned | " << std::endl;
+          //   std::cout << " |--- | ---| " << std::endl;
             headerStripsPrintedAlready = true;
           }
-          std::cout << " | " <<  globalIas_;
-          if (detid.subdetId() == StripSubdetector::TIB) {
-            std::cout << " | TIB L" << abs(int(tTopo->tibLayer(detid)));
-          }
-          if (detid.subdetId() == StripSubdetector::TOB) {
-            std::cout << " | TOB L" << abs(int(tTopo->tobLayer(detid)));
-          }
-          else if (detid.subdetId() == StripSubdetector::TID) {
-            std::cout << " | TID D" << abs(int(tTopo->tidWheel(detid)));
-          }
-          else if (detid.subdetId() == StripSubdetector::TEC) {
-            std::cout << " | TEC D" << abs(int(tTopo->tidWheel(detid)));
-          }
-          
-          std::cout << " | " << genGammaBeta<< " | " << track->eta() << " | " << stripNormCharge << " e/um | " << stripSize << " | " << tTopo->isStereo(detid) << " | " << isGlued << " | " << clusterCleaned << " | " << std::endl;
+          // std::cout << " | " <<  globalIas_;
+          // if (detid.subdetId() == StripSubdetector::TIB) {
+          //   std::cout << " | TIB L" << abs(int(tTopo->tibLayer(detid)));
+          // }
+          // if (detid.subdetId() == StripSubdetector::TOB) {
+          //   std::cout << " | TOB L" << abs(int(tTopo->tobLayer(detid)));
+          // }
+          // else if (detid.subdetId() == StripSubdetector::TID) {
+          //   std::cout << " | TID D" << abs(int(tTopo->tidWheel(detid)));
+          // }
+          // else if (detid.subdetId() == StripSubdetector::TEC) {
+          //   std::cout << " | TEC D" << abs(int(tTopo->tidWheel(detid)));
+          // }
+
+          // std::cout << " | " << genGammaBeta<< " | " << track->eta() << " | " << stripNormCharge << " e/um | " << stripSize << " | " << tTopo->isStereo(detid) << " | " << isGlued << " | " << clusterCleaned << " | " << std::endl;
         }
       } // end of the strip part
     } // end the loop on the rechits
-    
+
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
     if (isBckg || isData) {
@@ -2127,13 +2550,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       MassDownComb = GetMassFromBeta(track->p(), (1 / tof->inverseBeta()));
 
     bool PassNonTrivialSelection = false;
-  
+
     // Loop through the rechits on the given track in the preselection function
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
         DetId detid(dedxHits->detId(i));
         float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
         auto IhOnLayer = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
-        tuple->PostPreS_IasAllIhVsLayer->Fill(globalIas_, IhOnLayer, i+0.5, EventWeight_);
+        tuple->PostPreS_IasAllIhVsLayer->Fill(globalIas_, IhOnLayer, i+0, EventWeight_);
         // One plot for the pixels
         if (detid.subdetId() < 3) {
           // up to 8 in histo
@@ -2145,7 +2568,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if (globalIas_ < 0.03 && globalIas_ > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
           }
           if (tuple) {
-            tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex-0.5, EventWeight_);
+            tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex, EventWeight_);
           }
         }
         // another for the strips
@@ -2159,7 +2582,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
 
             if (tuple) {
-                tuple->PostPreS_IasStripIhVsLayer->Fill(globalIas_, IhOnLayer, stripLayerIndex-0.5, EventWeight_);
+                tuple->PostPreS_IasStripIhVsLayer->Fill(globalIas_, IhOnLayer, stripLayerIndex, EventWeight_);
             }
         }
     }
@@ -2188,7 +2611,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                            dedxMObj,
                            tof,
                            iEvent,
-                           EventWeight_,
                            CutIndex,
                            tuple,
                            false,
@@ -2198,7 +2620,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                            0)) {
           continue;
         }
-        
+
         if (CutIndex != 0)
           PassNonTrivialSelection = true;
         HSCPTk[CutIndex] = true;
@@ -2237,9 +2659,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
            track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
     float fovhd = track->found() <= 0 ? -1 : track->found() / float(track->found() + nomh);
-    unsigned int nom = 0;
-    if (dedxSObj)
-      nom = dedxSObj->numberOfMeasurements();
+    unsigned int nom = (dedxSObj) ? (dedxSObj->numberOfMeasurements()+nonL1PixHits) : 0;
 
     float genid = 0, gencharge = -99, genmass = -99, genpt = -99, geneta = -99, genphi = -99;
 
@@ -2275,7 +2695,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       muon_PFIso03_sumPhotonPt = muon->pfIsolationR03().sumPhotonEt;
       muon_PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
     }
-    
+
     OpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp);
 
     HSCP_passCutPt55.push_back(track->pt() > 55 ? true : false);
@@ -2286,12 +2706,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Charge.push_back(track->charge());
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
-    HSCP_Ias.push_back(dedxSObj ? dedxSObj->dEdx() : -1);
+    HSCP_Ias.push_back(dedxIas_FullTracker ? dedxIas_FullTracker->dEdx() : -1);
     HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
     HSCP_Ias_StripOnly.push_back(dedxIas_StripOnly ? dedxIas_StripOnly->dEdx() : -1);
     HSCP_Ias_PixelOnly_noL1.push_back(dedxIas_PixelOnly_noL1 ? dedxIas_PixelOnly_noL1->dEdx() : -1);
-    HSCP_Ih.push_back(dedxMObj ? dedxMObj->dEdx() : -1);
+    HSCP_Ih.push_back(dedxMObj_FullTracker ? dedxMObj_FullTracker->dEdx() : -1);
+    // we should have a leaf where Ih is NoL1
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
     HSCP_ProbXY.push_back(TreeprobXYonTrack);
@@ -2304,10 +2725,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_isHighPurity.push_back(track->quality(reco::TrackBase::highPurity));
     HSCP_EoverP.push_back(pf_energy/track->p());
     HSCP_isMuon.push_back(pf_isMuon);
-    HSCP_MuonSelector.push_back(pf_muon_selector);
+    HSCP_isPhoton.push_back(pf_isPhoton);
     HSCP_isElectron.push_back(pf_isElectron);
     HSCP_isChHadron.push_back(pf_isChHadron);
     HSCP_isNeutHadron.push_back(pf_isNeutHadron);
+    HSCP_isPfTrack.push_back(pf_isPfTrack);
+    HSCP_isUndefined.push_back(pf_isUndefined);
     HSCP_ECAL_energy.push_back(pf_ecal_energy);
     HSCP_HCAL_energy.push_back(pf_hcal_energy);
     HSCP_TOF.push_back(tof ? tof->inverseBeta() : -99);
@@ -2324,17 +2747,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_dZ.push_back(dz);
     HSCP_dXY.push_back(dxy);
     HSCP_dR.push_back(OpenAngle);
+    HSCP_p.push_back(track->p());
     HSCP_eta.push_back(track->eta());
     HSCP_phi.push_back(track->phi());
     HSCP_NOH.push_back(track->found());
-    HSCP_NOPH.push_back(track->hitPattern().numberOfValidPixelHits());
+    HSCP_NOPH.push_back(nonL1PixHits);
     HSCP_FOVH.push_back(track->validFraction());
     HSCP_NOMH.push_back(nomh);
     HSCP_FOVHD.push_back(fovhd);
     HSCP_NOM.push_back(nom);
+    HSCP_matchTrigMuon_minDeltaR.push_back(dr_min_hlt_muon);
+    HSCP_matchTrigMuon_pT.push_back(hlt_match_pt);
+
     HSCP_iso_TK.push_back(iso_TK);
     HSCP_iso_ECAL.push_back(iso_ECAL);
     HSCP_iso_HCAL.push_back(iso_HCAL);
+    HSCP_track_genTrackMiniIsoSumPt.push_back(track_genTrackMiniIsoSumPt);
     HSCP_PFMiniIso_relative.push_back(miniRelIsoAll);
     HSCP_PFMiniIso_wMuon_relative.push_back(miniRelIsoAll_wMuon);
     HSCP_track_PFIsolationR005_sumChargedHadronPt.push_back(track_PFIso005_sumCharHadPt);
@@ -2381,8 +2809,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   }  //END loop over HSCP candidates
 
+  // Trigger type after preSelection at the event level
+  tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   tuple_maker->fillTreeBranches(tuple,
-                                TrigInfo_,
+                                trigInfo_,
                                 iEvent.id().run(),
                                 iEvent.id().event(),
                                 iEvent.id().luminosityBlock(),
@@ -2399,14 +2829,29 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                 HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
                                 HLT_MET105_IsoTrk50,
-                                CaloMET,
-                                RecoPFMET_et,
+                                RecoCaloMET,
+				RecoCaloMET_phi,
+				RecoCaloMET_sigf,
+                                RecoPFMET,
+				RecoPFMET_phi,
+				RecoPFMET_sigf,
                                 RecoPFMHT,
+				HLTCaloMET,
+				HLTCaloMET_phi,
+				HLTCaloMET_sigf,
+				HLTCaloMETClean,
+				HLTCaloMETClean_phi,
+				HLTCaloMETClean_sigf,
+				HLTCaloMHT,
+				HLTCaloMHT_phi,
+				HLTCaloMHT_sigf,
                                 HLTPFMET,
+				HLTPFMET_phi,
+				HLTPFMET_sigf,
                                 HLTPFMHT,
-                                RecoPFMET_eta,
-                                RecoPFMET_phi,
-                                RecoPFMET_significance,
+				HLTPFMHT_phi,
+				HLTPFMHT_sigf,
+                                matchedMuonWasFound,
                                 maxPtMuon1,
                                 etaMuon1,
                                 phiMuon1,
@@ -2449,10 +2894,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_isHighPurity,
                                 HSCP_EoverP,
                                 HSCP_isMuon,
-                                HSCP_MuonSelector,
+                                HSCP_isPhoton,
                                 HSCP_isElectron,
                                 HSCP_isChHadron,
                                 HSCP_isNeutHadron,
+                                HSCP_isPfTrack,
+                                HSCP_isUndefined,
                                 HSCP_ECAL_energy,
                                 HSCP_HCAL_energy,
                                 HSCP_TOF,
@@ -2469,6 +2916,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_dZ,
                                 HSCP_dXY,
                                 HSCP_dR,
+                                HSCP_p,
                                 HSCP_eta,
                                 HSCP_phi,
                                 HSCP_NOH,
@@ -2477,9 +2925,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_NOMH,
                                 HSCP_FOVHD,
                                 HSCP_NOM,
+                                HSCP_matchTrigMuon_minDeltaR,
+                                HSCP_matchTrigMuon_pT,
                                 HSCP_iso_TK,
                                 HSCP_iso_ECAL,
                                 HSCP_iso_HCAL,
+                                HSCP_track_genTrackMiniIsoSumPt,
                                 HSCP_PFMiniIso_relative,
                                 HSCP_PFMiniIso_wMuon_relative,
                                 HSCP_track_PFIsolationR005_sumChargedHadronPt,
@@ -2623,6 +3074,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("TriggerResults", edm::InputTag("TriggerResults","","HLT"))
     ->setComment("A");
+  desc.add<std::string>("FilterName",std::string("hltL3fL1sMu22Or25L1f0L2f10QL3Filtered50Q"))
+  ->setComment("Meaning of this is: L1f0  = L1 filtered with threshold 0, L2f10Q = L2 filtered at 10 GeV with quality cuts, L3Filtered50Q = L3 filtered at 50 GeV with quality cuts");
   desc.add("PfMET", edm::InputTag("pfMet"))
     ->setComment("A");
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
@@ -2630,7 +3083,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.add("CaloMET", edm::InputTag("caloMet"))
     ->setComment("Take MET from the calorimeters");
   desc.add("CaloJet", edm::InputTag("ak4CaloJets"))
-  ->setComment("Take jets from the calorimeters");
+    ->setComment("Take jets from the calorimeters");
+  desc.add("TriggerSummary", edm::InputTag("hltTriggerSummaryAOD"))
+    ->setComment("A");
   desc.add("PileupInfo", edm::InputTag("addPileupInfo"))
     ->setComment("A");
   desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
@@ -2641,22 +3096,13 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Input collection for particleFlow algorithm");
   desc.add("GenCollection", edm::InputTag("generator","","GEN"))
     ->setComment("A");
-  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
-    ->setComment("Add the list of muon triggers");
-  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
-    ->setComment("Add the list of MET triggers");
-  desc.add("trigEventTag",edm::InputTag("hltTriggerSummaryAOD","","HLT"))
-    ->setComment("A");
-  desc.add<std::string>("filterName",std::string("hltL1sSingleMu22or25"))
-    ->setComment("A");
-  desc.add<std::string>("pathName","HLT_Mu50_v")
-    ->setComment("A");
   desc.addUntracked("TypeMode", 0)
     ->setComment("0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1");
   desc.addUntracked("SampleType", 0)
     ->setComment("0:Data, 1:Background, 2:Signal, 3:Signal Systematics");
-  desc.addUntracked<std::string>("SampleName","BaseName")->setComment("A");
+  // TODO: we really dont need this as a parameter, CRAB will name the output datasets obviously, having different than BaseName...
+  // TODO: (cont) ... will just make the plotting code complicated
+  desc.addUntracked<std::string>("SampleName","BaseName")->setComment("This can be used to distinguish the MET or SingleMuon analysis");
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
@@ -2688,42 +3134,60 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("globalIas_ vs Pt templates in eta binning");
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
-  //desc.add<std::string>("PixelCPE","PixelCPEClusterRepair")
   desc.add<std::string>("PixelCPE","PixelCPETemplateReco")
-    ->setComment("CPE used in the pixel reco, cluster repair is the best available so far ");
+    ->setComment("CPE used in the pixel reco, PixelCPEClusterRepair is the best available so far, template only is PixelCPETemplateReco ");
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
-  desc.addUntracked("DoTriggering",true)->setComment("Boolean to eecide whether we want to use triggers");
-  desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide  whether we want to calculate the systematics");
+  desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide whether we want to calculate the systematics");
+
+  // Trigger choice
+  // Choice of HLT_Mu50_v is to simplify analysis
+  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
+  ->setComment("Add the list of muon triggers");
+  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+    // Possibly used in a next version of the analysis
+     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+    ->setComment("Add the list of MET triggers");
+  // Decide if want to match the muon to HLT at event level
+  desc.addUntracked("MatchToHLTTrigger",true)->setComment("If we want to make sure the event has a muon at HLT");
+  // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
+  desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
+  // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
-  desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT    at PRE-SELECTION");
-  desc.addUntracked("GlobalMaxP",3000.0)->setComment("Cut on p    at PRE-SELECTION");
+  // Excluding the L1 in BPix because of hardware problems, require >=2 hits for track-probQ
   desc.addUntracked("GlobalMinNOPH",2)->setComment("Cut on number of (valid) track pixel hits");
-  desc.addUntracked("GlobalMinNOH",10)->setComment("Cut on number of (valid) track hits");
-  desc.addUntracked("GlobalMinFOVH",0.9)->setComment("Cut on fraction of valid track hits");
-  desc.addUntracked("GlobalMinFOVM",0.7)->setComment("Cut on fraction of valid measurements");
-  desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits)");
+  // Choice >0.8 is motivated by looking at N1 plot N1_TNOHFraction
+  desc.addUntracked("GlobalMinFOVH",0.8)->setComment("Cut on fraction of valid track hits for track cleaning");
+  // Choice of >=10 is motivated by N1_TNOM
+  desc.addUntracked("GlobalMinNOM",10)->setComment("Cut on number of dEdx hits (#strip+#pixel-#ClusterCleaned-#BPixL1 hits)");
+  // Use high purity tracks to ensure good quality tracks
+  desc.addUntracked("GlobalUseHighPurity",true)->setComment("Cut on the quality of the track");
+  // Choice of <5 is motivated by N1_Chi2oNdof
   desc.addUntracked("GlobalMaxChi2",5.0)->setComment("Cut on Track maximal Chi2/NDF");
-  desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
+  // Choice of <0.1 motivated by looking at N1 plot N1 plot
   desc.addUntracked("GlobalMaxDZ",0.1)->setComment("Cut on 1D distance (cm) to closest vertex in Z direction");
+  // Choice of <0.02 motivated by looking at N1 plot N1 plot
   desc.addUntracked("GlobalMaxDXY",0.02)->setComment("Cut on 2D distance (cm) to closest vertex in R direction");
-  desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt)");
-  desc.addUntracked("GlobalMinDeltaRminJet",0.4)->setComment("Min distance in dR to the nearest jet");
+
   desc.addUntracked("GlobalMaxMiniRelIsoAll",0.02)->setComment("Cut on the PF based mini-isolation");
-  desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,globalIh_,etc)");
+  desc.addUntracked("GlobalMaxTIsol",15.0)->setComment("Cut on tracker isolation (SumPt of genTracks with variable cone)");
+  desc.addUntracked("GlobalMaxEoP",0.3)->setComment("Cut on calorimeter isolation (E/P) using PF");
+
   desc.addUntracked("GlobalMinTrackProbQCut",0.0)->setComment("Min cut for probQ, 0.0 means no cuts applied");
-  desc.addUntracked("GlobalMaxTrackProbQCut",1.0)->setComment("Max cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMaxTrackProbQCut",0.7)->setComment("Max cut for probQ, 1.0 means no cuts applied");
+  desc.addUntracked("GlobalMinIh",3.47)->setComment("Cut on dEdx estimator (Im,Ih,etc)");
   desc.addUntracked("GlobalMinTrackProbXYCut",0.01)->setComment("Min cut for probXY, -0.01 means no cuts applied");
   desc.addUntracked("GlobalMaxTrackProbXYCut",1.0)->setComment("Max cut for probXY, 1.0 means no cuts applied");
-  desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (globalIas_,globalIas_,etc)");
+  desc.addUntracked("GlobalMinIs",0.0)->setComment("Cut on dEdx discriminator (Ias,Is,etc)");
+  desc.addUntracked("GlobalMinDeltaRminJet",0.4)->setComment("Min distance in dR to the nearest jet");
   desc.addUntracked("MinMuStations",2)->setComment("Minimum number of muon stations");
   desc.addUntracked("GlobalMinNDOF",8.0)->setComment("Cut on number of DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMinNDOFDT",6.0)->setComment("Cut on number of DT DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMaxTOFErr",0.15)->setComment("Cut on error on muon TOF measurement");
   desc.addUntracked("GlobalMinTOF",1.0)->setComment("Cut on the min time-of-flight");
-  
+
  descriptions.add("HSCParticleAnalyzer",desc);
 }
 
@@ -2892,7 +3356,7 @@ GlobalPoint Analyzer::getOuterHitPos(const edm::EventSetup& iSetup, const reco::
   // Retrieve tracker geometry from the event setup
   edm::ESHandle<TrackerGeometry> tkGeometry;
   iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
-  
+
   GlobalPoint point(0, 0, 0);
   if (!dedxHits) {
     return point;
@@ -2973,7 +3437,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 const edm::Event& iEvent,
                                 const edm::EventSetup& iSetup,
                                 const float pixelProbs[],
-                                const float Event_Weight,
                                 Tuple* tuple,
                                 const float GenBeta,
                                 const bool RescaleP,
@@ -2982,18 +3445,23 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
                                 float MassErr,
                                 const float closestBackgroundPDGsIDs[]) {
   using namespace edm;
-    
+
+  const edm::Handle<reco::TrackCollection> trackCollectionHandle = iEvent.getHandle(genTrackToken_);;
   //===================== Handle For vertex ===============
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
   //===================== Handle For PFCandidate ===================
   const edm::Handle<reco::PFCandidateCollection> pfCandHandle = iEvent.getHandle(pfCandToken_);
   //===================== Handle For PFMET ===================
-  const edm::Handle<std::vector<reco::PFMET>> pfMETHandle = iEvent.getHandle(pfMETToken_);
+  const edm::Handle<std::vector<reco::PFMET>> recoPFMETHandle = iEvent.getHandle(pfMETToken_);
   //====================== Handle for PF jets ======================
   const edm::Handle<reco::PFJetCollection> pfJetHandle = iEvent.getHandle(pfJetToken_);
   //===================== Handle For CaloJet ===================
   const edm::Handle<std::vector<reco::CaloJet>> caloJetHandle = iEvent.getHandle(caloJetToken_);
 
+    //===================== Handle For Topology ===================
+  edm::ESHandle<TrackerTopology> TopoHandle;
+  iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
+  const TrackerTopology* tTopo = TopoHandle.product();
 
   if (vertexColl.size() < 1) {
     LogPrint(MOD) << "        >> Preselection not passed: there is no vertex"
@@ -3001,19 +3469,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     return false;
   }
 
-/*  bool vetoJet = false;
-
-  if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
-    const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
-    for (unsigned int i = 0; i < pfJetColl->size(); i++) {
-      const reco::PFJet* jet = &(*pfJetColl)[i];
-      if(jet->pt()<30) continue;
-      float dr = deltaR(jet->eta(),jet->phi(),track->eta(),track->phi());
-      if(dr<0.3) vetoJet=true;
-    }
-  }
-*/
-  
   // This is a repeated code here
   int highestPtGoodVertex = -1;
   int goodVerts = 0;
@@ -3025,33 +3480,54 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       continue;  //only consider good vertex
     goodVerts++;
     if (tuple) {
-      tuple->BefPreS_dzAll->Fill(track->dz(vertexColl[i].position()), Event_Weight);
-      tuple->BefPreS_dxyAll->Fill(track->dxy(vertexColl[i].position()), Event_Weight);
+      tuple->BefPreS_dzAll->Fill(track->dz(vertexColl[i].position()), EventWeight_);
+      tuple->BefPreS_dxyAll->Fill(track->dxy(vertexColl[i].position()), EventWeight_);
     }
-    
+
     if (fabs(track->dz(vertexColl[i].position())) < fabs(dzMin)) {
       dzMin = fabs(track->dz(vertexColl[i].position()));
       highestPtGoodVertex = i;
     }
   } // End loop on the vertices in the event
-  
+
   if (highestPtGoodVertex < 0) {
     highestPtGoodVertex = 0;
   }
-  
+
   // Impact paramters dz and dxy
   float dz = track->dz(vertexColl[highestPtGoodVertex].position());
   float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
-  
+
   TVector3 vertex(vertexColl[highestPtGoodVertex].position().x(),
                   vertexColl[highestPtGoodVertex].position().y(),
                   vertexColl[highestPtGoodVertex].position().z());
-  
+
   // I think these are not used anywhere
 //  TreeDXY = dxy;
 //  TreeDZ = dz;
 //
-  
+  // Loop on generalTracks
+  float track_genTrackMiniIsoSumPt = 0;
+  for(unsigned int c=0;c<trackCollectionHandle->size();c++){
+    reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
+    // Dont count the HSCP candidate in
+    if (genTrackRef.isNonnull() && genTrackRef.key() != track.key()) {
+      float drForMiniIso = 0.0;
+      if (track->pt() < 50 ) {
+        drForMiniIso = 0.2;
+      } else if (track->pt() < 200) {
+        drForMiniIso = 10/track->pt();
+      } else {
+        drForMiniIso = 0.05;
+      }
+      float pt = genTrackRef->pt();
+      float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
+      if (dr<drForMiniIso) {
+        track_genTrackMiniIsoSumPt+=pt;
+      }
+    }
+  }
+
   // Loop on PF candidates
   bool pf_isPfTrack = false;
   bool pf_isPhoton = false, pf_isElectron = false, pf_isMuon = false;
@@ -3059,14 +3535,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   float track_PFMiniIso_sumCharHadPt = 0, track_PFMiniIso_sumNeutHadPt = 0, track_PFMiniIso_sumPhotonPt = 0, track_PFMiniIso_sumPUPt = 0, track_PFMiniIso_sumMuonPt = 0 ,track_PFMiniIso_sumLeptonPt = 0;
   float track_PFMiniIso_otherPt = 0;
   float pf_energy = 0.0;
-    
+
   // number of tracks as the first bin
   if (tuple) {
-    tuple->BefPreS_pfType->Fill(0.5, EventWeight_);
+    tuple->BefPreS_pfType->Fill(0., EventWeight_);
   }
-  
-  float isoTK_PVconstrain_dr03 = 0.;
- 
+
 
   if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
     const reco::PFCandidateCollection* pf = pfCandHandle.product();
@@ -3085,7 +3559,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
         pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
         pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
-        
+
         pf_isChHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h;
         pf_isNeutHadron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::h0;
         pf_isUndefined = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::X;
@@ -3093,21 +3567,21 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
         if (tuple) {
           // Number of PF tracks matched to HSCP candidate track
-            tuple->BefPreS_pfType->Fill(1.5, EventWeight_);
+            tuple->BefPreS_pfType->Fill(1., EventWeight_);
           if (pf_isElectron) {
-            tuple->BefPreS_pfType->Fill(2.5, EventWeight_);
+            tuple->BefPreS_pfType->Fill(2., EventWeight_);
           } else if (pf_isMuon) {
-            tuple->BefPreS_pfType->Fill(3.5, EventWeight_);
+            tuple->BefPreS_pfType->Fill(3., EventWeight_);
           } else if (pf_isPhoton) {
-            tuple->BefPreS_pfType->Fill(4.5, EventWeight_);
+            tuple->BefPreS_pfType->Fill(4., EventWeight_);
           } else if (pf_isChHadron) {
-           tuple->BefPreS_pfType->Fill(5.5, EventWeight_);
+           tuple->BefPreS_pfType->Fill(5., EventWeight_);
           } else if (pf_isNeutHadron) {
-            tuple->BefPreS_pfType->Fill(6.5, EventWeight_);
+            tuple->BefPreS_pfType->Fill(6., EventWeight_);
           } else if (pf_isUndefined) {
-            tuple->BefPreS_pfType->Fill(7.5, EventWeight_);
+            tuple->BefPreS_pfType->Fill(7., EventWeight_);
           } else {
-           tuple->BefPreS_pfType->Fill(8.5, EventWeight_);
+           tuple->BefPreS_pfType->Fill(8., EventWeight_);
           }
         }
         if (debug_ > 4) LogPrint(MOD) << "      >> HSCP candidate track has ID " << pfCand->pdgId() << " categoriezed by PF as " << pfCand->translatePdgIdToType(pfCand->pdgId());
@@ -3145,12 +3619,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
         if (!pf_isElectronForIdx && !pf_isMuonForIdx && !pf_isChHadronForIdx && !pf_isNeutHadronForIdx && !pf_isPhotonForIdx) {
           track_PFMiniIso_otherPt+=pt;
-          LogPrint(MOD) << "PF cand ID " << pfCand->pdgId() << " is not in the std categories, it's " << pfCand->translatePdgIdToType(pfCand->pdgId()); 
+          LogPrint(MOD) << "PF cand ID " << pfCand->pdgId() << " is not in the std categories, it's " << pfCand->translatePdgIdToType(pfCand->pdgId());
         }
       }
     }
   }//end loop PFCandidates
-  
+
   // loop on PF Jets for the histograms
   float dRMinPfJet = 9999.0;
   float dRMinPfJetTemp = 9999.0;
@@ -3165,23 +3639,23 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     for (unsigned int i = 0; i < pfJetColl->size(); i++) {
       const reco::PFJet* jet = &(*pfJetColl)[i];
       float dr = deltaR(jet->eta(), jet->phi(), track->eta(), track->phi());
-      
+
       float dRMinPfCaloJet = 9999.0;
       float dPtPfCaloJet = 9999.0;
       if (caloJetHandle.isValid() && !caloJetHandle->empty()) {
         for (unsigned int iCalo = 0; iCalo < caloJetHandle->size(); iCalo++) {
           const reco::CaloJet* jetCalo = &(*caloJetHandle)[iCalo];
           float drCalo = deltaR(jet->eta(), jet->phi(), jetCalo->eta(), jetCalo->phi());
-          
+
           if (drCalo < dRMinPfCaloJet) {
             dRMinPfCaloJet = drCalo;
             dPtPfCaloJet = fabs(jet->pt()-jetCalo->pt());
           }
         }
       }
-      
+
       tuple->BefPreS_dRVsdPtPfCaloJet->Fill(dRMinPfCaloJet,dPtPfCaloJet, EventWeight_);
-      
+
       if (dr < dRMinPfJetTemp) {
         dRMinPfJetTemp = dr;
         nearestJetIndex = i;
@@ -3192,7 +3666,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         continue;
       }
       pfNumJets++;
-      
+
       if (dr < dRMinPfJet) {
         dRMinPfJet = dr;
       }
@@ -3223,122 +3697,123 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       }
     }
   }
-  
+
   // Calculate PF mini relative isolation
   // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  if (miniRelIsoAll == 0) {
-    if (debug_ > 4) LogPrint(MOD) << "      >> track_PFMiniIso_sumLeptonPt: " << track_PFMiniIso_sumLeptonPt << " track_PFMiniIso_sumCharHadPt: " << track_PFMiniIso_sumCharHadPt << " track_PFMiniIso_sumNeutHadPt " << track_PFMiniIso_sumNeutHadPt << " track_PFMiniIso_sumPhotonPt " << track_PFMiniIso_sumPhotonPt << " track_PFMiniIso_sumPUPt: " << track_PFMiniIso_sumPUPt << " track_PFMiniIso_otherPt: " << track_PFMiniIso_otherPt ; 
-  }
+  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_otherPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 
   // Calculate transverse mass
   float RecoPFMET_et = -1, RecoPFMET_phi = -1;
+  float dPhiMinPfMet = 9999.0;
 
-  if (pfMETHandle.isValid() && !pfMETHandle->empty()) {
-    for (unsigned int i = 0; i < pfMETHandle->size(); i++) {
-      const reco::PFMET* pfMet = &(*pfMETHandle)[i];
-      RecoPFMET_et = pfMet->et();
-      RecoPFMET_phi = pfMet->phi();
+
+  if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
+    if (recoPFMETHandle->size() > 1) {
+      cout << "recoPFMETHandle->size() " << recoPFMETHandle->size() << endl;
+    }
+    for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
+      const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
+      RecoPFMET_et = recoPFMet->et();
+      RecoPFMET_phi = recoPFMet->phi();
     }
   }
+
+  // Loop through the rechits to find the number of non-L1 hits
+  unsigned int nonL1PixHits = 0;
+  for (unsigned int i = 0; i < dedxHits->size(); i++) {
+    DetId detid(dedxHits->detId(i));
+    if (detid.subdetId() < 3) {
+      if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) != 1)) {
+        nonL1PixHits++;
+      }
+    }
+  }
+
   float massT = sqrt(2*track->pt()*RecoPFMET_et*(1-cos(track->phi()-RecoPFMET_phi)));
+  dPhiMinPfMet = fabs(reco::deltaPhi(RecoPFMET_phi,track->phi()));
 
   // Number of DeDx hits
-  unsigned int numDeDxHits = (dedxSObj) ? dedxSObj->numberOfMeasurements() : 0;
+  unsigned int numDeDxHits = (dedxSObj) ? (dedxSObj->numberOfMeasurements()+nonL1PixHits) : 0;
   unsigned int missingHitsTillLast =
     track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
     track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
   float validFractionTillLast =
     track->found() <= 0 ? -1 : track->found() / float(track->found() + missingHitsTillLast);
-  
+
   float probQonTrack = pixelProbs[0];
   float probXYonTrack = pixelProbs[1];
   float probQonTrackNoLayer1 = pixelProbs[2];
   float probXYonTrackNoLayer1 = pixelProbs[3];
-  
-  // TODO: what do PUA and PUB stand for??
+
+  // A,B,C for 3 cat of PU
   bool PUA = (vertexColl.size() < 15);
-  bool PUB = (vertexColl.size() >= 15);
-  
+  bool PUB = (vertexColl.size() >= 15 && vertexColl.size() < 30);
+  bool PUC = (vertexColl.size() >= 30 );
+
   const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
   susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
-  
+
 //  float EoP = (hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy()) / track->p();
   float EoP = pf_energy / track->p();
   float IsoTK_SumEt = hscpIso.Get_TK_SumEt();
 
   float Mass = GetMass(track->p(), globalIh_, dEdxK_, dEdxC_);
-  
+
   //Find distance to nearest segment on opposite side of detector
   float minPhi = 0.0, minEta = 0.0;
   float segSep = SegSep(track, iEvent, minPhi, minEta);
 
   // Preselection cuts
-  bool passedCutsArray[19];
+  bool passedCutsArray[15];
   std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
- 
-  //WIP Minimal selection 
 
   // No cut, i.e. events after trigger
   passedCutsArray[0]  = true;
-  // Check if eta is inside the max eta cut
-  passedCutsArray[1]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
   // Cut on transverse momentum
-  passedCutsArray[2]  = (track->pt() > globalMinPt_) ? true : false;
-  // Cut on maximal momentum
-  passedCutsArray[3]  = (track->p() < globalMaxP_) ? true : false;
-  // Check the number of pixel hits
-  passedCutsArray[4]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidPixelHits()) > globalMinNOPH_) ? true : false;
-  // Check the number of hits 
-  passedCutsArray[5]  = (typeMode_ != 3 && fabs(track->hitPattern().numberOfValidHits()) > globalMinNOH_) ? true : false;
-  // Check the min fraction of valid hits
-  passedCutsArray[6]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
-  // Check the min fraction of valid measurements
-  passedCutsArray[7] = ((numDeDxHits-track->hitPattern().numberOfValidPixelHits())/(float)fabs(track->hitPattern().numberOfValidStripHits()) > globalMinFOVM_) ? true : false;
-  // Cut for the number of dEdx hits
-  passedCutsArray[8]  = (numDeDxHits > globalMinNOM_)  ? true : false;
-  // Select only high purity tracks
-  passedCutsArray[9]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
-  // Cut on the chi2 / ndof
-  passedCutsArray[10] = (typeMode_ != 3 && track->chi2() / track->ndof() < globalMaxChi2_) ? true : false;
-  // Cut on the energy over momenta
-  passedCutsArray[11] = (EoP < globalMaxEoP_) ? true : false;
-  // Cut on the impact parameter
+  // Single muon trigger threshold is 50 GeV
+  passedCutsArray[1]  = (track->pt() > globalMinPt_) ? true : false;
+  // Check if eta is inside the max eta cut for detector homogeneity
+  passedCutsArray[2]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+  // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
+  passedCutsArray[3]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
+  // Check the min fraction of valid hits to ensure good stats on the hits
+  passedCutsArray[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+  // Cut for the number of dEdx hits to ensure good stats on the hits
+  passedCutsArray[5]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+  // Select only high purity tracks to ensure good quality tracks
+  passedCutsArray[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+  // Cut on the chi2 / ndof to ensure good quality tracks
+  passedCutsArray[7] = (typeMode_ != 3 && (track->chi2() / track->ndof()) < globalMaxChi2_) ? true : false;
+  // Cut on the impact parameter to ensure the track is coming from the PV
   // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-  passedCutsArray[12] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+  passedCutsArray[8] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
                         || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
   // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-  passedCutsArray[13] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+  passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
                         || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
-  // Cut on the uncertainty of the pt measurement
-  //passedCutsArray[14] = (true) ? true : false;
-  passedCutsArray[14] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
-  // Veto on jet with pT > 30 GeV in a cone of dR=0.3
-  //passedCutsArray[12] = (true) ? true : false;
-  //passedCutsArray[15] = ( vetoJet ) ? false : true;
-  //passedCutsArray[15] = ( dRMinPfJet > globalMinDeltaRminJet_ ) ? true : false;
-  passedCutsArray[15] = true;
-//  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
   // Cut on the PF based mini-isolation
-  //passedCutsArray[13] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
+  // Cut on the absolute pT-dependent cone size TkIsolation
+  passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
+    // Cut on the energy over momenta
+  passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
+    // Cut on the uncertainty of the pt measurement
+  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008)) ? true : false;
+//  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
   // Cut on the tracker based isolation
-  passedCutsArray[16] = ( isoTK_PVconstrain_dr03 < globalMaxTIsol_) ? true : false;
-  // Cut on the PF electron ID
-  passedCutsArray[17] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
-  // Cut on min Ih (or max for fractionally charged)
-  passedCutsArray[18] = (  (typeMode_ != 5 && globalIh_ > globalMinIh_)
-                        || (typeMode_ == 5 && globalIh_ < globalMinIh_)) ? true : false;
-  //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
-  // Cut away background events based on the probXY
+//  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
 
-//  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_ && probXYonTrackNoLayer1 < 1.0))  ? true : false;
-//  passedCutsArray[16] = ( true ) ? true : false;
+  // Cut on the PF electron ID
+//  passedCutsArray[14] = ( !pf_isElectron  && !pf_isPhoton) ? true : false;
+  // Cut on min Ih (or max for fractionally charged)
+//  passedCutsArray[15] = (  (typeMode_ != 5 &&  globalIh_ > globalMinIh_)
+//                        || (typeMode_ == 5 && globalIh_ < globalMinIh_)) ? true : false;
   //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
   // Cut away background events based on the probXY
-  //passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_) && (probXYonTrackNoLayer1 < globalMaxTrackProbXYCut_))  ? true : false;
+//  passedCutsArray[16] = ((probXYonTrackNoLayer1 > globalMinTrackProbXYCut_) && (probXYonTrackNoLayer1 < globalMaxTrackProbXYCut_))  ? true : false;
   // Cut away background events based on the probQ
-//  passedCutsArray[17] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
+  passedCutsArray[14] = (probQonTrackNoLayer1 < globalMaxTrackProbQCut_ && probQonTrackNoLayer1 > globalMinTrackProbQCut_) ? true : false;
 //  // TOF only cuts
 //  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
 //  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -3353,7 +3828,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   // cut on relative tracker isolation (SumPt/Pt)
   // bool cutRelTKIso = ( IsoTK_SumEt / track->pt() > GlobalMaxRelTIsol)  ? true : false;
   // Cut for number of DOF in TOF ana
-  
+
   // CutFlow in a single plot
   if (tuple) {
     for (size_t i=0;i<sizeof(passedCutsArray);i++) {
@@ -3364,11 +3839,11 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         }
       }
       if (allCutsPassedSoFar) {
-        tuple->CutFlow->Fill((i+0.5), Event_Weight);
+        tuple->CutFlow->Fill((i+1), EventWeight_);
       }
     }
   }
-    
+
     // CutFlow in a single plot when the order is reversed
     if (tuple) {
       for (int i = sizeof(passedCutsArray)-1; i>=0; i--) {
@@ -3379,131 +3854,137 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
           }
         }
         if (allCutsPassedSoFar) {
-          tuple->CutFlowReverse->Fill((i+0.5), Event_Weight);
+          tuple->CutFlowReverse->Fill((i), EventWeight_);
         }
       }
     }
-  
-  // Before preselection print-outs
-  if (debug_ > 7 ) {
-    LogPrint(MOD) << "        >> Trigger passed!";
-    LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
-    LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
-    LogPrint(MOD) << "        >>   track->p()  " <<   track->p() ;
-    LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
-    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
-    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidHits()  " <<   track->hitPattern().numberOfValidHits() ;
-    LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
-    LogPrint(MOD) << "        >>   numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits())  " <<   numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits()) ;
-    LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
-    LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
-    LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
-    LogPrint(MOD) << "        >>   PF E = " << pf_energy <<  " Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy();
-    LogPrint(MOD) << "        >>   dz  " <<   dz ;
-    LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
-    LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
-    LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
-    LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
-    LogPrint(MOD) << "        >>   isoTK_PVconstrain_dr03   " <<   isoTK_PVconstrain_dr03  ;
-    LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
-    LogPrint(MOD) << "        >>   Ih  " <<   globalIh_ ;
-    LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
-    LogPrint(MOD) << "        >>   probXYonTrack   " <<  probXYonTrack  ;
-    LogPrint(MOD) << "        >>   Ias  " << globalIas_ ;
-  }
 
-  
+//  // Before preselection print-outs
+//  if (debug_ > 7 ) {
+//    LogPrint(MOD) << "        >> Before preselection print-outs:";
+//    LogPrint(MOD) << "        >> Trigger passed!";
+//    LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
+//    LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
+//    LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
+//    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
+//    LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
+//    LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
+//    LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
+//    LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
+//    LogPrint(MOD) << "        >>   PF E = " << pf_energy <<  " Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " p = " << track->p() ;
+//    LogPrint(MOD) << "        >>   dz  " <<   dz ;
+//    LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
+//    LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
+//    LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
+//    LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
+//    LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
+//    LogPrint(MOD) << "        >>   globalIh_  " <<   globalIh_ ;
+//    LogPrint(MOD) << "        >>   globalIas_  " << globalIas_;
+//    LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+//    LogPrint(MOD) << "        >>   probXYonTrack   " <<  probXYonTrack  ;
+//
+//  }
+
   // Before (pre)selection plots
   if (tuple) {
-    if (GenBeta >= 0) {
-      tuple->Beta_Matched->Fill(GenBeta, Event_Weight);
-    }
-    tuple->BefPreS_Eta->Fill(track->eta(), Event_Weight);
-    tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, Event_Weight);
-    tuple->BefPreS_NVertex->Fill(vertexColl.size()-.5, Event_Weight);
-    tuple->BefPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
+    tuple->BefPreS_Eta->Fill(track->eta(), EventWeight_);
+    tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern()), EventWeight_);
+    tuple->BefPreS_NVertex->Fill(vertexColl.size(), EventWeight_);
+    tuple->BefPreS_NVertex_NoEventWeight->Fill(vertexColl.size());
     if (PUA) {
-      tuple->BefPreS_TNOH_PUA->Fill(track->found(), Event_Weight);
-      tuple->BefPreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
-      tuple->BefPreS_Ias_PUA->Fill(globalIas_, Event_Weight);
-      tuple->BefPreS_Ih_PUA->Fill(globalIh_, Event_Weight);
-      tuple->BefPreS_Pt_PUA->Fill(track->pt(), Event_Weight);
-        
+      tuple->BefPreS_TNOH_PUA->Fill(track->found(), EventWeight_);
+      tuple->BefPreS_TNOM_PUA->Fill(numDeDxHits, EventWeight_);
+      tuple->BefPreS_Ias_PUA->Fill(globalIas_, EventWeight_);
+      tuple->BefPreS_Ih_PUA->Fill(globalIh_, EventWeight_);
+      tuple->BefPreS_Pt_PUA->Fill(track->pt(), EventWeight_);
     }
     if (PUB) {
-      tuple->BefPreS_TNOH_PUB->Fill(track->found(), Event_Weight);
-      tuple->BefPreS_TNOM_PUB->Fill(numDeDxHits, Event_Weight);
-      tuple->BefPreS_Ias_PUB->Fill(globalIas_, Event_Weight);
-      tuple->BefPreS_Ih_PUB->Fill(globalIh_, Event_Weight);
-      tuple->BefPreS_Pt_PUB->Fill(track->pt(), Event_Weight);
+      tuple->BefPreS_TNOH_PUB->Fill(track->found(), EventWeight_);
+      tuple->BefPreS_TNOM_PUB->Fill(numDeDxHits, EventWeight_);
+      tuple->BefPreS_Ias_PUB->Fill(globalIas_, EventWeight_);
+      tuple->BefPreS_Ih_PUB->Fill(globalIh_, EventWeight_);
+      tuple->BefPreS_Pt_PUB->Fill(track->pt(), EventWeight_);
     }
-    tuple->BefPreS_TNOHFraction->Fill(track->validFraction(), Event_Weight);
-    tuple->BefPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
-    tuple->BefPreS_TNOHFractionTillLast->Fill(validFractionTillLast, Event_Weight);
-    tuple->BefPreS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
-    tuple->BefPreS_TNOM->Fill(numDeDxHits-.5, Event_Weight);
+    tuple->BefPreS_TNOHFraction->Fill(track->validFraction(), EventWeight_);
+    tuple->BefPreS_TNOPH->Fill(nonL1PixHits, EventWeight_);
+    tuple->BefPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
+    tuple->BefPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
+    tuple->BefPreS_TNOM->Fill(numDeDxHits, EventWeight_);
     if (track->found() - numDeDxHits) {
-      tuple->BefPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, Event_Weight);
+      tuple->BefPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, EventWeight_);
     }
     tuple->BefPreS_ProbQ->Fill(probQonTrack, EventWeight_);
     tuple->BefPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
     tuple->BefPreS_ProbQNoL1->Fill(probQonTrackNoLayer1, EventWeight_);
     tuple->BefPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     if (tof) {
-      tuple->BefPreS_nDof->Fill(tof->nDof()-.5, Event_Weight);
-      tuple->BefPreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
-      tuple->BefPreS_TOFError->Fill(tof->inverseBetaErr(), Event_Weight);
-      tuple->BefPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), Event_Weight);
+      tuple->BefPreS_nDof->Fill(tof->nDof(), EventWeight_);
+      tuple->BefPreS_MTOF->Fill(tof->inverseBeta(), EventWeight_);
+      tuple->BefPreS_TOFError->Fill(tof->inverseBetaErr(), EventWeight_);
+      tuple->BefPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), EventWeight_);
     }
-    tuple->BefPreS_Qual->Fill(track->qualityMask(), Event_Weight);
-    tuple->BefPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
-    tuple->BefPreS_Pt->Fill(track->pt(), Event_Weight);
-    tuple->BefPreS_P->Fill(track->p(), Event_Weight);
-    tuple->BefPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), Event_Weight);
-    tuple->BefPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
-    tuple->BefPreS_Dxy->Fill(dxy, Event_Weight);
-    tuple->BefPreS_Dz->Fill(dz, Event_Weight);
-    tuple->BefPreS_EtaVsDz->Fill(track->eta(), dz, Event_Weight);
-    tuple->BefPreS_PV->Fill(goodVerts, Event_Weight);
+    if (track->quality(reco::TrackBase::highPurity)) {
+      tuple->BefPreS_Qual->Fill(1., EventWeight_);
+    } else {
+      tuple->BefPreS_Qual->Fill(0., EventWeight_);
+    }
+
+    tuple->BefPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_);
+    tuple->BefPreS_Pt->Fill(track->pt(), EventWeight_);
+    tuple->BefPreS_Pt_lowPt->Fill(track->pt(), EventWeight_);
+    tuple->BefPreS_P->Fill(track->p(), EventWeight_);
+    tuple->BefPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
+    tuple->BefPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), EventWeight_);
+    tuple->BefPreS_Dxy->Fill(dxy, EventWeight_);
+    tuple->BefPreS_Dz->Fill(dz, EventWeight_);
+    tuple->BefPreS_EtaVsDz->Fill(track->eta(), dz, EventWeight_);
+    tuple->BefPreS_PV->Fill(goodVerts, EventWeight_);
     tuple->BefPreS_PV_NoEventWeight->Fill(goodVerts);
-    tuple->BefPreS_EoP->Fill(EoP, Event_Weight);
-    tuple->BefPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
-    tuple->BefPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
-    tuple->BefPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
-    tuple->BefPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
-    tuple->BefPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), Event_Weight);
-    tuple->BefPreS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
-    tuple->BefPreS_Ih->Fill(globalIh_, Event_Weight);
-    tuple->BefPreS_Ias->Fill(globalIas_, Event_Weight);
-    tuple->BefPreS_massT->Fill(massT, Event_Weight);
+    tuple->BefPreS_EoP->Fill(EoP, EventWeight_);
+    tuple->BefPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
+    tuple->BefPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+    tuple->BefPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+    tuple->BefPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), EventWeight_);
+    tuple->BefPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+    tuple->BefPreS_TIsol->Fill(IsoTK_SumEt, EventWeight_);
+    tuple->BefPreS_Ih->Fill(globalIh_, EventWeight_);
+    tuple->BefPreS_Ias->Fill(globalIas_, EventWeight_);
+    tuple->BefPreS_massT->Fill(massT, EventWeight_);
+    tuple->BefPreS_mass->Fill(Mass);
+
+
     // Add PFCadidate based isolation info to the tuple
     // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
     // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
-    tuple->BefPreS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
-    tuple->BefPreS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
-    tuple->BefPreS_SegSep->Fill(segSep, Event_Weight);
-    tuple->BefPreS_SegMinPhiSep->Fill(minPhi, Event_Weight);
-    tuple->BefPreS_SegMinEtaSep->Fill(minEta, Event_Weight);
-    tuple->BefPreS_OpenAngle->Fill(OpenAngle, Event_Weight);
-    tuple->BefPreS_MassErr->Fill(MassErr, Event_Weight);
+    tuple->BefPreS_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+    tuple->BefPreS_MiniRelIsoChg->Fill(miniRelIsoChg, EventWeight_);
+    tuple->BefPreS_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+    tuple->BefPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+    tuple->BefPreS_SegSep->Fill(segSep, EventWeight_);
+    tuple->BefPreS_SegMinPhiSep->Fill(minPhi, EventWeight_);
+    tuple->BefPreS_SegMinEtaSep->Fill(minEta, EventWeight_);
+    tuple->BefPreS_OpenAngle->Fill(OpenAngle, EventWeight_);
+    tuple->BefPreS_MassErr->Fill(MassErr, EventWeight_);
     tuple->BefPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
-    tuple->BefPreS_EtaVsIas->Fill(track->eta(), globalIas_, Event_Weight);
-    tuple->BefPreS_EtaVsIh->Fill(track->eta(), globalIh_, Event_Weight);
-    tuple->BefPreS_EtaVsP->Fill(track->eta(), track->p(), Event_Weight);
-    tuple->BefPreS_EtaVsPt->Fill(track->eta(), track->pt(), Event_Weight);
-    tuple->BefPreS_PVsIas->Fill(track->p(), globalIas_, Event_Weight);
-    tuple->BefPreS_IhVsIas->Fill(globalIh_, globalIas_, Event_Weight);
-    tuple->BefPreS_PVsIh->Fill(track->p(), globalIh_, Event_Weight);
-    tuple->BefPreS_PtVsIas->Fill(track->pt(), globalIas_, Event_Weight);
-    tuple->BefPreS_PtVsIh->Fill(track->pt(), globalIh_, Event_Weight);
-    tuple->BefPreS_CaloNumJets->Fill(caloNumJets,Event_Weight);
-    tuple->BefPreS_dRMinPfJet->Fill(dRMinPfJet, Event_Weight);
-    tuple->BefPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, globalIas_, Event_Weight);
-    tuple->BefPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
-    tuple->BefPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, Event_Weight);
-
+    tuple->BefPreS_EtaVsIas->Fill(track->eta(), globalIas_, EventWeight_);
+    tuple->BefPreS_EtaVsIh->Fill(track->eta(), globalIh_, EventWeight_);
+    tuple->BefPreS_EtaVsP->Fill(track->eta(), track->p(), EventWeight_);
+    tuple->BefPreS_EtaVsPt->Fill(track->eta(), track->pt(), EventWeight_);
+    tuple->BefPreS_PVsIas->Fill(track->p(), globalIas_, EventWeight_);
+    tuple->BefPreS_IhVsIas->Fill(globalIh_, globalIas_, EventWeight_);
+    tuple->BefPreS_PVsIh->Fill(track->p(), globalIh_, EventWeight_);
+    tuple->BefPreS_PtVsIas->Fill(track->pt(), globalIas_, EventWeight_);
+    tuple->BefPreS_PtVsIh->Fill(track->pt(), globalIh_, EventWeight_);
+    tuple->BefPreS_CaloNumJets->Fill(caloNumJets,EventWeight_);
+    tuple->BefPreS_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
+    tuple->BefPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, globalIas_, EventWeight_);
+    tuple->BefPreS_dRMinCaloJet->Fill(dRMinCaloJet, EventWeight_);
+    tuple->BefPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, EventWeight_);
+    if (GenBeta >= 0) {
+      tuple->BefPreS_GenBeta->Fill(GenBeta, EventWeight_);
+    }
   }
-  
+
   //For TOF only analysis match to a SA track without vertex constraint for IP cuts
   if (typeMode_ == 3) {
       //Find closest NV track
@@ -3518,75 +3999,69 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       }
     }
     if (tuple) {
-      tuple->BefPreS_dR_NVTrack->Fill(minDr, Event_Weight);
+      tuple->BefPreS_dR_NVTrack->Fill(minDr, EventWeight_);
     }
     if (minDr > 0.4) {
       return false;
     }
     if (tuple) {
-      tuple->NVTrack->Fill(0.0, Event_Weight);
+      tuple->NVTrack->Fill(0.0, EventWeight_);
     }
-    
-      // Find displacement of tracks with respect to beam spot
+
+    // Find displacement of tracks with respect to beam spot
     const reco::BeamSpot beamSpotColl = iEvent.get(offlineBeamSpotToken_);
     float dzFromBeamSpot = NVTrack.dz(beamSpotColl.position());
     float dxyFromBeamSpot = NVTrack.dxy(beamSpotColl.position());
     if (debug_ > 8 ) LogPrint(MOD) << dzFromBeamSpot << " and " << dxyFromBeamSpot;
-      // TODO use this for TOF only analysis, instead of dxy and dz
-    
+    // TODO use this for TOF only analysis, instead of dxy and dz
+
     if (muonStations(NVTrack.hitPattern()) < minMuStations_)
       return false;
-    
-    if (tuple) {
-      tuple->MTOF->Fill(0.0, Event_Weight);
-      if (GenBeta >= 0)
-        tuple->Beta_PreselectedB->Fill(GenBeta, Event_Weight);
-    }
   } // End condition for TOF only analysis
-  
-  
+
+
   if (tuple) {
       //Plotting segment separation depending on whether track passed dz cut
     if (fabs(dz) > globalMaxDZ_) {
-      tuple->BefPreS_SegMinEtaSep_FailDz->Fill(minEta, Event_Weight);
+      tuple->BefPreS_SegMinEtaSep_FailDz->Fill(minEta, EventWeight_);
     } else {
-      tuple->BefPreS_SegMinEtaSep_PassDz->Fill(minEta, Event_Weight);
+      tuple->BefPreS_SegMinEtaSep_PassDz->Fill(minEta, EventWeight_);
     }
     //Plots for tracking failing Eta Sep cut
     if (fabs(minEta) < minSegEtaSep) {
       //Needed to compare dz distribution of cosmics in pure cosmic and main sample
       tuple->BefPreS_Dz_FailSep->Fill(dz);
     }
-    
+
     if (tof) {
         //Plots for tracks in dz control region
       if (fabs(dz) > CosmicMinDz && fabs(dz) < CosmicMaxDz) {
-        tuple->BefPreS_Pt_FailDz->Fill(track->pt(), Event_Weight);
-        tuple->BefPreS_TOF_FailDz->Fill(tof->inverseBeta(), Event_Weight);
+        tuple->BefPreS_Pt_FailDz->Fill(track->pt(), EventWeight_);
+        tuple->BefPreS_TOF_FailDz->Fill(tof->inverseBeta(), EventWeight_);
         if (fabs(track->eta()) > CSCRegion) {
-          tuple->BefPreS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), Event_Weight);
-          tuple->BefPreS_Pt_FailDz_CSC->Fill(track->pt(), Event_Weight);
+          tuple->BefPreS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), EventWeight_);
+          tuple->BefPreS_Pt_FailDz_CSC->Fill(track->pt(), EventWeight_);
         } else if (fabs(track->eta()) < DTRegion) {
-          tuple->BefPreS_TOF_FailDz_DT->Fill(tof->inverseBeta(), Event_Weight);
-          tuple->BefPreS_Pt_FailDz_DT->Fill(track->pt(), Event_Weight);
+          tuple->BefPreS_TOF_FailDz_DT->Fill(tof->inverseBeta(), EventWeight_);
+          tuple->BefPreS_Pt_FailDz_DT->Fill(track->pt(), EventWeight_);
         }
       }
         //Plots of dz
       if (fabs(track->eta()) > CSCRegion) {
-        tuple->BefPreS_Dz_CSC->Fill(dz, Event_Weight);
+        tuple->BefPreS_Dz_CSC->Fill(dz, EventWeight_);
       } else if (fabs(track->eta()) < DTRegion) {
-        tuple->BefPreS_Dz_DT->Fill(dz, Event_Weight);
+        tuple->BefPreS_Dz_DT->Fill(dz, EventWeight_);
       }
     }
   }
 
-  
+
   bool DXYSB = (typeMode_ == 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
   bool DZSB = (typeMode_ == 5 && fabs(dz) > globalMaxDZ_) ? true : false;
-  
+
   //check if HSCP is compatible with cosmics.
   bool OASB = (typeMode_ == 5 && OpenAngle >= 2.8) ? true : false;
-  
+
   isCosmicSB = (DXYSB && DZSB && OASB);
   isSemiCosmicSB = (!isCosmicSB && (DXYSB || DZSB || OASB));
 
@@ -3595,55 +4070,52 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
   const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
   const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
   const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
-  
-  if (tuple) {
-    if (tof)
-      tuple->BefPreS_EtaVsTOF->Fill(track->eta(), tof->inverseBeta(), Event_Weight);
+
+  if (tuple && tof) {
+      tuple->BefPreS_EtaVsTOF->Fill(track->eta(), tof->inverseBeta(), EventWeight_);
   }
-  
+
   if (tuple) {
-    if (GenBeta >= 0)
-      tuple->Beta_PreselectedC->Fill(GenBeta, Event_Weight);
     if (DZSB && OASB)
-      tuple->BefPreS_Dxy_Cosmic->Fill(dxy, Event_Weight);
+      tuple->BefPreS_Dxy_Cosmic->Fill(dxy, EventWeight_);
     if (DXYSB && OASB)
-      tuple->BefPreS_Dz_Cosmic->Fill(dz, Event_Weight);
+      tuple->BefPreS_Dz_Cosmic->Fill(dz, EventWeight_);
     if (DXYSB && DZSB)
-      tuple->BefPreS_OpenAngle_Cosmic->Fill(OpenAngle, Event_Weight);
-    
+      tuple->BefPreS_OpenAngle_Cosmic->Fill(OpenAngle, EventWeight_);
+
     // Get the location of the outmost hit
-    tuple->BefPreS_LastHitDXY->Fill(furthersHitDxy, Event_Weight);
-    tuple->BefPreS_LastHitD3D->Fill(furthersHitDistance, Event_Weight);
+    tuple->BefPreS_LastHitDXY->Fill(furthersHitDxy, EventWeight_);
+    tuple->BefPreS_LastHitD3D->Fill(furthersHitDistance, EventWeight_);
 
     if (fabs(track->eta()) < DTRegion) {
-      tuple->BefPreS_Pt_DT->Fill(track->pt(), Event_Weight);
+      tuple->BefPreS_Pt_DT->Fill(track->pt(), EventWeight_);
     } else {
-      tuple->BefPreS_Pt_CSC->Fill(track->pt(), Event_Weight);
+      tuple->BefPreS_Pt_CSC->Fill(track->pt(), EventWeight_);
     }
-    
+
     if (DXYSB && DZSB && OASB) {
-      tuple->BefPreS_Pt_Cosmic->Fill(track->pt(), Event_Weight);
-      tuple->BefPreS_Ias_Cosmic->Fill(globalIas_, Event_Weight);
-      tuple->BefPreS_Ih_Cosmic->Fill(globalIh_, Event_Weight);
+      tuple->BefPreS_Pt_Cosmic->Fill(track->pt(), EventWeight_);
+      tuple->BefPreS_Ias_Cosmic->Fill(globalIas_, EventWeight_);
+      tuple->BefPreS_Ih_Cosmic->Fill(globalIh_, EventWeight_);
     }
     if (tof) {
-      tuple->BefPreS_TOF->Fill(tof->inverseBeta(), Event_Weight);
+      tuple->BefPreS_TOF->Fill(tof->inverseBeta(), EventWeight_);
       if (PUA)
-        tuple->BefPreS_TOF_PUA->Fill(tof->inverseBeta(), Event_Weight);
+        tuple->BefPreS_TOF_PUA->Fill(tof->inverseBeta(), EventWeight_);
       if (PUB)
-        tuple->BefPreS_TOF_PUB->Fill(tof->inverseBeta(), Event_Weight);
+        tuple->BefPreS_TOF_PUB->Fill(tof->inverseBeta(), EventWeight_);
       if (dttof->nDof() > 6)
-        tuple->BefPreS_TOF_DT->Fill(dttof->inverseBeta(), Event_Weight);
+        tuple->BefPreS_TOF_DT->Fill(dttof->inverseBeta(), EventWeight_);
       if (csctof->nDof() > 6)
-        tuple->BefPreS_TOF_CSC->Fill(csctof->inverseBeta(), Event_Weight);
-      tuple->BefPreS_PtTOF->Fill(track->pt(), tof->inverseBeta(), Event_Weight);
+        tuple->BefPreS_TOF_CSC->Fill(csctof->inverseBeta(), EventWeight_);
+      tuple->BefPreS_PtTOF->Fill(track->pt(), tof->inverseBeta(), EventWeight_);
     }
-      
+
     if (tof) {
-      tuple->BefPreS_TOFIs->Fill(tof->inverseBeta(), globalIas_, Event_Weight);
-      tuple->BefPreS_TOFIh->Fill(tof->inverseBeta(), globalIas_, Event_Weight);
+      tuple->BefPreS_TOFIs->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
+      tuple->BefPreS_TOFIh->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
     }
-    
+
     //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
     //Binning not used for other analyses
     int bin = -1;
@@ -3653,13 +4125,14 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       } else {
         bin = muonStations(track->hitPattern()) + 1;
       }
-      tuple->BefPreS_Pt_Binned[to_string(bin)]->Fill(track->pt(), Event_Weight);
+      tuple->BefPreS_Pt_Binned[to_string(bin)]->Fill(track->pt(), EventWeight_);
     }
   }
 
+
   // N-1 plots
   if (tuple) {
-    for (size_t i=1;i<sizeof(passedCutsArray);i++) {
+    for (size_t i=0;i<sizeof(passedCutsArray);i++) {
       bool allOtherCutsPassed = true;
       for (size_t j=1;j<sizeof(passedCutsArray);j++) {
         if (i==j) continue;
@@ -3670,54 +4143,92 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
         }
       }
       if (allOtherCutsPassed) {
-        if (i==1)  { tuple->N1_Eta->Fill(track->eta(), Event_Weight); };
-        if (i==2)  { tuple->N1_Pt->Fill(track->pt(), Event_Weight); };
-        if (i==3)  { tuple->N1_P->Fill(track->p(), Event_Weight); };
-        if (i==4)  { tuple->N1_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight); };
-        if (i==5)  { tuple->N1_TNOH->Fill(track->hitPattern().numberOfValidHits()-.5, Event_Weight); };
-        if (i==6)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), Event_Weight); };
-        if (i==7)  { tuple->N1_TNOMFraction->Fill(numDeDxHits/fabs(track->hitPattern().numberOfValidStripHits()), Event_Weight); };
-        if (i==8)  { tuple->N1_TNOM->Fill(numDeDxHits-.5, Event_Weight); };
-        if (i==9)  { tuple->N1_Qual->Fill(track->qualityMask()-.5, Event_Weight); };
-        if (i==10)  { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight); };
-        if (i==11) { tuple->N1_EoP->Fill(EoP, Event_Weight); };
-        if (i==12) { tuple->N1_Dz->Fill(dz, Event_Weight); };
-        if (i==13) { tuple->N1_Dxy->Fill(dxy, Event_Weight); };
-        if (i==14) { tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight); };
-        if (i==15) { tuple->N1_dRMinPfJet->Fill(dRMinPfJet, Event_Weight); };
-        if (i==16) { tuple->TIsol->Fill(isoTK_PVconstrain_dr03, Event_Weight); };
-        //if (i==16) { tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight); };
-        //if (i==1) { tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight); };
-        if (i==17) {
-          tuple->N1_pfType->Fill(0.5, EventWeight_);
+        // Put the not used variables to the i==0, this will be always true
+        if (i==0)  {
+          tuple->N1_pfType->Fill(0., EventWeight_);
           if (pf_isPfTrack) {
-            tuple->N1_pfType->Fill(1.5, EventWeight_);
+            tuple->N1_pfType->Fill(1., EventWeight_);
           } else {
-            tuple->N1_pfType->Fill(8.5, EventWeight_);
+            tuple->N1_pfType->Fill(8., EventWeight_);
           }
           if (pf_isElectron) {
-            tuple->N1_pfType->Fill(2.5, EventWeight_);
+            tuple->N1_pfType->Fill(2., EventWeight_);
           } else if (pf_isMuon) {
-            tuple->N1_pfType->Fill(3.5, EventWeight_);
+            tuple->N1_pfType->Fill(3., EventWeight_);
           } else if (pf_isPhoton) {
-            tuple->N1_pfType->Fill(4.5, EventWeight_);
+            tuple->N1_pfType->Fill(4., EventWeight_);
           } else if (pf_isChHadron) {
-           tuple->N1_pfType->Fill(5.5, EventWeight_);
+            tuple->N1_pfType->Fill(5., EventWeight_);
           } else if (pf_isNeutHadron) {
-            tuple->N1_pfType->Fill(6.5, EventWeight_);
+            tuple->N1_pfType->Fill(6., EventWeight_);
           } else if (pf_isUndefined) {
-            tuple->N1_pfType->Fill(7.5, EventWeight_);
+            tuple->N1_pfType->Fill(7., EventWeight_);
           }
+          tuple->N1_Ih->Fill(globalIh_, EventWeight_);
+          tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_);
+          tuple->N1_Stations->Fill(muonStations(track->hitPattern()), EventWeight_);
+          tuple->N1_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
+          tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
+        };
+
+        if (i==1)  {
+          tuple->N1_Pt->Fill(track->pt(), EventWeight_);
+          tuple->N1_Pt_lowPt->Fill(track->pt(), EventWeight_);
+        };
+        if (i==2)  { tuple->N1_Eta->Fill(track->eta(), EventWeight_); };
+        if (i==3)  { tuple->N1_TNOPH->Fill(nonL1PixHits, EventWeight_); };
+        if (i==4)  { tuple->N1_TNOHFraction->Fill(track->validFraction(), EventWeight_); };
+        if (i==5)  { tuple->N1_TNOM->Fill(numDeDxHits, EventWeight_); };
+        if (i==6)  {
+          if (track->quality(reco::TrackBase::highPurity)) {
+            tuple->N1_Qual->Fill(1., EventWeight_);
+          } else {
+            tuple->N1_Qual->Fill(0., EventWeight_);
+          }
+        };
+        if (i==7) { tuple->N1_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_); };
+        if (i==8) { tuple->N1_Dz->Fill(dz, EventWeight_); };
+        if (i==9) { tuple->N1_Dxy->Fill(dxy, EventWeight_); };
+        if (i==10) {
+          tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+          tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, EventWeight_);
         }
-        if (i==18) { tuple->N1_Ih->Fill(globalIh_, Event_Weight); };
-//        if (i==16)  { tuple->N1_ProbXY->Fill(probXYonTrack, EventWeight_); };
-//        if (i==17) {
-//          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
-//          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
-//        };
-//        if (i==18) { tuple->N1_Stations->Fill(muonStations(track->hitPattern()), Event_Weight); };
-//        if (i==19) { LogDebug("Analyzer") << "cutPhiTOFOnly"; };
-//        if (i==20) { LogDebug("Analyzer") << "cutEtaTOFOnly"; };
+        if (i==11) {
+          tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+
+          tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          tuple->N1_MiniRelTkIso_lowMiniRelIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          if (PUA) {
+            tuple->N1_MiniTkIso_PUA->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUA->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUB) {
+            tuple->N1_MiniTkIso_PUB->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUB->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          } else if (PUC) {
+            tuple->N1_MiniTkIso_PUC->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+            tuple->N1_MiniRelTkIso_lowMiniRelIso_PUC->Fill(track_genTrackMiniIsoSumPt / track->pt(), EventWeight_);
+          }
+        };
+        if (i==12) {
+          tuple->N1_EoP->Fill(EoP, EventWeight_);
+        };
+        if (i==13) {
+          tuple->N1_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPtVsPt_lowPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+          tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), GenBeta, EventWeight_);
+          //TODO
+        };
+        if (i==14) {
+          tuple->N1_ProbQ->Fill(probQonTrack, EventWeight_);
+          tuple->N1_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
+        };
+//        if (i==15) { };
+//        if (i==16) { };
+//        if (i==17) { };
+//        if (i==18) { };
+
       }
     }
   }
@@ -3727,87 +4238,87 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     if (passedCutsArray[i]) {
         // Plot Eta after each cut
       if (tuple) {
-        tuple->CutFlowEta->Fill(track->eta(), i+0.5, EventWeight_);
-        tuple->CutFlowProbQ->Fill(probQonTrack, i+0.5, EventWeight_);
-        tuple->CutFlowPfType->Fill(0.5, i+0.5, EventWeight_);
+        tuple->CutFlowEta->Fill(track->eta(), i, EventWeight_);
+        tuple->CutFlowProbQ->Fill(probQonTrack, i, EventWeight_);
+        tuple->CutFlowPfType->Fill(0., i, EventWeight_);
         if (pf_isPfTrack) {
-          tuple->CutFlowPfType->Fill(1.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(1., i, EventWeight_);
         } else {
-          tuple->CutFlowPfType->Fill(8.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(8., i, EventWeight_);
         }
         if (pf_isElectron) {
-          tuple->CutFlowPfType->Fill(2.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(2., i, EventWeight_);
         } else if (pf_isMuon) {
-          tuple->CutFlowPfType->Fill(3.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(3., i, EventWeight_);
         } else if (pf_isPhoton) {
-          tuple->CutFlowPfType->Fill(4.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(4., i, EventWeight_);
         } else if (pf_isChHadron) {
-          tuple->CutFlowPfType->Fill(5.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(5., i, EventWeight_);
         } else if (pf_isNeutHadron) {
-          tuple->CutFlowPfType->Fill(6.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(6., i, EventWeight_);
         } else if (pf_isUndefined) {
-          tuple->CutFlowPfType->Fill(7.5, i+0.5, EventWeight_);
+          tuple->CutFlowPfType->Fill(7., i, EventWeight_);
         }
       }
-      
+
     } else {
       if (debug_ > 2 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
       // TODO: when the preselection list finalizes I might be more verbose than this
       return false;
     }
   }
-  
+
   // After (pre)selection plots
   if (tuple) {
-      tuple->PostPreS_pfType->Fill(0.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(0.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(0., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(0., globalIas_, EventWeight_);
     if (pf_isPfTrack) {
-      tuple->PostPreS_pfType->Fill(1.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(1.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(1., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(1., globalIas_, EventWeight_);
     } else {
-      tuple->PostPreS_pfType->Fill(8.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(8.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(8., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(8., globalIas_, EventWeight_);
     }
     if (pf_isElectron) {
-      tuple->PostPreS_pfType->Fill(2.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(2.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(2., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(2., globalIas_, EventWeight_);
     } else if (pf_isMuon) {
-      tuple->PostPreS_pfType->Fill(3.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(3.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(3., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(3., globalIas_, EventWeight_);
     } else if (pf_isPhoton) {
-      tuple->PostPreS_pfType->Fill(4.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(4.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(4., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(4., globalIas_, EventWeight_);
     } else if (pf_isChHadron) {
-      tuple->PostPreS_pfType->Fill(5.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(5.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(5., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(5., globalIas_, EventWeight_);
     } else if (pf_isNeutHadron) {
-      tuple->PostPreS_pfType->Fill(6.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(6.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(6., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(6., globalIas_, EventWeight_);
     } else if (pf_isUndefined) {
-      tuple->PostPreS_pfType->Fill(7.5, EventWeight_);
-      tuple->PostPreS_pfTypeVsIas->Fill(7.5, globalIas_, EventWeight_);
+      tuple->PostPreS_pfType->Fill(7., EventWeight_);
+      tuple->PostPreS_pfTypeVsIas->Fill(7., globalIas_, EventWeight_);
     }
-    tuple->PostPreS_Eta->Fill(track->eta(), Event_Weight);
-    tuple->PostPreS_EtaVsIas->Fill(track->eta(), globalIas_, Event_Weight);
-    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern())-.5, Event_Weight);
-    tuple->PostPreS_NVertex->Fill(vertexColl.size()-.5, Event_Weight);
-    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size()-.5);
+    tuple->PostPreS_Eta->Fill(track->eta(), EventWeight_);
+    tuple->PostPreS_EtaVsIas->Fill(track->eta(), globalIas_, EventWeight_);
+    tuple->PostPreS_MatchedStations->Fill(muonStations(track->hitPattern()), EventWeight_);
+    tuple->PostPreS_NVertex->Fill(vertexColl.size(), EventWeight_);
+    tuple->PostPreS_NVertex_NoEventWeight->Fill(vertexColl.size());
     if (PUA) {
-      tuple->PostPreS_TNOH_PUA->Fill(track->found(), Event_Weight);
-      tuple->PostPreS_TNOM_PUA->Fill(numDeDxHits, Event_Weight);
+      tuple->PostPreS_TNOH_PUA->Fill(track->found(), EventWeight_);
+      tuple->PostPreS_TNOM_PUA->Fill(numDeDxHits, EventWeight_);
     }
     if (PUB) {
-      tuple->PostPreS_TNOH_PUB->Fill(track->found(), Event_Weight);
-      tuple->PostPreS_TNOM_PUB->Fill(numDeDxHits, Event_Weight);
+      tuple->PostPreS_TNOH_PUB->Fill(track->found(), EventWeight_);
+      tuple->PostPreS_TNOM_PUB->Fill(numDeDxHits, EventWeight_);
     }
-    tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), Event_Weight);
-    tuple->PostPreS_TNOHFractionVsIas->Fill(track->validFraction(), globalIas_, Event_Weight);
-    tuple->PostPreS_TNOPH->Fill(track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
-    tuple->PostPreS_TNOPHVsIas->Fill(track->hitPattern().numberOfValidPixelHits()-.5, globalIas_, Event_Weight);
-    tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, Event_Weight);
-    tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, Event_Weight);
-    tuple->PostPreS_TNOM->Fill(numDeDxHits-.5, Event_Weight);
-    tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits-.5, globalIas_, Event_Weight);
+    tuple->PostPreS_TNOHFraction->Fill(track->validFraction(), EventWeight_);
+    tuple->PostPreS_TNOHFractionVsIas->Fill(track->validFraction(), globalIas_, EventWeight_);
+    tuple->PostPreS_TNOPH->Fill(nonL1PixHits, EventWeight_);
+    tuple->PostPreS_TNOPHVsIas->Fill(nonL1PixHits, globalIas_, EventWeight_);
+    tuple->PostPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
+    tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
+    tuple->PostPreS_TNOM->Fill(numDeDxHits, EventWeight_);
+    tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits, globalIas_, EventWeight_);
     tuple->PostPreS_ProbQ->Fill(probQonTrack, EventWeight_);
     tuple->PostPreS_ProbQVsIas->Fill(probQonTrack, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
@@ -3818,7 +4329,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoLayer1, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
-    
+
     if (globalIas_ > 0.6) {
       tuple->PostPreS_ProbXY_highIas->Fill(probXYonTrack, EventWeight_);
       tuple->PostPreS_ProbXYVsIas_highIas->Fill(probXYonTrack, globalIas_, EventWeight_);
@@ -3828,188 +4339,204 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas->Fill(probXYonTrackNoLayer1, probQonTrackNoLayer1, EventWeight_);
     }
     if (tof) {
-      tuple->PostPreS_nDof->Fill(tof->nDof()-.5, Event_Weight);
-      tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), Event_Weight);
-      tuple->PostPreS_TOFError->Fill(tof->inverseBetaErr(), Event_Weight);
-      tuple->PostPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), Event_Weight);
+      tuple->PostPreS_nDof->Fill(tof->nDof(), EventWeight_);
+      tuple->PostPreS_MTOF->Fill(tof->inverseBeta(), EventWeight_);
+      tuple->PostPreS_TOFError->Fill(tof->inverseBetaErr(), EventWeight_);
+      tuple->PostPreS_TimeAtIP->Fill(tof->timeAtIpInOut(), EventWeight_);
     }
-    tuple->PostPreS_Qual->Fill(track->qualityMask()-.5, Event_Weight);
-    tuple->PostPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), Event_Weight);
-    tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), globalIas_, Event_Weight);
-    tuple->PostPreS_Pt->Fill(track->pt(), Event_Weight);
-    tuple->PostPreS_PtVsIas->Fill(track->pt(), globalIas_, Event_Weight);
-    tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), Event_Weight);
-    tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), Event_Weight);
-    tuple->PostPreS_Dz->Fill(dz, Event_Weight);
-    tuple->PostPreS_Dxy->Fill(dxy, Event_Weight);
-    tuple->PostPreS_PV->Fill(goodVerts, Event_Weight);
+    if (track->quality(reco::TrackBase::highPurity)) {
+      tuple->PostPreS_Qual->Fill(1., EventWeight_);
+    } else {
+      tuple->PostPreS_Qual->Fill(0., EventWeight_);
+    }
+    tuple->PostPreS_Chi2oNdof->Fill(track->chi2() / track->ndof(), EventWeight_);
+    tuple->PostPreS_Chi2oNdofVsIas->Fill(track->chi2() / track->ndof(), globalIas_, EventWeight_);
+    tuple->PostPreS_Pt->Fill(track->pt(), EventWeight_);
+    tuple->PostPreS_Pt_lowPt->Fill(track->pt(), EventWeight_);
+    tuple->PostPreS_PtVsIas->Fill(track->pt(), globalIas_, EventWeight_);
+    tuple->PostPreS_P->Fill(track->p(), EventWeight_);
+    tuple->PostPreS_NOMoNOH->Fill(numDeDxHits / (float)track->found(), EventWeight_);
+    tuple->PostPreS_NOMoNOHvsPV->Fill(goodVerts, numDeDxHits / (float)track->found(), EventWeight_);
+    tuple->PostPreS_Dz->Fill(dz, EventWeight_);
+    tuple->PostPreS_Dxy->Fill(dxy, EventWeight_);
+    tuple->PostPreS_PV->Fill(goodVerts, EventWeight_);
     tuple->PostPreS_PV_NoEventWeight->Fill(goodVerts);
-    
-    tuple->PostPreS_EoP->Fill(EoP, Event_Weight);
-    tuple->PostPreS_EoPVsIas->Fill(EoP, globalIas_, Event_Weight);
-    tuple->PostPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), Event_Weight);
-    tuple->PostPreS_SumpTOverpTVsIas->Fill(IsoTK_SumEt / track->pt(), globalIas_, Event_Weight);
-    tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), Event_Weight);
-    tuple->PostPreS_PtErrOverPtVsIas->Fill(track->ptError() / track->pt(), globalIas_, Event_Weight);
-    tuple->PostPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), Event_Weight);
-    tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), Event_Weight);
-    tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), Event_Weight);
-    tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, Event_Weight);
-    tuple->PostPreS_TIsolVsIas->Fill(IsoTK_SumEt, globalIas_,Event_Weight);
-    tuple->PostPreS_Ih->Fill(globalIh_, Event_Weight);
-    tuple->PostPreS_IhVsIas->Fill(globalIh_, globalIas_, Event_Weight);
+
+    tuple->PostPreS_EoP->Fill(EoP, EventWeight_);
+    tuple->PostPreS_EoPVsIas->Fill(EoP, globalIas_, EventWeight_);
+    tuple->PostPreS_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), EventWeight_);
+    tuple->PostPreS_SumpTOverpTVsIas->Fill(IsoTK_SumEt / track->pt(), globalIas_, EventWeight_);
+    tuple->PostPreS_PtErrOverPt->Fill(track->ptError() / track->pt(), EventWeight_);
+    tuple->PostPreS_PtErrOverPtVsIas->Fill(track->ptError() / track->pt(), globalIas_, EventWeight_);
+    tuple->PostPreS_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
+    tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), EventWeight_);
+    tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
+    tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, EventWeight_);
+    tuple->PostPreS_TIsolVsIas->Fill(IsoTK_SumEt, globalIas_,EventWeight_);
+    tuple->PostPreS_Ih->Fill(globalIh_, EventWeight_);
+    tuple->PostPreS_IhVsIas->Fill(globalIh_, globalIas_, EventWeight_);
     tuple->PostPreS_Ih_NoEventWeight->Fill(globalIh_);
-    tuple->PostPreS_Ias->Fill(globalIas_, Event_Weight);
+    tuple->PostPreS_Ias->Fill(globalIas_, EventWeight_);
     tuple->PostPreS_Ias_NoEventWeight->Fill(globalIas_);
-    tuple->PostPreS_massT->Fill(massT, Event_Weight);
-    tuple->PostPreS_massTVsIas->Fill(massT, globalIas_, Event_Weight);
+    tuple->PostPreS_massT->Fill(massT, EventWeight_);
+    tuple->PostPreS_massTVsIas->Fill(massT, globalIas_, EventWeight_);
       // Add PFCadidate based isolation info to the tuple
       // https://github.com/cms-sw/cmssw/blob/6d2f66057131baacc2fcbdd203588c41c885b42c/
       // PhysicsTools/NanoAOD/plugins/IsoValueMapProducer.cc#L157
-    tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, Event_Weight);
-    tuple->PostPreS_MiniRelIsoAllVsIas->Fill(miniRelIsoAll, globalIas_, Event_Weight);
-    tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, Event_Weight);
-    tuple->PostPreS_MassErr->Fill(MassErr, Event_Weight);
-    tuple->PostPreS_MassErrVsIas->Fill(MassErr, globalIas_, Event_Weight);
-    
-    tuple->PostPreS_EtaVsGenID->Fill(track->eta(), closestBackgroundPDGsIDs[0], Event_Weight);
+    tuple->PostPreS_MiniRelIsoAll->Fill(miniRelIsoAll, EventWeight_);
+    tuple->PostPreS_MiniRelIsoAllVsIas->Fill(miniRelIsoAll, globalIas_, EventWeight_);
+    tuple->PostPreS_MiniRelIsoChg->Fill(miniRelIsoChg, EventWeight_);
+    tuple->PostPreS_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+    tuple->PostPreS_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt, EventWeight_);
+
+    tuple->PostPreS_MassErr->Fill(MassErr, EventWeight_);
+    tuple->PostPreS_MassErrVsIas->Fill(MassErr, globalIas_, EventWeight_);
+
+    tuple->PostPreS_EtaVsGenID->Fill(track->eta(), closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_ProbQVsGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
     tuple->PostPreS_ProbXYVsGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[0], EventWeight_);
-    tuple->PostPreS_PtVsGenID->Fill(track->pt(), closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_EoPVsGenID->Fill(EoP, closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_IhVsGenID->Fill(globalIh_, closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_IasVsGenID->Fill(globalIas_, closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_massTVsGenID->Fill(massT, closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_miniIsoChgVsGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_miniIsoChgVsGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[0], Event_Weight);
-    tuple->PostPreS_MassVsGenID->Fill(Mass, closestBackgroundPDGsIDs[0], Event_Weight);
-    
-    tuple->PostPreS_EtaVsMomGenID->Fill(track->eta(), closestBackgroundPDGsIDs[1], Event_Weight);
+    tuple->PostPreS_PtVsGenID->Fill(track->pt(), closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_EoPVsGenID->Fill(EoP, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_IhVsGenID->Fill(globalIh_, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_IasVsGenID->Fill(globalIas_, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_MassTVsGenID->Fill(massT, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_MiniIsoChgVsGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_MiniIsoChgVsGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[0], EventWeight_);
+    tuple->PostPreS_MassVsGenID->Fill(Mass, closestBackgroundPDGsIDs[0], EventWeight_);
+
+    tuple->PostPreS_EtaVsMomGenID->Fill(track->eta(), closestBackgroundPDGsIDs[1], EventWeight_);
     tuple->PostPreS_ProbQVsMomGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
     tuple->PostPreS_ProbXYVsMomGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[1], EventWeight_);
-    tuple->PostPreS_PtVsMomGenID->Fill(track->pt(), closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_EoPVsMomGenID->Fill(EoP, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_IhVsMomGenID->Fill(globalIh_, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_IasVsMomGenID->Fill(globalIas_, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_massTVsMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_miniIsoChgVsMomGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_miniIsoAllVsMomGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[1], Event_Weight);
-    tuple->PostPreS_MassVsMomGenID->Fill(Mass, closestBackgroundPDGsIDs[1], Event_Weight);
-    
-    tuple->PostPreS_EtaVsSiblingGenID->Fill(track->eta(), closestBackgroundPDGsIDs[2], Event_Weight);
+    tuple->PostPreS_PtVsMomGenID->Fill(track->pt(), closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_EoPVsMomGenID->Fill(EoP, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_IhVsMomGenID->Fill(globalIh_, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_IasVsMomGenID->Fill(globalIas_, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_MassTVsMomGenID->Fill(massT, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_MiniIsoChgVsMomGenID->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_MiniIsoAllVsMomGenID->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[1], EventWeight_);
+    tuple->PostPreS_MassVsMomGenID->Fill(Mass, closestBackgroundPDGsIDs[1], EventWeight_);
+
+    tuple->PostPreS_EtaVsSiblingGenID->Fill(track->eta(), closestBackgroundPDGsIDs[2], EventWeight_);
     tuple->PostPreS_ProbQVsSiblingGenID->Fill(probQonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
     tuple->PostPreS_ProbXYVsSiblingGenID->Fill(probXYonTrack, closestBackgroundPDGsIDs[2], EventWeight_);
-    tuple->PostPreS_PtVsSiblingGenID->Fill(track->pt(), closestBackgroundPDGsIDs[2], Event_Weight);
-    tuple->PostPreS_EoPVsSiblingGenID->Fill(EoP, closestBackgroundPDGsIDs[2], Event_Weight);
-    tuple->PostPreS_IhVsSiblingGenID->Fill(globalIh_, closestBackgroundPDGsIDs[2], Event_Weight);
-    tuple->PostPreS_IasVsSiblingGenID->Fill(globalIas_, closestBackgroundPDGsIDs[2], Event_Weight);
-    tuple->PostPreS_massTVsSiblingGenID->Fill(massT, closestBackgroundPDGsIDs[2], Event_Weight);
-    tuple->PostPreS_MassVsSiblingGenID->Fill(Mass, closestBackgroundPDGsIDs[2], Event_Weight);
-    
-    tuple->PostPreS_EtaVsGenAngle->Fill(track->eta(), closestBackgroundPDGsIDs[3], Event_Weight);
+    tuple->PostPreS_PtVsSiblingGenID->Fill(track->pt(), closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_EoPVsSiblingGenID->Fill(EoP, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_IhVsSiblingGenID->Fill(globalIh_, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_IasVsSiblingGenID->Fill(globalIas_, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_MassTVsSiblingGenID->Fill(massT, closestBackgroundPDGsIDs[2], EventWeight_);
+    tuple->PostPreS_MassVsSiblingGenID->Fill(Mass, closestBackgroundPDGsIDs[2], EventWeight_);
+
+    tuple->PostPreS_EtaVsGenAngle->Fill(track->eta(), closestBackgroundPDGsIDs[3], EventWeight_);
     tuple->PostPreS_ProbQVsGenAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
     tuple->PostPreS_ProbXYVsGenAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[3], EventWeight_);
-    tuple->PostPreS_PtVsGenAngle->Fill(track->pt(), closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_EoPVsGenAngle->Fill(EoP, closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_IhVsGenAngle->Fill(globalIh_, closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_IasVsGenAngle->Fill(globalIas_, closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_massTVsGenAngle->Fill(massT, closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_miniIsoChgVsGenAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_miniIsoAllVsGenAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[3], Event_Weight);
-    tuple->PostPreS_MassVsGenAngle->Fill(Mass, closestBackgroundPDGsIDs[3], Event_Weight);
-    
-    tuple->PostPreS_EtaVsGenMomAngle->Fill(track->eta(), closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_PtVsGenAngle->Fill(track->pt(), closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_EoPVsGenAngle->Fill(EoP, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_IhVsGenAngle->Fill(globalIh_, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_IasVsGenAngle->Fill(globalIas_, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_MassTVsGenAngle->Fill(massT, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_MiniIsoChgVsGenAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_MiniIsoAllVsGenAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[3], EventWeight_);
+    tuple->PostPreS_MassVsGenAngle->Fill(Mass, closestBackgroundPDGsIDs[3], EventWeight_);
+
+    tuple->PostPreS_EtaVsGenMomAngle->Fill(track->eta(), closestBackgroundPDGsIDs[4], EventWeight_);
     tuple->PostPreS_ProbQVsGenMomAngle->Fill(probQonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
     tuple->PostPreS_ProbXYVsGenMomAngle->Fill(probXYonTrack, closestBackgroundPDGsIDs[4], EventWeight_);
-    tuple->PostPreS_PtVsGenMomAngle->Fill(track->pt(), closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_EoPVsGenMomAngle->Fill(EoP, closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_IhVsGenMomAngle->Fill(globalIh_, closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_IasVsGenMomAngle->Fill(globalIas_, closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_massTVsGenMomAngle->Fill(massT, closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_miniIsoChgVsGenMomAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_miniIsoAllVsGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], Event_Weight);
-    tuple->PostPreS_MassVsGenMomAngle->Fill(Mass, closestBackgroundPDGsIDs[4], Event_Weight);
+    tuple->PostPreS_PtVsGenMomAngle->Fill(track->pt(), closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_EoPVsGenMomAngle->Fill(EoP, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_IhVsGenMomAngle->Fill(globalIh_, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_IasVsGenMomAngle->Fill(globalIas_, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_MassTVsGenMomAngle->Fill(massT, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_MiniIsoChgVsGenMomAngle->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_MiniIsoAllVsGenMomAngle->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[4], EventWeight_);
+    tuple->PostPreS_MassVsGenMomAngle->Fill(Mass, closestBackgroundPDGsIDs[4], EventWeight_);
 
     tuple->PostPreS_GenPtVsRecoPt->Fill(closestBackgroundPDGsIDs[5], track->pt());
-    
-    tuple->PostPreS_EtaVsGenNumSibling->Fill(track->eta(), closestBackgroundPDGsIDs[6], Event_Weight);
+
+    tuple->PostPreS_EtaVsGenNumSibling->Fill(track->eta(), closestBackgroundPDGsIDs[6], EventWeight_);
     tuple->PostPreS_ProbQVsGenNumSibling->Fill(probQonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
     tuple->PostPreS_ProbXYVsGenNumSibling->Fill(probXYonTrack, closestBackgroundPDGsIDs[6], EventWeight_);
-    tuple->PostPreS_PtVsGenNumSibling->Fill(track->pt(), closestBackgroundPDGsIDs[6], Event_Weight);
-    tuple->PostPreS_EoPVsGenNumSibling->Fill(EoP, closestBackgroundPDGsIDs[6], Event_Weight);
-    tuple->PostPreS_IhVsGenNumSibling->Fill(globalIh_, closestBackgroundPDGsIDs[6], Event_Weight);
-    tuple->PostPreS_IasVsGenNumSibling->Fill(globalIas_, closestBackgroundPDGsIDs[6], Event_Weight);
-    tuple->PostPreS_massTVsGenNumSibling->Fill(massT, closestBackgroundPDGsIDs[6], Event_Weight);
-    tuple->PostPreS_miniIsoChgVsGenNumSibling->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[6], Event_Weight);
-    tuple->PostPreS_miniIsoAllVsGenNumSibling->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[6], Event_Weight);
-    
-    tuple->PostPreS_LastHitDXY->Fill(furthersHitDxy, Event_Weight);
-    tuple->PostPreS_LastHitDXYVsEta->Fill(furthersHitDxy, track->eta(), Event_Weight);
-    tuple->PostPreS_LastHitD3D->Fill(furthersHitDistance, Event_Weight);
-    tuple->PostPreS_LastHitD3DVsEta->Fill(furthersHitDistance, track->eta(), Event_Weight);
-    
-    tuple->PostPreS_EoPVsPfType->Fill(EoP, 0.5, EventWeight_);
-    tuple->PostPreS_MassVsPfType->Fill(Mass, 0.5, EventWeight_);
+    tuple->PostPreS_PtVsGenNumSibling->Fill(track->pt(), closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_EoPVsGenNumSibling->Fill(EoP, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_IhVsGenNumSibling->Fill(globalIh_, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_IasVsGenNumSibling->Fill(globalIas_, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_MassTVsGenNumSibling->Fill(massT, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_MiniIsoChgVsGenNumSibling->Fill(miniRelIsoChg, closestBackgroundPDGsIDs[6], EventWeight_);
+    tuple->PostPreS_MiniIsoAllVsGenNumSibling->Fill(miniRelIsoAll, closestBackgroundPDGsIDs[6], EventWeight_);
+
+    tuple->PostPreS_LastHitDXY->Fill(furthersHitDxy, EventWeight_);
+    tuple->PostPreS_LastHitDXYVsEta->Fill(furthersHitDxy, track->eta(), EventWeight_);
+    tuple->PostPreS_LastHitD3D->Fill(furthersHitDistance, EventWeight_);
+    tuple->PostPreS_LastHitD3DVsEta->Fill(furthersHitDistance, track->eta(), EventWeight_);
+
+    tuple->PostPreS_EoPVsPfType->Fill(EoP, 0., EventWeight_);
+    tuple->PostPreS_MassVsPfType->Fill(Mass, 0., EventWeight_);
     if (pf_isPfTrack) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 1.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 1.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 1., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 1., EventWeight_);
     } else {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 8.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 8.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 8., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 8., EventWeight_);
     }
     if (pf_isElectron) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 2.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 2.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 2., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 2., EventWeight_);
     } else if (pf_isMuon) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 3.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 3.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 3., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 3., EventWeight_);
     } else if (pf_isPhoton) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 4.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 4.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 4., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 4., EventWeight_);
     } else if (pf_isChHadron) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 5.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 5.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 5., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 5., EventWeight_);
     } else if (pf_isNeutHadron) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 6.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 6.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 6., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 6., EventWeight_);
     } else if (pf_isUndefined) {
-      tuple->PostPreS_EoPVsPfType->Fill(EoP, 7.5, EventWeight_);
-      tuple->PostPreS_MassVsPfType->Fill(Mass, 7.5, EventWeight_);
+      tuple->PostPreS_EoPVsPfType->Fill(EoP, 7., EventWeight_);
+      tuple->PostPreS_MassVsPfType->Fill(Mass, 7., EventWeight_);
     }
-  
-    tuple->PostPreS_Mass->Fill(Mass, Event_Weight);
-    tuple->PostPreS_MassVsPt->Fill(Mass, track->pt(), Event_Weight);
-    tuple->PostPreS_MassVsP->Fill(Mass, track->p(), Event_Weight);
-    tuple->PostPreS_MassVsTNOHFraction->Fill(Mass, track->validFraction(), Event_Weight);
-    tuple->PostPreS_MassVsTNOPH->Fill(Mass, track->hitPattern().numberOfValidPixelHits()-.5, Event_Weight);
-    tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits-.5, Event_Weight);
-    tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,probQonTrackNoLayer1, Event_Weight);
-    tuple->PostPreS_MassVsProbXYNoL1->Fill(Mass,probXYonTrackNoLayer1, Event_Weight);
-    tuple->PostPreS_MassVsEoP->Fill(Mass, EoP, Event_Weight);
-    tuple->PostPreS_MassVsSumpTOverpT->Fill(Mass, IsoTK_SumEt / track->pt(), Event_Weight);
-    tuple->PostPreS_MassVsPtErrOverPt->Fill(Mass, track->ptError() / track->pt(), Event_Weight);
-    tuple->PostPreS_MassVsTIsol->Fill(Mass, IsoTK_SumEt,Event_Weight);
-    tuple->PostPreS_MassVsIh->Fill(Mass, globalIh_, Event_Weight);
-    tuple->PostPreS_MassVsMassT->Fill(Mass, massT, Event_Weight);
-    tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, Event_Weight);
-    tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, Event_Weight);
-    tuple->PostPreS_dRMinPfJet->Fill(dRMinPfJet, Event_Weight);
-    tuple->PostPreS_closestPfJetMuonFraction->Fill(closestPfJetMuonFraction, Event_Weight);
-    tuple->PostPreS_closestPfJetElectronFraction->Fill(closestPfJetElectronFraction, Event_Weight);
-    tuple->PostPreS_closestPfJetPhotonFraction->Fill(closestPfJetPhotonFraction, Event_Weight);
-    tuple->PostPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, globalIas_, Event_Weight);
-    tuple->PostPreS_closestPfJetMuonFractionVsIas->Fill(closestPfJetMuonFraction, globalIas_, Event_Weight);
-    tuple->PostPreS_closestPfJetElectronFractionVsIas->Fill(closestPfJetElectronFraction, globalIas_, Event_Weight);
-    tuple->PostPreS_closestPfJetPhotonFractionVsIas->Fill(closestPfJetPhotonFraction, globalIas_, Event_Weight);
-    tuple->PostPreS_dRMinCaloJet->Fill(dRMinCaloJet, Event_Weight);
-    tuple->PostPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, Event_Weight);
-    tuple->PostPreS_CaloNumJets->Fill(caloNumJets, Event_Weight);
-      
+
+    tuple->PostPreS_Mass->Fill(Mass, EventWeight_);
+    tuple->PostPreS_MassVsPt->Fill(Mass, track->pt(), EventWeight_);
+    tuple->PostPreS_MassVsP->Fill(Mass, track->p(), EventWeight_);
+    tuple->PostPreS_MassVsTNOHFraction->Fill(Mass, track->validFraction(), EventWeight_);
+    tuple->PostPreS_MassVsTNOPH->Fill(Mass, nonL1PixHits, EventWeight_);
+    tuple->PostPreS_MassVsTNOM->Fill(Mass, numDeDxHits, EventWeight_);
+    tuple->PostPreS_MassVsProbQNoL1->Fill(Mass,probQonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_MassVsProbXYNoL1->Fill(Mass,probXYonTrackNoLayer1, EventWeight_);
+    tuple->PostPreS_MassVsEoP->Fill(Mass, EoP, EventWeight_);
+    tuple->PostPreS_MassVsSumpTOverpT->Fill(Mass, IsoTK_SumEt / track->pt(), EventWeight_);
+    tuple->PostPreS_MassVsPtErrOverPt->Fill(Mass, track->ptError() / track->pt(), EventWeight_);
+    tuple->PostPreS_MassVsTIsol->Fill(Mass, IsoTK_SumEt,EventWeight_);
+    tuple->PostPreS_MassVsIh->Fill(Mass, globalIh_, EventWeight_);
+    tuple->PostPreS_MassVsMassT->Fill(Mass, massT, EventWeight_);
+    tuple->PostPreS_MassVsMiniRelIsoAll->Fill(Mass, miniRelIsoAll, EventWeight_);
+    tuple->PostPreS_MassVsMassErr->Fill(Mass, MassErr, EventWeight_);
+    tuple->PostPreS_dRMinPfJet->Fill(dRMinPfJet, EventWeight_);
+    tuple->PostPreS_closestPfJetMuonFraction->Fill(closestPfJetMuonFraction, EventWeight_);
+    tuple->PostPreS_closestPfJetElectronFraction->Fill(closestPfJetElectronFraction, EventWeight_);
+    tuple->PostPreS_closestPfJetPhotonFraction->Fill(closestPfJetPhotonFraction, EventWeight_);
+    tuple->PostPreS_dRMinPfJetVsIas->Fill(dRMinPfJet, globalIas_, EventWeight_);
+    tuple->PostPreS_closestPfJetMuonFractionVsIas->Fill(closestPfJetMuonFraction, globalIas_, EventWeight_);
+    tuple->PostPreS_closestPfJetElectronFractionVsIas->Fill(closestPfJetElectronFraction, globalIas_, EventWeight_);
+    tuple->PostPreS_closestPfJetPhotonFractionVsIas->Fill(closestPfJetPhotonFraction, globalIas_, EventWeight_);
+    tuple->PostPreS_dRMinCaloJet->Fill(dRMinCaloJet, EventWeight_);
+    tuple->PostPreS_dPhiMinPfMet->Fill(dPhiMinPfMet, EventWeight_);
+    tuple->PostPreS_CaloNumJets->Fill(caloNumJets, EventWeight_);
+    tuple->PostPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, EventWeight_);
+    tuple->PostPreS_dPhiMinPfMetVsIas->Fill(dPhiMinPfMet, globalIas_, EventWeight_);
+    tuple->PostPreS_PfMet->Fill(RecoPFMET_et, EventWeight_);
+    tuple->PostPreS_PfMetPhi->Fill(RecoPFMET_phi, EventWeight_);
+    if (GenBeta >= 0) {
+      tuple->PostPreS_GenBeta->Fill(GenBeta, EventWeight_);
+    }
+
   }
- 
-  if (globalIas_ > 0.6 || Mass > 1000 || debug_ > 7 ) {
-    if (globalIas_ > 0.6)    { LogPrint(MOD) << "\n\n        >> After passing preselection, the globalIas_ > 0.6";}
-    if (Mass > 1000 ) { LogPrint(MOD) << "\n\n        >> After passing preselection, the Mass > 1000";}
+
+  if ((globalIas_ > 0.6 || Mass > 1000 || debug_ > 7 ) && saveTree_ == 0) {
+    if (globalIas_ > 0.6)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.6";}
+    if (Mass > 1000 ) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
     LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
     LogPrint(MOD) << "        >> -----------------------------------------------";
     LogPrint(MOD) << "        >> Trigger passed!" ;
@@ -4020,7 +4547,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> track->validFraction()  " <<   track->validFraction() ;
     LogPrint(MOD) << "        >> numDeDxHits  " <<   numDeDxHits ;
     LogPrint(MOD) << "        >> track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof() ;
-    LogPrint(MOD) << "        >> EoP   " <<   EoP << "     --> | PF E = " << pf_energy <<  " | Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " | p = " << track->p() ;
+    LogPrint(MOD) << "        >> EoP   " <<   EoP << "     --> | PF E = " << pf_energy <<  " | Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " | p = " << track->p() << " | " ;
     LogPrint(MOD) << "        >> dz  " <<   dz ;
     LogPrint(MOD) << "        >> dxy  " <<   dxy ;
     LogPrint(MOD) << "        >> track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
@@ -4037,15 +4564,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     LogPrint(MOD) << "        >> closestPfJetElectronFraction   " <<   closestPfJetElectronFraction ;
     LogPrint(MOD) << "        >> closestPfJetPhotonFraction   " <<   closestPfJetPhotonFraction ;
   }
-  
+
   if (globalIas_ < 0.03 && globalIas_ > 0.025) {
     cout <<  " Ias: " << globalIas_ << " LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event() << endl;
   }
-  
-  // Fill up gen based beta histo after preselection
-  if (tuple && GenBeta >= 0) {
-    tuple->Beta_PreselectedA->Fill(GenBeta, Event_Weight);
-  }
+
+
 
   // Cut on  Rescaled P
   if (RescaleP && RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < globalMinPt_) {
@@ -4072,10 +4596,10 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
       return false;
   } // End condition on tof existence or not
 
-  
+
 
 //  //mk if(MassErr > 0 && MassErr > 2.2)return false; //FIXME jozze -- cut on relative mass error in units of 8*MassErr/Mass
-  
+
 //  if (cutEtaTOFOnly) {
 //    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, eta is too low";
 //    return false;
@@ -4083,17 +4607,17 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //    if (debug_ > 5 ) LogPrint(MOD) << "        >> Preselection criteria passed for TOF eta cut";
 //  }
 //  if (tuple)
-//    tuple->BefPreS_Phi->Fill(track->phi(), Event_Weight);
+//    tuple->BefPreS_Phi->Fill(track->phi(), EventWeight_);
 
 //  if (cutPhiTOFOnly) {
 //    if (debug_ > 4 ) LogPrint(MOD) << "        >> Preselection not passed: for TOF only analysis, 1.2 < phi < 1.9";
 //    return false;
 //  }
-  
+
 //    float RecoQoPt = track->charge() / track->pt();
 //    if (!hscp.trackRef().isNull() && hscp.trackRef()->pt() > 200) {
 //      float InnerRecoQoPt = hscp.trackRef()->charge() / hscp.trackRef()->pt();
-//      tuple->BefPreS_InnerInvPtDiff->Fill((RecoQoPt - InnerRecoQoPt) / InnerRecoQoPt, Event_Weight);
+//      tuple->BefPreS_InnerInvPtDiff->Fill((RecoQoPt - InnerRecoQoPt) / InnerRecoQoPt, EventWeight_);
 //    }
 
   return true;
@@ -4104,12 +4628,12 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //     Selection
 //
 //=============================================================
+// TAV: iEvent is not needed to be passed
 bool Analyzer::passSelection(const reco::TrackRef track,
                              const reco::DeDxData* dedxSObj,
                              const reco::DeDxData* dedxMObj,
                              const reco::MuonTimeExtra* tof,
                              const edm::Event& iEvent,
-                             float Event_Weight,
                              const int& CutIndex,
                              Tuple* tuple,
                              const bool isFlip,
@@ -4120,74 +4644,75 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   static constexpr const char* const MOD = "Analyzer";
   using namespace edm;
   float MuonTOF;
-  
+
   if (track.isNull()) {
     LogPrint(MOD) << "@passSelection: track.isNull() -- this should never happen!!!";
     return false;
   }
-  
+
   tof ? MuonTOF = tof->inverseBeta(): MuonTOF= globalMinTOF_ ;
 
   float PtCut = CutPt_[CutIndex];
-  float ICut = CutI_[CutIndex];
+  float IasCut = CutI_[CutIndex];
   float TOFCut = CutTOF_[CutIndex];
   if (isFlip) {
     PtCut = CutPt_Flip_[CutIndex];
-    ICut = CutI_Flip_[CutIndex];
+    IasCut = CutI_Flip_[CutIndex];
     TOFCut = CutTOF_Flip_[CutIndex];
   }
 
+  // Check if we pass the momentum selection
   if (RescaleP) {
     if (RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < PtCut)
       return false;
-  } else {
-    if (track->pt() < PtCut) {
+  } else if (track->pt() < PtCut) {
       return false;
+  }
+
+  // Distribtution of GenBeta after Pt selection is passed
+  if (tuple && GenBeta >= 0) {
+    tuple->PostS_CutIdVsBeta_postPt->Fill(CutIndex, GenBeta, EventWeight_);
+  }
+
+  // Check if we pass the (rescalled) Ias selection
+  if (typeMode_ != 3 && globalIas_ + RescaleI < IasCut) {
+    return false;
+  }
+
+  // Distribtution of GenBeta after Pt and Ias selection is passed
+  if (tuple && GenBeta >= 0) {
+      tuple->PostS_CutIdVsBeta_postPtAndIas->Fill(CutIndex, GenBeta, EventWeight_);
+  }
+
+  // Check if we pass the TOF selection
+  if ((typeMode_ > 1 && typeMode_ != 5) && !isFlip && MuonTOF + RescaleT < TOFCut) {
+    return false;
+  }
+  if ((typeMode_ > 1 && typeMode_ != 5) && isFlip && MuonTOF + RescaleT > TOFCut) {
+    return false;
+  }
+
+  if (tuple) {
+    if (GenBeta >= 0) {
+      tuple->PostS_CutIdVsBeta_postPtAndIasAndTOF->Fill(CutIndex, GenBeta, EventWeight_);
     }
-  }
-  
-  if (tuple) {
-    tuple->Pt->Fill(CutIndex, Event_Weight);
-    if (GenBeta >= 0)
-      tuple->Beta_SelectedP->Fill(CutIndex, GenBeta, Event_Weight);
-  }
-
-  if (typeMode_ != 3 && globalIas_ + RescaleI < ICut) {
-    return false;
-  }
-
-  if (tuple) {
-    tuple->I->Fill(CutIndex, Event_Weight);
-    if (GenBeta >= 0)
-      tuple->Beta_SelectedI->Fill(CutIndex, GenBeta, Event_Weight);
-  }
-
-  if ((typeMode_ > 1 && typeMode_ != 5) && !isFlip && MuonTOF + RescaleT < TOFCut)
-    return false;
-  if ((typeMode_ > 1 && typeMode_ != 5) && isFlip && MuonTOF + RescaleT > TOFCut)
-    return false;
-
-  if (tuple) {
-    tuple->TOF->Fill(CutIndex, Event_Weight);
-    if (GenBeta >= 0)
-      tuple->Beta_SelectedT->Fill(CutIndex, GenBeta, Event_Weight);
-    tuple->AS_P->Fill(CutIndex, track->p(), Event_Weight);
-    tuple->AS_Pt->Fill(CutIndex, track->pt(), Event_Weight);
-    tuple->AS_Ias->Fill(CutIndex, globalIas_, Event_Weight);
-    tuple->AS_Ih->Fill(CutIndex, globalIh_, Event_Weight);
-    tuple->AS_TOF->Fill(CutIndex, MuonTOF, Event_Weight);
+    tuple->PostS_CutIdVsP->Fill(CutIndex, track->p(), EventWeight_);
+    tuple->PostS_CutIdVsPt->Fill(CutIndex, track->pt(), EventWeight_);
+    tuple->PostS_CutIdVsIas->Fill(CutIndex, globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsIh->Fill(CutIndex, globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsTOF->Fill(CutIndex, MuonTOF, EventWeight_);
     // TODO:
-    //tuple->AS_EtaIs->Fill(CutIndex,track->eta(),globalIas_,Event_Weight);
-    //tuple->AS_EtaIh->Fill(CutIndex,track->eta(),globalIh_,Event_Weight);
-    //tuple->AS_EtaP ->Fill(CutIndex,track->eta(),track->p(),Event_Weight);
-    //tuple->AS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),Event_Weight);
+    //tuple->PostS_EtaIs->Fill(CutIndex,track->eta(),globalIas_,EventWeight_);
+    //tuple->PostS_EtaIh->Fill(CutIndex,track->eta(),globalIh_,EventWeight_);
+    //tuple->PostS_EtaP ->Fill(CutIndex,track->eta(),track->p(),EventWeight_);
+    //tuple->PostS_EtaPt->Fill(CutIndex,track->eta(),track->pt(),EventWeight_);
     // TODO: until here
-    tuple->AS_PIs->Fill(CutIndex, track->p(), globalIas_, Event_Weight);
-    tuple->AS_PIh->Fill(CutIndex, track->p(), globalIh_, Event_Weight);
-    tuple->AS_PtIs->Fill(CutIndex, track->pt(), globalIas_, Event_Weight);
-    tuple->AS_PtIh->Fill(CutIndex, track->pt(), globalIh_, Event_Weight);
-    tuple->AS_TOFIs->Fill(CutIndex, MuonTOF, globalIas_, Event_Weight);
-    tuple->AS_TOFIh->Fill(CutIndex, MuonTOF, globalIh_, Event_Weight);
+    tuple->PostS_CutIdVsPVsIas->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsPVsIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsPtVsIas->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsPtVsIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
+    tuple->PostS_CutIdVsTOFVsIas->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
+    tuple->PostS_CutIdVsTOFVsIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
   }
   return true;
 }
@@ -4267,7 +4792,6 @@ void Analyzer::calculateSyst(reco::TrackRef track,
                              const edm::Event& iEvent,
                              const edm::EventSetup& iSetup,
                              const float pixelProbs[],
-                             const float Event_Weight,
                              Tuple* tuple,
                              const float GenBeta,
                              float MassErr,
@@ -4279,9 +4803,9 @@ void Analyzer::calculateSyst(reco::TrackRef track,
   float TRescale = -0.015;  //-0.005 (used in 2012); // added to the 1/beta value
 
   // compute systematic due to momentum scale
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, PRescale, 0, 0, 0, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, nullptr, -1, PRescale, 0, 0, 0, closestBackgroundPDGsIDs)) {
     float RescalingFactor = RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) / track->pt();
-    
+
     float Mass = -1;
     if (dedxMObj)
       Mass = GetMass(track->p() * RescalingFactor, dedxMObj->dEdx(), dEdxK_, dEdxC_);
@@ -4296,14 +4820,13 @@ void Analyzer::calculateSyst(reco::TrackRef track,
       MassComb = Mass;
     if (tof)
       MassComb = MassTOF;
-    
+
     for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
       if (passSelection(track,
                         dedxSObj,
                         dedxMObj,
                         tof,
                         iEvent,
-                        EventWeight_,
                         CutIndex,
                         nullptr,
                         false,
@@ -4323,7 +4846,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     } // end loop on cut index
   } // end compute systematic due to momentum scale
   // compute systematic due to dEdx (both globalIas_ and Ih)
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, false, 0.0, IRescale, 0.0, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, nullptr, -1, false, 0.0, IRescale, 0.0, closestBackgroundPDGsIDs)) {
       //if(TypeMode==5 && isSemiCosmicSB)continue;
     float Mass = -1;
     if (dedxMObj)
@@ -4340,8 +4863,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     if (tof)
       MassComb = MassTOF;
     for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-      if (passSelection(
-                        track, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, nullptr, false, -1, 0, IRescale, 0)) {
+      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, CutIndex, nullptr, false, -1, 0, IRescale, 0)) {
         HSCPTk_SystI[CutIndex] = true;
         if (Mass > MaxMass_SystI[CutIndex])
           MaxMass_SystI[CutIndex] = Mass;
@@ -4353,7 +4875,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to dEdx
   // compute systematic due to Mass shift ??????????
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, nullptr, -1, 0, 0, 0, 0, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -4369,9 +4891,9 @@ void Analyzer::calculateSyst(reco::TrackRef track,
       MassComb = Mass;
     if (tof)
       MassComb = MassTOF;
-    
+
     for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, nullptr, false, -1, 0, 0, 0)) {
+      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, CutIndex, nullptr, false, -1, 0, 0, 0)) {
         HSCPTk_SystM[CutIndex] = true;
         if (Mass > MaxMass_SystM[CutIndex])
           MaxMass_SystM[CutIndex] = Mass;
@@ -4383,7 +4905,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End compute systematic due to Mass shift
   // compute systematic due to TOF
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, TRescale, 0, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, nullptr, -1, 0, 0, TRescale, 0, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -4399,9 +4921,9 @@ void Analyzer::calculateSyst(reco::TrackRef track,
       MassComb = Mass;
     if (tof)
       MassComb = MassTOF;
-    
+
     for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, nullptr, false, -1, 0, 0, TRescale)) {
+      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, CutIndex, nullptr, false, -1, 0, 0, TRescale)) {
         HSCPTk_SystT[CutIndex] = true;
         if (Mass > MaxMass_SystT[CutIndex])
           MaxMass_SystT[CutIndex] = Mass;
@@ -4413,7 +4935,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
     }
   } // End condition for compute systematic due to TOF
   // compute systematics due to PU
-  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, EventWeight_, nullptr, -1, 0, 0, 0, 0, closestBackgroundPDGsIDs)) {
+  if (passPreselection(track, dedxHits, dedxSObj, dedxMObj, tof, iEvent, iSetup, pixelProbs, nullptr, -1, 0, 0, 0, 0, closestBackgroundPDGsIDs)) {
     /*if(TypeMode==5 && isSemiCosmicSB)continue;*/
     float Mass = -1;
     if (dedxMObj)
@@ -4429,9 +4951,9 @@ void Analyzer::calculateSyst(reco::TrackRef track,
       MassComb = Mass;
     if (tof)
       MassComb = MassTOF;
-    
+
     for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
-      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, EventWeight_, CutIndex, nullptr, false, -1, 0, 0, 0)) {
+      if (passSelection(track, dedxSObj, dedxMObj, tof, iEvent, CutIndex, nullptr, false, -1, 0, 0, 0)) {
         HSCPTk_SystPU[CutIndex] = true;
         if (Mass > MaxMass_SystPU[CutIndex])
           MaxMass_SystPU[CutIndex] = Mass;

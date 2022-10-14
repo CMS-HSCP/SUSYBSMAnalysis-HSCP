@@ -74,10 +74,17 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DataFormats/Common/interface/ValueMap.h"
-
 #include "DataFormats/Common/interface/TriggerResults.h"
-#include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+<<<<<<< HEAD
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+=======
+#include "DataFormats/HLTReco/interface/TriggerObject.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+>>>>>>> 216b5192fa4cf189e81c6851df9581a30dd7f2a7
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -109,6 +116,7 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
@@ -120,7 +128,10 @@
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
 
+<<<<<<< HEAD
 #include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
+=======
+>>>>>>> 216b5192fa4cf189e81c6851df9581a30dd7f2a7
 
 using namespace std;
 
@@ -152,7 +163,6 @@ public:
                         const edm::Event& iEvent,
                         const edm::EventSetup& iSetup,
                         const float pixelProbs[],
-                        const float Event_Weight,
                         Tuple* tuple,
                         const float GenBeta,
                         const bool RescaleP,
@@ -166,7 +176,6 @@ public:
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
                      const edm::Event& iEvent,
-                     const float Event_Weight,
                      const int& CutIndex,
                      Tuple* tuple,
                      const bool isFlip,
@@ -188,7 +197,6 @@ public:
                      const edm::Event& iEvent,
                      const edm::EventSetup& iSetup,
                      const float pixelProbs[],
-                     const float Event_Weight,
                      Tuple* tuple,
                      const float GenBeta,
                      float MassErr,
@@ -203,6 +211,7 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<vector<susybsm::HSCParticle>> hscpToken_;
+  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_; 
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
   edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;
@@ -218,10 +227,15 @@ private:
   edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;
   edm::EDGetTokenT<vector<reco::Muon>> muonToken_;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
+  edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
+  string filterName_;
+  string pathName_;
+  bool matchToHLTTrigger_;
   edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
   edm::EDGetTokenT<std::vector<reco::CaloMET>> caloMETToken_;
   edm::EDGetTokenT<std::vector<reco::CaloJet>> caloJetToken_;
+  edm::EDGetTokenT<trigger::TriggerEvent> triggerSummaryToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
   edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
@@ -371,8 +385,6 @@ private:
 
   vector<float> PUSystFactor_;
 
-  unsigned int TrigInfo_ = 0;  //1 -mu only, 2- met only, 3 mu and met
-
   TRandom3* RNG = nullptr;
   bool is2016;
   bool is2016G;
@@ -383,7 +395,7 @@ private:
 
   const std::string pixelCPE_;
   const int debug_;
-  const bool hasMCMatch_, doTriggering_,calcSyst_;
+  const bool hasMCMatch_,calcSyst_;
 
   static constexpr const char* const MOD = "Analyzer";
 

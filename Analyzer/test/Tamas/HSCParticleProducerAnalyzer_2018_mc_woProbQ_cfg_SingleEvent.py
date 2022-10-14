@@ -11,7 +11,8 @@ options.outputFile = 'Histos.root'
 # -1 means all events
 options.maxEvents = -1
 
-options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+#options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
@@ -49,7 +50,6 @@ process = cms.Process("HSCPAnalysis")
 #isBckg = False
 #isData = False
 #isSkimmedSample = False
-#GTAG = 'START72_V1::All'
 
 ## print configuration:
 print('\nCMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
@@ -76,12 +76,24 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-170To300_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2430000/E09ACB33-2178-7346-9B8F-1B2E37A01299.root"),
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-170To300_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/250000/0D04C22E-0391-534F-84D1-673F519CDE00.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-170To300_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/250000/0D04C22E-0391-534F-84D1-673F519CDE00.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40004/3EA4FB46-684A-A344-B8FD-C49E604413CA.root"),
+#   fileNames = cms.untracked.vstring("file:3EA4FB46-684A-A344-B8FD-C49E604413CA.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/00002/8A680DB7-DC98-1B4C-9BE8-0BF6B95B25F5.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/240008/50D6866F-AF83-1545-BA76-D696B7B7BF6E.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40003/12DD9D3F-118A-D044-B4A1-4EF7372EA686.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40003/07C11DC9-2A14-6741-8F59-40E6EF7E8906.root"),
+   fileNames = cms.untracked.vstring("file:07C11DC9-2A14-6741-8F59-40E6EF7E8906.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
-process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:20417:299250484')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:37737:411896098')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:115188:115187134')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:183264:183263902')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:25539:278749947')
+process.source.eventsToProcess = cms.untracked.VEventRange('1:22416:244663529')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -252,7 +264,6 @@ process.analyzer.DeDxC = C
 process.analyzer.DeDxSF_0 = SF0
 process.analyzer.DeDxSF_1 = SF1
 process.analyzer.GlobalMinIh = C
-process.analyzer.DoTriggering = False
 
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
