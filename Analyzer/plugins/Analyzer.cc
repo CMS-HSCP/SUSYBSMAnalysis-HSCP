@@ -219,10 +219,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
-      trigEventTag_(iConfig.getParameter<edm::InputTag>("trigEventTag")), 
-      trigEventToken_(consumes<trigger::TriggerEvent>(trigEventTag_)),
-      filterName_(iConfig.getParameter<std::string>("filterName")),
-      pathName_(iConfig.getParameter<std::string>("pathName")),
       // =========Analysis parameters===============
       typeMode_(iConfig.getUntrackedParameter<int>("TypeMode")),
       sampleType_(iConfig.getUntrackedParameter<int>("SampleType")),
@@ -2701,8 +2697,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_passCutPt55.push_back(track->pt() > 55 ? true : false);
     HSCP_passPreselection.push_back(passPre);
     HSCP_passSelection.push_back(PassNonTrivialSelection);
-    HSCP_isPFMuon.push_back(hscp_is_muon);
-    HSCP_PFMuonPt.push_back(hscp_pfmuon_pt);
     HSCP_Charge.push_back(track->charge());
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
@@ -3592,8 +3586,6 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 
       float dr = deltaR(pfCand->eta(),pfCand->phi(),track->eta(),track->phi());
       bool fromPV = (fabs(dz) < 0.1);
-
-      if(fromPV && dr<0.3) isoTK_PVconstrain_dr03 += pfCand->p4().pt();
 
       float pt = pfCand->p4().pt();
       float drForMiniIso = 0.0;

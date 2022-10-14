@@ -77,14 +77,11 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "FWCore/Common/interface/TriggerNames.h"
-<<<<<<< HEAD
-#include "DataFormats/HLTReco/interface/TriggerEvent.h"
-=======
+
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
->>>>>>> 216b5192fa4cf189e81c6851df9581a30dd7f2a7
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -128,10 +125,7 @@
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
 
-<<<<<<< HEAD
-#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
-=======
->>>>>>> 216b5192fa4cf189e81c6851df9581a30dd7f2a7
+
 
 using namespace std;
 
@@ -243,10 +237,7 @@ private:
   edm::EDGetTokenT<GenEventInfoProduct> genEventToken_; // for reading generator weight
 
   vector<string> trigger_met_, trigger_mu_;
-  edm::InputTag trigEventTag_;
-  edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
-  string filterName_;
-  string pathName_;
+
 
   vector<float> CutPt_, CutI_, CutTOF_;
   vector<float> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;
