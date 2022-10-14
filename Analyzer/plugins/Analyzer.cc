@@ -179,6 +179,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
+      trigEventTag_(iConfig.getParameter<edm::InputTag>("trigEventTag")), 
+      trigEventToken_(consumes<trigger::TriggerEvent>(trigEventTag_)),
+      filterName_(iConfig.getParameter<std::string>("filterName")),
+      pathName_(iConfig.getParameter<std::string>("pathName")),
       // =========Analysis parameters===============
       typeMode_(iConfig.getUntrackedParameter<int>("TypeMode")),
       sampleType_(iConfig.getUntrackedParameter<int>("SampleType")),
@@ -951,7 +955,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->ErrorHisto->Fill(3.5);
         continue;
     }
-        
+    
+    edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
+    std::vector<TLorentzVector> trigObjP4s;
+    trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,trigEventTag_.process());
+
+    bool matchHLTMuon = false;
+
+    float dr_min_hlt_hscp = 9999.;
+    if(hscp.type() == susybsm::HSCParticleType::globalMuon){
+        for(size_t objNr=0;objNr<trigObjP4s.size();objNr++){
+            float dr_hltmu_hscp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),hscp.trackRef()->eta(),hscp.trackRef()->phi());
+            if (dr_hltmu_hscp < dr_min_hlt_hscp){
+                dr_min_hlt_hscp = dr_hltmu_hscp;
+            }
+        }
+        if(dr_min_hlt_hscp<0.1) matchHLTMuon=true;
+    }
+       
+    std::cout << "matching HLT : " << matchHLTMuon << std::endl; 
     // Reco - GEN track matching
     // For signal only, make sure that the candidate is associated to a true HSCP
     int closestGenIndex = -1;
@@ -2624,6 +2646,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
   desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
+  desc.add("trigEventTag",edm::InputTag("hltTriggerSummaryAOD","","HLT"))
+    ->setComment("A");
+  desc.add<std::string>("filterName",std::string("hltL1sSingleMu22or25"))
+    ->setComment("A");
+  desc.add<std::string>("pathName","HLT_Mu50_v")
+    ->setComment("A");
   desc.addUntracked("TypeMode", 0)
     ->setComment("0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1");
   desc.addUntracked("SampleType", 0)

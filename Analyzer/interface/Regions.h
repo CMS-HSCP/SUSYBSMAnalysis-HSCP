@@ -10,9 +10,19 @@
 #include "TDirectory.h"
 
 
+//data 2017
+float K_data2017 = 2.30;
+float C_data2017 = 3.17;
+//data 2018
+float K_data2018 = 2.27;
+float C_data2018 = 3.16;
+//MC 2017
+float K_mc2017 = 2.26;
+float C_mc2017 = 3.22;
+//MC 2018
+float K_mc2018 = 2.27;
+float C_mc2018 = 3.22;
 
-float K = 3.20;
-float C = 3.17;
 
 // Scale the 1D-histogram given to the unit 
 void scale(TH1F* h){
@@ -28,7 +38,7 @@ class Region{
         void setSuffix(std::string suffix);
         void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins);
         void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w);
-        void fillPredMass(float weight_);
+        void fillPredMass(const std::string&, float weight_);
         void write();
 
         int np;
@@ -133,7 +143,7 @@ void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, floa
 // While combining the input for several couples leading to the same mass: 
 // contents are added 
 // errors: the sqrt of the squared uncertainties are added
-void Region::fillPredMass(float weight_=-1) {
+void Region::fillPredMass(const std::string& st_sample,float weight_=-1) {
     TH1F* eta = (TH1F*) ih_eta->ProjectionX();
     for(int i=1;i<eta->GetNbinsX();i++)
     {
@@ -151,8 +161,13 @@ void Region::fillPredMass(float weight_=-1) {
                 float dedx = ih->GetBinCenter(k);
                 float prob = p->GetBinContent(j) * ih->GetBinContent(k);
                 float weight = prob;
-                if(weight_>0) weight = weight_;
+                //if(weight_>0) weight = weight_;
                 float err_weight = weight*sqrt((1./(ih->GetBinContent(k)))+(1./(p->GetBinContent(j)*ih->Integral())));
+                float K=0, C=0;
+                if(st_sample=="data2017"){K=K_data2017;C=C_data2017;}
+                if(st_sample=="data2018"){K=K_data2018;C=C_data2018;}
+                if(st_sample=="mc2017"){K=K_mc2017;C=C_mc2017;}
+                if(st_sample=="mc2018"){K=K_mc2018;C=C_mc2018;}
                 float mass = GetMass(mom,dedx,K,C);
                 int bin_mass = pred_mass->FindBin(mass);
                 if(prob>=0)
@@ -181,7 +196,9 @@ void Region::write(){
 }
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
-    std::string dir = "analyzer/BaseName/";
+    //std::string dir = "analyzer/BaseName/";
+    std::string dir = "HSCParticleAnalyzer/BaseName/";
+    //std::string dir="";
     r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
     r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
     r.ih_eta                            = (TH2F*)f->Get((dir+"ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
@@ -189,7 +206,9 @@ void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool boo
     r.ias_p                             = (TH2F*)f->Get((dir+"ias_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_p->Rebin2D(rebinp,rebinih);
     r.ias_pt                            = (TH2F*)f->Get((dir+"ias_pt_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_pt->Rebin2D(rebinp,rebinih);
     r.mass                              = (TH1F*)f->Get((dir+"mass_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
+    //r.mass                              = (TH1F*)f->Get((dir+"massFromTree_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
     r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
+    //r.pred_mass                         = (TH1F*)f->Get((dir+"massFrom1DTemplatesEtaBinning_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);
 }
 
 // Return randomly select histo 
@@ -211,7 +230,8 @@ void poissonHisto(TH2F &h,TRandom3* RNG){
 // The first given 2D-histogram is weighted in respect to the 1D-histogram 
 void etaReweighingP(TH2F* eta_p_1, TH1F* eta2)
 {
-    TH1F* eta1 = (TH1F*) eta_p_1->ProjectionY(); eta1->Scale(1./eta1->Integral());
+    TH1F* eta1 = (TH1F*) eta_p_1->ProjectionY(); 
+    eta1->Scale(1./eta1->Integral());
     eta2->Scale(1./eta2->Integral());
     eta2->Divide(eta1);
     for(int i=0;i<eta_p_1->GetNbinsX()+1;i++)
@@ -245,12 +265,13 @@ void overflowLastBin(TH1F* h){
 // rebinning histogram according to an array of bins
 TH1F* rebinHisto(TH1F* h){
     overflowLastBin(h);
-    double xbins[17] = {0,50,100,150,200,250,300,350,400,450,500,600,700,800,1000,1500,2000};
+    //double xbins[17] = {0,50,100,150,200,250,300,350,400,450,500,600,700,800,1000,1500,2000};
+    double xbins[12] = {0,100,200,300,400,500,600,700,800,1000,1500,2000};
     std::vector<double> xbins_v;
     for(double i=0.0;i<=1000.0;i+=50) xbins_v.push_back(i);
     std::string newname = h->GetName(); 
     newname += "_rebinned";
-    TH1F* hres = (TH1F*) h->Rebin(16,newname.c_str(),xbins);
+    TH1F* hres = (TH1F*) h->Rebin(11,newname.c_str(),xbins);
     overflowLastBin(hres);
     return hres;
 }
@@ -269,6 +290,20 @@ TH1F* ratioIntegral(TH1F* h1, TH1F* h2){
         Perr = sqrt(Perr*Perr + pow(P*SystError,2));
         res->SetBinContent(i,D/P);
         res->SetBinError(i,sqrt(pow(Derr*P,2)+pow(Perr*D,2))/pow(P,2));
+    }
+    return res;
+}
+
+TH1F* pull(TH1F* h1, TH1F* h2){
+    float SystError = 0.2;
+    TH1F* res = (TH1F*) h1->Clone(); res->Reset();
+    for(int i=0;i<h1->GetNbinsX()+1;i++){
+        double Perr = 0, Derr = 0;
+        double P = h1->GetBinContent(i); if(P<=0) continue;
+        double D = h2->GetBinContent(i);
+        Perr = sqrt(P + pow(P*SystError,2));
+        Derr = sqrt(D);
+        res->SetBinContent(i,(D-P)/sqrt(pow(Derr,2)+pow(Perr,2)));
     }
     return res;
 }
@@ -320,7 +355,7 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     if(rebin) h1=rebinHisto(h1);
     if(rebin) h2=rebinHisto(h2);
     TCanvas* c1 = new TCanvas(("plotting_"+name).c_str(),"");
-    c1->Divide(1,2);
+    c1->Divide(1,3);
     gStyle->SetOptStat(0);
     c1->cd(1);
     TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
@@ -345,10 +380,17 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     }
     tmp->GetYaxis()->SetRangeUser(0,2);
     tmp->Draw();
+    c1->cd(3);
+    TH1F* tmp2 = (TH1F*) h1->Clone(); tmp2->Reset();
+    tmp2=pull(h2,h1);
+    tmp2->GetYaxis()->SetTitle("pull");
+    tmp2->GetYaxis()->SetTitleSize(0.06);
+    tmp2->GetYaxis()->SetRangeUser(-5,5);
+    tmp2->Draw();
     return c1;
 }
 
-void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
+void bckgEstimate(const std::string& st_sample, Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
     std::vector<TH1F> vPE;
     TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
@@ -370,7 +412,7 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
         float C = c_ih_eta.Integral();
         float normalisationABC = 1.;
         if(A>0) normalisationABC = B*C/A;
-        bc.fillPredMass();
+        bc.fillPredMass(st_sample);
         scale(bc.pred_mass);
         massNormalisation(bc.pred_mass,normalisationABC);
         vPE.push_back(*bc.pred_mass);
@@ -389,7 +431,7 @@ void bckgEstimate(Region& b, Region& c, Region& bc, Region& a, Region& d, std::s
     delete RNG;
 }
 
-void bckgEstimate_fromHistos(TH2F* mass_cutIndex, TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, TH1F* H_A, TH1F* H_B, TH1F* H_C, int cutIndex=3, int nPE=100){
+void bckgEstimate_fromHistos(const std::string& st_sample, TH2F* mass_cutIndex, TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, TH1F* H_A, TH1F* H_B, TH1F* H_C, int cutIndex=3, int nPE=100){
     TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_projA",cutIndex+1,cutIndex+1);
     TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_projB",cutIndex+1,cutIndex+1);
     ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
@@ -422,11 +464,11 @@ void bckgEstimate_fromHistos(TH2F* mass_cutIndex, TH2F* eta_cutIndex_regA, TH2F*
         float C = H_C->Integral(cutIndex+1,cutIndex+1);
         float norm = 1;
         if(A>0) norm = B*C/A;
-        //std::cout << " A: " << A << " B: " << B << " C: " << C << " norm: " << norm << " D: " << mass_obs->Integral() << std::endl;
-        rBC.fillPredMass();
+        std::cout << " A: " << A << " B: " << B << " C: " << C << " norm: " << norm << " D: " << mass_obs->Integral() << std::endl;
+        rBC.fillPredMass(st_sample);
         scale(rBC.pred_mass);
-        massNormalisation(rBC.pred_mass,norm);
-        //massNormalisation(rBC.pred_mass,mass_obs->Integral());
+        //massNormalisation(rBC.pred_mass,norm);
+        massNormalisation(rBC.pred_mass,mass_obs->Integral());
         vPE.push_back(*rBC.pred_mass);
     }
     TH1F h_tmp = meanHistoPE(vPE);

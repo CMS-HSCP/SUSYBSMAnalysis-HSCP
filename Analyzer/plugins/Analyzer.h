@@ -77,6 +77,7 @@
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -118,6 +119,8 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
+
+#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 using namespace std;
 
@@ -226,6 +229,10 @@ private:
   edm::EDGetTokenT<GenEventInfoProduct> genEventToken_; // for reading generator weight
 
   vector<string> trigger_met_, trigger_mu_;
+  edm::InputTag trigEventTag_;
+  edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
+  string filterName_;
+  string pathName_;
 
   vector<float> CutPt_, CutI_, CutTOF_;
   vector<float> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;

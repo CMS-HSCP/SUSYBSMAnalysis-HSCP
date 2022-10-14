@@ -1,2 +1,5 @@
 #root_file  nofPseudoExperiments    cutIndex      rebin_boolean   rebin eta   rebin Ih    rebin p     rebin mass
-/opt/sbg/cms/ui3_data1/dapparu/HSCP/Production/resultSingleMuon_20UL17C_TkOnly_28p2/histoSingleMuon_20UL17C_TkOnly_28p2          100                     28             0               2           2           2           25
+#/opt/sbg/cms/ui3_data1/dapparu/HSCP/Production/resultSingleMuon_20UL17C_TkOnly_28p2/histoSingleMuon_20UL17C_TkOnly_28p2          100                     3             0               2           2           2           25
+#crab_Analysis_SingleMuon_Run2018C_CodeV30p9_v1          10                     3             0               2           2           2           25
+crab_Analysis_2018_WJetsToLNu_2J_CodeV30p9_v1    mc2018      10                     3             0               2           2           2           25
+#outfile_SingleMuon_TkOnly_20UL17C_v28p2_etaLowerThan1p0_setp8preS_-50eta50_ias50_pt60_ih34_p-1_etabins120_ihbins200_pbins200_massbins50_invIso0_invMET0          10                     3             0               2           2           2           25
