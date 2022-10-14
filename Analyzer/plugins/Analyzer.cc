@@ -241,7 +241,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       numDzRegions_(iConfig.getUntrackedParameter<int>("DzRegions")),
       globalMaxEta_(iConfig.getUntrackedParameter<double>("GlobalMaxEta")),
       globalMinPt_(iConfig.getUntrackedParameter<double>("GlobalMinPt")),
-      globalMaxP_(iConfig.getUntrackedParameter<double>("GlobalMaxP")),
       globalMinNOPH_(iConfig.getUntrackedParameter<int>("GlobalMinNOPH")),
       globalMinNOH_(iConfig.getUntrackedParameter<int>("GlobalMinNOH")),
       globalMinFOVH_(iConfig.getUntrackedParameter<double>("GlobalMinFOVH")),
