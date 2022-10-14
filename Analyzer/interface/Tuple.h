@@ -81,6 +81,7 @@ struct Tuple {
   std::vector<float> Tree_Charge;
   std::vector<float> Tree_Pt;
   std::vector<float> Tree_PtErr;
+  std::vector<float> Tree_Is_StripOnly;
   std::vector<float> Tree_Ias;
   std::vector<float> Tree_Ias_noTIBnoTIDno3TEC;
   std::vector<float> Tree_Ias_PixelOnly;

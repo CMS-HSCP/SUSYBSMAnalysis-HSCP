@@ -920,6 +920,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Charge;
   std::vector<float> HSCP_Pt;
   std::vector<float> HSCP_PtErr;
+  std::vector<float> HSCP_Is_StripOnly;
   std::vector<float> HSCP_Ias;
   std::vector<float> HSCP_Ias_noPix_noTIB_noTID_no3TEC;
   std::vector<float> HSCP_Ias_PixelOnly;
@@ -1742,6 +1743,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     int  skip_templates_ias = 0;
     auto localdEdxTemplates = dEdxTemplates;
     float dEdxErr = 0;
+    bool symmetricSmirnov = false;
 
     // Ih
     auto dedxMObj_FullTrackerTmp =
@@ -1843,6 +1845,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
 
     reco::DeDxData* dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
+
+    //symmetric Smirnov discriminator - Is
+    auto dedxIs_StripOnly_Tmp =
+        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+
+    reco::DeDxData* dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     auto dedxMObj = dedxIh_noL1;
@@ -2700,6 +2709,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Charge.push_back(track->charge());
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
+    HSCP_Is_StripOnly.push_back(dedxIs_StripOnly ? dedxIs_StripOnly->dEdx() : -1);
     HSCP_Ias.push_back(dedxIas_FullTracker ? dedxIas_FullTracker->dEdx() : -1);
     HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
@@ -2870,6 +2880,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Charge,
                                 HSCP_Pt,
                                 HSCP_PtErr,
+                                HSCP_Is_StripOnly,
                                 HSCP_Ias,
                                 HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ias_PixelOnly,

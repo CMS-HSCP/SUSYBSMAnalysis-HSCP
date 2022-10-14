@@ -1516,7 +1516,8 @@ reco::DeDxData computedEdx(const int& run_number,
                            float* dEdxErr = nullptr,
                            bool useTemplateLayer = false,
                            bool skipPixelL1 = false,
-                           int  skip_templates_ias = 0) {
+                           int  skip_templates_ias = 0,
+                           bool symmetricSmirnov = false) {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
@@ -1721,7 +1722,8 @@ crossTalkInvAlgo=1;
       result = 1.0 / (12 * size);
       std::sort(vect.begin(), vect.end(), std::less<float>());
       for (int i = 1; i <= size; i++) {
-        result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
+        if(!symmetricSmirnov) result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
+        else result += pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
       }
       result *= (3.0 / size);
     } else {  //dEdx estimator
