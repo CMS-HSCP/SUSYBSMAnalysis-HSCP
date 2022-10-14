@@ -53,6 +53,7 @@ struct Tuple {
   float Tree_HLTPFMHT;
   float Tree_HLTPFMHT_phi;
   float Tree_HLTPFMHT_sigf;
+  bool Tree_matchedMuonWasFound;
   float Tree_Muon1_Pt;
   float Tree_Muon1_eta;
   float Tree_Muon1_phi;
@@ -97,10 +98,12 @@ struct Tuple {
   std::vector<float> Tree_EoverP;
   std::vector<float> Tree_muon_eta;
   std::vector<bool> Tree_isMuon;
-  std::vector<int>  Tree_Muon_selector;
+  std::vector<bool> Tree_isPhoton;
   std::vector<bool> Tree_isElectron;
   std::vector<bool> Tree_isChHadron;
   std::vector<bool> Tree_isNeutHadron;
+  std::vector<bool> Tree_isPfTrack;
+  std::vector<bool> Tree_isUndefined;
   std::vector<float> Tree_ECAL_energy;
   std::vector<float> Tree_HCAL_energy;
   std::vector<float> Tree_TOF;
@@ -117,6 +120,7 @@ struct Tuple {
   std::vector<float> Tree_dZ;
   std::vector<float> Tree_dXY;
   std::vector<float> Tree_dR;
+  std::vector<float> Tree_p;
   std::vector<float> Tree_eta;
   std::vector<float> Tree_phi;
   std::vector<unsigned int> Tree_NOH;   //number of (valid) track pixel+strip hits
@@ -127,10 +131,14 @@ struct Tuple {
   std::vector<float> Tree_FOVHD;  //fraction of valid hits divided by total expected hits until the last one
   std::vector<unsigned int>
       Tree_NOM;  //number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
+  std::vector<float> Tree_matchTrigMuon_minDeltaR;  //minDeltaR bewteen triggermuon and HSCP
+  std::vector<float> Tree_matchTrigMuon_pT;  //pt of trigger muon with minDeltaR bewteen triggermuon and HSCP
   std::vector<float> Tree_iso_TK;
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
-  
+  std::vector<float> Tree_track_genTrackMiniIsoSumPt;
+
+
   std::vector<float> Tree_PFMiniIso_relative;
   std::vector<float> Tree_PFMiniIso_wMuon_relative;
 
@@ -143,7 +151,7 @@ struct Tuple {
   std::vector<float> Tree_track_PFIsolationR01_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR01_sumPhotonPt;
   std::vector<float> Tree_track_PFIsolationR01_sumPUPt;
- 
+
   std::vector<float> Tree_track_PFIsolationR03_sumChargedHadronPt;
   std::vector<float> Tree_track_PFIsolationR03_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR03_sumPhotonPt;
@@ -251,7 +259,7 @@ struct Tuple {
   TH1F* BefPreS_TriggerType;
   TH1F* HSCPCandidateType;
   TH1F* BefPreS_RecoHSCParticleType;
-  
+
   TH1F* N1_Eta;
   TH1F* N1_Chi2oNdof;
   TH1F* N1_Qual;
@@ -311,7 +319,7 @@ struct Tuple {
   TH1F* Gen_DecayLength;
   TH1F* Gen_Beta_Charged;
   TH1F* Gen_Beta_Triggered;
-  
+
   TH1F* Gen_Binning;
   TH1F* Gen_pT;
   TH1F* Gen_Eta;
@@ -319,11 +327,12 @@ struct Tuple {
   TH1F* Gen_BetaGamma;
 
   TH1F* BefPreS_massT;
+  TH1F* BefPreS_mass;
   TH1F* BefPreS_MiniRelIsoAll;
   TH1F* BefPreS_MiniRelIsoChg;
   TH1F* BefPreS_MiniRelTkIso;
   TH1F* BefPreS_MiniTkIso;
-  
+
   TH1F* BefPreS_RecoPFMET;
   TH1F* BefPreS_RecoPFHT;
   TH1F* BefPreS_CaloNumJets;
@@ -401,7 +410,7 @@ struct Tuple {
   TH1F* BefPreS_LastHitD3D;
   TH2F* BefPreS_PtErrOverPtVsPtErrOverPt2;
   TH2F* BefPreS_PtErrOverPtVsPt;
-  
+
   TH1F* BefPreS_ProbQ;
   TH1F* BefPreS_ProbXY;
   TH1F* BefPreS_ProbQNoL1;
@@ -425,7 +434,7 @@ struct Tuple {
 
   TH2F* BefPreS_CluNormChargeVsStripLayer_lowBetaGamma;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma;
-  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91; 
+  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2;
 
@@ -436,7 +445,7 @@ struct Tuple {
   TH2F* BefPreS_genGammaBetaVsProbXYNoL1;
   TH2F* BefPreS_dRVsPtPfJet;
   TH2F* BefPreS_dRVsdPtPfCaloJet;
-  
+
   TH1F* BefPreS_P;
   TH1F* BefPreS_Pt_DT;
   TH1F* BefPreS_Pt_CSC;
@@ -455,7 +464,7 @@ struct Tuple {
   TH2F* BefPreS_EtaVsTOF;  //TH3F*  PostS_EtaTOF;
   TH2F* BefPreS_EtaVsDz;
   TH2F* BefPreS_EtaVsNBH;  // number of bad hits vs Eta
-  
+
   TH2F* BefPreS_PVsIas;
   TH2F* BefPreS_IhVsIas;
   TH2F* BefPreS_PVsIh;
@@ -479,11 +488,11 @@ struct Tuple {
   TH1F* PostPreS_MiniRelIsoChg;
   TH1F* PostPreS_MiniTkIso;
   TH1F* PostPreS_MiniRelTkIso;
-  
+
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
   TH1F* PostPreS_CaloNumJets;
-  
+
   TH1F* PostPreS_Chi2oNdof;
   TH2F* PostPreS_Chi2oNdofVsIas;
   TH1F* PostPreS_Qual;
@@ -545,7 +554,7 @@ struct Tuple {
   TH1F* PostPreS_TimeAtIP;
   TH1F* PostPreS_OpenAngle;
   TH1F* PostPreS_OpenAngle_Cosmic;
-  
+
   TH1F* PostPreS_Pt_FailDz;
   TH1F* PostPreS_Pt_FailDz_DT;
   TH1F* PostPreS_Pt_FailDz_CSC;
@@ -556,14 +565,14 @@ struct Tuple {
   TH1F* PostPreS_Dz_Cosmic;
   TH1F* PostPreS_Dz_CSC;
   TH1F* PostPreS_Dz_DT;
-  
+
   TH1F* PostPreS_LastHitDXY;
   TH2F* PostPreS_LastHitDXYVsEta;
   TH1F* PostPreS_LastHitD3D;
   TH2F* PostPreS_LastHitD3DVsEta;
   TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
   TH2F* PostPreS_PtErrOverPtVsPt;
-  
+
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
   TH1F* PostPreS_ProbXY;
@@ -677,10 +686,10 @@ struct Tuple {
   TH2F* PostPreS_MassVsMassT;
   TH2F* PostPreS_MassVsMiniRelIsoAll;
   TH2F* PostPreS_MassVsMassErr;
-  
+
   TH1F* CutFlow;
   TH1F* CutFlowReverse;
-  
+
   TH2F* CutFlowEta;
   TH2F* CutFlowPfType;
   TH2F* CutFlowProbQ;
@@ -739,7 +748,7 @@ struct Tuple {
   TH2F* PostS_CutIdVsEta_RegionF;
   TH2F* PostS_CutIdVsEta_RegionG;
   TH2F* PostS_CutIdVsEta_RegionH;
-  
+
   TH2F* PostS_CutIdVsP;
   TH2F* PostS_CutIdVsPt;
   TH2F* PostS_CutIdVsIas;
@@ -755,7 +764,7 @@ struct Tuple {
   TH2F* PostS_CutIdVsBeta_postPt;
   TH2F* PostS_CutIdVsBeta_postPtAndIas;
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
-  
+
   TH1F* PostPreS_GenBeta;
 
   //Prediction histograms
@@ -883,10 +892,10 @@ struct Tuple {
   std::map<std::string, TH1D*> CtrlPt_S2_TOF_Binned;  //TH1D* CtrlPt_S2_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S3_TOF_Binned;  //TH1D* CtrlPt_S3_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S4_TOF_Binned;  //TH1D* CtrlPt_S4_TOF_Binned[MaxPredBins];
-   
+
   Region rA_ias50;
   Region rC_ias50;
-  
+
   Region rB_50ias60;
   Region rB_60ias70;
   Region rB_70ias80;

@@ -92,7 +92,7 @@ void loadSFPixel() {
    file_calib2.open("CorrFact2018PixL1.txt");
    if (!file_calib2) { std::cerr << "cannot open file CorrFact2018PixL1.txt " << std::endl; }
    else
-   {  
+   {
       while (!file_calib2.eof () && icalibL1<calmax) {
        file_calib2 >> irunMinValL1[icalibL1] >> scaleValL1[icalibL1] >> errorScaleValL1[icalibL1] ;
        icalibL1++;
@@ -101,7 +101,7 @@ void loadSFPixel() {
    if (irunMinValL1[icalibL1-1]==0) icalibL1--;
    icalibL1_2018=icalibL1-icalibL1_2017;
    file_calib2.close ();
- 
+
 
    std::ifstream file_calib3;
    file_calib3.open("CorrFact2017PixL2.txt");
@@ -121,7 +121,7 @@ void loadSFPixel() {
    file_calib4.open("CorrFact2018PixL2.txt");
    if (!file_calib4) { std::cerr << "cannot open file CorrFact2018PixL2.txt " << std::endl; }
    else
-   {  
+   {
       while (!file_calib4.eof () && icalibL2<calmax) {
        file_calib4 >> irunMinValL2[icalibL2] >> scaleValL2[icalibL2] >> errorScaleValL2[icalibL2] ;
        icalibL2++;
@@ -130,7 +130,7 @@ void loadSFPixel() {
    if (irunMinValL2[icalibL2-1]==0) icalibL2--;
    icalibL2_2018=icalibL2-icalibL2_2017;
    file_calib4.close ();
- 
+
    std::ifstream file_calib5;
    file_calib5.open("CorrFact2017PixL3.txt");
    icalibL3=0;
@@ -149,7 +149,7 @@ void loadSFPixel() {
    file_calib6.open("CorrFact2018PixL3.txt");
    if (!file_calib6) { std::cerr << "cannot open file CorrFact2018PixL3.txt " << std::endl; }
    else
-   {  
+   {
       while (!file_calib6.eof () && icalibL3<calmax) {
        file_calib6 >> irunMinValL3[icalibL3] >> scaleValL3[icalibL3] >> errorScaleValL3[icalibL3] ;
        icalibL3++;
@@ -158,7 +158,7 @@ void loadSFPixel() {
    if (irunMinValL3[icalibL3-1]==0) icalibL3--;
    icalibL3_2018=icalibL3-icalibL3_2017;
    file_calib6.close ();
- 
+
    std::ifstream file_calib7;
    file_calib7.open("CorrFact2017PixL4.txt");
    icalibL4=0;
@@ -177,7 +177,7 @@ void loadSFPixel() {
    file_calib8.open("CorrFact2018PixL4.txt");
    if (!file_calib8) { std::cerr << "cannot open file CorrFact2018PixL4.txt " << std::endl; }
    else
-   {  
+   {
       while (!file_calib8.eof () && icalibL4<calmax) {
        file_calib8 >> irunMinValL4[icalibL4] >> scaleValL4[icalibL4] >> errorScaleValL4[icalibL4] ;
        icalibL4++;
@@ -186,7 +186,7 @@ void loadSFPixel() {
    if (irunMinValL4[icalibL4-1]==0) icalibL4--;
    icalibL4_2018=icalibL4-icalibL4_2017;
    file_calib8.close ();
- 
+
    std::ifstream file_calib9;
    file_calib9.open("CorrFact2017PixR1.txt");
    icalibR1=0;
@@ -205,7 +205,7 @@ void loadSFPixel() {
    file_calib10.open("CorrFact2018PixR1.txt");
    if (!file_calib10) { std::cerr << "cannot open file CorrFact2018PixR1.txt " << std::endl; }
    else
-   {  
+   {
       while (!file_calib10.eof () && icalibR1<calmax) {
        file_calib10 >> irunMinValR1[icalibR1] >> scaleValR1[icalibR1] >> errorScaleValR1[icalibR1] ;
        icalibR1++;
@@ -214,7 +214,7 @@ void loadSFPixel() {
    if (irunMinValR1[icalibR1-1]==0) icalibR1--;
    icalibR1_2018=icalibR1-icalibR1_2017;
    file_calib10.close ();
- 
+
    std::ifstream file_calib11;
    file_calib11.open("CorrFact2017PixR2.txt");
    icalibR2=0;
@@ -234,7 +234,7 @@ void loadSFPixel() {
    file_calib12.open("CorrFact2018PixR2.txt");
    if (!file_calib12) { std::cerr << "cannot open file CorrFact2018PixR2.txt " << std::endl; }
    else
-   {  
+   {
       while (!file_calib12.eof () && icalibR2<calmax) {
        file_calib12 >> irunMinValR2[icalibR2] >> scaleValR2[icalibR2] >> errorScaleValR2[icalibR2] ;
        icalibR2++;
@@ -367,11 +367,11 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
        }
 
      }
-     else { 
-        std::cout << "unknowm layer number in Barrel Pixel " << layerorside << std::endl; 
-        return 0; 
-     } 
-     
+     else {
+        std::cout << "unknowm layer number in Barrel Pixel " << layerorside << std::endl;
+        return 0;
+     }
+
    }
    else if (pix==2) {
      if (layerorside==1) {
@@ -422,14 +422,14 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
        }
 
      }
-     else { 
-        std::cout << "unknowm ring number in EndCap Pixel " << layerorside << std::endl; 
-        return 0; 
-     } 
+     else {
+        std::cout << "unknowm ring number in EndCap Pixel " << layerorside << std::endl;
+        return 0;
+     }
    }
 
    return scale;
-   
+
 }
 
 
@@ -1047,7 +1047,7 @@ std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1
   }
 //---
  // do nothing else
- return Q; 
+ return Q;
 }
 
 std::vector<int> CrossTalkInv(const std::vector<int>& Q,
@@ -1072,7 +1072,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
     return QII;
   }
 
-  if(way){ 
+  if(way){
       std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end()) ;
       if(*mQ>253){
          if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
@@ -1164,7 +1164,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
       }
     }
   }
-  // Max at the end of the cluster 
+  // Max at the end of the cluster
   if (ampls.size() > 1) {
     if (ampls[ampls.size() - 1] > ampls[ampls.size() - 2] ||
         (ampls.size() > 2 && ampls[ampls.size() - 1] == ampls[ampls.size() - 2] &&
@@ -1179,7 +1179,7 @@ bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exit
     NofMax = 1;
   }
 
-  // --- SHAPE SELECTION 
+  // --- SHAPE SELECTION
   //------------------------------------------------------------------------
   //
   //               ____
@@ -1659,16 +1659,16 @@ crossTalkInvAlgo=1;
       if (detid.subdetId() == 6) {
         layer = ((detid >> 5) & 0x7) + 13;
       }  //TEC
-      
+
       //skip templates ias = 1 --> skip pixel, TIB, TID, 3 first TEC layers
       if (skip_templates_ias == 1 && (
                      detid.subdetId()<5 ||
                      layer == 14 ||
                      layer == 15 ||
                      layer == 16
-                  ) 
+                  )
         ){continue;}
-      
+
       //skip templates ias = 2 --> pixel only, with pixL1 or not
       if (skip_templates_ias == 2 && (
                   detid.subdetId()>2 ||
@@ -2144,11 +2144,11 @@ float pTerr_over_pT_etaBin(const float& pt, const float& eta, float q=99){
     if(q==999){
         if(abs(eta)<=0.8) return std::max(f_eta_0p8_q999(pt),0.01);
         else if(abs(eta)>0.8 && abs(eta)<=1.7) return std::max(f_0p8_eta_1p7_q999(pt),0.01);
-        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q999(pt),0.01); 
+        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q999(pt),0.01);
     }else if(q==99){
         if(abs(eta)<=0.8) return std::max(f_eta_0p8_q99(pt),0.01);
         else if(abs(eta)>0.8 && abs(eta)<=1.7) return std::max(f_0p8_eta_1p7_q99(pt),0.01);
-        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q99(pt),0.01); 
+        else if(abs(eta)>1.7 && abs(eta)<=2.1) return std::max(f_1p7_eta_2p1_q99(pt),0.01);
     }else if(q==95){
         if(abs(eta)<=0.8) return std::max(f_eta_0p8_q95(pt),0.01);
         else if(abs(eta)>0.8 && abs(eta)<=1.7) return std::max(f_0p8_eta_1p7_q95(pt),0.01);
