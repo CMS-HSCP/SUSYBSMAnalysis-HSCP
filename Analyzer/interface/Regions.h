@@ -196,6 +196,7 @@ void Region::write(){
 }
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
+    //std::string dir = "analyzer/BaseName/";
     std::string dir = "HSCParticleAnalyzer/BaseName/";
     r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
     r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
@@ -302,6 +303,7 @@ TH1F* pull(TH1F* h1, TH1F* h2){
         Perr = sqrt(P + pow(P*SystError,2));
         Derr = sqrt(D);
         res->SetBinContent(i,(D-P)/sqrt(pow(Derr,2)+pow(Perr,2)));
+        res->SetBinError(i,res->GetBinContent(i)*((Derr/D)+(Perr/P)));
     }
     return res;
 }
@@ -334,7 +336,8 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
         for(unsigned int pe=0;pe<vPE.size();pe++){
             err += pow(mean - vPE[pe].GetBinContent(i),2);
         }
-        err = sqrt(err/(vPE.size()-1));
+        err = sqrt(err);
+        //err = sqrt(err/(vPE.size()-1));
         h.SetBinContent(i,mean);
         h.SetBinError(i,err);
     }
@@ -359,7 +362,7 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
       canvName = "plotting_"+name;
     }
     TCanvas* c1 = new TCanvas(canvName.c_str(),"", 800,800);
-    c1->Divide(1,2);
+    c1->Divide(1,3);
     gStyle->SetOptStat(0);
     c1->cd(1);
     TPad* p1 = (TPad*)(c1->cd(1));
@@ -369,6 +372,7 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     leg->AddEntry(h2,leg2.c_str(),"lep");
     h1->SetStats(0);
     h1->Draw();
+    h1->GetYaxis()->SetRangeUser(1e-4,1e6);
     h2->SetLineColor(2);
     h2->SetStats(0);
     h2->Draw("esame");
@@ -387,14 +391,28 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     }
     tmp->GetYaxis()->SetRangeUser(0,2);
     tmp->Draw();
+    tmp->SetLineColor(1);
+    tmp->SetMarkerColor(1);
+    c1->cd(3);
+    TH1F* tmp2 = (TH1F*) pull(h2,h1)->Clone();
+    tmp2->Draw("E0");
+    tmp2->GetYaxis()->SetTitle("pulls");
+    tmp2->GetYaxis()->SetRangeUser(-3,3);
+    tmp2->SetLineColor(1);
+    tmp2->SetMarkerColor(1);
     c1->SaveAs((canvName+".png").c_str());
     return c1;
 }
 
-void bckgEstimate(const std::string& st_sample, Region& b, Region& c, Region& bc, Region& a, Region& d, std::string st, int nPE=100){
+void bckgEstimate(const std::string& st_sample, const Region& B, const Region& C, const Region& BC, const Region& A, const Region& D, const std::string& st, const int& nPE=100){
+    Region bc = BC;
+    Region d = D;
     std::vector<TH1F> vPE;
     TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
+        Region a = A;
+        Region b = B;
+        Region c = C;
         TH2F a_ih_eta(*a.ih_eta);
         TH2F b_ih_eta(*b.ih_eta);
         TH2F c_ih_eta(*c.ih_eta);
@@ -427,27 +445,36 @@ void bckgEstimate(const std::string& st_sample, Region& b, Region& c, Region& bc
     overflowLastBin(d.mass);
     overflowLastBin(bc.pred_mass);
     
-    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
-    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
+    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
     delete RNG;
 }
 
-void bckgEstimate_fromHistos(const std::string& st_sample, TH2F* mass_cutIndex, TH2F* eta_cutIndex_regA, TH2F* eta_cutIndex_regB, TH3F* ih_eta_cutIndex_regB, TH3F* eta_p_cutIndex_regC, TH1F* H_A, TH1F* H_B, TH1F* H_C, int cutIndex=3, int nPE=100){
-    TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_projA",cutIndex+1,cutIndex+1);
-    TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_projB",cutIndex+1,cutIndex+1);
-    ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
-    TH2F* ih_eta_regB =  (TH2F*)ih_eta_cutIndex_regB->Project3D("zyB");
-    eta_p_cutIndex_regC->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
-    TH2F* eta_p_regC = (TH2F*)eta_p_cutIndex_regC->Project3D("yzC"); 
+void bckgEstimate_fromHistos(const std::string& st_sample, const TH2F& mass_cutInd, const TH2F& eta_cutIndex_A, const TH2F& eta_cutIndex_B, const TH3F& ih_eta_cutIndex_B, const TH3F& eta_p_cutIndex_C, const TH1F& HA, const TH1F& HB, const TH1F& HC, int cutIndex=3, int nPE=100){
+    TH2F* mass_cutIndex = (TH2F*) mass_cutInd.Clone();
     TH1F* mass_obs = (TH1F*)mass_cutIndex->ProjectionY("_projD",cutIndex+1,cutIndex+1);
-
     Region rBC;
     rBC.pred_mass = (TH1F*)mass_obs->Clone();
     rBC.pred_mass->Reset();
-
     std::vector<TH1F> vPE;
     TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
+    
+        TH2F* eta_cutIndex_regA = (TH2F*) eta_cutIndex_A.Clone();
+        TH2F* eta_cutIndex_regB = (TH2F*) eta_cutIndex_B.Clone();
+        TH3F* ih_eta_cutIndex_regB = (TH3F*) ih_eta_cutIndex_B.Clone();
+        TH3F* eta_p_cutIndex_regC = (TH3F*) eta_p_cutIndex_C.Clone();
+        TH1F* H_A = (TH1F*) HA.Clone();
+        TH1F* H_B = (TH1F*) HB.Clone();
+        TH1F* H_C = (TH1F*) HC.Clone();
+    
+        TH1F* eta_regA = (TH1F*)eta_cutIndex_regA->ProjectionY("_projA",cutIndex+1,cutIndex+1);
+        TH1F* eta_regB = (TH1F*)eta_cutIndex_regB->ProjectionY("_projB",cutIndex+1,cutIndex+1);
+        ih_eta_cutIndex_regB->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
+        TH2F* ih_eta_regB =  (TH2F*)ih_eta_cutIndex_regB->Project3D("zyB");
+        eta_p_cutIndex_regC->GetXaxis()->SetRange(cutIndex+1,cutIndex+1);
+        TH2F* eta_p_regC = (TH2F*)eta_p_cutIndex_regC->Project3D("yzC"); 
+
         poissonHisto(*eta_regA,RNG);
         poissonHisto(*eta_regB,RNG);
         poissonHisto(*ih_eta_regB,RNG);
@@ -483,8 +510,8 @@ void bckgEstimate_fromHistos(const std::string& st_sample, TH2F* mass_cutIndex, 
     overflowLastBin(mass_obs);
     overflowLastBin(rBC.pred_mass);
     
-    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction")->Write();
-    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st).c_str(),"Observed","Prediction",true)->Write();
+    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
+    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
 
     delete RNG;
 }
