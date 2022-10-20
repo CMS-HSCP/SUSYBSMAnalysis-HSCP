@@ -181,13 +181,12 @@ void step2_backgroundPrediction(){
     // estimate the background in different Ias slices, each containing 10% of the statistic 
     // ------------------------------------------------------------------------------------------------------
     
-    //bckgEstimate(st_sample, rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", nPE);
-    //bckgEstimate(st_sample, rb_60ias70, rc_ias50, rbc_60ias70, ra_ias50, rd_60ias70, "60ias70", nPE);
-    //bckgEstimate(st_sample, rb_70ias80, rc_ias50, rbc_70ias80, ra_ias50, rd_70ias80, "70ias80", nPE);
-    //bckgEstimate(st_sample, rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", nPE);
+    bckgEstimate(st_sample, rb_50ias60, rc_ias50, rbc_50ias60, ra_ias50, rd_50ias60, "50ias60", nPE);
+    bckgEstimate(st_sample, rb_60ias70, rc_ias50, rbc_60ias70, ra_ias50, rd_60ias70, "60ias70", nPE);
+    bckgEstimate(st_sample, rb_70ias80, rc_ias50, rbc_70ias80, ra_ias50, rd_70ias80, "70ias80", nPE);
+    bckgEstimate(st_sample, rb_80ias90, rc_ias50, rbc_80ias90, ra_ias50, rd_80ias90, "80ias90", nPE);
     //bckgEstimate(st_sample, rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", nPE);
     bckgEstimate(st_sample, rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90", nPE);
-    //bckgEstimate(st_sample, rb_50ias90, rc_ias50, rbc_50ias90, ra_ias50, rd_50ias90, "50ias90_2", nPE=50);
     //bckgEstimate(st_sample, rb_90ias100, rc_ias50, rbc_90ias100, ra_ias50, rd_90ias100, "90ias100", nPE);
 
     
@@ -198,9 +197,12 @@ void step2_backgroundPrediction(){
    
 
 
-    bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, nPE);
-    bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, 100);
-    bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex=28, nPE);
+    //bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, nPE);
+    //bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, 20);
+    //bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, 50);
+    //bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, 100);
+    //bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex, 200);
+    //bckgEstimate_fromHistos(st_sample, *mass_cutIndex, *eta_cutIndex_regA, *eta_cutIndex_regB, *ih_eta_cutIndex_regB, *eta_p_cutIndex_regC, *H_A, *H_B, *H_C, cutIndex=28, nPE);
 
     delete ofile;
     delete mass_cutIndex;

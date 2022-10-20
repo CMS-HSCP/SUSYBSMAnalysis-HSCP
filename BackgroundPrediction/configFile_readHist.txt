@@ -2,5 +2,9 @@
 #/opt/sbg/cms/ui3_data1/dapparu/HSCP/Production/resultSingleMuon_20UL17C_TkOnly_28p2/histoSingleMuon_20UL17C_TkOnly_28p2          100                     3             0               2           2           2           25
 crab_Analysis_SingleMuon_Run2018C_CodeV30p9_v1  data2018        10                     3             0               2           2           2           25
 #crab_Analysis_2018_WJetsToLNu_2J_CodeV30p9_v1    mc2018      10                     3             0               2           2           2           25
+#ttbar/ttbarIncl    mc2018      10                     3             0               2           2           2           25
+#ttbar/crab_Analysis_2018_TTTo2L2Nu_CodeV40p1_v1    mc2018      10                     3             0               2           2           2           25
+#ttbar/crab_Analysis_2018_TTToHadronic_CodeV40p1_v1    mc2018      10                     3             0               2           2           2           25
+#ttbar/crab_Analysis_2018_TTToSemiLeptonic_CodeV40p1_v1    mc2018      10                     3             0               2           2           2           25
 #outfile_SingleMuon_TkOnly_20UL17C_v28p2_etaLowerThan1p0_setp8preS_-50eta50_ias50_pt60_ih34_p-1_etabins120_ihbins200_pbins200_massbins50_invIso0_invMET0   data2017        10                     3             0               2           2           2           25
 #/data/vami/projects/HSCP/v1/CMSSW_10_6_30/src/BackgroundPredFiles/crab_Analysis_2018_WJetsToLNu_2J_CodeV30p9_v1          3                     3             0               2           2           2           25

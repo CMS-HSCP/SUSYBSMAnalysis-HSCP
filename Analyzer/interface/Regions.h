@@ -10,6 +10,7 @@
 #include "TDirectory.h"
 
 
+
 //data 2017
 float K_data2017 = 2.30;
 float C_data2017 = 3.17;
@@ -89,6 +90,9 @@ void Region::setSuffix(std::string suffix){
 
 // Function which intializes the histograms with given binnings 
 void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins){
+    TH1::SetDefaultSumw2(kTRUE);
+    TH2::SetDefaultSumw2(kTRUE);
+    TH3::SetDefaultSumw2(kTRUE);
     np = pbins;
     plow = 0;
     pup = 10000;
@@ -108,18 +112,18 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     masslow = 0;
     massup = 4000;
     std::string suffix = suffix_;
-    ih_p_eta = dir.make<TH3F>(("ih_p_eta"+suffix).c_str(),";#eta;p [GeV];I_{h} [MeV/cm]",neta,etalow,etaup,np,plow,pup,nih,ihlow,ihup); ih_p_eta->Sumw2();
-    eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";p [GeV];#eta",np,plow,pup,neta,etalow,etaup); eta_p->Sumw2();
-    ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup); ih_eta->Sumw2();
-    ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup); ih_p->Sumw2();
-    ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";p [GeV];I_{as}",np,plow,pup,nias,iaslow,iasup); ias_p->Sumw2();
-    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];I_{as}",npt,ptlow,ptup,nias,iaslow,iasup); ias_pt->Sumw2();
-    mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); mass->Sumw2();
-    pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); pred_mass->Sumw2();
+    ih_p_eta = dir.make<TH3F>(("ih_p_eta"+suffix).c_str(),";#eta;p [GeV];I_{h} [MeV/cm]",neta,etalow,etaup,np,plow,pup,nih,ihlow,ihup); 
+    eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";p [GeV];#eta",np,plow,pup,neta,etalow,etaup); 
+    ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup); 
+    ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup);
+    ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";p [GeV];I_{as}",np,plow,pup,nias,iaslow,iasup); 
+    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];I_{as}",npt,ptlow,ptup,nias,iaslow,iasup);
+    mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
+    pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
     mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     pred_mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
-    pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); pt_pterroverpt->Sumw2();
-    hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10); hTOF->Sumw2();
+    pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); 
+    hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10); 
 }
 
 // Function which fills histograms
@@ -243,7 +247,6 @@ void etaReweighingP(TH2F* eta_p_1, TH1F* eta2)
             eta_p_1->SetBinError(i,j,err_ij*eta2->GetBinContent(j));
         }
     }
-    eta_p_1->Sumw2();
 }
 
 
@@ -299,7 +302,7 @@ TH1F* pull(TH1F* h1, TH1F* h2){
     for(int i=0;i<h1->GetNbinsX()+1;i++){
         double Perr = 0, Derr = 0;
         double P = h1->GetBinContent(i); if(P<=0) continue;
-        double D = h2->GetBinContent(i);
+        double D = h2->GetBinContent(i); if(D<=0) continue;
         Perr = sqrt(P + pow(P*SystError,2));
         Derr = sqrt(D);
         res->SetBinContent(i,(D-P)/sqrt(pow(Derr,2)+pow(Perr,2)));
@@ -324,6 +327,7 @@ void saveHistoRatio(TH1F* h1,TH1F* h2,std::string st1,std::string st2,std::strin
 }
 
 TH1F meanHistoPE(std::vector<TH1F> vPE){
+    float SystError = 0.2;
     TH1F h(vPE[0]);
     h.Reset();
     h.SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
@@ -336,8 +340,9 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
         for(unsigned int pe=0;pe<vPE.size();pe++){
             err += pow(mean - vPE[pe].GetBinContent(i),2);
         }
-        err = sqrt(err);
-        //err = sqrt(err/(vPE.size()-1));
+        if(vPE.size()>1) err = sqrt(err/(vPE.size()-1));
+        else err = sqrt(err);
+        err = sqrt(pow(err,2)+pow(SystError*mean,2));
         h.SetBinContent(i,mean);
         h.SetBinError(i,err);
     }
@@ -400,7 +405,8 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     tmp2->GetYaxis()->SetRangeUser(-3,3);
     tmp2->SetLineColor(1);
     tmp2->SetMarkerColor(1);
-    c1->SaveAs((canvName+".png").c_str());
+    c1->SaveAs(("toCopy_20oct_v2/"+canvName+".pdf").c_str());
+    c1->SaveAs(("toCopy_20oct_v2/"+canvName+".root").c_str());
     return c1;
 }
 
@@ -459,7 +465,8 @@ void bckgEstimate_fromHistos(const std::string& st_sample, const TH2F& mass_cutI
     std::vector<TH1F> vPE;
     TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
-    
+   
+        //std::cout << "pe: " << pe << std::endl;
         TH2F* eta_cutIndex_regA = (TH2F*) eta_cutIndex_A.Clone();
         TH2F* eta_cutIndex_regB = (TH2F*) eta_cutIndex_B.Clone();
         TH3F* ih_eta_cutIndex_regB = (TH3F*) ih_eta_cutIndex_B.Clone();
