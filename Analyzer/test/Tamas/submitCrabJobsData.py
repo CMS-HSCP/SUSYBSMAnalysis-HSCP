@@ -15,10 +15,6 @@ datasetList = [
 codeVersion = sys.argv[1]
 #just the number, like 18p2
 
-didVoms = input("Push enter if you alread did voms-proxy-init -rfc -voms cms -valid 192:00 otherwise say no and do it\n")
-if(didVoms):
- sys.exit()
-
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
 if not os.path.exists("4crab_Template_Data.py"):
@@ -49,7 +45,7 @@ config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 config.Data.ignoreLocality = True
 
 config.section_('Site')
-config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
+config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_CCIN2P3', 'T2_UK_London_IC']
 config.Site.storageSite = 'T2_HU_Budapest'
 #config.Site.storageSite = 'T3_US_FNALLPC'
   '''
@@ -62,7 +58,7 @@ for i in datasetList:
   os.system("cp 4crab_Template_Data.py 4crab_toSubmit_Data.py")
   replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceVERZIO)
-  shortSampleName = i[1:(i.find('-'))-1].replace("/","_")
+  shortSampleName = i[1:(i.find('-'))].replace("/","_")
   replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceROVIDMINTA)
   replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_toSubmit_Data.py"
