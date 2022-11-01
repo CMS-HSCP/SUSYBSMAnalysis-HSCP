@@ -164,7 +164,8 @@
 // - 40p4: - Bugfix to 40p3
 // - 40p5: - Plot 1-probQ, change naming of Ias in histos
 // - 40p6: - Add Ias,GenID Vs Dz,Dxy postPreS plots
-// - 40p6: - Control region with pt < 55
+// - 40p7: - Control region with pt < 55
+// - 40p8: - Go back to standard wf
 
 //  
 //v23 Dylan 
@@ -1292,8 +1293,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
   float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
-
-    if (track->pt() > 55.) continue;
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
     std::vector<float> clust_charge;
@@ -2998,7 +2997,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Decide if want to match the muon to HLT at event level
   desc.addUntracked("MatchToHLTTrigger",true)->setComment("If we want to make sure the event has a muon at HLT");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
-  desc.addUntracked("GlobalMinPt",50.0)->setComment("Cut on pT at PRE-SELECTION");
+  desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   // Excluding the L1 in BPix because of hardware problems, require >=2 hits for track-probQ
@@ -4169,7 +4168,9 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->PostPreS_ProbXYVsProbQ->Fill(probXYonTrack, 1 - probQonTrack, EventWeight_);
     tuple->PostPreS_ProbQNoL1->Fill(1 - probQonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
-    tuple->PostPreS_ProbQNoL1VsIas_lowPt->Fill(1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
+    if (track->pt() < 65) {
+      tuple->PostPreS_ProbQNoL1VsIas_lowPt->Fill(1 - probQonTrackNoLayer1, globalIas_, EventWeight_);
+    }
     tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoLayer1, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoLayer1, globalIas_, EventWeight_);
     tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoLayer1, 1 - probQonTrackNoLayer1, EventWeight_);
