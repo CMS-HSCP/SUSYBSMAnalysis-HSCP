@@ -76,9 +76,12 @@ struct Tuple {
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
   std::vector<bool> Tree_passPreselection;
   std::vector<bool> Tree_passSelection;
+  std::vector<bool> Tree_isPFMuon;
+  std::vector<bool> Tree_PFMuonPt;
   std::vector<float> Tree_Charge;
   std::vector<float> Tree_Pt;
   std::vector<float> Tree_PtErr;
+  std::vector<float> Tree_Is_StripOnly;
   std::vector<float> Tree_Ias;
   std::vector<float> Tree_Ias_noTIBnoTIDno3TEC;
   std::vector<float> Tree_Ias_PixelOnly;
@@ -264,11 +267,14 @@ struct Tuple {
   TH1F* N1_Chi2oNdof;
   TH1F* N1_Qual;
   TH1F* N1_TNOPH;
+  TH1F* N1_TNOH;
   TH1F* N1_TNOHFraction;
+  TH1F* N1_TNOMFraction;
   TH1F* N1_TNOM;
   TH1F* nDof;
   TH1F* tofError;
   TH1F* N1_Pt;
+
   TH1F* N1_Pt_lowPt;
   TH1F* N1_Ih;
   TH1F* N1_MTOF;
@@ -276,6 +282,7 @@ struct Tuple {
   TH1F* N1_EoP;
   TH1F* N1_SumpTOverpT;
   TH1F* N1_dRMinPfJet;
+
   TH1F* N1_PtErrOverPt;
   TH1F* N1_PtErrOverPt2;
   TH2F* N1_PtErrOverPtVsPt;

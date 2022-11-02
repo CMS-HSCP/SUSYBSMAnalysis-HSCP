@@ -95,9 +95,12 @@ public:
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection,
                         const std::vector<bool> &passSelection,
+                        const std::vector<bool> &isPFMuon,
+                        const std::vector<bool> &PFMuonPt,
                         const std::vector<float> &Charge,
                         const std::vector<float> &Pt,
                         const std::vector<float> &PtErr,
+                        const std::vector<float> &Is_StripOnly,
                         const std::vector<float> &Ias,
                         const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                         const std::vector<float> &Ias_PixelOnly,
@@ -233,7 +236,7 @@ public:
 
   void fillRegions(Tuple *&tuple,
                    float pt_cut,
-                   float Ias_quantiles[6],
+                   float Ias_quantiles[5],
                    float eta,
                    float p,
                    float pt,
@@ -1318,9 +1321,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("passPreselection", &tuple->Tree_passPreselection);
       tuple->Tree->Branch("passSelection", &tuple->Tree_passSelection);
     }
+    tuple->Tree->Branch("isPFMuon", &tuple->Tree_isPFMuon);
+    tuple->Tree->Branch("PFMuonPt", &tuple->Tree_PFMuonPt);
     tuple->Tree->Branch("Charge", &tuple->Tree_Charge);
     tuple->Tree->Branch("Pt", &tuple->Tree_Pt);
     tuple->Tree->Branch("PtErr", &tuple->Tree_PtErr);
+    tuple->Tree->Branch("Is_StripOnly", &tuple->Tree_Is_StripOnly);
     tuple->Tree->Branch("Ias", &tuple->Tree_Ias);
     tuple->Tree->Branch("Ias_noTIBnoTIDno3TEC", &tuple->Tree_Ias_noTIBnoTIDno3TEC);
     tuple->Tree->Branch("Ias_PixelOnly", &tuple->Tree_Ias_PixelOnly);
@@ -1540,9 +1546,12 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection,
                                   const std::vector<bool> &passSelection,
+                                  const std::vector<bool> &isPFMuon,
+                                  const std::vector<bool> &PFMuonPt,
                                   const std::vector<float> &Charge,
                                   const std::vector<float> &Pt,
                                   const std::vector<float> &PtErr,
+                                  const std::vector<float> &Is_StripOnly,
                                   const std::vector<float> &Ias,
                                   const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                                   const std::vector<float> &Ias_PixelOnly,
@@ -1701,9 +1710,12 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection = passPreselection;
   tuple->Tree_passSelection = passSelection;
+  tuple->Tree_isPFMuon = isPFMuon;
+  tuple->Tree_PFMuonPt = PFMuonPt;
   tuple->Tree_Charge = Charge;
   tuple->Tree_Pt = Pt;
   tuple->Tree_PtErr = PtErr;
+  tuple->Tree_Is_StripOnly = Is_StripOnly;
   tuple->Tree_Ias = Ias;
   tuple->Tree_Ias_noTIBnoTIDno3TEC = Ias_noTIBnoTIDno3TEC;
   tuple->Tree_Ias_PixelOnly = Ias_PixelOnly;
@@ -2182,7 +2194,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
 
 void TupleMaker::fillRegions(Tuple *&tuple,
                              float pt_cut,
-                             float Ias_quantiles[6],
+                             float Ias_quantiles[5],
                              float eta,
                              float p,
                              float pt,
@@ -2199,7 +2211,7 @@ void TupleMaker::fillRegions(Tuple *&tuple,
         if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+        if(ias>=Ias_quantiles[4])                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
     }else{
         if(ias<Ias_quantiles[0]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[1]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
@@ -2207,7 +2219,7 @@ void TupleMaker::fillRegions(Tuple *&tuple,
         if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
         if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-        if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) {m<500?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
+        if(ias>=Ias_quantiles[4])        {m<500?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
     }
 }
 

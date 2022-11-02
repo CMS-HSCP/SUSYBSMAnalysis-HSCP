@@ -171,6 +171,9 @@
 // v25 Dylan
 // - add EoP in the ntuple
 // - add jets info in the ntuple
+// v27 Dylan
+// - minimal preselection
+// - add N-1 plots
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -223,6 +226,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       period_(iConfig.getUntrackedParameter<string>("Period")),
       skipSelectionPlot_(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot")),
       ptHistoUpperBound_(iConfig.getUntrackedParameter<double>("PtHistoUpperBound")),
+      pHistoUpperBound_(iConfig.getUntrackedParameter<double>("PHistoUpperBound")),
       massHistoUpperBound_(iConfig.getUntrackedParameter<double>("MassHistoUpperBound")),
       massNBins_(iConfig.getUntrackedParameter<int>("MassNBins")),
       cutOnIPbound_(iConfig.getUntrackedParameter<double>("IPbound")),
@@ -908,9 +912,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<bool> HSCP_passCutPt55;
   std::vector<bool> HSCP_passPreselection;
   std::vector<bool> HSCP_passSelection;
+  std::vector<bool> HSCP_isPFMuon;
+  std::vector<bool> HSCP_PFMuonPt;
   std::vector<float> HSCP_Charge;
   std::vector<float> HSCP_Pt;
   std::vector<float> HSCP_PtErr;
+  std::vector<float> HSCP_Is_StripOnly;
   std::vector<float> HSCP_Ias;
   std::vector<float> HSCP_Ias_noPix_noTIB_noTID_no3TEC;
   std::vector<float> HSCP_Ias_PixelOnly;
@@ -1403,7 +1410,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
   float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
-  /**********************************/
+
 
     HSCP_count++;
     if (debug_> 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << HSCP_count ;
@@ -1511,6 +1518,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Loop through the rechits on the given track **before** preselection
     unsigned int nonL1PixHits = 0;
     for (unsigned int i = 0; i < dedxHits->size(); i++) {
+
       clust_charge.push_back(dedxHits->charge(i));
       clust_pathlength.push_back(dedxHits->pathlength(i));
       clust_isStrip.push_back(dedxHits->detId(i) >= 3 ? true : false);
@@ -1537,6 +1545,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // extract probQ and probXY from this
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+
 
 //        if (probXY < 0.0 || probXY >= 1.f) LogPrint(MOD) << "(probXY < 0.0 || probXY >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
@@ -1612,6 +1621,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           nonL1PixHits++;
           float probQNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoLayer1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+
 //          if (probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) LogPrint(MOD) << "(probXYNoLayer1 < 0.0 || probXYNoLayer1 >= 1.f) in LS / Event : " << iEvent.id().luminosityBlock() << " / " << iEvent.id().event();
 
           if (probQNoLayer1 <= 0.0 || probQNoLayer1 >= 1.f) probQNoLayer1 = 1.f;
@@ -1730,17 +1740,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     int  skip_templates_ias = 0;
     auto localdEdxTemplates = dEdxTemplates;
     float dEdxErr = 0;
+    bool symmetricSmirnov = false;
 
     // Ih
     auto dedxMObj_FullTrackerTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true,  useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true,  useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_);
 
     reco::DeDxData* dedxMObj_FullTracker = dedxMObj_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxMObj_FullTrackerTmp : nullptr;
 
     // Ih Up
     auto dedxMUpObjTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, 0, useTemplateLayer_);
 
     reco::DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements() > 0 ? &dedxMUpObjTmp : nullptr;
@@ -1749,14 +1760,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // For now it's a copy of Ih Up, I doubt that's what it should be...
     // Also I think this should be done on the top of Ih no pixel L1 not the full tracker version
     auto dedxMDownObjTmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, 0, useTemplateLayer_);
 
     reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements() > 0 ? &dedxMDownObjTmp : nullptr;
 
     // Ih no pixel L1
     auto dedxIh_noL1_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
@@ -1764,73 +1775,80 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Ih 0.15 low values drop
     // Should useTruncated be true ?
     auto dedxIh_15drop_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = true,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = true,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, &dEdxErr, useTemplateLayer_);
 
     reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
 
     // Ih Strip only
     auto dedxIh_StripOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_);
 
     reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
 
     // Ih Strip only and 0.15 low values drop
     auto dedxIh_StripOnly_15drop_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = true,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = true,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.15, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_StripOnly_15drop = dedxIh_StripOnly_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_15drop_Tmp : nullptr;
 
     // Ih Pixel only no BPIXL1
     auto dedxIh_PixelOnly_noL1_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = false, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_PixelOnlyh_noL1 = dedxIh_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_PixelOnly_noL1_Tmp : nullptr;
 
     // Ih correct saturation from fits
     auto dedxIh_SaturationCorrectionFromFits_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 2, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_SaturationCorrectionFromFits = dedxIh_SaturationCorrectionFromFits_Tmp.numberOfMeasurements() > 0 ? &dedxIh_SaturationCorrectionFromFits_Tmp : nullptr;
 
     // globalIas_
     auto dedxIas_FullTrackerTmp =
-    computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                 mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
 
     reco::DeDxData* dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
 
     //globalIas_ without TIB, TID, and 3 first TEC layers
     auto dedxIas_noTIBnoTIDno3TEC_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
+    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
 
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
     //globalIas_ Pixel only
     auto dedxIas_PixelOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
 
     reco::DeDxData* dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
     //globalIas_ Strip only
     auto dedxIas_StripOnly_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
+    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
 
     reco::DeDxData* dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
     //globalIas_ Pixel only no BPIXL1
     auto dedxIas_PixelOnly_noL1_Tmp =
-        computedEdx(run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
 
     reco::DeDxData* dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
+
+    //symmetric Smirnov discriminator - Is
+    auto dedxIs_StripOnly_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+
+    reco::DeDxData* dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     auto dedxMObj = dedxIh_noL1;
@@ -1991,6 +2009,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           0,
                           MassErr,
                           closestBackgroundPDGsIDs);
+
 
       // Dont do TOF only is isCosmicSB is true
     if (typeMode_ == 5 && isCosmicSB) {
@@ -2558,6 +2577,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         else {
             // up to 25 in histo
             unsigned int stripLayerIndex = 0;
+
             if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
             if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
             if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
@@ -2686,6 +2706,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Charge.push_back(track->charge());
     HSCP_Pt.push_back(track->pt());
     HSCP_PtErr.push_back(track->ptError());
+    HSCP_Is_StripOnly.push_back(dedxIs_StripOnly ? dedxIs_StripOnly->dEdx() : -1);
     HSCP_Ias.push_back(dedxIas_FullTracker ? dedxIas_FullTracker->dEdx() : -1);
     HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
@@ -2851,9 +2872,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection,
                                 HSCP_passSelection,
+                                HSCP_isPFMuon,
+                                HSCP_PFMuonPt,
                                 HSCP_Charge,
                                 HSCP_Pt,
                                 HSCP_PtErr,
+                                HSCP_Is_StripOnly,
                                 HSCP_Ias,
                                 HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ias_PixelOnly,
@@ -3084,6 +3108,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
+  desc.addUntracked("PHistoUpperBound",10000.0)->setComment("A");
   desc.addUntracked("MassHistoUpperBound",4000.0)->setComment("A");
   desc.addUntracked("MassNBins",400)->setComment("Number of bins in the mass plot");
   desc.addUntracked("IPbound",1.0)
@@ -3518,6 +3543,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
     tuple->BefPreS_pfType->Fill(0., EventWeight_);
   }
 
+
   if(pfCandHandle.isValid() && !pfCandHandle->empty()) {
     const reco::PFCandidateCollection* pf = pfCandHandle.product();
     for (unsigned int i = 0; i < pf->size(); i++){
@@ -3793,6 +3819,7 @@ bool Analyzer::passPreselection(const reco::TrackRef track,
 //  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
 //  passedCutsArray[20] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(minEta) > minSegEtaSep)) ? true : false;
 //
+  
   // Not used cuts TODO: revise
   // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
   // bool cutMinNumOfMissingHits = (typeMode_ != 3 && missingHitsTillLast > GlobalMaxNOMHTillLast) ? true : false;

@@ -238,11 +238,11 @@ process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cff")
 #process.analyzer.SampleTxtFile=options.sampleTxtFile
 process.analyzer.TypeMode = 0
 process.analyzer.SampleType = SampleType
-process.analyzer.SaveTree = 0 #6 is all saved, 0 is none
+process.analyzer.SaveTree = 6 #6 is all saved, 0 is none
 process.analyzer.SaveGenTree = 0
 process.analyzer.DeDxTemplate=IasTemplate
 process.analyzer.TimeOffset="MuonTimeOffset.txt"
-process.analyzer.TrackProbQCut = 0.1
+#process.analyzer.TrackProbQCut = 0.1
 process.analyzer.DebugLevel = 7
 process.analyzer.Period = "2017"
 process.analyzer.DeDxK = K

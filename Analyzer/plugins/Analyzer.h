@@ -77,6 +77,7 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
@@ -123,6 +124,7 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
+
 
 
 using namespace std;
@@ -236,6 +238,7 @@ private:
 
   vector<string> trigger_met_, trigger_mu_;
 
+
   vector<float> CutPt_, CutI_, CutTOF_;
   vector<float> CutPt_Flip_, CutI_Flip_, CutTOF_Flip_;
   //map<string, vector<float>> VCuts;
@@ -282,6 +285,7 @@ private:
 
   // binning for the pT, mass, IP distributions
   float ptHistoUpperBound_ = 4000;
+  float pHistoUpperBound_ = 10000;
   float massHistoUpperBound_ = 4000;
   unsigned int massNBins_ = 400;
   float cutOnIPbound_ = 1.0;
@@ -290,6 +294,7 @@ private:
   
   // Ias quantiles and pT_cut used to validate the background estimate method in data
   float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
+  //float Ias_quantiles[5]={ 0.037, 0.042, 0.048, 0.056, 0.066 }; //data or signal //WIP new quantiles determined with new preselection cuts
   float pT_cut = 60;
   
   // binning for eta, ih, p, mass distributions used to validate the background estimate method in data

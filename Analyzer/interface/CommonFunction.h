@@ -1499,7 +1499,8 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
   return true;
 }
 
-reco::DeDxData computedEdx(const int& run_number,
+reco::DeDxData computedEdx(const float& track_eta,
+                           const int& run_number,
                            string year,
                            const reco::DeDxHitInfo* dedxHits,
                            float* scaleFactors,
@@ -1516,7 +1517,8 @@ reco::DeDxData computedEdx(const int& run_number,
                            float* dEdxErr = nullptr,
                            bool useTemplateLayer = false,
                            bool skipPixelL1 = false,
-                           int  skip_templates_ias = 0) {
+                           int  skip_templates_ias = 0,
+                           bool symmetricSmirnov = false) {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
@@ -1567,6 +1569,10 @@ reco::DeDxData computedEdx(const int& run_number,
       continue;
 
     if (detid.subdetId() >= 3) {  //for strip only
+      
+      if(track_eta < 1.0 && !(detid.subdetId() == 3 || detid.subdetId() == 5)) continue; // eta < 1.0 -> only TIB+TOB hits
+      if(track_eta > 1.0 && track_eta < 1.7 && !(detid.subdetId() == 3 || detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // 1.0 < eta < 1.7 -> only TIB+TID+TEC hits
+      if(track_eta > 1.7 && !(detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // eta > 1.7 -> only TID+TEC hits
 
       SiStripDetId Sdetid(dedxHits->detId(h));
       const SiStripCluster* cluster = dedxHits->stripCluster(h);
@@ -1721,7 +1727,8 @@ crossTalkInvAlgo=1;
       result = 1.0 / (12 * size);
       std::sort(vect.begin(), vect.end(), std::less<float>());
       for (int i = 1; i <= size; i++) {
-        result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2);
+        if(!symmetricSmirnov) result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Ias 
+        else result += pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Is 
       }
       result *= (3.0 / size);
     } else {  //dEdx estimator

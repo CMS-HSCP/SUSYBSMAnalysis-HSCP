@@ -6,9 +6,9 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
-#"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
+"/SingleMuon/Run2017C-09Aug2019_UL2017-v1/AOD",
 #"/MET/Run2017C-09Aug2019_UL2017_rsb-v1/AOD",
-"/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
+#"/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
 #"/MET/Run2018C-15Feb2022_UL2018-v1/AOD",
 ]
 
@@ -50,8 +50,7 @@ config.Data.ignoreLocality = True
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
-config.Site.storageSite = 'T2_HU_Budapest'
-#config.Site.storageSite = 'T3_US_FNALLPC'
+config.Site.storageSite = 'T3_US_FNALLPC'
   '''
 
   with open("4crab_Template_Data.py", "w") as text_file:
