@@ -200,8 +200,8 @@ void Region::write(){
 }
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
-    std::string dir = "analyzer/BaseName/";
-    //std::string dir = "HSCParticleAnalyzer/BaseName/";
+    //std::string dir = "analyzer/BaseName/";
+    std::string dir = "HSCParticleAnalyzer/BaseName/";
     r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
     r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
     r.ih_eta                            = (TH2F*)f->Get((dir+"ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
@@ -273,8 +273,7 @@ TH1F* rebinHisto(TH1F* h){
     for(double i=0.0;i<=1000.0;i+=50) xbins_v.push_back(i);
     std::string newname = h->GetName(); 
     newname += "_rebinned";
-    TH1F* hres = (TH1F*) h->Rebin(5);
-    //TH1F* hres = (TH1F*) h->Rebin(11,newname.c_str(),xbins);
+    TH1F* hres = (TH1F*) h->Rebin(11,newname.c_str(),xbins);
     overflowLastBin(hres);
     return hres;
 }
@@ -333,7 +332,6 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
     h.Reset();
     h.SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     for(int i=0;i<h.GetNbinsX()+1;i++){
-        //std::cout << "i: " << i << " mass: " << h.GetBinCenter(i) << std::endl;
         float mean=0, err=0;
         TH1F* htemp = new TH1F("htemp","htemp",100,0,1e6);
         for(unsigned int pe=0;pe<vPE.size();pe++){
@@ -350,7 +348,6 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
         mean = htemp->GetMean();
         err = fact*htemp->GetStdDev();
         err = sqrt(pow(err,2)+pow(SystError*mean,2));
-        //std::cout << "stddeverr/stddev: " << htemp->GetStdDevError()/err << std::endl;
         h.SetBinContent(i,mean);
         h.SetBinError(i,err);
         delete htemp;
@@ -468,8 +465,8 @@ void bckgEstimate(const std::string& st_sample, const std::string& dirname, cons
     overflowLastBin(d.mass);
     overflowLastBin(bc.pred_mass);
 
-    //d.mass->Rebin(rebinMass);
-    //bc.mass->Rebin(rebinMass);
+    d.mass->Rebin(rebinMass);
+    bc.mass->Rebin(rebinMass);
     
     plotting(d.mass,bc.pred_mass,false,dirname,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
     plotting(d.mass,bc.pred_mass,false,dirname,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
@@ -486,7 +483,6 @@ void bckgEstimate_fromHistos(const std::string& st_sample, const std::string& di
     TRandom3* RNG = new TRandom3();
     for(int pe=0;pe<nPE;pe++){
    
-        //std::cout << "pe: " << pe << std::endl;
         TH2F* eta_cutIndex_regA = (TH2F*) eta_cutIndex_A.Clone();
         TH2F* eta_cutIndex_regB = (TH2F*) eta_cutIndex_B.Clone();
         TH3F* ih_eta_cutIndex_regB = (TH3F*) ih_eta_cutIndex_B.Clone();
@@ -511,22 +507,17 @@ void bckgEstimate_fromHistos(const std::string& st_sample, const std::string& di
         poissonHisto(*H_C,RNG);
         etaReweighingP(eta_p_regC, eta_regB);
         rBC.eta_p = eta_p_regC; rBC.ih_eta = ih_eta_regB;
-        /*float A = eta_regA->Integral();
-        float B = eta_regB->Integral();
-        float C = eta_p_regC->Integral();*/
         float A = H_A->Integral(cutIndex+1,cutIndex+1);
         float B = H_B->Integral(cutIndex+1,cutIndex+1);
         float C = H_C->Integral(cutIndex+1,cutIndex+1);
         float norm = 1;
         if(A>0) norm = B*C/A;
-        //std::cout << " A: " << A << " B: " << B << " C: " << C << " norm: " << norm << " D: " << mass_obs->Integral() << std::endl;
         rBC.fillPredMass(st_sample);
         scale(rBC.pred_mass);
         massNormalisation(rBC.pred_mass,norm);
-        //massNormalisation(rBC.pred_mass,mass_obs->Integral());
         vPE.push_back(*rBC.pred_mass);
     }
-    TH1F h_tmp;// = meanHistoPE(vPE);
+    TH1F h_tmp = meanHistoPE(vPE);
     if(nPE>1) rBC.pred_mass = &h_tmp;
 
     std::string st = "cutIndex"+to_string(cutIndex);
