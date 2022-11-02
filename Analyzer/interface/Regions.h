@@ -200,8 +200,8 @@ void Region::write(){
 }
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
-    //std::string dir = "analyzer/BaseName/";
-    std::string dir = "HSCParticleAnalyzer/BaseName/";
+    std::string dir = "analyzer/BaseName/";
+    //std::string dir = "HSCParticleAnalyzer/BaseName/";
     r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
     r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
     r.ih_eta                            = (TH2F*)f->Get((dir+"ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
@@ -273,7 +273,8 @@ TH1F* rebinHisto(TH1F* h){
     for(double i=0.0;i<=1000.0;i+=50) xbins_v.push_back(i);
     std::string newname = h->GetName(); 
     newname += "_rebinned";
-    TH1F* hres = (TH1F*) h->Rebin(11,newname.c_str(),xbins);
+    TH1F* hres = (TH1F*) h->Rebin(5);
+    //TH1F* hres = (TH1F*) h->Rebin(11,newname.c_str(),xbins);
     overflowLastBin(hres);
     return hres;
 }
@@ -332,19 +333,27 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
     h.Reset();
     h.SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     for(int i=0;i<h.GetNbinsX()+1;i++){
+        //std::cout << "i: " << i << " mass: " << h.GetBinCenter(i) << std::endl;
         float mean=0, err=0;
+        TH1F* htemp = new TH1F("htemp","htemp",100,0,1e6);
         for(unsigned int pe=0;pe<vPE.size();pe++){
             mean += vPE[pe].GetBinContent(i);
+            htemp->Fill(vPE[pe].GetBinContent(i));
         }
         mean /= vPE.size();
         for(unsigned int pe=0;pe<vPE.size();pe++){
             err += pow(mean - vPE[pe].GetBinContent(i),2);
         }
-        if(vPE.size()>1) err = sqrt(err/(vPE.size()-1));
+        float fact=1;
+        if(vPE.size()>1) {err = sqrt(err/(vPE.size()-1));fact=vPE.size()/(vPE.size()-1);}
         else err = sqrt(err);
+        mean = htemp->GetMean();
+        err = fact*htemp->GetStdDev();
         err = sqrt(pow(err,2)+pow(SystError*mean,2));
+        //std::cout << "stddeverr/stddev: " << htemp->GetStdDevError()/err << std::endl;
         h.SetBinContent(i,mean);
         h.SetBinError(i,err);
+        delete htemp;
     }
     return h;
 }
@@ -357,7 +366,7 @@ TH1F meanHistoPE(std::vector<TH1F> vPE){
 // The second window contains the ratio of these 1D-histograms or the ratio of right integers of them. 
 // We define which kind of ratio we want with tha 'ratioSimple' boolean.
 // The 'name' given corresponds to the name of the canvas 
-TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name="", std::string leg1="", std::string leg2="", bool rebin=false){
+TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string dirname="", std::string name="", std::string leg1="", std::string leg2="", bool rebin=false){
     if(rebin) h1=rebinHisto(h1);
     if(rebin) h2=rebinHisto(h2);
     std::string canvName;
@@ -382,6 +391,10 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     h2->SetStats(0);
     h2->Draw("esame");
     leg->Draw("same");
+    h1->SetName((name+"_obs").c_str());
+    h1->Write();
+    h1->SetName((name+"_pred").c_str());
+    h2->Write();
     c1->cd(2);
     TH1F* tmp = (TH1F*) h1->Clone(); tmp->Reset();
     if(ratioSimple){
@@ -398,6 +411,8 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     tmp->Draw();
     tmp->SetLineColor(1);
     tmp->SetMarkerColor(1);
+    tmp->SetName((name+"_ratioInt").c_str());
+    tmp->Write();
     c1->cd(3);
     TH1F* tmp2 = (TH1F*) pull(h2,h1)->Clone();
     tmp2->Draw("E0");
@@ -405,12 +420,14 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string name=""
     tmp2->GetYaxis()->SetRangeUser(-3,3);
     tmp2->SetLineColor(1);
     tmp2->SetMarkerColor(1);
-    c1->SaveAs(("toCopy_20oct_v2/"+canvName+".pdf").c_str());
-    c1->SaveAs(("toCopy_20oct_v2/"+canvName+".root").c_str());
+    tmp2->SetName((name+"_pull").c_str());
+    tmp2->Write();
+    c1->SaveAs((dirname+canvName+".pdf").c_str());
+    c1->SaveAs((dirname+canvName+".root").c_str());
     return c1;
 }
 
-void bckgEstimate(const std::string& st_sample, const Region& B, const Region& C, const Region& BC, const Region& A, const Region& D, const std::string& st, const int& nPE=100){
+void bckgEstimate(const std::string& st_sample, const std::string& dirname, const Region& B, const Region& C, const Region& BC, const Region& A, const Region& D, const std::string& st, const int& nPE=100, const int& rebinMass=1){
     Region bc = BC;
     Region d = D;
     std::vector<TH1F> vPE;
@@ -450,13 +467,16 @@ void bckgEstimate(const std::string& st_sample, const Region& B, const Region& C
     
     overflowLastBin(d.mass);
     overflowLastBin(bc.pred_mass);
+
+    //d.mass->Rebin(rebinMass);
+    //bc.mass->Rebin(rebinMass);
     
-    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
-    plotting(d.mass,bc.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
+    plotting(d.mass,bc.pred_mass,false,dirname,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
+    plotting(d.mass,bc.pred_mass,false,dirname,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
     delete RNG;
 }
 
-void bckgEstimate_fromHistos(const std::string& st_sample, const TH2F& mass_cutInd, const TH2F& eta_cutIndex_A, const TH2F& eta_cutIndex_B, const TH3F& ih_eta_cutIndex_B, const TH3F& eta_p_cutIndex_C, const TH1F& HA, const TH1F& HB, const TH1F& HC, int cutIndex=3, int nPE=100){
+void bckgEstimate_fromHistos(const std::string& st_sample, const std::string& dirname, const TH2F& mass_cutInd, const TH2F& eta_cutIndex_A, const TH2F& eta_cutIndex_B, const TH3F& ih_eta_cutIndex_B, const TH3F& eta_p_cutIndex_C, const TH1F& HA, const TH1F& HB, const TH1F& HC, int cutIndex=3, int nPE=100){
     TH2F* mass_cutIndex = (TH2F*) mass_cutInd.Clone();
     TH1F* mass_obs = (TH1F*)mass_cutIndex->ProjectionY("_projD",cutIndex+1,cutIndex+1);
     Region rBC;
@@ -506,7 +526,7 @@ void bckgEstimate_fromHistos(const std::string& st_sample, const TH2F& mass_cutI
         //massNormalisation(rBC.pred_mass,mass_obs->Integral());
         vPE.push_back(*rBC.pred_mass);
     }
-    TH1F h_tmp = meanHistoPE(vPE);
+    TH1F h_tmp;// = meanHistoPE(vPE);
     if(nPE>1) rBC.pred_mass = &h_tmp;
 
     std::string st = "cutIndex"+to_string(cutIndex);
@@ -517,8 +537,8 @@ void bckgEstimate_fromHistos(const std::string& st_sample, const TH2F& mass_cutI
     overflowLastBin(mass_obs);
     overflowLastBin(rBC.pred_mass);
     
-    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
-    plotting(mass_obs,rBC.pred_mass,false,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
+    plotting(mass_obs,rBC.pred_mass,false,dirname,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction")->Write();
+    plotting(mass_obs,rBC.pred_mass,false,dirname,("mass1D_regionBC_"+st+"_nPE-"+to_string(nPE)).c_str(),"Observed","Prediction",true)->Write();
 
     delete RNG;
 }
