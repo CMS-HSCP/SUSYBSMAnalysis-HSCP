@@ -308,6 +308,7 @@ struct Tuple {
   TH1F* Gen_BetaGamma;
 
   TH1F* BefPreS_MassT;
+  TH1F* BefPreS_MassT_highMassT;
   TH1F* BefPreS_MiniRelIsoAll;
   TH1F* BefPreS_MiniRelIsoChg;
   TH1F* BefPreS_MiniRelTkIso;
@@ -463,6 +464,7 @@ struct Tuple {
   TH1F* PostPreS_PfType;
   TH2F* PostPreS_PfTypeVsIas;
   TH1F* PostPreS_MassT;
+  TH1F* PostPreS_MassT_highMassT;
   TH2F* PostPreS_MassTVsIas;
   TH1F* PostPreS_MiniRelIsoAll;
   TH2F* PostPreS_MiniRelIsoAllVsIas;
@@ -572,6 +574,8 @@ struct Tuple {
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
   TH2F* PostPreS_ProbQNoL1VsIas_lowPt;
+  TH2F* PostPreS_ProbQNoL1VsIas__Pileup_up;
+  TH2F* PostPreS_ProbQNoL1VsIas__Pileup_down;
   TH1F* PostPreS_ProbXYNoL1;
   TH1F* PostPreS_ProbXYNoL1_highIas;
   TH2F* PostPreS_ProbXYNoL1VsIas;
