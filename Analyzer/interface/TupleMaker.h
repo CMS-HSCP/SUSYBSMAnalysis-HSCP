@@ -664,7 +664,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->BefPreS_ProbQ = dir.make<TH1F>("BefPreS_ProbQ", ";F_{I}^{pixels};Tracks / bin", 100, 0, 1);
   tuple->BefPreS_ProbXY = dir.make<TH1F>("BefPreS_ProbXY", ";Prob_{XY,pixelAV} (pixels);Tracks / bin", 100, 0, 1);
-  tuple->BefPreS_ProbQNoL1 = dir.make<TH1F>("BefPreS_ProbQNoL1", ";Prob_{Q} (pixels, no-L1);Tracks / bin", 100, 0, 1);
+  tuple->BefPreS_ProbQNoL1 = dir.make<TH1F>("BefPreS_ProbQNoL1", ";F_{I}^{pixels};Tracks / bin", 100, 0, 1);
   tuple->BefPreS_ProbXYNoL1 = dir.make<TH1F>("BefPreS_ProbXYNoL1", ";Prob_{XY,pixelAV} (pixels, no-L1);Tracks / bin", 100, 0, 1);
   tuple->BefPreS_MassErr = dir.make<TH1F>("BefPreS_MassErr", ";MassErr;Tracks / bin", 50, 0., 10.);
   tuple->BefPreS_ProbQVsIas = dir.make<TH2F>("BefPreS_ProbQVsIas", ";F_{I}^{pixels};G_{I}^{strips};Tracks / bin", 100, 0.0, 1.0, 100, 0.0, 1.0);
@@ -874,16 +874,16 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_ProbXYVsIas_highIas = dir.make<TH2F>("PostPreS_ProbXYVsIas_highIas", ";ProbXY (G_{I}^{strips} > 0.6);G_{I}^{strips} (G_{I}^{strips} > 0.6);Tracks / bin",  100, 0, 1, 10, 0., 1.);
   tuple->PostPreS_ProbXYVsProbQ = dir.make<TH2F>("PostPreS_ProbXYVsProbQ", ";Prob_{XY,pixelAV} (pixels);F_{I}^{pixels};Tracks / bin",  100, 0., 1., 10, 0., 1.);
   tuple->PostPreS_ProbXYVsProbQ_highIas = dir.make<TH2F>("PostPreS_ProbXYVsProbQ_highIas", ";ProbXY (G_{I}^{strips} > 0.6);ProbQ (G_{I}^{strips} > 0.6);Tracks / bin",  100, 0., 1., 10, 0., 1.);
-  tuple->PostPreS_ProbQNoL1 = dir.make<TH1F>("PostPreS_ProbQNoL1", ";Prob_{Q} (pixels, no-L1);Tracks / bin", 20, 0., 1.);
-  tuple->PostPreS_ProbQNoL1VsIas = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas", ";Prob_{Q} (pixels, no-L1);G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostPreS_ProbQNoL1VsIas_lowPt = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_lowPt", ";Prob_{Q} (pixels, no-L1);G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostPreS_ProbQNoL1VsIas__Pileup_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas__Pileup_up", ";Prob_{Q} (pixels, no-L1);G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostPreS_ProbQNoL1VsIas__Pileup_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas__Pileup_down", ";Prob_{Q} (pixels, no-L1);G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1 = dir.make<TH1F>("PostPreS_ProbQNoL1", ";F_{I}^{pixels};Tracks / bin", 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas", ";F_{I}^{pixels};G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_lowPt = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_lowPt", ";F_{I}^{pixels};G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pileup_up", ";F_{I}^{pixels};G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pileup_down", ";F_{I}^{pixels};G_{I}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>("PostPreS_ProbXYNoL1", ";ProbXYNoL1;Tracks / bin", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1_highIas = dir.make<TH1F>("PostPreS_ProbXYNoL1_highIas", ";ProbXYNoL1 for (G_{I}^{strips} > 0.6);Tracks / bin", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1VsIas = dir.make<TH2F>("PostPreS_ProbXYNoL1VsIas", ";ProbXYNoL1;G_{I}^{strips};Tracks / bin", 100, 0., 1., 20, 0.,1.);
   tuple->PostPreS_ProbXYNoL1VsIas_highIas = dir.make<TH2F>("PostPreS_ProbXYNoL1VsIas_highIas", ";ProbXYNoL1;G_{I}^{strips} (G_{I}^{strips} > 0.6);Tracks / bin", 100, 0., 1., 20, 0.,1.);
-  tuple->PostPreS_ProbXYNoL1VsProbQNoL1  = dir.make<TH2F>("PostPreS_ProbXYNoL1VsProbQNoL1", ";ProbXYNoL1;Prob_{Q} (pixels, no-L1);Tracks / bin", 100, 0., 1., 20,0.,1.);
+  tuple->PostPreS_ProbXYNoL1VsProbQNoL1  = dir.make<TH2F>("PostPreS_ProbXYNoL1VsProbQNoL1", ";ProbXYNoL1;F_{I}^{pixels};Tracks / bin", 100, 0., 1., 20,0.,1.);
   tuple->PostPreS_ProbXYNoL1VsProbQNoL1_highIas  = dir.make<TH2F>("PostPreS_ProbXYNoL1VsProbQNoL1_highIas", ";ProbXYNoL1 (G_{I}^{strips} > 0.6);ProbQNoL1 (G_{I}^{strips} > 0.6)", 100, 0., 1., 20,0.,1.);
 
   tuple->PostPreS_MassErr = dir.make<TH1F>("PostPreS_MassErr", ";MassErr/Mass;Tracks / bin", 50, 0., 10.);
