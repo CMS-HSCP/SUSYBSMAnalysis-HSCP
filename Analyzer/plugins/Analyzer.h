@@ -146,8 +146,8 @@ public:
                       vector<float>& CutPt_Flip,
                       vector<float>& CutI_Flip,
                       vector<float>& CutTOF_Flip);
-
-  bool passPreselection(const bool passedCutsArray[]);
+  template <typename T, size_t n>
+  bool passPreselection(T (&passedCutsArray)[n]);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,

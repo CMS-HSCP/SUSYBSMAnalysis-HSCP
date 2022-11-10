@@ -274,7 +274,7 @@ struct Tuple {
   TH2F* N1_PtErrOverPtVsPt_lowPt;
   TH2F* N1_PtErrOverPtVsGenBeta;
   TH2F* N1_PtErrOverPt2VsIas;
-  TH2F* N1_PtErrOverPt2VsProbQNoLayer1;
+  TH2F* N1_PtErrOverPt2VsProbQNoL1;
   TH1F* N1_I;
   TH1F* N1_TOF;
   TH1F* NVTrack;
@@ -283,9 +283,9 @@ struct Tuple {
   TH1F* N1_Dz;
   TH1F* N1_SegSep;
   TH1F* FailDz;
-  TH1F* N1_ProbQNoLayer1;
-  TH2F* N1_ProbQNoLayer1VsIas;
-  TH3F* N1_IhVsProbQNoLayer1VsIas;
+  TH1F* N1_ProbQNoL1;
+  TH2F* N1_ProbQNoL1VsIas;
+  TH3F* N1_IhVsProbQNoL1VsIas;
   TH1F* N1_ProbXY;
   TH1F* N1_PfType;
   TH1F* N1_MiniRelIsoAll;
@@ -495,6 +495,7 @@ struct Tuple {
   TH1F* PostPreS_Qual;
   TH1F* PostPreS_TNOH_PUA;
   TH1F* PostPreS_TNOH_PUB;
+  TH1F* PostPreS_TNOH_PUC;
   TH1F* PostPreS_TNOHFraction;
   TH2F* PostPreS_TNOHFractionVsIas;
   TH1F* PostPreS_TNOPH;
@@ -507,6 +508,7 @@ struct Tuple {
   TH2F* PostPreS_TNOMVsIas;
   TH1F* PostPreS_TNOM_PUA;
   TH1F* PostPreS_TNOM_PUB;
+  TH1F* PostPreS_TNOM_PUC;
   TH1F* PostPreS_NOMoNOH;
   TProfile* PostPreS_NOMoNOHvsPV;
   TH1F* PostPreS_nDof;
@@ -587,7 +589,9 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
-  TH2F* PostPreS_ProbQNoL1VsIas_lowPt;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
   TH1F* PostPreS_ProbXYNoL1;
