@@ -14,6 +14,7 @@
 
 // - 41p0: - Refactor so no tuple is needed in the preslection function
 // - 41p1: - Further code cleaning
+// - 41p2: - 1D plots for CR, include syst on probQ
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -468,7 +469,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   // If triggering is intended (not the case when we make ntuples)
   if (trigInfo_ > 0) {
-      if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
+    // Number of events that pass the trigger
+    tuple->NumEvents->Fill(2., EventWeight_);
   }
   else {
     if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers, skipping it";
@@ -476,8 +479,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
     // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
 
-  // Number of events that pass the trigger
-  tuple->NumEvents->Fill(2., EventWeight_);
+
   
   // Get handle for trigEvent
   edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
@@ -757,6 +759,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_mT;
   std::vector<bool> HSCP_passCutPt55;
   std::vector<bool> HSCP_passPreselection;
+  std::vector<bool> HSCP_passPreselectionSept8;
   std::vector<bool> HSCP_passSelection;
   std::vector<bool> HSCP_isPFMuon;
   std::vector<bool> HSCP_PFMuonPt;
@@ -2192,18 +2195,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    
-    
+
     bool DXYSB = (typeMode_ == 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
     bool DZSB = (typeMode_ == 5 && fabs(dz) > globalMaxDZ_) ? true : false;
-    
+
       //check if HSCP is compatible with cosmics.
     bool OASB = (typeMode_ == 5 && OpenAngle >= 2.8) ? true : false;
-    
+
     isCosmicSB = (DXYSB && DZSB && OASB);
     isSemiCosmicSB = (!isCosmicSB && (DXYSB || DZSB || OASB));
-    
-    
+
       // Get the location of the outmost hit
     const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
     const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
@@ -2333,6 +2334,35 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // bool cutRelTKIso = ( IsoTK_SumEt / track->pt() > GlobalMaxRelTIsol)  ? true : false;
       // Cut for number of DOF in TOF ana
     
+    // Define preselection cuts for Sept 8 preselection
+    bool passedCutsArraySept8[10];
+    std::fill(std::begin(passedCutsArraySept8), std::end(passedCutsArraySept8),false);
+    
+      // No cut, i.e. events after trigger
+    passedCutsArraySept8[0]  = true;
+      // Cut on transverse momentum
+      // Single muon trigger threshold is 50 GeV
+    passedCutsArraySept8[1]  = (track->pt() > globalMinPt_) ? true : false;
+      // Check if eta is inside the max eta cut for detector homogeneity
+    passedCutsArraySept8[2]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
+    passedCutsArraySept8[3]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
+      // Check the min fraction of valid hits to ensure good stats on the hits
+    passedCutsArraySept8[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
+      // Cut for the number of dEdx hits to ensure good stats on the hits
+    passedCutsArraySept8[5]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+      // Select only high purity tracks to ensure good quality tracks
+    passedCutsArraySept8[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
+      // Cut on the chi2 / ndof to ensure good quality tracks
+    passedCutsArraySept8[7] = (typeMode_ != 3 && (track->chi2() / track->ndof()) < globalMaxChi2_) ? true : false;
+      // Cut on the impact parameter to ensure the track is coming from the PV
+      // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
+    passedCutsArraySept8[8] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
+                               || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
+      // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
+    passedCutsArraySept8[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
+                               || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
+    
     // N-1 plots
     for (size_t i=0;i<sizeof(passedCutsArray);i++) {
       bool allOtherCutsPassed = true;
@@ -2445,6 +2475,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
+    // Reverse cutflow, i.e. start with the last cut from the original cutflow
     bool passedCutsArrayReverse[15];
     std::reverse_copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayReverse));
     for (size_t i=0;i<sizeof(passedCutsArrayReverse);i++) {
@@ -2465,9 +2496,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     passedCutsArrayForCR[1] = (track->pt() > 50 && track->pt() < 55) ? true : false;
     
     if (passPreselection(passedCutsArrayForCR)) {
+      tuple->PostPreS_Ias_CR->Fill(globalIas_, EventWeight_);
+      tuple->PostPreS_ProbQNoL1_CR->Fill(1 - probQonTrackNoL1, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::max(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down->Fill((1 - probQonTrackNoL1)*0.995, globalIas_,  EventWeight_);
     }
     
     // Preselection for the Gi templates, here the pT must be small
@@ -2479,6 +2514,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     bool passPre = passPreselection(passedCutsArray);
+    bool passPreSept8 = passPreselection(passedCutsArraySept8);
     
       // Dont do TOF only is isCosmicSB is true
     if (typeMode_ == 5 && isCosmicSB) {
@@ -2590,6 +2626,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
         tuple->PostPreS_ProbQNoL1VsIas_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
         tuple->PostPreS_ProbQNoL1VsIas_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
+        tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::max(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
+        tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down->Fill((1 - probQonTrackNoL1)*0.995, globalIas_,  EventWeight_);
+        
         tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoL1, EventWeight_);
         tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoL1, globalIas_, EventWeight_);
         tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoL1, 1 - probQonTrackNoL1, EventWeight_);
@@ -3478,6 +3517,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     HSCP_passCutPt55.push_back(track->pt() > 55 ? true : false);
     HSCP_passPreselection.push_back(passPre);
+    HSCP_passPreselectionSept8.push_back(passPreSept8);
     HSCP_passSelection.push_back(PassNonTrivialSelection);
     HSCP_Charge.push_back(track->charge());
     HSCP_Pt.push_back(track->pt());
@@ -3648,6 +3688,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_mT,
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection,
+                                HSCP_passPreselectionSept8,
                                 HSCP_passSelection,
                                 HSCP_isPFMuon,
                                 HSCP_PFMuonPt,
