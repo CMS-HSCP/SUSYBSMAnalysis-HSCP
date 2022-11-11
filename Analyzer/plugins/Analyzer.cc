@@ -14,7 +14,7 @@
 
 // - 41p0: - Refactor so no tuple is needed in the preslection function
 // - 41p1: - Further code cleaning
-// - 41p2: - 1D plots for CR, include syst on probQ, add passPreSept8
+// - 41p2: - 1D plots for CR, include syst on probQ, add passPreSept8, dz/dxy for non-vertex tracks, plots for cosmics checks
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -538,7 +538,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Exit if no match was found
     if (saveTree_ == 0) return;
   } else {
-    // TODO_Ntuple add this variable to the ntuple
     matchedMuonWasFound = true;
     // Number of events that pass the matching
     tuple->NumEvents->Fill(3., EventWeight_);
@@ -1107,43 +1106,38 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dz = track->dz(vertexColl[highestPtGoodVertex].position());
     float dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
     
+    // Impact parameters if no vertex
+    float dzFromBeamSpot = 9999.;
+    float dxyFromBeamSpot = 9999.;
+    
     TVector3 vertex(vertexColl[highestPtGoodVertex].position().x(),
                     vertexColl[highestPtGoodVertex].position().y(),
                     vertexColl[highestPtGoodVertex].position().z());
     
 //      //For TOF only analysis match to a SA track without vertex constraint for IP cuts
-//    if (typeMode_ == 3) {
-//        //Find closest NV track
-//      const std::vector<reco::Track> noVertexTrackColl = iEvent.get(refittedStandAloneMuonsToken_);
-//      reco::Track NVTrack;
-//      float minDr = 15;
-//      for (unsigned int i = 0; i < noVertexTrackColl.size(); i++) {
-//        auto dR = deltaR(track->eta(), track->phi(), noVertexTrackColl[i].eta(), noVertexTrackColl[i].phi());
-//        if (dR < minDr) {
-//          minDr = dR;
-//          NVTrack = noVertexTrackColl[i];
-//        }
-//      }
-//      if (tuple) {
-//        tuple->BefPreS_dR_NVTrack->Fill(minDr, EventWeight_);
-//      }
-//      if (minDr > 0.4) {
-//        return false;
-//      }
-//      if (tuple) {
-//        tuple->NVTrack->Fill(0.0, EventWeight_);
-//      }
-//
-//        // Find displacement of tracks with respect to beam spot
-//      const reco::BeamSpot beamSpotColl = iEvent.get(offlineBeamSpotToken_);
-//      float dzFromBeamSpot = NVTrack.dz(beamSpotColl.position());
-//      float dxyFromBeamSpot = NVTrack.dxy(beamSpotColl.position());
-//      if (debug_ > 8 ) LogPrint(MOD) << dzFromBeamSpot << " and " << dxyFromBeamSpot;
-//        // TODO use this for TOF only analysis, instead of dxy and dz
-//
-//      if (muonStations(NVTrack.hitPattern()) < minMuStations_)
-//        return false;
-//    } // End condition for TOF only analysis
+    if (typeMode_ == 3) {
+      //Find closest NV track
+      const std::vector<reco::Track> noVertexTrackColl = iEvent.get(refittedStandAloneMuonsToken_);
+      reco::Track NVTrack;
+      float minDr = 15;
+      for (unsigned int i = 0; i < noVertexTrackColl.size(); i++) {
+        auto dR = deltaR(track->eta(), track->phi(), noVertexTrackColl[i].eta(), noVertexTrackColl[i].phi());
+        if (dR < minDr) {
+          minDr = dR;
+          NVTrack = noVertexTrackColl[i];
+        }
+      }
+
+      tuple->BefPreS_dR_NVTrack->Fill(minDr, EventWeight_);
+      if (minDr < 0.4) {
+          // Find displacement of tracks with respect to beam spot
+        const reco::BeamSpot beamSpotColl = iEvent.get(offlineBeamSpotToken_);
+        dzFromBeamSpot = NVTrack.dz(beamSpotColl.position());
+        dxyFromBeamSpot = NVTrack.dxy(beamSpotColl.position());
+      }
+
+//      if (muonStations(NVTrack.hitPattern()) < minMuStations_) return false;
+    } // End condition for TOF only analysis
   
     // Save PF informations and isolation
     float track_PFIso005_sumCharHadPt = 0, track_PFIso005_sumNeutHadPt = 0, track_PFIso005_sumPhotonPt = 0, track_PFIso005_sumPUPt = 0;
@@ -2051,6 +2045,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // This will return stuff if typeMode_ = 3
     float segSep = SegSep(track, iEvent, minPhi, minEta);
     
+    // maximal deltaR angle between the candidate and any other canidate
+    float maxOpenAngle = -1;
+    maxOpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp);
+    
     bool doBefPreSplots = true;
     // Before (pre)selection plots
     if (doBefPreSplots) {
@@ -2128,7 +2126,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_SegSep->Fill(segSep, EventWeight_);
       tuple->BefPreS_SegMinPhiSep->Fill(minPhi, EventWeight_);
       tuple->BefPreS_SegMinEtaSep->Fill(minEta, EventWeight_);
-      tuple->BefPreS_OpenAngle->Fill(OpenAngle, EventWeight_);
+      tuple->BefPreS_OpenAngle->Fill(maxOpenAngle, EventWeight_);
       tuple->BefPreS_MassErr->Fill(MassErr, EventWeight_);
       tuple->BefPreS_ProbQVsIas->Fill(1 - probQonTrack, globalIas_, EventWeight_);
       tuple->BefPreS_EtaVsIas->Fill(track->eta(), globalIas_, EventWeight_);
@@ -2150,116 +2148,113 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
-    if (tuple) {
-        //Plotting segment separation depending on whether track passed dz cut
-      if (fabs(dz) > globalMaxDZ_) {
-        tuple->BefPreS_SegMinEtaSep_FailDz->Fill(minEta, EventWeight_);
-      } else {
-        tuple->BefPreS_SegMinEtaSep_PassDz->Fill(minEta, EventWeight_);
-      }
-        //Plots for tracking failing Eta Sep cut
-      if (fabs(minEta) < minSegEtaSep) {
-          //Needed to compare dz distribution of cosmics in pure cosmic and main sample
-        tuple->BefPreS_Dz_FailSep->Fill(dz);
-      }
-      
-      if (tof) {
-          //Plots for tracks in dz control region
-        if (fabs(dz) > CosmicMinDz && fabs(dz) < CosmicMaxDz) {
-          tuple->BefPreS_Pt_FailDz->Fill(track->pt(), EventWeight_);
-          tuple->BefPreS_TOF_FailDz->Fill(tof->inverseBeta(), EventWeight_);
-          if (fabs(track->eta()) > CSCRegion) {
-            tuple->BefPreS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), EventWeight_);
-            tuple->BefPreS_Pt_FailDz_CSC->Fill(track->pt(), EventWeight_);
-          } else if (fabs(track->eta()) < DTRegion) {
-            tuple->BefPreS_TOF_FailDz_DT->Fill(tof->inverseBeta(), EventWeight_);
-            tuple->BefPreS_Pt_FailDz_DT->Fill(track->pt(), EventWeight_);
-          }
-        }
-          //Plots of dz
-        if (fabs(track->eta()) > CSCRegion) {
-          tuple->BefPreS_Dz_CSC->Fill(dz, EventWeight_);
-        } else if (fabs(track->eta()) < DTRegion) {
-          tuple->BefPreS_Dz_DT->Fill(dz, EventWeight_);
-        }
-      }
+    //Plotting segment separation depending on whether track passed dz cut
+    if (fabs(dz) > globalMaxDZ_) {
+      tuple->BefPreS_SegMinEtaSep_FailDz->Fill(minEta, EventWeight_);
+    } else {
+      tuple->BefPreS_SegMinEtaSep_PassDz->Fill(minEta, EventWeight_);
     }
-
-    bool DXYSB = (typeMode_ == 5 && fabs(dxy) > globalMaxDXY_) ? true : false;
-    bool DZSB = (typeMode_ == 5 && fabs(dz) > globalMaxDZ_) ? true : false;
-
-      //check if HSCP is compatible with cosmics.
-    bool OASB = (typeMode_ == 5 && OpenAngle >= 2.8) ? true : false;
-
-    isCosmicSB = (DXYSB && DZSB && OASB);
-    isSemiCosmicSB = (!isCosmicSB && (DXYSB || DZSB || OASB));
-
-      // Get the location of the outmost hit
-    const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
-    const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
-    const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
+      //Plots for tracking failing Eta Sep cut
+    if (fabs(minEta) < minSegEtaSep) {
+        //Needed to compare dz distribution of cosmics in pure cosmic and main sample
+      tuple->BefPreS_Dz_FailSep->Fill(dz);
+    }
     
-    if (tuple && tof) {
+    if (tof) {
+        //Plots for tracks in dz control region
+      if (fabs(dz) > CosmicMinDz && fabs(dz) < CosmicMaxDz) {
+        tuple->BefPreS_Pt_FailDz->Fill(track->pt(), EventWeight_);
+        tuple->BefPreS_TOF_FailDz->Fill(tof->inverseBeta(), EventWeight_);
+        if (fabs(track->eta()) > CSCRegion) {
+          tuple->BefPreS_TOF_FailDz_CSC->Fill(tof->inverseBeta(), EventWeight_);
+          tuple->BefPreS_Pt_FailDz_CSC->Fill(track->pt(), EventWeight_);
+        } else if (fabs(track->eta()) < DTRegion) {
+          tuple->BefPreS_TOF_FailDz_DT->Fill(tof->inverseBeta(), EventWeight_);
+          tuple->BefPreS_Pt_FailDz_DT->Fill(track->pt(), EventWeight_);
+        }
+      }
+        //Plots of dz
+      if (fabs(track->eta()) > CSCRegion) {
+        tuple->BefPreS_Dz_CSC->Fill(dz, EventWeight_);
+      } else if (fabs(track->eta()) < DTRegion) {
+        tuple->BefPreS_Dz_DT->Fill(dz, EventWeight_);
+      }
       tuple->BefPreS_EtaVsTOF->Fill(track->eta(), tof->inverseBeta(), EventWeight_);
     }
     
-    if (tuple) {
-      if (DZSB && OASB)
-        tuple->BefPreS_Dxy_Cosmic->Fill(dxy, EventWeight_);
-      if (DXYSB && OASB)
-        tuple->BefPreS_Dz_Cosmic->Fill(dz, EventWeight_);
-      if (DXYSB && DZSB)
-        tuple->BefPreS_OpenAngle_Cosmic->Fill(OpenAngle, EventWeight_);
-      
-        // Get the location of the outmost hit
-      tuple->BefPreS_LastHitDXY->Fill(furthersHitDxy, EventWeight_);
-      tuple->BefPreS_LastHitD3D->Fill(furthersHitDistance, EventWeight_);
-      
-      if (fabs(track->eta()) < DTRegion) {
-        tuple->BefPreS_Pt_DT->Fill(track->pt(), EventWeight_);
-      } else {
-        tuple->BefPreS_Pt_CSC->Fill(track->pt(), EventWeight_);
-      }
-      
-      if (DXYSB && DZSB && OASB) {
-        tuple->BefPreS_Pt_Cosmic->Fill(track->pt(), EventWeight_);
-        tuple->BefPreS_Ias_Cosmic->Fill(globalIas_, EventWeight_);
-        tuple->BefPreS_Ih_Cosmic->Fill(globalIh_, EventWeight_);
-      }
-      if (tof) {
-        tuple->BefPreS_TOF->Fill(tof->inverseBeta(), EventWeight_);
-        if (PUA)
-          tuple->BefPreS_TOF_PUA->Fill(tof->inverseBeta(), EventWeight_);
-        if (PUB)
-          tuple->BefPreS_TOF_PUB->Fill(tof->inverseBeta(), EventWeight_);
-        if (dttof->nDof() > 6)
-          tuple->BefPreS_TOF_DT->Fill(dttof->inverseBeta(), EventWeight_);
-        if (csctof->nDof() > 6)
-          tuple->BefPreS_TOF_CSC->Fill(csctof->inverseBeta(), EventWeight_);
-        tuple->BefPreS_PtVsTOF->Fill(track->pt(), tof->inverseBeta(), EventWeight_);
-      }
-      
-      if (tof) {
-        tuple->BefPreS_TOFVsIs->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
-        tuple->BefPreS_TOFVsIh->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
-      }
-      
-        //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
-        //Binning not used for other analyses
-      int bin = -1;
-      if (typeMode_ == 3) {
-        if (fabs(track->eta()) < DTRegion) {
-          bin = muonStations(track->hitPattern()) - 2;
-        } else {
-          bin = muonStations(track->hitPattern()) + 1;
-        }
-        tuple->BefPreS_Pt_Binned[to_string(bin)]->Fill(track->pt(), EventWeight_);
-      }
+    // Check if HSCP is compatible with cosmics
+    bool isDxyHigh = ((typeMode_ != 3 && fabs(dxy) > globalMaxDXY_) || (typeMode_ == 3 && fabs(dxyFromBeamSpot) > globalMaxDXY_)) ? true : false;
+    bool isDzHigh = ((typeMode_ != 3 && fabs(dz) > globalMaxDZ_) || (typeMode_ == 3 && fabs(dzFromBeamSpot) > globalMaxDZ_)) ? true : false;
+    bool isOpenAngleHigh =  (maxOpenAngle >= 2.8) ? true : false;
+
+    isCosmicSB = (isDxyHigh && isDzHigh && isOpenAngleHigh);
+    isSemiCosmicSB = (!isCosmicSB && (isDxyHigh || isDzHigh || isOpenAngleHigh));
+    
+    // TODO: have histos that shows if we have these cosmics ones (BefPreS should show non-zero
+    // while PostPreS should not contain any, preselection cuts this
+    if (isDzHigh && isOpenAngleHigh) {
+      tuple->BefPreS_Dxy_Cosmic->Fill(dxy, EventWeight_);
+    }
+    if (isDxyHigh && isOpenAngleHigh) {
+      tuple->BefPreS_Dz_Cosmic->Fill(dz, EventWeight_);
+    }
+    if (isDxyHigh && isDzHigh) {
+      tuple->BefPreS_OpenAngle_Cosmic->Fill(maxOpenAngle, EventWeight_);
     }
     
+    if (isDxyHigh && isDzHigh && isOpenAngleHigh) {
+      tuple->BefPreS_Pt_Cosmic->Fill(track->pt(), EventWeight_);
+      tuple->BefPreS_Ias_Cosmic->Fill(globalIas_, EventWeight_);
+      tuple->BefPreS_Ih_Cosmic->Fill(globalIh_, EventWeight_);
+    }
     
-    // Define preselection cuts
-//    int sizeOfpassedCutArrays = 15; --> this didnt work out, TODO come back to this?
+    // Get the location of the outmost hit
+    const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
+    const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
+    const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
+
+      // Get the location of the outmost hit
+    tuple->BefPreS_LastHitDXY->Fill(furthersHitDxy, EventWeight_);
+    tuple->BefPreS_LastHitD3D->Fill(furthersHitDistance, EventWeight_);
+    
+    if (fabs(track->eta()) < DTRegion) {
+      tuple->BefPreS_Pt_DT->Fill(track->pt(), EventWeight_);
+    } else {
+      tuple->BefPreS_Pt_CSC->Fill(track->pt(), EventWeight_);
+    }
+    
+    if (tof) {
+      tuple->BefPreS_TOF->Fill(tof->inverseBeta(), EventWeight_);
+      if (PUA)
+        tuple->BefPreS_TOF_PUA->Fill(tof->inverseBeta(), EventWeight_);
+      if (PUB)
+        tuple->BefPreS_TOF_PUB->Fill(tof->inverseBeta(), EventWeight_);
+      if (dttof->nDof() > 6)
+        tuple->BefPreS_TOF_DT->Fill(dttof->inverseBeta(), EventWeight_);
+      if (csctof->nDof() > 6)
+        tuple->BefPreS_TOF_CSC->Fill(csctof->inverseBeta(), EventWeight_);
+      tuple->BefPreS_PtVsTOF->Fill(track->pt(), tof->inverseBeta(), EventWeight_);
+      tuple->BefPreS_TOFVsIs->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
+      tuple->BefPreS_TOFVsIh->Fill(tof->inverseBeta(), globalIas_, EventWeight_);
+    }
+    
+    // Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
+    // Binning not used for other analyses
+    int bin = -1;
+    if (typeMode_ == 3) {
+      if (fabs(track->eta()) < DTRegion) {
+        bin = muonStations(track->hitPattern()) - 2;
+      } else {
+        bin = muonStations(track->hitPattern()) + 1;
+      }
+      tuple->BefPreS_Pt_Binned[to_string(bin)]->Fill(track->pt(), EventWeight_);
+    }
+    
+    // ----------------------------------------------------------------------------|
+    // Define preselection cuts                                                    |
+    // ----------------------------------------------------------------------------|
+    
+    // int sizeOfpassedCutArrays = 15; --> this didnt work out, TODO come back to this?
     bool passedCutsArray[15];
     std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
     
@@ -2281,12 +2276,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Cut on the chi2 / ndof to ensure good quality tracks
     passedCutsArray[7] = (typeMode_ != 3 && (track->chi2() / track->ndof()) < globalMaxChi2_) ? true : false;
       // Cut on the impact parameter to ensure the track is coming from the PV
-      // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-    passedCutsArray[8] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
-                          || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
-      // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-    passedCutsArray[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
-                          || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
+      // for typeMode_ 3 (TOF only) dz and dxy is supposed to come from the beamspot
+    passedCutsArray[8] = (  (typeMode_ != 3 && fabs(dz) < globalMaxDZ_)
+                          || (typeMode_ == 3 && fabs(dzFromBeamSpot) < 4)) ? true : false;
+    passedCutsArray[9] = (  (typeMode_ != 3 && fabs(dxy) < globalMaxDXY_)
+                          || (typeMode_ == 3 && fabs(dxyFromBeamSpot) < 4)) ? true : false;
       // Cut on the PF based mini-isolation
     passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
       // Cut on the absolute pT-dependent cone size TkIsolation
@@ -2345,12 +2339,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Cut on the chi2 / ndof to ensure good quality tracks
     passedCutsArraySept8[7] = (typeMode_ != 3 && (track->chi2() / track->ndof()) < globalMaxChi2_) ? true : false;
       // Cut on the impact parameter to ensure the track is coming from the PV
-      // for typeMode_ 5 dz is supposed to come from the beamspot, TODO
-    passedCutsArraySept8[8] = (  (typeMode_ != 5 && fabs(dz) < globalMaxDZ_)
-                               || (typeMode_ == 5 && fabs(dz) < 4)) ? true : false;
-      // for typeMode_ 5 dxy is supposed to come from the beamspot, TODO
-    passedCutsArraySept8[9] = (  (typeMode_ != 5 && fabs(dxy) < globalMaxDXY_)
-                               || (typeMode_ == 5 && fabs(dxy) < 4)) ? true : false;
+      // for typeMode_ 3 (TOF only) dz and dxy is supposed to come from the beamspot
+    passedCutsArraySept8[8] = (  (typeMode_ != 3 && fabs(dz) < globalMaxDZ_)
+                          || (typeMode_ == 3 && fabs(dzFromBeamSpot) < 4)) ? true : false;
+    passedCutsArraySept8[9] = (  (typeMode_ != 3 && fabs(dxy) < globalMaxDXY_)
+                          || (typeMode_ == 3 && fabs(dxyFromBeamSpot) < 4)) ? true : false;
     
     // N-1 plots
     for (size_t i=0;i<sizeof(passedCutsArray);i++) {
@@ -2441,7 +2434,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), GenBeta, EventWeight_);
           tuple->N1_PtErrOverPt2VsIas->Fill(track->ptError() / (track->pt()*track->pt()), globalIas_, EventWeight_);
           tuple->N1_PtErrOverPt2VsProbQNoL1->Fill(track->ptError() / (track->pt()*track->pt()), 1 - probQonTrackNoL1, EventWeight_);
-            //TODO
         };
         if (i==14) {
           tuple->N1_ProbQNoL1->Fill(1 - probQonTrackNoL1, EventWeight_);
@@ -2464,6 +2456,33 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
+    // Plot Eta after each cut
+    for (size_t i=0;i<sizeof(passedCutsArray);i++) {
+      if (passedCutsArray[i]) {
+        tuple->CutFlowEta->Fill(track->eta(), i, EventWeight_);
+        tuple->CutFlowProbQ->Fill(1 - probQonTrack, i, EventWeight_);
+        tuple->CutFlowPfType->Fill(0., i, EventWeight_);
+        if (pf_isPfTrack) {
+          tuple->CutFlowPfType->Fill(1., i, EventWeight_);
+        } else {
+          tuple->CutFlowPfType->Fill(8., i, EventWeight_);
+        }
+        if (pf_isElectron) {
+          tuple->CutFlowPfType->Fill(2., i, EventWeight_);
+        } else if (pf_isMuon) {
+          tuple->CutFlowPfType->Fill(3., i, EventWeight_);
+        } else if (pf_isPhoton) {
+          tuple->CutFlowPfType->Fill(4., i, EventWeight_);
+        } else if (pf_isChHadron) {
+          tuple->CutFlowPfType->Fill(5., i, EventWeight_);
+        } else if (pf_isNeutHadron) {
+          tuple->CutFlowPfType->Fill(6., i, EventWeight_);
+        } else if (pf_isUndefined) {
+          tuple->CutFlowPfType->Fill(7., i, EventWeight_);
+        }
+      }
+    }
+    
     // Reverse cutflow, i.e. start with the last cut from the original cutflow
     bool passedCutsArrayReverse[15];
     std::reverse_copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayReverse));
@@ -2478,7 +2497,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->CutFlowReverse->Fill((i+1), EventWeight_);
       }
     }
-    
+      
     // Preselection cuts for a CR where the pT cut is flipped
     bool passedCutsArrayForCR[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForCR));
@@ -2505,8 +2524,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool passPre = passPreselection(passedCutsArray);
     bool passPreSept8 = passPreselection(passedCutsArraySept8);
     
-      // Dont do TOF only is isCosmicSB is true
-    if (typeMode_ == 5 && isCosmicSB) {
+    // Dont do TOF only is isCosmicSB is true
+    if (typeMode_ == 3 && isCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a cosmic track, skipping it";
       // 8-th bin of the error histo, not a collision track
       tuple->ErrorHisto->Fill(7.);
@@ -2516,7 +2535,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Dont do TOF only is isSemiCosmicSB is true
-    if (typeMode_ == 5 && isSemiCosmicSB) {
+    if (typeMode_ == 3 && isSemiCosmicSB) {
       if (debug_ > 2) LogPrint(MOD) << "      >> This is a semi-cosmic track, skipping it";
       // 8-th bin of the error histo, not a collision track
       tuple->ErrorHisto->Fill(7.);
@@ -3182,7 +3201,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bool specInCPE = false;
         (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
         
-        // TODO2 come back to this and double the plots for highIas
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           
@@ -3501,8 +3519,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       muon_PFIso03_sumPhotonPt = muon->pfIsolationR03().sumPhotonEt;
       muon_PFIso03_sumPUPt = muon->pfIsolationR03().sumPUPt;
     }
-    
-    OpenAngle = deltaROpositeTrack(iEvent.get(hscpToken_), hscp);
 
     HSCP_passCutPt55.push_back(track->pt() > 55 ? true : false);
     HSCP_passPreselection.push_back(passPre);
@@ -3552,7 +3568,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_MassErr.push_back(MassErr);
     HSCP_dZ.push_back(dz);
     HSCP_dXY.push_back(dxy);
-    HSCP_dR.push_back(OpenAngle);
+    HSCP_dR.push_back(maxOpenAngle);
     HSCP_p.push_back(track->p());
     HSCP_eta.push_back(track->eta());
     HSCP_phi.push_back(track->phi());
@@ -4245,31 +4261,6 @@ bool Analyzer::passPreselection(T (&passedCutsArray)[n]) {
   // Return false in the function if a given cut is not passed
   for (size_t i=0;i<sizeof(T) * n;i++) {
     if (passedCutsArray[i]) {
-        // Plot Eta after each cut
-      // Need to figure out how to do this with the new way to preselections
-//      if (tuple) {
-//        tuple->CutFlowEta->Fill(track->eta(), i, EventWeight_);
-//        tuple->CutFlowProbQ->Fill(1 - probQonTrack, i, EventWeight_);
-//        tuple->CutFlowPfType->Fill(0., i, EventWeight_);
-//        if (pf_isPfTrack) {
-//          tuple->CutFlowPfType->Fill(1., i, EventWeight_);
-//        } else {
-//          tuple->CutFlowPfType->Fill(8., i, EventWeight_);
-//        }
-//        if (pf_isElectron) {
-//          tuple->CutFlowPfType->Fill(2., i, EventWeight_);
-//        } else if (pf_isMuon) {
-//          tuple->CutFlowPfType->Fill(3., i, EventWeight_);
-//        } else if (pf_isPhoton) {
-//          tuple->CutFlowPfType->Fill(4., i, EventWeight_);
-//        } else if (pf_isChHadron) {
-//          tuple->CutFlowPfType->Fill(5., i, EventWeight_);
-//        } else if (pf_isNeutHadron) {
-//          tuple->CutFlowPfType->Fill(6., i, EventWeight_);
-//        } else if (pf_isUndefined) {
-//          tuple->CutFlowPfType->Fill(7., i, EventWeight_);
-//        }
-//      }
     } else {
       if (debug_ > 2 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
       // TODO: when the preselection list finalizes I might be more verbose than this

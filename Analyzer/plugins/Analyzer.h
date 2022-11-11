@@ -252,9 +252,6 @@ private:
   const reco::MuonTimeExtra* dttof;
   const reco::MuonTimeExtra* csctof;
 
-  float OpenAngle = -1;  //global variable needed by PassPreselection... Ugly isn't it?!
-  float TreeDXY = -1;
-  float TreeDZ = -1;
   float TreeprobQonTrack = -1;
   float TreeprobQonTracknoL1 = -1;
   float TreeprobXYonTrack = -1;
