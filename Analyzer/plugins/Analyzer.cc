@@ -14,7 +14,7 @@
 
 // - 41p0: - Refactor so no tuple is needed in the preslection function
 // - 41p1: - Further code cleaning
-// - 41p2: - 1D plots for CR, include syst on probQ
+// - 41p2: - 1D plots for CR, include syst on probQ, add passPreSept8
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -1922,15 +1922,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    
-      // Compute transverse mass mT between HSCP with and MET
-    float massT = sqrt(2*track->pt()*RecoPFMET*(1-cos(track->phi()-RecoPFMET_phi)));
-    HSCP_mT.push_back(massT);
   
-      // number of tracks as the first bin
-    if (tuple) {
-      tuple->BefPreS_pfType->Fill(0., EventWeight_);
-    }
+    // number of tracks as the first bin
+    tuple->BefPreS_pfType->Fill(0., EventWeight_);
     
     int nearestJetIndex = -1;
     int pfNumJets = 0;
@@ -2001,34 +1995,29 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (isSignal) GenBeta = genColl[closestGenIndex].p() / genColl[closestGenIndex].energy();
 
     
-      // Calculate transverse mass
-    float RecoPFMET_et = -1, RecoPFMET_phi = -1;
+    
+    // Compute transverse mass mT between HSCP with and MET
+    float massT = -10.;
+    if (RecoPFMET > 0) massT = sqrt(2*track->pt()*RecoPFMET*(1-cos(track->phi()-RecoPFMET_phi)));
+    HSCP_mT.push_back(massT);
+    
+    // Comput the phi angle between MET and the candidate
     float dPhiMinPfMet = 9999.0;
-    
-    
-    if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
-      if (recoPFMETHandle->size() > 1) {
-        cout << "recoPFMETHandle->size() " << recoPFMETHandle->size() << endl;
-      }
-      for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
-        const reco::PFMET* recoPFMet = &(*recoPFMETHandle)[i];
-        RecoPFMET_et = recoPFMet->et();
-        RecoPFMET_phi = recoPFMet->phi();
-      }
-    }
-    
-      // Loop through the rechits to find the number of non-L1 hits
-    for (unsigned int i = 0; i < dedxHits->size(); i++) {
-      DetId detid(dedxHits->detId(i));
-      if (detid.subdetId() < 3) {
-        if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) != 1)) {
-          nonL1PixHits++;
-        }
-      }
-    }
-    
-    
     dPhiMinPfMet = fabs(reco::deltaPhi(RecoPFMET_phi,track->phi()));
+    
+//  This was done already above, there is a difference:
+//   --> that version does a cleaning on the CPE not being correct
+//      // Loop through the rechits to find the number of non-L1 hits
+//    for (unsigned int i = 0; i < dedxHits->size(); i++) {
+//      DetId detid(dedxHits->detId(i));
+//      if (detid.subdetId() < 3) {
+//        if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) != 1)) {
+//          nonL1PixHits++;
+//        }
+//      }
+//    }
+    
+
     
       // Number of DeDx hits
     unsigned int numDeDxHits = (dedxSObj) ? (dedxSObj->numberOfMeasurements()+nonL1PixHits) : 0;
@@ -2835,7 +2824,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_CaloNumJets->Fill(caloNumJets, EventWeight_);
         tuple->PostPreS_dRMinCaloJetVsIas->Fill(dRMinCaloJet, globalIas_, EventWeight_);
         tuple->PostPreS_dPhiMinPfMetVsIas->Fill(dPhiMinPfMet, globalIas_, EventWeight_);
-        tuple->PostPreS_PfMet->Fill(RecoPFMET_et, EventWeight_);
+        tuple->PostPreS_PfMet->Fill(RecoPFMET, EventWeight_);
         tuple->PostPreS_PfMetPhi->Fill(RecoPFMET_phi, EventWeight_);
         if (GenBeta >= 0) {
           tuple->PostPreS_GenBeta->Fill(GenBeta, EventWeight_);
