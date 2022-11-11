@@ -9,8 +9,6 @@
 #include "TFile.h"
 #include "TDirectory.h"
 
-
-
 //data 2017
 float K_data2017 = 2.30;
 float C_data2017 = 3.17;
@@ -23,7 +21,6 @@ float C_mc2017 = 3.22;
 //MC 2018
 float K_mc2018 = 2.27;
 float C_mc2018 = 3.22;
-
 
 // Scale the 1D-histogram given to the unit 
 void scale(TH1F* h){
@@ -375,17 +372,27 @@ TCanvas* plotting(TH1F* h1, TH1F* h2, bool ratioSimple=true, std::string dirname
     TCanvas* c1 = new TCanvas(canvName.c_str(),"", 800,800);
     c1->Divide(1,3);
     gStyle->SetOptStat(0);
-    c1->cd(1);
-    TPad* p1 = (TPad*)(c1->cd(1));
+    //c1->cd(1);
+    //TPad* p1 = (TPad*)(c1->cd(1));
+    TPad *p1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1.0);
+    p1->Draw();
+    p1->cd();
     p1->SetLogy();
+    p1->SetTopMargin(0.05);
+    p1->SetBottomMargin(0.1);
+    p1->SetLeftMargin(0.12);
+    p1->SetRightMargin(0.05);
     TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
     leg->AddEntry(h1,leg1.c_str(),"lep");
     leg->AddEntry(h2,leg2.c_str(),"lep");
     h1->SetStats(0);
+    h1->SetMarkerStyle(20);
     h1->Draw();
     h1->GetYaxis()->SetRangeUser(1e-4,1e6);
     h2->SetLineColor(2);
     h2->SetStats(0);
+    h2->SetMarkerStyle(20);
+    h2->SetMarkerColor(2);
     h2->Draw("esame");
     leg->Draw("same");
     h1->SetName((name+"_obs").c_str());

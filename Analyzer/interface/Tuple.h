@@ -281,13 +281,14 @@ struct Tuple {
   TH1F* N1_TIsol;
   TH1F* N1_EoP;
   TH1F* N1_SumpTOverpT;
-  TH1F* N1_dRMinPfJet;
-
+  TH1F* N1_DrMinPfJet;
   TH1F* N1_PtErrOverPt;
   TH1F* N1_PtErrOverPt2;
   TH2F* N1_PtErrOverPtVsPt;
   TH2F* N1_PtErrOverPtVsPt_lowPt;
   TH2F* N1_PtErrOverPtVsGenBeta;
+  TH2F* N1_PtErrOverPt2VsIas;
+  TH2F* N1_PtErrOverPt2VsProbQNoL1;
   TH1F* N1_I;
   TH1F* N1_TOF;
   TH1F* NVTrack;
@@ -296,10 +297,11 @@ struct Tuple {
   TH1F* N1_Dz;
   TH1F* N1_SegSep;
   TH1F* FailDz;
-  TH1F* N1_ProbQ;
-  TH2F* N1_ProbQVsIas;
+  TH1F* N1_ProbQNoL1;
+  TH2F* N1_ProbQNoL1VsIas;
+  TH3F* N1_IhVsProbQNoL1VsIas;
   TH1F* N1_ProbXY;
-  TH1F* N1_pfType;
+  TH1F* N1_PfType;
   TH1F* N1_MiniRelIsoAll;
   TH1F* N1_MiniRelIsoAll_lowMiniRelIso;
   TH1F* N1_MiniRelTkIso;
@@ -333,8 +335,8 @@ struct Tuple {
   TH1F* Gen_Beta;
   TH1F* Gen_BetaGamma;
 
-  TH1F* BefPreS_massT;
-  TH1F* BefPreS_mass;
+  TH1F* BefPreS_MassT;
+  TH1F* BefPreS_MassT_highMassT;
   TH1F* BefPreS_MiniRelIsoAll;
   TH1F* BefPreS_MiniRelIsoChg;
   TH1F* BefPreS_MiniRelTkIso;
@@ -382,9 +384,9 @@ struct Tuple {
   TH1F* BefPreS_NVertex_NoEventWeight;
   TH1F* BefPreS_PV;
   TH1F* BefPreS_PV_NoEventWeight;
-  TH1F* BefPreS_dzAll;
+  TH1F* BefPreS_DzAll;
   TH1F* BefPreS_dxyAll;
-  TH1F* BefPreS_dzMinv3d;
+  TH1F* BefPreS_DzMinv3d;
   TH1F* BefPreS_dxyMinv3d;
   TH1F* BefPreS_SegSep;
   TH1F* BefPreS_SegMinPhiSep;
@@ -425,6 +427,7 @@ struct Tuple {
   TH1F* BefPreS_MassErr;
   TH2F* BefPreS_ProbQVsIas;
 
+  TH1F* BefPreS_CluProbHasFilled;
   TH2F* BefPreS_CluProbQVsPixelLayer;
   TH2F* BefPreS_CluProbXYVsPixelLayer;
   TH2F* BefPreS_CluNormChargeVsPixelLayer;
@@ -477,19 +480,20 @@ struct Tuple {
   TH2F* BefPreS_PVsIh;
   TH2F* BefPreS_PtVsIas;
   TH2F* BefPreS_PtVsIh;
-  TH2F* BefPreS_PtTOF;
-  TH2F* BefPreS_TOFIs;
-  TH2F* BefPreS_TOFIh;
+  TH2F* BefPreS_PtVsTOF;
+  TH2F* BefPreS_TOFVsIs;
+  TH2F* BefPreS_TOFVsIh;
   TH1F* BefPreS_GenBeta;
 
 
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
-  TH1F* PostPreS_pfType;
-  TH2F* PostPreS_pfTypeVsIas;
-  TH1F* PostPreS_massT;
-  TH2F* PostPreS_massTVsIas;
+  TH1F* PostPreS_PfType;
+  TH2F* PostPreS_PfTypeVsIas;
+  TH1F* PostPreS_MassT;
+  TH1F* PostPreS_MassT_highMassT;
+  TH2F* PostPreS_MassTVsIas;
   TH1F* PostPreS_MiniRelIsoAll;
   TH2F* PostPreS_MiniRelIsoAllVsIas;
   TH1F* PostPreS_MiniRelIsoChg;
@@ -505,6 +509,7 @@ struct Tuple {
   TH1F* PostPreS_Qual;
   TH1F* PostPreS_TNOH_PUA;
   TH1F* PostPreS_TNOH_PUB;
+  TH1F* PostPreS_TNOH_PUC;
   TH1F* PostPreS_TNOHFraction;
   TH2F* PostPreS_TNOHFractionVsIas;
   TH1F* PostPreS_TNOPH;
@@ -517,12 +522,14 @@ struct Tuple {
   TH2F* PostPreS_TNOMVsIas;
   TH1F* PostPreS_TNOM_PUA;
   TH1F* PostPreS_TNOM_PUB;
+  TH1F* PostPreS_TNOM_PUC;
   TH1F* PostPreS_NOMoNOH;
   TProfile* PostPreS_NOMoNOHvsPV;
   TH1F* PostPreS_nDof;
   TH1F* PostPreS_TOFError;
   TH1F* PostPreS_PtErrOverPt;
   TH2F* PostPreS_PtErrOverPtVsIas;
+  TH2F* PostPreS_PtErrOverPt2VsIas;
   TH1F* PostPreS_PtErrOverPt2;
   TH1F* PostPreS_Pt;
   TH1F* PostPreS_Pt_lowPt;
@@ -546,10 +553,14 @@ struct Tuple {
   TH1F* PostPreS_NVertex_NoEventWeight;
   TH1F* PostPreS_PV;
   TH1F* PostPreS_PV_NoEventWeight;
-  TH1F* PostPreS_dzAll;
+  TH1F* PostPreS_DzAll;
   TH1F* PostPreS_dxyAll;
   TH1F* PostPreS_Dz;
+  TH2F* PostPreS_DzVsIas;
+  TH2F* PostPreS_DzVsGenID;
   TH1F* PostPreS_Dxy;
+  TH2F* PostPreS_DxyVsIas;
+  TH2F* PostPreS_DxyVsGenID;
   TH1F* PostPreS_SegSep;
   TH1F* PostPreS_SegMinPhiSep;
   TH1F* PostPreS_SegMinEtaSep;
@@ -582,6 +593,8 @@ struct Tuple {
 
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
+  TH3F* PostPreS_IhVsProbQNoL1VsIas;
+  TH3F* PostPreS_MomentumVsProbQNoL1VsIas;
   TH1F* PostPreS_ProbXY;
   TH1F* PostPreS_ProbXY_highIas;
   TH2F* PostPreS_ProbXYVsIas;
@@ -590,6 +603,11 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pileup_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
   TH1F* PostPreS_ProbXYNoL1;
   TH1F* PostPreS_ProbXYNoL1_highIas;
   TH2F* PostPreS_ProbXYNoL1VsIas;

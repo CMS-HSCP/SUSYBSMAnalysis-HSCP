@@ -76,8 +76,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
+   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
