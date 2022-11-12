@@ -266,6 +266,8 @@ struct Tuple {
   TH1F* NumEvents;
   TH1F* dRMinHLTMuon;
   TH1F* ErrorHisto;
+  
+  TH1F* BefPreS_HltMatchTrackLevel;
   TH1F* BefPreS_TriggerType;
   TH1F* HSCPCandidateType;
   TH1F* BefPreS_RecoHSCParticleType;
@@ -349,8 +351,9 @@ struct Tuple {
   TH1F* BefPreS_MiniTkIso;
   
   TH1F* BefPreS_RecoPFMET;
-  TH1F* BefPreS_RecoPFHT;
-  TH1F* BefPreS_CaloNumJets;
+  TH1F* BefPreS_RecoPfHT;
+  TH1F* BefPreS_RecoPfJetsNum;
+  TH1F* BefPreS_CaloJetsNum;
 
   TH1F* BefPreS_Chi2oNdof;
   TH1F* BefPreS_Qual;
@@ -377,6 +380,7 @@ struct Tuple {
   TH1F* BefPreS_Ias;
   TH1F* BefPreS_Ias_PUA;
   TH1F* BefPreS_Ias_PUB;
+  TH1F* BefPreS_IasForStatus91;
   TH1F* BefPreS_Ih;
   TH1F* BefPreS_Ih_PUA;
   TH1F* BefPreS_Ih_PUB;
@@ -508,7 +512,7 @@ struct Tuple {
   
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
-  TH1F* PostPreS_CaloNumJets;
+  TH1F* PostPreS_CaloJetsNum;
   
   TH1F* PostPreS_Chi2oNdof;
   TH2F* PostPreS_Chi2oNdofVsIas;
@@ -620,6 +624,13 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_up;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostPreS_TriggerMuon50VsBeta;
+  
+  
   TH1F* PostPreS_ProbXYNoL1;
   TH1F* PostPreS_ProbXYNoL1_highIas;
   TH2F* PostPreS_ProbXYNoL1VsIas;
@@ -628,6 +639,7 @@ struct Tuple {
   TH2F* PostPreS_ProbXYNoL1VsProbQNoL1_highIas;
   TH1F* PostPreS_MassErr;
   TH2F* PostPreS_MassErrVsIas;
+
 
   TH2F* PostPreS_EtaVsGenID;
   TH2F* PostPreS_ProbQVsGenID;
@@ -755,7 +767,6 @@ struct Tuple {
 
   TH2F* PostPreS_CluNormChargeVsStripLayer_lowBetaGamma;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma;
-  TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2;
 
@@ -773,8 +784,9 @@ struct Tuple {
   TH1F* PostPreS_dPhiMinPfMet;
   TH2F* PostPreS_dRMinCaloJetVsIas;
   TH2F* PostPreS_dPhiMinPfMetVsIas;
-  TH1F* PostPreS_PfMet;
-  TH1F* PostPreS_PfMetPhi;
+  TH1F* PostPreS_RecoPfMet;
+  TH1F* PostPreS_RecoPfMetPhi;
+  TH1F* PostPreS_RecoPfJetsNum;
 
   // Post Selection plots
   TH2F* PostS_CutIdVsEta_RegionA;

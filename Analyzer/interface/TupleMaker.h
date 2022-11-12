@@ -290,7 +290,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->NumEvents->GetXaxis()->SetBinLabel(1,"All events");
   tuple->NumEvents->GetXaxis()->SetBinLabel(2,"Events w/ PU syst");
   tuple->NumEvents->GetXaxis()->SetBinLabel(3,"After trigger");
-  tuple->NumEvents->GetXaxis()->SetBinLabel(4,"After HLT obj matching");
+  tuple->NumEvents->GetXaxis()->SetBinLabel(4,"After HLT obj to evt matching");
   
   tuple->dRMinHLTMuon = dir.make<TH1F>("dRMinHLTMuon", ";#Delta R_{min,mu,HLT};Number of events/bin",100,0.,3.2);
   
@@ -311,6 +311,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(3,"Double-charged R-hadrons");
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
+  
+  tuple->BefPreS_HltMatchTrackLevel = dir.make<TH1F>("BefPreS_HltMatchTrackLevel", ";;Tracks/category", 5, -0.5, 4.5);
+  tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"All tracks");
+  tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(2,"Tracks matched to HLT muon");
   
   tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
@@ -582,8 +586,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_MiniTkIso = dir.make<TH1F>("BefPreS_MiniTkIso", ";MiniTkIso;Tracks / bin",  150, 0.0, 50);
 
   tuple->BefPreS_RecoPFMET = dir.make<TH1F>("BefPreS_RecoPFMET", ";RecoPFMET (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
-  tuple->BefPreS_RecoPFHT = dir.make<TH1F>("BefPreS_RecoPFHT", ";RecoPFHT (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
-  tuple->BefPreS_CaloNumJets = dir.make<TH1F>("BefPreS_CaloNumJets", ";Number of calo jets;Tracks / bin",  70, 0.0, 70.0);
+  tuple->BefPreS_RecoPfHT = dir.make<TH1F>("BefPreS_RecoPfHT", ";RecoPFHT (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
+  tuple->BefPreS_RecoPfJetsNum = dir.make<TH1F>("BefPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / bin",  70, 0.0, 70.0);
+  tuple->BefPreS_CaloJetsNum = dir.make<TH1F>("BefPreS_CaloJetsNum", ";Number of calo jets;Tracks / bin",  70, 0.0, 70.0);
 
   tuple->BefPreS_Chi2oNdof = dir.make<TH1F>("BefPreS_Chi2oNdof", ";Chi2oNdof;Tracks / bin", 20, 0, 20);
   // This should just be a 2-bin plot where high-purity is not present = 0 or present = 1
@@ -608,6 +613,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_Pt = dir.make<TH1F>("BefPreS_Pt", ";p_{T} (GeV);Tracks / bin", 50, 0, PtHistoUpperBound);
   tuple->BefPreS_Pt_lowPt = dir.make<TH1F>("BefPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0, 500);
   tuple->BefPreS_Ias = dir.make<TH1F>("BefPreS_Ias", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
+  tuple->BefPreS_IasForStatus91 = dir.make<TH1F>("BefPreS_Ias", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
   tuple->BefPreS_Ih = dir.make<TH1F>("BefPreS_Ih", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
   tuple->BefPreS_MTOF = dir.make<TH1F>("BefPreS_MTOF", ";MTOF;Tracks / bin", 50, -2, 5);
   tuple->BefPreS_TIsol = dir.make<TH1F>("BefPreS_TIsol", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} (GeV);Tracks / 4 GeV", 25, 0, 100);
@@ -785,7 +791,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostPreS_RecoPFMET = dir.make<TH1F>("PostPreS_RecoPFMET", ";RecoPFMET;Tracks / bin",  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>("PostPreS_RecoPFHT", ";RecoPFHT;Tracks / bin",  200, 0.0, 2000.0);
-  tuple->PostPreS_CaloNumJets = dir.make<TH1F>("PostPreS_CaloNumJets", ";Number of calo jets;Tracks / bin",  30, 0.0, 30.0);
+  tuple->PostPreS_CaloJetsNum = dir.make<TH1F>("PostPreS_CaloJetsNum", ";Number of calo jets;Tracks / bin",  30, 0.0, 30.0);
   
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>("PostPreS_Chi2oNdof", ";#chi^{2}/N_{dof};Tracks / 1", 20, 0, 20);
   tuple->PostPreS_Chi2oNdofVsIas = dir.make<TH2F>("PostPreS_Chi2oNdofVsIas", ";#chi^{2}/Ndof;G_{i}^{strips}",20, 0, 20,10,0.,1.);
@@ -902,6 +908,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,-0.05,1.05);
+  
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>("PostPreS_ProbXYNoL1", ";ProbXYNoL1;Tracks / bin", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1_highIas = dir.make<TH1F>("PostPreS_ProbXYNoL1_highIas", ";ProbXYNoL1 for (G_{i}^{strips} > 0.6);Tracks / bin", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1VsIas = dir.make<TH2F>("PostPreS_ProbXYNoL1VsIas", ";ProbXYNoL1;G_{i}^{strips};Tracks / bin", 100, 0., 1., 20, 0.,1.);
@@ -1040,7 +1052,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_lowBetaGamma", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
   tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
-  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
   tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
   tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
 
@@ -1060,8 +1071,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_dRMinCaloJetVsIas =  dir.make<TH2F>("PostPreS_dRMinCaloJetVsIas", ";dRMinCaloJet;G_{i}^{strips}",100,0.,1.5,10,0.,1.);
   tuple->PostPreS_dPhiMinPfMetVsIas =  dir.make<TH2F>("PostPreS_dPhiMinPfMetVsIas", ";dPhiMinPfMet;G_{i}^{strips}",100,0.,3.2,10,0.,1.);
 
-  tuple->PostPreS_PfMet = dir.make<TH1F>("PostPreS_PfMet", ";PfMet",200,0.,2000.);
-  tuple->PostPreS_PfMetPhi = dir.make<TH1F>("PostPreS_PfMetPhi", ";PfMetPhi",30,0.,3.2);
+  tuple->PostPreS_RecoPfMet = dir.make<TH1F>("PostPreS_RecoPfMet", ";PfMet",200,0.,2000.);
+  tuple->PostPreS_RecoPfMetPhi = dir.make<TH1F>("PostPreS_RecoPfMetPhi", ";PfMetPhi",30,0.,3.2);
+  tuple->PostPreS_RecoPfJetsNum = dir.make<TH1F>("PostPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / bin",  70, 0.0, 70.0);
   
   tuple->PostPreS_GenBeta = dir.make<TH1F>("PostPreS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0, 1);
   
