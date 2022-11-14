@@ -546,7 +546,6 @@ struct Tuple {
   TH2F* PostPreS_PtVsIas;
   TH1F* PostPreS_P;
   TH1F* PostPreS_Ias;
-  TH1F* PostPreS_Ias_CR;
   TH1F* PostPreS_Ias_NoEventWeight;
   TH1F* PostPreS_Ih;
   TH2F* PostPreS_IhVsIas;
@@ -612,22 +611,29 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsIas_highIas;
   TH2F* PostPreS_ProbXYVsProbQ;
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
-  TH1F* PostPreS_ProbQNoL1;
+
+  TH1F* PostPreS_Ias_CR;
   TH1F* PostPreS_ProbQNoL1_CR;
-  TH2F* PostPreS_ProbQNoL1VsIas;
   TH2F* PostPreS_ProbQNoL1VsIas_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Ias_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Ias_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_down;
+  
+  TH1F* PostPreS_ProbQNoL1;
+  TH2F* PostPreS_ProbQNoL1VsIas;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_up;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_down;
-  TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
-  TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
   TH2F* PostPreS_ProbQNoL1VsIas_Ias_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
   TH2F* PostPreS_TriggerMuon50VsBeta;
   
   

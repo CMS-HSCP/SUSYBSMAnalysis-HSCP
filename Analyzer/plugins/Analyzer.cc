@@ -15,7 +15,8 @@
 // - 41p0: - Refactor so no tuple is needed in the preslection function
 // - 41p1: - Further code cleaning
 // - 41p2: - 1D plots for CR, include syst on probQ, add passPreSept8, dz/dxy for non-vertex tracks, plots for cosmics checks
-// - 42p3: - Add Pt,Ias systematics,trigger syst measurement. Now we dont return if trigger is not passed, but it's part of the cutflow, check num tracks before after HLT mu matching
+// - 41p3: - Add Pt,Ias systematics,trigger syst measurement. Now we dont return if trigger is not passed, but it's part of the cutflow, check num tracks before after HLT mu matching
+// - 41p4: - Fix syst plots
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -532,26 +533,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
   }
-  if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+  if (trigInfo_> 0) {
   tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
   }
 
-  // TODO dr_min_hlt_muon_inEvent < 0.15 checks
-  if (matchToHLTTrigger_ && dr_min_hlt_muon_inEvent > 0.15) {
-    // Exit if no match was found
-    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the trigger matching";
-//    if (saveTree_ == 0) return;
-  } else {
-    matchedMuonWasFound = true;
-    // Number of events that pass the matching
-    if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+  // Number of events that pass the matching
+  if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      matchedMuonWasFound = true;
     tuple->NumEvents->Fill(3., EventWeight_);
-    }
   }
 
 
   //keep beta distribution for signal after the trigger
-  if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+  if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
   if (isSignal) {
     if (HSCPGenBeta1 >= 0)
       tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
@@ -906,7 +900,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
       tuple->ErrorHisto->Fill(1.);
       }
       continue;
@@ -917,7 +911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (debug_ > 0 ) LogPrint(MOD) << "  >> Tracker + Muon analysis w/o a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
       
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
       continue;
     }
     
@@ -927,7 +921,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ == 3 && muon.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> TOF only mode but no muon connected to the candidate -- skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
       continue;
     }
     
@@ -939,7 +933,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (track.isNull()) {
       if (debug_> 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
       // Third bin of the error histo, no tracks
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(2.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(2.);
       continue;
     }
 
@@ -947,7 +941,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
       continue;
     }
 
@@ -961,7 +955,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (vertexColl.size() < 1) {
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
         // 4-th bin of the error histo, no PV
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(3.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(3.);
         continue;
     }
         
@@ -998,7 +992,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // dont look at events where we didnt find the gen canidate
       if (debug_ > 4 ) LogPrint(MOD) << "  >> Event where we didnt find the gen candidate";
       // 5-th bin of the error histo, didnt find the gen canidate
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(4.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(4.);
       continue;
     }
     if (trigInfo_ > 0) {
@@ -1041,7 +1035,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (isSignal) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
       // All HSCP candidates
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(0., EventWeight_);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(0., EventWeight_);
       // Neutral HSCP candidates
       if (   closestHSCPsPDGsID == 1000993 || closestHSCPsPDGsID == 1009113
           || closestHSCPsPDGsID == 1009223 || closestHSCPsPDGsID == 1009313
@@ -1050,7 +1044,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           || closestHSCPsPDGsID == 1000622 || closestHSCPsPDGsID == 1000642
           || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
           || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
-        if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(1., EventWeight_);
+        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(1., EventWeight_);
       }
       // Single-charged HSCP
       else if (   closestHSCPsPDGsID == 1009213 || closestHSCPsPDGsID == 1009323
@@ -1061,21 +1055,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                || closestHSCPsPDGsID == 1000652 || closestHSCPsPDGsID == 1006211
                || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
                || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
-        if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(2., EventWeight_);
+        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(2., EventWeight_);
       }
       // Double-charged R-hadrons
       else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
-        if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(3., EventWeight_);
+        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(3., EventWeight_);
         // Dont mix double charged R-hadrons with the rest
         // The reco pt of them is 1/2 the pt of the gen track
         continue;
       }
       // tau prime, could be single or multiple charged
       else if (closestHSCPsPDGsID == 17) {
-        if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(4., EventWeight_);
+        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(4., EventWeight_);
       }
       else {
-        if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(5., EventWeight_);
+        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->HSCPCandidateType->Fill(5., EventWeight_);
       }
     }
     
@@ -1102,9 +1096,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dzMin = 10000;
     // Loop on the vertices in the event
     for (unsigned int i = 0; i < vertexColl.size(); i++) {
+        //only consider good vertex
       if (vertexColl[i].isFake() || fabs(vertexColl[i].z()) > 24 || vertexColl[i].position().rho() > 2 ||
-          vertexColl[i].ndof() <= 4)
-        continue;  //only consider good vertex
+          vertexColl[i].ndof() <= 4) continue;
       goodVerts++;
       if (trigInfo_ > 0) {
       tuple->BefPreS_DzAll->Fill(track->dz(vertexColl[i].position()), EventWeight_);
@@ -1363,7 +1357,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHits) {
       if (debug_> 3) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
       // 7-th bin of the error histo, No dedxHits associated to this track
-      if (trigInfo_>0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(6.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(6.);
       continue;
     }
 
@@ -1941,6 +1935,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           track_genTrackMiniIsoSumPt+=pt;
         }
       }
+//      float dRCandidateToIthTrack = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
+//      if (genTrackRef->pt() > 5) {
+//        cout << "Reco track pt: " << genTrackRef->pt() << " (dR=" << dRCandidateToIthTrack << ")" << endl;
+//      }
     }
   
     // number of tracks as the first bin
@@ -2315,8 +2313,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
       // Cut on the energy over momenta
     passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
-      // Cut on the uncertainty of the pt measurement
+      // Cut on the uncertainty of the pt measurement, TODO the cut value should be made a global variable
     passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008)) ? true : false;
+      // Cut away background events based on the probQ
+    passedCutsArray[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
       //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
       // Cut on the tracker based isolation
       //  passedCutsArray[12] = ( IsoTK_SumEt < globalMaxTIsol_) ? true : false;
@@ -2329,8 +2329,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       //passedCutsArray[16] = ( MassErr < 3 ) ? true : false;
       // Cut away background events based on the probXY
       //  passedCutsArray[16] = ((probXYonTrackNoL1 > globalMinTrackProbXYCut_) && (probXYonTrackNoL1 < globalMaxTrackProbXYCut_))  ? true : false;
-      // Cut away background events based on the probQ
-    passedCutsArray[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
+
       //  // TOF only cuts
       //  passedCutsArray[18] = (typeMode_ != 3 || (typeMode_ == 3 && muonStations(track->hitPattern()) > minMuStations_)) ? true : false;
       //  passedCutsArray[19] = (typeMode_ != 3 || (typeMode_ == 3 && fabs(track->phi()) > 1.2 && fabs(track->phi()) < 1.9)) ? true : false;
@@ -2348,30 +2347,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Define preselection cuts for Sept 8 preselection
     bool passedCutsArraySept8[10];
     std::fill(std::begin(passedCutsArraySept8), std::end(passedCutsArraySept8),false);
-    
-      // No cut, i.e. events after trigger
-    passedCutsArraySept8[0]  = (trigInfo_ > 0) ? true : false;
-      // Cut on transverse momentum
-      // Single muon trigger threshold is 50 GeV
-    passedCutsArraySept8[1]  = (track->pt() > globalMinPt_) ? true : false;
-      // Check if eta is inside the max eta cut for detector homogeneity
-    passedCutsArraySept8[2]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
-      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
-    passedCutsArraySept8[3]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
-      // Check the min fraction of valid hits to ensure good stats on the hits
-    passedCutsArraySept8[4]  = (typeMode_ != 3 && track->validFraction() > globalMinFOVH_) ? true : false;
-      // Cut for the number of dEdx hits to ensure good stats on the hits
-    passedCutsArraySept8[5]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
-      // Select only high purity tracks to ensure good quality tracks
-    passedCutsArraySept8[6]  = (typeMode_ != 3 && track->quality(reco::TrackBase::highPurity)) ? true : false;
-      // Cut on the chi2 / ndof to ensure good quality tracks
-    passedCutsArraySept8[7] = (typeMode_ != 3 && (track->chi2() / track->ndof()) < globalMaxChi2_) ? true : false;
-      // Cut on the impact parameter to ensure the track is coming from the PV
-      // for typeMode_ 3 (TOF only) dz and dxy is supposed to come from the beamspot
-    passedCutsArraySept8[8] = (  (typeMode_ != 3 && fabs(dz) < globalMaxDZ_)
-                          || (typeMode_ == 3 && fabs(dzFromBeamSpot) < 4)) ? true : false;
-    passedCutsArraySept8[9] = (  (typeMode_ != 3 && fabs(dxy) < globalMaxDXY_)
-                          || (typeMode_ == 3 && fabs(dxyFromBeamSpot) < 4)) ? true : false;
+    // To reduce mistakes, we just copy the first 10 cuts from earlier, those are the frozen cuts
+    passedCutsArraySept8[0]  = passedCutsArray[0];
+    passedCutsArraySept8[1]  = passedCutsArray[1];
+    passedCutsArraySept8[2]  = passedCutsArray[2];
+    passedCutsArraySept8[3]  = passedCutsArray[3];
+    passedCutsArraySept8[4]  = passedCutsArray[4];
+    passedCutsArraySept8[5]  = passedCutsArray[5];
+    passedCutsArraySept8[6]  = passedCutsArray[6];
+    passedCutsArraySept8[7] = passedCutsArray[7];
+    passedCutsArraySept8[8] = passedCutsArray[8];
+    passedCutsArraySept8[9] = passedCutsArray[9];
     
     // N-1 plots
     for (size_t i=0;i<sizeof(passedCutsArray);i++) {
@@ -2538,8 +2524,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
-      tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::max(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::min(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down->Fill((1 - probQonTrackNoL1)*0.995, globalIas_,  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_Ias_up->Fill(1 - probQonTrackNoL1, std::min(1.0,globalIas_*1.05),  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_*0.95,  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_Pt_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_Pt_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
     }
     
     // Preselection for the Gi templates, here the pT must be small
@@ -2583,21 +2573,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // RescaledPt(track->pt(), track->eta(), track->phi(), track->charge());
     bool passedCutsArrayForPtSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForPtSyst));
-    passedCutsArrayForPtSyst[1] = (rescaledPtUp < globalMinPt_) ? true : false;
+    passedCutsArrayForPtSyst[1] = (rescaledPtUp > globalMinPt_) ? true : false;
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection for pT UP systematics";
     if (passPreselection(passedCutsArrayForPtSyst)) {
       tuple->PostPreS_ProbQNoL1VsIas_Pt_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_);
     }
+    
     float newInvPtDown = (1. / track->pt()) * 0.9;
     float rescaledPtDown = 1 / newInvPtDown;
-    passedCutsArrayForPtSyst[1] = (rescaledPtDown < globalMinPt_) ? true : false;
+    passedCutsArrayForPtSyst[1] = (rescaledPtDown > globalMinPt_) ? true : false;
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection for pT DOWN systematics";
     if (passPreselection(passedCutsArrayForPtSyst)) {
       tuple->PostPreS_ProbQNoL1VsIas_Pt_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_);
     }
 
     // Systematics plots for Ias rescaling
-    tuple->PostPreS_ProbQNoL1VsIas_Ias_down->Fill(1 - probQonTrackNoL1, std::max(1.0,globalIas_*1.05),  EventWeight_);
+    tuple->PostPreS_ProbQNoL1VsIas_Ias_up->Fill(1 - probQonTrackNoL1, std::min(1.0,globalIas_*1.05),  EventWeight_);
     tuple->PostPreS_ProbQNoL1VsIas_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_*0.95,  EventWeight_);
     
     // Systematics plots for trigger
@@ -2704,8 +2695,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
         tuple->PostPreS_ProbQNoL1VsIas_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
         tuple->PostPreS_ProbQNoL1VsIas_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
-        tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::max(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
-        tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down->Fill((1 - probQonTrackNoL1)*0.995, globalIas_,  EventWeight_);
+        tuple->PostPreS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
+        tuple->PostPreS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - probQonTrackNoL1)*0.995, globalIas_,  EventWeight_);
         
         tuple->PostPreS_ProbXYNoL1->Fill(probXYonTrackNoL1, EventWeight_);
         tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoL1, globalIas_, EventWeight_);
@@ -4333,8 +4324,6 @@ bool Analyzer::passPreselection(T (&passedCutsArray)[n]) {
   for (size_t i=0;i<sizeof(T) * n;i++) {
     if (passedCutsArray[i]) {
     } else {
-      if (!passedCutsArray[0]) cout << "Trigger not passed" << endl;
-      if (!passedCutsArray[1]) cout << "pT not passed" << endl;
       if (debug_ > 2 ) LogPrint(MOD) << "        >> Preselection not passed for the " <<  std::to_string(i) << "-th cut, please check the code what that corresponds to";
       // TODO: when the preselection list finalizes I might be more verbose than this
       return false;
