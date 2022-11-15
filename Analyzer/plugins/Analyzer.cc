@@ -103,6 +103,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       minMuStations_(iConfig.getUntrackedParameter<int>("MinMuStations")),
       globalMinIs_(iConfig.getUntrackedParameter<double>("GlobalMinIs")),
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
+      PuTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
+      NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")), 
+      PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
+
       useTemplateLayer_(iConfig.getUntrackedParameter<bool>("UseTemplateLayer")),
       dEdxSF_0_(iConfig.getUntrackedParameter<double>("DeDxSF_0")),
       dEdxSF_1_(iConfig.getUntrackedParameter<double>("DeDxSF_1")),
@@ -135,7 +139,19 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   //dEdxSF [1] = dEdxSF_1_;
 
   bool splitByModuleType = true;
-  dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType);
+  //Get bool if we want PU or not : PU_Treat, get nb of PU bins (all in cfg)
+
+  dEdxTemplatesPU.resize(NbPuBins_, NULL);
+
+  if(PuTreatment_){
+    for (int i = 0; i < NbPuBins_ ; i++){
+      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,);
+    }
+  }
+  else{
+    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,0,0);
+  }
+
   tofCalculator.loadTimeOffset(timeOffset_);
 }
 
@@ -2497,9 +2513,29 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Preselection for the Gi templates, here the pT must be small
     bool passedCutsArrayForGiTemplates[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForGiTemplates));
-    passedCutsArrayForGiTemplates[1] = (track->pt() < 15) ? true : false;
+    passedCutsArrayForGiTemplates[1] = ( 20 < track->p() < 48 ) ? true : false; //Add choice of P range 
+
+    //NB of PU bins and according numbers 
+    //binning rescale : dEdx, pathlength
+  
+    // PAY ATTENTION : PU == NPV for the following loop !
+
     if (passPreselection(passedCutsArrayForGiTemplates)) {
-      // Raphael, this is where your code should come
+     
+      if(PuTreatment_){
+
+      }
+      else{
+      
+      }
+      string trigger = "HLT_Mu50"; // Choice of trigger available, or is it already done prior to that in presel ?
+      for (unsigned int i = 0; i < triggerH->size(); i++) {
+        if (TString(triggerNames.triggerName(i)).Contains(choice_trigger) && triggerH->accept(i)){
+            
+
+        }
+      }
+
     }
     
     bool passPre = passPreselection(passedCutsArray);
@@ -3941,6 +3977,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("SaveGenTree",0)->setComment("A");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
     ->setComment("globalIas_ vs Pt templates in eta binning");
+
+
+
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
   desc.add<std::string>("PixelCPE","PixelCPETemplateReco")
@@ -3996,7 +4035,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinNDOFCSC",6.0)->setComment("Cut on number of CSC DegreeOfFreedom used for muon TOF measurement");
   desc.addUntracked("GlobalMaxTOFErr",0.15)->setComment("Cut on error on muon TOF measurement");
   desc.addUntracked("GlobalMinTOF",1.0)->setComment("Cut on the min time-of-flight");
-  
+  //Templates related parameters 
+
+  desc.addUntracked("PileUpTreatment",false)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
+  desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
+  desc.addUntracked("PileUpBins",  std::vector<std::int>{0,20,25,30,35,200});
+ 
  descriptions.add("HSCParticleAnalyzer",desc);
 }
 
