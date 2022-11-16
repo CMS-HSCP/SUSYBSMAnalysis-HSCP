@@ -16,7 +16,7 @@ datasetList = [
 "/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-500_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPpairStau_M-1599_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-557_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 
 ]
 
@@ -59,11 +59,11 @@ config.Data.ignoreLocality = True
 config.Data.runRange = '0'
 
 config.section_('Site')
-config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*']
+config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_CCIN2P3', 'T2_UK_London_IC']
 config.Site.storageSite = 'T2_HU_Budapest'
   '''
 
-  with open("4crab_Signal_Template_wPorobQ.py", "w") as text_file:
+  with open("4crab_Signal_Template.py", "w") as text_file:
       text_file.write(TEMPLATE)
 
 for i in datasetList:

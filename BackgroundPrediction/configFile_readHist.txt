@@ -6,3 +6,4 @@
 ttbar/crab_Analysis_2018_TTTo2L2Nu_CodeV40p1_v1    mc2018   2nov/   10                     3             0               2           2           2           25
 #ttbar/crab_Analysis_2018_TTToHadronic_CodeV40p1_v1    mc2018  2nov/    10                     3             0               2           2           2           25
 #ttbar/crab_Analysis_2018_TTToSemiLeptonic_CodeV40p1_v1    mc2018  2nov/    10                     3             0               2           2           2           25
+

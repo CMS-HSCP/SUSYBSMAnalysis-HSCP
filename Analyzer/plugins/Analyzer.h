@@ -148,22 +148,8 @@ public:
                       vector<float>& CutPt_Flip,
                       vector<float>& CutI_Flip,
                       vector<float>& CutTOF_Flip);
-
-  bool passPreselection(const reco::TrackRef track,
-                        const reco::DeDxHitInfo* dedxHits,
-                        const reco::DeDxData* dedxSObj,
-                        const reco::DeDxData* dedxMObj,
-                        const reco::MuonTimeExtra* tof,
-                        const edm::Event& iEvent,
-                        const edm::EventSetup& iSetup,
-                        const float pixelProbs[],
-                        Tuple* tuple,
-                        const float GenBeta,
-                        const bool RescaleP,
-                        const float RescaleI,
-                        const float RescaleT,
-                        float MassErr,
-                        const float closestBackgroundPDGsIDs[]);
+  template <typename T, size_t n>
+  bool passPreselection(T (&passedCutsArray)[n]);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,

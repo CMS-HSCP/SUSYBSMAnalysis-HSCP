@@ -83,7 +83,8 @@ process.source = cms.Source("PoolSource",
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/240008/50D6866F-AF83-1545-BA76-D696B7B7BF6E.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40003/12DD9D3F-118A-D044-B4A1-4EF7372EA686.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/QCD_Pt-300To470_MuEnrichedPt5_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/40003/07C11DC9-2A14-6741-8F59-40E6EF7E8906.root"),
-   fileNames = cms.untracked.vstring("file:07C11DC9-2A14-6741-8F59-40E6EF7E8906.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v1/280000/C126FA50-F15A-174C-AEFC-F5B933927DCF.root"),
+   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v1/260000/14D8FFC9-039D-5545-93F8-C3D7E4285BB6.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -93,7 +94,9 @@ process.source = cms.Source("PoolSource",
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:115188:115187134')
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:183264:183263902')
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:25539:278749947')
-process.source.eventsToProcess = cms.untracked.VEventRange('1:22416:244663529')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:22416:244663529')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:38820:234081782')
+process.source.eventsToProcess = cms.untracked.VEventRange('1:127218:767118582')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -267,10 +270,6 @@ process.TFileService = cms.Service("TFileService",
                                    )
 
 process.analysis = cms.Path(process.HSCParticleAnalyzer)
-
-process.load('Configuration.StandardSequences.EndOfProcess_cff')
-process.endjob_step = cms.EndPath(process.endOfProcess)
-
 process.HSCPTuplePath += process.HSCParticleAnalyzer
 
 ########################################################################
@@ -283,5 +282,5 @@ for mod in process.filters_().itervalues():
 
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
-process.schedule = cms.Schedule(process.HSCPTuplePath) #, process.endjob_step)
+process.schedule = cms.Schedule(process.HSCPTuplePath)
 
