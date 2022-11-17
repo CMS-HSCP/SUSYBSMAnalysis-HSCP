@@ -104,6 +104,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMinIs_(iConfig.getUntrackedParameter<double>("GlobalMinIs")),
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       PuTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
+      DoOrUseTemplates_(iConfig.getUntrackedParameter<bool>("GenerateOrUseTemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")), 
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
 
@@ -143,13 +144,19 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 
   dEdxTemplatesPU.resize(NbPuBins_, NULL);
 
-  if(PuTreatment_){
+  if(PuTreatment_ && !DoOrUseTemplates_){
     for (int i = 0; i < NbPuBins_ ; i++){
-      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,);
+      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,PuBins_[i],PuBins_[i+1]);
     }
   }
-  else{
+  else if(PuTreatment_ && DoOrUseTemplates_){
+      
+  }
+  else if(!PuTreatment_ && !DoOrUseTemplates_){
     dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,0,0);
+  }
+  else if(!PuTreatment_ && DoOrUseTemplates_){
+    
   }
 
   tofCalculator.loadTimeOffset(timeOffset_);
@@ -1635,7 +1642,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dropLowerDeDxValue = 0.0;
     bool skipPixelL1 = false;
     int  skip_templates_ias = 0;
-    auto localdEdxTemplates = dEdxTemplates;
+    TH3F* localdEdxTemplates;
+    if(!DoOrUseTemplates_ && !PuTreatment_){
+      localdEdxTemplates = dEdxTemplates;
+    }
+    
     float dEdxErr = 0;
     bool symmetricSmirnov = false;
     
@@ -2513,7 +2524,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Preselection for the Gi templates, here the pT must be small
     bool passedCutsArrayForGiTemplates[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForGiTemplates));
-    passedCutsArrayForGiTemplates[1] = ( 20 < track->p() < 48 ) ? true : false; //Add choice of P range 
+    passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) ) ? true : false; //Add choice of P range 
 
     //NB of PU bins and according numbers 
     //binning rescale : dEdx, pathlength
@@ -2521,20 +2532,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // PAY ATTENTION : PU == NPV for the following loop !
 
     if (passPreselection(passedCutsArrayForGiTemplates)) {
-     
-      if(PuTreatment_){
+    
+      if(DoOrUseTemplates_){ //GENERATING TEMPLATES
+          if(PuTreatment_){
+          
+          }
+          else{
+              //Normal 
+          }
+          return;
+      } 
+      else{ //READING TEMPLATES 
 
       }
-      else{
       
-      }
       string trigger = "HLT_Mu50"; // Choice of trigger available, or is it already done prior to that in presel ?
+      /*
       for (unsigned int i = 0; i < triggerH->size(); i++) {
         if (TString(triggerNames.triggerName(i)).Contains(choice_trigger) && triggerH->accept(i)){
             
 
         }
-      }
+      }*/
 
     }
     
@@ -4038,8 +4057,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //Templates related parameters 
 
   desc.addUntracked("PileUpTreatment",false)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
+  desc.addUntracked("GenerateOrUseTemplates",true)->setComment("Boolean to decide whether we generate templates or use them, true means we generate");
+  
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
-  desc.addUntracked("PileUpBins",  std::vector<std::int>{0,20,25,30,35,200});
+  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
  
  descriptions.add("HSCParticleAnalyzer",desc);
 }

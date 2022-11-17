@@ -53,15 +53,15 @@ void loadDeDxParameters(
 
 TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType,bool PUTreatment,int low_bound, int high_bound) {
   TFile* InputFile = new TFile(path.c_str());
-  
-  if(!PUTreatment) TH3F* DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Charge_Vs_Path");
+  TH3F* DeDxMap_;
+  if(!PUTreatment) DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Charge_Vs_Path");
   else{
     if( (low_bound == 0 && high_bound == 0) || (high_bound < low_bound)) {
       exit(0);
     }
     else{  
       std::string template_name = "Charge_Vs_Path_PU_between_" + to_string(low_bound) + "_" + to_string(high_bound);
-      TH3F* DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, template_name.c_str());
+      DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, template_name.c_str());
     }
   }
 
