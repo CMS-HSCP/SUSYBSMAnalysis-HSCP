@@ -164,7 +164,7 @@ public:
                      const float RescaleI,
                      const float RescaleT);
 
-  float RescaledPt(const float& pt, const float& eta, const float& phi, const int& charge);
+  float shiftForPt(const float& pt, const float& eta, const float& phi, const int& charge);
   GlobalPoint getOuterHitPos(const edm::EventSetup& iSetup, const reco::DeDxHitInfo* dedxHits);
   float SegSep(const reco::TrackRef track, const edm::Event& iEvent, float& minPhi, float& minEta);
   float combineProbs(float probOnTrackWMulti, int numRecHits) const;
@@ -195,6 +195,7 @@ private:
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
   edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;
+  edm::EDGetTokenT<edm::ValueMap<int>> dedxPrescaleToken_;
   edm::EDGetTokenT<reco::MuonTimeExtraMap> muonTimeToken_;  // for reading inverse beta
   edm::EDGetTokenT<reco::MuonTimeExtraMap> muonDtTimeToken_;
   edm::EDGetTokenT<reco::MuonTimeExtraMap> muonCscTimeToken_;
@@ -309,7 +310,7 @@ private:
   float globalMaxTrackProbXYCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
-  bool PuTreatment_, DoOrUseTemplates_;
+  bool puTreatment_, createGiTemplates_;
   int NbPuBins_;
   vector<int> PuBins_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
@@ -362,6 +363,7 @@ private:
   vector<float> PUSystFactor_;
 
   TRandom3* RNG = nullptr;
+  TRandom3* RNG2 = nullptr;
   bool is2016;
   bool is2016G;
 

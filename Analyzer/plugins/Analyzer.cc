@@ -17,6 +17,7 @@
 // - 41p2: - 1D plots for CR, include syst on probQ, add passPreSept8, dz/dxy for non-vertex tracks, plots for cosmics checks
 // - 41p3: - Add Pt,Ias systematics,trigger syst measurement. Now we dont return if trigger is not passed, but it's part of the cutflow, check num tracks before after HLT mu matching
 // - 41p4: - Fix syst plots
+// - 41p5: Do trigger syst plots for diff etas, Ias syst in low p region, Gi template calibration, add met trig eff, POG version of track rescaling
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -33,6 +34,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       muonSegmentToken_(
           consumes<susybsm::MuonSegmentCollection>(iConfig.getParameter<edm::InputTag>("MuonSegmentCollection"))),
       dedxToken_(consumes<reco::DeDxHitInfoAss>(iConfig.getParameter<edm::InputTag>("DedxCollection"))),
+      dedxPrescaleToken_(consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("DedxCollectionPrescale"))),
       muonTimeToken_(consumes<reco::MuonTimeExtraMap>(iConfig.getParameter<edm::InputTag>("MuonTimeCollection"))),
       muonDtTimeToken_(consumes<reco::MuonTimeExtraMap>(iConfig.getParameter<edm::InputTag>("MuonDtTimeCollection"))),
       muonCscTimeToken_(consumes<reco::MuonTimeExtraMap>(iConfig.getParameter<edm::InputTag>("MuonCscTimeCollection"))),
@@ -105,8 +107,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       minMuStations_(iConfig.getUntrackedParameter<int>("MinMuStations")),
       globalMinIs_(iConfig.getUntrackedParameter<double>("GlobalMinIs")),
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
-      PuTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
-      DoOrUseTemplates_(iConfig.getUntrackedParameter<bool>("GenerateOrUseTemplates")),
+      puTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
+      createGiTemplates_(iConfig.getUntrackedParameter<bool>("CreateGiTemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")), 
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
 
@@ -146,19 +148,13 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 
   dEdxTemplatesPU.resize(NbPuBins_, NULL);
 
-  if(PuTreatment_ && !DoOrUseTemplates_){
+  // Option for Gi to have PU dependence
+  if (puTreatment_) {
     for (int i = 0; i < NbPuBins_ ; i++){
-      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,PuBins_[i],PuBins_[i+1]);
+      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,puTreatment_,PuBins_[i],PuBins_[i+1]);
     }
-  }
-  else if(PuTreatment_ && DoOrUseTemplates_){
-      
-  }
-  else if(!PuTreatment_ && !DoOrUseTemplates_){
-    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,PuTreatment_,0,0);
-  }
-  else if(!PuTreatment_ && DoOrUseTemplates_){
-    
+  } else {
+    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,puTreatment_,0,0);
   }
 
   tofCalculator.loadTimeOffset(timeOffset_);
@@ -579,6 +575,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // Define handles for DeDx Hits, Muon TOF Combined, Muon TOF DT, Muon TOF CSC
   const edm::Handle<reco::DeDxHitInfoAss> dedxCollH = iEvent.getHandle(dedxToken_);
+  edm::Handle<edm::ValueMap<int>> dedxPrescCollH; //  = iEvent.getHandle(dedxPrescaleToken_)
+  iEvent.getByToken(dedxPrescaleToken_, dedxPrescCollH);
+  
   const edm::Handle<reco::MuonTimeExtraMap> tofMap = iEvent.getHandle(muonTimeToken_);
   const edm::Handle<reco::MuonTimeExtraMap> tofDtMap = iEvent.getHandle(muonDtTimeToken_);
   const edm::Handle<reco::MuonTimeExtraMap> tofCscMap = iEvent.getHandle(muonCscTimeToken_);
@@ -991,13 +990,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!isData) {
       if (debug_> 0) LogPrint(MOD) << "  >> Background MC, Reco - GEN track matching";
       for (unsigned int g = 0; g < genColl.size(); g++) {
-        if (isSignal && !isHSCPgenID(genColl[g])) continue;
+        if (isSignal && !isHSCPgenID(genColl[g])) {
+          continue;
+        }
+        
         if (genColl[g].pt() < 5) {
           continue;
         }
         if (genColl[g].status() != 1) {
           continue;
         }
+        
+
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
         // We need to make this gen charge dependent for TauPrime2e
@@ -1011,11 +1015,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
+    
     if (!isData && closestGenIndex < 0 ) {
+      if (debug_ > 4 ) LogPrint(MOD) << "min dr: " << dRMinGen << endl;
+      if (debug_ > 4 ) LogPrint(MOD) << "min dPt: " << dPtMinBcg << endl;
       // dont look at events where we didnt find the gen canidate
       if (debug_ > 4 ) LogPrint(MOD) << "  >> Event where we didnt find the gen candidate";
       // 5-th bin of the error histo, didnt find the gen canidate
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(4.);
+      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        tuple->ErrorHisto->Fill(4.);
+      }
       continue;
     }
     if (trigInfo_ > 0) {
@@ -1358,6 +1367,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (!dedxHitsRef.isNull())
         dedxHits = &(*dedxHitsRef);
     }
+    
+//    const reco::DeDxHitInfo* dedxHitsPresc = nullptr;
+    reco::DeDxHitInfoRef dedxHitsPrescRef;
+    dedxHitsPrescRef = dedxCollH->get(track.key());
+    int preScaleForDeDx = 0;
+    if (!dedxHitsPrescRef.isNull()) {
+      preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
+    }
+    if (preScaleForDeDx > 1) cout << "preScaleForDeDx is non-zero " << preScaleForDeDx << endl;
 
     if (typeMode_ > 1 && typeMode_ != 5 && !hscp.muonRef().isNull()) {
       if (isBckg) {
@@ -1658,7 +1676,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool skipPixelL1 = false;
     int  skip_templates_ias = 0;
     TH3F* localdEdxTemplates;
-    if(!DoOrUseTemplates_ && !PuTreatment_){
+    if(!createGiTemplates_ && !puTreatment_){
       localdEdxTemplates = dEdxTemplates;
     }
     
@@ -2562,7 +2580,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Preselection for the Gi templates, here the pT must be small
     bool passedCutsArrayForGiTemplates[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForGiTemplates));
-    passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) ) ? true : false; //Add choice of P range 
+    // Add choice of P range
+    passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) ) ? true : false;
 
     //NB of PU bins and according numbers 
     //binning rescale : dEdx, pathlength
@@ -2570,29 +2589,37 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // PAY ATTENTION : PU == NPV for the following loop !
 
     if (passPreselection(passedCutsArrayForGiTemplates)) {
-    
-      if(DoOrUseTemplates_){ //GENERATING TEMPLATES
-          if(PuTreatment_){
-          
-          }
-          else{
-              //Normal 
-          }
-          return;
-      } 
-      else{ //READING TEMPLATES 
-
-      }
-      
-      string trigger = "HLT_Mu50"; // Choice of trigger available, or is it already done prior to that in presel ?
-      /*
-      for (unsigned int i = 0; i < triggerH->size(); i++) {
-        if (TString(triggerNames.triggerName(i)).Contains(choice_trigger) && triggerH->accept(i)){
-            
-
+      tuple->PostPreS_Ias_CR_lowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_);
+      for(unsigned int h=0; h< dedxHits->size(); h++){
+        DetId detid(dedxHits->detId(h));
+        int modulgeomForIndxH = 0;
+        float pathlenghtForIndxH = 0.0;
+        float chargeForIndxH = 0.0;
+        if (detid.subdetId() < 3) {
+          modulgeomForIndxH = 15;
+        } else {
+          SiStripDetId SSdetId(detid);
+          modulgeomForIndxH = SSdetId.moduleGeometry();
         }
-      }*/
-
+        pathlenghtForIndxH = dedxHits->pathlength(h) * 10;
+        chargeForIndxH = dedxHits->charge(h);
+        if(puTreatment_){
+        
+        } else {
+          // Standard approach, no PU dependence
+          tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+          tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+        }
+//        else{ //READING TEMPLATES
+//         // not sure if this is needed at all, Raphael
+//         // reading the templates already happens (much) above
+//        }
+      }
+    }
+    
+    if (createGiTemplates_) {
+      // If the purpose of this is to run the Gi templates only, exit here
+      return;
     }
     
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
@@ -2622,9 +2649,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Systematics plots for pT rescaling
-    float newInvPtUp = (1. / track->pt()) * 1.1;
-    float rescaledPtUp = 1 / newInvPtUp;
-    // RescaledPt(track->pt(), track->eta(), track->phi(), track->charge());
+    float shiftForPtValue = shiftForPt(track->pt(),track->eta(),track->phi(),track->charge());
+    cout << "shiftForPtValue " << shiftForPtValue << endl;
+    float rescaledPtUp = track->pt()*(1+shiftForPtValue);
     bool passedCutsArrayForPtSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForPtSyst));
     passedCutsArrayForPtSyst[1] = (rescaledPtUp > globalMinPt_) ? true : false;
@@ -2633,8 +2660,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostPreS_ProbQNoL1VsIas_Pt_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_);
     }
     
-    float newInvPtDown = (1. / track->pt()) * 0.9;
-    float rescaledPtDown = 1 / newInvPtDown;
+    float rescaledPtDown = track->pt()*(1-shiftForPtValue);
     passedCutsArrayForPtSyst[1] = (rescaledPtDown > globalMinPt_) ? true : false;
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection for pT DOWN systematics";
     if (passPreselection(passedCutsArrayForPtSyst)) {
@@ -2651,11 +2677,88 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     passedCutsArrayForTriggerSyst[0] = (true) ? true : false;
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection for trigger systematics";
     if (passPreselection(passedCutsArrayForTriggerSyst)) {
+      float distanceAtThisEta = 0.0;
+      float speedOfLightInCmPerNs = 29.97;
+      float GenBetaPrimeDown = -1.0;
+      float GenBetaPrimeUp = -1.0;
       if (!HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., GenBeta);
-      } else {
-        tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., GenBeta);
+        tuple->PostPreS_TriggerMuon50VsPt->Fill(0., track->pt());
+        if (fabs(track->eta()) < 0.3) {
+          distanceAtThisEta = 500.0;
+          float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+          GenBetaPrimeUp = distanceAtThisEta / ((timing+1)*speedOfLightInCmPerNs);
+          if (((timing-1)*speedOfLightInCmPerNs) > 0.0) {
+            GenBetaPrimeDown = distanceAtThisEta / ((timing-1)*speedOfLightInCmPerNs);
+          }
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(0., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., GenBetaPrimeUp);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., GenBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
+          distanceAtThisEta = 600.0;
+          float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+          GenBetaPrimeUp = distanceAtThisEta / ((timing+1)*speedOfLightInCmPerNs);
+          if (((timing-1)*speedOfLightInCmPerNs) > 0.0) {
+            GenBetaPrimeDown = distanceAtThisEta / ((timing-1)*speedOfLightInCmPerNs);
+          }
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(0., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., GenBetaPrimeUp);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., GenBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
+          distanceAtThisEta = 707.0;
+          float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+          GenBetaPrimeUp = distanceAtThisEta / ((timing+1)*speedOfLightInCmPerNs);
+          if (((timing-1)*speedOfLightInCmPerNs) > 0.0) {
+            GenBetaPrimeDown = distanceAtThisEta / ((timing-1)*speedOfLightInCmPerNs);
+          }
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(0., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., GenBetaPrimeUp);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., GenBetaPrimeDown);
         }
+          
+      } else if (HLT_Mu50) {
+        tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., GenBeta);
+        tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+        if (fabs(track->eta()) < 0.3) {
+          distanceAtThisEta = 500.0;
+          float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+          GenBetaPrimeUp = distanceAtThisEta / ((timing+1)*speedOfLightInCmPerNs);
+          if (((timing-1)*speedOfLightInCmPerNs) > 0.0) {
+            GenBetaPrimeDown = std::min(1.f,distanceAtThisEta / ((timing-1)*speedOfLightInCmPerNs));
+          }
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., GenBetaPrimeUp);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., GenBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
+          distanceAtThisEta = 600.0;
+          float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+          GenBetaPrimeUp = distanceAtThisEta / ((timing+1)*speedOfLightInCmPerNs);
+          if (((timing-1)*speedOfLightInCmPerNs) > 0.0) {
+            GenBetaPrimeDown = std::min(1.f,distanceAtThisEta / ((timing-1)*speedOfLightInCmPerNs));
+          }
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(1., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., GenBetaPrimeUp);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., GenBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
+          distanceAtThisEta = 700.0;
+          float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+          GenBetaPrimeUp = distanceAtThisEta / ((timing+1)*speedOfLightInCmPerNs);
+          if (((timing-1)*speedOfLightInCmPerNs) > 0.0) {
+            GenBetaPrimeDown = std::min(1.f,distanceAtThisEta / ((timing-1)*speedOfLightInCmPerNs));
+          }
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(1., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., GenBetaPrimeUp);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., GenBetaPrimeDown);
+        }
+        
+      }
+      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+        tuple->PostPreS_TriggerMETallVsBeta->Fill(0., GenBeta);
+        tuple->PostPreS_TriggerMETallVsBeta->Fill(0., GenBeta);
+      } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+        tuple->PostPreS_TriggerMETallVsBeta->Fill(1., GenBeta);
+        tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+      }
     }
     
     
@@ -3959,6 +4062,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 // ------------ method called once each job just after ending the event loop  ------------
 void Analyzer::endJob() {
   delete RNG;
+  delete RNG2;
   delete tuple;
   if (!isData) {
     delete mcWeight;
@@ -3991,6 +4095,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Input collection for HSCP isolation");
   desc.add("DedxCollection", edm::InputTag("dedxHitInfo"))
     ->setComment("Input collection for dEdx hit information");
+  desc.add("DedxCollectionPrescale", edm::InputTag("dedxHitInfo","prescale"))
+  ->setComment("Input collection for prescaled dEdx hit information");
   desc.add("MuonTimeCollection", edm::InputTag("muons", "combined"))
     ->setComment("Input collection for combined muon timing information");
   desc.add("MuonDtTimeCollection", edm::InputTag("muons", "dt"))
@@ -4134,7 +4240,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //Templates related parameters 
 
   desc.addUntracked("PileUpTreatment",false)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("GenerateOrUseTemplates",false)->setComment("Boolean to decide whether we generate templates or use them, true means we generate");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
   
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
@@ -4288,14 +4394,24 @@ float Analyzer::scaleFactor(float eta) {
 //     Method for rescaling pT
 //
 //=============================================================
-float Analyzer::RescaledPt(const float& pt, const float& eta, const float& phi, const int& charge) {
-  if (typeMode_ != 3) {
-    float newInvPt = 1 / pt + 0.000236 - 0.000135 * pow(eta, 2) + charge * 0.000282 * TMath::Sin(phi - 1.337);
-    return 1 / newInvPt;
+float Analyzer::shiftForPt(const float& pt, const float& eta, const float& phi, const int& charge) {
+  
+// based on https://twiki.cern.ch/twiki/bin/viewauth/CMS/MuonUL2018#Momentum_Resolution
+// AN-2018/008
+  // factor 0.46 corresponds to the 10% shift uncertainty
+  RNG2 = new TRandom3();
+  float sigma = 0.0;
+  if (fabs(eta) < 1.2) {
+    sigma = 0.0141926 + 4.23456e-05*pt - 9.91644e-09*pt*pt;
   } else {
-    float newInvPt = (1. / pt) * 1.1;
-    return 1 / newInvPt;
+    sigma = 0.016883 + 6.21438e-05*pt - 9.79418e-09*pt*pt;
   }
+  cout << "sigma: " << sigma << endl;
+  float shift = RNG2->Gaus(0,sigma*0.46);
+  return shift;
+// In the past the following was used:
+//    float newInvPt = 1 / pt + 0.000236 - 0.000135 * pow(eta, 2) + charge * 0.000282 * TMath::Sin(phi - 1.337);
+//    return 1 / newInvPt;
 }
 
 //=============================================================
@@ -4471,7 +4587,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
 
   // Check if we pass the momentum selection
   if (RescaleP) {
-    if (RescaledPt(track->pt(), track->eta(), track->phi(), track->charge()) < PtCut)
+    if (track->pt()*(1+shiftForPt(track->pt(),track->eta(),track->phi(),track->charge())) < PtCut)
       return false;
   } else if (track->pt() < PtCut) {
       return false;
@@ -4555,6 +4671,7 @@ float Analyzer::combineProbs(float probOnTrackWMulti, int numRecHits) const {
 //=============================================================
 bool Analyzer::isHSCPgenID(const reco::GenParticle& gen) {
   int thePDGidForCandidate = abs(gen.pdgId());
+  // R-hadrons
   if (   thePDGidForCandidate == 1000993 || thePDGidForCandidate == 1009113
       || thePDGidForCandidate == 1009223 || thePDGidForCandidate == 1009313
       || thePDGidForCandidate == 1009333 || thePDGidForCandidate == 1092114
@@ -4583,6 +4700,7 @@ bool Analyzer::isHSCPgenID(const reco::GenParticle& gen) {
   else if (thePDGidForCandidate == 17) {
     return true;
   } else {
+//    cout << "Not HSCP genID, it is " << thePDGidForCandidate << "status " << gen.status() << endl;
     return false;
   }
 }

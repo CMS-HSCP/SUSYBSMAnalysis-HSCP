@@ -495,7 +495,8 @@ struct Tuple {
   TH2F* BefPreS_TOFVsIh;
   TH1F* BefPreS_GenBeta;
 
-
+  TH3F* Calibration_GiTemplate;
+  TH3F* Calibration_GiTemplate_noL1;
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
@@ -613,6 +614,7 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
 
   TH1F* PostPreS_Ias_CR;
+  TH1F* PostPreS_Ias_CR_lowPt;
   TH1F* PostPreS_ProbQNoL1_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;
@@ -635,6 +637,21 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
   TH2F* PostPreS_TriggerMuon50VsBeta;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  
+  
+  
+  TH2F* PostPreS_TriggerMuon50VsPt;
+  TH2F* PostPreS_TriggerMETallVsBeta;
+  TH2F* PostPreS_TriggerMETallVsMet;
   
   
   TH1F* PostPreS_ProbXYNoL1;
