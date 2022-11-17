@@ -236,6 +236,10 @@ public:
     std::vector<unsigned int> chambers;
 
     FILE* pFile = fopen(path.c_str(), "r");
+    if (pFile == nullptr){
+      printf("File NOT found: %s\n",path.c_str());
+      exit(1);
+    }
     char line[16384];
     while (fgets(line, 16384, pFile)) {
       unsigned int run;

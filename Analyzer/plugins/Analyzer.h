@@ -309,6 +309,9 @@ private:
   float globalMaxTrackProbXYCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
+  bool PuTreatment_, DoOrUseTemplates_;
+  int NbPuBins_;
+  vector<int> PuBins_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
   float GlobalMinNDOFDT = 6;          // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
   float GlobalMinNDOFCSC = 6;         // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
@@ -325,6 +328,7 @@ private:
   //=============================================================
 
   TH3F* dEdxTemplates = nullptr;
+  vector<TH3F*> dEdxTemplatesPU;
 
   float dEdxSF_0_, dEdxSF_1_;
   float dEdxSF[2] = {dEdxSF_0_, dEdxSF_1_};
