@@ -4057,7 +4057,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //Templates related parameters 
 
   desc.addUntracked("PileUpTreatment",false)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("GenerateOrUseTemplates",true)->setComment("Boolean to decide whether we generate templates or use them, true means we generate");
+  desc.addUntracked("GenerateOrUseTemplates",false)->setComment("Boolean to decide whether we generate templates or use them, true means we generate");
   
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
