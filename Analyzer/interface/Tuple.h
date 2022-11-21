@@ -20,12 +20,25 @@ struct Tuple {
   unsigned int Tree_Lumi;
   unsigned int Tree_PileUp;
   unsigned int Tree_nofVertices;
+
+
+  int Tree_npv;
+  std::vector<float> Tree_pvX;
+  std::vector<float> Tree_pvY;
+  std::vector<float> Tree_pvZ;
+  std::vector<float> Tree_pvRho;
+  std::vector<int> Tree_pvNdof;
+  std::vector<float> Tree_pvChi2;
+  std::vector<float> Tree_pvSumPt2;
+
   unsigned int Tree_Hscp;
-  unsigned int Tree_nmuons;
+  unsigned int Tree_nMuons;
   unsigned int Tree_njets;
   float Tree_Weight;
   float Tree_GeneratorWeight;
   float Tree_GeneratorBinningValues;
+  std::vector<bool> Tree_triggerDecision;
+  std::vector<int> Tree_triggerHLTPrescale;
   bool Tree_HLT_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
   bool Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -54,13 +67,52 @@ struct Tuple {
   float Tree_HLTPFMHT_phi;
   float Tree_HLTPFMHT_sigf;
   bool Tree_matchedMuonWasFound;
-  float Tree_Muon1_Pt;
-  float Tree_Muon1_eta;
-  float Tree_Muon1_phi;
-  float Tree_Muon2_Pt;
-  float Tree_Muon2_eta;
-  float Tree_Muon2_phi;
-
+  std::vector<int> Tree_gParticleId;
+  std::vector<int> Tree_gParticleStatus;
+  std::vector<float> Tree_gParticleE;
+  std::vector<float> Tree_gParticlePt;
+  std::vector<float> Tree_gParticlePz;
+  std::vector<float> Tree_gParticleEta;
+  std::vector<float> Tree_gParticlePhi;
+  std::vector<float> Tree_gParticleBeta;
+  std::vector<int> Tree_gParticleCharge;
+  std::vector<float> Tree_gParticleProdVertexX;
+  std::vector<float> Tree_gParticleProdVertexY;
+  std::vector<float> Tree_gParticleProdVertexZ;
+  std::vector<int> Tree_gParticleMotherId;
+  std::vector<int> Tree_gParticleMotherIndex;
+  std::vector<float> Tree_muonE;
+  std::vector<float> Tree_muonPt;
+  std::vector<float> Tree_muonEta;
+  std::vector<float> Tree_muonPhi;
+  std::vector<int> Tree_muonCharge;
+  std::vector<bool> Tree_muonIsLoose;
+  std::vector<bool> Tree_muonIsMedium;
+  std::vector<bool> Tree_muonIsTight;
+  std::vector<float> Tree_muon_d0;
+  std::vector<float> Tree_muon_d0Err;
+  std::vector<float> Tree_muon_dZ;
+  std::vector<float> Tree_muon_ip3d;
+  std::vector<float> Tree_muon_ip3dSignificance;
+  std::vector<unsigned int> Tree_muonType;
+  std::vector<unsigned int> Tree_muonQuality;
+  std::vector<float> Tree_muon_pileupIso;
+  std::vector<float> Tree_muon_chargedIso;
+  std::vector<float> Tree_muon_photonIso;
+  std::vector<float> Tree_muon_neutralHadIso;
+  std::vector<float> Tree_muon_validFractionTrackerHits;
+  std::vector<float> Tree_muon_normChi2;
+  std::vector<float> Tree_muon_chi2LocalPosition;
+  std::vector<float> Tree_muon_kinkFinder;
+  std::vector<float> Tree_muon_segmentCompatability;
+  std::vector<float> Tree_muon_trkIso;
+  std::vector<float> Tree_muon_tuneP_Pt;
+  std::vector<float> Tree_muon_tuneP_PtErr;
+  std::vector<float> Tree_muon_tuneP_Eta;
+  std::vector<float> Tree_muon_tuneP_Phi;
+  std::vector<int> Tree_muon_tuneP_MuonBestTrackType;
+  std::vector<bool> Tree_muon_isHighPtMuon;
+  std::vector<bool> Tree_muon_isTrackerHighPtMuon;
   std::vector<float> Tree_jet_pt;
   std::vector<float> Tree_jet_eta;
   std::vector<float> Tree_jet_phi;
@@ -70,6 +122,13 @@ struct Tuple {
   std::vector<float> Tree_jet_et;
   std::vector<float> Tree_jet_chargedEmEnergyFraction;
   std::vector<float> Tree_jet_neutralEmEnergyFraction;
+  std::vector<float> Tree_jet_chargedHadronEnergyFraction;
+  std::vector<float> Tree_jet_neutralHadronEnergyFraction;
+  std::vector<float> Tree_jet_muonEnergyFraction;
+  std::vector<int> Tree_jet_chargedMultiplicity;
+  std::vector<int> Tree_jet_neutralMultiplicity;
+  std::vector<float> Tree_jet_jetArea;
+  std::vector<float> Tree_jet_pileupE;
 
   std::vector<float> Tree_vect_mT;
   std::vector<bool> Tree_passCutPt55;
@@ -123,6 +182,8 @@ struct Tuple {
   std::vector<float> Tree_MassErr;
   std::vector<float> Tree_dZ;
   std::vector<float> Tree_dXY;
+  std::vector<float> Tree_dZ_pv;
+  std::vector<float> Tree_dXY_pv;
   std::vector<float> Tree_dR;
   std::vector<float> Tree_p;
   std::vector<float> Tree_eta;
@@ -148,7 +209,7 @@ struct Tuple {
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
   std::vector<float> Tree_track_genTrackMiniIsoSumPt;
-  
+
   std::vector<float> Tree_PFMiniIso_relative;
   std::vector<float> Tree_PFMiniIso_wMuon_relative;
 
@@ -161,7 +222,7 @@ struct Tuple {
   std::vector<float> Tree_track_PFIsolationR01_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR01_sumPhotonPt;
   std::vector<float> Tree_track_PFIsolationR01_sumPUPt;
- 
+
   std::vector<float> Tree_track_PFIsolationR03_sumChargedHadronPt;
   std::vector<float> Tree_track_PFIsolationR03_sumNeutralHadronPt;
   std::vector<float> Tree_track_PFIsolationR03_sumPhotonPt;
@@ -197,6 +258,13 @@ struct Tuple {
   std::vector<float> Tree_GenPt;
   std::vector<float> Tree_GenEta;
   std::vector<float> Tree_GenPhi;
+  std::vector<float> Tree_HSCP_tuneP_Pt;
+  std::vector<float> Tree_HSCP_tuneP_PtErr;
+  std::vector<float> Tree_HSCP_tuneP_Eta;
+  std::vector<float> Tree_HSCP_tuneP_Phi;
+  std::vector<int> Tree_HSCP_tuneP_MuonBestTrackType;
+  std::vector<int> Tree_HSCP_ErrorHisto_bin;
+  std::vector<int> Tree_HSCP_type;
 
   TTree* GenTree;
   unsigned int GenTree_Run;
@@ -269,7 +337,7 @@ struct Tuple {
   TH1F* BefPreS_TriggerType;
   TH1F* HSCPCandidateType;
   TH1F* BefPreS_RecoHSCParticleType;
-  
+
   TH1F* N1_Eta;
   TH1F* N1_Chi2oNdof;
   TH1F* N1_Qual;
@@ -334,7 +402,7 @@ struct Tuple {
   TH1F* Gen_DecayLength;
   TH1F* Gen_Beta_Charged;
   TH1F* Gen_Beta_Triggered;
-  
+
   TH1F* Gen_Binning;
   TH1F* Gen_pT;
   TH1F* Gen_Eta;
@@ -347,7 +415,7 @@ struct Tuple {
   TH1F* BefPreS_MiniRelIsoChg;
   TH1F* BefPreS_MiniRelTkIso;
   TH1F* BefPreS_MiniTkIso;
-  
+
   TH1F* BefPreS_RecoPFMET;
   TH1F* BefPreS_RecoPFHT;
   TH1F* BefPreS_CaloNumJets;
@@ -425,7 +493,7 @@ struct Tuple {
   TH1F* BefPreS_LastHitD3D;
   TH2F* BefPreS_PtErrOverPtVsPtErrOverPt2;
   TH2F* BefPreS_PtErrOverPtVsPt;
-  
+
   TH1F* BefPreS_ProbQ;
   TH1F* BefPreS_ProbXY;
   TH1F* BefPreS_ProbQNoL1;
@@ -450,7 +518,7 @@ struct Tuple {
 
   TH2F* BefPreS_CluNormChargeVsStripLayer_lowBetaGamma;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma;
-  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91; 
+  TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91;
   TH2F* BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2;
 
@@ -461,7 +529,7 @@ struct Tuple {
   TH2F* BefPreS_genGammaBetaVsProbXYNoL1;
   TH2F* BefPreS_dRVsPtPfJet;
   TH2F* BefPreS_dRVsdPtPfCaloJet;
-  
+
   TH1F* BefPreS_P;
   TH1F* BefPreS_Pt_DT;
   TH1F* BefPreS_Pt_CSC;
@@ -480,7 +548,7 @@ struct Tuple {
   TH2F* BefPreS_EtaVsTOF;  //TH3F*  PostS_EtaTOF;
   TH2F* BefPreS_EtaVsDz;
   TH2F* BefPreS_EtaVsNBH;  // number of bad hits vs Eta
-  
+
   TH2F* BefPreS_PVsIas;
   TH2F* BefPreS_IhVsIas;
   TH2F* BefPreS_PVsIh;
@@ -505,11 +573,11 @@ struct Tuple {
   TH1F* PostPreS_MiniRelIsoChg;
   TH1F* PostPreS_MiniTkIso;
   TH1F* PostPreS_MiniRelTkIso;
-  
+
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
   TH1F* PostPreS_CaloNumJets;
-  
+
   TH1F* PostPreS_Chi2oNdof;
   TH2F* PostPreS_Chi2oNdofVsIas;
   TH1F* PostPreS_Qual;
@@ -579,7 +647,7 @@ struct Tuple {
   TH1F* PostPreS_TimeAtIP;
   TH1F* PostPreS_OpenAngle;
   TH1F* PostPreS_OpenAngle_Cosmic;
-  
+
   TH1F* PostPreS_Pt_FailDz;
   TH1F* PostPreS_Pt_FailDz_DT;
   TH1F* PostPreS_Pt_FailDz_CSC;
@@ -590,14 +658,14 @@ struct Tuple {
   TH1F* PostPreS_Dz_Cosmic;
   TH1F* PostPreS_Dz_CSC;
   TH1F* PostPreS_Dz_DT;
-  
+
   TH1F* PostPreS_LastHitDXY;
   TH2F* PostPreS_LastHitDXYVsEta;
   TH1F* PostPreS_LastHitD3D;
   TH2F* PostPreS_LastHitD3DVsEta;
   TH2F* PostPreS_PtErrOverPtVsPtErrOverPt2;
   TH2F* PostPreS_PtErrOverPtVsPt;
-  
+
   TH1F* PostPreS_ProbQ;
   TH2F* PostPreS_ProbQVsIas;
   TH3F* PostPreS_IhVsProbQNoL1VsIas;
@@ -723,10 +791,10 @@ struct Tuple {
   TH2F* PostPreS_MassVsMassT;
   TH2F* PostPreS_MassVsMiniRelIsoAll;
   TH2F* PostPreS_MassVsMassErr;
-  
+
   TH1F* CutFlow;
   TH1F* CutFlowReverse;
-  
+
   TH2F* CutFlowEta;
   TH2F* CutFlowPfType;
   TH2F* CutFlowProbQ;
@@ -785,7 +853,7 @@ struct Tuple {
   TH2F* PostS_CutIdVsEta_RegionF;
   TH2F* PostS_CutIdVsEta_RegionG;
   TH2F* PostS_CutIdVsEta_RegionH;
-  
+
   TH2F* PostS_CutIdVsP;
   TH2F* PostS_CutIdVsPt;
   TH2F* PostS_CutIdVsIas;
@@ -801,7 +869,7 @@ struct Tuple {
   TH2F* PostS_CutIdVsBeta_postPt;
   TH2F* PostS_CutIdVsBeta_postPtAndIas;
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
-  
+
   TH1F* PostPreS_GenBeta;
 
   //Prediction histograms
@@ -929,10 +997,10 @@ struct Tuple {
   std::map<std::string, TH1D*> CtrlPt_S2_TOF_Binned;  //TH1D* CtrlPt_S2_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S3_TOF_Binned;  //TH1D* CtrlPt_S3_TOF_Binned[MaxPredBins];
   std::map<std::string, TH1D*> CtrlPt_S4_TOF_Binned;  //TH1D* CtrlPt_S4_TOF_Binned[MaxPredBins];
-   
+
   Region rA_ias50;
   Region rC_ias50;
-  
+
   Region rB_50ias60;
   Region rB_60ias70;
   Region rB_70ias80;

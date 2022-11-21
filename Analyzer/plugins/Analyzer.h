@@ -128,7 +128,6 @@
 
 
 using namespace std;
-
 class TupleMaker;
 class MCWeight;
 
@@ -181,6 +180,9 @@ public:
                      const float GenBeta,
                      float MassErr,
                      const float closestBackgroundPDGsIDs[]);
+   const reco::Candidate* findFirstMotherWithDifferentID(const reco::Candidate *particle);
+   const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
+
 
 private:
   virtual void beginJob() override;
@@ -191,7 +193,7 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<vector<susybsm::HSCParticle>> hscpToken_;
-  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_; 
+  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_;
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
   edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;
@@ -207,9 +209,15 @@ private:
   edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;
   edm::EDGetTokenT<vector<reco::Muon>> muonToken_;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
+  edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
   string filterName_;
   string pathName_;
+  string triggerPathNamesFile_;
+  static const int NTriggersMAX = 1201;
+  string triggerPathNames[NTriggersMAX];
+
+
   bool matchToHLTTrigger_;
   edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
@@ -277,19 +285,19 @@ private:
   float cutOnIPbound_ = 1.0;
   unsigned int predBins_ = 0;
   unsigned int etaBins_ = 60;
-  
+
   // Ias quantiles and pT_cut used to validate the background estimate method in data
   float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
   //float Ias_quantiles[5]={ 0.037, 0.042, 0.048, 0.056, 0.066 }; //data or signal //WIP new quantiles determined with new preselection cuts
   float pT_cut = 60;
-  
+
   // binning for eta, ih, p, mass distributions used to validate the background estimate method in data
   int reg_etabins_ = 120;
   int reg_ihbins_ = 200;
   int reg_pbins_ = 200;
   int reg_massbins_ = 50;
-  
-  
+
+
   float dEdxS_UpLim_ = 1.0;
   float dEdxM_UpLim_ = 30.0;
   unsigned int numDzRegions_ = 6;
@@ -320,7 +328,7 @@ private:
   bool useTemplateLayer_ = false;
 
   // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
-  const int MaxPredBins = 6; 
+  const int MaxPredBins = 6;
 
   //=============================================================
   Tuple* tuple;

@@ -42,12 +42,23 @@ public:
                         const unsigned int &Lumi,
                         const unsigned int &PileUp,
                         const unsigned int &nofVertices,
+                        const int &npv,
+                        const std::vector<float>  &pvX,
+                        const std::vector<float>  &pvY,
+                        const std::vector<float>  &pvZ,
+                        const std::vector<float>  &pvRho,
+                        const std::vector<int>  &pvNdof,
+                        const std::vector<float>  &pvChi2,
+                        const std::vector<float>  &pvSumPt2,
+
                         const unsigned int &Hscp,
-                        const unsigned int &nmuons,
+                        const unsigned int &nMuons,
                         const unsigned int &njets,
                         const float &weight,
                         const float &generator_weight,
                         const float &generator_binning_values,
+                        const std::vector<bool> &triggerDecision,
+                        const std::vector<int> &triggerHLTPrescale,
                         const bool &HLT_Mu50,
                         const bool &HLT_PFMET120_PFMHT120_IDTight,
                         const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -76,12 +87,52 @@ public:
                         const float &HLTPFMHT_phi,
                         const float &HLTPFMHT_sigf,
                         const bool &matchedMuonWasFound,
-                        const float &Muon1_Pt,
-                        const float &Muon1_eta,
-                        const float &Muon1_phi,
-                        const float &Muon2_Pt,
-                        const float &Muon2_eta,
-                        const float &Muon2_phi,
+                        const std::vector<int> &gParticleId,
+                        const std::vector<int> &gParticleStatus,
+                        const std::vector<float> &gParticleE,
+                        const std::vector<float> &gParticlePt,
+                        const std::vector<float> &gParticlePz,
+                        const std::vector<float> &gParticleEta,
+                        const std::vector<float> &gParticlePhi,
+                        const std::vector<float> &gParticleBeta,
+                        const std::vector<int> &gParticleCharge,
+                        const std::vector<float> &gParticleProdVertexX,
+                        const std::vector<float> &gParticleProdVertexY,
+                        const std::vector<float> &gParticleProdVertexZ,
+                        const std::vector<int> &gParticleMotherId,
+                        const std::vector<int> &gParticleMotherIndex,
+                        const std::vector<float> &muonE,
+                        const std::vector<float> &muonPt,
+                        const std::vector<float> &muonEta,
+                        const std::vector<float> &muonPhi,
+                        const std::vector<int> &muonCharge,
+                        const std::vector<bool> &muonIsLoose,
+                        const std::vector<bool> &muonIsMedium,
+                        const std::vector<bool> &muonIsTight,
+                        const std::vector<float> &muon_d0,
+                        const std::vector<float> &muon_d0Err,
+                        const std::vector<float> &muon_dZ,
+                        const std::vector<float> &muon_ip3d,
+                        const std::vector<float> &muon_ip3dSignificance,
+                        const std::vector<unsigned int> &muonType,
+                        const std::vector<unsigned int> &muonQuality,
+                        const std::vector<float> &muon_pileupIso,
+                        const std::vector<float> &muon_chargedIso,
+                        const std::vector<float> &muon_photonIso,
+                        const std::vector<float> &muon_neutralHadIso,
+                        const std::vector<float> &muon_validFractionTrackerHits,
+                        const std::vector<float> &muon_normChi2,
+                        const std::vector<float> &muon_chi2LocalPosition,
+                        const std::vector<float> &muon_kinkFinder,
+                        const std::vector<float> &muon_segmentCompatability,
+                        const std::vector<float> &muon_trkIso,
+                        const std::vector<float> &muon_tuneP_Pt,
+                        const std::vector<float> &muon_tuneP_PtErr,
+                        const std::vector<float> &muon_tuneP_Eta,
+                        const std::vector<float> &muon_tuneP_Phi,
+                        const std::vector<int> &muon_tuneP_MuonBestTrackType,
+                        const std::vector<bool> &muon_isHighPtMuon,
+                        const std::vector<bool> &muon_isTrackerHighPtMuon,
                         const std::vector<float> &vect_jet_pt,
                         const std::vector<float> &vect_jet_eta,
                         const std::vector<float> &vect_jet_phi,
@@ -91,6 +142,13 @@ public:
                         const std::vector<float> &vect_jet_et,
                         const std::vector<float> &vect_jet_chargedEmEnergyFraction,
                         const std::vector<float> &vect_jet_neutralEmEnergyFraction,
+                        const std::vector<float> &vect_jet_chargedHadronEnergyFraction,
+                        const std::vector<float> &vect_jet_neutralHadronEnergyFraction,
+                        const std::vector<float> &vect_jet_muonEnergyFraction,
+                        const std::vector<int> &vect_jet_chargedMultiplicity,
+                        const std::vector<int> &vect_jet_neutralMultiplicity,
+                        const std::vector<float> &vect_jet_jetArea,
+                        const std::vector<float> &vect_jet_pileupE,
                         const std::vector<float> &vect_mT,
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection,
@@ -141,6 +199,8 @@ public:
                         const std::vector<float> &MassErr,
                         const std::vector<float> &dZ,
                         const std::vector<float> &dXY,
+                        const std::vector<float> &dZ_pv,
+                        const std::vector<float> &dXY_pv,
                         const std::vector<float> &dR,
                         const std::vector<float> &p,
                         const std::vector<float> &eta,
@@ -153,7 +213,7 @@ public:
                         const std::vector<unsigned int> &nom,
                         const std::vector<float> &matchTrigMuon_minDeltaR,
                         const std::vector<float> &matchTrigMuon_pT,
-                        
+
                         const std::vector<float> &iso_TK,
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
@@ -199,7 +259,14 @@ public:
                         const std::vector<float> &genmass,
                         const std::vector<float> &genpt,
                         const std::vector<float> &geneta,
-                        const std::vector<float> &genphi);
+                        const std::vector<float> &genphi,
+                        const std::vector<float> &HSCP_tuneP_Pt,
+                        const std::vector<float> &HSCP_tuneP_PtErr,
+                        const std::vector<float> &HSCP_tuneP_Eta,
+                        const std::vector<float> &HSCP_tuneP_Phi,
+                        const std::vector<int> &HSCP_tuneP_MuonBestTrackType,
+                        const std::vector<int> &HSCP_ErrorHisto_bin,
+                        const std::vector<int> &HSCP_type);
 
 
   void fillGenTreeBranches(Tuple *&tuple,
@@ -280,20 +347,20 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                                  float GlobalMinPt,
                                  float GlobalMinTOF) {
   std::string Name;
-  
+
   TH1::SetDefaultSumw2(kTRUE);
 
   tuple->IntLumi = dir.make<TProfile>("IntLumi", ";IntLumi", 1, 0, 1);
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
-  
+
   tuple->NumEvents = dir.make<TH1F>("NumEvents", ";;Number of events / category", 4, -0.5, 3.5);
   tuple->NumEvents->GetXaxis()->SetBinLabel(1,"All events");
   tuple->NumEvents->GetXaxis()->SetBinLabel(2,"Events w/ PU syst");
   tuple->NumEvents->GetXaxis()->SetBinLabel(3,"After trigger");
   tuple->NumEvents->GetXaxis()->SetBinLabel(4,"After HLT obj matching");
-  
+
   tuple->dRMinHLTMuon = dir.make<TH1F>("dRMinHLTMuon", ";#Delta R_{min,mu,HLT};Number of events/bin",100,0.,3.2);
-  
+
   tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
   tuple->ErrorHisto->GetXaxis()->SetBinLabel(1,"All tracks");
   tuple->ErrorHisto->GetXaxis()->SetBinLabel(2,"Not tracker / global muon");
@@ -304,21 +371,21 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->ErrorHisto->GetXaxis()->SetBinLabel(7,"No dEdx associated");
   tuple->ErrorHisto->GetXaxis()->SetBinLabel(8,"Not a collision track");
   tuple->ErrorHisto->GetXaxis()->SetBinLabel(9,"Has status 91 around it");
-    
+
   tuple->HSCPCandidateType = dir.make<TH1F>("HSCPCandidateType", ";;Number of generator candidate / category", 6, -0.5, 5.5);
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(1,"Neutral HSCP");
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(2,"Single-charged");
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(3,"Double-charged R-hadrons");
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
   tuple->HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
-  
+
   tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(3,"MET triggered");
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(4,"Muon OR MET triggered");
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(5,"Muon AND MET triggered");
-  
+
   tuple->BefPreS_RecoHSCParticleType = dir.make<TH1F>("BefPreS_RecoHSCParticleType", ";;Track/category", 6, -0.5, 5.5);
   tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
   tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"trackerMuon");
@@ -344,7 +411,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlow->GetXaxis()->SetBinLabel(14,"E/p");
   tuple->CutFlow->GetXaxis()->SetBinLabel(15,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(16,"F_{i}");
-  
+
   tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";CutFlowIndex", 17, -0.5, 16.5);
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(2,"p_{T}");
@@ -361,7 +428,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(13,"E/p");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(15,"F_{i}");
-  
+
   tuple->CutFlowProbQ =  dir.make<TH2F>("CutFlowProbQ", ";F_{i}^{pixels};",10, 0., 1.,17, -0.5, 16.5);
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(2,"p_{T}");
@@ -378,7 +445,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(13,"E/p");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlowProbQ->GetYaxis()->SetBinLabel(15,"F_{i}");
-  
+
   tuple->CutFlowEta = dir.make<TH2F>("CutFlowEta", ";#eta;", 50, -2.6, 2.6, 17, -0.5, 16.5);
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(2,"p_{T}");
@@ -395,7 +462,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(13,"E/p");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(15,"F_{i}");
-  
+
   tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";;", 9, -0.5, 8.5, 17, -0.5, 16.5);
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(1,"Trigger");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(2,"p_{T}");
@@ -412,7 +479,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(13,"E/p");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(15,"F_{i}");
-  
+
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(1,"AllTracks");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(2,"PFtracks");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(3,"isElectron");
@@ -427,11 +494,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_Pt = dir.make<TH1F>("N1_Pt", ";p_{T} (GeV);Tracks / 80 GeV", 50, 0, PtHistoUpperBound);
   tuple->N1_Pt_lowPt = dir.make<TH1F>("N1_Pt_lowPt", ";p_{T} (GeV);Tracks / 80 GeV", 50, 0, 500);
   tuple->N1_Chi2oNdof = dir.make<TH1F>("N1_Chi2oNdof", ";#chi^{2} / N_{dof};Tracks / 1", 20, 0, 20);
-  
+
   tuple->N1_Qual = dir.make<TH1F>("N1_Qual", ";;Tracks / category", 2, -0.5, 1.5);
   tuple->N1_Qual->GetXaxis()->SetBinLabel(1,"Not-HighPurity");
   tuple->N1_Qual->GetXaxis()->SetBinLabel(2,"HighPurity");
-  
+
   tuple->N1_TNOM = dir.make<TH1F>("N1_TNOM", ";Number of measurments;Tracks / 1", 40, -0.5, 39.5);
   tuple->N1_TNOPH = dir.make<TH1F>("N1_TNOPH", ";Number of pixel hits;Tracks / 1", 8, -0.5, 7.5);
   tuple->N1_TNOHFraction = dir.make<TH1F>("N1_TNOHFraction", ";Number of valid hit fraction;Tracks / 0.02", 50, 0, 1);
@@ -572,7 +639,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
   tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
-  
+
   tuple->BefPreS_MassT = dir.make<TH1F>("BefPreS_MassT", ";m_{T} (GeV);Tracks / 5 GeV", 50, 0.0, 250.0);
   tuple->BefPreS_MassT_highMassT = dir.make<TH1F>("BefPreS_MassT_highMassT", ";m_{T} (GeV);Tracks / 10 GeV", 250, 0.0, 2500.0);
 
@@ -590,7 +657,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_Qual = dir.make<TH1F>("BefPreS_Qual", ";;Tracks / category", 2, -0.5, 1.5);
   tuple->BefPreS_Qual->GetXaxis()->SetBinLabel(1,"Not-HighPurity");
   tuple->BefPreS_Qual->GetXaxis()->SetBinLabel(2,"HighPurity");
-  
+
   tuple->BefPreS_TNOH_PUA = dir.make<TH1F>("BefPreS_TNOH_PUA", ";TNOH_PUA;Tracks / bin",  40, -0.5, 39.5);
   tuple->BefPreS_TNOH_PUB = dir.make<TH1F>("BefPreS_TNOH_PUB", ";TNOH_PUB;Tracks / bin", 40, -0.5, 39.5);
   tuple->BefPreS_TNOHFraction = dir.make<TH1F>("BefPreS_TNOHFraction", ";TNOHFraction;Tracks / bin", 50, 0., 1.);
@@ -674,14 +741,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_GenPtVsRecoPt = dir.make<TH2F>("BefPreS_GenPtVsRecoPt", ";GenPt;RecoPt;Tracks / bin", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
   tuple->BefPreS_PtErrOverPtVsPt = dir.make<TH2F>("BefPreS_PtErrOverPtVsPt",  ";#sigma_{p_{T}}/p_{T};p_{T};Tracks / bin",  40, 0., 1., 40, 0., 4000);
   tuple->BefPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>("BefPreS_PtErrOverPtVsPtErrOverPt2",  ";#sigma_{p_{T}}/p_{T};p_{T}^{2};Tracks / bin",  40, 0., 1., 40, 0., 0.003);
-  
+
   tuple->BefPreS_ProbQ = dir.make<TH1F>("BefPreS_ProbQ", ";F_{i}^{pixels};Tracks / bin", 100, 0, 1);
   tuple->BefPreS_ProbXY = dir.make<TH1F>("BefPreS_ProbXY", ";Prob_{XY,pixelAV} (pixels);Tracks / bin", 100, 0, 1);
   tuple->BefPreS_ProbQNoL1 = dir.make<TH1F>("BefPreS_ProbQNoL1", ";F_{i}^{pixels};Tracks / bin", 100, 0, 1);
   tuple->BefPreS_ProbXYNoL1 = dir.make<TH1F>("BefPreS_ProbXYNoL1", ";Prob_{XY,pixelAV} (pixels, no-L1);Tracks / bin", 100, 0, 1);
   tuple->BefPreS_MassErr = dir.make<TH1F>("BefPreS_MassErr", ";MassErr;Tracks / bin", 50, 0., 10.);
   tuple->BefPreS_ProbQVsIas = dir.make<TH2F>("BefPreS_ProbQVsIas", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin", 100, 0.0, 1.0, 100, 0.0, 1.0);
-  
+
   tuple->BefPreS_EtaVsIas = dir.make<TH2F>("BefPreS_EtaVsIas", ";#eta;G_{i}^{strips};Tracks / bin", 50, -3, 3, 10, 0., 1.);
   tuple->BefPreS_EtaVsIh = dir.make<TH2F>("BefPreS_EtaVsIh", ";#eta;I_{h} (MeV/cm);Tracks / bin", 50, -3, 3, 100, 0, dEdxM_UpLim);
   tuple->BefPreS_EtaVsP = dir.make<TH2F>("BefPreS_EtaVsP", ";#eta;P (GeV);Tracks / bin", 50, -3, 3, 50, 0, PtHistoUpperBound);
@@ -703,7 +770,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_CluProbHasFilled = dir.make<TH1F>("BefPreS_CluProbHasFilled", ";;Clusters / category", 2, -0.5, 1.5);
   tuple->BefPreS_CluProbHasFilled->GetXaxis()->SetBinLabel(1,"ProbHasFailed");
   tuple->BefPreS_CluProbHasFilled->GetXaxis()->SetBinLabel(2,"ProbHasFilled");
-                                          
+
   tuple->BefPreS_CluProbQVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbQVsPixelLayer", ";Cluster Prob_{Q} (pixels);Layer",20,0.,1.,4,0.,4.);
   tuple->BefPreS_CluProbXYVsPixelLayer = dir.make<TH2F>("BefPreS_CluProbXYVsPixelLayer", ";Cluster Prob_{XZ,pixelAV} (pixels);Layer",100,0.,1.,4,0.,4.);
   tuple->BefPreS_CluNormChargeVsPixelLayer = dir.make<TH2F>("BefPreS_CluNormChargeVsPixelLayer", ";CluNormCharge (e/um);Layer",100,0.,600.,4,0.,4.);
@@ -731,10 +798,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_genGammaBetaVsProbXYNoL1 =  dir.make<TH2F>("BefPreS_genGammaBetaVsProbXYNoL1", ";#gamma #beta;ProbXYNoL1",10,0.,1.3,20,0.,1.);
   tuple->BefPreS_dRVsPtPfJet = dir.make<TH2F>("BefPreS_dRVsPtPfJet", ";dR(cand,jet);p_{T}",100,0.,1.5,100,0.,1000.);
   tuple->BefPreS_dRVsdPtPfCaloJet = dir.make<TH2F>("BefPreS_dRVsdPtPfCaloJet", ";dRmin;dPtPfCaloJet",100,0.,1.5,20,0.,100.);
-  
+
   tuple->BefPreS_GenBeta = dir.make<TH1F>("BefPreS_GenBeta", ";#beta;Tracks / bin", 20, 0, 1);
 
-  
+
 
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
@@ -742,7 +809,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(3,"MET triggered");
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(4,"Muon OR MET triggered");
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(5,"Muon AND MET triggered");
-  
+
   tuple->PostPreS_RecoHSCParticleType = dir.make<TH1F>("PostPreS_RecoHSCParticleType", ";;Tracks / category", 6, -0.5, 5.5);
   tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
   tuple->PostPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"trackerMuon");
@@ -761,7 +828,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
-  
+
   tuple->PostPreS_PfTypeVsIas = dir.make<TH2F>("PostPreS_PfTypeVsIas", ";;G_{i}^{strips}", 9, -0.5, 8.5,20,0.,1.);
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(1,"AllTracks");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(2,"PFtracks");
@@ -776,23 +843,23 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MassT = dir.make<TH1F>("PostPreS_MassT", ";m_{T} (GeV);Tracks / 5 GeV", 50, 0.0, 250.0);
   tuple->PostPreS_MassT_highMassT = dir.make<TH1F>("PostPreS_MassT_highMassT", ";m_{T} (GeV);Tracks / 10 GeV", 250, 0.0, 2500.0);
   tuple->PostPreS_MassTVsIas = dir.make<TH2F>("PostPreS_MassTVsIas", ";m_{T} (GeV);G_{i}^{strips}",50, 0.0, 250.0, 20, 0., 1.);
-  
+
   tuple->PostPreS_MiniRelIsoAll = dir.make<TH1F>("PostPreS_MiniRelIsoAll", ";MiniRelIsoAll;Tracks/bin", 150, 0.0, 0.1);
   tuple->PostPreS_MiniRelIsoAllVsIas =  dir.make<TH2F>("PostPreS_MiniRelIsoAllVsIas","PostPreS_MiniRelIsoAllVsIas", 150, 0.0, 0.1, 10, 0.,1.);
   tuple->PostPreS_MiniRelIsoChg = dir.make<TH1F>("PostPreS_MiniRelIsoChg", ";MiniRelIsoChg;Tracks/bin",  150, 0.0, 1.5);
   tuple->PostPreS_MiniTkIso = dir.make<TH1F>("PostPreS_MiniTkIso", ";MiniTkIso;Tracks/bin", 150, 0.0, 50.);
   tuple->PostPreS_MiniRelTkIso = dir.make<TH1F>("PostPreS_MiniRelTkIso", ";MiniRelTkIso;Tracks / bin", 150, 0.0, 1.5);
-  
+
   tuple->PostPreS_RecoPFMET = dir.make<TH1F>("PostPreS_RecoPFMET", ";RecoPFMET;Tracks / bin",  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>("PostPreS_RecoPFHT", ";RecoPFHT;Tracks / bin",  200, 0.0, 2000.0);
   tuple->PostPreS_CaloNumJets = dir.make<TH1F>("PostPreS_CaloNumJets", ";Number of calo jets;Tracks / bin",  30, 0.0, 30.0);
-  
+
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>("PostPreS_Chi2oNdof", ";#chi^{2}/N_{dof};Tracks / 1", 20, 0, 20);
   tuple->PostPreS_Chi2oNdofVsIas = dir.make<TH2F>("PostPreS_Chi2oNdofVsIas", ";#chi^{2}/Ndof;G_{i}^{strips}",20, 0, 20,10,0.,1.);
   tuple->PostPreS_Qual = dir.make<TH1F>("PostPreS_Qual", ";;Tracks / category", 2, -0.5, 1.5);
   tuple->PostPreS_Qual->GetXaxis()->SetBinLabel(1,"Not-HighPurity");
   tuple->PostPreS_Qual->GetXaxis()->SetBinLabel(2,"HighPurity");
-  
+
   tuple->PostPreS_TNOH_PUA = dir.make<TH1F>("PostPreS_TNOH_PUA", "Number of hits (low PU);Tracks / 1", 40, -0.5, 39.5);
   tuple->PostPreS_TNOH_PUB = dir.make<TH1F>("PostPreS_TNOH_PUB", "Number of hits (mid PU);Tracks / 1", 40, -0.5, 39.5);
   tuple->PostPreS_TNOH_PUC = dir.make<TH1F>("PostPreS_TNOH_PUC", "Number of hits (high PU);Tracks / 1", 40, -0.5, 39.5);
@@ -843,7 +910,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TimeAtIP = dir.make<TH1F>("PostPreS_TimeAtIP", ";TimeAtIP;Tracks / bin", 50, -100, 100);
   tuple->PostPreS_OpenAngle = dir.make<TH1F>("PostPreS_OpenAngle", ";OpenAngle;Tracks / bin", 50, -0.3, 3.15);
   tuple->PostPreS_OpenAngle_Cosmic = dir.make<TH1F>("PostPreS_OpenAngle_Cosmic", ";OpenAngle_Cosmic;Tracks / bin", 50, -0.3, 3.15);
-  
+
   tuple->PostPreS_NVertex = dir.make<TH1F>("PostPreS_NVertex", ";N_{vertex};Tracks / bin", 50, -0.5, 49.5);
   tuple->PostPreS_NVertex_NoEventWeight = dir.make<TH1F>("PostPreS_NVertex_NoEventWeight", ";N_{vertex} (NoEventWeight);Tracks / bin", 50, -0.5, 49.5);
   tuple->PostPreS_PV = dir.make<TH1F>("PostPreS_PV", ";PV;Tracks / bin", 60, -0.5, 59.5);
@@ -858,14 +925,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_Dxy = dir.make<TH1F>("PostPreS_Dxy", ";d_{xy} (cm);Tracks / bin", 200, -0.1, 0.1);
   tuple->PostPreS_DxyVsIas = dir.make<TH2F>("PostPreS_DxyVsIas", ";d_{xy} (cm);G_{i}^{strips};Tracks / bin", 200, -0.1, 0.1, 20, 0.0, 1.0);
   tuple->PostPreS_DxyVsGenID = dir.make<TH2F>("PostPreS_DxyVsGenID", ";d_{xy} (cm);GenID;Tracks / bin", 200, -0.1, 0.1, 4000, 0.0, 4000.0);
-  
+
   tuple->PostPreS_SegSep = dir.make<TH1F>("PostPreS_SegSep", ";SegSep;Tracks / bin", 50, 0, 2.5);
   tuple->PostPreS_SegMinEtaSep = dir.make<TH1F>("PostPreS_SegMinEtaSep", ";SegMinEtaSep;Tracks / bin", 50, -1., 1.);
   tuple->PostPreS_SegMinPhiSep = dir.make<TH1F>("PostPreS_SegMinPhiSep", ";SegMinPhiSep;Tracks / bin", 50, -3.3, 3.3);
   tuple->PostPreS_SegMinEtaSep_FailDz = dir.make<TH1F>("PostPreS_SegMinEtaSep_FailDz", ";SegMinEtaSep_FailDz;Tracks / bin", 50, -1., 1.);
   tuple->PostPreS_SegMinEtaSep_PassDz = dir.make<TH1F>("PostPreS_SegMinEtaSep_PassDz", ";SegMinEtaSep_PassDz;Tracks / bin", 50, -1., 1.);
   tuple->PostPreS_Dz_FailSep = dir.make<TH1F>("PostPreS_Dz_FailSep", ";Dz_FailSep;Tracks / bin", 50, -150, 150);
-  
+
   tuple->PostPreS_Dxy_Cosmic = dir.make<TH1F>("PostPreS_Dxy_Cosmic", ";Dxy_Cosmic;Tracks / bin", 150, -IPbound, IPbound);
   tuple->PostPreS_Dz_Cosmic = dir.make<TH1F>("PostPreS_Dz_Cosmic", ";Dz_Cosmic;Tracks / bin", 150, -IPbound, IPbound);
   tuple->PostPreS_Dz_CSC = dir.make<TH1F>("PostPreS_Dz_CSC", ";Dz_CSC;Tracks / bin", 150, -IPbound, IPbound);
@@ -879,7 +946,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PtErrOverPtVsPtErrOverPt2 = dir.make<TH2F>("PostPreS_PtErrOverPtVsPtErrOverPt2",  ";#sigma_{p_{T}}/p_{T};p_{T}^{2};Tracks / bin",  40, 0., 1., 40, 0., 0.003);
   tuple->PostPreS_PtErrOverPtVsPt = dir.make<TH2F>("PostPreS_PtErrOverPtVsPt",  ";#sigma_{p_{T}}/p_{T};p_{T};Tracks / bin",  40, 0., 1., 40, 0., 4000);
   tuple->PostPreS_GenPtVsRecoPt = dir.make<TH2F>("PostPreS_GenPtVsRecoPt", ";GenPt;RecoPt;Tracks / bin", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
-  
+
   tuple->PostPreS_ProbQ = dir.make<TH1F>("PostPreS_ProbQ", ";F_{i}^{pixels}", 100, 0., 1.);
   tuple->PostPreS_ProbQVsIas = dir.make<TH2F>("PostPreS_ProbQVsIas", ";F_{i}^{pixels};G_{i}^{strips}", 100, 0., 1., 100, 0., 1.);
   tuple->PostPreS_IhVsProbQNoL1VsIas = dir.make<TH3F>("PostPreS_IhVsProbQVsIas", ";I_{h} (MeV/cm);F_{i}^{pixels};G_{i}^{strips}",200, 0, dEdxM_UpLim, 100, 0.0, 1.0, 100, 0.0, 1.0);
@@ -941,7 +1008,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MiniIsoChgVsMomGenID = dir.make<TH2F>("PostPreS_MiniIsoChgVsMomGenID", ";miniIsoChg;MomGenID", 20, 0.0, 0.1, 4000, 0.0, 4000.0);
   tuple->PostPreS_MiniIsoAllVsMomGenID = dir.make<TH2F>("PostPreS_MiniIsoAllVsMomGenID", ";miniIsoAll;MomGenID", 20, 0.0, 0.1, 4000, 0.0, 4000.0);
   tuple->PostPreS_MassVsMomGenID = dir.make<TH2F>("PostPreS_MassVsMomGenID","PostPreS_MassVsMomGenID;Mass;MomGenID",80,0.,4000.,4000, 0.0, 4000.0);
-  
+
   tuple->PostPreS_EtaVsSiblingGenID = dir.make<TH2F>("PostPreS_EtaVsSiblingGenID", ";#eta;SiblingGenID",  50, -2.6, 2.6, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbQVsSiblingGenID = dir.make<TH2F>("PostPreS_ProbQVsSiblingGenID", ";F_{i}^{pixels};SiblingGenID", 20, 0.0, 1.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_ProbXYVsSiblingGenID = dir.make<TH2F>("PostPreS_ProbXYVsSiblingGenID", ";ProbXY;SiblingGenID", 20, 0.0, 1.0, 4000, 0.0, 4000.0);
@@ -951,7 +1018,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_IasVsSiblingGenID = dir.make<TH2F>("PostPreS_IasVsSiblingGenID", ";G_{i}^{strips};SiblingGenID", 10, 0., 1., 4000, 0.0, 4000.0);
   tuple->PostPreS_MassTVsSiblingGenID = dir.make<TH2F>("PostPreS_massTVsSiblingGenID", ";massT;SiblingGenID", 50, 0.0, 250.0, 4000, 0.0, 4000.0);
   tuple->PostPreS_MassVsSiblingGenID = dir.make<TH2F>("PostPreS_MassVsSiblingGenID", ";Mass;SiblingGenID",80, 0.0, 4000.0, 4000, 0.0, 4000.0);
-  
+
   tuple->PostPreS_EtaVsGenAngle = dir.make<TH2F>("PostPreS_EtaVsGenAngle", ";#eta;GenAngle",  50, -2.6, 2.6, 100, 0.0, 1.0);
   tuple->PostPreS_ProbQVsGenAngle = dir.make<TH2F>("PostPreS_ProbQVsGenAngle", ";F_{i}^{pixels};GenAngle", 20, 0.0, 1.0, 100, 0.0,1.0);
   tuple->PostPreS_ProbXYVsGenAngle = dir.make<TH2F>("PostPreS_ProbXYVsGenAngle", ";ProbXY;GenAngle", 20, 0.0, 1.0, 100, 0.0, 1.0);
@@ -963,7 +1030,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MiniIsoChgVsGenAngle = dir.make<TH2F>("PostPreS_MiniIsoChgVsGenAngle", ";miniIsoChg;GenAngle", 20, 0.0, 0.1, 100, 0.0, 1.0);
   tuple->PostPreS_MiniIsoAllVsGenAngle = dir.make<TH2F>("PostPreS_MiniIsoAllVsGenAngle", ";miniIsoAll;GenAngle", 20, 0.0, 0.1, 100, 0.0, 1.0);
   tuple->PostPreS_MassVsGenAngle = dir.make<TH2F>("PostPreS_MassVsGenAngle", ";Mass;GenAngle",80, 0.0,4000.0,  100, 0.0, 1.0);
-  
+
   tuple->PostPreS_EtaVsGenMomAngle = dir.make<TH2F>("PostPreS_EtaVsGenMomAngle", ";#eta;GenMomAngle",  50, -2.6, 2.6, 100, 0.0, 1.0);
   tuple->PostPreS_ProbQVsGenMomAngle = dir.make<TH2F>("PostPreS_ProbQVsGenMomAngle", ";F_{i}^{pixels};GenMomAngle", 20, 0.0, 1.0, 100, 0.0,1.0);
   tuple->PostPreS_ProbXYVsGenMomAngle = dir.make<TH2F>("PostPreS_ProbXYVsGenMomAngle", ";ProbXY;GenMomAngle", 20, 0.0, 1.0, 100, 0.0, 1.0);
@@ -1007,7 +1074,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_MassVsMassT = dir.make<TH2F>("PostPreS_MassVsMassT", ";Mass (GeV);", 80,0.,4000.,50, 0.0, 250.0);
   tuple->PostPreS_MassVsMiniRelIsoAll = dir.make<TH2F>("PostPreS_MassVsMiniRelIsoAll", ";Mass (GeV);", 80,0.,4000.,20, 0., 0.2);
   tuple->PostPreS_MassVsMassErr = dir.make<TH2F>("PostPreS_MassVsMassErr", ";Mass (GeV);", 80,0.,4000.,50, 0., 10.);
-  
+
   // Maybe we dont need these anymore
   tuple->PostPreS_IasAllIhVsLayer = dir.make<TH3F>("PostPreS_IasAllIhVsLayer", ";G_{i}^{strips};I_{h} (MeV/cm);LayerIndex (full tracker)", 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 35, 0.,35.);
   tuple->PostPreS_IasPixelIhVsLayer = dir.make<TH3F>("PostPreS_IasPixelIhVsLayer", ";G_{i}^{strips};I_{h} (MeV/cm);LayerIndex (pixels)", 50, 0., dEdxS_UpLim, 200, 0., dEdxM_UpLim, 10, 0.,10.);
@@ -1062,9 +1129,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_PfMet = dir.make<TH1F>("PostPreS_PfMet", ";PfMet",200,0.,2000.);
   tuple->PostPreS_PfMetPhi = dir.make<TH1F>("PostPreS_PfMetPhi", ";PfMetPhi",30,0.,3.2);
-  
+
   tuple->PostPreS_GenBeta = dir.make<TH1F>("PostPreS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0, 1);
-  
+
   //Initialize histograms for number of bins.  For everything but muon only PredBins=0 so no histograms created
   for (int i = 0; i < PredBins; i++) {
     char Suffix[1024];
@@ -1083,7 +1150,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_CutIdVsEta_RegionF = dir.make<TH2F>("PostS_CutIdVsEta_RegionF", ";NCuts;#eta (RegionF)", NCuts, 0, NCuts, 52, -2.6, 2.6);
   tuple->PostS_CutIdVsEta_RegionG = dir.make<TH2F>("PostS_CutIdVsEta_RegionG", ";NCuts;#eta (RegionG)", NCuts, 0, NCuts, 52, -2.6, 2.6);
   tuple->PostS_CutIdVsEta_RegionH = dir.make<TH2F>("PostS_CutIdVsEta_RegionH", ";NCuts;#eta (RegionH)", NCuts, 0, NCuts, 52, -2.6, 2.6);
-  
+
   tuple->PostS_CutIdVsBeta_postPt = dir.make<TH2F>("PostS_CutIdVsBeta_postPt", ";NCuts;#beta (p_{T} > p_{T,cut})", NCuts, 0, NCuts, 20, 0, 1);
   tuple->PostS_CutIdVsBeta_postPtAndIas = dir.make<TH2F>("PostS_CutIdVsBeta_postPtAndIas", ";NCuts;#beta (p_{T} > p_{T,cut} and G_{i}^{strips} > I_{as,cut} )", NCuts, 0, NCuts, 20, 0, 1);
   tuple->PostS_CutIdVsBeta_postPtAndIasAndTOF = dir.make<TH2F>("PostS_CutIdVsBeta_postPtAndIasAndTOF", ";NCuts;#beta (p_{T} > p_{T,cut} and G_{i}^{strips} > I_{as,cut} and TOF > TOF_{cut} ", NCuts, 0, NCuts, 20, 0, 1);
@@ -1288,12 +1355,24 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Lumi", &tuple->Tree_Lumi, "Lumi/i");
     tuple->Tree->Branch("PileUp", &tuple->Tree_PileUp, "PileUp/i");
     tuple->Tree->Branch("nofVtx", &tuple->Tree_nofVertices, "nofVtx/i");
+    tuple->Tree->Branch("npv", &tuple->Tree_npv, "npv/I");
+
+    tuple->Tree->Branch("pvX", &tuple->Tree_pvX);
+    tuple->Tree->Branch("pvY", &tuple->Tree_pvY);
+    tuple->Tree->Branch("pvZ", &tuple->Tree_pvZ);
+    tuple->Tree->Branch("pvRho", &tuple->Tree_pvRho);
+    tuple->Tree->Branch("pvNdof", &tuple->Tree_pvNdof);
+    tuple->Tree->Branch("pvChi2", &tuple->Tree_pvChi2);
+    tuple->Tree->Branch("pvSumPt2", &tuple->Tree_pvSumPt2);
+
     tuple->Tree->Branch("Hscp", &tuple->Tree_Hscp, "Hscp/i");
-    tuple->Tree->Branch("nmuons", &tuple->Tree_nmuons, "nmuons/i");
+    tuple->Tree->Branch("nMuons", &tuple->Tree_nMuons, "nMuons/i");
     tuple->Tree->Branch("njets", &tuple->Tree_njets, "njets/i");
     tuple->Tree->Branch("Weight", &tuple->Tree_Weight, "Weight/F");
     tuple->Tree->Branch("GeneratorWeight", &tuple->Tree_GeneratorWeight, "GeneratorWeight/F");
     tuple->Tree->Branch("GeneratorBinningValues", &tuple->Tree_GeneratorBinningValues, "GeneratorBinningValues/F");
+    tuple->Tree->Branch("triggerDecision", &tuple->Tree_triggerDecision);
+    tuple->Tree->Branch("triggerHLTPrescale", &tuple->Tree_triggerHLTPrescale);
     tuple->Tree->Branch("HLT_Mu50", &tuple->Tree_HLT_Mu50, "HLT_Mu50/O");
     tuple->Tree->Branch("HLT_PFMET120_PFMHT120_IDTight",
                         &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight,
@@ -1328,12 +1407,56 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("HLTPFMHT_phi", &tuple->Tree_HLTPFMHT_phi, "HLTPFMHT_phi/F");
     tuple->Tree->Branch("HLTPFMHT_sigf", &tuple->Tree_HLTPFMHT_sigf, "HLTPFMHT_sigf/F");
     tuple->Tree->Branch("matchedMuonWasFound", &tuple->Tree_matchedMuonWasFound, "matchedMuonWasFound/O");
-    tuple->Tree->Branch("Muon1_Pt", &tuple->Tree_Muon1_Pt, "Muon1_Pt/F");
-    tuple->Tree->Branch("Muon1_eta", &tuple->Tree_Muon1_eta, "Muon1_eta/F");
-    tuple->Tree->Branch("Muon1_phi", &tuple->Tree_Muon1_phi, "Muon1_phi/F");
-    tuple->Tree->Branch("Muon2_Pt", &tuple->Tree_Muon2_Pt, "Muon2_Pt/F");
-    tuple->Tree->Branch("Muon2_eta", &tuple->Tree_Muon2_eta, "Muon2_eta/F");
-    tuple->Tree->Branch("Muon2_phi", &tuple->Tree_Muon2_phi, "Muon2_phi/F");
+    tuple->Tree->Branch("gParticleId", &tuple->Tree_gParticleId);
+    tuple->Tree->Branch("gParticleStatus", &tuple->Tree_gParticleStatus);
+    tuple->Tree->Branch("gParticleE", &tuple->Tree_gParticleE);
+    tuple->Tree->Branch("gParticlePt", &tuple->Tree_gParticlePt);
+    tuple->Tree->Branch("gParticlePz", &tuple->Tree_gParticlePz);
+    tuple->Tree->Branch("gParticleEta", &tuple->Tree_gParticleEta);
+    tuple->Tree->Branch("gParticlePhi", &tuple->Tree_gParticlePhi);
+    tuple->Tree->Branch("gParticleBeta", &tuple->Tree_gParticleBeta);
+    tuple->Tree->Branch("gParticleCharge", &tuple->Tree_gParticleCharge);
+    tuple->Tree->Branch("gParticleProdVertexX", &tuple->Tree_gParticleProdVertexX);
+    tuple->Tree->Branch("gParticleProdVertexY", &tuple->Tree_gParticleProdVertexY);
+    tuple->Tree->Branch("gParticleProdVertexZ", &tuple->Tree_gParticleProdVertexZ);
+    tuple->Tree->Branch("gParticleMotherId", &tuple->Tree_gParticleMotherId);
+    tuple->Tree->Branch("gParticleMotherIndex", &tuple->Tree_gParticleMotherIndex);
+
+    tuple->Tree->Branch("muonE", &tuple->Tree_muonE);
+    tuple->Tree->Branch("muonPt", &tuple->Tree_muonPt);
+    tuple->Tree->Branch("muonEta", &tuple->Tree_muonEta);
+    tuple->Tree->Branch("muonPhi", &tuple->Tree_muonPhi);
+    tuple->Tree->Branch("muonCharge", &tuple->Tree_muonCharge);
+    tuple->Tree->Branch("muonIsLoose", &tuple->Tree_muonIsLoose);
+    tuple->Tree->Branch("muonIsMedium", &tuple->Tree_muonIsMedium);
+    tuple->Tree->Branch("muonIsTight", &tuple->Tree_muonIsTight);
+    tuple->Tree->Branch("muon_d0", &tuple->Tree_muon_d0);
+    tuple->Tree->Branch("muon_d0Err", &tuple->Tree_muon_d0Err);
+    tuple->Tree->Branch("muon_dZ", &tuple->Tree_muon_dZ);
+    tuple->Tree->Branch("muon_ip3d", &tuple->Tree_muon_ip3d);
+    tuple->Tree->Branch("muon_ip3dSignificance", &tuple->Tree_muon_ip3dSignificance);
+    tuple->Tree->Branch("muonType", &tuple->Tree_muonType);
+    tuple->Tree->Branch("muonQuality", &tuple->Tree_muonQuality);
+    tuple->Tree->Branch("muon_pileupIso", &tuple->Tree_muon_pileupIso);
+    tuple->Tree->Branch("muon_chargedIso", &tuple->Tree_muon_chargedIso);
+    tuple->Tree->Branch("muon_photonIso", &tuple->Tree_muon_photonIso);
+    tuple->Tree->Branch("muon_neutralHadIso", &tuple->Tree_muon_neutralHadIso);
+    tuple->Tree->Branch("muon_validFractionTrackerHits", &tuple->Tree_muon_validFractionTrackerHits);
+    tuple->Tree->Branch("muTree_muon_normChi2onE", &tuple->Tree_muon_normChi2);
+    tuple->Tree->Branch("muon_chi2LocalPosition", &tuple->Tree_muon_chi2LocalPosition);
+    tuple->Tree->Branch("muon_kinkFinder", &tuple->Tree_muon_kinkFinder);
+    tuple->Tree->Branch("muon_segmentCompatability", &tuple->Tree_muon_segmentCompatability);
+
+    tuple->Tree->Branch("muon_trkIso", &tuple->Tree_muon_trkIso);
+    tuple->Tree->Branch("muon_tuneP_Pt", &tuple->Tree_muon_tuneP_Pt);
+    tuple->Tree->Branch("muon_tuneP_PtErr", &tuple->Tree_muon_tuneP_PtErr);
+    tuple->Tree->Branch("muon_tuneP_Eta", &tuple->Tree_muon_tuneP_Eta);
+    tuple->Tree->Branch("muon_tuneP_Phi", &tuple->Tree_muon_tuneP_Phi);
+    tuple->Tree->Branch("muon_tuneP_MuonBestTrackType", &tuple->Tree_muon_tuneP_MuonBestTrackType);
+    tuple->Tree->Branch("muon_isHighPtMuon", &tuple->Tree_muon_isHighPtMuon);
+    tuple->Tree->Branch("muon_isTrackerHighPtMuon", &tuple->Tree_muon_isTrackerHighPtMuon);
+
+
     if (saveTree > 3) {
       tuple->Tree->Branch("Jet_pt", &tuple->Tree_jet_pt);
       tuple->Tree->Branch("Jet_eta", &tuple->Tree_jet_eta);
@@ -1344,6 +1467,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("Jet_et", &tuple->Tree_jet_et);
       tuple->Tree->Branch("Jet_chargedEmEnergyFraction", &tuple->Tree_jet_chargedEmEnergyFraction);
       tuple->Tree->Branch("Jet_neutralEmEnergyFraction", &tuple->Tree_jet_neutralEmEnergyFraction);
+
+      tuple->Tree->Branch("Jet_chargedHadronEnergyFraction", &tuple->Tree_jet_chargedHadronEnergyFraction);
+      tuple->Tree->Branch("Jet_neutralHadronEnergyFraction", &tuple->Tree_jet_neutralHadronEnergyFraction);
+      tuple->Tree->Branch("Jet_muonEnergyFraction", &tuple->Tree_jet_muonEnergyFraction);
+      tuple->Tree->Branch("Jet_chargedMultiplicity", &tuple->Tree_jet_chargedMultiplicity);
+      tuple->Tree->Branch("Jet_neutralMultiplicity", &tuple->Tree_jet_neutralMultiplicity);
+      tuple->Tree->Branch("Jet_jetArea", &tuple->Tree_jet_jetArea);
+      tuple->Tree->Branch("Jet_pileupE", &tuple->Tree_jet_pileupE);
+
     }
     tuple->Tree->Branch("mT", &tuple->Tree_vect_mT);
     if (saveTree > 1) {
@@ -1397,6 +1529,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("MassErr", &tuple->Tree_MassErr);
     tuple->Tree->Branch("dZ", &tuple->Tree_dZ);
     tuple->Tree->Branch("dXY", &tuple->Tree_dXY);
+    tuple->Tree->Branch("dZ_pv", &tuple->Tree_dZ_pv);
+    tuple->Tree->Branch("dXY_pv", &tuple->Tree_dXY_pv);
     tuple->Tree->Branch("dR", &tuple->Tree_dR);
     tuple->Tree->Branch("p", &tuple->Tree_p);
     tuple->Tree->Branch("eta", &tuple->Tree_eta);
@@ -1413,6 +1547,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     tuple->Tree->Branch("track_genTrackMiniIsoSumPt", &tuple->Tree_track_genTrackMiniIsoSumPt);
+    tuple->Tree->Branch("HSCP_tuneP_Pt", &tuple->Tree_HSCP_tuneP_Pt);
+    tuple->Tree->Branch("HSCP_tuneP_PtErr", &tuple->Tree_HSCP_tuneP_PtErr);
+    tuple->Tree->Branch("HSCP_tuneP_Eta", &tuple->Tree_HSCP_tuneP_Eta);
+    tuple->Tree->Branch("HSCP_tuneP_Phi", &tuple->Tree_HSCP_tuneP_Phi);
+    tuple->Tree->Branch("HSCP_tuneP_MuonBestTrackType", &tuple->Tree_HSCP_tuneP_MuonBestTrackType);
+    tuple->Tree->Branch("HSCP_ErrorHisto_bin", &tuple->Tree_HSCP_ErrorHisto_bin);
+    tuple->Tree->Branch("HSCP_type", &tuple->Tree_HSCP_type);
+
+
     if (saveTree > 1) {
       tuple->Tree->Branch("PFMiniIso_relative", &tuple->Tree_PFMiniIso_relative);
       tuple->Tree->Branch("PFMiniIso_wMuon_relative", &tuple->Tree_PFMiniIso_wMuon_relative);
@@ -1523,12 +1666,22 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const unsigned int &Lumi,
                                   const unsigned int &PileUp,
                                   const unsigned int &nofVertices,
+                                  const int &npv,
+                                  const std::vector<float>  &pvX,
+                                  const std::vector<float>  &pvY,
+                                  const std::vector<float>  &pvZ,
+                                  const std::vector<float>  &pvRho,
+                                  const std::vector<int>  &pvNdof,
+                                  const std::vector<float>  &pvChi2,
+                                  const std::vector<float>  &pvSumPt2,
                                   const unsigned int &Hscp,
-                                  const unsigned int &nmuons,
+                                  const unsigned int &nMuons,
                                   const unsigned int &njets,
                                   const float &weight,
                                   const float &generator_weight,
                                   const float &generator_binning_values,
+                                  const std::vector<bool> &triggerDecision,
+                                  const std::vector<int> &triggerHLTPrescale,
                                   const bool &HLT_Mu50,
                                   const bool &HLT_PFMET120_PFMHT120_IDTight,
                                   const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1557,12 +1710,52 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &HLTPFMHT_phi,
                                   const float &HLTPFMHT_sigf,
                                   const bool &matchedMuonWasFound,
-                                  const float &Muon1_Pt,
-                                  const float &Muon1_eta,
-                                  const float &Muon1_phi,
-                                  const float &Muon2_Pt,
-                                  const float &Muon2_eta,
-                                  const float &Muon2_phi,
+                                  const std::vector<int> &gParticleId,
+                                  const std::vector<int> &gParticleStatus,
+                                  const std::vector<float> &gParticleE,
+                                  const std::vector<float> &gParticlePt,
+                                  const std::vector<float> &gParticlePz,
+                                  const std::vector<float> &gParticleEta,
+                                  const std::vector<float> &gParticlePhi,
+                                  const std::vector<float> &gParticleBeta,
+                                  const std::vector<int> &gParticleCharge,
+                                  const std::vector<float> &gParticleProdVertexX,
+                                  const std::vector<float> &gParticleProdVertexY,
+                                  const std::vector<float> &gParticleProdVertexZ,
+                                  const std::vector<int> &gParticleMotherId,
+                                  const std::vector<int> &gParticleMotherIndex,
+                                  const std::vector<float> &muonE,
+                                  const std::vector<float> &muonPt,
+                                  const std::vector<float> &muonEta,
+                                  const std::vector<float> &muonPhi,
+                                  const std::vector<int> &muonCharge,
+                                  const std::vector<bool> &muonIsLoose,
+                                  const std::vector<bool> &muonIsMedium,
+                                  const std::vector<bool> &muonIsTight,
+                                  const std::vector<float> &muon_d0,
+                                  const std::vector<float> &muon_d0Err,
+                                  const std::vector<float> &muon_dZ,
+                                  const std::vector<float> &muon_ip3d,
+                                  const std::vector<float> &muon_ip3dSignificance,
+                                  const std::vector<unsigned int> &muonType,
+                                  const std::vector<unsigned int> &muonQuality,
+                                  const std::vector<float> &muon_pileupIso,
+                                  const std::vector<float> &muon_chargedIso,
+                                  const std::vector<float> &muon_photonIso,
+                                  const std::vector<float> &muon_neutralHadIso,
+                                  const std::vector<float> &muon_validFractionTrackerHits,
+                                  const std::vector<float> &muon_normChi2,
+                                  const std::vector<float> &muon_chi2LocalPosition,
+                                  const std::vector<float> &muon_kinkFinder,
+                                  const std::vector<float> &muon_segmentCompatability,
+                                  const std::vector<float> &muon_trkIso,
+                                  const std::vector<float> &muon_tuneP_Pt,
+                                  const std::vector<float> &muon_tuneP_PtErr,
+                                  const std::vector<float> &muon_tuneP_Eta,
+                                  const std::vector<float> &muon_tuneP_Phi,
+                                  const std::vector<int> &muon_tuneP_MuonBestTrackType,
+                                  const std::vector<bool> &muon_isHighPtMuon,
+                                  const std::vector<bool> &muon_isTrackerHighPtMuon,
                                   const std::vector<float> &Jet_pt,
                                   const std::vector<float> &Jet_eta,
                                   const std::vector<float> &Jet_phi,
@@ -1572,6 +1765,13 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Jet_et,
                                   const std::vector<float> &Jet_chargedEmEnergyFraction,
                                   const std::vector<float> &Jet_neutralEmEnergyFraction,
+                                  const std::vector<float> &Jet_chargedHadronEnergyFraction,
+                                  const std::vector<float> &Jet_neutralHadronEnergyFraction,
+                                  const std::vector<float> &Jet_muonEnergyFraction,
+                                  const std::vector<int> &Jet_chargedMultiplicity,
+                                  const std::vector<int> &Jet_neutralMultiplicity,
+                                  const std::vector<float> &Jet_jetArea,
+                                  const std::vector<float> &Jet_pileupE,
                                   const std::vector<float> &vect_mT,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection,
@@ -1622,6 +1822,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &MassErr,
                                   const std::vector<float> &dZ,
                                   const std::vector<float> &dXY,
+                                  const std::vector<float> &dZ_pv,
+                                  const std::vector<float> &dXY_pv,
                                   const std::vector<float> &dR,
                                   const std::vector<float> &p,
                                   const std::vector<float> &eta,
@@ -1638,8 +1840,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
                                   const std::vector<float> &track_genTrackMiniIsoSumPt,
-                                  
-                                  
+
+
                                   const std::vector<float> &PFMiniIso_relative,
                                   const std::vector<float> &PFMiniIso_wMuon_relative,
                                   const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
@@ -1681,19 +1883,39 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &genmass,
                                   const std::vector<float> &genpt,
                                   const std::vector<float> &geneta,
-                                  const std::vector<float> &genphi) {
+                                  const std::vector<float> &genphi,
+                                  const std::vector<float> &HSCP_tuneP_Pt,
+                                  const std::vector<float> &HSCP_tuneP_PtErr,
+                                  const std::vector<float> &HSCP_tuneP_Eta,
+                                  const std::vector<float> &HSCP_tuneP_Phi,
+                                  const std::vector<int> &HSCP_tuneP_MuonBestTrackType,
+                                  const std::vector<int> &HSCP_ErrorHisto_bin,
+                                  const std::vector<int> &HSCP_type
+                                  ) {
   tuple->Tree_Trig = Trig;
   tuple->Tree_Run = Run;
   tuple->Tree_Event = Event;
   tuple->Tree_Lumi = Lumi;
   tuple->Tree_PileUp = PileUp;
   tuple->Tree_nofVertices = nofVertices;
+  tuple->Tree_npv = npv;
+
+  tuple->Tree_pvX = pvX;
+  tuple->Tree_pvY = pvY;
+  tuple->Tree_pvZ = pvZ;
+  tuple->Tree_pvRho = pvRho;
+  tuple->Tree_pvNdof = pvNdof;
+  tuple->Tree_pvChi2 = pvChi2;
+  tuple->Tree_pvSumPt2 = pvSumPt2;
+
   tuple->Tree_Hscp = Hscp;
-  tuple->Tree_nmuons = nmuons;
+  tuple->Tree_nMuons = nMuons;
   tuple->Tree_njets = njets;
   tuple->Tree_Weight = weight;
   tuple->Tree_GeneratorWeight = generator_weight;
   tuple->Tree_GeneratorBinningValues = generator_binning_values;
+  tuple->Tree_triggerDecision = triggerDecision;
+  tuple->Tree_triggerHLTPrescale = triggerHLTPrescale;
   tuple->Tree_HLT_Mu50 = HLT_Mu50;
   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight = HLT_PFMET120_PFMHT120_IDTight;
   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
@@ -1722,12 +1944,54 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_HLTPFMHT_phi = HLTPFMHT_phi;
   tuple->Tree_HLTPFMHT_sigf = HLTPFMHT_sigf;
   tuple->Tree_matchedMuonWasFound = matchedMuonWasFound;
-  tuple->Tree_Muon1_Pt = Muon1_Pt;
-  tuple->Tree_Muon1_eta = Muon1_eta;
-  tuple->Tree_Muon1_phi = Muon1_phi;
-  tuple->Tree_Muon2_Pt = Muon2_Pt;
-  tuple->Tree_Muon2_eta = Muon2_eta;
-  tuple->Tree_Muon2_phi = Muon2_phi;
+  tuple->Tree_gParticleId = gParticleId;
+  tuple->Tree_gParticleStatus = gParticleStatus;
+  tuple->Tree_gParticleE = gParticleE;
+  tuple->Tree_gParticlePt = gParticlePt;
+  tuple->Tree_gParticlePz = gParticlePz;
+  tuple->Tree_gParticleEta = gParticleEta;
+  tuple->Tree_gParticlePhi = gParticlePhi;
+  tuple->Tree_gParticleBeta = gParticleBeta;
+  tuple->Tree_gParticleCharge = gParticleCharge;
+  tuple->Tree_gParticleProdVertexX = gParticleProdVertexX;
+  tuple->Tree_gParticleProdVertexY = gParticleProdVertexY;
+  tuple->Tree_gParticleProdVertexZ = gParticleProdVertexZ;
+  tuple->Tree_gParticleMotherId = gParticleMotherId;
+  tuple->Tree_gParticleMotherIndex = gParticleMotherIndex;
+  tuple->Tree_muonE = muonE;
+  tuple->Tree_muonPt = muonPt;
+  tuple->Tree_muonEta = muonEta;
+  tuple->Tree_muonPhi = muonPhi;
+  tuple->Tree_muonCharge = muonCharge;
+  tuple->Tree_muonIsLoose = muonIsLoose;
+  tuple->Tree_muonIsMedium = muonIsMedium;
+  tuple->Tree_muonIsTight = muonIsTight;
+  tuple->Tree_muon_d0 = muon_d0;
+  tuple->Tree_muon_d0Err = muon_d0Err;
+  tuple->Tree_muon_dZ = muon_dZ;
+  tuple->Tree_muon_ip3d = muon_ip3d;
+  tuple->Tree_muon_ip3dSignificance = muon_ip3dSignificance;
+  tuple->Tree_muonType = muonType;
+  tuple->Tree_muonQuality = muonQuality;
+  tuple->Tree_muon_pileupIso = muon_pileupIso;
+  tuple->Tree_muon_chargedIso = muon_chargedIso;
+  tuple->Tree_muon_photonIso = muon_photonIso;
+  tuple->Tree_muon_neutralHadIso = muon_neutralHadIso;
+  tuple->Tree_muon_validFractionTrackerHits = muon_validFractionTrackerHits;
+  tuple->Tree_muon_normChi2 = muon_normChi2;
+  tuple->Tree_muon_chi2LocalPosition = muon_chi2LocalPosition;
+  tuple->Tree_muon_kinkFinder = muon_kinkFinder;
+  tuple->Tree_muon_segmentCompatability = muon_segmentCompatability;
+
+  tuple->Tree_muon_trkIso = muon_trkIso;
+  tuple->Tree_muon_tuneP_Pt = muon_tuneP_Pt;
+  tuple->Tree_muon_tuneP_PtErr = muon_tuneP_PtErr;
+  tuple->Tree_muon_tuneP_Eta = muon_tuneP_Eta;
+  tuple->Tree_muon_tuneP_Phi = muon_tuneP_Phi;
+  tuple->Tree_muon_tuneP_MuonBestTrackType = muon_tuneP_MuonBestTrackType;
+  tuple->Tree_muon_isHighPtMuon = muon_isHighPtMuon;
+  tuple->Tree_muon_isTrackerHighPtMuon = muon_isTrackerHighPtMuon;
+
   tuple->Tree_jet_pt = Jet_pt;
   tuple->Tree_jet_eta = Jet_eta;
   tuple->Tree_jet_phi = Jet_phi;
@@ -1737,6 +2001,13 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_jet_et = Jet_et;
   tuple->Tree_jet_chargedEmEnergyFraction = Jet_chargedEmEnergyFraction;
   tuple->Tree_jet_neutralEmEnergyFraction = Jet_neutralEmEnergyFraction;
+  tuple->Tree_jet_chargedHadronEnergyFraction = Jet_chargedHadronEnergyFraction;
+  tuple->Tree_jet_neutralHadronEnergyFraction = Jet_neutralHadronEnergyFraction;
+  tuple->Tree_jet_muonEnergyFraction = Jet_muonEnergyFraction;
+  tuple->Tree_jet_chargedMultiplicity = Jet_chargedMultiplicity;
+  tuple->Tree_jet_neutralMultiplicity = Jet_neutralMultiplicity;
+  tuple->Tree_jet_jetArea = Jet_jetArea;
+  tuple->Tree_jet_pileupE = Jet_pileupE;
   tuple->Tree_vect_mT = vect_mT;
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection = passPreselection;
@@ -1787,6 +2058,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_MassErr = MassErr;
   tuple->Tree_dZ = dZ;
   tuple->Tree_dXY = dXY;
+  tuple->Tree_dZ_pv = dZ_pv;
+  tuple->Tree_dXY_pv = dXY_pv;
   tuple->Tree_dR = dR;
   tuple->Tree_p = p;
   tuple->Tree_eta = eta;
@@ -1845,7 +2118,16 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_GenPt = genpt;
   tuple->Tree_GenEta = geneta;
   tuple->Tree_GenPhi = genphi;
-  
+
+  tuple->Tree_HSCP_tuneP_Pt = HSCP_tuneP_Pt;
+  tuple->Tree_HSCP_tuneP_PtErr = HSCP_tuneP_PtErr;
+  tuple->Tree_HSCP_tuneP_Eta = HSCP_tuneP_Eta;
+  tuple->Tree_HSCP_tuneP_Phi = HSCP_tuneP_Phi;
+  tuple->Tree_HSCP_tuneP_MuonBestTrackType = HSCP_tuneP_MuonBestTrackType;
+  tuple->Tree_HSCP_ErrorHisto_bin = HSCP_ErrorHisto_bin;
+  tuple->Tree_HSCP_type = HSCP_type;
+
+
   // Save in the tree
   tuple->Tree->Fill();
   //if (!SkipSelectionPlot_) tuple->Tree->Fill();
@@ -1878,7 +2160,7 @@ void TupleMaker::fillGenTreeBranches(Tuple *&tuple,
   tuple->GenTree_GenPt = genpt;
   tuple->GenTree_GenEta = geneta;
   tuple->GenTree_GenPhi = genphi;
-  
+
   // Save in the gen tree
   tuple->GenTree->Fill();
 }
@@ -1910,8 +2192,8 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
                                               std::vector<float> CutTOF_Flip) {
   using namespace std;
   using namespace edm;
-  
-  
+
+
   reco::TrackRef track;
   if (TypeMode != 3)
     track = hscp.trackRef();
@@ -1921,9 +2203,9 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       return;
     track = muon->standAloneMuon();
   }
-  
+
   float MuonTOF = tof ? tof->inverseBeta() : GlobalMinTOF;
-  
+
   float Is = 0;
   if (dedxSObj) {
     Is = dedxSObj->dEdx();
@@ -1932,13 +2214,13 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (dedxMObj) {
     Ih = dedxMObj->dEdx();
   }
-  
+
   if (!isCosmicSB) {
     tuple->Hist_Pt->Fill(track->pt(), Event_Weight);
     tuple->Hist_Is->Fill(Is, Event_Weight);
     tuple->Hist_TOF->Fill(MuonTOF, Event_Weight);
   }
-  
+
   // std::cout << "Init After PT, Is and TOF plots are filled" << std::endl;
   //          /\ Ias
   //       /\  |----------------------------
@@ -1969,7 +2251,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     PtLimits.push_back(170);
     PtLimits.push_back(120);
   }
-  
+
   //Muon only prediction binned depending on where in the detector the track is and how many muon stations it has
   //Binning not used for other analyses
   int bin = -1;
@@ -1979,7 +2261,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     else
       bin = muonStations(track->hitPattern()) + 1;
   }
-  
+
   if (!isCosmicSB) {
     if (track->pt() > PtLimits[0]) {
       tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
@@ -2010,7 +2292,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       if (tof && bin >= 0 && bin < MaxPredBins)
         tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
     }
-    
+
     if (Is > 0.2) {
       if (tof)
         tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
@@ -2024,7 +2306,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       if (tof)
         tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
     }
-    
+
     if (Ih > 4.4) {
       if (tof)
         tuple->CtrlIh_S4_TOF->Fill(MuonTOF, Event_Weight);
@@ -2039,11 +2321,11 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->CtrlIh_S1_TOF->Fill(MuonTOF, Event_Weight);
     }
   }
-  
+
   float Ick = 0;
   if (dedxMObj)
     Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(float I, bool MC, float dEdxK, float dEdxC)
-  
+
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {
     if (MuonTOF < GlobalMinTOF)
       continue;
@@ -2052,7 +2334,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     bool PassPtCut = track->pt() >= CutPt[CutIndex];
     bool PassICut = (Is >= CutI[CutIndex]);
     bool PassTOFCut = MuonTOF >= CutTOF[CutIndex];
-    
+
     if (PassTOFCut && PassPtCut && PassICut) {  //Region D
       tuple->H_D->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
@@ -2092,7 +2374,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->Pred_EtaS2->Fill(CutIndex, track->eta(), Event_Weight);
       tuple->PostS_CutIdVsEta_RegionA->Fill(CutIndex, track->eta());
       tuple->PDF_A_Eta->Fill(CutIndex, track->eta(), Event_Weight);  //pz
-      
+
     } else if (!PassTOFCut && PassPtCut && PassICut) {  //Region H
       tuple->H_H->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
@@ -2122,7 +2404,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->PostS_CutIdVsEta_RegionF->Fill(CutIndex, track->eta());
       if (TypeMode == 2)
         tuple->PDF_F_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
-      
+
     } else if (!PassTOFCut && !PassPtCut && !PassICut) {  //Region E
       tuple->H_E->Fill(CutIndex, Event_Weight);
       if (TypeMode == 2)
@@ -2132,21 +2414,21 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->PDF_E_Eta->Fill(CutIndex, track->eta(), Event_Weight);  //pz
     }
   }
-  
+
   //Use events with low TOF to check accuracy of background prediction
   for (unsigned int CutIndex = 0; CutIndex < CutPt_Flip.size(); CutIndex++) {
     if (TypeMode != 5 && MuonTOF >= GlobalMinTOF)
       continue;
     if (TypeMode == 5 && !isCosmicSB)
       continue;
-    
+
     bool PassPtCut = track->pt() >= CutPt_Flip[CutIndex];
     bool PassICut = (Is >= CutI_Flip[CutIndex]);
     bool PassTOFCut = MuonTOF <= CutTOF_Flip[CutIndex];
-    
+
     if (TypeMode == 5)
       PassTOFCut = true;
-    
+
     if (PassTOFCut && PassPtCut && PassICut) {  //Region D
       tuple->RegionD_P_Flip->Fill(CutIndex, track->p(), Event_Weight);
       tuple->RegionD_I_Flip->Fill(CutIndex, Ih, Event_Weight);
@@ -2187,7 +2469,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->RegionH_Ias_Flip->Fill(CutIndex, Is, Event_Weight);
       if (TypeMode == 2 && Ick > 0)
         tuple->PDF_H_EtaMass_Flip->Fill(CutIndex, track->eta(), track->p() * sqrt(Ick), Event_Weight);  //pz
-      
+
       //Pred_P_Flip->Fill(CutIndex,track->p(),        Event_Weight);
       //Pred_I_Flip->Fill(CutIndex,Ih,   Event_Weight);
     } else if (!PassTOFCut && PassPtCut && !PassICut) {  //Region G
@@ -2196,7 +2478,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->Pred_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);
       if (TypeMode == 2)
         tuple->PDF_G_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
-      
+
     } else if (!PassTOFCut && !PassPtCut && PassICut) {  //Region F
       tuple->H_F_Flip->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
