@@ -214,8 +214,11 @@ private:
   string filterName_;
   string pathName_;
   string triggerPathNamesFile_;
+  string muonHLTFilterNamesFile_;
   static const int NTriggersMAX = 1201;
   string triggerPathNames[NTriggersMAX];
+  static const int MAX_MuonHLTFilters = 69;
+  string muonHLTFilterNames[MAX_MuonHLTFilters];
 
 
   bool matchToHLTTrigger_;

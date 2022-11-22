@@ -50,6 +50,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       trigEventToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
       filterName_(iConfig.getParameter<std::string>("FilterName")),
       triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
+      muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
       matchToHLTTrigger_(iConfig.getUntrackedParameter<bool>("MatchToHLTTrigger")),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
@@ -836,6 +837,33 @@ std::vector<int> muon_tuneP_MuonBestTrackType;
 std::vector<bool> muon_isHighPtMuon;
 std::vector<bool> muon_isTrackerHighPtMuon;
 
+// read muon HLT filter names
+for (int i = 0; i<MAX_MuonHLTFilters; ++i) muonHLTFilterNames[i] = "";
+ ifstream myMuonHLTFilterFile (edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str()) ;
+ if (myMuonHLTFilterFile.is_open()) {
+   char tmp[1024];
+   string line;
+   int index;
+   string hltfiltername;
+
+   while(myMuonHLTFilterFile>>line) {
+
+     if ( line.empty() || line.substr(0,1) == "#") {
+       myMuonHLTFilterFile.getline(tmp,1024);
+       continue;
+     }
+     index = atoi(line.c_str());
+     myMuonHLTFilterFile >> hltfiltername;
+     if (index < MAX_MuonHLTFilters) {
+      muonHLTFilterNames[index] = hltfiltername;
+     }
+   }
+   myMuonHLTFilterFile.close();
+ } else cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
+
+ 
+
+
 for (unsigned int i = 0; i < muonColl.size(); i++) {
   const reco::Muon* mu = &(muonColl)[i];
 
@@ -926,26 +954,33 @@ for (unsigned int i = 0; i < muonColl.size(); i++) {
     muon_isTrackerHighPtMuon.push_back(muon::isTrackerHighPtMuon(*mu, myPV));
 
 
-
-    //-----------------------
-   //Trigger Object Matching
-   //-----------------------
-     // bool passTagMuonFilter = false;
-     // for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
-     //   if (deltaR(trigObject.eta(), trigObject.phi(),mu.eta(),mu.phi()) > 0.3) continue;
-     //   trigObject.unpackFilterLabels(iEvent, *triggerBits);
-     //
-     //   //check all filters
-     //   for ( int q=0; q<MAX_MuonHLTFilters;q++) {
-     // 	if (trigObject.hasFilterLabel(muonHLTFilterNames[q].c_str())) muon_passHLTFilter[nMuons][q] = true;
-     //   }
-     // }
-
     nMuons++;
 
 }
+std::vector<std::vector<float>> triggerObjectE;
+std::vector<std::vector<float>> triggerObjectPt;
+std::vector<std::vector<float>> triggerObjectEta;
+std::vector<std::vector<float>> triggerObjectPhi;
 
 
+// std::vector<TLorentzVector> trigObjP4s;
+for ( int q=0; q<MAX_MuonHLTFilters;q++) {
+  trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,muonHLTFilterNames[q].c_str(),"HLT");
+  std::vector<float> triggerObjectE_temp;
+  std::vector<float> triggerObjectPt_temp;
+  std::vector<float> triggerObjectEta_temp;
+  std::vector<float> triggerObjectPhi_temp;
+  for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+    triggerObjectE_temp.push_back(trigObjP4s[objNr].Energy());
+    triggerObjectPt_temp.push_back(trigObjP4s[objNr].Pt());
+    triggerObjectEta_temp.push_back(trigObjP4s[objNr].Eta());
+    triggerObjectPhi_temp.push_back(trigObjP4s[objNr].Phi());
+  }
+  triggerObjectE.push_back(triggerObjectE_temp);
+  triggerObjectPt.push_back(triggerObjectPt_temp);
+  triggerObjectEta.push_back(triggerObjectEta_temp);
+  triggerObjectPhi.push_back(triggerObjectPhi_temp);
+}
 
   //////
   float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_sigf = -10;
@@ -4060,6 +4095,10 @@ for (unsigned int i = 0; i < muonColl.size(); i++) {
                                 GeneratorBinningValues_,
                                 triggerDecision,
                                 triggerHLTPrescale,
+                                triggerObjectE,
+                                triggerObjectPt,
+                                triggerObjectEta,
+                                triggerObjectPhi,
                                 HLT_Mu50,
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -4377,7 +4416,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   ->setComment("Meaning of this is: L1f0  = L1 filtered with threshold 0, L2f10Q = L2 filtered at 10 GeV with quality cuts, L3Filtered50Q = L3 filtered at 50 GeV with quality cuts");
   desc.add("triggerPathNamesFile", std::string("SUSYBSMAnalysis/Analyzer/data/trigger_names_llp_v3.dat"))
     ->setComment("A");
-
+  desc.add("muonHLTFilterNamesFile", std::string("SUSYBSMAnalysis/Analyzer/data/MuonHLTFilterNames.dat"))
+    ->setComment("A");
   desc.add("PfMET", edm::InputTag("pfMet"))
     ->setComment("A");
   desc.add("PfJet", edm::InputTag("ak4PFJetsCHS"))
@@ -4388,6 +4428,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Take jets from the calorimeters");
   desc.add("TriggerSummary", edm::InputTag("hltTriggerSummaryAOD"))
     ->setComment("A");
+
+
+
   desc.add("PileupInfo", edm::InputTag("addPileupInfo"))
     ->setComment("A");
   desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))

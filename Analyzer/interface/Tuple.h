@@ -39,6 +39,10 @@ struct Tuple {
   float Tree_GeneratorBinningValues;
   std::vector<bool> Tree_triggerDecision;
   std::vector<int> Tree_triggerHLTPrescale;
+  std::vector<std::vector<float>> Tree_triggerObjectE;
+  std::vector<std::vector<float>> Tree_triggerObjectPt;
+  std::vector<std::vector<float>> Tree_triggerObjectEta;
+  std::vector<std::vector<float>> Tree_triggerObjectPhi;
   bool Tree_HLT_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
   bool Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;

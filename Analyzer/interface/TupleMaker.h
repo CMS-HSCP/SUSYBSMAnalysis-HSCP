@@ -59,6 +59,10 @@ public:
                         const float &generator_binning_values,
                         const std::vector<bool> &triggerDecision,
                         const std::vector<int> &triggerHLTPrescale,
+                        const std::vector<std::vector<float>> &triggerObjectE,
+                        const std::vector<std::vector<float>> &triggerObjectPt,
+                        const std::vector<std::vector<float>> &triggerObjectEta,
+                        const std::vector<std::vector<float>> &triggerObjectPhi,
                         const bool &HLT_Mu50,
                         const bool &HLT_PFMET120_PFMHT120_IDTight,
                         const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1373,6 +1377,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("GeneratorBinningValues", &tuple->Tree_GeneratorBinningValues, "GeneratorBinningValues/F");
     tuple->Tree->Branch("triggerDecision", &tuple->Tree_triggerDecision);
     tuple->Tree->Branch("triggerHLTPrescale", &tuple->Tree_triggerHLTPrescale);
+
+    tuple->Tree->Branch("triggerObjectE", &tuple->Tree_triggerObjectE);
+    tuple->Tree->Branch("triggerObjectPt", &tuple->Tree_triggerObjectPt);
+    tuple->Tree->Branch("triggerObjectEta", &tuple->Tree_triggerObjectEta);
+    tuple->Tree->Branch("triggerObjectPhi", &tuple->Tree_triggerObjectPhi);
+
     tuple->Tree->Branch("HLT_Mu50", &tuple->Tree_HLT_Mu50, "HLT_Mu50/O");
     tuple->Tree->Branch("HLT_PFMET120_PFMHT120_IDTight",
                         &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight,
@@ -1682,6 +1692,10 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &generator_binning_values,
                                   const std::vector<bool> &triggerDecision,
                                   const std::vector<int> &triggerHLTPrescale,
+                                  const std::vector<std::vector<float>> &triggerObjectE,
+                                  const std::vector<std::vector<float>> &triggerObjectPt,
+                                  const std::vector<std::vector<float>> &triggerObjectEta,
+                                  const std::vector<std::vector<float>> &triggerObjectPhi,
                                   const bool &HLT_Mu50,
                                   const bool &HLT_PFMET120_PFMHT120_IDTight,
                                   const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
@@ -1916,6 +1930,10 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_GeneratorBinningValues = generator_binning_values;
   tuple->Tree_triggerDecision = triggerDecision;
   tuple->Tree_triggerHLTPrescale = triggerHLTPrescale;
+  tuple->Tree_triggerObjectE = triggerObjectE;
+  tuple->Tree_triggerObjectPt = triggerObjectPt;
+  tuple->Tree_triggerObjectEta = triggerObjectEta;
+  tuple->Tree_triggerObjectPhi = triggerObjectPhi;
   tuple->Tree_HLT_Mu50 = HLT_Mu50;
   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight = HLT_PFMET120_PFMHT120_IDTight;
   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
