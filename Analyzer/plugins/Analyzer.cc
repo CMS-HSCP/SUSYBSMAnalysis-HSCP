@@ -47,17 +47,17 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("MuonCollection"))),
       conversionsToken_(consumes<vector<reco::Conversion> >(iConfig.getParameter<edm::InputTag>("conversions"))),
       electronToken_(consumes<reco::GsfElectronCollection>(iConfig.getParameter<edm::InputTag>("ElectronCollection"))),
-      // electron_cutbasedID_decisions_veto_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_veto"))),
-      // electron_cutbasedID_decisions_loose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_loose"))),
-      // electron_cutbasedID_decisions_medium_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_medium"))),
-      // electron_cutbasedID_decisions_tight_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_tight"))),
-      // electron_mvaIsoID_decisions_wp80_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wp80"))),
-      // electron_mvaIsoID_decisions_wp90_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wp90"))),
-      // electron_mvaIsoID_decisions_wpHZZ_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wpHZZ"))),
-      // electron_mvaIsoID_decisions_wpLoose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wpLoose"))),
-      // electron_mvaNoIsoID_decisions_wp80_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wp80"))),
-      // electron_mvaNoIsoID_decisions_wp90_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wp90"))),
-      // electron_mvaNoIsoID_decisions_wpLoose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wpLoose"))),
+      electron_cutbasedID_decisions_veto_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_veto"))),
+      electron_cutbasedID_decisions_loose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_loose"))),
+      electron_cutbasedID_decisions_medium_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_medium"))),
+      electron_cutbasedID_decisions_tight_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_tight"))),
+      electron_mvaIsoID_decisions_wp80_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wp80"))),
+      electron_mvaIsoID_decisions_wp90_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wp90"))),
+      electron_mvaIsoID_decisions_wpHZZ_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wpHZZ"))),
+      electron_mvaIsoID_decisions_wpLoose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wpLoose"))),
+      electron_mvaNoIsoID_decisions_wp80_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wp80"))),
+      electron_mvaNoIsoID_decisions_wp90_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wp90"))),
+      electron_mvaNoIsoID_decisions_wpLoose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wpLoose"))),
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
       triggerPrescalesToken_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("triggerPrescales"))),
       trigEventToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
@@ -785,6 +785,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   }
 
+
+
   /////////////////////////
   // add all electrons
   ////////////////////////
@@ -826,17 +828,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> ele_OneOverEminusOneOverP;
 
 
-  // iEvent.getByToken(electron_cutbasedID_decisions_veto_Token_, electron_cutbasedID_decisions_veto);
-  // iEvent.getByToken(electron_cutbasedID_decisions_loose_Token_, electron_cutbasedID_decisions_loose);
-  // iEvent.getByToken(electron_cutbasedID_decisions_medium_Token_, electron_cutbasedID_decisions_medium);
-  // iEvent.getByToken(electron_cutbasedID_decisions_tight_Token_, electron_cutbasedID_decisions_tight);
-  // iEvent.getByToken(electron_mvaIsoID_decisions_wp80_Token_, electron_mvaIsoID_decisions_wp80);
-  // iEvent.getByToken(electron_mvaIsoID_decisions_wp90_Token_, electron_mvaIsoID_decisions_wp90);
-  // iEvent.getByToken(electron_mvaIsoID_decisions_wpHZZ_Token_, electron_mvaIsoID_decisions_wpHZZ);
-  // iEvent.getByToken(electron_mvaIsoID_decisions_wpLoose_Token_, electron_mvaIsoID_decisions_wpLoose);
-  // iEvent.getByToken(electron_mvaNoIsoID_decisions_wp80_Token_, electron_mvaNoIsoID_decisions_wp80);
-  // iEvent.getByToken(electron_mvaNoIsoID_decisions_wp90_Token_, electron_mvaNoIsoID_decisions_wp90);
-  // iEvent.getByToken(electron_mvaNoIsoID_decisions_wpLoose_Token_, electron_mvaNoIsoID_decisions_wpLoose);
+  iEvent.getByToken(electron_cutbasedID_decisions_veto_Token_, electron_cutbasedID_decisions_veto);
+  iEvent.getByToken(electron_cutbasedID_decisions_loose_Token_, electron_cutbasedID_decisions_loose);
+  iEvent.getByToken(electron_cutbasedID_decisions_medium_Token_, electron_cutbasedID_decisions_medium);
+  iEvent.getByToken(electron_cutbasedID_decisions_tight_Token_, electron_cutbasedID_decisions_tight);
+  iEvent.getByToken(electron_mvaIsoID_decisions_wp80_Token_, electron_mvaIsoID_decisions_wp80);
+  iEvent.getByToken(electron_mvaIsoID_decisions_wp90_Token_, electron_mvaIsoID_decisions_wp90);
+  iEvent.getByToken(electron_mvaIsoID_decisions_wpHZZ_Token_, electron_mvaIsoID_decisions_wpHZZ);
+  iEvent.getByToken(electron_mvaIsoID_decisions_wpLoose_Token_, electron_mvaIsoID_decisions_wpLoose);
+  iEvent.getByToken(electron_mvaNoIsoID_decisions_wp80_Token_, electron_mvaNoIsoID_decisions_wp80);
+  iEvent.getByToken(electron_mvaNoIsoID_decisions_wp90_Token_, electron_mvaNoIsoID_decisions_wp90);
+  iEvent.getByToken(electron_mvaNoIsoID_decisions_wpLoose_Token_, electron_mvaNoIsoID_decisions_wpLoose);
   edm::Handle<vector<reco::Conversion> > conversions;
   iEvent.getByToken(conversionsToken_,conversions);
   edm::Handle<reco::BeamSpot> beamSpot;
@@ -873,17 +875,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     ele_photonIso.push_back(ele.pfIsolationVariables().sumPhotonEt);
     ele_neutralHadIso.push_back(ele.pfIsolationVariables().sumNeutralHadronEt);
     ele_MissHits.push_back(ele.gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
-    // ele_passCutBasedIDVeto.push_back((*electron_cutbasedID_decisions_veto)[eleRef]);
-    // ele_passCutBasedIDLoose.push_back((*electron_cutbasedID_decisions_loose)[eleRef]);
-    // ele_passCutBasedIDMedium.push_back((*electron_cutbasedID_decisions_medium)[eleRef]);
-    // ele_passCutBasedIDTight.push_back((*electron_cutbasedID_decisions_tight)[eleRef]);
-    // ele_passMVAIsoIDWP80.push_back((*electron_mvaIsoID_decisions_wp80)[eleRef]);
-    // ele_passMVAIsoIDWP90.push_back((*electron_mvaIsoID_decisions_wp90)[eleRef]);
-    // ele_passMVAIsoIDWPHZZ.push_back((*electron_mvaIsoID_decisions_wpHZZ)[eleRef]);
-    // ele_passMVAIsoIDWPLoose.push_back((*electron_mvaIsoID_decisions_wpLoose)[eleRef]);
-    // ele_passMVANoIsoIDWP80.push_back((*electron_mvaNoIsoID_decisions_wp80)[eleRef]);
-    // ele_passMVANoIsoIDWP90.push_back((*electron_mvaNoIsoID_decisions_wp90)[eleRef]);
-    // ele_passMVANoIsoIDWPLoose.push_back((*electron_mvaNoIsoID_decisions_wpLoose)[eleRef]);
+    ele_passCutBasedIDVeto.push_back((*electron_cutbasedID_decisions_veto)[eleRef]);
+    ele_passCutBasedIDLoose.push_back((*electron_cutbasedID_decisions_loose)[eleRef]);
+    ele_passCutBasedIDMedium.push_back((*electron_cutbasedID_decisions_medium)[eleRef]);
+    ele_passCutBasedIDTight.push_back((*electron_cutbasedID_decisions_tight)[eleRef]);
+    ele_passMVAIsoIDWP80.push_back((*electron_mvaIsoID_decisions_wp80)[eleRef]);
+    ele_passMVAIsoIDWP90.push_back((*electron_mvaIsoID_decisions_wp90)[eleRef]);
+    ele_passMVAIsoIDWPHZZ.push_back((*electron_mvaIsoID_decisions_wpHZZ)[eleRef]);
+    ele_passMVAIsoIDWPLoose.push_back((*electron_mvaIsoID_decisions_wpLoose)[eleRef]);
+    ele_passMVANoIsoIDWP80.push_back((*electron_mvaNoIsoID_decisions_wp80)[eleRef]);
+    ele_passMVANoIsoIDWP90.push_back((*electron_mvaNoIsoID_decisions_wp90)[eleRef]);
+    ele_passMVANoIsoIDWPLoose.push_back((*electron_mvaNoIsoID_decisions_wpLoose)[eleRef]);
 
     //---------------
     //Conversion Veto
@@ -4554,9 +4556,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
     desc.add("ElectronCollection", edm::InputTag("gedGsfElectrons"))
       ->setComment("A");
+
       desc.add("conversions", edm::InputTag("allConversions","","RECO"))
         ->setComment("A");
-      // conversions = cms.InputTag("allConversions", "", "RECO"),
 
 
   desc.add("electron_cutbasedID_decisions_veto", edm::InputTag("egmGsfElectronIDs", "cutBasedElectronID-Fall17-94X-V2-veto", ""))
@@ -4595,6 +4597,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
     desc.add("triggerPrescales",  edm::InputTag("patTrigger"))
       ->setComment("A");
+
 
 
   desc.add<std::string>("FilterName",std::string("hltL3fL1sMu22Or25L1f0L2f10QL3Filtered50Q"))

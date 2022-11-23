@@ -82,6 +82,7 @@
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -212,17 +213,17 @@ private:
   edm::EDGetTokenT<vector<reco::Conversion> > conversionsToken_;
   edm::EDGetTokenT<reco::GsfElectronCollection> electronToken_;
 
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_medium_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_tight_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp80_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp90_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpHZZ_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpLoose_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp80_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90_Token_;
-  // edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_medium_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_tight_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp80_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp90_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpHZZ_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpLoose_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp80_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose_Token_;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
@@ -248,17 +249,17 @@ private:
   edm::EDGetTokenT<reco::PFCandidateCollection> pfCandToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genEventToken_; // for reading generator weight
 
-  // edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto;
-  // edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose;
-  // edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_medium;
-  // edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_tight;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp80;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp90;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpHZZ;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpLoose;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp80;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90;
-  // edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_medium;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_tight;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp80;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp90;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpHZZ;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpLoose;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp80;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose;
 
   vector<string> trigger_met_, trigger_mu_;
 
