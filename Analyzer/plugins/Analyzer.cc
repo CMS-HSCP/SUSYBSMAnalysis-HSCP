@@ -45,6 +45,19 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
           consumes<vector<reco::Track>>(iConfig.getParameter<edm::InputTag>("RefittedStandAloneMuonsCollection"))),
       offlineBeamSpotToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("OfflineBeamSpotCollection"))),
       muonToken_(consumes<vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("MuonCollection"))),
+      conversionsToken_(consumes<vector<reco::Conversion> >(iConfig.getParameter<edm::InputTag>("conversions"))),
+      electronToken_(consumes<reco::GsfElectronCollection>(iConfig.getParameter<edm::InputTag>("ElectronCollection"))),
+      // electron_cutbasedID_decisions_veto_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_veto"))),
+      // electron_cutbasedID_decisions_loose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_loose"))),
+      // electron_cutbasedID_decisions_medium_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_medium"))),
+      // electron_cutbasedID_decisions_tight_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_cutbasedID_decisions_tight"))),
+      // electron_mvaIsoID_decisions_wp80_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wp80"))),
+      // electron_mvaIsoID_decisions_wp90_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wp90"))),
+      // electron_mvaIsoID_decisions_wpHZZ_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wpHZZ"))),
+      // electron_mvaIsoID_decisions_wpLoose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaIsoID_decisions_wpLoose"))),
+      // electron_mvaNoIsoID_decisions_wp80_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wp80"))),
+      // electron_mvaNoIsoID_decisions_wp90_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wp90"))),
+      // electron_mvaNoIsoID_decisions_wpLoose_Token_(consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electron_mvaNoIsoID_decisions_wpLoose"))),
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
       triggerPrescalesToken_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("triggerPrescales"))),
       trigEventToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
@@ -772,32 +785,127 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   }
 
+  /////////////////////////
+  // add all electrons
+  ////////////////////////
+  edm::Handle<reco::GsfElectronCollection> electrons = iEvent.getHandle(electronToken_);
+
+  std::vector<float> eleE;
+  std::vector<float> elePt;
+  std::vector<float> eleEta;
+  std::vector<float> elePhi;
+  std::vector<float> eleCharge;
+  std::vector<float> eleE_SC;
+  std::vector<float> eleEta_SC;
+  std::vector<float> elePhi_SC;
+  std::vector<float> eleSigmaIetaIeta;
+  std::vector<float> eleFull5x5SigmaIetaIeta;
+  std::vector<float> eleR9;
+  std::vector<float> ele_dEta;
+  std::vector<float> ele_dPhi;
+  std::vector<float> ele_HoverE;
+  std::vector<float> ele_d0;
+  std::vector<float> ele_dZ;
+  std::vector<float> ele_pileupIso;
+  std::vector<float> ele_chargedIso;
+  std::vector<float> ele_photonIso;
+  std::vector<float> ele_neutralHadIso;
+  std::vector<int> ele_MissHits;
+  std::vector<bool> ele_passCutBasedIDVeto;
+  std::vector<bool> ele_passCutBasedIDLoose;
+  std::vector<bool> ele_passCutBasedIDMedium;
+  std::vector<bool> ele_passCutBasedIDTight;
+  std::vector<bool> ele_passMVAIsoIDWP80;
+  std::vector<bool> ele_passMVAIsoIDWP90;
+  std::vector<bool> ele_passMVAIsoIDWPHZZ;
+  std::vector<bool> ele_passMVAIsoIDWPLoose;
+  std::vector<bool> ele_passMVANoIsoIDWP80;
+  std::vector<bool> ele_passMVANoIsoIDWP90;
+  std::vector<bool> ele_passMVANoIsoIDWPLoose;
+  std::vector<bool> ele_PassConvVeto;
+  std::vector<float> ele_OneOverEminusOneOverP;
 
 
-  // unsigned int Muons_count = 0;
-  // float maxPtMuon1 = 0, maxPtMuon2 = 0;
-  // float etaMuon1 = 0, phiMuon1 = 0;
-  // float etaMuon2 = 0, phiMuon2 = 0;
-  // unsigned int muon1 = 0;
-  // for (unsigned int i = 0; i < muonColl.size(); i++) {
-  //   const reco::Muon* mu = &(muonColl)[i];
-  //   Muons_count++;
-  //   if (mu->pt() > maxPtMuon1) {
-  //     maxPtMuon1 = mu->pt();
-  //     etaMuon1 = mu->eta();
-  //     phiMuon1 = mu->phi();
-  //     muon1 = i;
-  //   }
-  // }
-  // for (unsigned int i = 0; i < muonColl.size(); i++) {
-  //   if (i == muon1) continue;
-  //   const reco::Muon* mu = &(muonColl)[i];
-  //   if (mu->pt() > maxPtMuon2) {
-  //     maxPtMuon2 = mu->pt();
-  //     etaMuon2 = mu->eta();
-  //     phiMuon2 = mu->phi();
-  //   }
-  // }
+  // iEvent.getByToken(electron_cutbasedID_decisions_veto_Token_, electron_cutbasedID_decisions_veto);
+  // iEvent.getByToken(electron_cutbasedID_decisions_loose_Token_, electron_cutbasedID_decisions_loose);
+  // iEvent.getByToken(electron_cutbasedID_decisions_medium_Token_, electron_cutbasedID_decisions_medium);
+  // iEvent.getByToken(electron_cutbasedID_decisions_tight_Token_, electron_cutbasedID_decisions_tight);
+  // iEvent.getByToken(electron_mvaIsoID_decisions_wp80_Token_, electron_mvaIsoID_decisions_wp80);
+  // iEvent.getByToken(electron_mvaIsoID_decisions_wp90_Token_, electron_mvaIsoID_decisions_wp90);
+  // iEvent.getByToken(electron_mvaIsoID_decisions_wpHZZ_Token_, electron_mvaIsoID_decisions_wpHZZ);
+  // iEvent.getByToken(electron_mvaIsoID_decisions_wpLoose_Token_, electron_mvaIsoID_decisions_wpLoose);
+  // iEvent.getByToken(electron_mvaNoIsoID_decisions_wp80_Token_, electron_mvaNoIsoID_decisions_wp80);
+  // iEvent.getByToken(electron_mvaNoIsoID_decisions_wp90_Token_, electron_mvaNoIsoID_decisions_wp90);
+  // iEvent.getByToken(electron_mvaNoIsoID_decisions_wpLoose_Token_, electron_mvaNoIsoID_decisions_wpLoose);
+  edm::Handle<vector<reco::Conversion> > conversions;
+  iEvent.getByToken(conversionsToken_,conversions);
+  edm::Handle<reco::BeamSpot> beamSpot;
+  iEvent.getByToken(offlineBeamSpotToken_,beamSpot);
+
+
+  for (uint i = 0; i < electrons->size(); ++i){
+    const reco::GsfElectron ele = (*electrons)[i];
+    reco::GsfElectronRef eleRef(electrons, i);
+    if(ele.pt() < 5) continue;
+
+    eleE.push_back(ele.energy());
+    elePt.push_back(ele.pt());
+    eleEta.push_back(ele.eta());
+    elePhi.push_back(ele.phi());
+    eleCharge.push_back(ele.charge());
+    ele.hadronicOverEm();
+    eleE_SC.push_back(ele.superCluster()->energy());
+    eleEta_SC.push_back(ele.superCluster()->eta());
+    elePhi_SC.push_back(ele.superCluster()->phi());
+
+    eleSigmaIetaIeta.push_back(ele.sigmaIetaIeta());
+    eleFull5x5SigmaIetaIeta.push_back(ele.full5x5_sigmaIetaIeta());
+    eleR9.push_back(ele.r9());
+    ele_dEta.push_back(ele.deltaEtaSuperClusterTrackAtVtx() - ele.superCluster()->eta() + ele.superCluster()->seed()->eta());
+
+    ele_dPhi.push_back(ele.deltaPhiSuperClusterTrackAtVtx());
+    ele_HoverE.push_back(ele.hcalOverEcal());
+    ele_d0.push_back(-ele.gsfTrack().get()->dxy(myPV.position()));
+    ele_dZ.push_back(ele.gsfTrack().get()->dz(myPV.position()));
+
+    ele_pileupIso.push_back(ele.pfIsolationVariables().sumPUPt);
+    ele_chargedIso.push_back(ele.pfIsolationVariables().sumChargedHadronPt);
+    ele_photonIso.push_back(ele.pfIsolationVariables().sumPhotonEt);
+    ele_neutralHadIso.push_back(ele.pfIsolationVariables().sumNeutralHadronEt);
+    ele_MissHits.push_back(ele.gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS));
+    // ele_passCutBasedIDVeto.push_back((*electron_cutbasedID_decisions_veto)[eleRef]);
+    // ele_passCutBasedIDLoose.push_back((*electron_cutbasedID_decisions_loose)[eleRef]);
+    // ele_passCutBasedIDMedium.push_back((*electron_cutbasedID_decisions_medium)[eleRef]);
+    // ele_passCutBasedIDTight.push_back((*electron_cutbasedID_decisions_tight)[eleRef]);
+    // ele_passMVAIsoIDWP80.push_back((*electron_mvaIsoID_decisions_wp80)[eleRef]);
+    // ele_passMVAIsoIDWP90.push_back((*electron_mvaIsoID_decisions_wp90)[eleRef]);
+    // ele_passMVAIsoIDWPHZZ.push_back((*electron_mvaIsoID_decisions_wpHZZ)[eleRef]);
+    // ele_passMVAIsoIDWPLoose.push_back((*electron_mvaIsoID_decisions_wpLoose)[eleRef]);
+    // ele_passMVANoIsoIDWP80.push_back((*electron_mvaNoIsoID_decisions_wp80)[eleRef]);
+    // ele_passMVANoIsoIDWP90.push_back((*electron_mvaNoIsoID_decisions_wp90)[eleRef]);
+    // ele_passMVANoIsoIDWPLoose.push_back((*electron_mvaNoIsoID_decisions_wpLoose)[eleRef]);
+
+    //---------------
+    //Conversion Veto
+    //---------------
+
+    !ConversionTools::hasMatchedConversion(ele,(*conversions),beamSpot->position());
+
+    if( beamSpot.isValid() && conversions.isValid() )
+    {
+      ele_PassConvVeto.push_back(!ConversionTools::hasMatchedConversion(ele,(*conversions),beamSpot->position()));
+    } else {
+      ele_PassConvVeto.push_back(false);
+    }
+    // // 1/E - 1/P
+    if( ele.ecalEnergy() == 0 ){
+      ele_OneOverEminusOneOverP.push_back(1e30);
+    } else if( !std::isfinite(ele.ecalEnergy())){
+      ele_OneOverEminusOneOverP.push_back(1e30);
+    } else {
+    ele_OneOverEminusOneOverP.push_back(1./ele.ecalEnergy()  -  ele.eSuperClusterOverP()/ele.ecalEnergy());
+    }
+  }
 /////////////////////////
 // add all muons
 ////////////////////////
@@ -861,7 +969,7 @@ for (int i = 0; i<MAX_MuonHLTFilters; ++i) muonHLTFilterNames[i] = "";
    myMuonHLTFilterFile.close();
  } else cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
 
- 
+
 
 
 for (unsigned int i = 0; i < muonColl.size(); i++) {
@@ -1408,32 +1516,37 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
       }
     }//end of isData condition
+    bool kept_after_mcMatching = true;
     if (!isData && closestGenIndex < 0 ) {
       // dont look at events where we didnt find the gen canidate
       if (debug_ > 4 ) LogPrint(MOD) << "  >> Event where we didnt find the gen canidate";
       // 5-th bin of the error histo, didnt find the gen canidate
       tuple->ErrorHisto->Fill(4.);
-      if (saveTree_ == 0) continue; //still save the HSCP candidate if tree is saved
-      continue; //still save the HSCP candidate if tree is saved
       ErrorHisto_bin = 4;
+      kept_after_mcMatching = false;
+      // continue;
+
     }
-    if (!isData) {
+
+    if (!isData && kept_after_mcMatching) {
       tuple->BefPreS_GendRMin->Fill(dRMinGen);
       tuple->BefPreS_GenPtVsdRMinGen->Fill(genColl[closestGenIndex].pt(), dRMinGen);
     }
-    if (!isData && dRMinGen > 0.01 ) {
+
+
+    if (!isData && kept_after_mcMatching && dRMinGen > 0.01 ) {
       // dont look at events where we didnt find the gen canidate close enough
       if (debug_ > 4 ) LogPrint(MOD) << "  >> The min Gen candidate distance is too big (" << dRMinGen << "), skipping the track";
       // 6-th bin of the error histo, didnt find the gen canidate
       tuple->ErrorHisto->Fill(5.);
-      if (saveTree_ == 0)continue; //still save the HSCP candidate if tree is saved
-      continue; //still save the HSCP candidate if tree is saved
       ErrorHisto_bin = 5;
+      kept_after_mcMatching = false;
+      // continue;
 
     }
 
     float genGammaBeta = 0.0;
-    if (!isData) {
+    if (!isData && kept_after_mcMatching ) {
       genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
     }
 
@@ -1441,7 +1554,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen;
     }
 
-    if (!isData) {
+    if (!isData && kept_after_mcMatching ) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genColl[closestGenIndex].pt(), dRMinGen);
       tuple->BefPreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
       // 2D plot to compare gen pt vs reco pt
@@ -1452,7 +1565,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     // the pt of the candidate and the number of siblings
     float closestBackgroundPDGsIDs[8] = {0.,0.,0.,9999.,9999.,0.,9999.,0.};
     // Look at the properties of the closes gen candidate
-    if (isSignal) {
+    if (isSignal && kept_after_mcMatching  ) {
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
       // All HSCP candidates
       tuple->HSCPCandidateType->Fill(0., EventWeight_);
@@ -1517,8 +1630,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           vertexColl[i].ndof() <= 4)
         continue;  //only consider good vertex
       goodVerts++;
-      tuple->BefPreS_DzAll->Fill(track->dz(vertexColl[i].position()), EventWeight_);
-      tuple->BefPreS_dxyAll->Fill(track->dxy(vertexColl[i].position()), EventWeight_);
+      if(kept_after_mcMatching) tuple->BefPreS_DzAll->Fill(track->dz(vertexColl[i].position()), EventWeight_);
+      if(kept_after_mcMatching) tuple->BefPreS_dxyAll->Fill(track->dxy(vertexColl[i].position()), EventWeight_);
       if (fabs(track->dz(vertexColl[i].position())) < fabs(dzMin)) {
         dzMin = fabs(track->dz(vertexColl[i].position()));
         highestPtGoodVertex = i;
@@ -1623,7 +1736,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           pf_energy = pfCand->ecalEnergy() + pfCand->hcalEnergy();
           pf_ecal_energy = pfCand->ecalEnergy();
           pf_hcal_energy = pfCand->hcalEnergy();
-          if (tuple) {
+          if (tuple && kept_after_mcMatching) {
               // Number of PF tracks matched to HSCP candidate track
             tuple->BefPreS_pfType->Fill(1., EventWeight_);
             if (pf_isElectron) {
@@ -1783,14 +1896,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     if (!dedxHits) {
       if (debug_> 3) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
       // 7-th bin of the error histo, No dedxHits associated to this track
-      tuple->ErrorHisto->Fill(6.);
+      if (kept_after_mcMatching) tuple->ErrorHisto->Fill(6.);
       continue;
     }
 
     // Loop on the gen particles (again) to find if the 0.001 enviroment of the candidate has 91 or >2
     bool candidateEnvHasStatus91 = false;
     bool candidateEnvHasStatusHigherThan2 = false;
-    if (!isData) {
+    if (!isData && kept_after_mcMatching) {
       unsigned int usignedIntclosestGenIndex = 0;
       if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
 
@@ -1812,9 +1925,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     int nofClust_dEdxLowerThan = 0;
 
-    if (!isData && candidateEnvHasStatus91) {
+    if (!isData && candidateEnvHasStatus91 && kept_after_mcMatching) {
       tuple->ErrorHisto->Fill(8.);
-      if (saveTree_) continue;
+      kept_after_mcMatching = false;
       ErrorHisto_bin = 8;
 
     }
@@ -1855,9 +1968,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bool cpeHasFailed = false;
         if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
           cpeHasFailed = true;
-          tuple->BefPreS_CluProbHasFilled->Fill(0., EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluProbHasFilled->Fill(0., EventWeight_);
         } else {
-          tuple->BefPreS_CluProbHasFilled->Fill(1., EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluProbHasFilled->Fill(1., EventWeight_);
         }
 
         if (cpeHasFailed) continue;
@@ -1889,31 +2002,30 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
         if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
-          tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
-          tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
-          tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
-          tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex, EventWeight_);
-          tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex, EventWeight_);
-
-          tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsPixelLayer->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluSizeVsPixelLayer->Fill(clustSize-0.5, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluSizeXVsPixelLayer->Fill(clustSizeX-0.5, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluSizeYVsPixelLayer->Fill(clustSizeY-0.5, pixLayerIndex, EventWeight_);
           if (isOnEdge) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(0.5, pixLayerIndex, EventWeight_);
           } else if (hasBadPixels) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(1.5, pixLayerIndex, EventWeight_);
           } else if (spansTwoROCs) {
-            tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(2.5, pixLayerIndex, EventWeight_);
           }
-          tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluSpecInCPEVsPixelLayer->Fill(3.5, pixLayerIndex, EventWeight_);
 
           if (probXY < globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex, EventWeight_);
-            tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluCotBetaVsPixelLayer_lowProbXY->Fill(cotBeta, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluCotAlphaVsPixelLayer_lowProbXY->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           } else if (probXY > globalMinTrackProbXYCut_ && !specInCPE) {
-            tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex, EventWeight_);
-            tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           }
           if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-            tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
           }
         } // end of IF on barrel pixel
 
@@ -1982,16 +2094,16 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
         if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
         if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-          tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
         } else if (!isData && genGammaBeta > 0.6 ) {
-          tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
           if (candidateEnvHasStatus91) {
-            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
           } else {
-            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
           }
           if (candidateEnvHasStatusHigherThan2) {
-            tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+            if (kept_after_mcMatching) tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
           }
         }
 
@@ -2020,7 +2132,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 //      tuple->ErrorHisto->Fill(8.);
     }
 
-    tuple->BefPreS_genGammaBetaVsProbXYNoL1->Fill(genGammaBeta, pixelProbs[3], EventWeight_);
+    if (kept_after_mcMatching) tuple->BefPreS_genGammaBetaVsProbXYNoL1->Fill(genGammaBeta, pixelProbs[3], EventWeight_);
 
     TreeprobQonTrack = pixelProbs[0];
     TreeprobXYonTrack = pixelProbs[1];
@@ -2195,7 +2307,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection";
 
     // Fill up the closestBackgroundPDGsIDs array (has to be done before preselection function)
-    if (!isData) {
+    if (!isData && kept_after_mcMatching) {
         //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
       closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
       float genEta = genColl[closestGenIndex].eta();
@@ -2358,7 +2470,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     }
 
     // number of tracks as the first bin
-    tuple->BefPreS_pfType->Fill(0., EventWeight_);
+    if (kept_after_mcMatching) tuple->BefPreS_pfType->Fill(0., EventWeight_);
 
     int nearestJetIndex = -1;
     int pfNumJets = 0;
@@ -2382,7 +2494,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           }
         }
 
-        tuple->BefPreS_dRVsdPtPfCaloJet->Fill(dRMinPfCaloJet,dPtPfCaloJet, EventWeight_);
+        if (kept_after_mcMatching) tuple->BefPreS_dRVsdPtPfCaloJet->Fill(dRMinPfCaloJet,dPtPfCaloJet, EventWeight_);
 
         if (dr < dRMinPfJetTemp) {
           dRMinPfJetTemp = dr;
@@ -2401,7 +2513,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       if (tuple) {
         const reco::PFJet* jet = &(*pfJetColl)[nearestJetIndex];
-        tuple->BefPreS_dRVsPtPfJet->Fill(dRMinPfJetTemp, jet->pt(), EventWeight_);
+        if (kept_after_mcMatching) tuple->BefPreS_dRVsPtPfJet->Fill(dRMinPfJetTemp, jet->pt(), EventWeight_);
         closestPfJetMuonFraction = jet->muonEnergyFraction();
         closestPfJetElectronFraction = jet->electronEnergyFraction();
         closestPfJetPhotonFraction = jet->photonEnergyFraction();
@@ -2426,7 +2538,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
     }
     float GenBeta = -1;
-    if (isSignal) GenBeta = genColl[closestGenIndex].p() / genColl[closestGenIndex].energy();
+    if (isSignal && kept_after_mcMatching) GenBeta = genColl[closestGenIndex].p() / genColl[closestGenIndex].energy();
 
 
 
@@ -2483,7 +2595,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     bool doBefPreSplots = true;
     // Before (pre)selection plots
-    if (doBefPreSplots) {
+    if (doBefPreSplots && kept_after_mcMatching) {
       tuple->BefPreS_Eta->Fill(track->eta(), EventWeight_);
       tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern()), EventWeight_);
       tuple->BefPreS_NVertex->Fill(vertexColl.size(), EventWeight_);
@@ -2580,7 +2692,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
     }
 
-    if (tuple) {
+    if (tuple && kept_after_mcMatching) {
         //Plotting segment separation depending on whether track passed dz cut
       if (fabs(dz) > globalMaxDZ_) {
         tuple->BefPreS_SegMinEtaSep_FailDz->Fill(minEta, EventWeight_);
@@ -2629,11 +2741,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
     const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
 
-    if (tuple && tof) {
+    if (tuple && tof && kept_after_mcMatching) {
       tuple->BefPreS_EtaVsTOF->Fill(track->eta(), tof->inverseBeta(), EventWeight_);
     }
 
-    if (tuple) {
+    if (tuple && kept_after_mcMatching) {
       if (DZSB && OASB)
         tuple->BefPreS_Dxy_Cosmic->Fill(dxy, EventWeight_);
       if (DXYSB && OASB)
@@ -2793,7 +2905,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           break;
         }
       }
-      if (allOtherCutsPassed) {
+      if (allOtherCutsPassed && kept_after_mcMatching) {
           // Put the not used variables to the i==0, this will be always true
         if (i==0)  {
           tuple->N1_PfType->Fill(0., EventWeight_);
@@ -2889,7 +3001,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           allCutsPassedSoFar = false;
         }
       }
-      if (allCutsPassedSoFar) {
+      if (allCutsPassedSoFar && kept_after_mcMatching) {
         tuple->CutFlow->Fill((i+1), EventWeight_);
       }
     }
@@ -2904,7 +3016,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           allCutsPassedSoFar = false;
         }
       }
-      if (allCutsPassedSoFar) {
+      if (allCutsPassedSoFar && kept_after_mcMatching) {
         tuple->CutFlowReverse->Fill((i+1), EventWeight_);
       }
     }
@@ -2914,7 +3026,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForCR));
     passedCutsArrayForCR[1] = (track->pt() > 50 && track->pt() < 55) ? true : false;
 
-    if (passPreselection(passedCutsArrayForCR)) {
+    if (passPreselection(passedCutsArrayForCR) && kept_after_mcMatching) {
       tuple->PostPreS_Ias_CR->Fill(globalIas_, EventWeight_);
       tuple->PostPreS_ProbQNoL1_CR->Fill(1 - probQonTrackNoL1, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
@@ -2956,7 +3068,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     }
 
     //fill the ABCD histograms and a few other control plots
-    if (passPre) {
+    if (passPre && kept_after_mcMatching) {
       if (debug_ > 2) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2) LogPrint(MOD) << "      >> Fill control and prediction histos";
       tuple_maker->fillControlAndPredictionHist(hscp,
@@ -3301,7 +3413,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     }
 
     // Let's do some printouts after preselections for gen particles
-    if (passPre) {
+    if (passPre && kept_after_mcMatching) {
       if (!isData) {
         //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
         closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
@@ -3542,7 +3654,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
     }
 
-    if (!isData) {
+    if (!isData  && kept_after_mcMatching) {
       bool hasStatus91Around = false;
       unsigned int usignedIntclosestGenIndex = 0;
       if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
@@ -3613,9 +3725,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
 
         // TODO2 come back to this and double the plots for highIas
-        if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
-          auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
 
+        if ( detid.subdetId() == PixelSubdetector::PixelBarrel && kept_after_mcMatching) {
+          auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
           tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, EventWeight_);
           tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize, pixLayerIndex, EventWeight_);
@@ -3671,7 +3783,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
 
       // the strip part
-      } else if (detid.subdetId() >= 3 && !isData && (globalIas_ > 0.3 || (globalIas_ > 0.025 && globalIas_ < 0.03 && debug_ > 4))) {
+    } else if (detid.subdetId() >= 3 && !isData && kept_after_mcMatching && (globalIas_ > 0.3 || (globalIas_ > 0.025 && globalIas_ < 0.03 && debug_ > 4))) {
           // Taking the strips cluster
         auto const* stripsCluster = dedxHits->stripCluster(i);
         std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
@@ -3730,7 +3842,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
-    if (isBckg || isData) {
+    if ((isBckg || isData) && kept_after_mcMatching) {
       //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
 //      float Mass = -1;
 //      if (dedxMObj)
@@ -3793,7 +3905,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         DetId detid(dedxHits->detId(i));
         float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
         auto IhOnLayer = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
-        tuple->PostPreS_IasAllIhVsLayer->Fill(globalIas_, IhOnLayer, i+0, EventWeight_);
+        if (kept_after_mcMatching) tuple->PostPreS_IasAllIhVsLayer->Fill(globalIas_, IhOnLayer, i+0, EventWeight_);
         // One plot for the pixels
         if (detid.subdetId() < 3) {
           // up to 8 in histo
@@ -3804,7 +3916,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
             if (globalIas_ < 0.03 && globalIas_ > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
           }
-          if (tuple) {
+          if (tuple && kept_after_mcMatching) {
             tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex, EventWeight_);
           }
         }
@@ -3817,13 +3929,13 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
             if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
 
-            if (tuple) {
+            if (tuple && kept_after_mcMatching) {
                 tuple->PostPreS_IasStripIhVsLayer->Fill(globalIas_, IhOnLayer, stripLayerIndex, EventWeight_);
             }
         }
     }
 
-    if (passPre) {
+    if (passPre && kept_after_mcMatching) {
         tuple_maker->fillRegions(tuple,
                                  pT_cut,
                                  Ias_quantiles,
@@ -3899,7 +4011,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     float genid = 0, gencharge = -99, genmass = -99, genpt = -99, geneta = -99, genphi = -99;
 
-    if (isSignal) {
+    if (isSignal && kept_after_mcMatching) {
       genid = genColl[closestGenIndex].pdgId();
       gencharge = genColl[closestGenIndex].charge();
       genmass = genColl[closestGenIndex].mass();
@@ -4141,6 +4253,40 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                 gParticleProdVertexZ,
                                 gParticleMotherId,
                                 gParticleMotherIndex,
+                                eleE,
+                                elePt,
+                                eleEta,
+                                elePhi,
+                                eleCharge,
+                                eleE_SC,
+                                eleEta_SC,
+                                elePhi_SC,
+                                eleSigmaIetaIeta,
+                                eleFull5x5SigmaIetaIeta,
+                                eleR9,
+                                ele_dEta,
+                                ele_dPhi,
+                                ele_HoverE,
+                                ele_d0,
+                                ele_dZ,
+                                ele_pileupIso,
+                                ele_chargedIso,
+                                ele_photonIso,
+                                ele_neutralHadIso,
+                                ele_MissHits,
+                                ele_passCutBasedIDVeto,
+                                ele_passCutBasedIDLoose,
+                                ele_passCutBasedIDMedium,
+                                ele_passCutBasedIDTight,
+                                ele_passMVAIsoIDWP80,
+                                ele_passMVAIsoIDWP90,
+                                ele_passMVAIsoIDWPHZZ,
+                                ele_passMVAIsoIDWPLoose,
+                                ele_passMVANoIsoIDWP80,
+                                ele_passMVANoIsoIDWP90,
+                                ele_passMVANoIsoIDWPLoose,
+                                ele_PassConvVeto,
+                                ele_OneOverEminusOneOverP,
                                 muonE,
                                 muonPt,
                                 muonEta,
@@ -4405,6 +4551,45 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.add("MuonSegmentCollection", edm::InputTag("MuonSegmentProducer"))
     ->setComment("A");
   desc.add("MuonCollection", edm::InputTag("muons"))
+    ->setComment("A");
+    desc.add("ElectronCollection", edm::InputTag("gedGsfElectrons"))
+      ->setComment("A");
+      desc.add("conversions", edm::InputTag("allConversions","","RECO"))
+        ->setComment("A");
+      // conversions = cms.InputTag("allConversions", "", "RECO"),
+
+
+  desc.add("electron_cutbasedID_decisions_veto", edm::InputTag("egmGsfElectronIDs", "cutBasedElectronID-Fall17-94X-V2-veto", ""))
+    ->setComment("A");
+  desc.add("electron_cutbasedID_decisions_loose", edm::InputTag("egmGsfElectronIDs", "cutBasedElectronID-Fall17-94X-V2-loose", ""))
+    ->setComment("A");
+  desc.add("electron_cutbasedID_decisions_medium", edm::InputTag("egmGsfElectronIDs", "cutBasedElectronID-Fall17-94X-V2-medium", ""))
+    ->setComment("A");
+  desc.add("electron_cutbasedID_decisions_tight", edm::InputTag("egmGsfElectronIDs", "cutBasedElectronID-Fall17-94X-V2-tight", ""))
+      ->setComment("A");
+  desc.add("electron_mvaIsoID_decisions_wp80", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-iso-V2-wp80", ""))
+    ->setComment("A");
+  desc.add("electron_mvaIsoID_decisions_wp90", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-iso-V2-wp90", ""))
+    ->setComment("A");
+  desc.add("electron_mvaIsoID_decisions_wpHZZ", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-iso-V2-wpHZZ", ""))
+    ->setComment("A");
+  desc.add("electron_mvaIsoID_decisions_wpLoose", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-iso-V2-wpLoose", ""))
+    ->setComment("A");
+  desc.add("electron_mvaNoIsoID_decisions_wp80", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-noIso-V2-wp80", ""))
+    ->setComment("A");
+  desc.add("electron_mvaNoIsoID_decisions_wp90", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-noIso-V2-wp90", ""))
+    ->setComment("A");
+  desc.add("electron_mvaNoIsoID_decisions_wpLoose", edm::InputTag("egmGsfElectronIDs", "mvaEleID-Fall17-noIso-V2-wpLoose", ""))
+    ->setComment("A");
+  desc.add("photon_cutbasedID_decisions_loose", edm::InputTag("egmPhotonIDs", "cutBasedPhotonID-Fall17-94X-V2-loose", ""))
+    ->setComment("A");
+  desc.add("photon_cutbasedID_decisions_medium", edm::InputTag("egmPhotonIDs", "cutBasedPhotonID-Fall17-94X-V2-medium", ""))
+    ->setComment("A");
+  desc.add("photon_cutbasedID_decisions_tight", edm::InputTag("egmPhotonIDs", "cutBasedPhotonID-Fall17-94X-V2-tight", ""))
+    ->setComment("A");
+  desc.add("photon_mvaID_decisions_wp80", edm::InputTag("egmPhotonIDs", "mvaPhoID-RunIIFall17-v2-wp80", ""))
+    ->setComment("A");
+  desc.add("photon_mvaID_decisions_wp90", edm::InputTag("egmPhotonIDs", "mvaPhoID-RunIIFall17-v2-wp90", ""))
     ->setComment("A");
   desc.add("TriggerResults", edm::InputTag("TriggerResults","","HLT"))
     ->setComment("A");

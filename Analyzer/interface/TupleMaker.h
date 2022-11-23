@@ -105,6 +105,40 @@ public:
                         const std::vector<float> &gParticleProdVertexZ,
                         const std::vector<int> &gParticleMotherId,
                         const std::vector<int> &gParticleMotherIndex,
+                        const std::vector<float> &eleE,
+                        const std::vector<float> &elePt,
+                        const std::vector<float> &eleEta,
+                        const std::vector<float> &elePhi,
+                        const std::vector<float> &eleCharge,
+                        const std::vector<float> &eleE_SC,
+                        const std::vector<float> &eleEta_SC,
+                        const std::vector<float> &elePhi_SC,
+                        const std::vector<float> &eleSigmaIetaIeta,
+                        const std::vector<float> &eleFull5x5SigmaIetaIeta,
+                        const std::vector<float> &eleR9,
+                        const std::vector<float> &ele_dEta,
+                        const std::vector<float> &ele_dPhi,
+                        const std::vector<float> &ele_HoverE,
+                        const std::vector<float> &ele_d0,
+                        const std::vector<float> &ele_dZ,
+                        const std::vector<float> &ele_pileupIso,
+                        const std::vector<float> &ele_chargedIso,
+                        const std::vector<float> &ele_photonIso,
+                        const std::vector<float> &ele_neutralHadIso,
+                        const std::vector<int> &ele_MissHits,
+                        const std::vector<bool> &ele_passCutBasedIDVeto,
+                        const std::vector<bool> &ele_passCutBasedIDLoose,
+                        const std::vector<bool> &ele_passCutBasedIDMedium,
+                        const std::vector<bool> &ele_passCutBasedIDTight,
+                        const std::vector<bool> &ele_passMVAIsoIDWP80,
+                        const std::vector<bool> &ele_passMVAIsoIDWP90,
+                        const std::vector<bool> &ele_passMVAIsoIDWPHZZ,
+                        const std::vector<bool> &ele_passMVAIsoIDWPLoose,
+                        const std::vector<bool> &ele_passMVANoIsoIDWP80,
+                        const std::vector<bool> &ele_passMVANoIsoIDWP90,
+                        const std::vector<bool> &ele_passMVANoIsoIDWPLoose,
+                        const std::vector<bool> &ele_PassConvVeto,
+                        const std::vector<float> &ele_OneOverEminusOneOverP,
                         const std::vector<float> &muonE,
                         const std::vector<float> &muonPt,
                         const std::vector<float> &muonEta,
@@ -1432,6 +1466,42 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("gParticleMotherId", &tuple->Tree_gParticleMotherId);
     tuple->Tree->Branch("gParticleMotherIndex", &tuple->Tree_gParticleMotherIndex);
 
+    tuple->Tree->Branch("eleE", &tuple->Tree_eleE);
+    tuple->Tree->Branch("elePt", &tuple->Tree_elePt);
+    tuple->Tree->Branch("eleEta", &tuple->Tree_eleEta);
+    tuple->Tree->Branch("elePhi", &tuple->Tree_elePhi);
+    tuple->Tree->Branch("eleCharge", &tuple->Tree_eleCharge);
+    tuple->Tree->Branch("eleE_SC", &tuple->Tree_eleE_SC);
+    tuple->Tree->Branch("eleEta_SC", &tuple->Tree_eleEta_SC);
+    tuple->Tree->Branch("elePhi_SC", &tuple->Tree_elePhi_SC);
+    tuple->Tree->Branch("eleSigmaIetaIeta", &tuple->Tree_eleSigmaIetaIeta);
+    tuple->Tree->Branch("eleFull5x5SigmaIetaIeta", &tuple->Tree_eleFull5x5SigmaIetaIeta);
+    tuple->Tree->Branch("eleR9", &tuple->Tree_eleR9);
+    tuple->Tree->Branch("ele_dEta", &tuple->Tree_ele_dEta);
+    tuple->Tree->Branch("ele_dPhi", &tuple->Tree_ele_dPhi);
+    tuple->Tree->Branch("ele_HoverE", &tuple->Tree_ele_HoverE);
+    tuple->Tree->Branch("ele_d0", &tuple->Tree_ele_d0);
+    tuple->Tree->Branch("ele_dZ", &tuple->Tree_ele_dZ);
+    tuple->Tree->Branch("ele_pileupIso", &tuple->Tree_ele_pileupIso);
+    tuple->Tree->Branch("ele_chargedIso", &tuple->Tree_ele_chargedIso);
+    tuple->Tree->Branch("ele_photonIso", &tuple->Tree_ele_photonIso);
+    tuple->Tree->Branch("ele_neutralHadIso", &tuple->Tree_ele_neutralHadIso);
+    tuple->Tree->Branch("ele_MissHits", &tuple->Tree_ele_MissHits);
+    tuple->Tree->Branch("ele_passCutBasedIDVeto", &tuple->Tree_ele_passCutBasedIDVeto);
+    tuple->Tree->Branch("ele_passCutBasedIDLoose", &tuple->Tree_ele_passCutBasedIDLoose);
+    tuple->Tree->Branch("ele_passCutBasedIDMedium", &tuple->Tree_ele_passCutBasedIDMedium);
+    tuple->Tree->Branch("ele_passCutBasedIDTight", &tuple->Tree_ele_passCutBasedIDTight);
+    tuple->Tree->Branch("ele_passMVAIsoIDWP80", &tuple->Tree_ele_passMVAIsoIDWP80);
+    tuple->Tree->Branch("ele_passMVAIsoIDWP90", &tuple->Tree_ele_passMVAIsoIDWP90);
+    tuple->Tree->Branch("ele_passMVAIsoIDWPHZZ", &tuple->Tree_ele_passMVAIsoIDWPHZZ);
+    tuple->Tree->Branch("ele_passMVAIsoIDWPLoose", &tuple->Tree_ele_passMVAIsoIDWPLoose);
+    tuple->Tree->Branch("ele_passMVANoIsoIDWP80", &tuple->Tree_ele_passMVANoIsoIDWP80);
+    tuple->Tree->Branch("ele_passMVANoIsoIDWP90", &tuple->Tree_ele_passMVANoIsoIDWP90);
+    tuple->Tree->Branch("ele_passMVANoIsoIDWPLoose", &tuple->Tree_ele_passMVANoIsoIDWPLoose);
+    tuple->Tree->Branch("ele_PassConvVeto", &tuple->Tree_ele_PassConvVeto);
+    tuple->Tree->Branch("ele_OneOverEminusOneOverP", &tuple->Tree_ele_OneOverEminusOneOverP);
+
+
     tuple->Tree->Branch("muonE", &tuple->Tree_muonE);
     tuple->Tree->Branch("muonPt", &tuple->Tree_muonPt);
     tuple->Tree->Branch("muonEta", &tuple->Tree_muonEta);
@@ -1738,6 +1808,40 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &gParticleProdVertexZ,
                                   const std::vector<int> &gParticleMotherId,
                                   const std::vector<int> &gParticleMotherIndex,
+                                  const std::vector<float> &eleE,
+                                  const std::vector<float> &elePt,
+                                  const std::vector<float> &eleEta,
+                                  const std::vector<float> &elePhi,
+                                  const std::vector<float> &eleCharge,
+                                  const std::vector<float> &eleE_SC,
+                                  const std::vector<float> &eleEta_SC,
+                                  const std::vector<float> &elePhi_SC,
+                                  const std::vector<float> &eleSigmaIetaIeta,
+                                  const std::vector<float> &eleFull5x5SigmaIetaIeta,
+                                  const std::vector<float> &eleR9,
+                                  const std::vector<float> &ele_dEta,
+                                  const std::vector<float> &ele_dPhi,
+                                  const std::vector<float> &ele_HoverE,
+                                  const std::vector<float> &ele_d0,
+                                  const std::vector<float> &ele_dZ,
+                                  const std::vector<float> &ele_pileupIso,
+                                  const std::vector<float> &ele_chargedIso,
+                                  const std::vector<float> &ele_photonIso,
+                                  const std::vector<float> &ele_neutralHadIso,
+                                  const std::vector<int> &ele_MissHits,
+                                  const std::vector<bool> &ele_passCutBasedIDVeto,
+                                  const std::vector<bool> &ele_passCutBasedIDLoose,
+                                  const std::vector<bool> &ele_passCutBasedIDMedium,
+                                  const std::vector<bool> &ele_passCutBasedIDTight,
+                                  const std::vector<bool> &ele_passMVAIsoIDWP80,
+                                  const std::vector<bool> &ele_passMVAIsoIDWP90,
+                                  const std::vector<bool> &ele_passMVAIsoIDWPHZZ,
+                                  const std::vector<bool> &ele_passMVAIsoIDWPLoose,
+                                  const std::vector<bool> &ele_passMVANoIsoIDWP80,
+                                  const std::vector<bool> &ele_passMVANoIsoIDWP90,
+                                  const std::vector<bool> &ele_passMVANoIsoIDWPLoose,
+                                  const std::vector<bool> &ele_PassConvVeto,
+                                  const std::vector<float> &ele_OneOverEminusOneOverP,
                                   const std::vector<float> &muonE,
                                   const std::vector<float> &muonPt,
                                   const std::vector<float> &muonEta,
@@ -1976,6 +2080,48 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_gParticleProdVertexZ = gParticleProdVertexZ;
   tuple->Tree_gParticleMotherId = gParticleMotherId;
   tuple->Tree_gParticleMotherIndex = gParticleMotherIndex;
+
+
+  tuple->Tree_eleE = eleE;
+  tuple->Tree_elePt = elePt;
+  tuple->Tree_eleEta = eleEta;
+  tuple->Tree_elePhi = elePhi;
+  tuple->Tree_eleCharge = eleCharge;
+  tuple->Tree_eleE_SC = eleE_SC;
+  tuple->Tree_eleEta_SC = eleEta_SC;
+  tuple->Tree_elePhi_SC = elePhi_SC;
+  tuple->Tree_eleSigmaIetaIeta = eleSigmaIetaIeta;
+  tuple->Tree_eleFull5x5SigmaIetaIeta = eleFull5x5SigmaIetaIeta;
+  tuple->Tree_eleR9 = eleR9;
+  tuple->Tree_ele_dEta = ele_dEta;
+  tuple->Tree_ele_dPhi = ele_dPhi;
+  tuple->Tree_ele_HoverE = ele_HoverE;
+  tuple->Tree_ele_d0 = ele_d0;
+  tuple->Tree_ele_dZ = ele_dZ;
+  tuple->Tree_ele_pileupIso = ele_pileupIso;
+  tuple->Tree_ele_chargedIso = ele_chargedIso;
+  tuple->Tree_ele_photonIso = ele_photonIso;
+  tuple->Tree_ele_neutralHadIso = ele_neutralHadIso;
+  tuple->Tree_ele_MissHits = ele_MissHits;
+  tuple->Tree_ele_passCutBasedIDVeto = ele_passCutBasedIDVeto;
+  tuple->Tree_ele_passCutBasedIDLoose = ele_passCutBasedIDLoose;
+  tuple->Tree_ele_passCutBasedIDMedium = ele_passCutBasedIDMedium;
+  tuple->Tree_ele_passCutBasedIDTight = ele_passCutBasedIDTight;
+  tuple->Tree_ele_passMVAIsoIDWP80 = ele_passMVAIsoIDWP80;
+  tuple->Tree_ele_passMVAIsoIDWP90 = ele_passMVAIsoIDWP90;
+  tuple->Tree_ele_passMVAIsoIDWPHZZ = ele_passMVAIsoIDWPHZZ;
+  tuple->Tree_ele_passMVAIsoIDWPLoose = ele_passMVAIsoIDWPLoose;
+  tuple->Tree_ele_passMVANoIsoIDWP80 = ele_passMVANoIsoIDWP80;
+  tuple->Tree_ele_passMVANoIsoIDWP90 = ele_passMVANoIsoIDWP90;
+  tuple->Tree_ele_passMVANoIsoIDWPLoose = ele_passMVANoIsoIDWPLoose;
+  tuple->Tree_ele_PassConvVeto = ele_PassConvVeto;
+  tuple->Tree_ele_OneOverEminusOneOverP = ele_OneOverEminusOneOverP;
+
+
+
+
+
+
   tuple->Tree_muonE = muonE;
   tuple->Tree_muonPt = muonPt;
   tuple->Tree_muonEta = muonEta;
