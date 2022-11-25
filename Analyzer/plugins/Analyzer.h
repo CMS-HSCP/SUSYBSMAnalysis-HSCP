@@ -374,6 +374,7 @@ private:
   const std::string pixelCPE_;
   const int debug_;
   const bool hasMCMatch_,calcSyst_;
+  unsigned int trigInfo_;
 
   static constexpr const char* const MOD = "Analyzer";
 

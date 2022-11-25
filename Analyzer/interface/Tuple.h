@@ -267,9 +267,14 @@ struct Tuple {
   TH1F* dRMinHLTMuon;
   TH1F* ErrorHisto;
   
-  TH1F* BefPreS_HltMatchTrackLevel;
+  
+  TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
+  TH2F* BefPreS_MuonPtVsTrackPt;
+  
+  
   TH1F* BefPreS_TriggerType;
-  TH1F* HSCPCandidateType;
+  TH1F* Gen_HSCPCandidateType;
+  TH1F* BefPreS_HSCPCandidateType;
   TH1F* BefPreS_RecoHSCParticleType;
   
   TH1F* N1_Eta;
@@ -496,7 +501,9 @@ struct Tuple {
   TH1F* BefPreS_GenBeta;
 
   TH3F* Calibration_GiTemplate;
-  TH3F* Calibration_GiTemplate_noL1;
+  TH1F* BefPreS_NumCandidates;
+  TH1F* PostPreS_NumCandidates;
+  
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
@@ -546,7 +553,7 @@ struct Tuple {
   TH1F* PostPreS_Pt_lowPt;
   TH2F* PostPreS_PtVsIas;
   TH1F* PostPreS_P;
-  TH1F* PostPreS_Ias;
+  
   TH1F* PostPreS_Ias_NoEventWeight;
   TH1F* PostPreS_Ih;
   TH2F* PostPreS_IhVsIas;
@@ -626,16 +633,56 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_down;
   
-  TH1F* PostPreS_ProbQNoL1;
-  TH2F* PostPreS_ProbQNoL1VsIas;
-  TH2F* PostPreS_ProbQNoL1VsIas_Pileup_up;
-  TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
-  TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_up;
-  TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_down;
-  TH2F* PostPreS_ProbQNoL1VsIas_Ias_up;
-  TH2F* PostPreS_ProbQNoL1VsIas_Ias_down;
-  TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
-  TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
+  TH1F* PostS_RelativePtShift;
+  TH1F* PostS_ProbQNoL1;
+  TH1F* PostS_Ias;
+  TH2F* PostS_ProbQNoL1VsIas;
+  TH2F* PostS_ProbQNoL1VsIas_Pileup_up;
+  TH2F* PostS_ProbQNoL1VsIas_Pileup_down;
+  TH2F* PostS_ProbQNoL1VsIas_ProbQNoL1_up;
+  TH2F* PostS_ProbQNoL1VsIas_ProbQNoL1_down;
+  TH2F* PostS_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostS_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostS_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostS_ProbQNoL1VsIas_Pt_down;
+  
+  TH1F* PostS_SR1_ProbQNoL1;
+  TH1F* PostS_SR1_Ias;
+  TH2F* PostS_SR1_ProbQNoL1VsIas;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Pileup_up;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Pileup_down;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Pt_down;
+  
+  TH1F* PostS_SR2_ProbQNoL1;
+  TH1F* PostS_SR2_Ias;
+  TH2F* PostS_SR2_ProbQNoL1VsIas;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Pileup_up;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Pileup_down;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Pt_down;
+  
+  TH1F* PostS_SR3_ProbQNoL1;
+  TH1F* PostS_SR3_Ias;
+  TH2F* PostS_SR3_ProbQNoL1VsIas;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Pileup_up;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Pileup_down;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Pt_down;
+
+  
   TH2F* PostPreS_TriggerMuon50VsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
@@ -766,9 +813,10 @@ struct Tuple {
   TH2F* CutFlowPfType;
   TH2F* CutFlowProbQ;
 
-  TH3F* PostPreS_IasAllIhVsLayer;
-  TH3F* PostPreS_IasPixelIhVsLayer;
-  TH3F* PostPreS_IasStripIhVsLayer;
+  // TODO: better deal with these
+//  TH3F* PostPreS_IasAllIhVsLayer;
+//  TH3F* PostPreS_IasPixelIhVsLayer;
+//  TH3F* PostPreS_IasStripIhVsLayer;
 
   TH2F* PostPreS_CluProbQVsPixelLayer;
   TH2F* PostPreS_CluProbXYVsPixelLayer;
@@ -926,14 +974,15 @@ struct Tuple {
 
   TH2F* RegionH_Ias_Flip;
 
-  TH2F* H_D_DzSidebands;
-
   TH2F* BefPreS_GenPtVsdRMinGen;
   TH1F* BefPreS_GendRMin;
   TH2F* BefPreS_GenPtVsdRMinGenPostCut;
   TH2F* BefPreS_GenPtVsGenMinPt;
   TH2F* BefPreS_GenPtVsRecoPt;
   TH2F* PostPreS_GenPtVsRecoPt;
+  
+  TH1F* PostS_RecoHSCParticleType;
+  TH1F* PostS_HltMatchTrackLevel;
 
   TH1D* CtrlPt_S1_Is;
   TH1D* CtrlPt_S2_Is;
