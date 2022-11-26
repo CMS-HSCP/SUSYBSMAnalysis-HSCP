@@ -327,7 +327,7 @@ struct Tuple {
   TH1F* N1_MiniTkIso_PUB;
   TH1F* N1_MiniTkIso_PUC;
 
-  TH1F* BefPreS_pfType;
+  TH1F* BefPreS_PfType;
 
   TH1F* HSCPE;
   TH1F* HSCPE_SystP;
@@ -366,6 +366,8 @@ struct Tuple {
   TH1F* BefPreS_TNOH_PUB;
   TH1F* BefPreS_TNOHFraction;
   TH1F* BefPreS_TNOPH;
+  TH1F* BefPreS_RatioCleanAndAllStripsClu;
+  TH1F* BefPreS_RatioCleanAndAllPixelClu;
   TH1F* BefPreS_TNOHFractionTillLast;
   TH1F* BefPreS_TNOMHTillLast;
   TH1F* BefPreS_Eta;
@@ -531,6 +533,8 @@ struct Tuple {
   TH1F* PostPreS_TNOHFraction;
   TH2F* PostPreS_TNOHFractionVsIas;
   TH1F* PostPreS_TNOPH;
+  TH1F* PostPreS_RatioCleanAndAllStripsClu;
+  TH1F* PostPreS_RatioCleanAndAllPixelClu;
   TH2F* PostPreS_TNOPHVsIas;
   TH1F* PostPreS_TNOHFractionTillLast;
   TH1F* PostPreS_TNOMHTillLast;

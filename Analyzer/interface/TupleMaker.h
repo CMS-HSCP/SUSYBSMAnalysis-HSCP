@@ -429,7 +429,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(4,"isMuon");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(5,"isPhoton");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(6,"isChHadron");
-  tuple->CutFlowPfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
+  tuple->CutFlowPfType->GetXaxis()->SetBinLabel(7,"isNeutHadron");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
 
@@ -489,14 +489,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_MiniTkIso_PUB = dir.make<TH1F>("N1_MiniTkIso_PUB", ";MiniTkIso (15 =< PU < 30);Tracks / 0.3",  150, 0.0, 50.);
   tuple->N1_MiniTkIso_PUC = dir.make<TH1F>("N1_MiniTkIso_PUC", ";MiniTkIso (PU >= 30);Tracks / 0.3",  150, 0.0, 50.);
 
-  tuple->N1_PfType = dir.make<TH1F>("N1_PfType", ";pfType", 9, -0.5, 8.5);
+  tuple->N1_PfType = dir.make<TH1F>("N1_PfType", ";;Tracks / category", 9, -0.5, 8.5);
   tuple->N1_PfType->GetXaxis()->SetBinLabel(1,"AllTracks");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(2,"PFtracks");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(3,"isElectron");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(4,"isMuon");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(5,"isPhoton");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(6,"isChHadron");
-  tuple->N1_PfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
+  tuple->N1_PfType->GetXaxis()->SetBinLabel(7,"isNeutHadron");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
 
@@ -571,17 +571,20 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_GenPtVsdRMinGenPostCut = dir.make<TH2F>("BefPreS_GenPtVsdRMinGenPostCut", ";GenPt (GeV);dRMinGen (after cut)", 50, 0, PtHistoUpperBound, 50, 0., 0.05);
   tuple->BefPreS_GenPtVsGenMinPt = dir.make<TH2F>("BefPreS_GenPtVsGenMinPt", ";GenPtVsGenMinPt", 50, 0, PtHistoUpperBound, 100, 0, 1.);
   tuple->BefPreS_GenPtVsRecoPt = dir.make<TH2F>("BefPreS_GenPtVsRecoPt", ";GenPt;RecoPt", 50, 0, PtHistoUpperBound, 50, 0, PtHistoUpperBound);
+  
+  tuple->BefPreS_RatioCleanAndAllStripsClu = dir.make<TH1F>("BefPreS_RatioCleanAndAllStripsClu",";Clean / all strips clu;Track / 0.05",21,-0.05,1.05);
+  tuple->BefPreS_RatioCleanAndAllPixelClu = dir.make<TH1F>("BefPreS_RatioCleanAndAllPixelClu",";Clean / all pixel clu;Track / 0.05",21,-0.05,1.05);
 
-  tuple->BefPreS_pfType = dir.make<TH1F>("BefPreS_pfType", ";;Tracks / category", 9, -0.5, 8.5);
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(1,"AllTracks");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(2,"PFtracks");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(3,"isElectron");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(4,"isMuon");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(5,"isPhoton");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(6,"isChHadron");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(8,"isUndefined");
-  tuple->BefPreS_pfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
+  tuple->BefPreS_PfType = dir.make<TH1F>("BefPreS_PfType", ";;Tracks / category", 9, -0.5, 8.5);
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(1,"AllTracks");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(2,"PFtracks");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(3,"isElectron");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(4,"isMuon");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(5,"isPhoton");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(6,"isChHadron");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(7,"isNeutHadron");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(8,"isUndefined");
+  tuple->BefPreS_PfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
   
   tuple->BefPreS_MassT = dir.make<TH1F>("BefPreS_MassT", ";m_{T} (GeV);Tracks / 5 GeV", 50, 0.0, 250.0);
   tuple->BefPreS_MassT_highMassT = dir.make<TH1F>("BefPreS_MassT_highMassT", ";m_{T} (GeV);Tracks / 10 GeV", 250, 0.0, 2500.0);
@@ -593,8 +596,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->BefPreS_RecoPFMET = dir.make<TH1F>("BefPreS_RecoPFMET", ";RecoPFMET (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
   tuple->BefPreS_RecoPfHT = dir.make<TH1F>("BefPreS_RecoPfHT", ";RecoPFHT (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
-  tuple->BefPreS_RecoPfJetsNum = dir.make<TH1F>("BefPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / bin",  15, -0.5, 15.5);
-  tuple->BefPreS_CaloJetsNum = dir.make<TH1F>("BefPreS_CaloJetsNum", ";Number of calo jets;Tracks / bin",  15, -0.5, 15.5);
+  tuple->BefPreS_RecoPfJetsNum = dir.make<TH1F>("BefPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / bin",  16, -0.5, 15.5);
+  tuple->BefPreS_CaloJetsNum = dir.make<TH1F>("BefPreS_CaloJetsNum", ";Number of calo jets;Tracks / bin",  16, -0.5, 15.5);
 
   tuple->BefPreS_Chi2oNdof = dir.make<TH1F>("BefPreS_Chi2oNdof", ";Chi2oNdof;Tracks / bin", 20, 0, 20);
   // This should just be a 2-bin plot where high-purity is not present = 0 or present = 1
@@ -749,8 +752,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->Calibration_GiTemplate =  dir.make<TH3F>("Calibration_GiTemplate", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
 
-  tuple->BefPreS_NumCandidates = dir.make<TH1F>("BefPreS_NumCandidates", ";Number of HSCP candidates;Events / bin", 10, -0.5, 10.5);
-  tuple->PostPreS_NumCandidates = dir.make<TH1F>("PostPreS_NumCandidates", ";;Events / bin", 10, -0.5, 10.5);
+  tuple->BefPreS_NumCandidates = dir.make<TH1F>("BefPreS_NumCandidates", ";Number of HSCP candidates;Events / bin", 11, -0.5, 10.5);
+  tuple->PostPreS_NumCandidates = dir.make<TH1F>("PostPreS_NumCandidates", ";Number of HSCP candidates;Events / bin", 11, -0.5, 10.5);
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
@@ -773,7 +776,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(4,"isMuon");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(5,"isPhoton");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(6,"isChHadron");
-  tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
+  tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(7,"isNeutHadron");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
   
@@ -784,7 +787,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(4,"isMuon");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(5,"isPhoton");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(6,"isChHadron");
-  tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(7,"#isNeutHadron");
+  tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(7,"isNeutHadron");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->PostPreS_PfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
 
@@ -814,6 +817,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TNOHFraction = dir.make<TH1F>("PostPreS_TNOHFraction", ";TNOHFraction;Tracks / bin", 20, 0, 1);
   tuple->PostPreS_TNOHFractionVsIas = dir.make<TH2F>("PostPreS_TNOHFractionVsIas","TNOHFraction;Ias;Tracks / bin",50, 0, 1,10,0.,1.);
   tuple->PostPreS_TNOPH = dir.make<TH1F>( "PostPreS_TNOPH", ";Number of pixel hits;Tracks / bin", 8, -0.5, 7.5);
+  tuple->PostPreS_RatioCleanAndAllStripsClu = dir.make<TH1F>("PostPreS_RatioCleanAndAllStripsClu",";Clean / all strips clu;Track / 0.05",21,-0.05,1.05);
+  tuple->PostPreS_RatioCleanAndAllPixelClu = dir.make<TH1F>("PostPreS_RatioCleanAndAllPixelClu",";Clean / all pixel clu;Track / 0.05",21,-0.05,1.05);
+  
   tuple->PostPreS_TNOPHVsIas = dir.make<TH2F>("PostPreS_TNOPHVsIas", ";_TNOPH;G_{i}^{strips};Tracks / bin", 8,-0.5, 7.5, 20, 0., 1.);
   tuple->PostPreS_TNOHFractionTillLast = dir.make<TH1F>("PostPreS_TNOHFractionTillLast", ";TNOHFractionTillLast;Tracks / bin", 50, 0, 1);
   tuple->PostPreS_TNOMHTillLast = dir.make<TH1F>("PostPreS_TNOMHTillLast", ";TNOMHTillLast;Tracks / bin", 20, -0.5, 19.5);
