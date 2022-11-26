@@ -510,7 +510,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   const auto triggerNames = iEvent.triggerNames(*triggerH);
   // if (isData) iEvent.getByToken(triggerPrescalesToken_, triggerPrescales);
 
-  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales = iEvent.getHandle(triggerPrescalesToken_);
+  //edm::Handle<pat::PackedTriggerPrescales> triggerPrescales = iEvent.getHandle(triggerPrescalesToken_);
 
   //------------------------------------------------------------------
   //Read in HLT Trigger Path List from config file
@@ -560,7 +560,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (triggerPathNames[j] == "") continue;
       if (hltPathNameWithoutVersionNumber == triggerPathNames[j]) {
       	triggerDecision[j] = triggerH->accept(i);
-      	if (isData) triggerHLTPrescale[j] = triggerPrescales->getPrescaleForIndex(i);
+      	//if (isData) triggerHLTPrescale[j] = triggerPrescales->getPrescaleForIndex(i);
       }
     }
   }

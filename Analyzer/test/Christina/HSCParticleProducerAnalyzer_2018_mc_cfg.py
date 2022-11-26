@@ -17,7 +17,7 @@ options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_0
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isSignal',
+options.register('SAMPLE', 'isBckg',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
@@ -76,11 +76,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-#   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2560000/F6D6EB63-9383-3545-8322-893B2C166861.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
-
+   #fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
+   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -88,6 +85,21 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
 process.HSCPTuplePath = cms.Path() 
+
+########################################################################
+#Run the Skim sequence if necessary
+if(not options.isSkimmedSample):
+   process.nEventsBefSkim  = cms.EDProducer("EventCountProducer")
+
+   process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
+   process.HSCPTrigger = process.hltHighLevel.clone()
+   process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLT" )
+   process.HSCPTrigger.andOr = cms.bool( True ) #OR
+   process.HSCPTrigger.throw = cms.bool( False )  
+   process.HSCPTrigger.HLTPaths = ["*"]     
+   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger 
+
+########################################################################
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
@@ -103,13 +115,12 @@ if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
         filter = cms.bool(False),
         src = cms.InputTag("genParticles"),
         cut = cms.string('pt > 5.0'),
-        stableOnly = cms.bool(True)
+#        stableOnly = cms.bool(True)
    )
 
    process.HSCPTuplePath += process.genParticlesSkimmed
 
 ########################################################################
-
 # electron VID
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 electron_id_config = cms.PSet(electron_ids = cms.vstring([                   
@@ -128,8 +139,6 @@ for idmod in electron_id_config.electron_ids.value():
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
 process.HSCPTuplePath += process.egmGsfElectronIDSequence
-
-
 
 #make the pool output
 process.Out = cms.OutputModule("PoolOutputModule",
@@ -246,7 +255,7 @@ process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
 process.HSCParticleAnalyzer.Period = "2018"
-process.HSCParticleAnalyzer.DebugLevel = 0
+process.HSCParticleAnalyzer.DebugLevel = 0 
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C
 process.HSCParticleAnalyzer.DeDxSF_0 = SF0
@@ -256,14 +265,8 @@ process.HSCParticleAnalyzer.GlobalMinIh = C
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
-###process.HSCParticleAnalyzer.OutputFile = 'Data_2017_UL'
 
 process.analysis = cms.Path(process.HSCParticleAnalyzer)
-
-
-
-
-
 
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.endjob_step = cms.EndPath(process.endOfProcess)
@@ -280,6 +283,5 @@ for mod in process.filters_().itervalues():
 
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
-
-process.schedule = cms.Schedule(process.HSCPTuplePath,  process.endjob_step)
+process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
 
