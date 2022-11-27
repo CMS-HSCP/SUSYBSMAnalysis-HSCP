@@ -21,7 +21,7 @@
 // - 41p6: CreateGiTemplates is false
 // - 41p7: Plot for number of candidates, extend dRMinPfJet to 3.2, add 3 SRs, add HLT match, relative pt shift, tuneP muon checks
 // - 41p8: Cutflow fixes, add fraction of cleaned clusters, getting rid of pixelProbs[], make trigger syst more general
-// - 41p9: Increase pT in SR
+// - 41p9: Increase pT in SR, dont load histos that are not needed for this typeMode
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -3508,8 +3508,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 //      if (dedxMObj)
 //        Mass = GetMass(track->p(), dedxMObj->dEdx(), dEdxK_, dEdxC_);
       float MassTOF = -1;
-      if (tof)
+      if (tof) {
         MassTOF = GetTOFMass(track->p(), (2 - tof->inverseBeta()));
+      }
       float MassComb = -1;
       if (tof && dedxMObj)
         MassComb = GetMassFromBeta(track->p(),
@@ -3522,9 +3523,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       for (unsigned int CutIndex = 0; CutIndex < CutPt_Flip_.size(); CutIndex++) {
         //Fill Mass Histograms
         tuple->Mass_Flip->Fill(CutIndex, Mass, EventWeight_);
-        if (tof)
+        if (tof && typeMode_ > 1) {
           tuple->MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
-        tuple->MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
+          tuple->MassComb_Flip->Fill(CutIndex, MassComb, EventWeight_);
+        }
       }
     }
 
@@ -3634,18 +3636,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
         //Fill Mass Histograms
         tuple->Mass->Fill(CutIndex, Mass, EventWeight_);
-        if (tof)
+        if (tof && typeMode_ > 1) {
           tuple->MassTOF->Fill(CutIndex, MassTOF, EventWeight_);
-        if (isBckg)
           tuple->MassComb->Fill(CutIndex, MassComb, EventWeight_);
+        }
 
         //Fill Mass Histograms for different Ih syst
         tuple->Mass_SystHUp->Fill(CutIndex, MassUp, EventWeight_);
         tuple->Mass_SystHDown->Fill(CutIndex, MassDown, EventWeight_);
-        if (tof)
+        if (tof && typeMode_ > 1) {
           tuple->MassTOF_SystH->Fill(CutIndex, MassTOF, EventWeight_);
-        tuple->MassComb_SystHUp->Fill(CutIndex, MassUpComb, EventWeight_);
-        tuple->MassComb_SystHDown->Fill(CutIndex, MassDownComb, EventWeight_);
+          tuple->MassComb_SystHUp->Fill(CutIndex, MassUpComb, EventWeight_);
+          tuple->MassComb_SystHDown->Fill(CutIndex, MassDownComb, EventWeight_);
+        }
 
       }  //end of Cut loop
     } // end of condition for passPre
@@ -4136,7 +4139,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->HSCPE_SystM->Fill(CutIndex, EventWeight_);
       tuple->MaxEventMass_SystM->Fill(CutIndex, MaxMass_SystM[CutIndex], EventWeight_);
     }
-    if (HSCPTk_SystT[CutIndex]) {
+    if (HSCPTk_SystT[CutIndex] && typeMode_ > 1) {
       tuple->HSCPE_SystT->Fill(CutIndex, EventWeight_);
       tuple->MaxEventMass_SystT->Fill(CutIndex, MaxMass_SystT[CutIndex], EventWeight_);
     }
