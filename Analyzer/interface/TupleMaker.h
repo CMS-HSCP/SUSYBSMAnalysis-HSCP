@@ -292,9 +292,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->NumEvents->GetXaxis()->SetBinLabel(3,"After trigger");
   tuple->NumEvents->GetXaxis()->SetBinLabel(4,"After HLT obj to evt matching");
   
-  tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";abs(muon p_{T} - tracker p_{T}) / tracker p_{T};Tracks / bin", 20,0.0,1.0);
-  tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";muon p_{T};tracker p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
-  
   tuple->dRMinHLTMuon = dir.make<TH1F>("dRMinHLTMuon", ";#Delta R_{min,mu,HLT};Number of events/bin",100,0.,3.2);
   
   tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
@@ -315,28 +312,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Gen_HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
   tuple->Gen_HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
   
-  tuple->BefPreS_HSCPCandidateType = dir.make<TH1F>("BefPreS_HSCPCandidateType", ";;Number of generator candidate / category", 6, -0.5, 5.5);
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(1,"Neutral HSCP");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(2,"Single-charged");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(3,"Double-charged R-hadrons");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
+  tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";abs(muon p_{T} - tracker p_{T}) / tracker p_{T};Tracks / bin", 20,0.0,1.0);
+  tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";muon p_{T};tracker p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
   
-  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
-  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
-  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
-  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(3,"MET triggered");
-  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(4,"Muon OR MET triggered");
-  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(5,"Muon AND MET triggered");
-  
-  tuple->BefPreS_RecoHSCParticleType = dir.make<TH1F>("BefPreS_RecoHSCParticleType", ";;Track / category", 6, -0.5, 5.5);
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"trackerMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"matchedStandAloneMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"standAloneMuon");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"innerTrack");
-  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(6,"unknown");
-
   tuple->CutFlow = dir.make<TH1F>("CutFlow", ";;Tracks / category", 17, -0.5, 16.5);
   tuple->CutFlow->GetXaxis()->SetBinLabel(1,"All tracks");
   tuple->CutFlow->GetXaxis()->SetBinLabel(2,"Trigger");
@@ -432,6 +410,23 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(7,"isNeutHadron");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->CutFlowPfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
+  
+  tuple->N1_FlowEta = dir.make<TH2F>("N1_FlowEta", ";#eta;", 50, -2.6, 2.6, 17, -0.5, 16.5);
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(1,"Trigger");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(2,"p_{T}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(3,"#eta");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(4,"N_{no-L1 pixel hits}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(5,"f_{valid/all hits}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(6,"N_{dEdx hits}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(7,"HighPurity");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(8,"#chi^{2} / N_{dof}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(9,"d_{z}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(10,"d_{xy}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(13,"E/p");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
+  tuple->N1_FlowEta->GetYaxis()->SetBinLabel(15,"F_{i}");
 
   tuple->N1_Eta = dir.make<TH1F>("N1_Eta", ";#eta;Tracks / 0.05", 52, -2.6, 2.6);
   tuple->N1_Pt = dir.make<TH1F>("N1_Pt", ";p_{T} (GeV);Tracks / 80 GeV", 50, 0, PtHistoUpperBound);
@@ -469,10 +464,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_PtErrOverPt2VsIas =  dir.make<TH2F>("N1_PtErrOverPt2VsIas", ";#sigma_{p_{T}}/p_{T}^{2};G_{i}^{strips};Tracks / bin", 40, 0., 0.003, 20, 0.,1.);
   tuple->N1_PtErrOverPt2VsProbQNoL1 =  dir.make<TH2F>("N1_PtErrOverPt2VsProbQNoL1", ";#sigma_{p_{T}}/p_{T}^{2};prob_{Q,pixelAV} (pixels);Tracks / bin", 40, 0., 0.003, 20, 0.,1.);
 
-  tuple->N1_SegSep = dir.make<TH1F>("N1_SegSep", ";SegSep", 1, 0, 1);
-
-  tuple->FailDz = dir.make<TH1F>("FailDz", ";FailDz", 1, 0, 1);
-
   tuple->N1_ProbQNoL1 = dir.make<TH1F>("N1_ProbQNoL1", ";F_{i}^{pixels};Tracks / 0.01", 40, 0., 1.);
   tuple->N1_ProbQNoL1VsIas = dir.make<TH2F>("N1_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips}", 100, 0.0, 1.0, 100, 0.0, 1.0);
   tuple->N1_IhVsProbQNoL1VsIas = dir.make<TH3F>("N1_IhVsProbQNoL1VsIas", ";I_{h} (MeV/cm);F_{i}^{pixels};G_{i}^{strips}",200, 0, dEdxM_UpLim, 100, 0.0, 1.0, 100, 0.0, 1.0);
@@ -500,61 +491,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_PfType->GetXaxis()->SetBinLabel(8,"isUndefined");
   tuple->N1_PfType->GetXaxis()->SetBinLabel(9,"notPFtrack");
 
-  tuple->HSCPE = dir.make<TH1F>("HSCPE", ";NCuts;HSCPE", NCuts, 0, NCuts);
-  tuple->HSCPE_SystP = dir.make<TH1F>("HSCPE_SystP", ";NCuts;HSCPE_SystP", NCuts, 0, NCuts);
-  tuple->HSCPE_SystI = dir.make<TH1F>("HSCPE_SystI", ";NCuts;HSCPE_SystI", NCuts, 0, NCuts);
-  tuple->HSCPE_SystM = dir.make<TH1F>("HSCPE_SystM", ";NCuts;HSCPE_SystM", NCuts, 0, NCuts);
-  tuple->HSCPE_SystT = dir.make<TH1F>("HSCPE_SystT", ";NCuts;HSCPE_SystT", NCuts, 0, NCuts);
-  tuple->HSCPE_SystPU = dir.make<TH1F>("HSCPE_SystPU", ";NCuts;HSCPE_SystPU", NCuts, 0, NCuts);
-  tuple->HSCPE_SystHUp = dir.make<TH1F>("HSCPE_SystHUp", ";NCuts;HSCPE_SystHUp", NCuts, 0, NCuts);
-  tuple->HSCPE_SystHDown = dir.make<TH1F>("HSCPE_SystHDown", ";NCuts;HSCPE_SystHDown", NCuts, 0, NCuts);
-
-  tuple->Mass = dir.make<TH2F>("Mass", ";NCuts;Mass", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF = dir.make<TH2F>("MassTOF", ";NCuts;MassTOF", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb = dir.make<TH2F>("MassComb", ";NCuts;MassComb", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass = dir.make<TH2F>("MaxEventMass", ";NCuts;MaxEventMass", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystP = dir.make<TH2F>("Mass_SystP", ";NCuts;Mass_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_SystP = dir.make<TH2F>("MassTOF_SystP", ";NCuts;MassTOF_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystP = dir.make<TH2F>("MassComb_SystP", ";NCuts;MassComb_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystP = dir.make<TH2F>("MaxEventMass_SystP", ";NCuts;MaxEventMass_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystI = dir.make<TH2F>("Mass_SystI", ";NCuts;Mass_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_SystI = dir.make<TH2F>("MassTOF_SystI", ";NCuts;MassTOF_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystI = dir.make<TH2F>("MassComb_SystI", ";NCuts;MassComb_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystI = dir.make<TH2F>("MaxEventMass_SystI", ";NCuts;MaxEventMass_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystM = dir.make<TH2F>("Mass_SystM", ";NCuts;Mass_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_SystM = dir.make<TH2F>("MassTOF_SystM", ";NCuts;MassTOF_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystM = dir.make<TH2F>("MassComb_SystM", ";NCuts;MassComb_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystM = dir.make<TH2F>("MaxEventMass_SystM", ";NCuts;MaxEventMass_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystT = dir.make<TH2F>("Mass_SystT", ";NCuts;Mass_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_SystT = dir.make<TH2F>("MassTOF_SystT", ";NCuts;MassTOF_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystT = dir.make<TH2F>("MassComb_SystT", ";NCuts;MassComb_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystT = dir.make<TH2F>("MaxEventMass_SystT", ";NCuts;MaxEventMass_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystPU = dir.make<TH2F>("Mass_SystPU", ";NCuts;Mass_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_SystPU = dir.make<TH2F>("MassTOF_SystPU", ";NCuts;MassTOF_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystPU = dir.make<TH2F>("MassComb_SystPU", ";NCuts;MassComb_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystPU = dir.make<TH2F>("MaxEventMass_SystPU", ";NCuts;MaxEventMass_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystHUp = dir.make<TH2F>("Mass_SystHUp", ";NCuts;Mass_SystHUp", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_SystH = dir.make<TH2F>("MassTOF_SystH", ";NCuts;MassTOF_SystH", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystHUp = dir.make<TH2F>("MassComb_SystHUp", ";NCuts;MassComb_SystHUp", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystHUp = dir.make<TH2F>("MaxEventMass_SystHUp", ";NCuts;MaxEventMass_SystHUp", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_SystHDown = dir.make<TH2F>("Mass_SystHDown", ";NCuts;Mass_SystHDown", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_SystHDown = dir.make<TH2F>("MassComb_SystHDown", ";NCuts;MassComb_SystHDown", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MaxEventMass_SystHDown = dir.make<TH2F>("MaxEventMass_SystHDown", ";NCuts;MaxEventMass_SystHDown", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  tuple->Mass_Flip = dir.make<TH2F>("Mass_Flip", ";NCuts;Mass_Flip", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassTOF_Flip = dir.make<TH2F>("MassTOF_Flip", ";NCuts;MassTOF_Flip", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-  tuple->MassComb_Flip = dir.make<TH2F>("MassComb_Flip", ";NCuts;MassComb_Flip", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
-
-  if (SkipSelectionPlot)
-    return;
-
   tuple->Gen_DecayLength = dir.make<TH1F>("Gen_DecayLength", "DecayLength (maybe cm);Gen candidate / 1 cm", 1000, 0., 1000.);
   tuple->Gen_Beta_Charged = dir.make<TH1F>("Beta_GenCharged", ";#beta (GenCharged);Gen candidate / 0.05", 20, 0, 1);
   tuple->Gen_Beta_Triggered = dir.make<TH1F>("Beta_Triggered", ";#beta (Triggered);Gen candidate / 0.05", 20, 0, 1);
@@ -565,6 +501,27 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Gen_Beta = dir.make<TH1F>("Gen_Beta", ";Generator candidate #beta;Gen candidate / 0.05", 20, 0, 1);
   tuple->Gen_BetaGamma = dir.make<TH1F>("Gen_BetaGamma", ";Generator candidate #beta #gamma;Gen canidate/ 0.1",4500,0.,450.);
 
+  tuple->BefPreS_HSCPCandidateType = dir.make<TH1F>("BefPreS_HSCPCandidateType", ";;Number of generator candidate / category", 6, -0.5, 5.5);
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(1,"Neutral HSCP");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(2,"Single-charged");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(3,"Double-charged R-hadrons");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
+  
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
+  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
+  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
+  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(3,"MET triggered");
+  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(4,"Muon OR MET triggered");
+  tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(5,"Muon AND MET triggered");
+  
+  tuple->BefPreS_RecoHSCParticleType = dir.make<TH1F>("BefPreS_RecoHSCParticleType", ";;Track / category", 6, -0.5, 5.5);
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(2,"trackerMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(3,"matchedStandAloneMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"standAloneMuon");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"innerTrack");
+  tuple->BefPreS_RecoHSCParticleType->GetXaxis()->SetBinLabel(6,"unknown");
 
   tuple->BefPreS_GenPtVsdRMinGen = dir.make<TH2F>("BefPreS_GenPtVsdRMinGen", ";GenPt;dRMinGen", 50, 0, PtHistoUpperBound, 100, 0., 1.);
   tuple->BefPreS_GendRMin = dir.make<TH1F>("BefPreS_GendRMin", ";dR_min;Gen candidate / 0.032",100,0.,3.2);
@@ -803,7 +760,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostPreS_RecoPFMET = dir.make<TH1F>("PostPreS_RecoPFMET", ";RecoPFMET;Tracks / bin",  200, 0.0, 2000.0);
   tuple->PostPreS_RecoPFHT = dir.make<TH1F>("PostPreS_RecoPFHT", ";RecoPFHT;Tracks / bin",  200, 0.0, 2000.0);
-  tuple->PostPreS_CaloJetsNum = dir.make<TH1F>("PostPreS_CaloJetsNum", ";Number of calo jets;Tracks / bin",  30, 0.0, 30.0);
+  tuple->PostPreS_CaloJetsNum = dir.make<TH1F>("PostPreS_CaloJetsNum", ";Number of calo jets;Tracks / bin",  16, -0.5, 15.5);
   
   tuple->PostPreS_Chi2oNdof = dir.make<TH1F>("PostPreS_Chi2oNdof", ";#chi^{2}/N_{dof};Tracks / 1", 20, 0, 20);
   tuple->PostPreS_Chi2oNdofVsIas = dir.make<TH2F>("PostPreS_Chi2oNdofVsIas", ";#chi^{2}/Ndof;G_{i}^{strips}",20, 0, 20,10,0.,1.);
@@ -1146,7 +1103,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostS_CutIdVsTOFVsIh = dir.make<TH3F>("PostS_CutIdVsTOFVsIh", ";NCuts;TOF;I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
   }
   
-  tuple->PostS_RelativePtShift = dir.make<TH1F>("PostS_RelativePtShift", ";#Delta p_{T} / p_{T};Tracks / bin", 20, 0., 0.001);
+  tuple->PostS_RelativePtShift = dir.make<TH1F>("PostS_RelativePtShift", ";#Delta p_{T} / p_{T};Tracks / bin", 20, 0., 0.0005);
   
   tuple->PostS_Ias = dir.make<TH1F>("PostS_Ias", ";G_{i}^{strips};Tracks / bin", 10, 0, dEdxS_UpLim);
   tuple->PostS_ProbQNoL1 = dir.make<TH1F>("PostS_ProbQNoL1", ";F_{i}^{pixels};Tracks / bin", 20, 0., 1.);
@@ -1267,21 +1224,21 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->PDF_H_EtaMass_Flip = dir.make<TH3F>("PDF_H_EtaMass_Flip", ";NCuts;PDF_H_EtaMass_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., MassNBins, 0, MassHistoUpperBound);
     }
 
-      tuple->RegionD_I = dir.make<TH2F>("RegionD_I", ";NCuts;RegionD_I", NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
-      tuple->RegionD_Ias = dir.make<TH2F>("RegionD_Ias", ";NCuts;RegionD_Ias", NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
-      tuple->RegionD_P = dir.make<TH2F>("RegionD_P", ";NCuts;RegionD_P", NCuts, 0, NCuts, 200, GlobalMinPt, PtHistoUpperBound);
-      tuple->RegionD_TOF = dir.make<TH2F>("RegionD_TOF", ";NCuts;RegionD_TOF", NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
+    tuple->RegionD_I = dir.make<TH2F>("RegionD_I", ";NCuts;RegionD_I", NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
+    tuple->RegionD_Ias = dir.make<TH2F>("RegionD_Ias", ";NCuts;RegionD_Ias", NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
+    tuple->RegionD_P = dir.make<TH2F>("RegionD_P", ";NCuts;RegionD_P", NCuts, 0, NCuts, 200, GlobalMinPt, PtHistoUpperBound);
+    tuple->RegionD_TOF = dir.make<TH2F>("RegionD_TOF", ";NCuts;RegionD_TOF", NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
 
-      tuple->RegionH_Ias = dir.make<TH2F>("RegionH_Ias", ";NCuts;RegionH_Ias", NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
+    tuple->RegionH_Ias = dir.make<TH2F>("RegionH_Ias", ";NCuts;RegionH_Ias", NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
 
-      tuple->H_A_Flip = dir.make<TH1D>("H_A_Flip", ";NCuts_Flip;H_A_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_B_Flip = dir.make<TH1D>("H_B_Flip", ";NCuts_Flip;H_B_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_C_Flip = dir.make<TH1D>("H_C_Flip", ";NCuts_Flip;H_C_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_D_Flip = dir.make<TH1D>("H_D_Flip", ";NCuts_Flip;H_D_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_E_Flip = dir.make<TH1D>("H_E_Flip", ";NCuts_Flip;H_E_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_F_Flip = dir.make<TH1D>("H_F_Flip", ";NCuts_Flip;H_F_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_G_Flip = dir.make<TH1D>("H_G_Flip", ";NCuts_Flip;H_G_Flip", NCuts_Flip, 0, NCuts_Flip);
-      tuple->H_H_Flip = dir.make<TH1D>("H_H_Flip", ";NCuts_Flip;H_H_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_A_Flip = dir.make<TH1D>("H_A_Flip", ";NCuts_Flip;H_A_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_B_Flip = dir.make<TH1D>("H_B_Flip", ";NCuts_Flip;H_B_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_C_Flip = dir.make<TH1D>("H_C_Flip", ";NCuts_Flip;H_C_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_D_Flip = dir.make<TH1D>("H_D_Flip", ";NCuts_Flip;H_D_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_E_Flip = dir.make<TH1D>("H_E_Flip", ";NCuts_Flip;H_E_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_F_Flip = dir.make<TH1D>("H_F_Flip", ";NCuts_Flip;H_F_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_G_Flip = dir.make<TH1D>("H_G_Flip", ";NCuts_Flip;H_G_Flip", NCuts_Flip, 0, NCuts_Flip);
+    tuple->H_H_Flip = dir.make<TH1D>("H_H_Flip", ";NCuts_Flip;H_H_Flip", NCuts_Flip, 0, NCuts_Flip);
     
     tuple->PostS_RecoHSCParticleType = dir.make<TH1F>("PostS_RecoHSCParticleType", ";;Tracks / category", 6, -0.5, 5.5);
     tuple->PostS_RecoHSCParticleType->GetXaxis()->SetBinLabel(1,"globalMuon");
@@ -1290,6 +1247,56 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostS_RecoHSCParticleType->GetXaxis()->SetBinLabel(4,"standAloneMuon");
     tuple->PostS_RecoHSCParticleType->GetXaxis()->SetBinLabel(5,"innerTrack");
     tuple->PostS_RecoHSCParticleType->GetXaxis()->SetBinLabel(6,"unknown");
+    
+    tuple->HSCPE = dir.make<TH1F>("HSCPE", ";NCuts;HSCPE", NCuts, 0, NCuts);
+    tuple->HSCPE_SystP = dir.make<TH1F>("HSCPE_SystP", ";NCuts;HSCPE_SystP", NCuts, 0, NCuts);
+    tuple->HSCPE_SystI = dir.make<TH1F>("HSCPE_SystI", ";NCuts;HSCPE_SystI", NCuts, 0, NCuts);
+    tuple->HSCPE_SystM = dir.make<TH1F>("HSCPE_SystM", ";NCuts;HSCPE_SystM", NCuts, 0, NCuts);
+    tuple->HSCPE_SystPU = dir.make<TH1F>("HSCPE_SystPU", ";NCuts;HSCPE_SystPU", NCuts, 0, NCuts);
+    tuple->HSCPE_SystHUp = dir.make<TH1F>("HSCPE_SystHUp", ";NCuts;HSCPE_SystHUp", NCuts, 0, NCuts);
+    tuple->HSCPE_SystHDown = dir.make<TH1F>("HSCPE_SystHDown", ";NCuts;HSCPE_SystHDown", NCuts, 0, NCuts);
+    
+    tuple->Mass = dir.make<TH2F>("Mass", ";NCuts;Mass", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass = dir.make<TH2F>("MaxEventMass", ";NCuts;MaxEventMass", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->Mass_SystP = dir.make<TH2F>("Mass_SystP", ";NCuts;Mass_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass_SystP = dir.make<TH2F>("MaxEventMass_SystP", ";NCuts;MaxEventMass_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->Mass_SystI = dir.make<TH2F>("Mass_SystI", ";NCuts;Mass_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass_SystI = dir.make<TH2F>("MaxEventMass_SystI", ";NCuts;MaxEventMass_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->Mass_SystM = dir.make<TH2F>("Mass_SystM", ";NCuts;Mass_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass_SystM = dir.make<TH2F>("MaxEventMass_SystM", ";NCuts;MaxEventMass_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->Mass_SystPU = dir.make<TH2F>("Mass_SystPU", ";NCuts;Mass_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass_SystPU = dir.make<TH2F>("MaxEventMass_SystPU", ";NCuts;MaxEventMass_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->Mass_SystHUp = dir.make<TH2F>("Mass_SystHUp", ";NCuts;Mass_SystHUp", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass_SystHUp = dir.make<TH2F>("MaxEventMass_SystHUp", ";NCuts;MaxEventMass_SystHUp", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->Mass_SystHDown = dir.make<TH2F>("Mass_SystHDown", ";NCuts;Mass_SystHDown", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    tuple->MaxEventMass_SystHDown = dir.make<TH2F>("MaxEventMass_SystHDown", ";NCuts;MaxEventMass_SystHDown", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    
+    tuple->Mass_Flip = dir.make<TH2F>("Mass_Flip", ";NCuts;Mass_Flip", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    
+    if (TypeMode > 1) {
+      tuple->HSCPE_SystT = dir.make<TH1F>("HSCPE_SystT", ";NCuts;HSCPE_SystT", NCuts, 0, NCuts);
+      
+      tuple->MassComb_Flip = dir.make<TH2F>("MassComb_Flip", ";NCuts;MassComb_Flip", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_SystH = dir.make<TH2F>("MassTOF_SystH", ";NCuts;MassTOF_SystH", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystHUp = dir.make<TH2F>("MassComb_SystHUp", ";NCuts;MassComb_SystHUp", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystPU = dir.make<TH2F>("MassComb_SystPU", ";NCuts;MassComb_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->Mass_SystT = dir.make<TH2F>("Mass_SystT", ";NCuts;Mass_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_SystT = dir.make<TH2F>("MassTOF_SystT", ";NCuts;MassTOF_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystT = dir.make<TH2F>("MassComb_SystT", ";NCuts;MassComb_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MaxEventMass_SystT = dir.make<TH2F>("MaxEventMass_SystT", ";NCuts;MaxEventMass_SystT", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystI = dir.make<TH2F>("MassComb_SystI", ";NCuts;MassComb_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_SystM = dir.make<TH2F>("MassTOF_SystM", ";NCuts;MassTOF_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystM = dir.make<TH2F>("MassComb_SystM", ";NCuts;MassComb_SystM", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb = dir.make<TH2F>("MassComb", ";NCuts;MassComb", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_SystP = dir.make<TH2F>("MassTOF_SystP", ";NCuts;MassTOF_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystP = dir.make<TH2F>("MassComb_SystP", ";NCuts;MassComb_SystP", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF = dir.make<TH2F>("MassTOF", ";NCuts;MassTOF", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassComb_SystHDown = dir.make<TH2F>("MassComb_SystHDown", ";NCuts;MassComb_SystHDown", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_Flip = dir.make<TH2F>("MassTOF_Flip", ";NCuts;MassTOF_Flip", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_SystI = dir.make<TH2F>("MassTOF_SystI", ";NCuts;MassTOF_SystI", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+      tuple->MassTOF_SystPU = dir.make<TH2F>("MassTOF_SystPU", ";NCuts;MassTOF_SystPU", NCuts, 0, NCuts, MassNBins, 0, MassHistoUpperBound);
+    }
+
 
     for (int i = 0; i < PredBins; i++) {
       char Suffix[1024];

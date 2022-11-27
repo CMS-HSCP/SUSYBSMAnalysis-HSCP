@@ -218,48 +218,6 @@ struct Tuple {
   //      Declare Histograms
   //=============================================================
 
-  TH2F* Mass;
-  TH2F* MassTOF;
-  TH2F* MassComb;
-  TH2F* MaxEventMass;
-
-  TH2F* Mass_SystP;
-  TH2F* MassTOF_SystP;
-  TH2F* MassComb_SystP;
-  TH2F* MaxEventMass_SystP;
-
-  TH2F* Mass_SystI;
-  TH2F* MassTOF_SystI;
-  TH2F* MassComb_SystI;
-  TH2F* MaxEventMass_SystI;
-
-  TH2F* Mass_SystM;
-  TH2F* MassTOF_SystM;
-  TH2F* MassComb_SystM;
-  TH2F* MaxEventMass_SystM;
-
-  TH2F* Mass_SystT;
-  TH2F* MassTOF_SystT;
-  TH2F* MassComb_SystT;
-  TH2F* MaxEventMass_SystT;
-
-  TH2F* Mass_SystPU;
-  TH2F* MassTOF_SystPU;
-  TH2F* MassComb_SystPU;
-  TH2F* MaxEventMass_SystPU;
-
-  TH2F* Mass_SystHUp;
-  TH2F* MassTOF_SystH;
-  TH2F* MassComb_SystHUp;
-  TH2F* MaxEventMass_SystHUp;
-
-  TH2F* Mass_SystHDown;
-  TH2F* MassComb_SystHDown;
-  TH2F* MaxEventMass_SystHDown;
-
-  TH2F* Mass_Flip;
-  TH2F* MassTOF_Flip;
-  TH2F* MassComb_Flip;
 
   TProfile* IntLumi;
   TProfile* XSection;
@@ -308,8 +266,6 @@ struct Tuple {
   TH1F* N1_Stations;
   TH1F* N1_Dxy;
   TH1F* N1_Dz;
-  TH1F* N1_SegSep;
-  TH1F* FailDz;
   TH1F* N1_ProbQNoL1;
   TH2F* N1_ProbQNoL1VsIas;
   TH3F* N1_IhVsProbQNoL1VsIas;
@@ -814,6 +770,7 @@ struct Tuple {
   TH1F* CutFlowReverse;
   
   TH2F* CutFlowEta;
+  TH2F* N1_FlowEta;
   TH2F* CutFlowPfType;
   TH2F* CutFlowProbQ;
 
@@ -958,6 +915,50 @@ struct Tuple {
   TH1D* H_F_Flip;
   TH1D* H_G_Flip;
   TH1D* H_H_Flip;
+  
+  
+  TH2F* Mass;
+  TH2F* MassTOF;
+  TH2F* MassComb;
+  TH2F* MaxEventMass;
+  
+  TH2F* Mass_SystP;
+  TH2F* MassTOF_SystP;
+  TH2F* MassComb_SystP;
+  TH2F* MaxEventMass_SystP;
+  
+  TH2F* Mass_SystI;
+  TH2F* MassTOF_SystI;
+  TH2F* MassComb_SystI;
+  TH2F* MaxEventMass_SystI;
+  
+  TH2F* Mass_SystM;
+  TH2F* MassTOF_SystM;
+  TH2F* MassComb_SystM;
+  TH2F* MaxEventMass_SystM;
+  
+  TH2F* Mass_SystT;
+  TH2F* MassTOF_SystT;
+  TH2F* MassComb_SystT;
+  TH2F* MaxEventMass_SystT;
+  
+  TH2F* Mass_SystPU;
+  TH2F* MassTOF_SystPU;
+  TH2F* MassComb_SystPU;
+  TH2F* MaxEventMass_SystPU;
+  
+  TH2F* Mass_SystHUp;
+  TH2F* MassTOF_SystH;
+  TH2F* MassComb_SystHUp;
+  TH2F* MaxEventMass_SystHUp;
+  
+  TH2F* Mass_SystHDown;
+  TH2F* MassComb_SystHDown;
+  TH2F* MaxEventMass_SystHDown;
+  
+  TH2F* Mass_Flip;
+  TH2F* MassTOF_Flip;
+  TH2F* MassComb_Flip;
 
   std::map<std::string, TH1D*> H_B_Binned_Flip;  //TH1D* H_B_Binned_Flip[MaxPredBins];
   std::map<std::string, TH1D*> H_D_Binned_Flip;  //TH1D* H_D_Binned_Flip[MaxPredBins];
