@@ -268,7 +268,6 @@ struct Tuple {
   TH1F* N1_Dz;
   TH1F* N1_ProbQNoL1;
   TH2F* N1_ProbQNoL1VsIas;
-  TH3F* N1_IhVsProbQNoL1VsIas;
   TH1F* N1_ProbXY;
   TH1F* N1_PfType;
   TH1F* N1_MiniRelIsoAll;
@@ -597,6 +596,7 @@ struct Tuple {
   TH1F* PostS_ProbQNoL1;
   TH1F* PostS_Ias;
   TH2F* PostS_ProbQNoL1VsIas;
+  TH3F* PostS_ProbQNoL1VsIasVsPt;
   TH2F* PostS_ProbQNoL1VsIas_Pileup_up;
   TH2F* PostS_ProbQNoL1VsIas_Pileup_down;
   TH2F* PostS_ProbQNoL1VsIas_ProbQNoL1_up;
@@ -605,6 +605,8 @@ struct Tuple {
   TH2F* PostS_ProbQNoL1VsIas_Ias_down;
   TH2F* PostS_ProbQNoL1VsIas_Pt_up;
   TH2F* PostS_ProbQNoL1VsIas_Pt_down;
+  TH2F* PostS_ProbQNoL1VsIas_Trigger_up;
+  TH2F* PostS_ProbQNoL1VsIas_Trigger_down;
   
   TH1F* PostS_SR1_ProbQNoL1;
   TH1F* PostS_SR1_Ias;
@@ -617,6 +619,8 @@ struct Tuple {
   TH2F* PostS_SR1_ProbQNoL1VsIas_Ias_down;
   TH2F* PostS_SR1_ProbQNoL1VsIas_Pt_up;
   TH2F* PostS_SR1_ProbQNoL1VsIas_Pt_down;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Trigger_up;
+  TH2F* PostS_SR1_ProbQNoL1VsIas_Trigger_down;
   
   TH1F* PostS_SR2_ProbQNoL1;
   TH1F* PostS_SR2_Ias;
@@ -629,6 +633,8 @@ struct Tuple {
   TH2F* PostS_SR2_ProbQNoL1VsIas_Ias_down;
   TH2F* PostS_SR2_ProbQNoL1VsIas_Pt_up;
   TH2F* PostS_SR2_ProbQNoL1VsIas_Pt_down;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Trigger_up;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_Trigger_down;
   
   TH1F* PostS_SR3_ProbQNoL1;
   TH1F* PostS_SR3_Ias;
@@ -641,6 +647,8 @@ struct Tuple {
   TH2F* PostS_SR3_ProbQNoL1VsIas_Ias_down;
   TH2F* PostS_SR3_ProbQNoL1VsIas_Pt_up;
   TH2F* PostS_SR3_ProbQNoL1VsIas_Pt_down;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Trigger_up;
+  TH2F* PostS_SR3_ProbQNoL1VsIas_Trigger_down;
 
   
   TH2F* PostPreS_TriggerMuon50VsBeta;

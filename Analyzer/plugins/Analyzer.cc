@@ -22,6 +22,7 @@
 // - 41p7: Plot for number of candidates, extend dRMinPfJet to 3.2, add 3 SRs, add HLT match, relative pt shift, tuneP muon checks
 // - 41p8: Cutflow fixes, add fraction of cleaned clusters, getting rid of pixelProbs[], make trigger syst more general
 // - 41p9: Increase pT in SR, dont load histos that are not needed for this typeMode
+// - 42p0: Add trigger syst plots, add PostS_ProbQNoL1VsIasVsPt, extend dRMinPfJet to 5.0
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -185,7 +186,7 @@ void Analyzer::beginJob() {
                                dir,
                                saveTree_,
                                saveGenTree_,
-                               skipSelectionPlot_,
+                               calcSyst_,
                                typeMode_,
                                isSignal,
                                CutPt_.size(),
@@ -491,6 +492,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     trigInfo_ = 4;
   }
 
+  // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
+//  bool triggerPassed = (trigInfo_ == 1);
   tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   // If triggering is intended (not the case when we make ntuples)
   if (trigInfo_ > 0) {
@@ -1069,7 +1072,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     if (!isData && debug_ > 5 && trigInfo_ > 0) {
-      LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genColl[closestGenIndex].pdgId() << " with pT " << genColl[closestGenIndex].pt() ;
+      LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genColl[closestGenIndex].pdgId() << " with pT " << genColl[closestGenIndex].pt() << " and eta " << genColl[closestGenIndex].eta() ;
     }
     if (trigInfo_ > 0) {
       if (!isData) {
@@ -2519,7 +2522,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (i==14) {
           tuple->N1_ProbQNoL1->Fill(1 - probQonTrackNoL1, EventWeight_);
           tuple->N1_ProbQNoL1VsIas->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
-          tuple->N1_IhVsProbQNoL1VsIas->Fill(globalIh_, 1 - probQonTrackNoL1, globalIas_, EventWeight_);
         };
       }
     }
@@ -2601,7 +2603,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
-      tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::min(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up->Fill(std::min(1.,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down->Fill((1 - probQonTrackNoL1)*0.995, globalIas_,  EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Ias_up->Fill(1 - probQonTrackNoL1, std::min(1.0,globalIas_*1.05),  EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_*0.95,  EventWeight_);
@@ -2742,7 +2744,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
-      postPreS_candidate_count++;
+      if (trigInfo_ > 0) postPreS_candidate_count++;
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Fill control and prediction histos";
       tuple_maker->fillControlAndPredictionHist(hscp,
@@ -2766,7 +2768,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                                 CutTOF_Flip_);
       // After pre-selection plots
       bool doPostPreSplots = true;
-      if (doPostPreSplots) {
+      if (doPostPreSplots && trigInfo_ > 0) {
         tuple->PostPreS_PfType->Fill(0., EventWeight_);
         tuple->PostPreS_PfTypeVsIas->Fill(0., globalIas_, EventWeight_);
         if (pf_isPfTrack) {
@@ -3089,7 +3091,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Let's do some printouts after preselections for gen particles
-    if (passPre) {
+    if (passPre && trigInfo_ > 0) {
       if (!isData) {
         //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
         closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
@@ -3334,9 +3336,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_ProbQVsGenEnviromentID->Fill(probQonTrack, abs(genColl[g].pdgId()), EventWeight_);
         tuple->PostPreS_IasVsGenEnviromentID->Fill(globalIas_, abs(genColl[g].pdgId()), EventWeight_);
       }
-      if (hasStatus91Around) {
+      if (hasStatus91Around && passPre && trigInfo_ > 0) {
         tuple->PostPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
-      } else {
+      } else if (passPre && trigInfo_ > 0) {
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, EventWeight_);
       }
     }
@@ -3354,7 +3356,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       DetId detid(dedxHits->detId(i));
 
       // The pixel part
-      if (detid.subdetId() < 3) {
+      if (detid.subdetId() < 3 && passPre && trigInfo_ > 0) {
         // Taking the pixel cluster
         auto const* pixelCluster =  dedxHits->pixelCluster(i);
         // Get the local angles (axproximate from global)
@@ -3445,7 +3447,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
       // the strip part
-      } else if (detid.subdetId() >= 3 && !isData && (globalIas_ > 0.3 || (globalIas_ > 0.025 && globalIas_ < 0.03 && debug_ > 4))) {
+      } else if ((passPre && trigInfo_ > 0) && detid.subdetId() >= 3 && !isData && (globalIas_ > 0.3 || (globalIas_ > 0.025 && globalIas_ < 0.03 && debug_ > 4))) {
           // Taking the strips cluster
         auto const* stripsCluster = dedxHits->stripCluster(i);
         std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
@@ -3562,41 +3564,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     bool PassNonTrivialSelection = false;
   
-    // Loop through the rechits on the given track in the preselection function
-//    for (unsigned int i = 0; i < dedxHits->size(); i++) {
-//        DetId detid(dedxHits->detId(i));
-//        float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-//        auto IhOnLayer = dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i);
-//        tuple->PostPreS_IasAllIhVsLayer->Fill(globalIas_, IhOnLayer, i+0, EventWeight_);
-        // One plot for the pixels
-//        if (detid.subdetId() < 3) {
-          // up to 8 in histo
-//          unsigned int pixLayerIndex = 0;
-//          if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
-//            pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
-//          } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
-//            pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
-//            if (globalIas_ < 0.03 && globalIas_ > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
-//          }
-//          if (tuple) {
-//            tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex, EventWeight_);
-//          }
-//        }
-        // another for the strips
-//        else {
-//            up to 25 in histo
-//            unsigned int stripLayerIndex = 0;
-//            if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
-//            if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
-//            if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
-//            if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-
-//            if (tuple) {
-//                tuple->PostPreS_IasStripIhVsLayer->Fill(globalIas_, IhOnLayer, stripLayerIndex, EventWeight_);
-//            }
-//        }
-//    }
-
     if (passPre) {
         tuple_maker->fillRegions(tuple,
                                  pT_cut,
@@ -3642,8 +3609,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
         //Fill Mass Histograms for different Ih syst
-        tuple->Mass_SystHUp->Fill(CutIndex, MassUp, EventWeight_);
-        tuple->Mass_SystHDown->Fill(CutIndex, MassDown, EventWeight_);
+        if (calcSyst_) {
+          tuple->Mass_SystHUp->Fill(CutIndex, MassUp, EventWeight_);
+          tuple->Mass_SystHDown->Fill(CutIndex, MassDown, EventWeight_);
+        }
         if (tof && typeMode_ > 1) {
           tuple->MassTOF_SystH->Fill(CutIndex, MassTOF, EventWeight_);
           tuple->MassComb_SystHUp->Fill(CutIndex, MassUpComb, EventWeight_);
@@ -3656,10 +3625,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float Ick2 = 0;
     if (dedxMObj)
       Ick2 = GetIck(dedxMObj->dEdx(), dEdxK_, dEdxC_);
-    int nomh = 0;
+    unsigned int nomh = 0;
     nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
            track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
+    
+    if (missingHitsTillLast == nomh) {
+      cout << "missingHitsTillLast == nomh, dupplicate, please clean up" << endl;
+    }
     float fovhd = track->found() <= 0 ? -1 : track->found() / float(track->found() + nomh);
+    if (validFractionTillLast == fovhd) {
+      cout << "validFractionTillLast == fovhd, dupplicate, please clean up" << endl;
+    }
+    
 
     float genid = 0, gencharge = -99, genmass = -99, genpt = -99, geneta = -99, genphi = -99;
 
@@ -3710,7 +3687,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ias_StripOnly.push_back(dedxIas_StripOnly ? dedxIas_StripOnly->dEdx() : -1);
     HSCP_Ias_PixelOnly_noL1.push_back(dedxIas_PixelOnly_noL1 ? dedxIas_PixelOnly_noL1->dEdx() : -1);
     HSCP_Ih.push_back(dedxMObj_FullTracker ? dedxMObj_FullTracker->dEdx() : -1);
-      // we should have a leaf where Ih is NoL1
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
     HSCP_ProbXY.push_back(TreeprobXYonTrack);
@@ -3810,13 +3786,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
   if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
   
-  if (debug_ > 3 && trigInfo_ > 0) LogPrint(MOD) << "After choosing the best candidate track";
   int hscpIndex = 0;
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     hscpIndex++;
     if (bestCandidateIndex != hscpIndex) {
       continue;
     }
+    
+    if (debug_ > 3 && trigInfo_ > 0) LogPrint(MOD) << "After choosing the best candidate track";
     
     if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
       tuple->PostS_RecoHSCParticleType->Fill(0.);
@@ -3848,6 +3825,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
     tuple->PostS_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
     tuple->PostS_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
+    tuple->PostS_ProbQNoL1VsIasVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, track->pt(), EventWeight_);
     
     // Systematics plots for pT rescaling
     if (rescaledPtUp > globalMinPt_) {
@@ -3865,9 +3843,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->PostS_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
     tuple->PostS_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
     
-      // Systematics plots for Fi rescaling
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.0,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
+    // Systematics plots for Fi rescaling
+    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
     tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+    
+    // Systematics plots for trigger rescaling
+    tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
+    tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     
     // Repeat for several SRs
     if (track->pt() > 100) {
@@ -3883,17 +3865,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
-        // Systematics plots for Gi rescaling
+      // Systematics plots for Gi rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
       
-        // Systematics plots for PU rescaling
+      // Systematics plots for PU rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
-        // Systematics plots for Fi rescaling
-      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.0,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
+      // Systematics plots for Fi rescaling
+      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      
+      // Systematics plots for trigger rescaling
+      tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
+      tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
     if (track->pt() > 200) {
       tuple->PostS_SR2_Ias->Fill(bestCandidateIas, EventWeight_);
@@ -3908,17 +3894,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
-        // Systematics plots for Gi rescaling
+      // Systematics plots for Gi rescaling
       tuple->PostS_SR2_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
       tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
       
-        // Systematics plots for PU rescaling
+      // Systematics plots for PU rescaling
       tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
-        // Systematics plots for Fi rescaling
-      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.0,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
+      // Systematics plots for Fi rescaling
+      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
       tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      
+      // Systematics plots for trigger rescaling
+      tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
+      tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
     if (track->pt() > 300) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
@@ -3933,17 +3923,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
-        // Systematics plots for Gi rescaling
+      // Systematics plots for Gi rescaling
       tuple->PostS_SR3_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
       
-        // Systematics plots for PU rescaling
+      // Systematics plots for PU rescaling
       tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
-        // Systematics plots for Fi rescaling
-      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.0,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
+      // Systematics plots for Fi rescaling
+      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      
+      // Systematics plots for trigger rescaling
+      tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
+      tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
     
   } // end of "loop" on the single best HSCP candidate
@@ -4127,36 +4121,38 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->MaxEventMass->Fill(CutIndex, MaxMass[CutIndex], EventWeight_);
       }
     }
-    if (HSCPTk_SystP[CutIndex]) {
-      tuple->HSCPE_SystP->Fill(CutIndex, EventWeight_);
-      tuple->MaxEventMass_SystP->Fill(CutIndex, MaxMass_SystP[CutIndex], EventWeight_);
-    }
-    if (HSCPTk_SystI[CutIndex]) {
-      tuple->HSCPE_SystI->Fill(CutIndex, EventWeight_);
-      tuple->MaxEventMass_SystI->Fill(CutIndex, MaxMass_SystI[CutIndex], EventWeight_);
-    }
-    if (HSCPTk_SystM[CutIndex]) {
-      tuple->HSCPE_SystM->Fill(CutIndex, EventWeight_);
-      tuple->MaxEventMass_SystM->Fill(CutIndex, MaxMass_SystM[CutIndex], EventWeight_);
-    }
-    if (HSCPTk_SystT[CutIndex] && typeMode_ > 1) {
-      tuple->HSCPE_SystT->Fill(CutIndex, EventWeight_);
-      tuple->MaxEventMass_SystT->Fill(CutIndex, MaxMass_SystT[CutIndex], EventWeight_);
-    }
-    if (HSCPTk_SystPU[CutIndex]) {
-      tuple->HSCPE_SystPU->Fill(CutIndex, EventWeight_ * PUSystFactor_[0]);
-      tuple->MaxEventMass_SystPU->Fill(CutIndex, MaxMass_SystPU[CutIndex], EventWeight_ * PUSystFactor_[0]);
-    }
-    if (HSCPTk_SystHUp[CutIndex]) {
-      tuple->HSCPE_SystHUp->Fill(CutIndex, EventWeight_);
-      tuple->MaxEventMass_SystHUp->Fill(CutIndex, MaxMass_SystHUp[CutIndex], EventWeight_);
-    }
-    if (HSCPTk_SystHDown[CutIndex]) {
-      tuple->HSCPE_SystHDown->Fill(CutIndex, EventWeight_);
-      tuple->MaxEventMass_SystHDown->Fill(CutIndex, MaxMass_SystHDown[CutIndex], EventWeight_);
-    }
+    if (calcSyst_) {
+      if (HSCPTk_SystP[CutIndex]) {
+        tuple->HSCPE_SystP->Fill(CutIndex, EventWeight_);
+        tuple->MaxEventMass_SystP->Fill(CutIndex, MaxMass_SystP[CutIndex], EventWeight_);
+      }
+      if (HSCPTk_SystI[CutIndex]) {
+        tuple->HSCPE_SystI->Fill(CutIndex, EventWeight_);
+        tuple->MaxEventMass_SystI->Fill(CutIndex, MaxMass_SystI[CutIndex], EventWeight_);
+      }
+      if (HSCPTk_SystM[CutIndex]) {
+        tuple->HSCPE_SystM->Fill(CutIndex, EventWeight_);
+        tuple->MaxEventMass_SystM->Fill(CutIndex, MaxMass_SystM[CutIndex], EventWeight_);
+      }
+      if (HSCPTk_SystT[CutIndex] && typeMode_ > 1) {
+        tuple->HSCPE_SystT->Fill(CutIndex, EventWeight_);
+        tuple->MaxEventMass_SystT->Fill(CutIndex, MaxMass_SystT[CutIndex], EventWeight_);
+      }
+      if (HSCPTk_SystPU[CutIndex]) {
+        tuple->HSCPE_SystPU->Fill(CutIndex, EventWeight_ * PUSystFactor_[0]);
+        tuple->MaxEventMass_SystPU->Fill(CutIndex, MaxMass_SystPU[CutIndex], EventWeight_ * PUSystFactor_[0]);
+      }
+      if (HSCPTk_SystHUp[CutIndex]) {
+        tuple->HSCPE_SystHUp->Fill(CutIndex, EventWeight_);
+        tuple->MaxEventMass_SystHUp->Fill(CutIndex, MaxMass_SystHUp[CutIndex], EventWeight_);
+      }
+      if (HSCPTk_SystHDown[CutIndex]) {
+        tuple->HSCPE_SystHDown->Fill(CutIndex, EventWeight_);
+        tuple->MaxEventMass_SystHDown->Fill(CutIndex, MaxMass_SystHDown[CutIndex], EventWeight_);
+      }
+    } // end of calcSyst_
   }
-}
+} // end of analyze()
 
 // ------------ method called once each job just after ending the event loop  ------------
 void Analyzer::endJob() {
