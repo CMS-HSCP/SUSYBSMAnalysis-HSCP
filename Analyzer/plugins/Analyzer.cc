@@ -1676,17 +1676,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dropLowerDeDxValue = 0.0;
     bool skipPixelL1 = false;
     int  skip_templates_ias = 0;
-    TH3F* localdEdxTemplates;
-    if(!createGiTemplates_ && !puTreatment_){
-      localdEdxTemplates = dEdxTemplates;
-    }
-    //Part below is not needed since we loaded templates above, we can just pass each template as the new localdEdxTemplates
-    /*
-    if(!createGiTemplates_ && puTreatment_){
-      vector<TH3F*> localdEdxTemplatesPU(NbPuBins_, NULL);
-      localdEdxTemplatesPU = dEdxTemplatesPU;
-    }
-    */
+    TH3F* localdEdxTemplates; //Temp TH3 that wil ltake actual template for each calculation
+    
+
     float dEdxErr = 0;
     bool symmetricSmirnov = false;
     
@@ -1762,12 +1754,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     reco::DeDxData dedxIas_FullTrackerTmp,dedxIas_noTIBnoTIDno3TEC_Tmp,dedxIas_PixelOnly_Tmp,dedxIas_StripOnly_Tmp,dedxIas_PixelOnly_noL1_Tmp,dedxIs_StripOnly_Tmp;
 
     //Pointers that will have the dEdx info laterr
-    reco::DeDxData* dedxIas_FullTracker = nullptr;
-    reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = nullptr;
-    reco::DeDxData* dedxIas_PixelOnly = nullptr;
-    reco::DeDxData* dedxIas_StripOnly = nullptr;
-    reco::DeDxData* dedxIas_PixelOnly_noL1 = nullptr;
-    reco::DeDxData* dedxIs_StripOnly = nullptr;
+    reco::DeDxData* dedxIas_FullTracker = nullptr; //globalIas_
+    reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = nullptr; //globalIas_ without TIB, TID, and 3 first TEC layers
+
+    reco::DeDxData* dedxIas_PixelOnly = nullptr; //globalIas_ Pixel only
+    reco::DeDxData* dedxIas_StripOnly = nullptr; //globalIas_ Strip only
+    reco::DeDxData* dedxIas_PixelOnly_noL1 = nullptr; //globalIas_ Pixel only no BPIXL1
+    reco::DeDxData* dedxIs_StripOnly = nullptr; //symmetric Smirnov discriminator - Is
 
     int NPV = vertexColl.size();
     if(!puTreatment_){
@@ -1811,14 +1804,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     else{
         for(int i = 0 ; i < NbPuBins_ ; i++){ 
             if ( NPV > PuBins_[i] && NPV <= PuBins_[i+1] ){
-            
+                //globalIas_ 
                 dedxIas_FullTrackerTmp =
                 computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                             mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
                 
                 dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
-                
-                //globalIas_ without TIB, TID, and 3 first TEC layers
+               
+                //globalIas_ without TIB, TID, and 3 first TEC layers 
                 dedxIas_noTIBnoTIDno3TEC_Tmp =
                     computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                                 mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
