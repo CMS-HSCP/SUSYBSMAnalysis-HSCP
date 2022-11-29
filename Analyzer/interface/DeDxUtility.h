@@ -51,10 +51,10 @@ void loadDeDxParameters(
   }
 }
 
-TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType,bool PUTreatment,int puBin) {
+TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType,bool puTreatment,int puBin) {
   TFile* InputFile = new TFile(path.c_str());
   TH3F* DeDxMap_;
-  if(!PUTreatment) DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Calibration_GiTemplate");
+  if(!puTreatment) DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Calibration_GiTemplate");
   else{
     if( puBin > 5) {
       exit(0);
