@@ -23,6 +23,7 @@
 // - 41p8: Cutflow fixes, add fraction of cleaned clusters, getting rid of pixelProbs[], make trigger syst more general
 // - 41p9: Increase pT in SR, dont load histos that are not needed for this typeMode
 // - 42p0: Add trigger syst plots, add PostS_ProbQNoL1VsIasVsPt, extend dRMinPfJet to 5.0
+// - 42p1: Let in MET triggers, for some MET trigger studies, tuneP muon checks extended axis, fix CutFlow 1st bin
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -469,7 +470,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   // Number of (re-weighted) events
   tuple->NumEvents->Fill(0., EventWeight_);
-  tuple->CutFlow->Fill(0., EventWeight_);
   // Number of (re-weighted with PU syst fact) events
   tuple->NumEvents->Fill(1., EventWeight_ * PUSystFactor_[0]);
 
@@ -559,19 +559,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
   }
-  if (trigInfo_> 0) {
+  if (trigInfo_ > 0) {
   tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
   }
 
   // Number of events that pass the matching
-  if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+  if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
       matchedMuonWasFound = true;
     tuple->NumEvents->Fill(3., EventWeight_);
   }
 
 
   //keep beta distribution for signal after the trigger
-  if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+  if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
   if (isSignal) {
     if (HSCPGenBeta1 >= 0)
       tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
@@ -592,16 +592,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   edm::Handle<CSCSegmentCollection> CSCSegmentCollH;
   edm::Handle<DTRecSegment4DCollection> DTSegmentCollH;
   
-    // Retrieve tracker topology from the event setup
+  // Retrieve tracker topology from the event setup
   edm::ESHandle<TrackerTopology> TopoHandle;
   iSetup.get<TrackerTopologyRcd>().get(TopoHandle);
   const TrackerTopology* tTopo = TopoHandle.product();
   
-    // Retrieve tracker geometry from the event setup
+  // Retrieve tracker geometry from the event setup
   edm::ESHandle<TrackerGeometry> tkGeometry;
   iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
   
-    // Retrieve CPE from the event setup
+  // Retrieve CPE from the event setup
   edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
   iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
   
@@ -639,7 +639,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
   
-
   float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_sigf = -10; 
   float RecoPFMET = -10, RecoPFMET_phi = -10, RecoPFMET_sigf = -10, RecoPFMHT = -10;
   float HLTCaloMET = -10, HLTCaloMET_phi = -10, HLTCaloMET_sigf = -10;
@@ -658,7 +657,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
   }
 
-
   //===================== Handle For RecoPFMET ===================
   if (recoPFMETHandle.isValid() && !recoPFMETHandle->empty()) {
     for (unsigned int i = 0; i < recoPFMETHandle->size(); i++) {
@@ -668,9 +666,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       RecoPFMET_sigf = recoPFMet->significance();
     }
   }
-
-
-
 
   //===================== Handle For HLT Trigger Summary ===================
   const edm::Handle<trigger::TriggerEvent> hltTriggerSummaryHandle = iEvent.getHandle(trigEventToken_);
@@ -908,6 +903,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float bestCandidateDrMinHltMuon = 9999.;
   
   for (const auto& hscp : iEvent.get(hscpToken_)) {
+    // Number of tracks before any trigger or preselection
+    tuple->CutFlow->Fill(0., EventWeight_);
     if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  --------------------------------------------";
     candidate_count++;
     if (trigInfo_ > 0) {
@@ -936,7 +933,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
       if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
         tuple->ErrorHisto->Fill(1.);
       }
       continue;
@@ -948,7 +945,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ == 3 && muon.isNull()) {
       if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> TOF only mode but no muon connected to the candidate -- skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
       continue;
     }
     
@@ -958,29 +955,29 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (track.isNull()) {
       if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
       // Third bin of the error histo, no tracks
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(2.);
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(2.);
       continue;
     }
-    
+
+    float trackerPt = track->pt();
+    float muonPt = 0.f;
     if (!muon.isNull()) {
-      float trackerPt = track->pt();
-      float muonPt = 0.f;
       reco::TrackRef trackMu;
       if (muon->tunePMuonBestTrack().isNonnull()) {
-        // for the next step do:
-        // track = muon->tunePMuonBestTrack();
         trackMu = muon->tunePMuonBestTrack();
         muonPt = trackMu->pt();
-        tuple->BefPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
-        tuple->BefPreS_RelDiffMuonPtAndTrackPt->Fill(fabs(muonPt-trackerPt)/trackerPt, EventWeight_);
+
       }
     }
+    
+    tuple->BefPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
+    tuple->BefPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
 
     // Require a track segment in the muon system
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
       continue;
     }
 
@@ -994,7 +991,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (vertexColl.size() < 1) {
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
         // 4-th bin of the error histo, no PV
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(3.);
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(3.);
         continue;
     }
         
@@ -1091,7 +1088,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
       // All HSCP candidates
       tuple->Gen_HSCPCandidateType->Fill(0., EventWeight_);
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
         tuple->BefPreS_HSCPCandidateType->Fill(0., EventWeight_);
       }
       // Neutral HSCP candidates
@@ -1103,7 +1100,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
           || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
         tuple->Gen_HSCPCandidateType->Fill(1., EventWeight_);
-        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
           tuple->BefPreS_HSCPCandidateType->Fill(1., EventWeight_);
         }
       }
@@ -1117,14 +1114,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
                || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
         tuple->Gen_HSCPCandidateType->Fill(2., EventWeight_);
-        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
           tuple->BefPreS_HSCPCandidateType->Fill(2., EventWeight_);
         }
       }
       // Double-charged R-hadrons
       else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
         tuple->Gen_HSCPCandidateType->Fill(3., EventWeight_);
-        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
           tuple->BefPreS_HSCPCandidateType->Fill(3., EventWeight_);
         }
         // Dont mix double charged R-hadrons with the rest
@@ -1134,13 +1131,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // tau prime, could be single or multiple charged
       else if (closestHSCPsPDGsID == 17) {
         tuple->Gen_HSCPCandidateType->Fill(4., EventWeight_);
-        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
           tuple->BefPreS_HSCPCandidateType->Fill(4., EventWeight_);
         }
       }
       else {
         tuple->Gen_HSCPCandidateType->Fill(5., EventWeight_);
-        if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
           tuple->Gen_HSCPCandidateType->Fill(5., EventWeight_);
         }
       }
@@ -1421,7 +1418,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHits) {
       if (debug_> 3 && trigInfo_ > 0) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
       // 7-th bin of the error histo, No dedxHits associated to this track
-      if (trigInfo_> 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(6.);
+      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(6.);
       continue;
     }
 
@@ -2716,7 +2713,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           
       } else if (HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., GenBeta);
-        tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+        
         if (fabs(track->eta()) < 0.3) {
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., GenBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
@@ -2734,14 +2731,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
       if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
         tuple->PostPreS_TriggerMETallVsBeta->Fill(0., GenBeta);
-        tuple->PostPreS_TriggerMETallVsBeta->Fill(0., GenBeta);
+        tuple->PostPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
+        tuple->PostPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
+        tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
       } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
         tuple->PostPreS_TriggerMETallVsBeta->Fill(1., GenBeta);
         tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+        tuple->PostPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
+        tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
       }
     }
-    
-    
+
+
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
       if (trigInfo_ > 0) postPreS_candidate_count++;
@@ -2769,6 +2770,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // After pre-selection plots
       bool doPostPreSplots = true;
       if (doPostPreSplots && trigInfo_ > 0) {
+        tuple->PostPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
+        tuple->PostPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
         tuple->PostPreS_PfType->Fill(0., EventWeight_);
         tuple->PostPreS_PfTypeVsIas->Fill(0., globalIas_, EventWeight_);
         if (pf_isPfTrack) {
@@ -2818,6 +2821,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TNOHFractionVsIas->Fill(track->validFraction(), globalIas_, EventWeight_);
         tuple->PostPreS_TNOPH->Fill(nonL1PixHits, EventWeight_);
         tuple->PostPreS_RatioCleanAndAllStripsClu->Fill(ratioCleanAndAllStripsClu, EventWeight_);
+        tuple->PostPreS_RatioCleanAndAllStripsCluVsIas->Fill(ratioCleanAndAllStripsClu, globalIas_, EventWeight_);
         tuple->PostPreS_RatioCleanAndAllPixelClu->Fill(ratioCleanAndAllPixelClu, EventWeight_);
         
         tuple->PostPreS_TNOPHVsIas->Fill(nonL1PixHits, globalIas_, EventWeight_);
@@ -3040,6 +3044,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_RecoPfMetPhi->Fill(RecoPFMET_phi, EventWeight_);
         // Jets_count is for all jets, while pfJetsNum is after it was made sure that the HSCP cand is real
         tuple->PostPreS_RecoPfJetsNum->Fill(pfJetsNum, EventWeight_);
+        tuple->PostPreS_RecoPfHT->Fill(pfJetHT, EventWeight_);
         if (GenBeta >= 0) {
           tuple->PostPreS_GenBeta->Fill(GenBeta, EventWeight_);
         }
@@ -3786,6 +3791,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
   if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
   
+  if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15 && postPreS_candidate_count == 0) {
+    if (debug_ > 2) LogPrint(MOD) << "Trigger passed, but number of postPreSelected candidates is zero";
+  }
+  
+  
   int hscpIndex = 0;
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     hscpIndex++;
@@ -4290,9 +4300,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Choice of HLT_Mu50_v is to simplify analysis
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
   ->setComment("Add the list of muon triggers");
-  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
     // Possibly used in a next version of the analysis
-     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+//     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Decide if want to match the muon to HLT at event level
   desc.addUntracked("MatchToHLTTrigger",true)->setComment("If we want to make sure the event has a muon at HLT");

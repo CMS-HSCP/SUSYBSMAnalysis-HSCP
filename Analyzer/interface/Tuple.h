@@ -461,7 +461,11 @@ struct Tuple {
   TH1F* BefPreS_NumCandidates;
   TH1F* PostPreS_NumCandidates;
   
+
+  
   // Post preselection plots
+  TH1F* PostPreS_RelDiffMuonPtAndTrackPt;
+  TH2F* PostPreS_MuonPtVsTrackPt;
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
   TH1F* PostPreS_PfType;
@@ -489,6 +493,7 @@ struct Tuple {
   TH2F* PostPreS_TNOHFractionVsIas;
   TH1F* PostPreS_TNOPH;
   TH1F* PostPreS_RatioCleanAndAllStripsClu;
+  TH2F* PostPreS_RatioCleanAndAllStripsCluVsIas;
   TH1F* PostPreS_RatioCleanAndAllPixelClu;
   TH2F* PostPreS_TNOPHVsIas;
   TH1F* PostPreS_TNOHFractionTillLast;
@@ -667,6 +672,8 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsPt;
   TH2F* PostPreS_TriggerMETallVsBeta;
   TH2F* PostPreS_TriggerMETallVsMet;
+  TH2F* PostPreS_TriggerMETallVsHT;
+  TH3F* PostPreS_TriggerMETallVsMetVsHT;
   
   
   TH1F* PostPreS_ProbXYNoL1;
@@ -827,6 +834,7 @@ struct Tuple {
   TH1F* PostPreS_RecoPfMet;
   TH1F* PostPreS_RecoPfMetPhi;
   TH1F* PostPreS_RecoPfJetsNum;
+  TH1F* PostPreS_RecoPfHT;
 
   // Post Selection plots
   TH2F* PostS_CutIdVsEta_RegionA;
