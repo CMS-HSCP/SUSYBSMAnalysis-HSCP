@@ -507,7 +507,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
   tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
   
-  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
+  tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(3,"MET triggered");

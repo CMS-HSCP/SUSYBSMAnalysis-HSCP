@@ -24,6 +24,7 @@
 // - 41p9: Increase pT in SR, dont load histos that are not needed for this typeMode
 // - 42p0: Add trigger syst plots, add PostS_ProbQNoL1VsIasVsPt, extend dRMinPfJet to 5.0
 // - 42p1: Let in MET triggers, for some MET trigger studies, tuneP muon checks extended axis, fix CutFlow 1st bin
+// - 42p2: Changes so the code is compatible with MET triggers
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -58,7 +59,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       triggerResultsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("TriggerResults"))),
       trigEventToken_(consumes<trigger::TriggerEvent>(iConfig.getParameter<edm::InputTag>("TriggerSummary"))),
       filterName_(iConfig.getParameter<std::string>("FilterName")),
-      matchToHLTTrigger_(iConfig.getUntrackedParameter<bool>("MatchToHLTTrigger")),
       pfMETToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("PfMET"))),
       pfJetToken_(consumes<reco::PFJetCollection>(iConfig.getParameter<edm::InputTag>("PfJet"))),
       caloMETToken_(consumes<std::vector<reco::CaloMET>>(iConfig.getParameter<edm::InputTag>("CaloMET"))),
@@ -472,48 +472,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->NumEvents->Fill(0., EventWeight_);
   // Number of (re-weighted with PU syst fact) events
   tuple->NumEvents->Fill(1., EventWeight_ * PUSystFactor_[0]);
-
-  // Check if the event is passing trigger
-  if (debug_ > 1) LogPrint(MOD) << "\nChecking if the LS " << iEvent.id().luminosityBlock() <<  " / event " << iEvent.id().event() << "  is passing trigger...";
-  bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
-  bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
   
-  if (muTrig) {
-    // mu trigger passed
-    trigInfo_ = 1;
-  } else if (metTrig) {
-    // met trigger passed
-    trigInfo_ = 2;
-  } else if (metTrig || muTrig) {
-    // mu or met
-    trigInfo_ = 3;
-  } else if (metTrig && muTrig) {
-    // mu and met
-    trigInfo_ = 4;
-  }
-
-  // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
-//  bool triggerPassed = (trigInfo_ == 1);
-  tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
-  // If triggering is intended (not the case when we make ntuples)
-  if (trigInfo_ > 0) {
-    if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
-    // Number of events that pass the trigger
-    tuple->NumEvents->Fill(2., EventWeight_);
-  }
-  else {
-    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers";
-//    if (saveTree_ == 0)  return;
-  }
-    // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
-
-
-  
-  // Get handle for trigEvent
+    // Get handle for trigEvent
   edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
   
-  //===================== Collection For Muons ===================
-  // Get muon collections
+    //===================== Collection For Muons ===================
+    // Get muon collections
   vector<reco::Muon> muonColl = iEvent.get(muonToken_);
   unsigned int Muons_count = 0;
   float maxPtMuon1 = 0, maxPtMuon2 = 0;
@@ -543,41 +507,65 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Match muon track to HLT muon track
   std::vector<TLorentzVector> trigObjP4s;
   trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
-
+  
   bool matchedMuonWasFound = false;
-
+  
   float dr_min_hlt_muon_inEvent = 9999.0;
   for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
     if (trigObjP4s[objNr].Pt() < 50) continue;
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
       if (mu->isStandAloneMuon() && !mu->isGlobalMuon())  continue;
-
+      
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       if (dr_hltmu_muon < dr_min_hlt_muon_inEvent){
         dr_min_hlt_muon_inEvent = dr_hltmu_muon;
       }
     }
   }
-  if (trigInfo_ > 0) {
-  tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
+  if (HLT_Mu50) {
+    tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
   }
-
-  // Number of events that pass the matching
-  if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
-      matchedMuonWasFound = true;
+  
+    // Number of events that pass the matching
+  if (HLT_Mu50 && dr_min_hlt_muon_inEvent < 0.15) {
+    matchedMuonWasFound = true;
     tuple->NumEvents->Fill(3., EventWeight_);
   }
 
+  // Check if the event is passing trigger
+  if (debug_ > 1) LogPrint(MOD) << "\nChecking if the LS " << iEvent.id().luminosityBlock() <<  " / event " << iEvent.id().event() << "  is passing trigger...";
+  bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
+  bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
+  
+  if (muTrig && dr_min_hlt_muon_inEvent < 0.15) { trigInfo_ = 1; }
+  if (metTrig) { trigInfo_ = 2;  }
+  if (metTrig || muTrig) { trigInfo_ = 3; }
+  if (metTrig && muTrig) { trigInfo_ = 4; }
+
+  // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
+//  bool triggerPassed = (trigInfo_ == 1);
+  tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+  // If triggering is intended (not the case when we make ntuples)
+  if (trigInfo_ > 0) {
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
+    // Number of events that pass the trigger
+    tuple->NumEvents->Fill(2., EventWeight_);
+  }
+  else {
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers";
+//    if (saveTree_ == 0)  return;
+  }
+    // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
 
   //keep beta distribution for signal after the trigger
-  if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
-  if (isSignal) {
-    if (HSCPGenBeta1 >= 0)
-      tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
-    if (HSCPGenBeta2 >= 0)
-      tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta2, EventWeight_);
-  }
+  if (trigInfo_ > 0) {
+    if (isSignal) {
+      if (HSCPGenBeta1 >= 0)
+        tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
+      if (HSCPGenBeta2 >= 0)
+        tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta2, EventWeight_);
+    }
   }
 
   // Define handles for DeDx Hits, Muon TOF Combined, Muon TOF DT, Muon TOF CSC
@@ -933,7 +921,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
       if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(1.);
       }
       continue;
@@ -945,7 +933,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ == 3 && muon.isNull()) {
       if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> TOF only mode but no muon connected to the candidate -- skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_ > 0) tuple->ErrorHisto->Fill(1.);
       continue;
     }
     
@@ -955,7 +943,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (track.isNull()) {
       if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
       // Third bin of the error histo, no tracks
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(2.);
+      if (trigInfo_ > 0) tuple->ErrorHisto->Fill(2.);
       continue;
     }
 
@@ -977,7 +965,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
       // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(1.);
+      if (trigInfo_ > 0) tuple->ErrorHisto->Fill(1.);
       continue;
     }
 
@@ -991,7 +979,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (vertexColl.size() < 1) {
         if (debug_> 0) LogPrint(MOD) << "  >> Event has no primary vertices, skipping it";
         // 4-th bin of the error histo, no PV
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(3.);
+      if (trigInfo_ > 0) tuple->ErrorHisto->Fill(3.);
         continue;
     }
         
@@ -1042,7 +1030,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // dont look at events where we didnt find the gen canidate
       if (debug_ > 4 && trigInfo_ > 0) LogPrint(MOD) << "  >> Event where we didnt find the gen candidate";
       // 5-th bin of the error histo, didnt find the gen canidate
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(4.);
       }
       continue;
@@ -1088,7 +1076,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
       // All HSCP candidates
       tuple->Gen_HSCPCandidateType->Fill(0., EventWeight_);
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+      if (trigInfo_ > 0) {
         tuple->BefPreS_HSCPCandidateType->Fill(0., EventWeight_);
       }
       // Neutral HSCP candidates
@@ -1100,7 +1088,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
           || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
         tuple->Gen_HSCPCandidateType->Fill(1., EventWeight_);
-        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0) {
           tuple->BefPreS_HSCPCandidateType->Fill(1., EventWeight_);
         }
       }
@@ -1114,14 +1102,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
                || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
         tuple->Gen_HSCPCandidateType->Fill(2., EventWeight_);
-        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0) {
           tuple->BefPreS_HSCPCandidateType->Fill(2., EventWeight_);
         }
       }
       // Double-charged R-hadrons
       else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
         tuple->Gen_HSCPCandidateType->Fill(3., EventWeight_);
-        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0) {
           tuple->BefPreS_HSCPCandidateType->Fill(3., EventWeight_);
         }
         // Dont mix double charged R-hadrons with the rest
@@ -1131,13 +1119,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // tau prime, could be single or multiple charged
       else if (closestHSCPsPDGsID == 17) {
         tuple->Gen_HSCPCandidateType->Fill(4., EventWeight_);
-        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0) {
           tuple->BefPreS_HSCPCandidateType->Fill(4., EventWeight_);
         }
       }
       else {
         tuple->Gen_HSCPCandidateType->Fill(5., EventWeight_);
-        if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) {
+        if (trigInfo_ > 0) {
           tuple->Gen_HSCPCandidateType->Fill(5., EventWeight_);
         }
       }
@@ -1418,7 +1406,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHits) {
       if (debug_> 3 && trigInfo_ > 0) LogPrint(MOD) << "No dedxHits associated to this track, skipping it";
       // 7-th bin of the error histo, No dedxHits associated to this track
-      if (trigInfo_ > 0 && matchToHLTTrigger_ && dr_min_hlt_muon_inEvent < 0.15) tuple->ErrorHisto->Fill(6.);
+      if (trigInfo_ > 0) tuple->ErrorHisto->Fill(6.);
       continue;
     }
 
@@ -2349,7 +2337,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
     
     // No cut, i.e. events after trigger
-    passedCutsArray[0]  = (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) ? true : false;
+    passedCutsArray[0]  = (trigInfo_ > 0) ? true : false;
     // Cut on transverse momentum
     // Single muon trigger threshold is 50 GeV
     passedCutsArray[1]  = (track->pt() > globalMinPt_) ? true : false;
@@ -2524,7 +2512,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // CutFlow in a single plot
-    if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) {
+    if (trigInfo_ > 0) {
       for (size_t i=0;i<sizeof(passedCutsArray);i++) {
         bool allCutsPassedSoFar = true;
         for (size_t j=0;j<=i;j++) {
@@ -3788,10 +3776,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }  //END loop over HSCP candidates
   
   // Event level information, after choosing the best candidate track
-  if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
-  if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15) tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
+  if (trigInfo_ > 0) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
+  if (trigInfo_ > 0) tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
   
-  if (trigInfo_ > 0 && dr_min_hlt_muon_inEvent < 0.15 && postPreS_candidate_count == 0) {
+  if (trigInfo_ > 0 && postPreS_candidate_count == 0) {
     if (debug_ > 2) LogPrint(MOD) << "Trigger passed, but number of postPreSelected candidates is zero";
   }
   
@@ -4304,8 +4292,6 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     // Possibly used in a next version of the analysis
 //     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
-  // Decide if want to match the muon to HLT at event level
-  desc.addUntracked("MatchToHLTTrigger",true)->setComment("If we want to make sure the event has a muon at HLT");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
