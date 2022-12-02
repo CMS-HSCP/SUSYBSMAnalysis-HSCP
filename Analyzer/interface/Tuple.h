@@ -673,6 +673,7 @@ struct Tuple {
   TH2F* PostPreS_TriggerMETallVsBeta;
   TH2F* PostPreS_TriggerMETallVsMet;
   TH2F* PostPreS_TriggerMETallVsHT;
+  TH2F* PostPreS_MetVsHT;
   TH3F* PostPreS_TriggerMETallVsMetVsHT;
   
   
@@ -782,6 +783,7 @@ struct Tuple {
   TH2F* PostPreS_MassVsMassErr;
   
   TH1F* CutFlow;
+  TH1F* EventCutFlow;
   TH1F* CutFlowReverse;
   
   TH2F* CutFlowEta;

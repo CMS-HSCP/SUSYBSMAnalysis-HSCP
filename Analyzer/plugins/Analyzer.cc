@@ -25,6 +25,7 @@
 // - 42p0: Add trigger syst plots, add PostS_ProbQNoL1VsIasVsPt, extend dRMinPfJet to 5.0
 // - 42p1: Let in MET triggers, for some MET trigger studies, tuneP muon checks extended axis, fix CutFlow 1st bin
 // - 42p2: Changes so the code is compatible with MET triggers
+// - 42p3: Dont cut on dR of gen vs candidate, add MET vs HT plot, go back to Mu only triggers, Add EventCutFlow
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -538,8 +539,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
   
-  if (muTrig && dr_min_hlt_muon_inEvent < 0.15) { trigInfo_ = 1; }
-  if (metTrig) { trigInfo_ = 2;  }
+  if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
+    trigInfo_ = 1;
+    tuple->BefPreS_TriggerType->Fill(1., EventWeight_);
+  }
+  if (metTrig) {
+    trigInfo_ = 2;
+    tuple->BefPreS_TriggerType->Fill(2., EventWeight_);
+  }
   if (metTrig || muTrig) { trigInfo_ = 3; }
   if (metTrig && muTrig) { trigInfo_ = 4; }
 
@@ -889,6 +896,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float bestCandidateIas = -1.;
   float bestCandidateProbQNoL1 = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
+  unsigned int bestSoFarCandCutInd = 0;
+  
+  tuple->EventCutFlow->Fill(0.0, EventWeight_);
   
   for (const auto& hscp : iEvent.get(hscpToken_)) {
     // Number of tracks before any trigger or preselection
@@ -915,18 +925,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << candidate_count;
-    
     // Tracker only analysis must have either a tracker muon or a global muon
-    if (typeMode_ == 1 &&
-        !(hscp.type() == susybsm::HSCParticleType::trackerMuon || hscp.type() == susybsm::HSCParticleType::globalMuon)) {
-      if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis  w/o a tracker muon or a global muon";
-      // Second bin of the error histo, num tracks that fail the track existence checks
-      if (trigInfo_ > 0) {
-        tuple->ErrorHisto->Fill(1.);
+    
+    if (typeMode_ == 0 || typeMode_ == 1)  {
+      if ((hscp.type() != susybsm::HSCParticleType::trackerMuon) && (hscp.type() != susybsm::HSCParticleType::globalMuon)) {
+        if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis w/o a tracker muon or a global muon";
+        // Second bin of the error histo, num tracks that fail the track existence checks
+        if (trigInfo_ > 0) {
+          tuple->ErrorHisto->Fill(1.);
+        }
+        continue;
       }
-      continue;
     }
-        
+    
     // Define muon reference
     // For TOF only analysis we must have a muon connected to the HSCP candidate
     reco::MuonRef muon = hscp.muonRef();
@@ -939,7 +950,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Define track reference
     // For TOF only analysis use updated stand alone muon track, otherwise use inner tracker track
-    reco::TrackRef track = (typeMode_ != 3) ? hscp.trackRef() : track = muon->standAloneMuon();
+    reco::TrackRef track = (typeMode_ != 3) ? hscp.trackRef() : muon->standAloneMuon();
     if (track.isNull()) {
       if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Event has no track associated to this HSCP, skipping it";
       // Third bin of the error histo, no tracks
@@ -1036,22 +1047,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     if (trigInfo_ > 0) {
-    if (!isData) {
-      tuple->BefPreS_GendRMin->Fill(dRMinGen);
-      tuple->BefPreS_GenPtVsdRMinGen->Fill(genColl[closestGenIndex].pt(), dRMinGen);
-    }
-    }
-    if (!isData && dRMinGen > 0.01 ) {
-      // dont look at events where we didnt find the gen canidate close enough
-      if (debug_ > 4 && trigInfo_ > 0) LogPrint(MOD) << "  >> Gen candidate (ID = " << genColl[closestGenIndex].pdgId() << ") is too far from HSCP track candidate (dRMinGen: " << dRMinGen << ", dPtMinGen: " << fabs(genColl[closestGenIndex].pt() - track->pt())<< "), skipping the track";
-      // 6-th bin of the error histo, didnt find the gen canidate
-      if (trigInfo_ > 0) {
-        tuple->ErrorHisto->Fill(5.);
+      if (!isData) {
+        tuple->BefPreS_GendRMin->Fill(dRMinGen);
+        tuple->BefPreS_GenPtVsdRMinGen->Fill(genColl[closestGenIndex].pt(), dRMinGen);
       }
-      continue;
     }
     
-    float genGammaBeta = 0.0;
+    float genGammaBeta = -1.0;
     if (!isData) {
       genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
     }
@@ -1329,16 +1331,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           else if(pf_isNeutHadronForIdx) track_PFIso05_sumNeutHadPt+=pt;
           else if(pf_isPhotonForIdx) track_PFIso05_sumPhotonPt+=pt;
         }
-    } // end loop PFCandidates
-  } // close condition on the validity of PFCandidates
+      } // end loop PFCandidates
+    } // close condition on the validity of PFCandidates
     
-  // Calculate PF mini relative isolation
-      // Calculate PF mini relative isolation
-      // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_otherPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
+    // Calculate PF mini relative isolation
+    // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+    float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_otherPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+    float miniRelIsoChg = track_PFMiniIso_sumCharHadPt/track->pt();
 //  float miniRelIsoAll = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
-  float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
+    float miniRelIsoAll_wMuon = (track_PFMiniIso_sumMuonPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
 
     HSCP_count++;
 
@@ -1440,6 +1441,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
       continue;
     }
+    
+    tuple->EventCutFlow->Fill(1.0, EventWeight_);
     // Include probQonTrack, probXYonTrack, probQonTrackNoL1, probXYonTrackNoL1 into one array
     float pixelProbs[4] = {0.0,0.0,0.0,0.0};
     int numRecHitsQ = 0, numRecHitsXY = 0;
@@ -1510,8 +1513,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
         bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
         
-        bool specInCPE = false;
-        (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
+        bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
         
         auto cotAlpha = lv.x()/lv.z();
         auto cotBeta = lv.y()/lv.z();
@@ -1666,8 +1668,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (probQonTrack < 0.0 || probXYonTrack < 0.0 || probQonTrack > 1.f || probXYonTrack > 1.f) {
       if (debug_> 2) LogPrint(MOD) << "    >> Probs out of bound: " <<
         " ProbQ = " << probQonTrack << " ProbXY = " << probXYonTrack <<  " ProbQNoL1 = "<< probQonTrackNoL1 << " ProbXYNoL1 = " << probXYonTrackNoL1;
-//      continue;
-//      tuple->ErrorHisto->Fill(8.);
     }
     if (trigInfo_ > 0) {
       tuple->BefPreS_genGammaBetaVsProbXYNoL1->Fill(genGammaBeta, probXYonTrackNoL1, EventWeight_);
@@ -2511,6 +2511,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
+    // All track after technical checks
+    tuple->CutFlow->Fill(1., EventWeight_);
     // CutFlow in a single plot
     if (trigInfo_ > 0) {
       for (size_t i=0;i<sizeof(passedCutsArray);i++) {
@@ -2522,7 +2524,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }
         if (allCutsPassedSoFar) {
-          tuple->CutFlow->Fill((i+1), EventWeight_);
+          if (bestSoFarCandCutInd < i) {
+            bestSoFarCandCutInd = i;
+          }
+          tuple->CutFlow->Fill((i+2), EventWeight_);
         }
       }
     }
@@ -2701,7 +2706,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           
       } else if (HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., GenBeta);
-        
+        tuple->PostPreS_TriggerMuon50VsPt->Fill(1., track->pt());
         if (fabs(track->eta()) < 0.3) {
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., GenBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
@@ -2729,10 +2734,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
       }
     }
-
+    
 
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
+      if (trigInfo_ < 1) {
+        cout << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
+      }
+      tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT);
       if (trigInfo_ > 0) postPreS_candidate_count++;
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Fill control and prediction histos";
@@ -3039,7 +3048,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
       }
       
-      if ((globalIas_ > 0.3 || Mass > 1000 || debug_ > 7)  && trigInfo_ > 0) {
+      if ((((globalIas_ > 0.3 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
         if (globalIas_ > 0.3)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.3";}
         if (Mass > 1000) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
         LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
@@ -3076,11 +3085,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hlt_muon;
       }
-    } else if (saveTree_ < 1) {
-      // Preselection not passed,
-      // skipping it if the ntuple is not used
-      continue;
-
     }
     
     // Let's do some printouts after preselections for gen particles
@@ -3151,14 +3155,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pt());
             unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
             numSiblingsF  = float(numSiblings);
-            if (globalIas_ > 0.3 && trigInfo_ > 0) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
+            if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
             for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
               if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
               float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              if (globalIas_ > 0.3)std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+              if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
               if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                 dRMinGenAndSibling = siblingDr;
                 closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
@@ -3171,11 +3175,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             break;
           }
         }
-        if (globalIas_ > 0.3) std::cout << std::endl;
+        if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
         
         // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
         if (!motherFound) {
-          if (globalIas_ > 0.3 && trigInfo_ > 0) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
+          if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
           
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
@@ -3183,7 +3187,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
                 closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pt());
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
-                if (globalIas_ > 0.3 && trigInfo_ > 0) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
                   if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
@@ -3195,14 +3199,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                 if (globalIas_ > 0.3) std::cout << std::endl;
                 unsigned int numAunts = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
-                if (globalIas_ > 0.3 && trigInfo_ > 0) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
+                if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numAunts+1; daughterIndx++) {
                   if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float auntEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
                   float auntPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
                   float auntPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pt();
                   float auntDr = deltaR(genEta, genPhi, auntEta, auntPhi);
-                  if (globalIas_ > 0.3) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
+                  if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
                   if( (auntDr != 0.0) && (auntDr < dRMinGenAndAunt)) {
                     dRMinGenAndAunt = auntDr;
                     closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -3217,12 +3221,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             }
             if (motherFound) break;
           }
-          if (globalIas_ > 0.3) std::cout << std::endl;
+          if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
         }
   
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
         if (!motherFound) {
-          if (debug_ > 4 && trigInfo_ > 0) LogPrint(MOD) << "      >> All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
+          if (debug_ > 4 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> All moms' moms had the same ID as the candidate, let's look at the grand-grammas";
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               for (unsigned int numGrandGramMomIndx = 0; numGrandGramMomIndx < genCandidateUnderStudy.mother(numGramMomIndx)->mother(numGramMomIndx)->numberOfMothers(); numGrandGramMomIndx++) {
@@ -3231,14 +3235,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                   closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pt());
                   unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                   numSiblingsF  = float(numSiblings);
-                  if (globalIas_ > 0.3 && trigInfo_ > 0) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
+                  if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
                   for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
                     if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                     float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                     float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                     float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pt();
                     float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                    if (globalIas_ > 0.3) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
+                    if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
                     if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                       dRMinGenAndSibling = siblingDr;
                       closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -3267,7 +3271,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
         closestBackgroundPDGsIDs[6] = numSiblingsF;
         
-        if ((debug_> 2 || globalIas_ > 0.3) && trigInfo_ > 0) {
+        if ((((debug_> 2) || (!isSignal && globalIas_ > 0.3))) && (trigInfo_ > 0)) {
           LogPrint(MOD) << "      >> Track's gen ID: " << closestBackgroundPDGsIDs[0];
           LogPrint(MOD) << "      >> Track's gen pt: " << closestBackgroundPDGsIDs[5];
           
@@ -3312,7 +3316,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
-    if (!isData) {
+    if (!isData && passPre) {
       bool hasStatus91Around = false;
       unsigned int usignedIntclosestGenIndex = 0;
       if (closestGenIndex>0) usignedIntclosestGenIndex = closestGenIndex;
@@ -3335,13 +3339,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, EventWeight_);
       }
     }
-    
-    // Some printouts to understand ProbQ vs ProbQNoL1
-    if ((fabs(probQonTrackNoL1-probQonTrack)/probQonTrackNoL1 > 0.015 ) && debug_ > 9 && trigInfo_ > 0) {
-      LogPrint(MOD) << " Rel diff of (CombProbQ - CombProbQNoL1)/CombProbQNoL1: " <<  fabs(probQonTrackNoL1-probQonTrack)/probQonTrackNoL1;
-      LogPrint(MOD) << " CombProbQ: " << probQonTrack << " CombProbQNoL1: " << probQonTrackNoL1 ;
-    }
-    
+    if (passPre) {
     // Loop through the deDx hits after the preselection
     bool headerStripsPrintedAlready = false;
     bool headerPixPrintedAlready = false;
@@ -3422,7 +3420,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             tuple->PostPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
           }
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
-          if (!isData && (globalIas_ > 0.3 || (globalIas_ > 0.02 && globalIas_ < 0.03 && debug_ > 4))) {
+          if ((!isSignal && (globalIas_ > 0.3 || (globalIas_ > 0.02 && globalIas_ < 0.03))) || (debug_ > 4)) {
             if (!headerPixPrintedAlready) {
               std::cout << std::endl << "        | $I_{as}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
               std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
@@ -3434,13 +3432,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             std::cout  << "        | " <<  globalIas_ << " | L" << tTopo->pxbLayer(detid) << " | " << genGammaBeta << " | " << isFlippedModule << " | ";
             std::cout << cotAlpha << " | " << cotBeta << " | " << momentum<< " | " << clustSizeX << " | " << clustSizeY << " | ";
             std::cout << pixelNormCharge << " e/um | " << isOnEdge  << " | " << hasBadPixels  << " | " << spansTwoROCs << " | " << probXY << " | " << probQ <<  " | " << std::endl;
-          } else if (isSignal && genGammaBeta <= 0.31623 && trigInfo_ > 0)  {
+          } else if (!isData && genGammaBeta <= 0.31623 && trigInfo_ > 0 && debug_ > 4)  {
             LogPrint(MOD) << "BetaGamma is too low for Bichsel";
           }
         }
 
       // the strip part
-      } else if ((passPre && trigInfo_ > 0) && detid.subdetId() >= 3 && !isData && (globalIas_ > 0.3 || (globalIas_ > 0.025 && globalIas_ < 0.03 && debug_ > 4))) {
+      } else if (passPre && trigInfo_ > 0 && detid.subdetId() >= 3) {
           // Taking the strips cluster
         auto const* stripsCluster = dedxHits->stripCluster(i);
         std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
@@ -3450,27 +3448,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       
         float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
         float stripSize = stripsCluster->amplitudes().size();
-        if (!isData) {
-          unsigned int stripLayerIndex = 0;
-          if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
-          if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
-          if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
-          if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-          
-          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-            tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-          } else if (!isData && genGammaBeta > 0.6 ) {
-            tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-            if (!candidateEnvHasStatus91) {
-              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-            }
-            if (candidateEnvHasStatusHigherThan2) {
-              tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-            }
-          }
-          
-          unsigned int isGlued = 0;
-          (tTopo->glued(detid) > 0) ? isGlued = 1 : isGlued = 0;
+        unsigned int stripLayerIndex = 0;
+        if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+        if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+        if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
+        if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
+        
+        if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+          tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+        } else if (!isData && genGammaBeta > 0.6 ) {
+          tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+        }
+        
+        if  ((globalIas_ > 0.3 || (globalIas_ > 0.025 && globalIas_ < 0.03)) && debug_ > 4) {
+          unsigned int isGlued = (tTopo->glued(detid) > 0) ? 1 : 0;
           if (!headerStripsPrintedAlready) {
             std::cout << std::endl <<  "        | $I_{as}$  | Layer | gammaBeta | eta | Norm. Charge | size | stereo | glued | cleaned | " << std::endl;
             std::cout << "        |--- | ---| " << std::endl;
@@ -3490,33 +3481,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             std::cout << "        | TEC D" << abs(int(tTopo->tidWheel(detid)));
           }
           
-          std::cout << "        | " << genGammaBeta<< " | " << track->eta() << " | " << stripNormCharge << " e/um | " << stripSize << " | " << tTopo->isStereo(detid) << " | " << isGlued << " | " << clusterCleaned << " | " << std::endl;
+          std::cout << "        | " << genGammaBeta << " | " << track->eta() << " | " << stripNormCharge << " e/um | " << stripSize << " | " << tTopo->isStereo(detid) << " | " << isGlued << " | " << clusterCleaned << " | " << std::endl;
         }
+
       } // end of the strip part
     } // end the loop on the rechits
+    }
     
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
-    if (isBckg || isData) {
+    if (passPre && tof) {
       //compute the mass of the candidate, for TOF mass flip the TOF over 1 to get the mass, so 0.8->1.2
-//      float Mass = -1;
-//      if (dedxMObj)
-//        Mass = GetMass(track->p(), dedxMObj->dEdx(), dEdxK_, dEdxC_);
-      float MassTOF = -1;
-      if (tof) {
-        MassTOF = GetTOFMass(track->p(), (2 - tof->inverseBeta()));
-      }
+      float MassTOF = (tof) ? GetTOFMass(track->p(), (2 - tof->inverseBeta())) : -1;
+      float InvBeta = GetIBeta(dedxMObj->dEdx(), dEdxK_, dEdxC_);
       float MassComb = -1;
       if (tof && dedxMObj)
-        MassComb = GetMassFromBeta(track->p(),
-                                   (GetIBeta(dedxMObj->dEdx(), dEdxK_, dEdxC_) + (1 / (2 - tof->inverseBeta()))) * 0.5);
+        MassComb = GetMassFromBeta(track->p(),(InvBeta + (1 / (2 - tof->inverseBeta()))) * 0.5);
       if (dedxMObj)
         MassComb = Mass;
       if (tof)
         MassComb = GetMassFromBeta(track->p(), (1 / (2 - tof->inverseBeta())));
       //Background check looking at region with TOF<1
       for (unsigned int CutIndex = 0; CutIndex < CutPt_Flip_.size(); CutIndex++) {
-        //Fill Mass Histograms
         tuple->Mass_Flip->Fill(CutIndex, Mass, EventWeight_);
         if (tof && typeMode_ > 1) {
           tuple->MassTOF_Flip->Fill(CutIndex, MassTOF, EventWeight_);
@@ -3527,9 +3513,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     //compute the mass of the candidate
   
-    float MassTOF = tof    ?  GetTOFMass(track->p(), tof->inverseBeta()) : -1;
-    float MassComb  = (tof && dedxMObj) ? GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), dEdxK_, dEdxC_) + (1 / tof->inverseBeta())) * 0.5) : -1;
-    MassComb = tof   ?  GetMassFromBeta(track->p(), (1 / tof->inverseBeta())) : Mass;
+    float MassTOF = tof ?  GetTOFMass(track->p(), tof->inverseBeta()) : -1;
+    float MassComb = tof   ?  GetMassFromBeta(track->p(), (1 / tof->inverseBeta())) : Mass;
+    MassComb  = (tof && dedxMObj) ? GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(), dEdxK_, dEdxC_) + (1 / tof->inverseBeta())) * 0.5) : Mass;
 
     float MassUp = -1;
     if (dedxMUpObj)
@@ -3615,22 +3601,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }  //end of Cut loop
     } // end of condition for passPre
 
-    float Ick2 = 0;
-    if (dedxMObj)
-      Ick2 = GetIck(dedxMObj->dEdx(), dEdxK_, dEdxC_);
-    unsigned int nomh = 0;
-    nomh = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
-           track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
-    
-    if (missingHitsTillLast == nomh) {
-      cout << "missingHitsTillLast == nomh, dupplicate, please clean up" << endl;
-    }
-    float fovhd = track->found() <= 0 ? -1 : track->found() / float(track->found() + nomh);
-    if (validFractionTillLast == fovhd) {
-      cout << "validFractionTillLast == fovhd, dupplicate, please clean up" << endl;
-    }
-    
-
+    float Ick2 = (dedxMObj) ? GetIck(dedxMObj->dEdx(), dEdxK_, dEdxC_) : 0.f;
     float genid = 0, gencharge = -99, genmass = -99, genpt = -99, geneta = -99, genphi = -99;
 
     if (isSignal) {
@@ -3720,8 +3691,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_NOH.push_back(track->found());
     HSCP_NOPH.push_back(nonL1PixHits);
     HSCP_FOVH.push_back(track->validFraction());
-    HSCP_NOMH.push_back(nomh);
-    HSCP_FOVHD.push_back(fovhd);
+    HSCP_NOMH.push_back(missingHitsTillLast);
+    HSCP_FOVHD.push_back(validFractionTillLast);
     HSCP_NOM.push_back(numDeDxHits);
     HSCP_matchTrigMuon_minDeltaR.push_back(dr_min_hlt_muon);
     HSCP_matchTrigMuon_pT.push_back(hlt_match_pt);
@@ -3777,8 +3748,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   // Event level information, after choosing the best candidate track
   if (trigInfo_ > 0) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
-  if (trigInfo_ > 0) tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
+  if (trigInfo_ > 0) {
+    tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
+    tuple->EventCutFlow->Fill(2.0, EventWeight_);
+  }
   
+  for (uint32_t cutFloIndex = 1; cutFloIndex<18; cutFloIndex++) {
+    if (cutFloIndex <= bestSoFarCandCutInd) {
+      tuple->EventCutFlow->Fill(cutFloIndex+2, EventWeight_);
+    }
+  }
+
   if (trigInfo_ > 0 && postPreS_candidate_count == 0) {
     if (debug_ > 2) LogPrint(MOD) << "Trigger passed, but number of postPreSelected candidates is zero";
   }
@@ -3807,23 +3787,31 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_RecoHSCParticleType->Fill(5.);
     }
 
-    reco::TrackRef track =  hscp.trackRef();
+    reco::TrackRef bestCandidateTrack =  hscp.trackRef();
+    reco::MuonRef bestCandidateMuon = hscp.muonRef();
     
-    if (trigInfo_ > 0) tuple->PostS_HltMatchTrackLevel->Fill(0.0, EventWeight_);
-    if (bestCandidateDrMinHltMuon < 0.15) {
-      if (trigInfo_ > 0) tuple->PostS_HltMatchTrackLevel->Fill(1.0, EventWeight_);
+    if (trigInfo_ > 0) {
+      tuple->PostS_HltMatchTrackLevel->Fill(1.0, EventWeight_);
+      if (bestCandidateMuon.isNonnull()) {
+        tuple->PostS_HltMatchTrackLevel->Fill(2.0, EventWeight_);
+      }
+      if (bestCandidateDrMinHltMuon < 0.15) {
+        if (trigInfo_ > 0) tuple->PostS_HltMatchTrackLevel->Fill(3.0, EventWeight_);
+      }
     }
     
-    float shiftForPtValue = shiftForPt(track->pt(),track->eta(),track->phi(),track->charge());
-    tuple->PostS_RelativePtShift->Fill(shiftForPtValue/track->pt(),  EventWeight_);
+
     
-    float rescaledPtUp = track->pt()*(1+shiftForPtValue);
-    float rescaledPtDown = track->pt()*(1-shiftForPtValue);
+    float shiftForPtValue = shiftForPt(bestCandidateTrack->pt(),bestCandidateTrack->eta(),bestCandidateTrack->phi(),bestCandidateTrack->charge());
+    tuple->PostS_RelativePtShift->Fill(shiftForPtValue/bestCandidateTrack->pt(),  EventWeight_);
+    
+    float rescaledPtUp = bestCandidateTrack->pt()*(1+shiftForPtValue);
+    float rescaledPtDown = bestCandidateTrack->pt()*(1-shiftForPtValue);
     
     tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
     tuple->PostS_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
     tuple->PostS_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
-    tuple->PostS_ProbQNoL1VsIasVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, track->pt(), EventWeight_);
+    tuple->PostS_ProbQNoL1VsIasVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_);
     
     // Systematics plots for pT rescaling
     if (rescaledPtUp > globalMinPt_) {
@@ -3850,7 +3838,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     
     // Repeat for several SRs
-    if (track->pt() > 100) {
+    if (bestCandidateTrack->pt() > 100) {
       tuple->PostS_SR1_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
@@ -3879,7 +3867,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
-    if (track->pt() > 200) {
+    if (bestCandidateTrack->pt() > 200) {
       tuple->PostS_SR2_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
@@ -3908,7 +3896,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
-    if (track->pt() > 300) {
+    if (bestCandidateTrack->pt() > 300) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
@@ -3941,7 +3929,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   } // end of "loop" on the single best HSCP candidate
   
   // Trigger type after preSelection at the event level
-  tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+  // I need these two lines because the OR of MET/Muon will be overwriting the trigInfo_
+  // so we never get 1 or 2
+  if (postPreS_candidate_count > 0) {
+    if (muTrig) {
+      tuple->PostPreS_TriggerType->Fill(1., EventWeight_);
+    }
+    if (metTrig) {
+      tuple->PostPreS_TriggerType->Fill(2., EventWeight_);
+    }
+    tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+  }
   
 
   tuple_maker->fillTreeBranches(tuple,
@@ -4240,9 +4238,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1");
   desc.addUntracked("SampleType", 0)
     ->setComment("0:Data, 1:Background, 2:Signal, 3:Signal Systematics");
-  // TODO: we really dont need this as a parameter, CRAB will name the output datasets obviously, having different than BaseName...
-  // TODO: (cont) ... will just make the plotting code complicated
-  desc.addUntracked<std::string>("SampleName","BaseName")->setComment("This can be used to distinguish the MET or SingleMuon analysis");
+  desc.addUntracked<std::string>("SampleName","BaseName")->setComment("This can be used to distinguish different signal models");
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
@@ -4288,9 +4284,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Choice of HLT_Mu50_v is to simplify analysis
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
   ->setComment("Add the list of muon triggers");
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+//  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
     // Possibly used in a next version of the analysis
-//     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
@@ -4673,7 +4669,6 @@ bool Analyzer::passSelection(const reco::TrackRef track,
                              const float RescaleT) {
   static constexpr const char* const MOD = "Analyzer";
   using namespace edm;
-  float MuonTOF;
   
   if (track.isNull()) {
     // Should be a LogError I believe...
@@ -4681,7 +4676,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     return false;
   }
   
-  tof ? MuonTOF = tof->inverseBeta(): MuonTOF= globalMinTOF_ ;
+  float MuonTOF = (tof) ? tof->inverseBeta() : globalMinTOF_ ;
   float PtCut = CutPt_[CutIndex];
   float IasCut = CutI_[CutIndex];
   float TOFCut = -1.;
@@ -4751,7 +4746,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
 //
 //=============================================================
 float Analyzer::combineProbs(float probOnTrackWMulti, int numRecHits) const {
-  float logprobOnTrackWMulti = probOnTrackWMulti > 0 ? log(probOnTrackWMulti) : 0;
+  float logprobOnTrackWMulti = (probOnTrackWMulti > 0) ? log(probOnTrackWMulti) : 0;
   float factQ = -logprobOnTrackWMulti;
   float probOnTrackTerm = 0.f;
 
