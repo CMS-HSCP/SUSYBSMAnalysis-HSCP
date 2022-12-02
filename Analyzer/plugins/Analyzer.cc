@@ -2650,6 +2650,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection with Sept8 cuts";
     bool passPreSept8 = passPreselection(passedCutsArraySept8);
     
+    // Few more bins in CutFlow for SRs
+    unsigned int passedCutsArraySize = sizeof(passedCutsArray);
+    if (globalIas_ > 0.25 && probQonTrackNoL1 < 0.1 && passPre) {
+      tuple->CutFlow->Fill(passedCutsArraySize + 2, EventWeight_);
+      if (track->pt() > 100) {
+        tuple->CutFlow->Fill(passedCutsArraySize+ 3, EventWeight_);
+      } if (track->pt() > 200) {
+        tuple->CutFlow->Fill(passedCutsArraySize + 4, EventWeight_);
+      }
+    }
+    
     // This should be moved more up in the code
     // Dont do TOF only is isCosmicSB is true
     if (typeMode_ == 3 && isCosmicSB) {
@@ -3758,7 +3769,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->EventCutFlow->Fill(cutFloIndex+2, EventWeight_);
     }
   }
-
+  
   if (trigInfo_ > 0 && postPreS_candidate_count == 0) {
     if (debug_ > 2) LogPrint(MOD) << "Trigger passed, but number of postPreSelected candidates is zero";
   }
@@ -3800,7 +3811,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
-
+    if (bestCandidateIas > 0.25 && bestCandidateProbQNoL1 < 0.1) {
+        tuple->EventCutFlow->Fill(17.0, EventWeight_);
+      if (bestCandidateTrack->pt() > 100) {
+        tuple->EventCutFlow->Fill(18.0, EventWeight_);
+      } if (bestCandidateTrack->pt() > 200) {
+        tuple->EventCutFlow->Fill(19.0, EventWeight_);
+      }
+    }
     
     float shiftForPtValue = shiftForPt(bestCandidateTrack->pt(),bestCandidateTrack->eta(),bestCandidateTrack->phi(),bestCandidateTrack->charge());
     tuple->PostS_RelativePtShift->Fill(shiftForPtValue/bestCandidateTrack->pt(),  EventWeight_);

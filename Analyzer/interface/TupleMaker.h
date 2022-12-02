@@ -315,7 +315,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";(muon p_{T} - tracker p_{T}) / tracker p_{T};Tracks / bin", 60,-1.0,2.0);
   tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";muon p_{T};tracker p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
   
-  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";;Tracks / category", 17, -0.5, 16.5);
+  tuple->CutFlow = dir.make<TH1F>("CutFlow", ";;Tracks / category", 20, -0.5, 19.5);
   tuple->CutFlow->GetXaxis()->SetBinLabel(1,"All tracks");
   tuple->CutFlow->GetXaxis()->SetBinLabel(2,"Technical");
   tuple->CutFlow->GetXaxis()->SetBinLabel(3,"Trigger");
@@ -333,8 +333,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlow->GetXaxis()->SetBinLabel(15,"E/p");
   tuple->CutFlow->GetXaxis()->SetBinLabel(16,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlow->GetXaxis()->SetBinLabel(17,"F_{i}");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(18,"SR0");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(19,"SR1");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(20,"SR2");
   
-  tuple->EventCutFlow = dir.make<TH1F>("EventCutFlow", ";;Events / category", 17, -0.5, 16.5);
+  tuple->EventCutFlow = dir.make<TH1F>("EventCutFlow", ";;Events / category", 20, -0.5, 19.5);
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(1,"All tracks");
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(2,"Technical");
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(3,"Trigger");
@@ -352,6 +355,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(15,"E/p");
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(16,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(17,"F_{i}");
+  tuple->EventCutFlow->GetXaxis()->SetBinLabel(18,"SR0");
+  tuple->EventCutFlow->GetXaxis()->SetBinLabel(19,"SR1");
+  tuple->EventCutFlow->GetXaxis()->SetBinLabel(20,"SR2");
   
   tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";;Tracks / category", 17, -0.5, 16.5);
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(1,"F_{i}");
@@ -1061,8 +1067,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_lowBetaGamma", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
   tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
-  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
-  tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2", ";CluNormCharge (e/um);Layer",600,0.,600.,24,-0.5,23.5);
 
   tuple->PostPreS_dRMinPfJet = dir.make<TH1F>("PostPreS_dRMinPfJet", ";dRMinPfJet",100,0.,5.0);
   tuple->PostPreS_closestPfJetMuonFraction = dir.make<TH1F>("PostPreS_closestPfJetMuonFraction",":closestPfJetMuonFraction",20,0.,1.);

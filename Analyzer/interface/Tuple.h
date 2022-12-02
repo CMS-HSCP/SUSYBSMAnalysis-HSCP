@@ -816,8 +816,6 @@ struct Tuple {
 
   TH2F* PostPreS_CluNormChargeVsStripLayer_lowBetaGamma;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma;
-  TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91;
-  TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2;
 
   TH1F* PostPreS_dRMinPfJet;
   TH1F* PostPreS_closestPfJetMuonFraction;
