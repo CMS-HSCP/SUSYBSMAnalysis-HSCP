@@ -26,6 +26,7 @@
 // - 42p1: Let in MET triggers, for some MET trigger studies, tuneP muon checks extended axis, fix CutFlow 1st bin
 // - 42p2: Changes so the code is compatible with MET triggers
 // - 42p3: Dont cut on dR of gen vs candidate, add MET vs HT plot, go back to Mu only triggers, Add EventCutFlow
+// - 43p4: Have more bins in Gi for the PostS histos, fix EventCutFlow's technical bin, letting in innerTracks
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -897,6 +898,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float bestCandidateProbQNoL1 = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
   unsigned int bestSoFarCandCutInd = 0;
+  bool passTechnicalChecks = false;
   
   tuple->EventCutFlow->Fill(0.0, EventWeight_);
   
@@ -925,12 +927,24 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> This is HSCP candidate track " << candidate_count;
-    // Tracker only analysis must have either a tracker muon or a global muon
-    
-    if (typeMode_ == 0 || typeMode_ == 1)  {
-      if ((hscp.type() != susybsm::HSCParticleType::trackerMuon) && (hscp.type() != susybsm::HSCParticleType::globalMuon)) {
-        if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis w/o a tracker muon or a global muon";
+    // Tracker only analysis must have either a track in the tracking system
+
+    if (typeMode_ == 0)  {
+      if ((hscp.type() != susybsm::HSCParticleType::trackerMuon) && (hscp.type() != susybsm::HSCParticleType::globalMuon) && (hscp.type() != susybsm::HSCParticleType::innerTrack)) {
+        if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis w/o a tracker track";
         // Second bin of the error histo, num tracks that fail the track existence checks
+        if (trigInfo_ > 0) {
+          tuple->ErrorHisto->Fill(1.);
+        }
+        continue;
+      }
+    }
+    
+    // Tracker + muon analysis must have a muon, either a tracker muon or a global muon
+    if (typeMode_ == 1)  {
+      if ((hscp.type() != susybsm::HSCParticleType::trackerMuon) && (hscp.type() != susybsm::HSCParticleType::globalMuon)) {
+        if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker + Muon analysis w/o a tracker muon or a global muon";
+          // Second bin of the error histo, num tracks that fail the track existence checks
         if (trigInfo_ > 0) {
           tuple->ErrorHisto->Fill(1.);
         }
@@ -1442,7 +1456,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       continue;
     }
     
-    tuple->EventCutFlow->Fill(1.0, EventWeight_);
+
+    passTechnicalChecks = true;
+    
     // Include probQonTrack, probXYonTrack, probQonTrackNoL1, probXYonTrackNoL1 into one array
     float pixelProbs[4] = {0.0,0.0,0.0,0.0};
     int numRecHitsQ = 0, numRecHitsXY = 0;
@@ -3756,6 +3772,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_GenPhi.push_back(genphi);
 
   }  //END loop over HSCP candidates
+  
+  if (passTechnicalChecks) {
+    tuple->EventCutFlow->Fill(1.0, EventWeight_);
+  }
   
   // Event level information, after choosing the best candidate track
   if (trigInfo_ > 0) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);

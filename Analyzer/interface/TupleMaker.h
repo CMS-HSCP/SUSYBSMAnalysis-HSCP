@@ -802,7 +802,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TNOHFractionVsIas = dir.make<TH2F>("PostPreS_TNOHFractionVsIas","TNOHFraction;Ias;Tracks / bin",50, 0, 1,10,0.,1.);
   tuple->PostPreS_TNOPH = dir.make<TH1F>( "PostPreS_TNOPH", ";Number of pixel hits;Tracks / bin", 8, -0.5, 7.5);
   tuple->PostPreS_RatioCleanAndAllStripsClu = dir.make<TH1F>("PostPreS_RatioCleanAndAllStripsClu",";Clean / all strips clu;Track / 0.05",20,-0.05,1.05);
-  tuple->PostPreS_RatioCleanAndAllStripsCluVsIas = dir.make<TH2F>("PostPreS_RatioCleanAndAllStripsCluVsIas",";Clean / all strips clu;_{i}^{strips};Track / 0.05",20,-0.05,1.05,20,0.,1.);
+  tuple->PostPreS_RatioCleanAndAllStripsCluVsIas = dir.make<TH2F>("PostPreS_RatioCleanAndAllStripsCluVsIas",";Clean / all strips clu;G_{i}^{strips};Track / 0.05",20,-0.05,1.05,20,0.,1.);
   tuple->PostPreS_RatioCleanAndAllPixelClu = dir.make<TH1F>("PostPreS_RatioCleanAndAllPixelClu",";Clean / all pixel clu;Track / 0.05",20,-0.05,1.05);
   
   tuple->PostPreS_TNOPHVsIas = dir.make<TH2F>("PostPreS_TNOPHVsIas", ";_TNOPH;G_{i}^{strips};Tracks / bin", 8,-0.5, 7.5, 20, 0., 1.);
@@ -1139,61 +1139,61 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostS_Ias = dir.make<TH1F>("PostS_Ias", ";G_{i}^{strips};Events / bin", 10, 0, dEdxS_UpLim);
   tuple->PostS_ProbQNoL1 = dir.make<TH1F>("PostS_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas = dir.make<TH2F>("PostS_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIasVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt", ";F_{i}^{pixels};G_{i}^{strips};pT_{T};Events / bin",20, 0., 1., 20, 0., 1.,50, 0, PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas = dir.make<TH2F>("PostS_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIasVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt", ";F_{i}^{pixels};G_{i}^{strips};pT_{T};Events / bin",20, 0., 1., 50, 0., 1.,50, 0, PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
   
   tuple->PostS_SR1_Ias = dir.make<TH1F>("PostS_SR1_Ias", ";G_{i}^{strips};Events / bin", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR1_ProbQNoL1 = dir.make<TH1F>("PostS_SR1_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR1_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
   
   
   tuple->PostS_SR2_Ias = dir.make<TH1F>("PostS_SR2_Ias", ";G_{i}^{strips};Events / bin", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR2_ProbQNoL1 = dir.make<TH1F>("PostS_SR2_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
   
   tuple->PostS_SR3_Ias = dir.make<TH1F>("PostS_SR3_Ias", ";G_{i}^{strips};Events / bin", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR3_ProbQNoL1 = dir.make<TH1F>("PostS_SR3_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 20, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Pt_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
+  tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events / bin",20, 0., 1., 50, 0., 1.);
 
   // Background prediction histograms don't need to be made for signal or individual MC samples
   // if (!isSignal) {
