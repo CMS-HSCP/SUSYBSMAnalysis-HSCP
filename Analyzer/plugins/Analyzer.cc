@@ -29,6 +29,7 @@
 // - 43p4: Have more bins in Gi for the PostS histos, fix EventCutFlow's technical bin, letting in innerTracks
 // - 42p4: Really 43p4 was a typo, and I also now when back with the Gi bins for PostS histos
 // - 42p5: 3 SRs with exclusive pT bins in them, MetOverHT plots, use genParticles not genParticlesSkimmed
+// - 31p0: same as 42p5 but with MET triggers
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -4332,9 +4333,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Choice of HLT_Mu50_v is to simplify analysis
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
   ->setComment("Add the list of muon triggers");
-//  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
     // Possibly used in a next version of the analysis
-     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+//     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
