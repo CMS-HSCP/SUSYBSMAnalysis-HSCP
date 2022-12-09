@@ -27,6 +27,8 @@
 // - 42p2: Changes so the code is compatible with MET triggers
 // - 42p3: Dont cut on dR of gen vs candidate, add MET vs HT plot, go back to Mu only triggers, Add EventCutFlow
 // - 43p4: Have more bins in Gi for the PostS histos, fix EventCutFlow's technical bin, letting in innerTracks
+// - 42p4: Really 43p4 was a typo, and I also now when back with the Gi bins for PostS histos
+// - 42p5: 3 SRs with exclusive pT bins in them, MetOverHT plots, use genParticles not genParticlesSkimmed
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -982,9 +984,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       }
     }
-    
-    tuple->BefPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
-    tuple->BefPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
+    if (trigInfo_ > 0) {
+      tuple->BefPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
+      tuple->BefPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
+    }
 
     // Require a track segment in the muon system
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
@@ -1058,12 +1061,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(4.);
       }
-      continue;
     }
+    
+    float genPt = -1.0;
     if (trigInfo_ > 0) {
       if (!isData) {
+        genPt = genColl[closestGenIndex].pt();
         tuple->BefPreS_GendRMin->Fill(dRMinGen);
-        tuple->BefPreS_GenPtVsdRMinGen->Fill(genColl[closestGenIndex].pt(), dRMinGen);
+        tuple->BefPreS_GenPtVsdRMinGen->Fill(genPt, dRMinGen);
+        tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
       }
     }
     
@@ -1077,10 +1083,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     if (trigInfo_ > 0) {
       if (!isData) {
-        tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genColl[closestGenIndex].pt(), dRMinGen);
-        tuple->BefPreS_GenPtVsGenMinPt->Fill(genColl[closestGenIndex].pt(), dPtMinBcg);
+        tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genPt, dRMinGen);
+        tuple->BefPreS_GenPtVsGenMinPt->Fill(genPt, dPtMinBcg);
         // 2D plot to compare gen pt vs reco pt
-        tuple->BefPreS_GenPtVsRecoPt->Fill(genColl[closestGenIndex].pt(), track->pt());
+        tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
       }
     }
 
@@ -1130,7 +1136,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         // Dont mix double charged R-hadrons with the rest
         // The reco pt of them is 1/2 the pt of the gen track
-        continue;
+//        continue;
       }
       // tau prime, could be single or multiple charged
       else if (closestHSCPsPDGsID == 17) {
@@ -1381,7 +1387,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const auto& trackToGenAssoc = *trackToGenAssocHandle;
       reco::GenParticleRef genCollForTrack = trackToGenAssoc[track]; //.key()];
       if (genCollForTrack.isNull()) {
-        LogPrint(MOD) << "  >> No associated gen track to this candidatei -- this is a fake track, skipping it";
+        LogPrint(MOD) << "  >> No associated gen track to this candidate -- this is a fake track, skipping it";
         continue;
       }
     }
@@ -2754,11 +2760,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
         tuple->PostPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
+        tuple->PostPreS_TriggerMETallVsMetOverHT->Fill(0., RecoPFMET/pfJetHT);
       } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
         tuple->PostPreS_TriggerMETallVsBeta->Fill(1., GenBeta);
         tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
         tuple->PostPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
+        tuple->PostPreS_TriggerMETallVsMetOverHT->Fill(1., RecoPFMET/pfJetHT);
       }
     }
     
@@ -2768,7 +2776,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (trigInfo_ < 1) {
         cout << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
       }
-      tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT);
+      tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT, EventWeight_);
+      tuple->PostPreS_MetOverHT->Fill(RecoPFMET/pfJetHT, EventWeight_);
       if (trigInfo_ > 0) postPreS_candidate_count++;
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Fill control and prediction histos";
@@ -2795,6 +2804,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       bool doPostPreSplots = true;
       if (doPostPreSplots && trigInfo_ > 0) {
         tuple->PostPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
+        tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt, trackerPt/genPt, EventWeight_);
         tuple->PostPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
         tuple->PostPreS_PfType->Fill(0., EventWeight_);
         tuple->PostPreS_PfTypeVsIas->Fill(0., globalIas_, EventWeight_);
@@ -3875,46 +3885,46 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
     tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     
-    // Repeat for several SRs
-    if (bestCandidateTrack->pt() > 100) {
+    if (bestCandidateTrack->pt() >= globalMinPt_ && bestCandidateTrack->pt() < 100) {
       tuple->PostS_SR1_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp > 100) {
+      if (rescaledPtUp >= globalMinPt_ && bestCandidateTrack->pt() < 100) {
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtDown > 100) {
+      if (rescaledPtDown >= globalMinPt_ && bestCandidateTrack->pt() < 100) {
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
-      // Systematics plots for Gi rescaling
+        // Systematics plots for Gi rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
       
-      // Systematics plots for PU rescaling
+        // Systematics plots for PU rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
-      // Systematics plots for Fi rescaling
+        // Systematics plots for Fi rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
       
-      // Systematics plots for trigger rescaling
+        // Systematics plots for trigger rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
-    if (bestCandidateTrack->pt() > 200) {
+    // Repeat for several SRs
+    if (bestCandidateTrack->pt() >= 100 && bestCandidateTrack->pt() < 200) {
       tuple->PostS_SR2_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp > 200) {
+      if (rescaledPtUp >= 100 && rescaledPtUp < 200) {
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtDown > 200) {
+      if (rescaledPtUp >= 100 && rescaledPtUp < 200) {
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -3934,16 +3944,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
-    if (bestCandidateTrack->pt() > 300) {
+    if (bestCandidateTrack->pt() >= 200) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp > 300) {
+      if (rescaledPtUp >= 200) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtDown > 300) {
+      if (rescaledPtUp >= 200) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -3963,7 +3973,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
     }
-    
   } // end of "loop" on the single best HSCP candidate
   
   // Trigger type after preSelection at the event level
@@ -4264,7 +4273,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("A");
   desc.add("PileupInfo", edm::InputTag("addPileupInfo"))
     ->setComment("A");
-  desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
+  desc.add("GenParticleCollection", edm::InputTag("genParticles"))
+//  desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
     ->setComment("A");
   desc.add("TrackToGenAssoc", edm::InputTag("allTrackMCMatch"))
     ->setComment("Collection used to match to gen thruth");
