@@ -307,7 +307,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
 //  if (debug_ > 1 ) LogPrint(MOD) << "\nThis is a new event. Weight factor applied: " << EventWeight_;
   
-  float HSCPGenBeta1 = -1, HSCPGenBeta2 = -1;
+  float HSCPgenBeta1 = -1, HSCPgenBeta2 = -1;
 
   //get generator weight and pthat
   if (!isData){
@@ -346,11 +346,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->Gen_DecayLength->Fill(HSCPDLength2, SignalEventWeight);
 
     // Get gen level beta for charged R-hadrons only
-    GetGenHSCPBeta(genColl, HSCPGenBeta1, HSCPGenBeta2, true);
-    if (HSCPGenBeta1 >= 0)
-      tuple->Gen_Beta_Charged->Fill(HSCPGenBeta1, SignalEventWeight);
-    if (HSCPGenBeta2 >= 0)
-      tuple->Gen_Beta_Charged->Fill(HSCPGenBeta2, SignalEventWeight);
+    GetGenHSCPBeta(genColl, HSCPgenBeta1, HSCPgenBeta2, true);
+    if (HSCPgenBeta1 >= 0)
+      tuple->Gen_Beta_Charged->Fill(HSCPgenBeta1, SignalEventWeight);
+    if (HSCPgenBeta2 >= 0)
+      tuple->Gen_Beta_Charged->Fill(HSCPgenBeta2, SignalEventWeight);
 
     // R-hadron weights needed due to wrong GenId
     // Wa is additional weight for single other, Wad for other+double_charged,
@@ -573,10 +573,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //keep beta distribution for signal after the trigger
   if (trigInfo_ > 0) {
     if (isSignal) {
-      if (HSCPGenBeta1 >= 0)
-        tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta1, EventWeight_);
-      if (HSCPGenBeta2 >= 0)
-        tuple->Gen_Beta_Triggered->Fill(HSCPGenBeta2, EventWeight_);
+      if (HSCPgenBeta1 >= 0)
+        tuple->Gen_Beta_Triggered->Fill(HSCPgenBeta1, EventWeight_);
+      if (HSCPgenBeta2 >= 0)
+        tuple->Gen_Beta_Triggered->Fill(HSCPgenBeta2, EventWeight_);
     }
   }
 
@@ -911,6 +911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Number of tracks before any trigger or preselection
     tuple->CutFlow->Fill(0., EventWeight_);
     if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  --------------------------------------------";
+    
     candidate_count++;
     if (trigInfo_ > 0) {
       // First bin of the error histo is all tracks (after trigger)
@@ -991,7 +992,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
       tuple->BefPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
     }
-
+    
     // Require a track segment in the muon system
     if (typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon())) {
       if (debug_> 0) LogPrint(MOD) << "  >> typeMode_ > 1 && typeMode_ != 5 && (muon.isNull() || !muon->isStandAloneMuon()), skipping it";
@@ -1056,33 +1057,32 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     if (!isData && closestGenIndex < 0 ) {
-      if (debug_ > 4 && trigInfo_ > 0) LogPrint(MOD) << "min dr: " << dRMinGen << endl;
-      if (debug_ > 4 && trigInfo_ > 0 ) LogPrint(MOD) << "min dPt: " << dPtMinBcg << endl;
-      // dont look at events where we didnt find the gen canidate
-      if (debug_ > 4 && trigInfo_ > 0) LogPrint(MOD) << "  >> Event where we didnt find the gen candidate";
+      if (debug_ > 4 && trigInfo_ > 0) {
+        LogPrint(MOD) << "min dr: " << dRMinGen << endl;
+        LogPrint(MOD) << "min dPt: " << dPtMinBcg << endl;
+        LogPrint(MOD) << "  >> Event where we didnt find the gen candidate";
+      }
       // 5-th bin of the error histo, didnt find the gen canidate
       if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(4.);
       }
     }
     
-    float genPt = -1.0;
-    if (trigInfo_ > 0) {
-      if (!isData) {
-        genPt = genColl[closestGenIndex].pt();
+    int genPdgId =  (closestGenIndex > 0) ?  genColl[closestGenIndex].pdgId() : 0;
+    float genPt = (closestGenIndex > 0) ? genColl[closestGenIndex].pt() : -1.;
+    float genEta = (closestGenIndex > 0) ? genColl[closestGenIndex].eta() : -9999.;
+    float genPhi = (closestGenIndex > 0) ? genColl[closestGenIndex].phi() : -9999.;
+    float genGammaBeta = (closestGenIndex > 0) ? genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass() : -1.;
+    float genBeta = (closestGenIndex > 0) ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1.f;
+
+    if (trigInfo_ > 0 && !isData) {
         tuple->BefPreS_GendRMin->Fill(dRMinGen);
         tuple->BefPreS_GenPtVsdRMinGen->Fill(genPt, dRMinGen);
         tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
-      }
     }
-    
-    float genGammaBeta = -1.0;
-    if (!isData) {
-      genGammaBeta = genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass();
-    }
-    
+
     if (!isData && debug_ > 5 && trigInfo_ > 0) {
-      LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genColl[closestGenIndex].pdgId() << " with pT " << genColl[closestGenIndex].pt() << " and eta " << genColl[closestGenIndex].eta() ;
+      LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genPdgId << " with pT " << genPt << " and eta " << genEta ;
     }
     if (trigInfo_ > 0) {
       if (!isData) {
@@ -1098,7 +1098,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float closestBackgroundPDGsIDs[8] = {0.,0.,0.,9999.,9999.,0.,9999.,0.};
     // Look at the properties of the closes gen candidate
     if (isSignal) {
-      closestHSCPsPDGsID = abs(genColl[closestGenIndex].pdgId());
+      closestHSCPsPDGsID = abs(genPdgId);
       // All HSCP candidates
       tuple->Gen_HSCPCandidateType->Fill(0., EventWeight_);
       if (trigInfo_ > 0) {
@@ -1155,7 +1155,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    
+
     // Match candidate track to HLT muon
     float hlt_match_pt = -9999.0;
     float temp_dr = 9999.;
@@ -1356,7 +1356,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       } // end loop PFCandidates
     } // close condition on the validity of PFCandidates
-    
+
     // Calculate PF mini relative isolation
     // float miniRelIsoOfficial = (track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
     float miniRelIsoAll = (track_PFMiniIso_sumLeptonPt + track_PFMiniIso_otherPt + track_PFMiniIso_sumCharHadPt + std::max(0.0, track_PFMiniIso_sumNeutHadPt + track_PFMiniIso_sumPhotonPt - 0.5* track_PFMiniIso_sumPUPt))/track->pt();
@@ -1705,7 +1705,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
-
     //computedEdx: hits, SF, templates, usePixel, useStrips,, useClusterCleaning, uneTrunc,
     //             mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, dedxErr, useTemplateLayer_, skip_templates_ias
     //
@@ -1853,7 +1852,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //Choose of Ias definition - strips only
     auto dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : -1.f;
-    
+
     float MassErr = GetMassErr(track->p(),
                                 track->ptError(),
                                 dedxMObj ? dedxMObj->dEdx() : -1,
@@ -1870,9 +1869,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }  //End of systematic computation for signal
     // ------------------------------------------------------------------------------------
     // Fill up the closestBackgroundPDGsIDs array (has to be done before preselection function)
-    if (!isData) {
+    if (!isData && closestGenIndex > 0) {
         //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
-      closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
+      closestBackgroundPDGsIDs[0] = (float)abs(genPdgId);
       float genEta = genColl[closestGenIndex].eta();
       float genPhi = genColl[closestGenIndex].phi();
       float dRMinGenAndSibling = 9999.0;
@@ -1907,7 +1906,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           break;
         }
       }
-      
         // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
       if (!motherFound) {
         
@@ -1939,7 +1937,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (motherFound) break;
         }
       }
-      
+
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
       if (!motherFound) {
         for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
@@ -1979,7 +1977,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       
       closestBackgroundPDGsIDs[3] = dRMinGenAndSibling;
       closestBackgroundPDGsIDs[4] = dRMinGenAndMom;
-      closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
+      closestBackgroundPDGsIDs[5] = fabs(genPt);
       closestBackgroundPDGsIDs[6] = numSiblingsF;
     }
     // -- end TODO Sept 25
@@ -2108,8 +2106,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
-    float GenBeta = -1.f;
-    if (!isData) GenBeta = genColl[closestGenIndex].p() / genColl[closestGenIndex].energy();
     
     // Compute transverse mass mT between HSCP with and MET
     float massT = -10.;
@@ -2255,8 +2251,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_dRMinPfJetVsIas->Fill(dRMinPfJetWithCuts, globalIas_, EventWeight_);
       tuple->BefPreS_RecoPfHT->Fill(pfJetHT, EventWeight_);
       tuple->BefPreS_RecoPfJetsNum->Fill(pfJetsNum, EventWeight_);
-      if (GenBeta >= 0) {
-        tuple->BefPreS_GenBeta->Fill(GenBeta, EventWeight_);
+      if (genBeta >= 0) {
+        tuple->BefPreS_GenBeta->Fill(genBeta, EventWeight_);
       }
       //Plotting segment separation depending on whether track passed dz cut
       if (fabs(dz) > globalMaxDZ_) {
@@ -2524,7 +2520,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           tuple->N1_PtErrOverPt2->Fill(track->ptError() / (track->pt()*track->pt()), EventWeight_);
           tuple->N1_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
           tuple->N1_PtErrOverPtVsPt_lowPt->Fill(track->ptError() / track->pt(), track->pt(), EventWeight_);
-          tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), GenBeta, EventWeight_);
+          tuple->N1_PtErrOverPtVsGenBeta->Fill(track->ptError() / track->pt(), genBeta, EventWeight_);
           tuple->N1_PtErrOverPt2VsIas->Fill(track->ptError() / (track->pt()*track->pt()), globalIas_, EventWeight_);
           tuple->N1_PtErrOverPt2VsProbQNoL1->Fill(track->ptError() / (track->pt()*track->pt()), 1 - probQonTrackNoL1, EventWeight_);
         };
@@ -2714,7 +2710,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (passPreselection(passedCutsArrayForTriggerSyst)) {
       float distanceAtThisEta = 500.0/sin(track->phi());
       float speedOfLightInCmPerNs = 29.97;
-      float timing = distanceAtThisEta / (GenBeta*speedOfLightInCmPerNs);
+      float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
       
       float genBetaPrimeUp =  -1.f;
       float genBetaPrimeDown = -1.f;
@@ -2723,48 +2719,48 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
       }
       if (!HLT_Mu50) {
-        tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., GenBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
         tuple->PostPreS_TriggerMuon50VsPt->Fill(0., track->pt());
         if (fabs(track->eta()) < 0.3) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(0., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(0., genBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
         } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(0., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(0., genBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
         } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(0., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(0., genBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
         }
           
       } else if (HLT_Mu50) {
-        tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., GenBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., genBeta);
         tuple->PostPreS_TriggerMuon50VsPt->Fill(1., track->pt());
         if (fabs(track->eta()) < 0.3) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., genBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
         } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(1., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(1., genBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
         } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(1., GenBeta);
+          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(1., genBeta);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
         }
         
       }
       if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
-        tuple->PostPreS_TriggerMETallVsBeta->Fill(0., GenBeta);
+        tuple->PostPreS_TriggerMETallVsBeta->Fill(0., genBeta);
         tuple->PostPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
         tuple->PostPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
       } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
-        tuple->PostPreS_TriggerMETallVsBeta->Fill(1., GenBeta);
+        tuple->PostPreS_TriggerMETallVsBeta->Fill(1., genBeta);
         tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
         tuple->PostPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
@@ -3081,8 +3077,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         // Jets_count is for all jets, while pfJetsNum is after it was made sure that the HSCP cand is real
         tuple->PostPreS_RecoPfJetsNum->Fill(pfJetsNum, EventWeight_);
         tuple->PostPreS_RecoPfHT->Fill(pfJetHT, EventWeight_);
-        if (GenBeta >= 0) {
-          tuple->PostPreS_GenBeta->Fill(GenBeta, EventWeight_);
+        if (genBeta >= 0) {
+          tuple->PostPreS_GenBeta->Fill(genBeta, EventWeight_);
         }
         
       }
@@ -3127,19 +3123,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Let's do some printouts after preselections for gen particles
-    if (passPre && trigInfo_ > 0) {
+    if (passPre && trigInfo_ > 0 && closestGenIndex > 0) {
       if (!isData) {
         //      if (debug_> 0) LogPrint(MOD) << "  >> Background MC, set gen IDs, mother IDs, sibling IDs";
-        closestBackgroundPDGsIDs[0] = (float)abs(genColl[closestGenIndex].pdgId());
-        float genEta = genColl[closestGenIndex].eta();
-        float genPhi = genColl[closestGenIndex].phi();
+        closestBackgroundPDGsIDs[0] = (float)abs(genPdgId);
         float dRMinGenAndSibling = 9999.0;
         float dRMinGenAndMom = 9999.0;
         float numSiblingsF = 9999.0;
         bool motherFound = false;
         float dRMinGenAndAunt = 9999.0;
 //        float dRMinGenAndGrandAunt = 9999.0;
-        reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex];
+        reco::GenParticle& genCandidateUnderStudy = genColl[closestGenIndex]; //TODODec13
         
         if (genCandidateUnderStudy.numberOfMothers() == 0) {
           LogPrint(MOD) << "There are zero mothers, track ID" << abs(genCandidateUnderStudy.pdgId()) <<
@@ -3340,6 +3334,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }
       }
+    }
+    
+    if (!isData && passPre) {
       if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
         tuple->PostPreS_RecoHSCParticleType->Fill(0.);
       } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
@@ -3378,6 +3375,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, EventWeight_);
       }
     }
+    
     if (passPre) {
     // Loop through the deDx hits after the preselection
     bool headerStripsPrintedAlready = false;
@@ -3601,7 +3599,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Cut loop: over all possible selection (one of them, the optimal one, will be used later)
       for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
         //Full Selection
-        if (!passSelection(track, dedxSObj, dedxMObj, tof, iEvent, CutIndex, tuple, false, GenBeta, false, 0, 0)) {
+        if (!passSelection(track, dedxSObj, dedxMObj, tof, iEvent, CutIndex, tuple, false, genBeta, false, 0, 0)) {
           continue;
         }
         
@@ -4741,7 +4739,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
                              const int& CutIndex,
                              Tuple* tuple,
                              const bool isFlip,
-                             const float GenBeta,
+                             const float genBeta,
                              const bool RescaleP,
                              const float RescaleI,
                              const float RescaleT) {
@@ -4773,9 +4771,9 @@ bool Analyzer::passSelection(const reco::TrackRef track,
       return false;
   }
   
-  // Distribtution of GenBeta after Pt selection is passed
-  if (tuple && GenBeta >= 0) {
-    tuple->PostS_CutIdVsBeta_postPt->Fill(CutIndex, GenBeta, EventWeight_);
+  // Distribtution of genBeta after Pt selection is passed
+  if (tuple && genBeta >= 0) {
+    tuple->PostS_CutIdVsBeta_postPt->Fill(CutIndex, genBeta, EventWeight_);
   }
   
   // Check if we pass the (rescalled) Ias selection
@@ -4783,9 +4781,9 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     return false;
   }
 
-  // Distribtution of GenBeta after Pt and Ias selection is passed
-  if (tuple && GenBeta >= 0) {
-      tuple->PostS_CutIdVsBeta_postPtAndIas->Fill(CutIndex, GenBeta, EventWeight_);
+  // Distribtution of genBeta after Pt and Ias selection is passed
+  if (tuple && genBeta >= 0) {
+      tuple->PostS_CutIdVsBeta_postPtAndIas->Fill(CutIndex, genBeta, EventWeight_);
   }
 
   // Check if we pass the TOF selection
@@ -4797,8 +4795,8 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   }
 
   if (tuple) {
-    if (GenBeta >= 0) {
-      tuple->PostS_CutIdVsBeta_postPtAndIasAndTOF->Fill(CutIndex, GenBeta, EventWeight_);
+    if (genBeta >= 0) {
+      tuple->PostS_CutIdVsBeta_postPtAndIasAndTOF->Fill(CutIndex, genBeta, EventWeight_);
     }
     tuple->PostS_CutIdVsP->Fill(CutIndex, track->p(), EventWeight_);
     tuple->PostS_CutIdVsPt->Fill(CutIndex, track->pt(), EventWeight_);
@@ -4895,7 +4893,7 @@ void Analyzer::calculateSyst(reco::TrackRef track,
                              const edm::EventSetup& iSetup,
                              const float pixelProbs[],
                              Tuple* tuple,
-                             const float GenBeta,
+                             const float genBeta,
                              float MassErr,
                              const float closestBackgroundPDGsIDs[]) {
   // Will put this back with the new way of preselections
