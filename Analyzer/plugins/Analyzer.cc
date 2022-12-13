@@ -28,8 +28,9 @@
 // - 42p3: Dont cut on dR of gen vs candidate, add MET vs HT plot, go back to Mu only triggers, Add EventCutFlow
 // - 43p4: Have more bins in Gi for the PostS histos, fix EventCutFlow's technical bin, letting in innerTracks
 // - 42p4: Really 43p4 was a typo, and I also now when back with the Gi bins for PostS histos
-// - 42p5: 3 SRs with exclusive pT bins in them, MetOverHT plots, use genParticles not genParticlesSkimmed
+// - 42p5: 3 SRs with exclusive pT bins in them, MetOverHt plots, use genParticles not genParticlesSkimmed
 // - 31p0: same as 42p5 but with MET triggers
+// - 31p2: candidate dependent MetOverHt plot
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -902,6 +903,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float bestCandidateDrMinHltMuon = 9999.;
   unsigned int bestSoFarCandCutInd = 0;
   bool passTechnicalChecks = false;
+  float pfJetHT = 0.f;
   
   tuple->EventCutFlow->Fill(0.0, EventWeight_);
   
@@ -2040,7 +2042,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     int nearestJetIndex = -1;
     int pfJetsNum = 0;
-    float pfJetHT = 0.f;
     if (pfJetHandle.isValid() && !pfJetHandle->empty()) {
       const reco::PFJetCollection* pfJetColl = pfJetHandle.product();
       for (unsigned int i = 0; i < pfJetColl->size(); i++) {
@@ -2761,13 +2762,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
         tuple->PostPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
-        tuple->PostPreS_TriggerMETallVsMetOverHT->Fill(0., RecoPFMET/pfJetHT);
+        tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
       } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
         tuple->PostPreS_TriggerMETallVsBeta->Fill(1., GenBeta);
         tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
         tuple->PostPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
         tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
-        tuple->PostPreS_TriggerMETallVsMetOverHT->Fill(1., RecoPFMET/pfJetHT);
+        tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
       }
     }
     
@@ -2778,7 +2779,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         cout << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
       }
       tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT, EventWeight_);
-      tuple->PostPreS_MetOverHT->Fill(RecoPFMET/pfJetHT, EventWeight_);
+      tuple->PostPreS_MetOverHt->Fill(RecoPFMET/pfJetHT, EventWeight_);
       if (trigInfo_ > 0) postPreS_candidate_count++;
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Fill control and prediction histos";
@@ -3793,6 +3794,34 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (trigInfo_ > 0) {
     tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
     tuple->EventCutFlow->Fill(2.0, EventWeight_);
+  }
+  
+  if (trigInfo_ > 0) {
+    if (postPreS_candidate_count == 0) {
+      tuple->PostS_MetOverHt_Cand0->Fill(RecoPFMET/pfJetHT, EventWeight_);
+    } else if (postPreS_candidate_count == 1) {
+      tuple->PostS_MetOverHt_Cand1->Fill(RecoPFMET/pfJetHT, EventWeight_);
+    } else if (postPreS_candidate_count == 2) {
+      tuple->PostS_MetOverHt_Cand2->Fill(RecoPFMET/pfJetHT, EventWeight_);
+    }
+  }
+  
+  if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+    if (postPreS_candidate_count == 0) {
+      tuple->PostS_TriggerMETallVsMetOverHt_Cand0->Fill(0.,RecoPFMET/pfJetHT);
+    } else if (postPreS_candidate_count == 1) {
+      tuple->PostS_TriggerMETallVsMetOverHt_Cand1->Fill(0.,RecoPFMET/pfJetHT);
+    } else if (postPreS_candidate_count == 2) {
+      tuple->PostS_TriggerMETallVsMetOverHt_Cand2->Fill(0.,RecoPFMET/pfJetHT);
+    }
+  } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+    if (postPreS_candidate_count == 0) {
+      tuple->PostS_TriggerMETallVsMetOverHt_Cand0->Fill(1.,RecoPFMET/pfJetHT);
+    } else if (postPreS_candidate_count == 1) {
+      tuple->PostS_TriggerMETallVsMetOverHt_Cand1->Fill(1.,RecoPFMET/pfJetHT);
+    } else if (postPreS_candidate_count == 2) {
+      tuple->PostS_TriggerMETallVsMetOverHt_Cand2->Fill(1.,RecoPFMET/pfJetHT);
+    }
   }
   
   for (uint32_t cutFloIndex = 1; cutFloIndex<18; cutFloIndex++) {

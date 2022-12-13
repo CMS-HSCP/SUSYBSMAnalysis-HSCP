@@ -928,10 +928,21 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_TriggerMETallVsBeta = dir.make<TH2F>("PostPreS_TriggerMETallVsBeta", ";OR of MET triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
   tuple->PostPreS_TriggerMETallVsMet = dir.make<TH2F>("PostPreS_TriggerMETallVsMet", ";OR of MET triggered;MET (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
   tuple->PostPreS_TriggerMETallVsHT = dir.make<TH2F>("PostPreS_TriggerMETallVsHT", ";OR of MET triggered;H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
-  tuple->PostPreS_TriggerMETallVsMetOverHT = dir.make<TH2F>("PostPreS_TriggerMETallVsMetOverHT", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
-  tuple->PostPreS_MetVsHT = dir.make<TH2F>("PostPreS_MetVsHT", ";MET (GeV);H_{T} (GeV);Tracks / bin",50,-0.05,2000.05,50,-0.05,2000.05);
-  tuple->PostPreS_MetOverHT = dir.make<TH1F>("PostPreS_MetOverHT", ";MET / H_{T};Tracks / bin",30,-0.05,2.95);
-  tuple->PostPreS_TriggerMETallVsMetVsHT = dir.make<TH3F>("PostPreS_TriggerMETallVsMetVsHT", ";OR of MET triggered;MET (GeV);H_{T} (GeV);Tracks / bin",2,-.5,1.5,100,-0.05,1500.05,100,-0.05,1500.05);
+  tuple->PostPreS_TriggerMETallVsMetOverHt = dir.make<TH2F>("PostPreS_TriggerMETallVsMetOverHt", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
+  
+  tuple->PostS_TriggerMETallVsMetOverHt_Cand0 = dir.make<TH2F>("PostS_TriggerMETallVsMetOverHt_Cand0", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
+  tuple->PostS_TriggerMETallVsMetOverHt_Cand1 = dir.make<TH2F>("PostS_TriggerMETallVsMetOverHt_Cand1", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
+  tuple->PostS_TriggerMETallVsMetOverHt_Cand2 = dir.make<TH2F>("PostS_TriggerMETallVsMetOverHt_Cand2", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
+  
+  
+  tuple->PostPreS_MetOverHt = dir.make<TH1F>("PostPreS_MetOverHt", ";MET / H_{T};Tracks / bin",30,-0.05,2.95);
+  tuple->PostS_MetOverHt_Cand0 = dir.make<TH1F>("PostS_MetOverHt_Cand0", ";MET / H_{T};Events / bin",30,-0.05,2.95);
+  tuple->PostS_MetOverHt_Cand1 = dir.make<TH1F>("PostS_MetOverHt_Cand1", ";MET / H_{T};Events / bin",30,-0.05,2.95);
+  tuple->PostS_MetOverHt_Cand2 = dir.make<TH1F>("PostS_MetOverHt_Cand2", ";MET / H_{T};Events / bin",30,-0.05,2.95);
+  
+  
+  tuple->PostPreS_MetVsHT = dir.make<TH2F>("PostPreS_MetVsHT", ";MET (GeV);H_{T} (GeV);Tracks / bin",25,-0.05,2000.05,25,-0.05,2000.05);
+  tuple->PostPreS_TriggerMETallVsMetVsHT = dir.make<TH3F>("PostPreS_TriggerMETallVsMetVsHT", ";OR of MET triggered;MET (GeV);H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05,50,-0.05,2000.05);
   tuple->PostPreS_ProbXYNoL1 = dir.make<TH1F>("PostPreS_ProbXYNoL1", ";ProbXYNoL1;Tracks / bin", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1_highIas = dir.make<TH1F>("PostPreS_ProbXYNoL1_highIas", ";ProbXYNoL1 for (G_{i}^{strips} > 0.6);Tracks / bin", 100, 0, 1);
   tuple->PostPreS_ProbXYNoL1VsIas = dir.make<TH2F>("PostPreS_ProbXYNoL1VsIas", ";ProbXYNoL1;G_{i}^{strips};Tracks / bin", 100, 0., 1., 20, 0.,1.);

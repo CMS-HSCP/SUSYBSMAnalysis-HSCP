@@ -675,10 +675,16 @@ struct Tuple {
   TH2F* PostPreS_TriggerMETallVsBeta;
   TH2F* PostPreS_TriggerMETallVsMet;
   TH2F* PostPreS_TriggerMETallVsHT;
-  TH2F* PostPreS_TriggerMETallVsMetOverHT;
+  TH2F* PostPreS_TriggerMETallVsMetOverHt;
+  TH2F* PostS_TriggerMETallVsMetOverHt_Cand0;
+  TH2F* PostS_TriggerMETallVsMetOverHt_Cand1;
+  TH2F* PostS_TriggerMETallVsMetOverHt_Cand2;
   TH3F* PostPreS_TriggerMETallVsMetVsHT;
   TH2F* PostPreS_MetVsHT;
-  TH1F* PostPreS_MetOverHT;
+  TH1F* PostPreS_MetOverHt;
+  TH1F* PostS_MetOverHt_Cand0;
+  TH1F* PostS_MetOverHt_Cand1;
+  TH1F* PostS_MetOverHt_Cand2;
 
 
   
