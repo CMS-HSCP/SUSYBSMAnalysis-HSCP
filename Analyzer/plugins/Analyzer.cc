@@ -110,6 +110,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       puTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
       createGiTemplates_(iConfig.getUntrackedParameter<bool>("CreateGiTemplates")),
+      CreateAndRunGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndRunGitemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")), 
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
 
@@ -150,14 +151,19 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   dEdxTemplatesPU.resize(NbPuBins_, NULL);
 
   // Option for Gi to have PU dependence
-  if (puTreatment_) {
-    for (int i = 0; i < NbPuBins_ ; i++){
-      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,puTreatment_,(i+1));
+  if(!createGiTemplates_){
+    if(puTreatment_){
+      for (int i = 0; i < NbPuBins_ ; i++){
+        dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,true,(i+1));
+      }
+    } else {
+        dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
     }
-  } else {
-    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,puTreatment_,0);
   }
-
+  if(CreateAndRunGitemplates_){
+    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0); 
+  }
+ 
   tofCalculator.loadTimeOffset(timeOffset_);
 }
 
@@ -1376,7 +1382,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHitsPrescRef.isNull()) {
       preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
     }
-    if (preScaleForDeDx > 1) cout << "preScaleForDeDx is non-zero " << preScaleForDeDx << endl;
+
+    //if (preScaleForDeDx > 1) cout << "preScaleForDeDx is non-zero " << preScaleForDeDx << endl;
 
     if (typeMode_ > 1 && typeMode_ != 5 && !hscp.muonRef().isNull()) {
       if (isBckg) {
@@ -1676,7 +1683,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dropLowerDeDxValue = 0.0;
     bool skipPixelL1 = false;
     int  skip_templates_ias = 0;
-    TH3F* localdEdxTemplates; //Temp TH3 that wil ltake actual template for each calculation
+    TH3F* localdEdxTemplates; //Temp TH3 that will take actual template for each calculation
     
 
     float dEdxErr = 0;
@@ -1763,93 +1770,94 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     reco::DeDxData* dedxIs_StripOnly = nullptr; //symmetric Smirnov discriminator - Is
 
     int NPV = vertexColl.size();
-    if(!puTreatment_){
-        dedxIas_FullTrackerTmp = 
-        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                   mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
-    
-        dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
-  
-        dedxIas_noTIBnoTIDno3TEC_Tmp =
-        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
-
-        dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
-
-        dedxIas_PixelOnly_Tmp =
-        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
-  
-        dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
-
-        dedxIas_StripOnly_Tmp =
-        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
-
-        dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
-
-        dedxIas_PixelOnly_noL1_Tmp =
-        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
- 
-        dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
-
-        dedxIs_StripOnly_Tmp =
-    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
-     
-        dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
-    }
-
-    else{
-        for(int i = 0 ; i < NbPuBins_ ; i++){ 
-            if ( NPV > PuBins_[i] && NPV <= PuBins_[i+1] ){
-                //globalIas_ 
-                dedxIas_FullTrackerTmp =
-                computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                            mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
-                
-                dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
-               
-                //globalIas_ without TIB, TID, and 3 first TEC layers 
-                dedxIas_noTIBnoTIDno3TEC_Tmp =
-                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
-            
-                dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
-            
-                //globalIas_ Pixel only
-                dedxIas_PixelOnly_Tmp =
-                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
-            
-                dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
-            
-                //globalIas_ Strip only
-                dedxIas_StripOnly_Tmp =
-                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
-            
-                dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
-            
-                //globalIas_ Pixel only no BPIXL1
-                dedxIas_PixelOnly_noL1_Tmp =
-                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
-            
-                dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
-                
-                //symmetric Smirnov discriminator - Is
-                dedxIs_StripOnly_Tmp =
-                computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                            mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
-                
-                dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+    //if(!createGiTemplates_){
+        if(!puTreatment_ || CreateAndRunGitemplates_){
+            dedxIas_FullTrackerTmp = 
+            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                       mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
         
-            }//end vertex coll size for PU treatment
-        }
-    }
+            dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+      
+            dedxIas_noTIBnoTIDno3TEC_Tmp =
+            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
     
+            dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
+    
+            dedxIas_PixelOnly_Tmp =
+            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
+      
+            dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
+    
+            dedxIas_StripOnly_Tmp =
+            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
+    
+            dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
+    
+            dedxIas_PixelOnly_noL1_Tmp =
+            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
+     
+            dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
+    
+            dedxIs_StripOnly_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+         
+            dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+        }
+    
+        else{
+            for(int i = 0 ; i < NbPuBins_ ; i++){ 
+                if ( NPV > PuBins_[i] && NPV <= PuBins_[i+1] ){
+                    //globalIas_ 
+                    dedxIas_FullTrackerTmp =
+                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
+                    
+                    dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+                   
+                    //globalIas_ without TIB, TID, and 3 first TEC layers 
+                    dedxIas_noTIBnoTIDno3TEC_Tmp =
+                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
+                
+                    dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
+                
+                    //globalIas_ Pixel only
+                    dedxIas_PixelOnly_Tmp =
+                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
+                
+                    dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
+                
+                    //globalIas_ Strip only
+                    dedxIas_StripOnly_Tmp =
+                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
+                
+                    dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
+                
+                    //globalIas_ Pixel only no BPIXL1
+                    dedxIas_PixelOnly_noL1_Tmp =
+                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
+                
+                    dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
+                    
+                    //symmetric Smirnov discriminator - Is
+                    dedxIs_StripOnly_Tmp =
+                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+                    
+                    dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+            
+                }//end vertex coll size for PU treatment
+            }
+        }
+    //} 
     //Choose of Ih definition - Ih_nodrop_noPixL1
     auto dedxMObj = dedxIh_noL1;
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : 0.0;
@@ -2641,14 +2649,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 
     //Preselection steps that can be changed for template generation
+    passedCutsArrayForGiTemplates[0] = true;
+    //if(track->p() < 48) std::cout << "found a track with p < 48 : track->p() = :" << track->p() << std::endl;
+    //std::cout << "track->p() = " << track->p() << std::endl;
+    passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) );  
+    passedCutsArrayForGiTemplates[2]  = (fabs(track->eta()) < 2.1);
 
-    passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) ) ? true : false;  
-    passedCutsArrayForGiTemplates[2]  = (fabs(track->eta()) < 2.1) ? true : false;
-
+    passedCutsArrayForGiTemplates[10] = true; //miniIso
+    //[1] is TrackerIso > 15
+    passedCutsArrayForGiTemplates[12] = true; //EoP
+    passedCutsArrayForGiTemplates[13] = true; //sigma pt / pt cut 
+    passedCutsArrayForGiTemplates[14] = true; //ProbQ cut
   
     // PAY ATTENTION : PU == NPV for the following loop !
-
+    //std::cout << "before looping for Gi Templates" << std::endl;
     if (passPreselection(passedCutsArrayForGiTemplates)) {
+      //std::cout << "This  event passed preselection steps .. " << std::endl;
       tuple->PostPreS_Ias_CR_lowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_); //are we sure this prescale is the good one ? in ntuple.cc track_prescale = (*dedxHitInfoPrescale)[dedxHitsRef];
       for(unsigned int h=0; h< dedxHits->size(); h++){
         DetId detid(dedxHits->detId(h));
@@ -2665,46 +2681,53 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         pathlenghtForIndxH = dedxHits->pathlength(h) * 10;
         chargeForIndxH = dedxHits->charge(h);
-        if(puTreatment_){
-           int npv = vertexColl.size();
-
-           for(int i = 0 ; i < NbPuBins_ ; i++){
-               if ( npv > PuBins_[i] && npv <= PuBins_[i+1] ){
-                   if(detid.subdetId() >= 3){ // For strips only 1 question : charge is already multiplied by sclae factor ? 
-                       if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                       else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                       else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                       else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                       else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+        if(createGiTemplates_){
+            if(puTreatment_){
+               int npv = vertexColl.size();
+               //std::cout << "NPV for this event : " << npv << std::endl; 
+               for(int i = 0 ; i < NbPuBins_ ; i++){
+                   if ( npv > PuBins_[i] && npv <= PuBins_[i+1] ){
+                       //std::cout << "We are then in PU bin #" << (i+1) << std::endl;
+                       if(detid.subdetId() >= 3){ // For strips only 1 question : charge is already multiplied by sclae factor ? 
+                           //std::cout << "filling templates for STRIPS" << std::endl;
+                           if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                           else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                           else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                           else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                           else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                       }
+                       else{ // for pixels , we multiply pathlenght by normMult 
+                           scaleFactor *= dEdxSF_1_;
+                           //std::cout << "filling templates for PIXELS" << std::endl;
+                         
+                           if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                           else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                           else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                           else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                           else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+    
+                       }
                    }
-                   else{ // for pixels , we multiply pathlenght by normMult 
-                       scaleFactor *= dEdxSF_1_;
-                       if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                       else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                       else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                       else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                       else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-
-                   }
-               }
-           }    
-        } else {
-          // Standard approach, no PU dependence
-          //We should have pixel and strips in different loops : in pixels, we divide charge * SF / pathlenght * normMult
-          if(detid.subdetId() >= 3){
-              tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-              tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-          }
-          else{
-              scaleFactor *= dEdxSF_1_;
-              tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-              tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-          }
-        }
+               }    
+            } else {
+              // Standard approach, no PU dependence
+              //We should have pixel and strips in different loops : in pixels, we divide charge * SF / pathlenght * normMult
+              if(detid.subdetId() >= 3){
+                  tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                  tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+              }
+              else{
+                  scaleFactor *= dEdxSF_1_;
+                  tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                  tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+              }
+            }
+    
+        }//end loop createGitemplates
       }
     }
     
-    if (createGiTemplates_) {
+    if (createGiTemplates_ && !CreateAndRunGitemplates_) {
       // If the purpose of this is to run the Gi templates only, exit here
       return;
     }
@@ -2737,7 +2760,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Systematics plots for pT rescaling
     float shiftForPtValue = shiftForPt(track->pt(),track->eta(),track->phi(),track->charge());
-    cout << "shiftForPtValue " << shiftForPtValue << endl;
+    //cout << "shiftForPtValue " << shiftForPtValue << endl;
     float rescaledPtUp = track->pt()*(1+shiftForPtValue);
     bool passedCutsArrayForPtSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForPtSyst));
@@ -4326,9 +4349,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinTOF",1.0)->setComment("Cut on the min time-of-flight");
   //Templates related parameters 
 
-  desc.addUntracked("PileUpTreatment",false)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
-  
+  desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+ 
+  desc.addUntracked("CreateAndRunGitemplates",true)->setComment("Boolean to decide if we create PU dependent templates while using other template for analysis");
+
+ 
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
  
@@ -4493,7 +4519,7 @@ float Analyzer::shiftForPt(const float& pt, const float& eta, const float& phi, 
   } else {
     sigma = 0.016883 + 6.21438e-05*pt - 9.79418e-09*pt*pt;
   }
-  cout << "sigma: " << sigma << endl;
+  //cout << "sigma: " << sigma << endl;
   float shift = RNG2->Gaus(0,sigma*0.46);
   return shift;
 // In the past the following was used:
