@@ -496,6 +496,14 @@ struct Tuple {
   TH1F* BefPreS_GenBeta;
 
   TH3F* Calibration_GiTemplate;
+
+  TH3F* Calibration_GiTemplate_PU_1;
+  TH3F* Calibration_GiTemplate_PU_2;
+  TH3F* Calibration_GiTemplate_PU_3;
+  TH3F* Calibration_GiTemplate_PU_4;
+  TH3F* Calibration_GiTemplate_PU_5;
+
+
   TH3F* Calibration_GiTemplate_noL1;
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
