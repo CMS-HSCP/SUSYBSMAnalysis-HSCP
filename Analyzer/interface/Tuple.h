@@ -982,6 +982,43 @@ struct Tuple {
   Region rD_50ias90;
   Region rD_90ias100;
 
+
+ // Calibration
+ // Scale Factors 
+ TH2D* SF_HHit2DPix_loose;
+ TH2D* SF_HHit2DStrip_loose;
+ TH2D* SF_HHit2DPix;
+ TH2D* SF_HHit2DStrip;
+
+ // K and C
+ TH2D* K_and_C_Ih_noL1_VsP_loose1;
+ TH2D* K_and_C_Ih_noL1_VsP_loose2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_loose1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_loose2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_loose1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_loose2;
+ TH2D* K_and_C_Ih_strip_VsP_loose1;
+ TH2D* K_and_C_Ih_strip_VsP_loose2;
+
+ TH2D* K_and_C_Ih_noL1_VsP_1;
+ TH2D* K_and_C_Ih_noL1_VsP_2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_2;
+ TH2D* K_and_C_Ih_strip_VsP_1;
+ TH2D* K_and_C_Ih_strip_VsP_2;
+
+ // Stability
+ TH2D* Stab_Ih_NoL1_VsRun;
+ TH2D* Stab_Ih_pixNoL1_VsRun;
+ TH2D* Stab_Ih_strip_VsRun;
+ TH2D* Stab_Gi_strip_VsRun;
+ TH2D* Stab_Gi_NoL1_VsRun;
+ TH2D* Stab_Fi_pixNoL1_VsRun;
+ TH2D* Stab_invB_VsRun;
+ TH2D* Stab_invB_DT_VsRun;
+ TH2D* Stab_invB_CSC_VsRun;
 };
 
 #endif
