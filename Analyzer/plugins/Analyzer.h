@@ -310,7 +310,7 @@ private:
   float globalMaxTrackProbXYCut_;
   unsigned int minMuStations_;
   float globalMinIs_, globalMinTOF_;
-  bool puTreatment_, createGiTemplates_;
+  bool puTreatment_, createGiTemplates_, CreateAndRunGitemplates_;
   int NbPuBins_;
   vector<int> PuBins_;
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement

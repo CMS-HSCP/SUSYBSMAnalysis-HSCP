@@ -110,6 +110,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       puTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
       createGiTemplates_(iConfig.getUntrackedParameter<bool>("CreateGiTemplates")),
+      CreateAndRunGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndRunGitemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")), 
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
 
@@ -158,8 +159,11 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
     } else {
         dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
     }
-  } 
-     
+  }
+  if(CreateAndRunGitemplates_){
+    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0); 
+  }
+ 
   tofCalculator.loadTimeOffset(timeOffset_);
 }
 
@@ -1378,7 +1382,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHitsPrescRef.isNull()) {
       preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
     }
-    if (preScaleForDeDx > 1) cout << "preScaleForDeDx is non-zero " << preScaleForDeDx << endl;
+
+    //if (preScaleForDeDx > 1) cout << "preScaleForDeDx is non-zero " << preScaleForDeDx << endl;
 
     if (typeMode_ > 1 && typeMode_ != 5 && !hscp.muonRef().isNull()) {
       if (isBckg) {
@@ -1766,7 +1771,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     int NPV = vertexColl.size();
     //if(!createGiTemplates_){
-        if(!puTreatment_){
+        if(!puTreatment_ || CreateAndRunGitemplates_){
             dedxIas_FullTrackerTmp = 
             computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
@@ -2679,12 +2684,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if(createGiTemplates_){
             if(puTreatment_){
                int npv = vertexColl.size();
-               std::cout << "NPV for this event : " << npv << std::endl; 
+               //std::cout << "NPV for this event : " << npv << std::endl; 
                for(int i = 0 ; i < NbPuBins_ ; i++){
                    if ( npv > PuBins_[i] && npv <= PuBins_[i+1] ){
-                       std::cout << "We are then in PU bin #" << (i+1) << std::endl;
+                       //std::cout << "We are then in PU bin #" << (i+1) << std::endl;
                        if(detid.subdetId() >= 3){ // For strips only 1 question : charge is already multiplied by sclae factor ? 
-                           std::cout << "filling templates for STRIPS" << std::endl;
+                           //std::cout << "filling templates for STRIPS" << std::endl;
                            if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
                            else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
                            else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
@@ -2693,7 +2698,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                        }
                        else{ // for pixels , we multiply pathlenght by normMult 
                            scaleFactor *= dEdxSF_1_;
-                           std::cout << "filling templates for PIXELS" << std::endl;
+                           //std::cout << "filling templates for PIXELS" << std::endl;
                          
                            if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
                            else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
@@ -2722,7 +2727,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
-    if (createGiTemplates_) {
+    if (createGiTemplates_ && !CreateAndRunGitemplates_) {
       // If the purpose of this is to run the Gi templates only, exit here
       return;
     }
@@ -2755,7 +2760,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Systematics plots for pT rescaling
     float shiftForPtValue = shiftForPt(track->pt(),track->eta(),track->phi(),track->charge());
-    cout << "shiftForPtValue " << shiftForPtValue << endl;
+    //cout << "shiftForPtValue " << shiftForPtValue << endl;
     float rescaledPtUp = track->pt()*(1+shiftForPtValue);
     bool passedCutsArrayForPtSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForPtSyst));
@@ -4346,7 +4351,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
   desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
-  
+ 
+  desc.addUntracked("CreateAndRunGitemplates",true)->setComment("Boolean to decide if we create PU dependent templates while using other template for analysis");
+
+ 
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
  
@@ -4511,7 +4519,7 @@ float Analyzer::shiftForPt(const float& pt, const float& eta, const float& phi, 
   } else {
     sigma = 0.016883 + 6.21438e-05*pt - 9.79418e-09*pt*pt;
   }
-  cout << "sigma: " << sigma << endl;
+  //cout << "sigma: " << sigma << endl;
   float shift = RNG2->Gaus(0,sigma*0.46);
   return shift;
 // In the past the following was used:
