@@ -734,13 +734,22 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_GenBeta = dir.make<TH1F>("BefPreS_GenBeta", ";#beta;Tracks / bin", 20, 0., 1.);
 
   
-  tuple->Calibration_GiTemplate =  dir.make<TH3F>("Calibration_GiTemplate", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
-
   tuple->BefPreS_NumCandidates = dir.make<TH1F>("BefPreS_NumCandidates", ";Number of HSCP candidates;Events / bin", 11, -0.5, 10.5);
   tuple->PostPreS_NumCandidates = dir.make<TH1F>("PostPreS_NumCandidates", ";Number of HSCP candidates;Events / bin", 11, -0.5, 10.5);
   tuple->PostPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("PostPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - tracker p_{T}) / tracker p_{T};Tracks / bin", 60,-1.0,2.0);
   tuple->PostPreS_MuonPtVsTrackPt = dir.make<TH2F>("PostPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};tracker p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
   tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};tracker p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
+
+  tuple->Calibration_GiTemplate =  dir.make<TH3F>("Calibration_GiTemplate", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+  tuple->Calibration_GiTemplate_noL1 = dir.make<TH3F>("Calibration_GiTemplate_noL1", ";Module geometry;Path lenght (cm?);Path normalised charge (ke/mm?)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+  
+  //is it good for me to pass puTreatment_ as new argument in the functions ?
+  tuple->Calibration_GiTemplate_PU_1 =  dir.make<TH3F>("Calibration_GiTemplate_PU_1", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+  tuple->Calibration_GiTemplate_PU_2 =  dir.make<TH3F>("Calibration_GiTemplate_PU_2", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+  tuple->Calibration_GiTemplate_PU_3 =  dir.make<TH3F>("Calibration_GiTemplate_PU_3", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+  tuple->Calibration_GiTemplate_PU_4 =  dir.make<TH3F>("Calibration_GiTemplate_PU_4", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+  tuple->Calibration_GiTemplate_PU_5 =  dir.make<TH3F>("Calibration_GiTemplate_PU_5", ";Module geometry;Path lenght (cm?);Path normalised charge (ke)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
+   
   tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
   tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");

@@ -458,12 +458,17 @@ struct Tuple {
   TH2F* BefPreS_TOFVsIh;
   TH1F* BefPreS_GenBeta;
 
-  TH3F* Calibration_GiTemplate;
   TH1F* BefPreS_NumCandidates;
   TH1F* PostPreS_NumCandidates;
-  
 
-  
+  TH3F* Calibration_GiTemplate;
+  TH3F* Calibration_GiTemplate_noL1;
+  TH3F* Calibration_GiTemplate_PU_1;
+  TH3F* Calibration_GiTemplate_PU_2;
+  TH3F* Calibration_GiTemplate_PU_3;
+  TH3F* Calibration_GiTemplate_PU_4;
+  TH3F* Calibration_GiTemplate_PU_5;
+
   // Post preselection plots
   TH1F* PostPreS_RelDiffMuonPtAndTrackPt;
   TH2F* PostPreS_MuonPtVsTrackPt;
