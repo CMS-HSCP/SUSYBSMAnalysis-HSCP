@@ -299,6 +299,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   } else {
     EventWeight_ = 1.;
   }
+
+    // useful at the event level -- because used both for the HSCP and the track loops
+    string year = period_;
+    if(!isData) year="";
+    int run_number=iEvent.id().run();
+    bool usePixel = true;
+    bool useStrip = true;
+    bool useTruncated = false;
+    bool mustBeInside = true;
+    size_t MaxStripNOM = 99;
+    bool correctFEDSat = false;
+    int crossTalkInvAlgo = 1;
+    float dropLowerDeDxValue = 0.0;
+    bool skipPixelL1 = false;
+    int  skip_templates_ias = 0;
+    TH3F* localdEdxTemplates;
+    if(!createGiTemplates_ && !puTreatment_){
+      localdEdxTemplates = dEdxTemplates;
+    }
   
 //  if (debug_ > 1 ) LogPrint(MOD) << "\nThis is a new event. Weight factor applied: " << EventWeight_;
   
@@ -1288,7 +1307,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if(pf_isMuonForIdx) track_PFMiniIso_sumMuonPt+=pt;
           if (!pf_isElectronForIdx && !pf_isMuonForIdx && !pf_isChHadronForIdx && !pf_isNeutHadronForIdx && !pf_isPhotonForIdx) {
             track_PFMiniIso_otherPt+=pt;
-            LogPrint(MOD) << "PF cand ID " << pfCand->pdgId() << " is not in the std categories, it's " << pfCand->translatePdgIdToType(pfCand->pdgId());
+//            LogPrint(MOD) << "PF cand ID " << pfCand->pdgId() << " is not in the std categories, it's " << pfCand->translatePdgIdToType(pfCand->pdgId());
           }
         }
         if (dr<0.05) {
@@ -1378,7 +1397,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 //    const reco::DeDxHitInfo* dedxHitsPresc = nullptr;
     reco::DeDxHitInfoRef dedxHitsPrescRef;
     dedxHitsPrescRef = dedxCollH->get(track.key());
-    int preScaleForDeDx = 0;
+    int preScaleForDeDx = 1;
     if (!dedxHitsPrescRef.isNull()) {
       preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
     }
@@ -1670,21 +1689,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //skip_templates_ias = 1 --> no Pix, no TIB, no TID, no 3 first layers TEC
     //skip_templates_ias = 2 --> Pixel Only
 
-    string year = period_;
-    if(!isData) year="";
-    int run_number=iEvent.id().run();
-    bool usePixel = true;
-    bool useStrip = true;
-    bool useTruncated = false;
-    bool mustBeInside = true;
-    size_t MaxStripNOM = 99;
-    bool correctFEDSat = false;
-    int crossTalkInvAlgo = 1;
-    float dropLowerDeDxValue = 0.0;
-    bool skipPixelL1 = false;
-    int  skip_templates_ias = 0;
-    TH3F* localdEdxTemplates; //Temp TH3 that will take actual template for each calculation
-    
 
     float dEdxErr = 0;
     bool symmetricSmirnov = false;
@@ -1743,7 +1747,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     // Ih Pixel only no BPIXL1
     auto dedxIh_PixelOnly_noL1_Tmp =
-        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = false, useClusterCleaning, useTruncated = false,
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
     reco::DeDxData* dedxIh_PixelOnlyh_noL1 = dedxIh_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_PixelOnly_noL1_Tmp : nullptr;
@@ -1758,10 +1762,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
  
     // Temporary dEdx info
-    reco::DeDxData dedxIas_FullTrackerTmp,dedxIas_noTIBnoTIDno3TEC_Tmp,dedxIas_PixelOnly_Tmp,dedxIas_StripOnly_Tmp,dedxIas_PixelOnly_noL1_Tmp,dedxIs_StripOnly_Tmp;
+    reco::DeDxData dedxIas_FullTrackerTmp,dedxIas_noL1Tmp,dedxIas_noTIBnoTIDno3TEC_Tmp,dedxIas_PixelOnly_Tmp,dedxIas_StripOnly_Tmp,dedxIas_PixelOnly_noL1_Tmp,dedxIs_StripOnly_Tmp;
 
     //Pointers that will have the dEdx info laterr
     reco::DeDxData* dedxIas_FullTracker = nullptr; //globalIas_
+    reco::DeDxData* dedxIas_noL1 = nullptr; //globalIas_ no BPIXL1
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = nullptr; //globalIas_ without TIB, TID, and 3 first TEC layers
 
     reco::DeDxData* dedxIas_PixelOnly = nullptr; //globalIas_ Pixel only
@@ -1777,11 +1782,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
         
             dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+
+            dedxIas_noL1Tmp =
+            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                   mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_,skipPixelL1 = true, skip_templates_ias = 2);
+
+            dedxIas_noL1 = dedxIas_noL1Tmp.numberOfMeasurements() > 0 ? &dedxIas_noL1Tmp : nullptr;
       
             dedxIas_noTIBnoTIDno3TEC_Tmp =
             computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                         mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
     
+
             dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
     
             dedxIas_PixelOnly_Tmp =
@@ -1818,6 +1830,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
                     
                     dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+
+                    //globalIas_ no BPIXL1
+                    dedxIas_noL1Tmp =
+                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                           mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_,skipPixelL1 = true, skip_templates_ias = 2);
+
+                    dedxIas_noL1 = dedxIas_noL1Tmp.numberOfMeasurements() > 0 ? &dedxIas_noL1Tmp : nullptr;
                    
                     //globalIas_ without TIB, TID, and 3 first TEC layers 
                     dedxIas_noTIBnoTIDno3TEC_Tmp =
@@ -3178,6 +3197,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (GenBeta >= 0) {
           tuple->PostPreS_GenBeta->Fill(GenBeta, EventWeight_);
         }
+        // stability plots
+        tuple->Stab_Ih_NoL1_VsRun->Fill(CurrentRun_, globalIh_ , EventWeight_);
+        tuple->Stab_Ih_pixNoL1_VsRun->Fill(CurrentRun_, (dedxIh_PixelOnlyh_noL1 ? dedxIh_PixelOnlyh_noL1->dEdx() : -1) , EventWeight_);
+        tuple->Stab_Ih_strip_VsRun->Fill(CurrentRun_, (dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) , EventWeight_);
+        tuple->Stab_Gi_strip_VsRun->Fill(CurrentRun_, globalIas_ , EventWeight_);
+        tuple->Stab_Gi_NoL1_VsRun->Fill(CurrentRun_, (dedxIas_noL1 ? dedxIas_noL1->dEdx() : -1), EventWeight_);
+        tuple->Stab_Fi_pixNoL1_VsRun->Fill(CurrentRun_, 1 - probQonTrackNoL1, EventWeight_);
+        if (tof) {
+          tuple->Stab_invB_VsRun->Fill(CurrentRun_, tof->inverseBeta(), EventWeight_);
+          tuple->Stab_invB_DT_VsRun->Fill(CurrentRun_, dttof->inverseBeta(), EventWeight_);
+          tuple->Stab_invB_CSC_VsRun->Fill(CurrentRun_, csctof->inverseBeta(), EventWeight_);
+        }
         
       }
       
@@ -3718,7 +3749,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           } else if (detid.subdetId() == PixelSubdetector::PixelEndcap) {
             pixLayerIndex = abs(int(tTopo->pxfDisk(detid)))+4;
-            if (globalIas_ < 0.03 && globalIas_ > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
+//            if (globalIas_ < 0.03 && globalIas_ > 0.025) cout << "Pixel L" << abs(int(tTopo->pxfDisk(detid))) << " Norm Charge: " << dedxHits->charge(i) / dedxHits->pathlength(i) << " e/um" << endl;
           }
           if (tuple) {
             tuple->PostPreS_IasPixelIhVsLayer->Fill(globalIas_, IhOnLayer, pixLayerIndex, EventWeight_);
@@ -3961,7 +3992,192 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   // Trigger type after preSelection at the event level
   tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+
+
+  // Calibration information
+  //
+  // choice of the vertex
+    int firstpvfound=false;
+    int index_pv=-1;
+    for (unsigned int i = 0; i < vertexColl.size(); i++) {
+        //only consider good vertex
+      if (vertexColl[i].isFake() || fabs(vertexColl[i].z()) > 24 || vertexColl[i].position().rho() > 2 ||
+          vertexColl[i].ndof() <= 4) continue;
+      if(!firstpvfound) {
+          firstpvfound=true;
+          index_pv=i;
+      }
+    }
+
+  // loop on the tracks
+  bool apply_trigger_sel_for_calib = true;
+  if (typeMode_ != 3 && (!apply_trigger_sel_for_calib || (apply_trigger_sel_for_calib && trigInfo_>0)) && index_pv>-1) { 
+    for(unsigned int c=0;c<trackCollectionHandle->size();c++){
+      reco::TrackRef track = reco::TrackRef( trackCollectionHandle.product(), c );
+
+      // selection of the tracks
+
+      bool passedTrackCutsArray[8];
+      std::fill(std::begin(passedTrackCutsArray), std::end(passedTrackCutsArray),true);
+
+      // Check if eta is inside the max eta cut for detector homogeneity
+      passedTrackCutsArray[0]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
+      // Select only high purity tracks to ensure good quality tracks
+      passedTrackCutsArray[1]  = (track->quality(reco::TrackBase::highPurity)) ? true : false;
+      // Cut on the chi2 / ndof to ensure good quality tracks
+      passedTrackCutsArray[2] = ((track->chi2() / track->ndof()) < globalMaxChi2_) ? true : false;
+      // Check the min fraction of valid hits to ensure good stats on the hits
+      passedTrackCutsArray[3]  = (track->validFraction() > globalMinFOVH_) ? true : false;
+      // Cut on the impact parameter to ensure the track is coming from the PV
+      // for typeMode_ 3 (TOF only) dz and dxy is supposed to come from the beamspot
+      float dz = track->dz(vertexColl[index_pv].position());
+      float dxy = track->dxy(vertexColl[index_pv].position());
+      passedTrackCutsArray[4] = (fabs(dz) < 0.5) ? true : false;
+      passedTrackCutsArray[5] = (fabs(dxy) < 0.5)  ? true : false;
+
+      if (!passPreselection(passedTrackCutsArray)) continue;
+
+
+      //load dedx quantity associated to this track 
+      const reco::DeDxHitInfo* dedxHits = nullptr;
+      reco::DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
+      if (!dedxHitsRef.isNull())
+        dedxHits = &(*dedxHitsRef);
+
+//      if(!dedxHits)  cout << "track " << c << " pt : " <<  track->pt()  << ", eta : " << track->eta()  << " without dedxHit info " << endl;
+      if(!dedxHits)continue;
+//      cout << "track " << c << " pt : " <<  track->pt()  << ", eta : " << track->eta()  << " with dedxHit info " << endl;
+
+      reco::DeDxHitInfoRef dedxHitsPrescRef;
+      dedxHitsPrescRef = dedxCollH->get(track.key());
+      int preScaleForDeDx = 1;
+      if (!dedxHitsPrescRef.isNull()) {
+        preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
+      }
+//      if (preScaleForDeDx > 1) cout << "preScaleForDeDx is non-zero " << preScaleForDeDx << " for track pt " << track->pt() << endl;
+
+
+      float dEdxErr = 0;
+
+      // Ih no pixel L1
+      auto dedxIh_noL1_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
+    
+      reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
+
+      // Ih Strip only
+      auto dedxIh_StripOnly_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_);
+
+      reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
+
+
+      unsigned int nonL1PixHits = dedxIh_noL1_Tmp.numberOfMeasurements() - dedxIh_StripOnly_Tmp.numberOfMeasurements() ;
+      unsigned int numDeDxHits = dedxIh_noL1_Tmp.numberOfMeasurements() ;
+
+      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
+       passedTrackCutsArray[6]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
+      // Cut for the number of dEdx hits to ensure good stats on the hits
+       passedTrackCutsArray[7]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+      if (!passPreselection(passedTrackCutsArray)) continue;
+
+      float ih0_noL1 = (dedxIh_noL1) ?  dedxIh_noL1->dEdx() : 0.0;
+      float ih0_strip = (dedxIh_StripOnly) ?  dedxIh_StripOnly->dEdx() : 0.0;
+
+      if (track->p()<50) {
+        tuple->K_and_C_Ih_noL1_VsP_loose1->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_noL1_VsP_loose2->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        if (fabs(track->eta())<1) {
+             tuple->K_and_C_Ih_noL1_VsP_eta1_loose1->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+             tuple->K_and_C_Ih_noL1_VsP_eta1_loose2->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        }
+        else {
+             tuple->K_and_C_Ih_noL1_VsP_eta2_loose1->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+             tuple->K_and_C_Ih_noL1_VsP_eta2_loose2->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        }
+        tuple->K_and_C_Ih_strip_VsP_loose1->Fill(track->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_loose2->Fill(track->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+
+       if ( fabs(dz) < globalMaxDZ_ && fabs(dxy) < globalMaxDXY_) {
+
+        tuple->K_and_C_Ih_noL1_VsP_1->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_noL1_VsP_2->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        if (fabs(track->eta())<1) {
+             tuple->K_and_C_Ih_noL1_VsP_eta1_1->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+             tuple->K_and_C_Ih_noL1_VsP_eta1_2->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        }
+        else {
+             tuple->K_and_C_Ih_noL1_VsP_eta2_1->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+             tuple->K_and_C_Ih_noL1_VsP_eta2_2->Fill(track->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        }
+        tuple->K_and_C_Ih_strip_VsP_1->Fill(track->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_2->Fill(track->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+
+       }
+      }
+
   
+      for(unsigned int h=0;h< dedxHits->size();h++){
+           DetId detid(dedxHits->detId(h));
+           float dedx_charge=dedxHits->charge(h);
+           float dedx_pathlength=dedxHits->pathlength(h);
+           float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+           float scaleFactor =dEdxSF[0];
+           if (detid.subdetId() >=3 ) {
+              // strip
+
+              // saturation correction of the charge 
+              const SiStripCluster* cluster = dedxHits->stripCluster(h);
+              std::vector<int> amplitudes = convert(cluster->amplitudes());
+              amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+              dedx_charge = 0;
+              for (unsigned int s = 0; s < amplitudes.size(); s++) {
+                 dedx_charge+=amplitudes[s];
+              }
+              float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
+  
+              // cleaning cuts
+              std::vector<int> amplitudes2 = convert(cluster->amplitudes());
+              std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
+              bool cleaning = clusterCleaning(amplitudesPrim, 1);
+              bool dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
+
+              if (cleaning && dedx_inside)  {
+                 if (fabs(track->eta()<0.4)){
+                   tuple->SF_HHit2DStrip_loose->Fill(track->p(), charge_over_pathlength, preScaleForDeDx*EventWeight_);
+                   if ( fabs(dz) < globalMaxDZ_ && fabs(dxy) < globalMaxDXY_) 
+                     tuple->SF_HHit2DStrip->Fill(track->p(), charge_over_pathlength, preScaleForDeDx*EventWeight_);
+                 }
+              }
+           }
+           else {
+              // pixel
+              scaleFactor *= dEdxSF[1];
+              //correction de tamas
+              float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
+              scaleFactor *= pixelScaling;
+              float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
+              // BPIXL1
+              bool isBPIXL1=false;
+              if (detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) isBPIXL1=true; 
+              if (!isBPIXL1) {
+                 if (fabs(track->eta()<0.4)){
+                   tuple->SF_HHit2DPix_loose->Fill(track->p(), charge_over_pathlength, preScaleForDeDx*EventWeight_);
+                   if ( fabs(dz) < globalMaxDZ_ && fabs(dxy) < globalMaxDXY_) 
+                      tuple->SF_HHit2DPix->Fill(track->p(), charge_over_pathlength, preScaleForDeDx*EventWeight_);
+                 }
+              }
+           }
+
+      } // end dEdX loop
+
+    } // end track loop
+   } // end if selection before looping on track
+  
+
+  // end of the Calibration part
 
   tuple_maker->fillTreeBranches(tuple,
                                 trigInfo_,

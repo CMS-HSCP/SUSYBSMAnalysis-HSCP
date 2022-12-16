@@ -1316,6 +1316,46 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       Name.append(Suffix);
       tuple->CtrlPt_S4_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S4_TOF_Binned", "CtrlPt_S4_TOF_Binned", 200, -2, 7);
     }
+
+ // Calibration
+ // Scale Factors 
+    tuple->SF_HHit2DPix_loose   =  dir.make<TH2D>("SF_HHit2DPix_loose", "SF_HHit2DPix_loose",  50, 0, 100,200, 0, 20);
+    tuple->SF_HHit2DStrip_loose =  dir.make<TH2D>("SF_HHit2DStrip_loose", "SF_HHit2DStrip_loose",  50, 0, 100,200, 0, 20);
+    tuple->SF_HHit2DPix   =  dir.make<TH2D>("SF_HHit2DPix", "SF_HHit2DPix",  50, 0, 100,200, 0, 20);
+    tuple->SF_HHit2DStrip =  dir.make<TH2D>("SF_HHit2DStrip", "SF_HHit2DStrip",  50, 0, 100,200, 0, 20);
+
+  // K and C
+    tuple->K_and_C_Ih_noL1_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose1","K_and_C_Ih_noL1_VsP_loose1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose2","K_and_C_Ih_noL1_VsP_loose2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_loose1","K_and_C_Ih_noL1_VsP_eta1_loose1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_loose2","K_and_C_Ih_noL1_VsP_eta1_loose2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_loose1","K_and_C_Ih_noL1_VsP_eta2_loose1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_loose2","K_and_C_Ih_noL1_VsP_eta2_loose2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_loose1","K_and_C_Ih_strip_VsP_loose1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_loose2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_loose2","K_and_C_Ih_strip_VsP_loose2", 250,0,50, 80, 2.,10.);
+
+    tuple->K_and_C_Ih_noL1_VsP_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_1","K_and_C_Ih_noL1_VsP_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_2","K_and_C_Ih_noL1_VsP_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_1","K_and_C_Ih_noL1_VsP_eta1_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_2","K_and_C_Ih_noL1_VsP_eta1_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_1","K_and_C_Ih_noL1_VsP_eta2_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_2","K_and_C_Ih_noL1_VsP_eta2_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_1","K_and_C_Ih_strip_VsP_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_2","K_and_C_Ih_strip_VsP_2", 250,0,50, 80, 2.,10.);
+
+  // Stability
+    tuple->Stab_Ih_NoL1_VsRun    = dir.make<TH2D>("Stab_Ih_NoL1_VsRun","Ih(NoL1):Run", 545, 271000,325500, 60, 0.,15.);
+    tuple->Stab_Ih_pixNoL1_VsRun = dir.make<TH2D>("Stab_Ih_pixNoL1_VsRun","Ih(pixNoL1):Run", 545, 271000,325500, 60, 0.,15.);
+    tuple->Stab_Ih_strip_VsRun   = dir.make<TH2D>("Stab_Ih_strip_VsRun","dEdX(strip):Run", 545, 271000,325500, 60, 0.,15.);
+    tuple->Stab_Gi_strip_VsRun   = dir.make<TH2D>("Stab_Gi_strip_VsRun","Gi(strip):Run", 545, 271000,325500, 80, 0.,1.);
+    tuple->Stab_Gi_NoL1_VsRun    = dir.make<TH2D>("Stab_Gi_NoL1_VsRun", "Gi(NoL1):Run", 545, 271000,325500, 80, 0.,1.);
+    tuple->Stab_Fi_pixNoL1_VsRun = dir.make<TH2D>("Stab_Fi_pixNoL1_VsRun", "Fi(pixNoL1):Run", 545, 271000,325500, 81, 0.,1.0125);
+    tuple->Stab_invB_VsRun       = dir.make<TH2D>("Stab_invB_VsRun","invBeta:Run", 545, 271000,325500, 90,-1,2);
+    tuple->Stab_invB_DT_VsRun    = dir.make<TH2D>("Stab_invB_DT_VsRun","invBeta(DT):Run", 545, 271000,325500, 90,-1,2);
+    tuple->Stab_invB_CSC_VsRun   = dir.make<TH2D>("Stab_invB_CSC_VsRun","invBeta(CSC):Run", 545, 271000,325500, 90,-1,2);
+
+
+
   }
 
   //===================================================
