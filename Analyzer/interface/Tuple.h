@@ -372,6 +372,8 @@ struct Tuple {
   TH1F* NumEvents;
   TH1F* dRMinHLTMuon;
   TH1F* ErrorHisto;
+
+  TH1F* BefPreS_HltMatchTrackLevel;
   TH1F* BefPreS_TriggerType;
   TH1F* HSCPCandidateType;
   TH1F* BefPreS_RecoHSCParticleType;
@@ -455,8 +457,9 @@ struct Tuple {
   TH1F* BefPreS_MiniTkIso;
 
   TH1F* BefPreS_RecoPFMET;
-  TH1F* BefPreS_RecoPFHT;
-  TH1F* BefPreS_CaloNumJets;
+  TH1F* BefPreS_RecoPfHT;
+  TH1F* BefPreS_RecoPfJetsNum;
+  TH1F* BefPreS_CaloJetsNum;
 
   TH1F* BefPreS_Chi2oNdof;
   TH1F* BefPreS_Qual;
@@ -483,6 +486,7 @@ struct Tuple {
   TH1F* BefPreS_Ias;
   TH1F* BefPreS_Ias_PUA;
   TH1F* BefPreS_Ias_PUB;
+  TH1F* BefPreS_IasForStatus91;
   TH1F* BefPreS_Ih;
   TH1F* BefPreS_Ih_PUA;
   TH1F* BefPreS_Ih_PUB;
@@ -597,7 +601,16 @@ struct Tuple {
   TH2F* BefPreS_TOFVsIh;
   TH1F* BefPreS_GenBeta;
 
+  TH3F* Calibration_GiTemplate;
 
+  TH3F* Calibration_GiTemplate_PU_1;
+  TH3F* Calibration_GiTemplate_PU_2;
+  TH3F* Calibration_GiTemplate_PU_3;
+  TH3F* Calibration_GiTemplate_PU_4;
+  TH3F* Calibration_GiTemplate_PU_5;
+
+
+  TH3F* Calibration_GiTemplate_noL1;
   // Post preselection plots
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
@@ -614,7 +627,8 @@ struct Tuple {
 
   TH1F* PostPreS_RecoPFMET;
   TH1F* PostPreS_RecoPFHT;
-  TH1F* PostPreS_CaloNumJets;
+
+  TH1F* PostPreS_CaloJetsNum;
 
   TH1F* PostPreS_Chi2oNdof;
   TH2F* PostPreS_Chi2oNdofVsIas;
@@ -648,7 +662,6 @@ struct Tuple {
   TH2F* PostPreS_PtVsIas;
   TH1F* PostPreS_P;
   TH1F* PostPreS_Ias;
-  TH1F* PostPreS_Ias_CR;
   TH1F* PostPreS_Ias_NoEventWeight;
   TH1F* PostPreS_Ih;
   TH2F* PostPreS_IhVsIas;
@@ -714,18 +727,48 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsIas_highIas;
   TH2F* PostPreS_ProbXYVsProbQ;
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
-  TH1F* PostPreS_ProbQNoL1;
+
+  TH1F* PostPreS_Ias_CR;
+  TH1F* PostPreS_Ias_CR_lowPt;
   TH1F* PostPreS_ProbQNoL1_CR;
-  TH2F* PostPreS_ProbQNoL1VsIas;
   TH2F* PostPreS_ProbQNoL1VsIas_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_ProbQNoL1_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Ias_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Ias_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_down;
+
+  TH1F* PostPreS_ProbQNoL1;
+  TH2F* PostPreS_ProbQNoL1VsIas;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_up;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
+  TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
+  TH2F* PostPreS_TriggerMuon50VsBeta;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+
+
+
+  TH2F* PostPreS_TriggerMuon50VsPt;
+  TH2F* PostPreS_TriggerMETallVsBeta;
+  TH2F* PostPreS_TriggerMETallVsMet;
+
+
   TH1F* PostPreS_ProbXYNoL1;
   TH1F* PostPreS_ProbXYNoL1_highIas;
   TH2F* PostPreS_ProbXYNoL1VsIas;
@@ -734,6 +777,7 @@ struct Tuple {
   TH2F* PostPreS_ProbXYNoL1VsProbQNoL1_highIas;
   TH1F* PostPreS_MassErr;
   TH2F* PostPreS_MassErrVsIas;
+
 
   TH2F* PostPreS_EtaVsGenID;
   TH2F* PostPreS_ProbQVsGenID;
@@ -861,7 +905,6 @@ struct Tuple {
 
   TH2F* PostPreS_CluNormChargeVsStripLayer_lowBetaGamma;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma;
-  TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91;
   TH2F* PostPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2;
 
@@ -879,8 +922,9 @@ struct Tuple {
   TH1F* PostPreS_dPhiMinPfMet;
   TH2F* PostPreS_dRMinCaloJetVsIas;
   TH2F* PostPreS_dPhiMinPfMetVsIas;
-  TH1F* PostPreS_PfMet;
-  TH1F* PostPreS_PfMetPhi;
+  TH1F* PostPreS_RecoPfMet;
+  TH1F* PostPreS_RecoPfMetPhi;
+  TH1F* PostPreS_RecoPfJetsNum;
 
   // Post Selection plots
   TH2F* PostS_CutIdVsEta_RegionA;
@@ -1053,6 +1097,43 @@ struct Tuple {
   Region rD_50ias90;
   Region rD_90ias100;
 
+
+ // Calibration
+ // Scale Factors
+ TH2D* SF_HHit2DPix_loose;
+ TH2D* SF_HHit2DStrip_loose;
+ TH2D* SF_HHit2DPix;
+ TH2D* SF_HHit2DStrip;
+
+ // K and C
+ TH2D* K_and_C_Ih_noL1_VsP_loose1;
+ TH2D* K_and_C_Ih_noL1_VsP_loose2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_loose1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_loose2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_loose1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_loose2;
+ TH2D* K_and_C_Ih_strip_VsP_loose1;
+ TH2D* K_and_C_Ih_strip_VsP_loose2;
+
+ TH2D* K_and_C_Ih_noL1_VsP_1;
+ TH2D* K_and_C_Ih_noL1_VsP_2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta1_2;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_1;
+ TH2D* K_and_C_Ih_noL1_VsP_eta2_2;
+ TH2D* K_and_C_Ih_strip_VsP_1;
+ TH2D* K_and_C_Ih_strip_VsP_2;
+
+ // Stability
+ TH2D* Stab_Ih_NoL1_VsRun;
+ TH2D* Stab_Ih_pixNoL1_VsRun;
+ TH2D* Stab_Ih_strip_VsRun;
+ TH2D* Stab_Gi_strip_VsRun;
+ TH2D* Stab_Gi_NoL1_VsRun;
+ TH2D* Stab_Fi_pixNoL1_VsRun;
+ TH2D* Stab_invB_VsRun;
+ TH2D* Stab_invB_DT_VsRun;
+ TH2D* Stab_invB_CSC_VsRun;
 };
 
 #endif
