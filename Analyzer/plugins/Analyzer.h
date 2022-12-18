@@ -82,6 +82,7 @@
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -122,13 +123,13 @@
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
 
 
 
 using namespace std;
-
 class TupleMaker;
 class MCWeight;
 
@@ -181,6 +182,9 @@ public:
                      const float GenBeta,
                      float MassErr,
                      const float closestBackgroundPDGsIDs[]);
+   const reco::Candidate* findFirstMotherWithDifferentID(const reco::Candidate *particle);
+   const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
+
 
 private:
   virtual void beginJob() override;
@@ -191,7 +195,7 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<vector<susybsm::HSCParticle>> hscpToken_;
-  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_; 
+  edm::EDGetTokenT<reco::TrackCollection> genTrackToken_;
   edm::EDGetTokenT<edm::ValueMap<susybsm::HSCPIsolation>> hscpIsoToken_;
   edm::EDGetTokenT<susybsm::MuonSegmentCollection> muonSegmentToken_;
   edm::EDGetTokenT<reco::DeDxHitInfoAss> dedxToken_;
@@ -207,10 +211,33 @@ private:
   edm::EDGetTokenT<vector<reco::Track>> refittedStandAloneMuonsToken_;
   edm::EDGetTokenT<reco::BeamSpot> offlineBeamSpotToken_;
   edm::EDGetTokenT<vector<reco::Muon>> muonToken_;
+  edm::EDGetTokenT<vector<reco::Conversion> > conversionsToken_;
+  edm::EDGetTokenT<reco::GsfElectronCollection> electronToken_;
+
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_medium_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_cutbasedID_decisions_tight_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp80_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp90_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpHZZ_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpLoose_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp80_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90_Token_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose_Token_;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
+  edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
   string filterName_;
   string pathName_;
+  string triggerPathNamesFile_;
+  string muonHLTFilterNamesFile_;
+  static const int NTriggersMAX = 1201;
+  string triggerPathNames[NTriggersMAX];
+  static const int MAX_MuonHLTFilters = 69;
+  string muonHLTFilterNames[MAX_MuonHLTFilters];
+
+
   bool matchToHLTTrigger_;
   edm::EDGetTokenT<std::vector<reco::PFMET>> pfMETToken_;
   edm::EDGetTokenT<reco::PFJetCollection> pfJetToken_;
@@ -222,6 +249,18 @@ private:
   edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
   edm::EDGetTokenT<reco::PFCandidateCollection> pfCandToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genEventToken_; // for reading generator weight
+
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_medium;
+  edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_tight;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp80;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wp90;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpHZZ;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaIsoID_decisions_wpLoose;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp80;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90;
+  edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose;
 
   vector<string> trigger_met_, trigger_mu_;
 
@@ -275,19 +314,19 @@ private:
   float cutOnIPbound_ = 1.0;
   unsigned int predBins_ = 0;
   unsigned int etaBins_ = 60;
-  
+
   // Ias quantiles and pT_cut used to validate the background estimate method in data
   float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
   //float Ias_quantiles[5]={ 0.037, 0.042, 0.048, 0.056, 0.066 }; //data or signal //WIP new quantiles determined with new preselection cuts
   float pT_cut = 60;
-  
+
   // binning for eta, ih, p, mass distributions used to validate the background estimate method in data
   int reg_etabins_ = 120;
   int reg_ihbins_ = 200;
   int reg_pbins_ = 200;
   int reg_massbins_ = 50;
-  
-  
+
+
   float dEdxS_UpLim_ = 1.0;
   float dEdxM_UpLim_ = 30.0;
   unsigned int numDzRegions_ = 6;
@@ -321,7 +360,7 @@ private:
   bool useTemplateLayer_ = false;
 
   // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
-  const int MaxPredBins = 6; 
+  const int MaxPredBins = 6;
 
   //=============================================================
   Tuple* tuple;
