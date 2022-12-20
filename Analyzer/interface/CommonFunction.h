@@ -1570,9 +1570,9 @@ reco::DeDxData computedEdx(const float& track_eta,
 
     if (detid.subdetId() >= 3) {  //for strip only
       
-      if(track_eta < 1.0 && !(detid.subdetId() == 3 || detid.subdetId() == 5)) continue; // eta < 1.0 -> only TIB+TOB hits
-      if(track_eta > 1.0 && track_eta < 1.7 && !(detid.subdetId() == 3 || detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // 1.0 < eta < 1.7 -> only TIB+TID+TEC hits
-      if(track_eta > 1.7 && !(detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // eta > 1.7 -> only TID+TEC hits
+      if(fabs(track_eta) < 1.0 && !(detid.subdetId() == 3 || detid.subdetId() == 5)) continue; // eta < 1.0 -> only TIB+TOB hits
+      if(fabs(track_eta) > 1.0 && track_eta < 1.7 && !(detid.subdetId() == 3 || detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // 1.0 < eta < 1.7 -> only TIB+TID+TEC hits
+      if(fabs(track_eta) > 1.7 && !(detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // eta > 1.7 -> only TID+TEC hits
 
       SiStripDetId Sdetid(dedxHits->detId(h));
       const SiStripCluster* cluster = dedxHits->stripCluster(h);

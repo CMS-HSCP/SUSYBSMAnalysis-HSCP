@@ -11,6 +11,8 @@
 <use name="Geometry/TrackerGeometryBuilder"/>
 <use name="RecoTracker/Record"/>
 <use name="RecoTracker/TrackProducer"/>
+<use name="RecoEgamma/EgammaTools"/>
+<use name="EgammaAnalysis/ElectronTools"/>
 <use name="root"/>
 <use name="roofit"/>
 <use name="rootmath"/>
