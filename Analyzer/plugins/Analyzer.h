@@ -150,7 +150,7 @@ public:
                       vector<float>& CutI_Flip,
                       vector<float>& CutTOF_Flip);
   template <typename T, size_t n>
-  bool passPreselection(T (&passedCutsArray)[n]);
+  bool passPreselection(T (&passedCutsArray)[n], bool verbose);
 
   bool passSelection(const reco::TrackRef track,
                      const reco::DeDxData* dedxSObj,
@@ -413,6 +413,7 @@ private:
   const std::string pixelCPE_;
   const int debug_;
   const bool hasMCMatch_,calcSyst_;
+  unsigned int trigInfo_;
 
   static constexpr const char* const MOD = "Analyzer";
 
