@@ -241,13 +241,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'templateMC_2017_v2.root'
+            IasTemplate = 'template_2017MC_v2.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'templateNC_2018_v2.root'
+            IasTemplate = 'template_2018MC_v2.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
@@ -255,13 +255,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'templateMC_2017_v2.root'
+            IasTemplate = 'template_2017MC_v2.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'templateMC_2017_v2.root'
+            IasTemplate = 'template_2018MC_v2.root'
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.SampleType = SampleType
