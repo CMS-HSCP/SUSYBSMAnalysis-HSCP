@@ -41,6 +41,9 @@ public:
                         const unsigned long &Event,
                         const unsigned int &Lumi,
                         const unsigned int &PileUp,
+                        const std::vector<int>  &BunchXing,
+                        const std::vector<int>  &nPU,
+                        const std::vector<float>  &nPUmean,
                         const unsigned int &nofVertices,
                         const int &npv,
                         const std::vector<float>  &pvX,
@@ -1618,6 +1621,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Event", &tuple->Tree_Event, "Event/l");
     tuple->Tree->Branch("Lumi", &tuple->Tree_Lumi, "Lumi/i");
     tuple->Tree->Branch("PileUp", &tuple->Tree_PileUp, "PileUp/i");
+    tuple->Tree->Branch("BunchXing", &tuple->Tree_BunchXing);
+    tuple->Tree->Branch("nPU", &tuple->Tree_nPU);
+    tuple->Tree->Branch("nPUmean", &tuple->Tree_nPUmean);
+
     tuple->Tree->Branch("nofVtx", &tuple->Tree_nofVertices, "nofVtx/i");
     tuple->Tree->Branch("npv", &tuple->Tree_npv, "npv/I");
 
@@ -1971,6 +1978,9 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const unsigned long &Event,
                                   const unsigned int &Lumi,
                                   const unsigned int &PileUp,
+                                  const std::vector<int>  &BunchXing,
+                                  const std::vector<int>  &nPU,
+                                  const std::vector<float>  &nPUmean,
                                   const unsigned int &nofVertices,
                                   const int &npv,
                                   const std::vector<float>  &pvX,
@@ -2241,6 +2251,9 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Event = Event;
   tuple->Tree_Lumi = Lumi;
   tuple->Tree_PileUp = PileUp;
+  tuple->Tree_BunchXing = BunchXing;
+  tuple->Tree_nPU = nPU;
+  tuple->Tree_nPUmean = nPUmean;
   tuple->Tree_nofVertices = nofVertices;
   tuple->Tree_npv = npv;
 
