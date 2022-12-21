@@ -9,7 +9,7 @@ options = VarParsing('analysis')
 # defaults
 options.outputFile = 'Histos.root'
 # -1 means all events
-options.maxEvents = -1
+options.maxEvents = 2000 
 
 #options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
 options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
@@ -17,7 +17,7 @@ options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_0
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isBckg',
+options.register('SAMPLE', 'isSignal',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
@@ -32,8 +32,8 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-options.register('LUMITOPROCESS', '',
-#options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
+#options.register('LUMITOPROCESS', '',
+options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -76,8 +76,12 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
-   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
+#   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2560000/F6D6EB63-9383-3545-8322-893B2C166861.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
+   fileNames = cms.untracked.vstring("file:9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
+
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -85,32 +89,6 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
 process.HSCPTuplePath = cms.Path() 
-
-########################################################################
-#Run the Skim sequence if necessary
-if(not options.isSkimmedSample):
-   process.nEventsBefSkim  = cms.EDProducer("EventCountProducer")
-
-   process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
-   process.HSCPTrigger = process.hltHighLevel.clone()
-   process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLT" )
-   process.HSCPTrigger.andOr = cms.bool( True ) #OR
-   process.HSCPTrigger.throw = cms.bool( False )
-   if(options.SAMPLE=='isData'):
-      process.HSCPTrigger.HLTPaths = [ #check triggers
-          "HLT_PFMET120_PFMHT120_IDTight_v*",
-          "HLT_Mu50_v*",
-          "HLT_PFHT500_PFMET100_PFMHT100_IDTight_v*",
-          "HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v*",
-          "HLT_MET105_IsoTrk50_v*",
-      ]
-   else:
-      #do not apply trigger filter on signal
-      process.HSCPTrigger.HLTPaths = ["*"]  
-   
-   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger 
-
-########################################################################
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
@@ -126,30 +104,12 @@ if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
         filter = cms.bool(False),
         src = cms.InputTag("genParticles"),
         cut = cms.string('pt > 5.0'),
-#        stableOnly = cms.bool(True)
+        stableOnly = cms.bool(True)
    )
 
    process.HSCPTuplePath += process.genParticlesSkimmed
 
 ########################################################################
-
-from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
-electron_id_config = cms.PSet(electron_ids = cms.vstring([                   
-                    'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
-                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff',
-                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_HZZ_V1_cff',
-                    'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff',
-                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Fall17_noIso_V2_cff', 
-                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Fall17_iso_V2_cff',
-                    ]))  
-
-
-                 
-switchOnVIDElectronIdProducer(process,DataFormat.AOD)
-for idmod in electron_id_config.electron_ids.value():
-    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
-
-process.HSCPTuplePath += process.egmGsfElectronIDSequence
 
 #make the pool output
 process.Out = cms.OutputModule("PoolOutputModule",
@@ -209,7 +169,8 @@ else:
 
 # run the EDAnalyzer
 
-if options.SAMPLE == 'isData':
+
+ptions.SAMPLE == 'isData':
     SampleType = 0
     if options.YEAR == '2017':
         K = 2.3
@@ -293,6 +254,7 @@ process.HSCParticleAnalyzer.GlobalMinIh = C
 process.TFileService = cms.Service("TFileService",
                                        fileName = cms.string(options.outputFile)
                                    )
+###process.HSCParticleAnalyzer.OutputFile = 'Data_2017_UL'
 
 process.analysis = cms.Path(process.HSCParticleAnalyzer)
 
