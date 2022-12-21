@@ -781,6 +781,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     LumiScalersCollection::const_iterator scalit = lumiScalers->begin();
     pileup_fromLumi = scalit->pileup();
   }
+    std::vector<int> BunchXing;
+    std::vector<int> nPU;
+    std::vector<float> nPUmean;
+    edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
+
+    iEvent.getByToken(pileupInfoToken_,puInfo);
+
+    for(const PileupSummaryInfo &pu : *puInfo)
+   {
+     BunchXing.push_back(pu.getBunchCrossing());
+     nPU.push_back(pu.getPU_NumInteractions());
+     nPUmean.push_back(pu.getTrueNumInteractions());
+   }
+
+
+
 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
@@ -4911,6 +4927,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                 iEvent.id().event(),
                                 iEvent.id().luminosityBlock(),
                                 pileup_fromLumi,
+                                BunchXing,
+                                nPU,
+                                nPUmean,
                                 vertexColl.size(),
                                 npv,
                                 pvX,

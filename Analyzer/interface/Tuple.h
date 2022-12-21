@@ -19,6 +19,10 @@ struct Tuple {
   unsigned long Tree_Event;
   unsigned int Tree_Lumi;
   unsigned int Tree_PileUp;
+  std::vector<int> Tree_BunchXing;
+  std::vector<int> Tree_nPU;
+  std::vector<float> Tree_nPUmean;
+
   unsigned int Tree_nofVertices;
 
 
