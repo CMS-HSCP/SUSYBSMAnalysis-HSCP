@@ -32,7 +32,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 3500
-config.JobType.inputFiles = ['templateMC.root','MuonTimeOffset.txt','Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v2.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'
@@ -50,7 +50,7 @@ config.Data.ignoreLocality = True
 config.Data.runRange = '0'
 
 config.section_('Site')
-config.Site.whitelist = ['T2_DE_DESY','T2_FR_IPHC','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_CCIN2P3', 'T2_UK_London_IC']
+config.Site.whitelist = ['T2_DE_DESY','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_*', 'T2_UK_London_IC']
 config.Site.blacklist = ['T2_US_Nebraska']
 config.Site.storageSite = 'T2_HU_Budapest'
   '''

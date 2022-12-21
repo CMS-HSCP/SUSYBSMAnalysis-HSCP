@@ -32,8 +32,8 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-#options.register('LUMITOPROCESS', '',
-options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
+options.register('LUMITOPROCESS', '',
+#options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -191,54 +191,71 @@ else:
 
 # run the EDAnalyzer
 
-if options.SAMPLE=='isData' :
-   SampleType = 0
-   if options.YEAR=='2017' :
-       K = 2.30
-       C = 3.17
-       SF0 = 1.0
-       SF1 = 1.0325
-       IasTemplate = "template_2017C.root" 
-   
-   if options.YEAR=='2018' :
-       K = 2.27
-       C = 3.16
-       SF0 = 1.0
-       SF1 = 1.0817
-       IasTemplate = "template_2017C.root" #FIXME template 2018?
-    #HSCP_minPt = 55
-
-elif options.SAMPLE=='isBckg':
-   SampleType = 1
-   if options.YEAR=='2017' :
-       K = 2.26
-       C = 3.22
-       SF0 = 1.0079
-       SF1 = 1.0875
-       IasTemplate = "templateMC.root"
-    
-   if options.YEAR=='2018' :
-       K = 2.27
-       C = 3.22
-       SF0 = 1.0047
-       SF1 = 1.1429
-       IasTemplate = "templateMC.root"
-
-else :
-   SampleType = 2
-   if options.YEAR=='2017' :
-       K = 2.26
-       C = 3.22
-       SF0 = 1.0079
-       SF1 = 1.0875
-       IasTemplate = "templateMC.root"
-    
-   if options.YEAR=='2018' :
-       K = 2.27
-       C = 3.22
-       SF0 = 1.0047
-       SF1 = 1.1429
-       IasTemplate = "templateMC.root"
+if options.SAMPLE == 'isData':
+    SampleType = 0
+    if options.YEAR == '2017':
+        K = 2.3
+        C = 3.17
+        SF0 = 1.0
+        SF1 = 1.0325
+        if options.ERA == 'A':
+            IasTemplate = 'template_2017B_v2.root'
+        if options.ERA == 'B':
+            IasTemplate = 'template_2017B_v2.root'
+        if options.ERA == 'C':
+            IasTemplate = 'template_2017C_v2.root'
+        if options.ERA == 'D':
+            IasTemplate = 'template_2017D_v2.root'
+        if options.ERA == 'E':
+            IasTemplate = 'template_2017E_v2.root'
+        if options.ERA == 'F':
+            IasTemplate = 'template_2017F_v2.root'
+        if options.ERA == 'G':
+            IasTemplate = 'template_2017F_v2.root'
+        if options.ERA == 'H':
+            IasTemplate = 'template_2017F_v2.root'
+    if options.YEAR == '2018':
+        K = 2.27
+        C = 3.16
+        SF0 = 1.0
+        SF1 = 1.0817
+        if options.ERA == 'A':
+            IasTemplate = 'template_2018A_v2.root'
+        if options.ERA == 'B':
+            IasTemplate = 'template_2018B_v2.root'
+        if options.ERA == 'C':
+            IasTemplate = 'template_2018C_v2.root'
+        if options.ERA == 'D':
+            IasTemplate = 'template_2018D_v2.root'
+else:
+    if options.SAMPLE == 'isBckg':
+        SampleType = 1
+        if options.YEAR == '2017':
+            K = 2.26
+            C = 3.22
+            SF0 = 1.0079
+            SF1 = 1.0875
+            IasTemplate = 'template_2017MC_v2.root'
+        if options.YEAR == '2018':
+            K = 2.27
+            C = 3.22
+            SF0 = 1.0047
+            SF1 = 1.1429
+            IasTemplate = 'template_2018MC_v2.root'
+    else:
+        SampleType = 2
+        if options.YEAR == '2017':
+            K = 2.26
+            C = 3.22
+            SF0 = 1.0079
+            SF1 = 1.0875
+            IasTemplate = 'template_2017MC_v2.root'
+        if options.YEAR == '2018':
+            K = 2.27
+            C = 3.22
+            SF0 = 1.0047
+            SF1 = 1.1429
+            IasTemplate = 'template_2018MC_v2.root'
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
@@ -247,7 +264,7 @@ process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
-process.HSCParticleAnalyzer.Period = "2018"
+process.HSCParticleAnalyzer.Period = options.YEAR
 process.HSCParticleAnalyzer.DebugLevel = 0 
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C

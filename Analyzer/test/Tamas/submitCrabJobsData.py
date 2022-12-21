@@ -11,8 +11,8 @@ datasetList = [
 "/SingleMuon/Run2017D-15Feb2022_UL2017-v1/AOD",
 "/SingleMuon/Run2017E-15Feb2022_UL2017-v1/AOD",
 "/SingleMuon/Run2017F-15Feb2022_UL2017-v1/AOD",
-"/SingleMuon/Run2017G-15Feb2022_UL2017-v1/AOD",
-"/SingleMuon/Run2017H-15Feb2022_UL2017-v1/AOD",
+#"/SingleMuon/Run2017G-15Feb2022_UL2017-v1/AOD", # 5 TeV
+#"/SingleMuon/Run2017H-15Feb2022_UL2017-v1/AOD", # lowPU
 "/SingleMuon/Run2018A-15Feb2022_UL2018-v1/AOD",
 "/SingleMuon/Run2018B-15Feb2022_UL2018-v1/AOD", 
 "/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
@@ -107,8 +107,8 @@ for i in datasetList:
   replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v2.root/g' 4crab_toSubmit_Data.py"
   os.system(replaceGiTEMPLATE)
 
-  os.system("cp 4crab_toSubmit_Data.py submittedConfigs/"+codeVersion+"_"+EVAD+IDOSZAK+".py") 
-  #os.system("crab submit -c 4crab_toSubmit_Data.py")
+  os.system("crab submit -c 4crab_toSubmit_Data.py")
+  os.system("mv 4crab_toSubmit_Data.py submittedConfigs/"+codeVersion+"_"+EVAD+IDOSZAK+".py")
 
 
 os.system("rm 4crab_Template_Data.py")

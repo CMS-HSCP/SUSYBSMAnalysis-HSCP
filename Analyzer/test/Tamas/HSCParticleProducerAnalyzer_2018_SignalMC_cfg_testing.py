@@ -9,7 +9,7 @@ options = VarParsing('analysis')
 # defaults
 options.outputFile = 'Histos.root'
 # -1 means all events
-options.maxEvents = -1
+options.maxEvents = 2000 
 
 #options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
 options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
@@ -32,8 +32,8 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-options.register('LUMITOPROCESS', '',
-#options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
+#options.register('LUMITOPROCESS', '',
+options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -80,7 +80,7 @@ process.source = cms.Source("PoolSource",
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2560000/F6D6EB63-9383-3545-8322-893B2C166861.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
-   fileNames = cms.untracked.vstring("file:14D8FFC9-039D-5545-93F8-C3D7E4285BB6.root"),
+   fileNames = cms.untracked.vstring("file:9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
 
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
@@ -169,7 +169,8 @@ else:
 
 # run the EDAnalyzer
 
-if options.SAMPLE == 'isData':
+
+ptions.SAMPLE == 'isData':
     SampleType = 0
     if options.YEAR == '2017':
         K = 2.3
@@ -243,7 +244,7 @@ process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
 process.HSCParticleAnalyzer.Period = options.YEAR
-process.HSCParticleAnalyzer.DebugLevel = 6 
+process.HSCParticleAnalyzer.DebugLevel = 0 
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C
 process.HSCParticleAnalyzer.DeDxSF_0 = SF0
