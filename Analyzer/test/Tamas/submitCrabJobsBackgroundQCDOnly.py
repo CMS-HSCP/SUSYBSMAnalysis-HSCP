@@ -37,7 +37,7 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
-config.JobType.maxMemoryMB = 3500
+config.JobType.maxMemoryMB = 4000
 config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v2.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 
 config.section_('Data')
