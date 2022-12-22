@@ -951,7 +951,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
   tuple->PostPreS_PtVsIas = dir.make<TH2F>("PostPreS_PtVsIas",";p_{T};G_{i}^{strips};Tracks / 80 GeV", 50, 0, PtHistoUpperBound, 20, 0., 1.);
   tuple->PostPreS_Ias_CR = dir.make<TH1F>("PostPreS_Ias_CR", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
-  tuple->PostPreS_Ias_CR_lowPt = dir.make<TH1F>("PostPreS_Ias_CR_lowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
+  tuple->PostPreS_Pt_lowPt_CR = dir.make<TH1F>("PostPreS_Pt_lowPt_CR", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
+  tuple->PostPreS_Ias_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ias_CR_veryLowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
+  tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
   tuple->PostPreS_Ias_NoEventWeight = dir.make<TH1F>("PostPreS_Ias_NoEventWeight", ";G_{i}^{strips} (NoEventWeight);Tracks / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostPreS_Ih = dir.make<TH1F>("PostPreS_Ih", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
   tuple->PostPreS_IhVsIas = dir.make<TH2F>("PostPreS_IhVsIas",";I_{h} (MeV/cm);G_{i}^{strips}",200, 0, dEdxM_UpLim, 20, 0.,1.);
@@ -1624,7 +1626,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("BunchXing", &tuple->Tree_BunchXing);
     tuple->Tree->Branch("nPU", &tuple->Tree_nPU);
     tuple->Tree->Branch("nPUmean", &tuple->Tree_nPUmean);
-
     tuple->Tree->Branch("nofVtx", &tuple->Tree_nofVertices, "nofVtx/i");
     tuple->Tree->Branch("npv", &tuple->Tree_npv, "npv/I");
 

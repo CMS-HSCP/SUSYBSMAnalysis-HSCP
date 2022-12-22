@@ -70,7 +70,7 @@ process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.options   = cms.untracked.PSet(
-      wantSummary = cms.untracked.bool(True),
+#      wantSummary = cms.untracked.bool(True),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 

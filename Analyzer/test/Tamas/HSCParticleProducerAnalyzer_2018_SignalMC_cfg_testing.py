@@ -70,7 +70,7 @@ process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.options   = cms.untracked.PSet(
-      wantSummary = cms.untracked.bool(True),
+#      wantSummary = cms.untracked.bool(True),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
@@ -166,11 +166,28 @@ else:
 
 
 ########################################################################
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+electron_id_config = cms.PSet(electron_ids = cms.vstring([                   
+                    'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_HZZ_V1_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Fall17_noIso_V2_cff', 
+                    'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Fall17_iso_V2_cff',
+                    ]))  
+
+
+                 
+switchOnVIDElectronIdProducer(process,DataFormat.AOD)
+for idmod in electron_id_config.electron_ids.value():
+    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
+process.HSCPTuplePath += process.egmGsfElectronIDSequence
 
 # run the EDAnalyzer
 
 
-ptions.SAMPLE == 'isData':
+if options.SAMPLE == 'isData':
     SampleType = 0
     if options.YEAR == '2017':
         K = 2.3

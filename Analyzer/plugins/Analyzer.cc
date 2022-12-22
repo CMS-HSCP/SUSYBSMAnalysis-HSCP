@@ -781,21 +781,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     LumiScalersCollection::const_iterator scalit = lumiScalers->begin();
     pileup_fromLumi = scalit->pileup();
   }
-    std::vector<int> BunchXing;
-    std::vector<int> nPU;
-    std::vector<float> nPUmean;
-    edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
+  
+  std::vector<int> bunchXing;
+  std::vector<int> nPU;
+  std::vector<float> nPUmean;
+  edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
 
-    iEvent.getByToken(pileupInfoToken_,puInfo);
+  iEvent.getByToken(pileupInfoToken_,puInfo);
 
-    for(const PileupSummaryInfo &pu : *puInfo)
-   {
-     BunchXing.push_back(pu.getBunchCrossing());
-     nPU.push_back(pu.getPU_NumInteractions());
-     nPUmean.push_back(pu.getTrueNumInteractions());
-   }
-
-
+  for(const PileupSummaryInfo &pu : *puInfo) {
+       bunchXing.push_back(pu.getBunchCrossing());
+       nPU.push_back(pu.getPU_NumInteractions());
+       nPUmean.push_back(pu.getTrueNumInteractions());
+  }
 
 
   // Collection for vertices
@@ -3224,6 +3222,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "\n      >> Check if we pass Preselection for CR";
     if (passPreselection(passedCutsArrayForCR, false)) {
       tuple->PostPreS_Ias_CR->Fill(globalIas_, EventWeight_);
+      tuple->PostPreS_Pt_lowPt_CR->Fill(track->pt(), EventWeight_);
       tuple->PostPreS_ProbQNoL1_CR->Fill(1 - probQonTrackNoL1, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
@@ -3247,12 +3246,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     passedCutsArrayForGiTemplates[10] = true; //miniIso
     //[11] is TrackerIso > 15
     passedCutsArrayForGiTemplates[12] = true; //EoP
-    passedCutsArrayForGiTemplates[13] = true; //sigma pt / pt cut
+    passedCutsArrayForGiTemplates[13] = true; //sigma pt / pt2 cut
     passedCutsArrayForGiTemplates[14] = true; //ProbQ cut
 
     // PAY ATTENTION : PU == NPV for the following loop !
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
-      tuple->PostPreS_Ias_CR_lowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_);
+      tuple->PostPreS_Ias_CR_veryLowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_);
       for(unsigned int h=0; h< dedxHits->size(); h++){
         DetId detid(dedxHits->detId(h));
         int modulgeomForIndxH = 0;
@@ -4927,7 +4926,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                 iEvent.id().event(),
                                 iEvent.id().luminosityBlock(),
                                 pileup_fromLumi,
-                                BunchXing,
+                                bunchXing,
                                 nPU,
                                 nPUmean,
                                 vertexColl.size(),
