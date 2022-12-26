@@ -34,6 +34,7 @@
 // - 42p5: Back to 42p5:
 // - 32p0: Technical run, after PR75 is merged
 // - 42p6: Adding Calibration plot, adding templates, adding electrons collection to the ntuple
+// - 42p7: Add Gen_BetaGamma_lowBetaGamma, fix BefPreS HSCP type axis, add BefTrig plots, add per eta, per beta trigger systs
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -447,6 +448,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->Gen_Eta->Fill(gen.eta(), SignalEventWeight);
         tuple->Gen_Beta->Fill(gen.p() / gen.energy(), SignalEventWeight);
         tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
+        tuple->Gen_BetaGamma_lowBetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
 
         // Variables for the tuple gen tree branch
         genid.push_back(gen.pdgId());
@@ -461,6 +463,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->Gen_Eta->Fill(gen.eta(), EventWeight_);
         tuple->Gen_Beta->Fill(gen.p() / gen.energy(), EventWeight_);
         tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass(), EventWeight_);
+        tuple->Gen_BetaGamma_lowBetaGamma->Fill(gen.p() / gen.mass(), EventWeight_);
 
         // Variables for the tuple gen tree branch
         genid.push_back(gen.pdgId());
@@ -787,14 +790,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> nPUmean;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
 
-  iEvent.getByToken(pileupInfoToken_,puInfo);
-
-  for(const PileupSummaryInfo &pu : *puInfo) {
-       bunchXing.push_back(pu.getBunchCrossing());
-       nPU.push_back(pu.getPU_NumInteractions());
-       nPUmean.push_back(pu.getTrueNumInteractions());
+  if (!isData) {
+    iEvent.getByToken(pileupInfoToken_,puInfo);
+    for(const PileupSummaryInfo &pu : *puInfo) {
+         bunchXing.push_back(pu.getBunchCrossing());
+         nPU.push_back(pu.getPU_NumInteractions());
+         nPUmean.push_back(pu.getTrueNumInteractions());
+    }
   }
-
 
   // Collection for vertices
   vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
@@ -1443,6 +1446,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   float bestCandidateIas = -1.;
   float bestCandidateProbQNoL1 = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
+  float bestCandidateGenBeta = -1.;
   unsigned int bestSoFarCandCutInd = 0;
   bool passTechnicalChecks = false;
   
@@ -2757,6 +2761,13 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     const GlobalPoint outerHit = getOuterHitPos(iSetup, dedxHits);
     const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
     const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
+    
+    bool doBefTrigPlots = true;
+    if (doBefTrigPlots) {
+      tuple->BefTrig_Ih->Fill(globalIh_, EventWeight_);
+      tuple->BefTrig_ProbQNoL1->Fill(1 - probQonTrackNoL1, EventWeight_);
+      tuple->BefTrig_Ias->Fill(globalIas_, EventWeight_);
+    }
 
     bool doBefPreSplots = true;
     // Before pre-selection, after trigger plots
@@ -3812,6 +3823,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bestCandidateIas = globalIas_;
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hlt_muon;
+        bestCandidateGenBeta = genBeta;
       }
     }
 
@@ -4627,8 +4639,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
     
     // Systematics plots for trigger rescaling
-    tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
-    tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
+    float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
+    float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
+
+    tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
+    tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     
     if (bestCandidateTrack->pt() >= globalMinPt_ && bestCandidateTrack->pt() < 100) {
       tuple->PostS_SR1_Ias->Fill(bestCandidateIas, EventWeight_);
@@ -4656,8 +4671,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
       
         // Systematics plots for trigger rescaling
-      tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
-      tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
+      tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
+      tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
     // Repeat for several SRs
     if (bestCandidateTrack->pt() >= 100 && bestCandidateTrack->pt() < 200) {
@@ -4686,8 +4701,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
       
       // Systematics plots for trigger rescaling
-      tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
-      tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
+      tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
+      tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
     if (bestCandidateTrack->pt() >= 200) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
@@ -4715,8 +4730,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
       
       // Systematics plots for trigger rescaling
-      tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * 1.03);
-      tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * 0.97);
+      tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
+      tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
   } // end of "loop" on the single best HSCP candidate
   
@@ -5605,9 +5620,7 @@ void Analyzer::initializeCuts(edm::Service<TFileService>& fs,
 }
 
 //=============================================================
-//
 //     Method for scaling eta Vs bin
-//
 //=============================================================
 float Analyzer::scaleFactor(float eta) {
   float etaBins[15] = {-2.1, -1.8, -1.5, -1.2, -0.9, -0.6, -0.3, 0.0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1};
@@ -5618,10 +5631,66 @@ float Analyzer::scaleFactor(float eta) {
   return 0;
 }
 
+//======================================================================
+//     Method for returning eta and beta dependent trigger syst factors
+//======================================================================
+float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
+  float betaBins[17] = {0.06, 0.12, 0.17, 0.23, 0.28, 0.34, 0.39, 0.45, 0.5, 0.56, 0.61, 0.67, 0.72, 0.78, 0.83, 0.89, 1};
+  if (syst > 0) {
+    // Up systematics
+    if (fabs(eta) < 0.3) {
+      float scaleBins[17] = {0.0,0.98,1.04,0.98,1.02,0.98,1.01,0.97,1.11,1.05,1.0,0.98,0.99,0.96,1.0,1.05,0.94};
+      for (int i = 0; i < 17; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 0.6) {
+      float scaleBins[17] = {0.0,0.99,1.0,0.99,1.0,1.0,1.01,1.01,1.04,1.06,1.07,0.98,0.97,0.99,1.0,0.96,1.01};
+      for (int i = 0; i < 17; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else {
+      float scaleBins[17] = {0.0,0.99,0.9,1.01,1.04,1.01,1.02,0.99,0.97,1.13,1.08,1.1,0.96,0.95,0.98,0.98,0.98};
+      for (int i = 0; i < 17; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    }
+  } else {
+    // Down systematics
+    if (fabs(eta) < 0.3) {
+      float scaleBins[17] = {0,0.49,0.98,0.97,0.93,1.01,1.02,0.97,0.96,0.73,0.78,0.86,0.93,0.95,0.97,1.06,};
+      for (int i = 0; i < 17; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 0.6) {
+      float scaleBins[17] = {0.0,1.73,0.9,1.18,1.1,0.86,1.07,0.95,0.98,0.79,0.7,0.77,0.88,0.98,1.0,0.99,1.02};
+      for (int i = 0; i < 17; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else {
+      float scaleBins[17] = {0.0,0.0,0.95,1.1,0.81,1.11,1.14,0.95,0.99,0.95,0.79,0.7,0.73,0.86,0.96,1.0,0.99};
+      for (int i = 0; i < 17; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+
 //=============================================================
-//
 //     Method for rescaling pT
-//
 //=============================================================
 // with the new method, no need to pass phi and charge
 float Analyzer::shiftForPt(const float& pt, const float& eta, const float& phi, const int& charge) {

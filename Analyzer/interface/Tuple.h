@@ -410,6 +410,11 @@ struct Tuple {
   TH1F* Gen_Eta;
   TH1F* Gen_Beta;
   TH1F* Gen_BetaGamma;
+  TH1F* Gen_BetaGamma_lowBetaGamma;
+  
+  TH1F* BefTrig_Ih;
+  TH1F* BefTrig_ProbQNoL1;
+  TH1F* BefTrig_Ias;
 
   TH1F* BefPreS_MassT;
   TH1F* BefPreS_MassT_highMassT;
