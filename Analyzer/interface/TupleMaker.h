@@ -641,17 +641,23 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Gen_Beta_Triggered = dir.make<TH1F>("Beta_Triggered", ";#beta (Triggered);Gen candidate / 0.05", 20, 0, 1);
 
   tuple->Gen_Binning = dir.make<TH1F>("Gen_Binning", ";Gen_Binning",1200,0.,1200.);
-  tuple->Gen_pT = dir.make<TH1F>("Gen_pT", ";Generator candidate p_{T} (GeV);Gen candidate / x GeV", 50, 0, PtHistoUpperBound);
+  tuple->Gen_pT = dir.make<TH1F>("Gen_pT", ";Generator candidate p_{T} (GeV);Gen candidate / 80 GeV", 50, 0, PtHistoUpperBound);
   tuple->Gen_Eta = dir.make<TH1F>("Gen_Eta", ";Generator candidate #eta;Gen candidate / 0.05", 52, -2.6, 2.6);
   tuple->Gen_Beta = dir.make<TH1F>("Gen_Beta", ";Generator candidate #beta;Gen candidate / 0.05", 20, 0., 1.);
   tuple->Gen_BetaGamma = dir.make<TH1F>("Gen_BetaGamma", ";Generator candidate #beta #gamma;Gen canidate/ 0.1",4500,0.,450.);
+  tuple->Gen_BetaGamma_lowBetaGamma = dir.make<TH1F>("Gen_BetaGamma_lowBetaGamma", ";Generator candidate #beta #gamma;Gen canidate/ 0.1",100,0.,10.);
+  
+  tuple->BefTrig_Ih = dir.make<TH1F>("BefTrig_Ih", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
+  tuple->BefTrig_ProbQNoL1 = dir.make<TH1F>("BefTrig_ProbQNoL1", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
+  tuple->BefTrig_Ias = dir.make<TH1F>("BefTrig_Ias", ";F_{i}^{pixels};Tracks / bin", 100, 0, 1);
 
   tuple->BefPreS_HSCPCandidateType = dir.make<TH1F>("BefPreS_HSCPCandidateType", ";;Number of generator candidate / category", 6, -0.5, 5.5);
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(1,"Neutral HSCP");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(2,"Single-charged");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(3,"Double-charged R-hadrons");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Tau-prime (1e or 2e)");
-  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Else");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(1,"All candidates");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(2,"Neutral HSCP");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(3,"Single-charged");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(4,"Double-charged R-hadrons");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(5,"Tau-prime (1e or 2e)");
+  tuple->BefPreS_HSCPCandidateType->GetXaxis()->SetBinLabel(6,"Else");
   
   tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
   tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
@@ -695,7 +701,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_MiniRelIsoChg = dir.make<TH1F>("BefPreS_MiniRelIsoChg", ";MiniRelIsoChg;Tracks / 0.01",  150, 0.0, 1.5);
   tuple->BefPreS_MiniRelTkIso = dir.make<TH1F>("BefPreS_MiniRelTkIso", ";MiniRelTkIso;Tracks / 0.01",  150, 0.0, 1.5);
   tuple->BefPreS_MiniTkIso = dir.make<TH1F>("BefPreS_MiniTkIso", ";MiniTkIso;Tracks / 0.05",  100, 0.0, 50);
-
+  
   tuple->BefPreS_RecoPFMET = dir.make<TH1F>("BefPreS_RecoPFMET", ";RecoPFMET (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
   tuple->BefPreS_RecoPfHT = dir.make<TH1F>("BefPreS_RecoPfHT", ";RecoPFHT (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
   tuple->BefPreS_RecoPfJetsNum = dir.make<TH1F>("BefPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / 1",  16, -0.5, 15.5);
@@ -951,7 +957,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
   tuple->PostPreS_PtVsIas = dir.make<TH2F>("PostPreS_PtVsIas",";p_{T};G_{i}^{strips};Tracks / 80 GeV", 50, 0, PtHistoUpperBound, 20, 0., 1.);
   tuple->PostPreS_Ias_CR = dir.make<TH1F>("PostPreS_Ias_CR", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
-  tuple->PostPreS_Ias_CR_lowPt = dir.make<TH1F>("PostPreS_Ias_CR_lowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
+  tuple->PostPreS_Pt_lowPt_CR = dir.make<TH1F>("PostPreS_Pt_lowPt_CR", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
+  tuple->PostPreS_Ias_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ias_CR_veryLowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
+  tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
   tuple->PostPreS_Ias_NoEventWeight = dir.make<TH1F>("PostPreS_Ias_NoEventWeight", ";G_{i}^{strips} (NoEventWeight);Tracks / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostPreS_Ih = dir.make<TH1F>("PostPreS_Ih", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
   tuple->PostPreS_IhVsIas = dir.make<TH2F>("PostPreS_IhVsIas",";I_{h} (MeV/cm);G_{i}^{strips}",200, 0, dEdxM_UpLim, 20, 0.,1.);
@@ -1045,20 +1053,20 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_ProbQNoL1VsIas_Pt_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
   tuple->PostPreS_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
-  tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
+  tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
 
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaB = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaB", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaC = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
-  tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaB = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaB", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaC = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+  tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
 
   tuple->PostPreS_TriggerMuon50VsPt = dir.make<TH2F>("PostPreS_TriggerMuon50VsPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,1000.05);
-  tuple->PostPreS_TriggerMETallVsBeta = dir.make<TH2F>("PostPreS_TriggerMETallVsBeta", ";OR of MET triggered;Gen #beta;Tracks / bin",2,-.5,1.5,40,-0.05,1.05);
+  tuple->PostPreS_TriggerMETallVsBeta = dir.make<TH2F>("PostPreS_TriggerMETallVsBeta", ";OR of MET triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
   tuple->PostPreS_TriggerMETallVsMet = dir.make<TH2F>("PostPreS_TriggerMETallVsMet", ";OR of MET triggered;MET (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
   tuple->PostPreS_TriggerMETallVsHT = dir.make<TH2F>("PostPreS_TriggerMETallVsHT", ";OR of MET triggered;H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
   tuple->PostPreS_TriggerMETallVsMetOverHt = dir.make<TH2F>("PostPreS_TriggerMETallVsMetOverHt", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
@@ -1624,7 +1632,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("BunchXing", &tuple->Tree_BunchXing);
     tuple->Tree->Branch("nPU", &tuple->Tree_nPU);
     tuple->Tree->Branch("nPUmean", &tuple->Tree_nPUmean);
-
     tuple->Tree->Branch("nofVtx", &tuple->Tree_nofVertices, "nofVtx/i");
     tuple->Tree->Branch("npv", &tuple->Tree_npv, "npv/I");
 

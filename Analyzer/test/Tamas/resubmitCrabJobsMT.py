@@ -15,7 +15,7 @@ for fname in os.listdir("crab_projects") :
     datasetList.append("crab_projects/"+fname)
 
 def task(i):
-  outTask = "crab resubmit -d "+i+""
+  outTask = "crab resubmit -d "+i+" --maxmemory 4000"
   os.system(outTask)
 
 for dataset in datasetList:

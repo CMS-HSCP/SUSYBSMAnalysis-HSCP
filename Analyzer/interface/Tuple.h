@@ -22,7 +22,6 @@ struct Tuple {
   std::vector<int> Tree_BunchXing;
   std::vector<int> Tree_nPU;
   std::vector<float> Tree_nPUmean;
-
   unsigned int Tree_nofVertices;
 
 
@@ -411,6 +410,11 @@ struct Tuple {
   TH1F* Gen_Eta;
   TH1F* Gen_Beta;
   TH1F* Gen_BetaGamma;
+  TH1F* Gen_BetaGamma_lowBetaGamma;
+  
+  TH1F* BefTrig_Ih;
+  TH1F* BefTrig_ProbQNoL1;
+  TH1F* BefTrig_Ias;
 
   TH1F* BefPreS_MassT;
   TH1F* BefPreS_MassT_highMassT;
@@ -701,7 +705,8 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
 
   TH1F* PostPreS_Ias_CR;
-  TH1F* PostPreS_Ias_CR_lowPt;
+  TH1F* PostPreS_Pt_lowPt_CR;
+  TH1F* PostPreS_Ias_CR_veryLowPt;
   TH1F* PostPreS_ProbQNoL1_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;

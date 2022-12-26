@@ -141,6 +141,7 @@ public:
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
   float scaleFactor(float eta);
+  float triggerSystFactor(float eta, float beta, int syst);
 
   void initializeCuts(edm::Service<TFileService>& fs,
                       vector<float>& CutPt,
