@@ -400,6 +400,7 @@ private:
 
   TRandom3* RNG = nullptr;
   TRandom3* RNG2 = nullptr;
+  TRandom3* RNG3 = nullptr;
   bool is2016;
   bool is2016G;
 
