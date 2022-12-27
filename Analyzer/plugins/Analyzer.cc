@@ -35,7 +35,7 @@
 // - 32p0: Technical run, after PR75 is merged
 // - 42p6: Adding Calibration plot, adding templates, adding electrons collection to the ntuple
 // - 42p7: Add Gen_BetaGamma_lowBetaGamma, fix BefPreS HSCP type axis, add BefTrig plots, add per eta, per beta trigger systs,
-//         unify vertex handling (use highest sum pt one),
+//         unify vertex handling (use highest sum pt one), add Gi smearing
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -2001,6 +2001,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     if (!isData && candidateEnvHasStatus91) {
       if (trigInfo_ > 0) {
         tuple->BefPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
+        // Has status 91 around
         tuple->ErrorHisto->Fill(8.);
       }
       ErrorHisto_bin = 8;
@@ -3231,7 +3232,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     // PAY ATTENTION : PU == NPV for the following loop !
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
       tuple->PostPreS_Ias_CR_veryLowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_);
-      for(unsigned int h=0; h< dedxHits->size(); h++){
+      for(unsigned int h=0; h< dedxHits->size(); h++) {
         DetId detid(dedxHits->detId(h));
         int modulgeomForIndxH = 0;
         float pathlenghtForIndxH = 0.0;
@@ -3303,7 +3304,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     unsigned int passedCutsArraySize = sizeof(passedCutsArray);
     if (globalIas_ > 0.25 && probQonTrackNoL1 < 0.1 && passPre) {
       tuple->CutFlow->Fill(passedCutsArraySize + 2, EventWeight_);
-      if (track->pt() > 100) {
+      if (track->pt() > 100 && track->pt() < 200) {
         tuple->CutFlow->Fill(passedCutsArraySize+ 3, EventWeight_);
       } if (track->pt() > 200) {
         tuple->CutFlow->Fill(passedCutsArraySize + 4, EventWeight_);
@@ -4594,14 +4595,19 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     }
     
     // Systematics plots for Gi rescaling
-    tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
-    tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
+    RNG3 = new TRandom3(long(time(NULL)));
+    float theGiSystFactorUp =  std::max((double)1, RNG3->Gaus(1,1.02));
+    float theGiSystFactorDown =  std::max((double)0, std::min((double)1, RNG3->Gaus(1,1.02)));
+    tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
+    tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
     
     // Systematics plots for PU rescaling
     tuple->PostS_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
     tuple->PostS_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
     
     // Systematics plots for Fi rescaling
+    //float theFiSystFactorUp = 1.005;
+    //float theFiSystFactorDown = 0.995;
     tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
     tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
     
@@ -4626,8 +4632,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       
         // Systematics plots for Gi rescaling
-      tuple->PostS_SR1_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
-      tuple->PostS_SR1_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
+      tuple->PostS_SR1_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
+      tuple->PostS_SR1_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
       
         // Systematics plots for PU rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
@@ -4656,8 +4662,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       
       // Systematics plots for Gi rescaling
-      tuple->PostS_SR2_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
-      tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
+      tuple->PostS_SR2_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
+      tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
       
       // Systematics plots for PU rescaling
       tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
@@ -4685,8 +4691,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       
       // Systematics plots for Gi rescaling
-      tuple->PostS_SR3_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.0,bestCandidateIas*1.05),  EventWeight_);
-      tuple->PostS_SR3_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*0.95,  EventWeight_);
+      tuple->PostS_SR3_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
+      tuple->PostS_SR3_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
       
       // Systematics plots for PU rescaling
       tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
@@ -5205,6 +5211,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 void Analyzer::endJob() {
   delete RNG;
   delete RNG2;
+  delete RNG3;
   delete tuple;
   if (!isData) {
     delete mcWeight;
