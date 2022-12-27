@@ -223,8 +223,6 @@ struct Tuple {
   std::vector<float> Tree_MassErr;
   std::vector<float> Tree_dZ;
   std::vector<float> Tree_dXY;
-  std::vector<float> Tree_dZ_pv;
-  std::vector<float> Tree_dXY_pv;
   std::vector<float> Tree_dR;
   std::vector<float> Tree_p;
   std::vector<float> Tree_eta;
@@ -469,10 +467,6 @@ struct Tuple {
   TH1F* BefPreS_NVertex_NoEventWeight;
   TH1F* BefPreS_PV;
   TH1F* BefPreS_PV_NoEventWeight;
-  TH1F* BefPreS_DzAll;
-  TH1F* BefPreS_dxyAll;
-  TH1F* BefPreS_DzMinv3d;
-  TH1F* BefPreS_dxyMinv3d;
   TH1F* BefPreS_SegSep;
   TH1F* BefPreS_SegMinPhiSep;
   TH1F* BefPreS_SegMinEtaSep;
@@ -655,8 +649,6 @@ struct Tuple {
   TH1F* PostPreS_NVertex_NoEventWeight;
   TH1F* PostPreS_PV;
   TH1F* PostPreS_PV_NoEventWeight;
-  TH1F* PostPreS_DzAll;
-  TH1F* PostPreS_dxyAll;
   TH1F* PostPreS_Dz;
   TH2F* PostPreS_DzVsIas;
   TH2F* PostPreS_DzVsGenID;

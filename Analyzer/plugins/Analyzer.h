@@ -293,10 +293,6 @@ private:
   const reco::MuonTimeExtra* dttof;
   const reco::MuonTimeExtra* csctof;
 
-  float TreeprobQonTrack = -1;
-  float TreeprobQonTracknoL1 = -1;
-  float TreeprobXYonTrack = -1;
-  float TreeprobXYonTracknoL1 = -1;
   bool isCosmicSB = false;
   bool isSemiCosmicSB = false;
 

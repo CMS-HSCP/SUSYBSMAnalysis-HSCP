@@ -240,8 +240,6 @@ public:
                         const std::vector<float> &MassErr,
                         const std::vector<float> &dZ,
                         const std::vector<float> &dXY,
-                        const std::vector<float> &dZ_pv,
-                        const std::vector<float> &dXY_pv,
                         const std::vector<float> &dR,
                         const std::vector<float> &p,
                         const std::vector<float> &eta,
@@ -254,7 +252,6 @@ public:
                         const std::vector<unsigned int> &nom,
                         const std::vector<float> &matchTrigMuon_minDeltaR,
                         const std::vector<float> &matchTrigMuon_pT,
-
                         const std::vector<float> &iso_TK,
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
@@ -772,8 +769,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->BefPreS_PV_NoEventWeight = dir.make<TH1F>("BefPreS_PV_NoEventWeight", ";N_{PV} (NoEventWeight);Tracks / 1", 60, -0.5, 59.5);
   tuple->BefPreS_NOMoNOH = dir.make<TH1F>("BefPreS_NOMoNOH", ";Num of measurment / num of hits;Tracks / bin",10,0.,1.0);
   tuple->BefPreS_NOMoNOHvsPV = dir.make<TProfile>("BefPreS_NOMoNOHvsPV", ";NOMoNOHvsPV;Tracks / bin", 60, 0, 60);
-  tuple->BefPreS_DzAll = dir.make<TH1F>("BefPreS_DzAll", ";d_{z,all} (cm);Tracks / 0.1 cm", 200, -10, 10);
-  tuple->BefPreS_dxyAll = dir.make<TH1F>("BefPreS_dxyAll", ";d_{xy,all} (cm);Tracks / 0.002 cm", 200, -0.2, 0.2);
   tuple->BefPreS_Dz = dir.make<TH1F>("BefPreS_Dz",";d_{z} (cm);Tracks / 0.003 cm", 200, -0.3, 0.3);
   tuple->BefPreS_Dxy = dir.make<TH1F>("BefPreS_Dxy","d_{xy} (cm);Tracks / 0.001 cm", 200, -0.1, 0.1);
 
@@ -990,8 +985,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostPreS_PV_NoEventWeight = dir.make<TH1F>("PostPreS_PV_NoEventWeight", ";PV_NoEventWeight;Tracks / bin", 60, 0, 60);
   tuple->PostPreS_NOMoNOH = dir.make<TH1F>("PostPreS_NOMoNOH", ";Num of measurment / num of hits;Tracks / bin",10,0.,1.0);
   tuple->PostPreS_NOMoNOHvsPV = dir.make<TProfile>("PostPreS_NOMoNOHvsPV", ";NOMoNOHvsPV", 60, 0, 60);
-  tuple->PostPreS_DzAll = dir.make<TH1F>("PostPreS_DzAll", ";dzAll;Tracks / 0.1 cm", 200, -10, 10);
-  tuple->PostPreS_dxyAll = dir.make<TH1F>("PostPreS_dxyAll", ";dxyAll;Tracks / 0.001 cm", 200, -0.2, 0.2);
   tuple->PostPreS_Dz = dir.make<TH1F>( "PostPreS_Dz", ";d_{z} (cm);Tracks / 0.003 cm", 200, -0.3, 0.3);
   tuple->PostPreS_DzVsIas = dir.make<TH2F>( "PostPreS_DzVsIas", ";d_{z} (cm);G_{i}^{strips};Tracks", 200, -0.3, 0.3, 20, 0.0, 1.0);
   tuple->PostPreS_DzVsGenID = dir.make<TH2F>( "PostPreS_DzVsGenID", ";d_{z} (cm);GenID;Tracks", 200, -0.3, 0.3, 4000, 0.0, 4000.0);
@@ -1849,8 +1842,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("MassErr", &tuple->Tree_MassErr);
     tuple->Tree->Branch("dZ", &tuple->Tree_dZ);
     tuple->Tree->Branch("dXY", &tuple->Tree_dXY);
-    tuple->Tree->Branch("dZ_pv", &tuple->Tree_dZ_pv);
-    tuple->Tree->Branch("dXY_pv", &tuple->Tree_dXY_pv);
     tuple->Tree->Branch("dR", &tuple->Tree_dR);
     tuple->Tree->Branch("p", &tuple->Tree_p);
     tuple->Tree->Branch("eta", &tuple->Tree_eta);
@@ -2183,8 +2174,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &MassErr,
                                   const std::vector<float> &dZ,
                                   const std::vector<float> &dXY,
-                                  const std::vector<float> &dZ_pv,
-                                  const std::vector<float> &dXY_pv,
                                   const std::vector<float> &dR,
                                   const std::vector<float> &p,
                                   const std::vector<float> &eta,
@@ -2468,8 +2457,6 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_MassErr = MassErr;
   tuple->Tree_dZ = dZ;
   tuple->Tree_dXY = dXY;
-  tuple->Tree_dZ_pv = dZ_pv;
-  tuple->Tree_dXY_pv = dXY_pv;
   tuple->Tree_dR = dR;
   tuple->Tree_p = p;
   tuple->Tree_eta = eta;
