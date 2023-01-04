@@ -17,8 +17,6 @@ for fname in os.listdir("crab_projects") :
 def task(i):
   haddTask = "hadd "+i[(i.find('crab_projects'))+14:]+".root "+i[(i.find('crab_projects')):]+"/results/*root"
   os.system(haddTask)
-  backgroundPred = "BackgroundPrediction -f "+i[(i.find('crab_projects'))+14:]+".root"
-  #os.system(backgroundPred)
 
 for dataset in datasetList:
   t = Thread(target=task, args=(dataset,))
