@@ -36,6 +36,8 @@
 // - 42p6: Adding Calibration plot, adding templates, adding electrons collection to the ntuple
 // - 42p7: Add Gen_BetaGamma_lowBetaGamma, fix BefPreS HSCP type axis, add BefTrig plots, add per eta, per beta trigger systs,
 //         unify vertex handling (use highest sum pt one), add Gi smearing
+// - 42p8: BefTrig trigger turnon plot, possibility to have Phase-0 data, cut on muon pt to be > 50 GeV in the trigger selection
+// - 32p0: Like 42p8, but exit when MC match now found (exitWhenGenMatchNotFound)
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -672,6 +674,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
       if (mu->isStandAloneMuon() && !mu->isGlobalMuon())  continue;
+      if (mu->pt() < 50) continue;
       
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       if (dr_hltmu_muon < dr_min_hlt_muon_inEvent){
@@ -688,7 +691,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     matchedMuonWasFound = true;
     tuple->NumEvents->Fill(3., EventWeight_);
   }
-
+  
   // Check if the event is passing trigger
   if (debug_ > 1) LogPrint(MOD) << "\nChecking if the LS " << iEvent.id().luminosityBlock() <<  " / event " << iEvent.id().event() << "  is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
@@ -1615,6 +1618,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (debug_> 0 && trigInfo_ > 0) cout << endl;
     }
     
+    // should be conf from config
+    bool exitWhenGenMatchNotFound = true; //TODO: should be false by default
     if (!isData && closestGenIndex < 0 ) {
       if (debug_ > 4 && trigInfo_ > 0) {
         LogPrint(MOD) << "min dr: " << dRMinGen << endl;
@@ -1625,6 +1630,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(4.);
       }
+      if (exitWhenGenMatchNotFound) continue;
     }
     
     int genPdgId =  (closestGenIndex > 0) ?  genColl[closestGenIndex].pdgId() : 0;
@@ -1642,12 +1648,16 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->BefPreS_GendRMin->Fill(dRMinGen);
       tuple->BefPreS_GenPtVsdRMinGen->Fill(genPt, dRMinGen);
       tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
-      // There used to be a cut on dRMinGen 0.015
+    }
+    
+    if (exitWhenGenMatchNotFound && dRMinGen > 0.015) continue;
+    
+    if (trigInfo_ > 0 && !isData) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genPt, dRMinGen);
       tuple->BefPreS_GenPtVsGenMinPt->Fill(genPt, dPtMinGen);
-      // 2D plot to compare gen pt vs reco pt
-      tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
     }
+      // 2D plot to compare gen pt vs reco pt
+    tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     // the pt of the candidate and the number of siblings
@@ -2010,6 +2020,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     passTechnicalChecks = true;
     
+    // Plot to see the trigger turn-on
+    if (!HLT_Mu50) {
+      tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(0., track->pt());
+    } else if (HLT_Mu50) {
+      tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(1., track->pt());
+    }
+    
+    int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+    
     // Include probQonTrack, probXYonTrack, probQonTrackNoL1, probXYonTrackNoL1 into one array
     float pixelProbs[4] = {0.0,0.0,0.0,0.0};
     int numRecHitsQ = 0, numRecHitsXY = 0;
@@ -2136,7 +2155,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
         // Have a separate variable that excludes Layer 1
         // Layer 1 was very noisy in 2017/2018
-        if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) != 1)) {
+        bool conditionForPhase0 = (numLayers == 3);
+        bool conditionForPhase1 = ((numLayers == 4) && (( detid.subdetId() == PixelSubdetector::PixelEndcap) || ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) != 1))));
+        if (conditionForPhase0 || conditionForPhase1) {
           nonL1PixHits++;
           float probQNoL1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoL1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
@@ -2437,8 +2458,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             }
         }
     //}
-    //Choose of Ih definition - Ih_nodrop_noPixL1
-    auto dedxMObj = dedxIh_noL1;
+    // Choose of Ih definition - Ih_nodrop_noPixL1 for Phase-1 detector
+    //                         - Ih_FullTracker for Phase-0 detector
+    auto dedxMObj = (numLayers > 3) ? dedxIh_noL1 : dedxMObj_FullTracker;
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : -1.f;
     
     //Choose of Ias definition - strips only
@@ -4033,7 +4055,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       for (unsigned int g = 0; g < genColl.size(); g++) {
         // Exclude the canidate when looking at its envirment
         if (g == usignedIntclosestGenIndex) continue;
-        // Look only at the R=0.1 enviroment of the candidate
+        // Look only at the R=0.001 enviroment of the candidate
         if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
 
         if (genColl[g].status() == 91) hasStatus91Around = true;

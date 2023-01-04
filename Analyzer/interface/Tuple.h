@@ -413,6 +413,7 @@ struct Tuple {
   TH1F* BefTrig_Ih;
   TH1F* BefTrig_ProbQNoL1;
   TH1F* BefTrig_Ias;
+  TH2F* BefTrig_TriggerMuon50VsPt_lowPt;
 
   TH1F* BefPreS_MassT;
   TH1F* BefPreS_MassT_highMassT;
@@ -789,8 +790,6 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
-
-
 
   TH2F* PostPreS_TriggerMuon50VsPt;
   TH2F* PostPreS_TriggerMETallVsBeta;
