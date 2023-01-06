@@ -353,7 +353,7 @@ private:
   float GlobalMinNDOFDT = 6;          // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
   float GlobalMinNDOFCSC = 6;         // cut on number of CSC DegreeOfFreedom used for muon TOF measurement
   float GlobalMaxTOFErr = 0.15;       //0.07;   // cut on error on muon TOF measurement
-
+  bool exitWhenGenMatchNotFound_;
   bool useTemplateLayer_ = false;
 
   // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
@@ -372,15 +372,14 @@ private:
   float dEdxK_;
   float dEdxC_;
   float globalIas_;
+  float globalFiStrips_;
   float globalIh_;
 
   dedxGainCorrector trackerCorrector;
-  string dEdxTemplate_;  // "MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", "Data13TeV16_dEdxTemplate.root"
+  string dEdxTemplate_;
   bool enableDeDxCalibration_;
   string timeOffset_;
   muonTimingCalculator tofCalculator;
-
-  float theFMIPX_ = 4;
 
   unsigned int saveTree_, saveGenTree_;
 

@@ -1518,7 +1518,8 @@ reco::DeDxData computedEdx(const float& track_eta,
                            bool useTemplateLayer = false,
                            bool skipPixelL1 = false,
                            int  skip_templates_ias = 0,
-                           bool symmetricSmirnov = false) {
+                           bool symmetricSmirnov = false,
+                           bool useMorrisMethod = false) {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
@@ -1723,14 +1724,28 @@ crossTalkInvAlgo=1;
 
   if (size > 0) {
     if (templateHisto) {
-      //Ias discriminator
-      result = 1.0 / (12 * size);
-      std::sort(vect.begin(), vect.end(), std::less<float>());
-      for (int i = 1; i <= size; i++) {
-        if(!symmetricSmirnov) result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Ias 
-        else result += pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Is 
-      }
-      result *= (3.0 / size);
+      if (useMorrisMethod) {
+        // FiStrips discriminator
+        float alpha = 1;
+        for (int i = 0; i < size; i++) {
+          alpha *= vect[i];
+        }
+        float logAlpha = log(alpha);
+        float probQm = 0;
+        for (int i = 0; i < size; i++) {
+          probQm += ((pow(-logAlpha, i)) / (factorial(i)));
+        }
+        result = alpha * probQm;
+      } else {
+        //Ias discriminator
+        result = 1.0 / (12 * size);
+        std::sort(vect.begin(), vect.end(), std::less<float>());
+        for (int i = 1; i <= size; i++) {
+          if(!symmetricSmirnov) result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Ias 
+          else result += pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Is 
+        }
+        result *= (3.0 / size);
+       }
     } else {  //dEdx estimator
       if (useTruncated) {
         //truncated40 estimator
