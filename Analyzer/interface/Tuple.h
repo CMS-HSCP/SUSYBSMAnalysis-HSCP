@@ -413,6 +413,7 @@ struct Tuple {
   TH1F* BefTrig_Ih;
   TH1F* BefTrig_ProbQNoL1;
   TH1F* BefTrig_Ias;
+  TH2F* BefTrig_TriggerMuon50VsPt_lowPt;
 
   TH1F* BefPreS_MassT;
   TH1F* BefPreS_MassT_highMassT;
@@ -633,6 +634,7 @@ struct Tuple {
   TH1F* PostPreS_P;
   
   TH1F* PostPreS_Ias_NoEventWeight;
+  TH1F* PostPreS_FiStrips_NoEventWeight;
   TH1F* PostPreS_Ih;
   TH2F* PostPreS_IhVsIas;
   TH1F* PostPreS_Ih_NoEventWeight;
@@ -713,7 +715,9 @@ struct Tuple {
   TH1F* PostS_RelativePtShift;
   TH1F* PostS_ProbQNoL1;
   TH1F* PostS_Ias;
+  TH1F* PostS_FiStrips;
   TH2F* PostS_ProbQNoL1VsIas;
+  TH2F* PostS_ProbQNoL1VsFiStrips;
   TH3F* PostS_ProbQNoL1VsIasVsPt;
   TH2F* PostS_ProbQNoL1VsIas_Pileup_up;
   TH2F* PostS_ProbQNoL1VsIas_Pileup_down;
@@ -770,6 +774,7 @@ struct Tuple {
 
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
+  TH2F* PostPreS_ProbQNoL1VsFiStrips;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pileup_down;
   TH2F* PostPreS_ProbQNoL1VsIas_ProbQNoL1_up;
@@ -789,8 +794,6 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
-
-
 
   TH2F* PostPreS_TriggerMuon50VsPt;
   TH2F* PostPreS_TriggerMETallVsBeta;

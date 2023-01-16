@@ -36,6 +36,9 @@
 // - 42p6: Adding Calibration plot, adding templates, adding electrons collection to the ntuple
 // - 42p7: Add Gen_BetaGamma_lowBetaGamma, fix BefPreS HSCP type axis, add BefTrig plots, add per eta, per beta trigger systs,
 //         unify vertex handling (use highest sum pt one), add Gi smearing
+// - 42p8: BefTrig trigger turnon plot, possibility to have Phase-0 data, cut on muon pt to be > 50 GeV in the trigger selection
+// - 32p0: Like 42p8, but exit when MC match now found (exitWhenGenMatchNotFound_)
+// - 42p8: Add FiStrips plots
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -145,7 +148,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       CreateAndRunGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndRunGitemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")),
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
-
+      exitWhenGenMatchNotFound_(iConfig.getUntrackedParameter<bool>("ExitWhenGenMatchNotFound")),
       useTemplateLayer_(iConfig.getUntrackedParameter<bool>("UseTemplateLayer")),
       dEdxSF_0_(iConfig.getUntrackedParameter<double>("DeDxSF_0")),
       dEdxSF_1_(iConfig.getUntrackedParameter<double>("DeDxSF_1")),
@@ -153,7 +156,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       dEdxC_(iConfig.getUntrackedParameter<double>("DeDxC")),
       dEdxTemplate_(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
       timeOffset_(iConfig.getUntrackedParameter<string>("TimeOffset")),
-      theFMIPX_(iConfig.getUntrackedParameter<double>("FMIPX")),
       saveTree_(iConfig.getUntrackedParameter<int>("SaveTree")),
       saveGenTree_(iConfig.getUntrackedParameter<int>("SaveGenTree")),
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
@@ -672,6 +674,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
       if (mu->isStandAloneMuon() && !mu->isGlobalMuon())  continue;
+      if (mu->pt() < 50) continue;
       
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       if (dr_hltmu_muon < dr_min_hlt_muon_inEvent){
@@ -688,7 +691,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     matchedMuonWasFound = true;
     tuple->NumEvents->Fill(3., EventWeight_);
   }
-
+  
   // Check if the event is passing trigger
   if (debug_ > 1) LogPrint(MOD) << "\nChecking if the LS " << iEvent.id().luminosityBlock() <<  " / event " << iEvent.id().event() << "  is passing trigger...";
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
@@ -1441,6 +1444,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   int bestCandidateIndex = -1;
   float maxIhSoFar = -1.;
   float bestCandidateIas = -1.;
+  float bestCandidateFiStrips = -1.;
   float bestCandidateProbQNoL1 = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
   float bestCandidateGenBeta = -1.;
@@ -1615,6 +1619,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (debug_> 0 && trigInfo_ > 0) cout << endl;
     }
     
+    // should be conf from config
     if (!isData && closestGenIndex < 0 ) {
       if (debug_ > 4 && trigInfo_ > 0) {
         LogPrint(MOD) << "min dr: " << dRMinGen << endl;
@@ -1625,6 +1630,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(4.);
       }
+      if (exitWhenGenMatchNotFound_) continue;
     }
     
     int genPdgId =  (closestGenIndex > 0) ?  genColl[closestGenIndex].pdgId() : 0;
@@ -1642,12 +1648,16 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->BefPreS_GendRMin->Fill(dRMinGen);
       tuple->BefPreS_GenPtVsdRMinGen->Fill(genPt, dRMinGen);
       tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
-      // There used to be a cut on dRMinGen 0.015
+    }
+    
+    if (exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
+    
+    if (trigInfo_ > 0 && !isData) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genPt, dRMinGen);
       tuple->BefPreS_GenPtVsGenMinPt->Fill(genPt, dPtMinGen);
-      // 2D plot to compare gen pt vs reco pt
-      tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
     }
+      // 2D plot to compare gen pt vs reco pt
+    tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     // the pt of the candidate and the number of siblings
@@ -2010,6 +2020,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     passTechnicalChecks = true;
     
+    // Plot to see the trigger turn-on
+    if (!HLT_Mu50) {
+      tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(0., track->pt());
+    } else if (HLT_Mu50) {
+      tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(1., track->pt());
+    }
+    
+    int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+    
     // Include probQonTrack, probXYonTrack, probQonTrackNoL1, probXYonTrackNoL1 into one array
     float pixelProbs[4] = {0.0,0.0,0.0,0.0};
     int numRecHitsQ = 0, numRecHitsXY = 0;
@@ -2136,7 +2155,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
         // Have a separate variable that excludes Layer 1
         // Layer 1 was very noisy in 2017/2018
-        if (( detid.subdetId() == PixelSubdetector::PixelEndcap) || (detid.subdetId() == PixelSubdetector::PixelBarrel && tTopo->pxbLayer(detid) != 1)) {
+        bool conditionForPhase0 = (numLayers == 3);
+        bool conditionForPhase1 = ((numLayers == 4) && (( detid.subdetId() == PixelSubdetector::PixelEndcap) || ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) != 1))));
+        if (conditionForPhase0 || conditionForPhase1) {
           nonL1PixHits++;
           float probQNoL1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoL1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
@@ -2202,7 +2223,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           }
         }
 
-        if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < theFMIPX_)
+        if (dedxHits->charge(i) * factorChargeToE / dedxHits->pathlength(i) < 4.0)
           nofClust_dEdxLowerThan++;
         }
       }// end loop on rechits on the given track
@@ -2240,7 +2261,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float Fmip = (float)nofClust_dEdxLowerThan / (float)dedxHits->size();
 
     //computedEdx: hits, SF, templates, usePixel, useStrips,, useClusterCleaning, uneTrunc,
-    //             mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, dedxErr, useTemplateLayer_, skip_templates_ias
+    //             mustBeInside, MaxStripNOM, correctFEDSat, XtalkInv, lowDeDxDrop, dedxErr, useTemplateLayer_, skip_templates_ias, useMorrisMethod
     //
     //correction inverseXtalk = 0 --> take the raw amplitudes of the cluster
     //correction inverseXtalk = 1 --> modify the amplitudes based on xtalk for non-saturated cluster + correct for saturation
@@ -2252,6 +2273,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     float dEdxErr = 0;
     bool symmetricSmirnov = false;
+    bool useMorrisMethod = false;
 
     // Ih
     auto dedxMObj_FullTrackerTmp =
@@ -2322,17 +2344,20 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
 
     // Temporary dEdx info
-    reco::DeDxData dedxIas_FullTrackerTmp,dedxIas_noL1Tmp,dedxIas_noTIBnoTIDno3TEC_Tmp,dedxIas_PixelOnly_Tmp,dedxIas_StripOnly_Tmp,dedxIas_PixelOnly_noL1_Tmp,dedxIs_StripOnly_Tmp;
+    reco::DeDxData dedxIas_FullTrackerTmp, dedxIas_noL1Tmp,dedxIas_noTIBnoTIDno3TEC_Tmp, dedxIas_PixelOnly_Tmp, dedxIas_StripOnly_Tmp, dedxIas_PixelOnly_noL1_Tmp, dedxIs_StripOnly_Tmp, dedxMorrisMethod_StripOnly_Tmp;
 
-    //Pointers that will have the dEdx info laterr
-    reco::DeDxData* dedxIas_FullTracker = nullptr; //globalIas_
-    reco::DeDxData* dedxIas_noL1 = nullptr; //globalIas_ no BPIXL1
+    // Pointers that will have the dEdx info laterr
+    // Ias including all pixel layers and strips
+    reco::DeDxData* dedxIas_FullTracker = nullptr;
+    // Ias including all pixel layers and strips except for the BPIXL1
+    reco::DeDxData* dedxIas_noL1 = nullptr;
     reco::DeDxData* dedxIas_noTIBnoTIDno3TEC = nullptr; //globalIas_ without TIB, TID, and 3 first TEC layers
 
     reco::DeDxData* dedxIas_PixelOnly = nullptr; //globalIas_ Pixel only
     reco::DeDxData* dedxIas_StripOnly = nullptr; //globalIas_ Strip only
     reco::DeDxData* dedxIas_PixelOnly_noL1 = nullptr; //globalIas_ Pixel only no BPIXL1
     reco::DeDxData* dedxIs_StripOnly = nullptr; //symmetric Smirnov discriminator - Is
+    reco::DeDxData* dedxMorrisMethod_StripOnly = nullptr; // FiStrips
 
     int NPV = vertexColl.size();
     //if(!createGiTemplates_){
@@ -2379,6 +2404,13 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
 
             dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+          
+          // the FiStrips variable
+          dedxMorrisMethod_StripOnly_Tmp =
+          computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                      mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0, symmetricSmirnov = false, useMorrisMethod = true);
+          
+          dedxMorrisMethod_StripOnly = dedxMorrisMethod_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxMorrisMethod_StripOnly_Tmp : nullptr;
         }
 
         else{
@@ -2432,18 +2464,28 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                 mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
 
                     dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+                  
+                    // the FiStrips variable
+                    dedxMorrisMethod_StripOnly_Tmp =
+                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0, symmetricSmirnov = false, useMorrisMethod = true);
+                    
+                    dedxMorrisMethod_StripOnly = dedxMorrisMethod_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxMorrisMethod_StripOnly_Tmp : nullptr;
 
                 }//end vertex coll size for PU treatment
             }
         }
     //}
-    //Choose of Ih definition - Ih_nodrop_noPixL1
-    auto dedxMObj = dedxIh_noL1;
+    // Choose of Ih definition - Ih_nodrop_noPixL1 for Phase-1 detector
+    //                         - Ih_FullTracker for Phase-0 detector
+    auto dedxMObj = (numLayers > 3) ? dedxIh_noL1 : dedxMObj_FullTracker;
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : -1.f;
     
     //Choose of Ias definition - strips only
     auto dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : -1.f;
+    
+    globalFiStrips_ = (dedxMorrisMethod_StripOnly) ? dedxMorrisMethod_StripOnly->dEdx() : -1.f;
 
     float MassErr = GetMassErr(track->p(),
                                 track->ptError(),
@@ -3524,6 +3566,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_ProbXYVsProbQ->Fill(probXYonTrack, 1 - probQonTrack, EventWeight_);
         tuple->PostPreS_ProbQNoL1->Fill(1 - probQonTrackNoL1, EventWeight_);
         tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoL1, globalIas_, EventWeight_);
+        tuple->PostPreS_ProbQNoL1VsFiStrips->Fill(1 - probQonTrackNoL1, globalFiStrips_, EventWeight_);
         tuple->PostPreS_ProbQNoL1VsIas_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[0]);
         tuple->PostPreS_ProbQNoL1VsIas_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_ * PUSystFactor_[1]);
         tuple->PostPreS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.0,(1 - probQonTrackNoL1)*1.005), globalIas_,  EventWeight_);
@@ -3584,6 +3627,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_IhVsIas->Fill(globalIh_, globalIas_, EventWeight_);
         tuple->PostPreS_Ih_NoEventWeight->Fill(globalIh_);
         tuple->PostPreS_Ias_NoEventWeight->Fill(globalIas_);
+        tuple->PostPreS_FiStrips_NoEventWeight->Fill(globalFiStrips_);
         tuple->PostPreS_MassT->Fill(massT, EventWeight_);
         tuple->PostPreS_MassT_highMassT->Fill(massT, EventWeight_);
         tuple->PostPreS_MassTVsIas->Fill(massT, globalIas_, EventWeight_);
@@ -3790,6 +3834,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         maxIhSoFar = globalIh_;
         bestCandidateIndex = candidate_count;
         bestCandidateIas = globalIas_;
+        bestCandidateFiStrips = globalFiStrips_;
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hlt_muon;
         bestCandidateGenBeta = genBeta;
@@ -4033,7 +4078,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       for (unsigned int g = 0; g < genColl.size(); g++) {
         // Exclude the canidate when looking at its envirment
         if (g == usignedIntclosestGenIndex) continue;
-        // Look only at the R=0.1 enviroment of the candidate
+        // Look only at the R=0.001 enviroment of the candidate
         if (deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi()) > 0.001) continue;
 
         if (genColl[g].status() == 91) hasStatus91Around = true;
@@ -4582,8 +4627,10 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float rescaledPtDown = bestCandidateTrack->pt()*(1-shiftForPtValue);
     
     tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
+    tuple->PostS_FiStrips->Fill(bestCandidateFiStrips, EventWeight_);
     tuple->PostS_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
     tuple->PostS_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
+    tuple->PostS_ProbQNoL1VsFiStrips->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, EventWeight_);
     tuple->PostS_ProbQNoL1VsIasVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_);
     
     // Systematics plots for pT rescaling
@@ -5315,7 +5362,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
 
   desc.add<std::string>("FilterName",std::string("hltL3fL1sMu22Or25L1f0L2f10QL3Filtered50Q"))
-  ->setComment("Meaning of this is: L1f0  = L1 filtered with threshold 0, L2f10Q = L2 filtered at 10 GeV with quality cuts, L3Filtered50Q = L3 filtered at 50 GeV with quality cuts");
+    ->setComment("Meaning of this is: L1f0  = L1 filtered with threshold 0, L2f10Q = L2 filtered at 10 GeV with quality cuts, L3Filtered50Q = L3 filtered at 50 GeV with quality cuts");
   desc.add("TriggerPathNamesFile", std::string("SUSYBSMAnalysis/Analyzer/data/trigger_names_llp_v3.dat"))
     ->setComment("A");
   desc.add("MuonHLTFilterNamesFile", std::string("SUSYBSMAnalysis/Analyzer/data/MuonHLTFilterNames.dat"))
@@ -5339,7 +5386,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 //  desc.add("GenParticleCollection", edm::InputTag("genParticlesSkimmed"))
     ->setComment("A");
   desc.add("TrackToGenAssoc", edm::InputTag("allTrackMCMatch"))
-    ->setComment("Collection used to match to gen thruth");
+    ->setComment("Collection used to match to gen truth");
   desc.add("PfCand", edm::InputTag("particleFlow"))
     ->setComment("Input collection for particleFlow algorithm");
   desc.add("GenCollection", edm::InputTag("generator","","GEN"))
@@ -5369,11 +5416,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
+  desc.addUntracked("ExitWhenGenMatchNotFound",false)
+    ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
   desc.addUntracked("DeDxK",2.3)->setComment("A");
   desc.addUntracked("DeDxC",3.17)->setComment("A");
-  desc.addUntracked("FMIPX",4.0)->setComment("A");
   desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
   desc.addUntracked("SaveGenTree",0)->setComment("A");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")

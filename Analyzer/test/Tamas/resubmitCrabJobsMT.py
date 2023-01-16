@@ -14,11 +14,6 @@ for fname in os.listdir("crab_projects") :
   if (codeVersion in fname) :
     datasetList.append("crab_projects/"+fname)
 
-def task(i):
-  outTask = "crab resubmit -d "+i+" --maxmemory 4000"
-  os.system(outTask)
-
 for dataset in datasetList:
-  t = Thread(target=task, args=(dataset,))
-  t.start()
-
+  outTask = "crab resubmit -d "+dataset+" --maxmemory 4500 --maxjobruntime 3000"
+  os.system(outTask)
