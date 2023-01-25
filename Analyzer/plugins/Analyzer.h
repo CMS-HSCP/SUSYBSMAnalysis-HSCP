@@ -313,15 +313,23 @@ private:
   unsigned int etaBins_ = 60;
 
   // Ias quantiles and pT_cut used to validate the background estimate method in data
-  float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
+  //float Ias_quantiles[5]={ 0.039, 0.045, 0.053, 0.064, 0.082 }; //data or signal
+  //Ias-quantiles update
+  //Ias-quantiles { 40%, 50%, 60%, 70%, 80%, 90%, 99%, 99.9% }
+  float Ias_quantiles[8]={ 0.014565036, 0.017987774, 0.022399569, 0.028518069, 0.038047370, 0.056746799, 0.13331622, 0.22018057 }; //data or signal -- IAS STRIP ONLY NO FSTRIP CUT
   //float Ias_quantiles[5]={ 0.037, 0.042, 0.048, 0.056, 0.066 }; //data or signal //WIP new quantiles determined with new preselection cuts
-  float pT_cut = 60;
+  //pT cut update 60-->70 GeV
+  float pT_cut = 70;
 
   // binning for eta, ih, p, mass distributions used to validate the background estimate method in data
-  int reg_etabins_ = 120;
-  int reg_ihbins_ = 200;
-  int reg_pbins_ = 200;
-  int reg_massbins_ = 50;
+  //eta 120-->200
+  int reg_etabins_ = 200;
+  //ih 200-->2000
+  int reg_ihbins_ = 2000;
+  //p 200-->2000
+  int reg_pbins_ = 2000;
+  //mass 50-->200
+  int reg_massbins_ = 200;
 
 
   float dEdxS_UpLim_ = 1.0;

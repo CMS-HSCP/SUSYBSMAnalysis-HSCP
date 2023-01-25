@@ -772,6 +772,109 @@ struct Tuple {
   TH2F* PostS_SR3_ProbQNoL1VsIas_Trigger_up;
   TH2F* PostS_SR3_ProbQNoL1VsIas_Trigger_down;
 
+  // VR1: Ias-quantile 50-90% & pT>70 GeV
+  TH1F* PostS_VR1_Mass;
+  TH1F* PostS_VR1_Mass_Pileup_up;
+  TH1F* PostS_VR1_Mass_Pileup_down;
+  TH1F* PostS_VR1_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR1_Mass_ProbQNoL1_down;
+  TH1F* PostS_VR1_Mass_Ias_up;
+  TH1F* PostS_VR1_Mass_Ias_down;
+  TH1F* PostS_VR1_Mass_Pt_up;
+  TH1F* PostS_VR1_Mass_Pt_down;
+  TH1F* PostS_VR1_Mass_Trigger_up;
+  TH1F* PostS_VR1_Mass_Trigger_down;
+  TH1F* PostS_VR1_Mass_K_up;
+  TH1F* PostS_VR1_Mass_K_down;
+  TH1F* PostS_VR1_Mass_C_up;
+  TH1F* PostS_VR1_Mass_C_down;
+  
+  // VR2: Ias-quantile 50-99% & pT>70 GeV
+  TH1F* PostS_VR2_Mass;
+  TH1F* PostS_VR2_Mass_Pileup_up;
+  TH1F* PostS_VR2_Mass_Pileup_down;
+  TH1F* PostS_VR2_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR2_Mass_ProbQNoL1_down;
+  TH1F* PostS_VR2_Mass_Ias_up;
+  TH1F* PostS_VR2_Mass_Ias_down;
+  TH1F* PostS_VR2_Mass_Pt_up;
+  TH1F* PostS_VR2_Mass_Pt_down;
+  TH1F* PostS_VR2_Mass_Trigger_up;
+  TH1F* PostS_VR2_Mass_Trigger_down;
+  TH1F* PostS_VR2_Mass_K_up;
+  TH1F* PostS_VR2_Mass_K_down;
+  TH1F* PostS_VR2_Mass_C_up;
+  TH1F* PostS_VR2_Mass_C_down;
+  
+  // VR3: Ias-quantile 50-99.9% & pT>70 GeV
+  TH1F* PostS_VR3_Mass;
+  TH1F* PostS_VR3_Mass_Pileup_up;
+  TH1F* PostS_VR3_Mass_Pileup_down;
+  TH1F* PostS_VR3_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR3_Mass_ProbQNoL1_down;
+  TH1F* PostS_VR3_Mass_Ias_up;
+  TH1F* PostS_VR3_Mass_Ias_down;
+  TH1F* PostS_VR3_Mass_Pt_up;
+  TH1F* PostS_VR3_Mass_Pt_down;
+  TH1F* PostS_VR3_Mass_Trigger_up;
+  TH1F* PostS_VR3_Mass_Trigger_down;
+  TH1F* PostS_VR3_Mass_K_up;
+  TH1F* PostS_VR3_Mass_K_down;
+  TH1F* PostS_VR3_Mass_C_up;
+  TH1F* PostS_VR3_Mass_C_down;
+
+
+  // SR1: Ias-quantile 90% & pT>70 GeV
+  TH1F* PostS_SR1_Mass;
+  TH1F* PostS_SR1_Mass_Pileup_up;
+  TH1F* PostS_SR1_Mass_Pileup_down;
+  TH1F* PostS_SR1_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR1_Mass_ProbQNoL1_down;
+  TH1F* PostS_SR1_Mass_Ias_up;
+  TH1F* PostS_SR1_Mass_Ias_down;
+  TH1F* PostS_SR1_Mass_Pt_up;
+  TH1F* PostS_SR1_Mass_Pt_down;
+  TH1F* PostS_SR1_Mass_Trigger_up;
+  TH1F* PostS_SR1_Mass_Trigger_down;
+  TH1F* PostS_SR1_Mass_K_up;
+  TH1F* PostS_SR1_Mass_K_down;
+  TH1F* PostS_SR1_Mass_C_up;
+  TH1F* PostS_SR1_Mass_C_down;
+  
+  // SR2: Ias-quantile 99% & pT>70 GeV
+  TH1F* PostS_SR2_Mass;
+  TH1F* PostS_SR2_Mass_Pileup_up;
+  TH1F* PostS_SR2_Mass_Pileup_down;
+  TH1F* PostS_SR2_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR2_Mass_ProbQNoL1_down;
+  TH1F* PostS_SR2_Mass_Ias_up;
+  TH1F* PostS_SR2_Mass_Ias_down;
+  TH1F* PostS_SR2_Mass_Pt_up;
+  TH1F* PostS_SR2_Mass_Pt_down;
+  TH1F* PostS_SR2_Mass_Trigger_up;
+  TH1F* PostS_SR2_Mass_Trigger_down;
+  TH1F* PostS_SR2_Mass_K_up;
+  TH1F* PostS_SR2_Mass_K_down;
+  TH1F* PostS_SR2_Mass_C_up;
+  TH1F* PostS_SR2_Mass_C_down;
+  
+  // SR3: Ias-quantile 99.9% & pT>70 GeV
+  TH1F* PostS_SR3_Mass;
+  TH1F* PostS_SR3_Mass_Pileup_up;
+  TH1F* PostS_SR3_Mass_Pileup_down;
+  TH1F* PostS_SR3_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR3_Mass_ProbQNoL1_down;
+  TH1F* PostS_SR3_Mass_Ias_up;
+  TH1F* PostS_SR3_Mass_Ias_down;
+  TH1F* PostS_SR3_Mass_Pt_up;
+  TH1F* PostS_SR3_Mass_Pt_down;
+  TH1F* PostS_SR3_Mass_Trigger_up;
+  TH1F* PostS_SR3_Mass_Trigger_down;
+  TH1F* PostS_SR3_Mass_K_up;
+  TH1F* PostS_SR3_Mass_K_down;
+  TH1F* PostS_SR3_Mass_C_up;
+  TH1F* PostS_SR3_Mass_C_down;
+
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
   TH2F* PostPreS_ProbQNoL1VsFiStrips;
@@ -1176,14 +1279,22 @@ struct Tuple {
   Region rB_70ias80;
   Region rB_80ias90;
   Region rB_50ias90;
+  Region rB_50ias99;
+  Region rB_50ias999;
   Region rB_90ias100;
+  Region rB_99ias100;
+  Region rB_999ias100;
 
   Region rD_50ias60;
   Region rD_60ias70;
   Region rD_70ias80;
   Region rD_80ias90;
   Region rD_50ias90;
+  Region rD_50ias99;
+  Region rD_50ias999;
   Region rD_90ias100;
+  Region rD_99ias100;
+  Region rD_999ias100;
 
 
  // Calibration

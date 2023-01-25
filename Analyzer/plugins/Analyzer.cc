@@ -1443,6 +1443,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   unsigned int postPreS_candidate_count = 0;
   int bestCandidateIndex = -1;
   float maxIhSoFar = -1.;
+  float bestCandidateMass = -1.;
+  float bestCandidateMass_Kup = -1.;
+  float bestCandidateMass_Kdown = -1.;
+  float bestCandidateMass_Cup = -1.;
+  float bestCandidateMass_Cdown = -1.;
+  float bestCandidatePt = -1.;
   float bestCandidateIas = -1.;
   float bestCandidateFiStrips = -1.;
   float bestCandidateProbQNoL1 = -1.;
@@ -2757,6 +2763,10 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float IsoTK_SumEt = hscpIso.Get_TK_SumEt();
 
     float Mass =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_) : -1;
+    float Mass_Kup =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_+0.01, dEdxC_) : -1;
+    float Mass_Kdown =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_-0.01, dEdxC_) : -1;
+    float Mass_Cup =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_+0.01) : -1;
+    float Mass_Cdown =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_-0.01) : -1;
 
     // Find distance to nearest segment on opposite side of detector
     float minPhi = 0.0, minEta = 0.0;
@@ -3833,6 +3843,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (globalIh_ > maxIhSoFar) {
         maxIhSoFar = globalIh_;
         bestCandidateIndex = candidate_count;
+        bestCandidateMass = Mass;
+        bestCandidateMass_Kup = Mass_Kup;
+        bestCandidateMass_Kdown = Mass_Kdown;
+        bestCandidateMass_Cup = Mass_Cup;
+        bestCandidateMass_Cdown = Mass_Cdown;
+        bestCandidatePt = track->pt();
         bestCandidateIas = globalIas_;
         bestCandidateFiStrips = globalFiStrips_;
         bestCandidateProbQNoL1 = probQonTrackNoL1;
@@ -4305,7 +4321,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  pT_cut,
                                  Ias_quantiles,
                                  track->eta(),
-                                 track->p(),
+                                 10000./track->p(),
                                  track->pt(),
                                  track->ptError(),
                                  dedxMObj ? dedxMObj->dEdx() : -1,
@@ -4625,7 +4641,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     
     float rescaledPtUp = bestCandidateTrack->pt()*(1+shiftForPtValue);
     float rescaledPtDown = bestCandidateTrack->pt()*(1-shiftForPtValue);
-    
+
+
     tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
     tuple->PostS_FiStrips->Fill(bestCandidateFiStrips, EventWeight_);
     tuple->PostS_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
@@ -4753,6 +4770,197 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
+
+
+    // Systematics on mass spectrum 
+
+    //VR1
+    if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[5] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_VR1_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling
+        tuple->PostS_VR1_Mass_K_up->Fill(bestCandidateMass_Kup, EventWeight_);
+        tuple->PostS_VR1_Mass_K_down->Fill(bestCandidateMass_Kdown, EventWeight_);
+        tuple->PostS_VR1_Mass_C_up->Fill(bestCandidateMass_Cup, EventWeight_);
+        tuple->PostS_VR1_Mass_C_down->Fill(bestCandidateMass_Cdown, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_VR1_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_VR1_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_VR1_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_VR1_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_VR1_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_VR1_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+
+    //VR2
+    if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[6] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_VR2_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling
+        tuple->PostS_VR2_Mass_K_up->Fill(bestCandidateMass_Kup, EventWeight_);
+        tuple->PostS_VR2_Mass_K_down->Fill(bestCandidateMass_Kdown, EventWeight_);
+        tuple->PostS_VR2_Mass_C_up->Fill(bestCandidateMass_Cup, EventWeight_);
+        tuple->PostS_VR2_Mass_C_down->Fill(bestCandidateMass_Cdown, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_VR2_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_VR2_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_VR2_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_VR2_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_VR2_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_VR2_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+        
+    //VR3
+    if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[7] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_VR3_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling
+        tuple->PostS_VR3_Mass_K_up->Fill(bestCandidateMass_Kup, EventWeight_);
+        tuple->PostS_VR3_Mass_K_down->Fill(bestCandidateMass_Kdown, EventWeight_);
+        tuple->PostS_VR3_Mass_C_up->Fill(bestCandidateMass_Cup, EventWeight_);
+        tuple->PostS_VR3_Mass_C_down->Fill(bestCandidateMass_Cdown, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_VR3_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_VR3_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_VR3_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_VR3_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_VR3_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_VR3_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+    
+    //SR1
+    if (bestCandidateIas>Ias_quantiles[5] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_SR1_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling
+        tuple->PostS_SR1_Mass_K_up->Fill(bestCandidateMass_Kup, EventWeight_);
+        tuple->PostS_SR1_Mass_K_down->Fill(bestCandidateMass_Kdown, EventWeight_);
+        tuple->PostS_SR1_Mass_C_up->Fill(bestCandidateMass_Cup, EventWeight_);
+        tuple->PostS_SR1_Mass_C_down->Fill(bestCandidateMass_Cdown, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_SR1_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_SR1_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_SR1_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_SR1_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_SR1_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_SR1_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+
+    //SR2
+    if (bestCandidateIas>Ias_quantiles[6] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_SR2_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling
+        tuple->PostS_SR2_Mass_K_up->Fill(bestCandidateMass_Kup, EventWeight_);
+        tuple->PostS_SR2_Mass_K_down->Fill(bestCandidateMass_Kdown, EventWeight_);
+        tuple->PostS_SR2_Mass_C_up->Fill(bestCandidateMass_Cup, EventWeight_);
+        tuple->PostS_SR2_Mass_C_down->Fill(bestCandidateMass_Cdown, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_SR2_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_SR2_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_SR2_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_SR2_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_SR2_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_SR2_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+
+    //SR3
+    if (bestCandidateIas>Ias_quantiles[7] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_SR3_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling
+        tuple->PostS_SR3_Mass_K_up->Fill(bestCandidateMass_Kup, EventWeight_);
+        tuple->PostS_SR3_Mass_K_down->Fill(bestCandidateMass_Kdown, EventWeight_);
+        tuple->PostS_SR3_Mass_C_up->Fill(bestCandidateMass_Cup, EventWeight_);
+        tuple->PostS_SR3_Mass_C_down->Fill(bestCandidateMass_Cdown, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_SR3_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_SR3_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_SR3_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_SR3_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_SR3_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_SR3_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+        
+    // Ias rescaling
+    if (bestCandidatePt > pT_cut) {
+        float rescaledUpIas = bestCandidateIas*theGiSystFactorUp;
+        float rescaledDownIas = bestCandidateIas*theGiSystFactorDown;
+        if (rescaledUpIas > Ias_quantiles[1] && rescaledUpIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[1] && rescaledUpIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[1] && rescaledUpIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[1] && rescaledDownIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[1] && rescaledDownIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[1] && rescaledDownIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+    }
+        
+
+    // pT rescaling
+    if (rescaledPtUp > globalMinPt_ && rescaledPtUp > pT_cut) {
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+    }
+    if (rescaledPtDown > globalMinPt_ && rescaledPtDown > pT_cut) {
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+    }
+
   } // end of "loop" on the single best HSCP candidate
   
   // Trigger type after preSelection at the event level
