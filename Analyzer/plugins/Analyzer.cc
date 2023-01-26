@@ -39,6 +39,7 @@
 // - 42p8: BefTrig trigger turnon plot, possibility to have Phase-0 data, cut on muon pt to be > 50 GeV in the trigger selection
 // - 32p0: Like 42p8, but exit when MC match now found (exitWhenGenMatchNotFound_)
 // - 42p8: Add FiStrips plots
+// - 42p9: Add new templates from Raphael, inclusive pT bins (>100,>200,>400), remove extra requirements on Calibration plots
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -1727,8 +1728,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float temp_dr = 9999.;
     for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
       temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
-      if (temp_dr < dr_min_hlt_muon)
-      {
+      if (temp_dr < dr_min_hlt_muon) {
         dr_min_hlt_muon = temp_dr;
         hlt_match_pt = trigObjP4s[objNr].Pt();
       }
@@ -3263,13 +3263,6 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     //Preselection steps that can be changed for template generation
     passedCutsArrayForGiTemplates[0] = true;
     passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) );
-    passedCutsArrayForGiTemplates[2]  = (fabs(track->eta()) < 2.1);
-
-    passedCutsArrayForGiTemplates[10] = true; //miniIso
-    //[11] is TrackerIso > 15
-    passedCutsArrayForGiTemplates[12] = true; //EoP
-    passedCutsArrayForGiTemplates[13] = true; //sigma pt / pt2 cut
-    passedCutsArrayForGiTemplates[14] = true; //ProbQ cut
 
     // PAY ATTENTION : PU == NPV for the following loop !
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
@@ -3346,10 +3339,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     unsigned int passedCutsArraySize = sizeof(passedCutsArray);
     if (globalIas_ > 0.25 && probQonTrackNoL1 < 0.1 && passPre) {
       tuple->CutFlow->Fill(passedCutsArraySize + 2, EventWeight_);
-      if (track->pt() > 100 && track->pt() < 200) {
+      if (track->pt() > 100) {
         tuple->CutFlow->Fill(passedCutsArraySize+ 3, EventWeight_);
       } if (track->pt() > 200) {
         tuple->CutFlow->Fill(passedCutsArraySize + 4, EventWeight_);
+      } if (track->pt() > 400) {
+        tuple->CutFlow->Fill(passedCutsArraySize + 5, EventWeight_);
       }
     }
     
@@ -3398,21 +3393,22 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostPreS_ProbQNoL1VsIas_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_*0.95,  EventWeight_);
 
     // Systematics plots for trigger
+    // TODO Jan 26
     bool passedCutsArrayForTriggerSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForTriggerSyst));
     passedCutsArrayForTriggerSyst[0] = (true) ? true : false;
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection for trigger systematics";
-    if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
-      float distanceAtThisEta = 500.0/sin(track->phi());
-      float speedOfLightInCmPerNs = 29.97;
-      float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
-      
-      float genBetaPrimeUp =  -1.f;
-      float genBetaPrimeDown = -1.f;
-      genBetaPrimeUp = distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs);
-      if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
-        genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
-      }
+    float distanceAtThisEta = 500.0/sin(track->phi());
+    float speedOfLightInCmPerNs = 29.97;
+    float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
+    
+    float genBetaPrimeUp =  -1.f;
+    float genBetaPrimeDown = -1.f;
+    genBetaPrimeUp = distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs);
+    if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
+    }
+    if (passPreselection(passedCutsArrayForTriggerSyst, false) && dr_min_hlt_muon < 0.15) {
       if (!HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
         tuple->PostPreS_TriggerMuon50VsPt->Fill(0., track->pt());
@@ -3461,6 +3457,55 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
       }
     } // end of passedCutsArrayForTriggerSyst loop
+    else if (dr_min_hlt_muon < 0.15) {
+      if (!HLT_Mu50) {
+        tuple->BefPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
+        tuple->BefPreS_TriggerMuon50VsPt->Fill(0., track->pt());
+        if (fabs(track->eta()) < 0.3) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(0., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(0., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(0., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+        }
+        
+      } else if (HLT_Mu50) {
+        tuple->BefPreS_TriggerMuon50VsBeta->Fill(1., genBeta);
+        tuple->BefPreS_TriggerMuon50VsPt->Fill(1., track->pt());
+        if (fabs(track->eta()) < 0.3) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(1., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(1., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(1., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+        }
+      }
+      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+        tuple->BefPreS_TriggerMETallVsBeta->Fill(0., genBeta);
+        tuple->BefPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
+        tuple->BefPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
+      } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+        tuple->BefPreS_TriggerMETallVsBeta->Fill(1., genBeta);
+        tuple->BefPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+        tuple->BefPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
+      }
+    }
     
 
     //fill the ABCD histograms and a few other control plots
@@ -4617,7 +4662,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->EventCutFlow->Fill(18.0, EventWeight_);
       } if (bestCandidateTrack->pt() > 200) {
         tuple->EventCutFlow->Fill(19.0, EventWeight_);
-      }
+      } if (bestCandidateTrack->pt() > 400) {
+      tuple->EventCutFlow->Fill(20.0, EventWeight_);
+    }
     }
     
     float shiftForPtValue = shiftForPt(bestCandidateTrack->pt(),bestCandidateTrack->eta(),bestCandidateTrack->phi(),bestCandidateTrack->charge());
@@ -4665,16 +4712,17 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
     tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     
-    if (bestCandidateTrack->pt() >= pT_cut && bestCandidateTrack->pt() < 100) {
+    // Repeat for several SRs with higher pT cut
+    if (bestCandidateTrack->pt() >= 100) {
       tuple->PostS_SR1_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= pT_cut && bestCandidateTrack->pt() < 100) {
+      if (rescaledPtUp >= 100) {
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtDown >= pT_cut && bestCandidateTrack->pt() < 100) {
+      if (rescaledPtDown >= 100) {
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -4694,17 +4742,17 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
-    // Repeat for several SRs
-    if (bestCandidateTrack->pt() >= 100 && bestCandidateTrack->pt() < 200) {
+    // now for even higher pT
+    if (bestCandidateTrack->pt() >= 200) {
       tuple->PostS_SR2_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= 100 && rescaledPtUp < 200) {
+      if (rescaledPtUp >= 200) {
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtUp >= 100 && rescaledPtUp < 200) {
+      if (rescaledPtUp >= 200) {
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -4724,16 +4772,17 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
-    if (bestCandidateTrack->pt() >= 200) {
+      // now for even higher pT
+    if (bestCandidateTrack->pt() >= 400) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= 200) {
+      if (rescaledPtUp >= 400) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtUp >= 200) {
+      if (rescaledPtUp >= 400) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       

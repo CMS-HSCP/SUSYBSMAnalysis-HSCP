@@ -566,6 +566,25 @@ struct Tuple {
   TH1F* BefPreS_GenBeta;
 
   TH1F* BefPreS_NumCandidates;
+  
+  TH2F* BefPreS_TriggerMuon50VsBeta;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaA;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaB;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaC;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  
+  TH2F* BefPreS_TriggerMuon50VsPt;
+  TH2F* BefPreS_TriggerMETallVsBeta;
+  TH2F* BefPreS_TriggerMETallVsMet;
+  TH2F* BefPreS_TriggerMETallVsHT;
+  TH2F* BefPreS_TriggerMETallVsMetOverHt;
+  TH3F* BefPreS_TriggerMETallVsMetVsHT;
+  
   TH1F* PostPreS_NumCandidates;
 
   TH3F* Calibration_GiTemplate;
