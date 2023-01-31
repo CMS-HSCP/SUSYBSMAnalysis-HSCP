@@ -48,21 +48,18 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
   # Remove/modify unnecessary stuff from the name of the plot that was required by SmartHistos to ditinguish plots
   dirname = f.GetListOfKeys().At(i).GetName()
   curr_dir = f.GetDirectory(dirname)
-# print("dirname: "+dirname)
-  if not (curr_dir) :
-    continue
-  for i in range(0, curr_dir.GetListOfKeys().GetEntries()):
+#  print("dirname: "+dirname)
+  if (True):
       # Match the plot of interest
-      keyname = curr_dir.GetListOfKeys().At(i).GetName()
-      curr_dir2 = f.GetDirectory(dirname+"/"+keyname)
-#                    print("keyname: "+keyname)
-      if not (curr_dir2) :
-        continue
-      for j in range(0, curr_dir2.GetListOfKeys().GetEntries()):
-          keyname2 = curr_dir2.GetListOfKeys().At(j).GetName()
+      keyname = f.GetListOfKeys().At(i).GetName()
+      keyname2 = f.GetListOfKeys().At(i).GetName()
+      curr_dir2 = f.GetDirectory(dirname)
+#      print("keyname: "+keyname)
+      if (True):
+#          keyname2 = curr_dir2.GetListOfKeys().At(j).GetName()
           if ("__" in keyname2) : continue
           # The plot should be TCanvas
-          newname = dirname + "/" + keyname+ "/" + keyname2
+          newname = dirname
 #          print("newname: "+newname)
           obj = f.Get(newname)
           
@@ -129,12 +126,8 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
               if (iDontWannaRunPlots) : continue
               if ("_region" in keyname2 or "CtrlPt_" in keyname2 or "Pred_" in keyname2 or "PDF" in keyname2 or "Hist_" in keyname2) : continue
 #              if not ("Trigger" in keyname2 and obj.ClassName() == "TH3F") : continue
-#              if not ("Calibration" in keyname2) : continue
+              if not ("GiTemplate" in keyname2) : continue
 
-
-#              if not ((obj.ClassName() == "TH3F" or obj.ClassName() == "TH3D") and "VsProbQVsIas" in keyname2) : continue
-              if ("Gen" in keyname2 and isData) : continue
-#                 print(obj.ClassName())
               if (obj.ClassName() == "TH3F" or obj.ClassName() == "TH3D"):
                 obj.SetTitle("")
                 if ("VsProbQVsIas" in keyname2) :
@@ -218,7 +211,7 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                   obj.GetXaxis().UnZoom()
                   obj.Project3D("YZ").Draw("COLZ")
                   can.SaveAs(name)
-                if ("Calibration_GiTemplate" in keyname2) :
+                if ("GiTemplate" in keyname2) :
                   projX = obj.ProjectionX()
                   projX.SetTitle("")
                   projX.SetStats(0)
@@ -271,171 +264,6 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 else :
                   print("Following plot was skipped: "+str(keyname2))
                   continue
-                # this maybe should go from bin to bin+1 ?
-#                if ("IhVsLayer" in keyname2 or "IhVsLayer" in keyname2) :
-#                  obj.SetMarkerStyle(20)
-#                  if ("PostPreS_IasPixelIhVsLayer" in keyname2) :
-#                      ratioOfhighIhPartOlowIh = ROOT.TH1F("RatioOfHighIhOverLowIh",";;Ratio of Ih>5 over Ih<5",7,0.,7.)
-#                      for x in range(1,obj.GetNbinsX()) :
-#                        lowIhPart = obj.Project3D("YZ").Integral(x,x,1,obj.Project3D("YZ").GetYaxis().FindBin(5.0))
-#                        highIhPart = obj.Project3D("YZ").Integral(x,x,obj.Project3D("YZ").GetYaxis().FindBin(5.0),obj.Project3D("YZ").GetNbinsY())
-#                        ratio = 0
-#                        if (lowIhPart>0) :
-#                          ratio = highIhPart/lowIhPart
-#                        ratioOfhighIhPartOlowIh.SetBinContent(x,ratio)
-#                      ratioOfhighIhPartOlowIh.Draw("COLZ")
-#                      ratioOfhighIhPartOlowIh.SetStats(0)
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(1,"BPix L1")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(2,"BPix L2")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(3,"BPix L3")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(4,"BPix L4")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(5,"FPix D1")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(6,"FPix D2")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(7,"FPix D3")
-#                      ratioOfhighIhPartOlowIh.GetYaxis().SetTitleOffset(1.5)
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(1,"BPix L1")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(2,"BPix L2")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(3,"BPix L3")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(4,"BPix L4")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(5,"FPix D1")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(6,"FPix D2")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(7,"FPix D3")
-#                      obj.Project3D("YZ").GetYaxis().SetTitleOffset(0.8)
-#                      obj.Project3D("YZ").GetYaxis().SetTitle("Ih")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(1,"BPix L1")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(2,"BPix L2")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(3,"BPix L3")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(4,"BPix L4")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(5,"FPix D1")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(6,"FPix D2")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(7,"FPix D3")
-#                      obj.Project3D("XZ").GetYaxis().SetTitle("Ias")
-#                      obj.Project3D("XZ").GetYaxis().SetTitleOffset(0.8)
-#                  elif ("PostPreS_IasStripIhVsLayer" in keyname2) :
-#                      ratioOfhighIhPartOlowIh = ROOT.TH1F("RatioOfHighIhOverLowIh",";;Ratio of Ih>5 over Ih<5",23,0.,23.)
-#                      for x in range(1,obj.GetNbinsX()) :
-#                        lowIhPart = obj.Project3D("YZ").Integral(x,x,1,obj.Project3D("YZ").GetYaxis().FindBin(5.0))
-#                        highIhPart = obj.Project3D("YZ").Integral(x,x,obj.Project3D("YZ").GetYaxis().FindBin(5.0),obj.Project3D("YZ").GetNbinsY())
-#                        ratio = 0
-#                        if (lowIhPart>0) :
-#                          ratio = highIhPart/lowIhPart
-#                        ratioOfhighIhPartOlowIh.SetBinContent(x,ratio)
-#                      ratioOfhighIhPartOlowIh.Draw("COLZ")
-#                      ratioOfhighIhPartOlowIh.SetStats(0)
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(1,"TIB L1")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(2,"TIB L2")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(3,"TIB L3")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(4,"TIB L4")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(5,"TOB L1")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(6,"TOB L2")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(7,"TOB L3")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(8,"TOB L4")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(9,"TOB L5")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(10,"TOB L6")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(11,"TID D1")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(12,"TID D2")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(13,"TID D3")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(14,"TEC D1")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(15,"TEC D2")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(16,"TEC D3")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(17,"TEC D4")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(18,"TEC D5")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(19,"TEC D6")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(20,"TEC D7")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(21,"TEC D8")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(22,"TEC D9")
-#                      ratioOfhighIhPartOlowIh.GetXaxis().SetBinLabel(23,"TEC D10")
-#                      ratioOfhighIhPartOlowIh.GetYaxis().SetTitleOffset(1.5)
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(1,"TIB L1")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(2,"TIB L2")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(3,"TIB L3")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(4,"TIB L4")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(5,"TOB L1")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(6,"TOB L2")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(7,"TOB L3")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(8,"TOB L4")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(9,"TOB L5")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(10,"TOB L6")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(11,"TID D1")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(12,"TID D2")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(13,"TID D3")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(14,"TEC D1")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(15,"TEC D2")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(16,"TEC D3")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(17,"TEC D4")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(18,"TEC D5")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(19,"TEC D6")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(20,"TEC D7")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(21,"TEC D8")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(22,"TEC D9")
-#                      obj.Project3D("YZ").GetXaxis().SetBinLabel(23,"TEC D10")
-#                      obj.Project3D("YZ").GetYaxis().SetTitleOffset(0.8)
-#                      obj.Project3D("YZ").GetYaxis().SetTitle("I_{h} (MeV/cm)")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(1,"TIB L1")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(2,"TIB L2")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(3,"TIB L3")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(4,"TIB L4")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(5,"TOB L1")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(6,"TOB L2")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(7,"TOB L3")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(8,"TOB L4")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(9,"TOB L5")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(10,"TOB L6")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(11,"TID D1")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(12,"TID D2")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(13,"TID D3")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(14,"TEC D1")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(15,"TEC D2")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(16,"TEC D3")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(17,"TEC D4")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(18,"TEC D5")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(19,"TEC D6")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(20,"TEC D7")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(21,"TEC D8")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(22,"TEC D9")
-#                      obj.Project3D("XZ").GetXaxis().SetBinLabel(23,"TEC D10")
-#                      obj.Project3D("XZ").GetYaxis().SetTitle("G_{i}^{Strips}")
-#                      obj.Project3D("XZ").GetYaxis().SetTitleOffset(0.8)
-##                  obj.GetXaxis().SetRange(obj.GetXaxis().FindBin(0.0),obj.GetXaxis().FindBin(1.0))
-#                  can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_RatioOfLowIasHighIas.png")
-#                  obj.Project3D("YZ").SetStats(0)
-#                  obj.Project3D("YZ").Draw("COLZ")
-#                  obj.Project3D("YZ").SetTitle("")
-#                  tex4.Draw("SAME")
-#                  tex5.Draw("SAME")
-#                  can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_allIas.png")
-#                  obj.Project3D("XZ").SetStats(0)
-#                  obj.Project3D("XZ").Draw("COLZ")
-#                  obj.Project3D("XZ").SetTitle("")
-#                  tex4.Draw("SAME")
-#                  tex5.Draw("SAME")
-#                  can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_allIh.png")
-#
-#                  obj.Project3D("YZ").GetYaxis().UnZoom()
-#                  obj.GetXaxis().SetRange(obj.GetXaxis().FindBin(0.7),obj.GetXaxis().FindBin(1.0))
-#                  obj.Project3D("YZ").Draw("COLZ")
-#                  tex4.Draw("SAME")
-#                  tex5.Draw("SAME")
-#                  can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_highIas.png")
-#
-#                  obj.GetXaxis().UnZoom()
-#                  obj.GetXaxis().SetRange(obj.GetXaxis().FindBin(0.0),obj.GetXaxis().FindBin(0.7))
-#                  projObj = obj.Project3D("YZ")
-#                  if (projObj.GetEntries()==0) : continue
-#                  projObj.Draw("COLZ")
-#                  can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_lowIas.png")
-#                  if ("PostPreS_IasPixelIhVsLayer" in keyname2):
-#                    for i in range(7) :
-#                      obj.Project3D("YZ").ProjectionY(newname,i,i+1,"e").Draw()
-#                      can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_PixLayer"+str(i)+".png")
-#                  elif ("PostPreS_IasStripIhVsLayer" in keyname2):
-#                    for i in range(23) :
-#                      obj.Project3D("YZ").ProjectionY(newname,i,i+1,"e").Draw()
-#                      can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_StripLayer"+str(i)+".png")
-#                else :
-#                  obj.SetMarkerStyle(20)
-#                  obj.GetXaxis().SetRange(bin,bin)
-#                  obj.Project3D("ZY").Draw("COLZ")
               if ((obj.ClassName() == "TH2F" or obj.ClassName() == "TH2D") and not (keyname2 == "GenPtVsRecoPt" or "PreS_" in keyname2 or "CutFlow" in keyname2 or "N1_" in keyname2 or "_p_" in keyname2 or "_pterr" in keyname2 )):
                 obj.SetTitle("")
                 obj.SetMarkerStyle(20)
@@ -1197,281 +1025,12 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
           else:
               print(keyname+"   "+newname + " does not inherit from TObject" )
 
-Mass = f.Get("/analyzer/BaseName/Mass")
-Mass_wPred = f.Get("/analyzer/BaseName/Pred_Mass_CB")
-if Mass_wPred :
-  tex5m = ROOT.TLatex(0.07,0.01,fileVersion)
-  tex5m.SetNDC();
-  tex5m.SetTextFont(52);
-  tex5m.SetTextSize(0.0185);
-  tex5m.SetLineWidth(2);
-  name = fileName[0:-5] + "_Bin" + str(bin)+ "/"
-  if not os.path.exists(os.path.dirname(name)): os.makedirs(os.path.dirname(name))
-  massBins = [10.,50.,100.,200.,300.,500.,1000.,4000.]
-  massBinsArray = np.array(massBins)
-  Mass_projY_NotRebinned = Mass.ProjectionY("Mass_projY_NotRebinned",ProjBin,ProjBin,"e")
-  Mass_wPred_projY_NotRebinned = Mass_wPred.ProjectionY("Mass_wPred_projY_NotRebinned",ProjBin,ProjBin,"e")
-
-  Mass_projY = ROOT.TH1F("Mass_projY" , "Mass_projY" , len(massBinsArray)-1, massBinsArray)
-  Mass_wPred_projY = ROOT.TH1F("Mass_wPred_projY" , "Mass_wPred_projY" , len(massBinsArray)-1, massBinsArray)
-
-  print("Mass_projY_NotRebinned.Integral(): ",Mass_projY_NotRebinned.Integral())
-  print("Mass_wPred_projY_NotRebinned.Integral(): ",Mass_wPred_projY_NotRebinned.Integral())
-
-  KSvalue = Mass_projY_NotRebinned.KolmogorovTest(Mass_wPred_projY_NotRebinned,"XD")
-  print("KS-test: "+str(KSvalue))
-
-  for i in range(1,len(massBinsArray)) :
-    voltBin = Mass_projY_NotRebinned.FindBin(massBinsArray[i-1])+1
-    currentBin = Mass_projY_NotRebinned.FindBin(massBinsArray[i])
-    Mass_projYCont = 0.0
-    Mass_wPred_projYCont = 0.0
-    Mass_projYCont_err2 = 0.0
-    Mass_wPred_projYCont_err2 = 0.0
-    for j in range(voltBin,currentBin) :
-      Mass_projYCont += Mass_projY_NotRebinned.GetBinContent(j)
-      Mass_projYCont_err2 += (Mass_projY_NotRebinned.GetBinError(j) * Mass_projY_NotRebinned.GetBinError(j))
-      
-      Mass_wPred_projYCont += Mass_wPred_projY_NotRebinned.GetBinContent(j)
-      Mass_wPred_projYCont_err2 += (Mass_wPred_projY_NotRebinned.GetBinError(j)*Mass_wPred_projY_NotRebinned.GetBinError(j))
-    Mass_projY.SetBinContent(i,Mass_projYCont)
-    Mass_projY.SetBinError(i,np.sqrt(Mass_projYCont_err2))
-    Mass_wPred_projY.SetBinContent(i,Mass_wPred_projYCont)
-    Mass_wPred_projY.SetBinError(i,np.sqrt(Mass_wPred_projYCont_err2))
-    
-
-  print("----------------------------------------------")
-  KSvalue2 = Mass_projY.KolmogorovTest(Mass_wPred_projY,"XD")
-  print("KS-test after rebinning: "+str(KSvalue2))
-
-  Mass_projY.SetMarkerColor(1)
-  Mass_projY.SetLineColor(1)
-  Mass_projY.SetMarkerStyle(20)
-  Mass_projY.SetTitle("")
-  Mass_projY.GetXaxis().SetTitleSize(0.05)
-  Mass_projY.GetXaxis().SetTitleOffset(1)
-  Mass_projY.GetXaxis().SetTitle("Mass [GeV]")
-  Mass_projY.GetYaxis().SetTitle("Tracks/bin")
-  Mass_projY.GetYaxis().SetTitleSize(0.05)
-  Mass_projY.GetYaxis().SetLabelSize(0.03)
-  Mass_projY.GetYaxis().SetTitleOffset(1)
-  Mass_projY.SetStats(0)
-#  Mass_projY.GetYaxis().SetRangeUser(0.001,Mass_projY.GetMaximum())
-
-
-  Mass_wPred_projY.SetMarkerColor(2)
-  Mass_wPred_projY.SetLineColor(2)
-  Mass_wPred_projY.SetMarkerStyle(20)
-  Mass_wPred_projY.SetTitle("")
-  Mass_wPred_projY.GetXaxis().SetTitleSize(0.05)
-  Mass_wPred_projY.GetXaxis().SetTitleOffset(1)
-  Mass_wPred_projY.GetXaxis().SetTitle("Mass [GeV]")
-  Mass_wPred_projY.GetYaxis().SetTitle("Tracks/bin")
-  Mass_wPred_projY.GetYaxis().SetTitleSize(0.05)
-  Mass_wPred_projY.GetYaxis().SetTitleOffset(1)
-  Mass_wPred_projY.GetYaxis().SetLabelSize(0.03)
-  Mass_wPred_projY.SetStats(0)
-  
-  Mass_projY_NotRebinned.SetMarkerColor(1)
-  Mass_projY_NotRebinned.SetLineColor(1)
-  Mass_projY_NotRebinned.SetMarkerStyle(20)
-  Mass_projY_NotRebinned.SetTitle("")
-  Mass_projY_NotRebinned.GetXaxis().SetTitleSize(0.05)
-  Mass_projY_NotRebinned.GetXaxis().SetTitleOffset(1)
-  Mass_projY_NotRebinned.GetXaxis().SetTitle("Mass [GeV]")
-  Mass_projY_NotRebinned.GetYaxis().SetTitle("Tracks/bin")
-  Mass_projY_NotRebinned.GetYaxis().SetTitleSize(0.05)
-  Mass_projY_NotRebinned.GetYaxis().SetTitleOffset(1)
-  Mass_projY_NotRebinned.SetStats(0)
-#  Mass_projY_NotRebinned.GetYaxis().SetRangeUser(0.001,Mass_projY_NotRebinned.GetMaximum())
-
-
-  Mass_wPred_projY_NotRebinned.SetMarkerColor(2)
-  Mass_wPred_projY_NotRebinned.SetLineColor(2)
-  Mass_wPred_projY_NotRebinned.SetMarkerStyle(20)
-  Mass_wPred_projY_NotRebinned.SetTitle("")
-  Mass_wPred_projY_NotRebinned.GetXaxis().SetTitleSize(0.05)
-  Mass_wPred_projY_NotRebinned.GetXaxis().SetTitleOffset(1)
-  Mass_wPred_projY_NotRebinned.GetXaxis().SetTitle("Mass [GeV]")
-  Mass_wPred_projY_NotRebinned.GetYaxis().SetTitle("Tracks/bin")
-  Mass_wPred_projY_NotRebinned.GetYaxis().SetTitleSize(0.05)
-  Mass_wPred_projY_NotRebinned.GetYaxis().SetTitleOffset(1)
-  Mass_wPred_projY_NotRebinned.SetStats(0)
-
-
-  print("Mass_projY.Integral(): ",Mass_projY.Integral())
-  print("Mass_wPred_projY.Integral(): ",Mass_wPred_projY.Integral())
-
-  legMass =  ROOT.TLegend(.45,.75,.80,.9,"","brNDC")
-  legMass.SetTextFont(42)
-  legMass.SetTextSize(0.035)
-  legMass.SetBorderSize(1);
-  legMass.SetLineColor(1);
-  legMass.SetLineStyle(1);
-  legMass.SetLineWidth(1);
-  legMass.SetFillColor(0);
-  legMass.SetFillStyle(1001);
-  legMass.AddEntry(Mass_wPred_projY,"Prediction","LP")
-  legMass.AddEntry(Mass_projY,"Observation","LP")
-
-  tex4 = ROOT.TLatex(0.7,0.93,"K-S test v2: "+str(round(KSvalue2,4)));
-  tex4.SetNDC();
-  tex4.SetTextFont(52);
-  tex4.SetTextSize(0.0485);
-  tex4.SetLineWidth(2);
-
-  cMass_projY = ROOT.TCanvas('cMass_projY', 'cMass_projY',800,800)
-
-  rp = ROOT.TRatioPlot(Mass_projY,Mass_wPred_projY, "diffsigerrasym")
-
-  rp.SetH1DrawOpt("P");
-  rp.SetH2DrawOpt("P");
-
-  rp.Draw()
-  #rp.GetUpperPad().BuildLegend()
-  rp.SetLeftMargin(0.13);
-  rp.SetRightMargin(0.05);
-  rp.SetUpTopMargin(0.1);
-  rp.SetLowTopMargin(0.02);
-  rp.SetLowBottomMargin(0.35);
-
-  max = Mass_projY.GetMaximum()*1.2
-  Mass_projY.SetMaximum(max);
-  rp.GetLowerRefGraph().SetMinimum(-4);
-  rp.GetLowerRefGraph().SetMaximum(4);
-  #rp.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
-  #rp.GetLowerRefGraph().SetLineColor(0) #0
-  rp.GetLowerRefGraph().SetMarkerStyle(20)
-  rp.GetLowerRefGraph().SetMarkerSize(1);
-  rp.GetLowYaxis().SetNdivisions(505);
-  rp.GetLowerRefYaxis().SetTitle("Pull");
-  rp.GetLowerRefYaxis().SetTitleSize(0.05);
-  rp.GetLowerRefYaxis().SetTitleOffset(1);
-  rp.GetLowerRefYaxis().SetLabelSize(0.035);
-
-
-  rp.GetLowerRefXaxis().SetTitleSize(0.05);
-  rp.GetLowerRefXaxis().SetTitleOffset(0.8);
-  rp.GetLowerRefXaxis().SetLabelSize(0.035);
-  cMass_projY.Modified()
-  cMass_projY.Update()
-  #Mass_projY.Draw()
-  #Mass_wPred_projY.Draw("SAME")
-  #rp.Draw("X")
-
-  rp.GetUpperPad().cd();
-  legMass.Draw("SAME")
-  tex2.Draw("SAME")
-  tex3.Draw("SAME")
-  tex4.Draw("SAME")
-  tex5m.Draw("SAME")
-  
-  name = newFileDir + "/cMass.png"
-  cMass_projY.SaveAs(name)
-  
-  
-  #############################################################################
-  cMass_projY_log = ROOT.TCanvas('cMass_projY_log', 'cMass_projY_log',800,800)
-  cMass_projY_log.SetLogy()
-
-  rp2 = ROOT.TRatioPlot(Mass_projY,Mass_wPred_projY, "diffsigerrasym")
-
-  rp2.SetH1DrawOpt("P");
-  rp2.SetH2DrawOpt("P");
-
-  rp2.Draw()
-  #rp2.GetUpperPad().BuildLegend()
-  rp2.SetLeftMargin(0.13);
-  rp2.SetRightMargin(0.05);
-  rp2.SetUpTopMargin(0.1);
-  rp2.SetLowTopMargin(0.02);
-  rp2.SetLowBottomMargin(0.35);
-
-  max2 = np.maximum(Mass_projY.GetMaximum()*10,10000)
-  Mass_projY.SetMaximum(max2);
-  Mass_projY.SetMinimum(0.000001);
-#  Mass_projY.GetYaxis().SetRangeUser(0.1,100)
-  rp2.GetLowerRefGraph().SetMinimum(-4);
-  rp2.GetLowerRefGraph().SetMaximum(4);
-  #rp2.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
-  #rp2.GetLowerRefGraph().SetLineColor(0) #0
-  rp2.GetLowerRefGraph().SetMarkerStyle(20)
-  rp2.GetLowerRefGraph().SetMarkerSize(1);
-  rp2.GetLowYaxis().SetNdivisions(505);
-  rp2.GetLowerRefYaxis().SetTitle("Pull");
-  rp2.GetLowerRefYaxis().SetTitleSize(0.05);
-  rp2.GetLowerRefYaxis().SetTitleOffset(1);
-  rp2.GetLowerRefYaxis().SetLabelSize(0.035);
-
-
-  rp2.GetLowerRefXaxis().SetTitleSize(0.05);
-  rp2.GetLowerRefXaxis().SetTitleOffset(0.8);
-  rp2.GetLowerRefXaxis().SetLabelSize(0.035);
-  cMass_projY_log.Modified()
-  cMass_projY_log.Update()
-  #Mass_projY.Draw()
-  #Mass_wPred_projY.Draw("SAME")
-  #rp2.Draw("X")
-
-  rp2.GetUpperPad().cd();
-  legMass.Draw("SAME")
-  tex2.Draw("SAME")
-  tex3.Draw("SAME")
-  tex4.Draw("SAME")
-  tex5m.Draw("SAME")
-  
-  name = newFileDir + "/cMass_log.png"
-  cMass_projY_log.SaveAs(name)
-  
-  cMassOrig_projY = ROOT.TCanvas('cMassOrig_projY', 'cMassOrig_projY',800,800)
-  rp0 = ROOT.TRatioPlot(Mass_projY_NotRebinned,Mass_wPred_projY_NotRebinned, "diffsigerrasym")
-  rp0.Draw()
-  rp0.SetH1DrawOpt("P");
-  rp0.SetH2DrawOpt("P");
-  rp0.SetLeftMargin(0.13);
-  rp0.SetRightMargin(0.05);
-  rp0.SetUpTopMargin(0.1);
-  rp0.SetLowTopMargin(0.02);
-  rp0.SetLowBottomMargin(0.35);
-  rp0.GetLowerRefGraph().SetMinimum(-4);
-  rp0.GetLowerRefGraph().SetMaximum(4);
-  #rp0.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
-  #rp0.GetLowerRefGraph().SetLineColor(0) #0
-  rp0.GetLowerRefGraph().SetMarkerStyle(20)
-  rp0.GetLowerRefGraph().SetMarkerSize(1);
-  rp0.GetLowYaxis().SetNdivisions(505);
-  rp0.GetLowerRefYaxis().SetTitle("Pull");
-  rp0.GetLowerRefYaxis().SetTitleSize(0.05);
-  rp0.GetLowerRefYaxis().SetTitleOffset(1);
-  rp0.GetLowerRefYaxis().SetLabelSize(0.035);
-
-
-  rp0.GetLowerRefXaxis().SetTitleSize(0.05);
-  rp0.GetLowerRefXaxis().SetTitleOffset(0.8);
-  rp0.GetLowerRefXaxis().SetLabelSize(0.035);
-  cMassOrig_projY.Modified()
-  cMassOrig_projY.Update()
-
-  rp0.GetUpperPad().cd();
-  legMass.Draw("SAME")
-  tex2.Draw("SAME")
-  tex3.Draw("SAME")
-  tex4.Draw("SAME")
-  tex5m.Draw("SAME")
-  cMassOrig_projY.SaveAs(newFileDir + "/cMass_NotRebinned.png")
-  
-  cMassOrig_projY_log = ROOT.TCanvas('cMassOrig_projY_log', 'cMassOrig_projY_log',800,800)
-  cMassOrig_projY_log.SetLogy()
-  rp0.Draw()
-  legMass.Draw("SAME")
-  tex2.Draw("SAME")
-  tex3.Draw("SAME")
-  tex4.Draw("SAME")
-  tex5m.Draw("SAME")
-  cMassOrig_projY_log.SaveAs(newFileDir + "/cMass_logy_NotRebinned.png")
-  
-
-
-os.system("cp forWebpage/* "+newFileDir+"/.")
-os.system("cp forWebpage/.htaccess "+newFileDir+"/.")
-print("scp -r "+ newFileDir + " tvami@lxplus.cern.ch:/eos/home-t/tvami/www/projects/HSCP/2022CodeV"+codeVersion+"/.")
+##template_2018A_v2.root
+#name = "2017A"
+#version = "v4"
+#fOut = ROOT.TFile.Open('template_{}_{}.root'.format(name,version),'UPDATE')
+#fIn = ROOT.TFile.Open("Histos_numEvent2000.root")
+#templ1 = fIn.Get('HSCParticleAnalyzer/BaseName/Calibration_GiTemplate_PU_1')
+#
+#templ1.Write()
+#fOut.Close()

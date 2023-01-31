@@ -67,8 +67,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   #fileNames = cms.untracked.vstring("/store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/270002/64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
-   fileNames = cms.untracked.vstring("file:64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
+   fileNames = cms.untracked.vstring("root://cmsxrootd.fnal.gov//store/data/Run2017E/SingleMuon/AOD/15Feb2022_UL2017-v1/40000/96C1CD17-6596-7A41-AAF8-31F719554903.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -203,34 +202,34 @@ if options.SAMPLE == 'isData':
         SF0 = 1.0
         SF1 = 1.0325
         if options.ERA == 'A':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v2.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v2.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2017C_v4.root'
+            IasTemplate = 'template_2017C_v2.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2017D_v4.root'
+            IasTemplate = 'template_2017D_v2.root'
         if options.ERA == 'E':
-            IasTemplate = 'template_2017E_v4.root'
+            IasTemplate = 'template_2017E_v2.root'
         if options.ERA == 'F':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v2.root'
         if options.ERA == 'G':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v2.root'
         if options.ERA == 'H':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v2.root'
     if options.YEAR == '2018':
         K = 2.27
         C = 3.16
         SF0 = 1.0
         SF1 = 1.0817
         if options.ERA == 'A':
-            IasTemplate = 'template_2018A_v4.root'
+            IasTemplate = 'template_2018A_v2.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2018B_v4.root'
+            IasTemplate = 'template_2018B_v2.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2018C_v4.root'
+            IasTemplate = 'template_2018C_v2.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2018D_v4.root'
+            IasTemplate = 'template_2018D_v2.root'
 else:
     if options.SAMPLE == 'isBckg':
         SampleType = 1
@@ -239,13 +238,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v2.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v2.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
@@ -253,13 +252,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v2.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v2.root'
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.SampleType = SampleType

@@ -54,12 +54,13 @@ void loadDeDxParameters(
 TH3F* loadDeDxTemplate(std::string path, bool splitByModuleType,bool puTreatment,int puBin) {
   TFile* InputFile = new TFile(path.c_str());
   TH3F* DeDxMap_;
-  if(!puTreatment) DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Charge_Vs_Path"); // replace with "Calibration_GiTemplate"
-  else{
+  if(!puTreatment) {
+     DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Calibration_GiTemplate"); // used to be Charge_Vs_Path 
+  } else{
     if( puBin > 5) {
+      printf("puBin > 5");
       exit(0);
-    }
-    else{  
+    } else{  
       std::string template_name = "Calibration_GiTemplate_PU_" + to_string(puBin);
       DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, template_name.c_str());
     }

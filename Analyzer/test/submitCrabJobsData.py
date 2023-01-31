@@ -105,7 +105,7 @@ for i in datasetList:
   replaceIDOSZAK  = "sed -i 's/IDOSZAK/"+IDOSZAK+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceIDOSZAK)
   	
-  replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v4.root/g' 4crab_toSubmit_Data.py"
+  replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v3.root/g' 4crab_toSubmit_Data.py"
   os.system(replaceGiTEMPLATE)
 
   os.system("crab submit -c 4crab_toSubmit_Data.py")

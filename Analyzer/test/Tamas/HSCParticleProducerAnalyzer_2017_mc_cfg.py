@@ -6,28 +6,24 @@ options = VarParsing('analysis')
 
 # defaults
 options.outputFile = 'Histos.root'
-options.maxEvents = 2000
+# -1 means all events
+options.maxEvents = -1
 
-# was 106X_dataRun2_v20
-options.register('GTAG', '106X_dataRun2_v36',
+#options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
+options.register('GTAG', '106X_mc2017_realistic_v10',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag"
 )
-options.register('SAMPLE', 'isData',
+options.register('SAMPLE', 'isBckg',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Sample Type. Use: isSignal or isBckg or isData"
 )
-options.register('YEAR', '2018',
+options.register('YEAR', '2017',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Year. Use: 2017 or 2018"
-)
-options.register('ERA', 'A', 
-    VarParsing.multiplicity.singleton,
-    VarParsing.varType.string, 
-    'Sample Type. Use: A,B,C,D,E,F,G'
 )
 options.register('isSkimmedSample', False,
     VarParsing.multiplicity.singleton,
@@ -42,9 +38,19 @@ options.register('LUMITOPROCESS', '',
 )
 options.parseArguments()
 
-
 process = cms.Process("HSCPAnalysis")
 
+#diventano var parsing
+#The following parameters need to be provided
+#isSignal, isBckg, isData, isSkimmedSample, GTAG, InputFileList
+#isSignal = True
+#isBckg = False
+#isData = False
+#isSkimmedSample = False
+#GTAG = 'START72_V1::All'
+
+## print configuration:
+print('\nCMSSW version : {}'.format(os.environ['CMSSW_VERSION']))
 print('Global Tag    : {}'.format(options.GTAG))
 if options.SAMPLE=='isData':
    print('Lumi File     : {}'.format(options.LUMITOPROCESS))
@@ -61,21 +67,21 @@ process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.options   = cms.untracked.PSet(
-#      wantSummary = cms.untracked.bool(False),
+#      wantSummary = cms.untracked.bool(True),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   #fileNames = cms.untracked.vstring("/store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/270002/64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
-   fileNames = cms.untracked.vstring("file:64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/230000/064A8795-8468-3849-B543-BDD6287EE510.root"),
+   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/280005/D8AB7663-12E6-6247-BF03-0F24B7D7D4C6.root "),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
-process.HSCPTuplePath = cms.Path()
+process.HSCPTuplePath = cms.Path() 
 
 ########################################################################
 #Run the Skim sequence if necessary
@@ -97,15 +103,15 @@ if(not options.isSkimmedSample):
       ]
    else:
       #do not apply trigger filter on signal
-      process.HSCPTrigger.HLTPaths = ["*"]
-
-   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger
+      process.HSCPTrigger.HLTPaths = ["*"]  
+   
+   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger 
 
 ########################################################################
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
-process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff")
+process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff") 
 process.HSCPTuplePath += process.nEventsBefEDM + process.HSCParticleProducerSeq
 
 ########################################################################  
@@ -117,7 +123,7 @@ if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
         filter = cms.bool(False),
         src = cms.InputTag("genParticles"),
         cut = cms.string('pt > 5.0'),
-        stableOnly = cms.bool(True)
+#        stableOnly = cms.bool(True)
    )
 
    process.HSCPTuplePath += process.genParticlesSkimmed
@@ -158,13 +164,13 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep recoTracks_standAloneMuons_*_*",
          "keep recoTrackExtras_standAloneMuons_*_*",
          "keep TrackingRecHitsOwned_standAloneMuons_*_*",
-         "keep recoTracks_globalMuons_*_*",
+         "keep recoTracks_globalMuons_*_*",  
          "keep recoTrackExtras_globalMuons_*_*",
          "keep recoMuons_muons_*_*",
          "keep recoMuonTimeExtraedmValueMap_muons_*_*",
          "keep edmTriggerResults_TriggerResults_*_*",
-         "keep *_ak4PFJetsCHS__*",
-         "keep recoPFMETs_pfMet__*",
+         "keep *_ak4PFJetsCHS__*", 
+         "keep recoPFMETs_pfMet__*",     
          "keep *_HSCParticleProducer_*_*",
          "keep *_HSCPIsolation*_*_*",
          "keep *_dedxHitInfo*_*_*",
@@ -173,9 +179,9 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep *_MuonSegmentProducer_*_*",
          "keep *_g4SimHits_StoppedParticles*_*",
          "keep PileupSummaryInfos_addPileupInfo_*_*",
-         "keep *_dt4DSegments__*",
-         "keep *_cscSegments__*",
-         "keep *_scalersRawToDigi_*_*",
+         "keep *_dt4DSegments__*",  
+         "keep *_cscSegments__*",  
+         "keep *_scalersRawToDigi_*_*", 
          "keep *_caloMet_*_*",
     ),
     fileName = cms.untracked.string(options.outputFile),
@@ -195,6 +201,11 @@ if(options.SAMPLE=='isBckg' or options.SAMPLE=='isData'):
 else:
    process.Out.SelectEvents = cms.untracked.PSet()
 
+
+########################################################################
+
+# run the EDAnalyzer
+
 if options.SAMPLE == 'isData':
     SampleType = 0
     if options.YEAR == '2017':
@@ -203,34 +214,34 @@ if options.SAMPLE == 'isData':
         SF0 = 1.0
         SF1 = 1.0325
         if options.ERA == 'A':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v2.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v2.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2017C_v4.root'
+            IasTemplate = 'template_2017C_v2.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2017D_v4.root'
+            IasTemplate = 'template_2017D_v2.root'
         if options.ERA == 'E':
-            IasTemplate = 'template_2017E_v4.root'
+            IasTemplate = 'template_2017E_v2.root'
         if options.ERA == 'F':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v2.root'
         if options.ERA == 'G':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v2.root'
         if options.ERA == 'H':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v2.root'
     if options.YEAR == '2018':
         K = 2.27
         C = 3.16
         SF0 = 1.0
         SF1 = 1.0817
         if options.ERA == 'A':
-            IasTemplate = 'template_2018A_v4.root'
+            IasTemplate = 'template_2018A_v2.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2018B_v4.root'
+            IasTemplate = 'template_2018B_v2.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2018C_v4.root'
+            IasTemplate = 'template_2018C_v2.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2018D_v4.root'
+            IasTemplate = 'template_2018D_v2.root'
 else:
     if options.SAMPLE == 'isBckg':
         SampleType = 1
@@ -239,13 +250,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v2.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v2.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
@@ -253,22 +264,23 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v2.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v2.root'
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
-process.HSCParticleAnalyzer.SampleType = SampleType
+process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
+process.HSCParticleAnalyzer.SampleType = SampleType 
 process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
-process.HSCParticleAnalyzer.DebugLevel = 0
 process.HSCParticleAnalyzer.Period = options.YEAR
+process.HSCParticleAnalyzer.DebugLevel = 0 
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C
 process.HSCParticleAnalyzer.DeDxSF_0 = SF0
@@ -297,5 +309,4 @@ for mod in process.filters_().itervalues():
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
 process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
-
 
