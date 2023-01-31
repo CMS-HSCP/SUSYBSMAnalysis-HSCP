@@ -41,7 +41,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 3500
-config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v2.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v4.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'
