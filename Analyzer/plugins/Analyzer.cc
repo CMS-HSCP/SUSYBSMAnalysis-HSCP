@@ -217,7 +217,7 @@ void Analyzer::beginJob() {
   // create histograms & trees
   tuple = new Tuple();
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
-
+  
   tuple_maker->initializeTuple(tuple,
                                dir,
                                saveTree_,
@@ -238,13 +238,17 @@ void Analyzer::beginJob() {
                                numDzRegions_,
                                globalMinPt_,
                                globalMinTOF_);
-
+  
   tuple_maker->initializeRegions(tuple,
                                  dir,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
                                  reg_massbins_);
+
+
+
+
 
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
@@ -5616,10 +5620,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   ->setComment("How many different bins the prediction is split in for analysis being run, sets how many histograms are actually initialized.");
   desc.addUntracked("EtaBins",60)
   ->setComment("How many bins we use for the background prediction method in Eta -- impacts background prediction method -- histograms with the name of the form Pred_Eta in Analysis_PlotStructure.h");
-  desc.addUntracked("RegEtaBins",120)->setComment("How many bins we use for the validation of the background estimate method");
-  desc.addUntracked("RegIhBins",200)->setComment("How many bins we use for the validation of the background estimate method");
-  desc.addUntracked("RegPBins",200)->setComment("How many bins we use for the validation of the background estimate method");
-  desc.addUntracked("RegMassBins",50)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegEtaBins",80)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegIhBins",400)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegPBins",1000)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegMassBins",400)->setComment("How many bins we use for the validation of the background estimate method");
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
@@ -5628,8 +5632,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
-  desc.addUntracked("DeDxK",2.3)->setComment("A");
-  desc.addUntracked("DeDxC",3.17)->setComment("A");
+  desc.addUntracked("DeDxK",2.27)->setComment("A");
+  desc.addUntracked("DeDxC",3.16)->setComment("A");
   desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
   desc.addUntracked("SaveGenTree",0)->setComment("A");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
@@ -6151,14 +6155,14 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     tuple->PostS_CutIdVsIas->Fill(CutIndex, globalIas_, EventWeight_);
     tuple->PostS_CutIdVsIh->Fill(CutIndex, globalIh_, EventWeight_);
 
-    tuple->PostS_CutIdVsPVsIas->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
-    tuple->PostS_CutIdVsPVsIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
-    tuple->PostS_CutIdVsPtVsIas->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
-    tuple->PostS_CutIdVsPtVsIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
+    //tuple->PostS_CutIdVsPVsIas->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
+    //tuple->PostS_CutIdVsPVsIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
+    //tuple->PostS_CutIdVsPtVsIas->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
+    //tuple->PostS_CutIdVsPtVsIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
     if (typeMode_ > 1) {
       tuple->PostS_CutIdVsTOF->Fill(CutIndex, MuonTOF, EventWeight_);
-      tuple->PostS_CutIdVsTOFVsIas->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
-      tuple->PostS_CutIdVsTOFVsIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
+      //tuple->PostS_CutIdVsTOFVsIas->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
+      //tuple->PostS_CutIdVsTOFVsIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
     }
   }
   return true;

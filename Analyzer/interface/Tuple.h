@@ -1088,12 +1088,12 @@ struct Tuple {
   TH2F* PostS_CutIdVsIh;
   TH2F* PostS_CutIdVsTOF;
 
-  TH3F* PostS_CutIdVsPVsIas;
-  TH3F* PostS_CutIdVsPVsIh;
-  TH3F* PostS_CutIdVsPtVsIas;
-  TH3F* PostS_CutIdVsPtVsIh;
-  TH3F* PostS_CutIdVsTOFVsIas;
-  TH3F* PostS_CutIdVsTOFVsIh;
+  //TH3F* PostS_CutIdVsPVsIas;
+  //TH3F* PostS_CutIdVsPVsIh;
+  //TH3F* PostS_CutIdVsPtVsIas;
+  //TH3F* PostS_CutIdVsPtVsIh;
+  //TH3F* PostS_CutIdVsTOFVsIas;
+  //TH3F* PostS_CutIdVsTOFVsIh;
   TH2F* PostS_CutIdVsBeta_postPt;
   TH2F* PostS_CutIdVsBeta_postPtAndIas;
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
@@ -1136,19 +1136,19 @@ struct Tuple {
 
   TH2F* PDF_E_Eta;
   TH2F* PDF_A_Eta;
-  TH3F* PDF_H_EtaMass;
-  TH3F* PDF_G_EtaP;
-  TH3F* PDF_C_EtaP;
-  TH3F* PDF_F_EtaICK;
-  TH3F* PDF_B_EtaICK;
+  //TH3F* PDF_H_EtaMass;
+  //TH3F* PDF_G_EtaP;
+  //TH3F* PDF_C_EtaP;
+  //TH3F* PDF_F_EtaICK;
+  //TH3F* PDF_B_EtaICK;
 
   TH2F* PDF_E_Eta_Flip;
   TH2F* PDF_A_Eta_Flip;
-  TH3F* PDF_H_EtaMass_Flip;
-  TH3F* PDF_G_EtaP_Flip;
-  TH3F* PDF_C_EtaP_Flip;
-  TH3F* PDF_F_EtaICK_Flip;
-  TH3F* PDF_B_EtaICK_Flip;
+  //TH3F* PDF_H_EtaMass_Flip;
+  //TH3F* PDF_G_EtaP_Flip;
+  //TH3F* PDF_C_EtaP_Flip;
+  //TH3F* PDF_F_EtaICK_Flip;
+  //TH3F* PDF_B_EtaICK_Flip;
 
   // end FIXME
 

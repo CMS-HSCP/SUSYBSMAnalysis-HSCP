@@ -343,7 +343,7 @@ public:
 
   void fillRegions(Tuple *&tuple,
                    float pt_cut,
-                   float Ias_quantiles[5],
+                   float Ias_quantiles[8],
                    float eta,
                    float p,
                    float pt,
@@ -1277,14 +1277,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_CutIdVsIas = dir.make<TH2F>("PostS_CutIdVsIas", ";NCuts;G_{i}^{strips}", NCuts, 0, NCuts, 10, 0., 1.);
   tuple->PostS_CutIdVsIh = dir.make<TH2F>("PostS_CutIdVsIh", ";NCuts;I_{h} (MeV/cm)", NCuts, 0, NCuts, 100, 0, dEdxM_UpLim);
   
-  tuple->PostS_CutIdVsPVsIas = dir.make<TH3F>("PostS_CutIdVsPVsIas", ";NCuts;p (GeV);G_{i}^{strips}", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 10, 0., 1.);
-  tuple->PostS_CutIdVsPVsIh = dir.make<TH3F>("PostS_CutIdVsPVsIh", ";NCuts;P;I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
-  tuple->PostS_CutIdVsPtVsIas = dir.make<TH3F>("PostS_CutIdVsPtVsIas", ";NCuts;p_{T} (GeV);G_{i}^{strips}", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 10, 0., 1.);
-  tuple->PostS_CutIdVsPtVsIh = dir.make<TH3F>("PostS_CutIdVsPtVsIh", ";NCuts;p_{T} (GeV);I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
+  //tuple->PostS_CutIdVsPVsIas = dir.make<TH3F>("PostS_CutIdVsPVsIas", ";NCuts;p (GeV);G_{i}^{strips}", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 10, 0., 1.);
+  //tuple->PostS_CutIdVsPVsIh = dir.make<TH3F>("PostS_CutIdVsPVsIh", ";NCuts;P;I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
+  //tuple->PostS_CutIdVsPtVsIas = dir.make<TH3F>("PostS_CutIdVsPtVsIas", ";NCuts;p_{T} (GeV);G_{i}^{strips}", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 10, 0., 1.);
+  //tuple->PostS_CutIdVsPtVsIh = dir.make<TH3F>("PostS_CutIdVsPtVsIh", ";NCuts;p_{T} (GeV);I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, PtHistoUpperBound, 100, 0, dEdxM_UpLim);
   if (TypeMode > 1) {
     tuple->PostS_CutIdVsTOF = dir.make<TH2F>("PostS_CutIdVsTOF", ";NCuts;TOF", NCuts, 0, NCuts, 50, 1, 5);
-    tuple->PostS_CutIdVsTOFVsIas = dir.make<TH3F>("PostS_CutIdVsTOFVsIas", ";NCuts;TOF;G_{i}^{strips}", NCuts, 0, NCuts, 50, 0, 5, 10, 0., 1.);
-    tuple->PostS_CutIdVsTOFVsIh = dir.make<TH3F>("PostS_CutIdVsTOFVsIh", ";NCuts;TOF;I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
+    //tuple->PostS_CutIdVsTOFVsIas = dir.make<TH3F>("PostS_CutIdVsTOFVsIas", ";NCuts;TOF;G_{i}^{strips}", NCuts, 0, NCuts, 50, 0, 5, 10, 0., 1.);
+    //tuple->PostS_CutIdVsTOFVsIh = dir.make<TH3F>("PostS_CutIdVsTOFVsIh", ";NCuts;TOF;I_{h} (MeV/cm)", NCuts, 0, NCuts, 50, 0, 5, 100, 0, dEdxM_UpLim);
   }
   
   tuple->PostS_RelativePtShift = dir.make<TH1F>("PostS_RelativePtShift", ";#Delta p_{T} / p_{T}; Events / bin", 20, 0., 0.1);
@@ -1492,28 +1492,28 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Pred_TOF = dir.make<TH2F>("Pred_TOF", ";NCuts;Pred_TOF", NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
       //pz
 
-      tuple->PDF_G_EtaP = dir.make<TH3F>("PDF_G_EtaP", ";NCuts;PDF_G_Eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
-      tuple->PDF_C_EtaP = dir.make<TH3F>("PDF_C_EtaP", ";NCuts;PDF_C_Eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
+      //tuple->PDF_G_EtaP = dir.make<TH3F>("PDF_G_EtaP", ";NCuts;PDF_G_Eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
+      //tuple->PDF_C_EtaP = dir.make<TH3F>("PDF_C_EtaP", ";NCuts;PDF_C_Eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
 
       tuple->PDF_A_Eta = dir.make<TH2F>("PDF_A_Eta", ";NCuts;PDF_A_Eta", NCuts, 0, NCuts, EtaBins, -3., 3.);
       tuple->PDF_E_Eta = dir.make<TH2F>("PDF_E_Eta", ";NCuts;PDF_E_Eta", NCuts, 0, NCuts, EtaBins, -3., 3.);
 
-      tuple->PDF_B_EtaICK = dir.make<TH3F>("PDF_B_EtaICK", ";NCuts;PDF_B_EtaICK", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
-      tuple->PDF_F_EtaICK = dir.make<TH3F>("PDF_F_EtaICK", ";NCuts;PDF_F_EtaICK", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
+      //tuple->PDF_B_EtaICK = dir.make<TH3F>("PDF_B_EtaICK", ";NCuts;PDF_B_EtaICK", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
+      //tuple->PDF_F_EtaICK = dir.make<TH3F>("PDF_F_EtaICK", ";NCuts;PDF_F_EtaICK", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
 
-      tuple->PDF_H_EtaMass = dir.make<TH3F>("PDF_H_EtaMass", ";NCuts;PDF_H_Eta;Mass", NCuts, 0, NCuts, EtaBins, -3., 3., MassNBins, 0, MassHistoUpperBound);
+      //tuple->PDF_H_EtaMass = dir.make<TH3F>("PDF_H_EtaMass", ";NCuts;PDF_H_Eta;Mass", NCuts, 0, NCuts, EtaBins, -3., 3., MassNBins, 0, MassHistoUpperBound);
 
       //pz FLIP
-      tuple->PDF_G_EtaP_Flip = dir.make<TH3F>("PDF_G_EtaP_Flip", ";NCuts;PDF_G_EtaP_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
-      tuple->PDF_C_EtaP_Flip = dir.make<TH3F>("PDF_C_EtaP_Flip", ";NCuts;PDF_C_EtaP_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
+      //tuple->PDF_G_EtaP_Flip = dir.make<TH3F>("PDF_G_EtaP_Flip", ";NCuts;PDF_G_EtaP_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
+      //tuple->PDF_C_EtaP_Flip = dir.make<TH3F>("PDF_C_EtaP_Flip", ";NCuts;PDF_C_EtaP_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
 
       tuple->PDF_A_Eta_Flip = dir.make<TH2F>("PDF_A_Eta_Flip", ";NCuts;PDF_A_Eta_Flip", NCuts, 0, NCuts, EtaBins, -3., 3.);
       tuple->PDF_E_Eta_Flip = dir.make<TH2F>("PDF_E_Eta_Flip", ";NCuts;PDF_E_Eta_Flip", NCuts, 0, NCuts, EtaBins, -3., 3.);
 
-      tuple->PDF_B_EtaICK_Flip = dir.make<TH3F>("PDF_B_EtaICK_Flip", ";NCuts;PDF_B_EtaICK_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
-      tuple->PDF_F_EtaICK_Flip = dir.make<TH3F>("PDF_F_EtaICK_Flip", ";NCuts;PDF_F_EtaICK_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
+      //tuple->PDF_B_EtaICK_Flip = dir.make<TH3F>("PDF_B_EtaICK_Flip", ";NCuts;PDF_B_EtaICK_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
+      //tuple->PDF_F_EtaICK_Flip = dir.make<TH3F>("PDF_F_EtaICK_Flip", ";NCuts;PDF_F_EtaICK_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., 60, -2., 3.);
 
-      tuple->PDF_H_EtaMass_Flip = dir.make<TH3F>("PDF_H_EtaMass_Flip", ";NCuts;PDF_H_EtaMass_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., MassNBins, 0, MassHistoUpperBound);
+      //tuple->PDF_H_EtaMass_Flip = dir.make<TH3F>("PDF_H_EtaMass_Flip", ";NCuts;PDF_H_EtaMass_Flip", NCuts, 0, NCuts, EtaBins, -3., 3., MassNBins, 0, MassHistoUpperBound);
     }
 
     tuple->RegionD_I = dir.make<TH2F>("RegionD_I", ";NCuts;RegionD_I", NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
@@ -2829,9 +2829,9 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     }
   }
 
-  float Ick = 0;
-  if (dedxMObj)
-    Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(float I, bool MC, float dEdxK, float dEdxC)
+  //float Ick = 0;
+  //if (dedxMObj)
+    //Ick = GetIck(Ih, DeDxK, DeDxC);  //GetIck(float I, bool MC, float dEdxK, float dEdxC)
 
   for (unsigned int CutIndex = 0; CutIndex < CutPt.size(); CutIndex++) {
     if (MuonTOF < GlobalMinTOF)
@@ -2855,7 +2855,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->H_C->Fill(CutIndex, Event_Weight);
       if (TypeMode < 2)
         tuple->Pred_EtaP->Fill(CutIndex, track->eta(), track->p(), Event_Weight);
-      tuple->PDF_C_EtaP->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
+      //tuple->PDF_C_EtaP->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
       //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
       tuple->PostS_CutIdVsEta_RegionC->Fill(CutIndex, track->eta());
     } else if (PassTOFCut && !PassPtCut && PassICut) {  //Region B
@@ -2868,7 +2868,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       }
       if (TypeMode < 2)
         tuple->Pred_EtaS->Fill(CutIndex, track->eta(), Event_Weight);
-      tuple->PDF_B_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
+      //tuple->PDF_B_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
       //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
       tuple->PostS_CutIdVsEta_RegionB->Fill(CutIndex, track->eta());
     } else if (PassTOFCut && !PassPtCut && !PassICut) {  //Region A
@@ -2880,15 +2880,15 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       if (TypeMode == 2)
         tuple->Pred_EtaS2->Fill(CutIndex, track->eta(), Event_Weight);
       tuple->PostS_CutIdVsEta_RegionA->Fill(CutIndex, track->eta());
-      tuple->PDF_A_Eta->Fill(CutIndex, track->eta(), Event_Weight);  //pz
+      //tuple->PDF_A_Eta->Fill(CutIndex, track->eta(), Event_Weight);  //pz
 
     } else if (!PassTOFCut && PassPtCut && PassICut) {  //Region H
       tuple->H_H->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
         tuple->H_H_Binned[to_string(bin)]->Fill(CutIndex, Event_Weight);
       tuple->RegionH_Ias->Fill(CutIndex, Is, Event_Weight);
-      if (TypeMode == 2 && Ick > 0)
-        tuple->PDF_H_EtaMass->Fill(CutIndex, track->eta(), track->p() * sqrt(Ick), Event_Weight);  //pz
+      //if (TypeMode == 2 && Ick > 0)
+        //tuple->PDF_H_EtaMass->Fill(CutIndex, track->eta(), track->p() * sqrt(Ick), Event_Weight);  //pz
       //Pred_P->Fill(CutIndex,track->p(),        Event_Weight);
       //Pred_I->Fill(CutIndex,Ih,   Event_Weight);
       if (TypeMode == 2)
@@ -2898,8 +2898,8 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       if (TypeMode == 2)
         tuple->Pred_EtaP->Fill(CutIndex, track->eta(), track->p(), Event_Weight);
       tuple->PostS_CutIdVsEta_RegionG->Fill(CutIndex, track->eta());
-      if (TypeMode == 2)
-        tuple->PDF_G_EtaP->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
+      //if (TypeMode == 2)
+        //tuple->PDF_G_EtaP->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
     } else if (!PassTOFCut && !PassPtCut && PassICut) {                             //Region F
       tuple->H_F->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
@@ -2909,16 +2909,16 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       if (TypeMode == 2)
         tuple->Pred_EtaS->Fill(CutIndex, track->eta(), Event_Weight);
       tuple->PostS_CutIdVsEta_RegionF->Fill(CutIndex, track->eta());
-      if (TypeMode == 2)
-        tuple->PDF_F_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
+      //if (TypeMode == 2)
+        //tuple->PDF_F_EtaICK->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
 
     } else if (!PassTOFCut && !PassPtCut && !PassICut) {  //Region E
       tuple->H_E->Fill(CutIndex, Event_Weight);
       if (TypeMode == 2)
         tuple->Pred_EtaB->Fill(CutIndex, track->eta(), Event_Weight);
       tuple->PostS_CutIdVsEta_RegionE->Fill(CutIndex, track->eta());
-      if (TypeMode == 2)
-        tuple->PDF_E_Eta->Fill(CutIndex, track->eta(), Event_Weight);  //pz
+      //if (TypeMode == 2)
+        //tuple->PDF_E_Eta->Fill(CutIndex, track->eta(), Event_Weight);  //pz
     }
   }
 
@@ -2948,7 +2948,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->H_C_Flip->Fill(CutIndex, Event_Weight);
       if (TypeMode < 2)
         tuple->Pred_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);
-      tuple->PDF_C_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
+      //tuple->PDF_C_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
       //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
     } else if (PassTOFCut && !PassPtCut && PassICut) {  //Region B
       tuple->H_B_Flip->Fill(CutIndex, Event_Weight);
@@ -2958,7 +2958,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->Pred_I_Flip->Fill(CutIndex, Ih, Event_Weight);
       if (TypeMode < 2)
         tuple->Pred_EtaS_Flip->Fill(CutIndex, track->eta(), Event_Weight);
-      tuple->PDF_B_EtaICK_Flip->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
+      //tuple->PDF_B_EtaICK_Flip->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
       //Pred_TOF_Flip->Fill(CutIndex,MuonTOF,         Event_Weight);
     } else if (PassTOFCut && !PassPtCut && !PassICut) {  //Region A
       tuple->H_A_Flip->Fill(CutIndex, Event_Weight);
@@ -2968,14 +2968,14 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->Pred_EtaB_Flip->Fill(CutIndex, track->eta(), Event_Weight);
       if (TypeMode == 2)
         tuple->Pred_EtaS2_Flip->Fill(CutIndex, track->eta(), Event_Weight);
-      tuple->PDF_A_Eta_Flip->Fill(CutIndex, track->eta(), Event_Weight);  //pz
+      //tuple->PDF_A_Eta_Flip->Fill(CutIndex, track->eta(), Event_Weight);  //pz
     } else if (!PassTOFCut && PassPtCut && PassICut) {                    //Region H
       tuple->H_H_Flip->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
         tuple->H_H_Binned_Flip[to_string(bin)]->Fill(CutIndex, Event_Weight);
       tuple->RegionH_Ias_Flip->Fill(CutIndex, Is, Event_Weight);
-      if (TypeMode == 2 && Ick > 0)
-        tuple->PDF_H_EtaMass_Flip->Fill(CutIndex, track->eta(), track->p() * sqrt(Ick), Event_Weight);  //pz
+      //if (TypeMode == 2 && Ick > 0)
+        //tuple->PDF_H_EtaMass_Flip->Fill(CutIndex, track->eta(), track->p() * sqrt(Ick), Event_Weight);  //pz
 
       //Pred_P_Flip->Fill(CutIndex,track->p(),        Event_Weight);
       //Pred_I_Flip->Fill(CutIndex,Ih,   Event_Weight);
@@ -2983,8 +2983,8 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->H_G_Flip->Fill(CutIndex, Event_Weight);
       if (TypeMode == 2)
         tuple->Pred_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);
-      if (TypeMode == 2)
-        tuple->PDF_G_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
+      //if (TypeMode == 2)
+        //tuple->PDF_G_EtaP_Flip->Fill(CutIndex, track->eta(), track->p(), Event_Weight);  //pz
 
     } else if (!PassTOFCut && !PassPtCut && PassICut) {  //Region F
       tuple->H_F_Flip->Fill(CutIndex, Event_Weight);
@@ -2994,14 +2994,14 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
         tuple->Pred_I_Flip->Fill(CutIndex, Ih, Event_Weight);
       if (TypeMode == 2)
         tuple->Pred_EtaS_Flip->Fill(CutIndex, track->eta(), Event_Weight);
-      if (TypeMode == 2)
-        tuple->PDF_F_EtaICK_Flip->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
+      //if (TypeMode == 2)
+        //tuple->PDF_F_EtaICK_Flip->Fill(CutIndex, track->eta(), Ick, Event_Weight);  //pz
     } else if (!PassTOFCut && !PassPtCut && !PassICut) {                            //Region E
       tuple->H_E_Flip->Fill(CutIndex, Event_Weight);
       if (TypeMode == 2)
         tuple->Pred_EtaB_Flip->Fill(CutIndex, track->eta(), Event_Weight);
-      if (TypeMode == 2)
-        tuple->PDF_E_Eta_Flip->Fill(CutIndex, track->eta(), Event_Weight);  //pz
+      //if (TypeMode == 2)
+        //tuple->PDF_E_Eta_Flip->Fill(CutIndex, track->eta(), Event_Weight);  //pz
     }
   }
 }
@@ -3014,7 +3014,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
 
 void TupleMaker::fillRegions(Tuple *&tuple,
                              float pt_cut,
-                             float Ias_quantiles[5],
+                             float Ias_quantiles[8],
                              float eta,
                              float p,
                              float pt,
