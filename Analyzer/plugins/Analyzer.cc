@@ -42,6 +42,7 @@
 // - 42p9: Add new templates from Raphael, inclusive pT bins (>=100,>=200,>=400), remove extra requirements on Calibration plots
 // - 33p1: Dedicated version for the GiTemplate production (to be named v4), PileUpTreatment = False, CreateAndRunGitemplates = False, add doBefTrig/PreS booleans
 // - 43p0: Add 3D histos for systematics but then not used, instead 50 bins for GiStrips as input to Alphebet, use v4 GiTemplates, PileUpTreatment = True, CreateAndExitGitemplates = False
+// - 33p3: Dedicated version for the GiTemplate production (to be named v4) for 2016 data, CreateGiTemplates = True, CreateAndExitGitemplates = True, Do*Plots = False
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -1569,8 +1570,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (trigInfo_ > 0) tuple->ErrorHisto->Fill(3.);
         continue;
     }
-
-
+    
     // tune P muon
     float tuneP_Pt = -999;
     float tuneP_PtErr = -999;
@@ -1584,7 +1584,6 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuneP_Phi = muon->tunePMuonBestTrack()->phi();
       tunePMuonBestTrackType = muon->tunePMuonBestTrackType();
     }
-
 
     // Reco - GEN track matching
     // For signal only, make sure that the candidate is associated to a true HSCP
@@ -1648,7 +1647,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float genBeta = (closestGenIndex > 0) ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1.f;
   
 
-    if (trigInfo_ > 0 && !isData && doBefPreSplots_) {
+    if (!isData && trigInfo_ > 0 && doBefPreSplots_) {
       if (debug_ > 5) {
         LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genPdgId << " with pT " << genPt << " and eta " << genEta ;
       }
@@ -1657,7 +1656,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
     }
     
-    if (exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
+    if (!isData && exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
     
     if (trigInfo_ > 0 && !isData && doBefPreSplots_) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genPt, dRMinGen);
@@ -5611,9 +5610,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked<std::string>("SampleName","BaseName")->setComment("This can be used to distinguish different signal models");
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
-  desc.addUntracked("DoBefTrigPlots",true)->setComment("Set to true if you want before trigger histos created");
-  desc.addUntracked("DoBefPreSplots",true)->setComment("Set to true if you want before preselection histos created");
-  desc.addUntracked("DoPostPreSplots",true)->setComment("Set to true if you want post preselection histos created");
+  desc.addUntracked("DoBefTrigPlots",false)->setComment("Set to true if you want before trigger histos created");
+  desc.addUntracked("DoBefPreSplots",false)->setComment("Set to true if you want before preselection histos created");
+  desc.addUntracked("DoPostPreSplots",false)->setComment("Set to true if you want post preselection histos created");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
   desc.addUntracked("PHistoUpperBound",10000.0)->setComment("A");
   desc.addUntracked("MassHistoUpperBound",4000.0)->setComment("A");
@@ -5632,7 +5631,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",true)
+  desc.addUntracked("ExitWhenGenMatchNotFound",false)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
@@ -5641,14 +5640,14 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
   desc.addUntracked("SaveGenTree",0)->setComment("A");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
-    ->setComment("globalIas_ vs Pt templates in eta binning");
+    ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector");
 
 
 
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
   desc.add<std::string>("PixelCPE","PixelCPETemplateReco")
-    ->setComment("CPE used in the pixel reco, PixelCPEClusterRepair is the best available so far, template only is PixelCPETemplateReco ");
+    ->setComment("CPE used in the pixel reco, PixelCPEClusterRepair is the best available so far, template only is PixelCPETemplateReco");
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
@@ -5700,12 +5699,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinTOF",1.0)->setComment("Cut on the min time-of-flight");
 
   //Templates related parameters
-
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
-  desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
-  desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
-  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateAndExitGitemplates",true)->setComment("Set to true if the only purpose is to create templates");
+  desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
+  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("choice of Pile up bins");
 
  descriptions.add("HSCParticleAnalyzer",desc);
 }

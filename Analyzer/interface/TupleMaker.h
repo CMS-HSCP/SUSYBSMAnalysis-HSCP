@@ -1687,48 +1687,48 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->RegionH_Ias_Flip =
         dir.make<TH2F>("RegionH_Ias_Flip", ";NCuts_Flip;RegionH_Ias_Flip", NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
 
-
-    tuple->CtrlPt_S1_Is = dir.make<TH1D>("CtrlPt_S1_Is", "CtrlPt_S1_Is", 200, 0, dEdxS_UpLim);
-    tuple->CtrlPt_S2_Is = dir.make<TH1D>("CtrlPt_S2_Is", "CtrlPt_S2_Is", 200, 0, dEdxS_UpLim);
-    tuple->CtrlPt_S3_Is = dir.make<TH1D>("CtrlPt_S3_Is", "CtrlPt_S3_Is", 200, 0, dEdxS_UpLim);
-    tuple->CtrlPt_S4_Is = dir.make<TH1D>("CtrlPt_S4_Is", "CtrlPt_S4_Is", 200, 0, dEdxS_UpLim);
-
-    tuple->CtrlPt_S1_Ih = dir.make<TH1D>("CtrlPt_S1_Ih", "CtrlPt_S1_Ih", 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S2_Ih = dir.make<TH1D>("CtrlPt_S2_Ih", "CtrlPt_S2_Ih", 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S3_Ih = dir.make<TH1D>("CtrlPt_S3_Ih", "CtrlPt_S3_Ih", 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S4_Ih = dir.make<TH1D>("CtrlPt_S4_Ih", "CtrlPt_S4_Ih", 400, 0, dEdxM_UpLim);
-
-    tuple->CtrlIs_S1_TOF = dir.make<TH1D>("CtrlIs_S1_TOF", "CtrlIs_S1_TOF", 200, 0, 5);
-    tuple->CtrlIs_S2_TOF = dir.make<TH1D>("CtrlIs_S2_TOF", "CtrlIs_S2_TOF", 200, 0, 5);
-    tuple->CtrlIs_S3_TOF = dir.make<TH1D>("CtrlIs_S3_TOF", "CtrlIs_S3_TOF", 200, 0, 5);
-    tuple->CtrlIs_S4_TOF = dir.make<TH1D>("CtrlIs_S4_TOF", "CtrlIs_S4_TOF", 200, 0, 5);
-
-    tuple->CtrlIh_S1_TOF = dir.make<TH1D>("CtrlIh_S1_TOF", "CtrlIh_S1_TOF", 200, 0, 5);
-    tuple->CtrlIh_S2_TOF = dir.make<TH1D>("CtrlIh_S2_TOF", "CtrlIh_S2_TOF", 200, 0, 5);
-    tuple->CtrlIh_S3_TOF = dir.make<TH1D>("CtrlIh_S3_TOF", "CtrlIh_S3_TOF", 200, 0, 5);
-    tuple->CtrlIh_S4_TOF = dir.make<TH1D>("CtrlIh_S4_TOF", "CtrlIh_S4_TOF", 200, 0, 5);
-
-    tuple->CtrlPt_S1_TOF = dir.make<TH1D>("CtrlPt_S1_TOF", "CtrlPt_S1_TOF", 200, -2, 7);
-    tuple->CtrlPt_S2_TOF = dir.make<TH1D>("CtrlPt_S2_TOF", "CtrlPt_S2_TOF", 200, -2, 7);
-    tuple->CtrlPt_S3_TOF = dir.make<TH1D>("CtrlPt_S3_TOF", "CtrlPt_S3_TOF", 200, -2, 7);
-    tuple->CtrlPt_S4_TOF = dir.make<TH1D>("CtrlPt_S4_TOF", "CtrlPt_S4_TOF", 200, -2, 7);
-
-    for (int i = 0; i < PredBins; i++) {
-      char Suffix[1024];
-      sprintf(Suffix, "_%i", i);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S1_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S1_TOF_Binned", "CtrlPt_S1_TOF_Binned", 200, -2, 7);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S2_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S2_TOF_Binned", "CtrlPt_S2_TOF_Binned", 200, -2, 7);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S3_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S3_TOF_Binned", "CtrlPt_S3_TOF_Binned", 200, -2, 7);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S4_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S4_TOF_Binned", "CtrlPt_S4_TOF_Binned", 200, -2, 7);
-    }
+      //  I think this is not use, let's remove it if nobody complains
+//    tuple->CtrlPt_S1_Is = dir.make<TH1D>("CtrlPt_S1_Is", "CtrlPt_S1_Is", 200, 0, dEdxS_UpLim);
+//    tuple->CtrlPt_S2_Is = dir.make<TH1D>("CtrlPt_S2_Is", "CtrlPt_S2_Is", 200, 0, dEdxS_UpLim);
+//    tuple->CtrlPt_S3_Is = dir.make<TH1D>("CtrlPt_S3_Is", "CtrlPt_S3_Is", 200, 0, dEdxS_UpLim);
+//    tuple->CtrlPt_S4_Is = dir.make<TH1D>("CtrlPt_S4_Is", "CtrlPt_S4_Is", 200, 0, dEdxS_UpLim);
+//
+//    tuple->CtrlPt_S1_Ih = dir.make<TH1D>("CtrlPt_S1_Ih", "CtrlPt_S1_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S2_Ih = dir.make<TH1D>("CtrlPt_S2_Ih", "CtrlPt_S2_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S3_Ih = dir.make<TH1D>("CtrlPt_S3_Ih", "CtrlPt_S3_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S4_Ih = dir.make<TH1D>("CtrlPt_S4_Ih", "CtrlPt_S4_Ih", 400, 0, dEdxM_UpLim);
+//
+//    tuple->CtrlIs_S1_TOF = dir.make<TH1D>("CtrlIs_S1_TOF", "CtrlIs_S1_TOF", 200, 0, 5);
+//    tuple->CtrlIs_S2_TOF = dir.make<TH1D>("CtrlIs_S2_TOF", "CtrlIs_S2_TOF", 200, 0, 5);
+//    tuple->CtrlIs_S3_TOF = dir.make<TH1D>("CtrlIs_S3_TOF", "CtrlIs_S3_TOF", 200, 0, 5);
+//    tuple->CtrlIs_S4_TOF = dir.make<TH1D>("CtrlIs_S4_TOF", "CtrlIs_S4_TOF", 200, 0, 5);
+//
+//    tuple->CtrlIh_S1_TOF = dir.make<TH1D>("CtrlIh_S1_TOF", "CtrlIh_S1_TOF", 200, 0, 5);
+//    tuple->CtrlIh_S2_TOF = dir.make<TH1D>("CtrlIh_S2_TOF", "CtrlIh_S2_TOF", 200, 0, 5);
+//    tuple->CtrlIh_S3_TOF = dir.make<TH1D>("CtrlIh_S3_TOF", "CtrlIh_S3_TOF", 200, 0, 5);
+//    tuple->CtrlIh_S4_TOF = dir.make<TH1D>("CtrlIh_S4_TOF", "CtrlIh_S4_TOF", 200, 0, 5);
+//
+//    tuple->CtrlPt_S1_TOF = dir.make<TH1D>("CtrlPt_S1_TOF", "CtrlPt_S1_TOF", 200, -2, 7);
+//    tuple->CtrlPt_S2_TOF = dir.make<TH1D>("CtrlPt_S2_TOF", "CtrlPt_S2_TOF", 200, -2, 7);
+//    tuple->CtrlPt_S3_TOF = dir.make<TH1D>("CtrlPt_S3_TOF", "CtrlPt_S3_TOF", 200, -2, 7);
+//    tuple->CtrlPt_S4_TOF = dir.make<TH1D>("CtrlPt_S4_TOF", "CtrlPt_S4_TOF", 200, -2, 7);
+//
+//    for (int i = 0; i < PredBins; i++) {
+//      char Suffix[1024];
+//      sprintf(Suffix, "_%i", i);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S1_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S1_TOF_Binned", "CtrlPt_S1_TOF_Binned", 200, -2, 7);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S2_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S2_TOF_Binned", "CtrlPt_S2_TOF_Binned", 200, -2, 7);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S3_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S3_TOF_Binned", "CtrlPt_S3_TOF_Binned", 200, -2, 7);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S4_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S4_TOF_Binned", "CtrlPt_S4_TOF_Binned", 200, -2, 7);
+//    }
 
  // Calibration
  // Scale Factors
@@ -2829,65 +2829,66 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       bin = muonStations(track->hitPattern()) + 1;
   }
 
-  if (!isCosmicSB) {
-    if (track->pt() > PtLimits[0]) {
-      tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S4_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    } else if (track->pt() > PtLimits[1]) {
-      tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S3_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    } else if (track->pt() > PtLimits[2]) {
-      tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S2_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    } else {
-      tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S1_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    }
-
-    if (Is > 0.2) {
-      if (tof)
-        tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Is > 0.1) {
-      if (tof)
-        tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Is > 0.05) {
-      if (tof)
-        tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
-    } else {
-      if (tof)
-        tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
-    }
-
-    if (Ih > 4.4) {
-      if (tof)
-        tuple->CtrlIh_S4_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Ih > 4.1) {
-      if (tof)
-        tuple->CtrlIh_S3_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Ih > 3.8) {
-      if (tof)
-        tuple->CtrlIh_S2_TOF->Fill(MuonTOF, Event_Weight);
-    } else {
-      if (tof)
-        tuple->CtrlIh_S1_TOF->Fill(MuonTOF, Event_Weight);
-    }
-  }
+//  I think this is not use, let's remove it if nobody complains
+//  if (!isCosmicSB) {
+//    if (track->pt() > PtLimits[0]) {
+//      tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S4_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    } else if (track->pt() > PtLimits[1]) {
+//      tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S3_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    } else if (track->pt() > PtLimits[2]) {
+//      tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S2_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    } else {
+//      tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S1_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    }
+//
+//    if (Is > 0.2) {
+//      if (tof)
+//        tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Is > 0.1) {
+//      if (tof)
+//        tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Is > 0.05) {
+//      if (tof)
+//        tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
+//    } else {
+//      if (tof)
+//        tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
+//    }
+//
+//    if (Ih > 4.4) {
+//      if (tof)
+//        tuple->CtrlIh_S4_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Ih > 4.1) {
+//      if (tof)
+//        tuple->CtrlIh_S3_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Ih > 3.8) {
+//      if (tof)
+//        tuple->CtrlIh_S2_TOF->Fill(MuonTOF, Event_Weight);
+//    } else {
+//      if (tof)
+//        tuple->CtrlIh_S1_TOF->Fill(MuonTOF, Event_Weight);
+//    }
+//  }
 
   float Ick = 0;
   if (dedxMObj)
