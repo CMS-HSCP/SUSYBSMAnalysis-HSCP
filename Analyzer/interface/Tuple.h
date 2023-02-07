@@ -1258,6 +1258,15 @@ struct Tuple {
  TH2D* K_and_C_Ih_noL1_VsP_eta2_2;
  TH2D* K_and_C_Ih_strip_VsP_1;
  TH2D* K_and_C_Ih_strip_VsP_2;
+ TH2D* K_and_C_Ih_noL1_VsP_noFcut1;
+ TH2D* K_and_C_Ih_noL1_VsP_noFcut2;
+ TH2D* K_and_C_Ih_strip_VsP_noFcut1;
+ TH2D* K_and_C_Ih_strip_VsP_noFcut2;
+ TH1D* K_and_C_Kin_Mass;
+ TH1D* K_and_C_Kin_p;
+ TH1D* K_and_C_Kin_phi;
+ TH1D* K_and_C_Kin_eta;
+
 
  // Stability
  TH2D* Stab_Ih_NoL1_VsRun;

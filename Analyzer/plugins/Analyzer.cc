@@ -4862,23 +4862,25 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       // selection of the tracks
 
-      bool passedTrackCutsArray[8];
+      bool passedTrackCutsArray[10];
       std::fill(std::begin(passedTrackCutsArray), std::end(passedTrackCutsArray),true);
 
+      // No cut, i.e. events after trigger
+      passedTrackCutsArray[0]  = (trigInfo_ > 0) ? true : false;
       // Check if eta is inside the max eta cut for detector homogeneity
-      passedTrackCutsArray[0]  = (fabs(generalTrack->eta()) < globalMaxEta_) ? true : false;
+      passedTrackCutsArray[1]  = (fabs(generalTrack->eta()) < globalMaxEta_) ? true : false;
       // Select only high purity tracks to ensure good quality tracks
-      passedTrackCutsArray[1]  = (generalTrack->quality(reco::TrackBase::highPurity)) ? true : false;
+      passedTrackCutsArray[2]  = (generalTrack->quality(reco::TrackBase::highPurity)) ? true : false;
       // Cut on the chi2 / ndof to ensure good quality tracks
-      passedTrackCutsArray[2] = ((generalTrack->chi2() / generalTrack->ndof()) < globalMaxChi2_) ? true : false;
+      passedTrackCutsArray[3] = ((generalTrack->chi2() / generalTrack->ndof()) < globalMaxChi2_) ? true : false;
       // Check the min fraction of valid hits to ensure good stats on the hits
-      passedTrackCutsArray[3]  = (generalTrack->validFraction() > globalMinFOVH_) ? true : false;
+      passedTrackCutsArray[4]  = (generalTrack->validFraction() > globalMinFOVH_) ? true : false;
       // Cut on the impact parameter to ensure the track is coming from the PV
       // for typeMode_ 3 (TOF only) dz and dxy is supposed to come from the beamspot
       float dzForCalib = generalTrack->dz(highestSumPt2Vertex.position());
       float dxyForCalib = generalTrack->dxy(highestSumPt2Vertex.position());
-      passedTrackCutsArray[4] = (fabs(dzForCalib) < 0.5) ? true : false;
-      passedTrackCutsArray[5] = (fabs(dxyForCalib) < 0.5)  ? true : false;
+      passedTrackCutsArray[5] = (fabs(dzForCalib) < 0.5) ? true : false;
+      passedTrackCutsArray[6] = (fabs(dxyForCalib) < 0.5)  ? true : false;
 
       if (!passPreselection(passedTrackCutsArray, false)) continue;
 
@@ -4918,17 +4920,138 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
 
 
-      unsigned int nonL1PixHits = dedxIh_noL1_Tmp.numberOfMeasurements() - dedxIh_StripOnly_Tmp.numberOfMeasurements() ;
-      unsigned int numDeDxHits = dedxIh_noL1_Tmp.numberOfMeasurements() ;
 
-      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
-      passedTrackCutsArray[6]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
-      // Cut for the number of dEdx hits to ensure good stats on the hits
-      passedTrackCutsArray[7]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
-      if (!passPreselection(passedTrackCutsArray, false)) continue;
+      // F^pix at track level
+      /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+      int numRecHitsQ = 0, numRecHitsXY = 0;
+      int numRecHitsXYNoL1 = 0;
+      float probQonTrackWMulti = 1;
+      float probXYonTrackWMulti = 1;
+      float probXYonTrackWMultiNoL1 = 1;
+      */
+      int numRecHitsQNoL1 = 0;
+      float probQonTrackWMultiNoL1 = 1;
+      unsigned int nonL1PixHits = 0;
+    
+      for (unsigned int i = 0; i < dedxHits->size(); i++) {
+
+        DetId detid(dedxHits->detId(i));
+        if (detid.subdetId() < 3) {
+        // Calculate probQ and probXY for this pixel rechit
+        // Taking the pixel cluster
+        auto const* pixelCluster =  dedxHits->pixelCluster(i);
+        if (pixelCluster == nullptr)  continue;
+        // Check on which geometry unit the hit is
+        const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+        // Get the local vector for the track direction
+        LocalVector lv = geomDet.toLocal(GlobalVector(generalTrack->px(), generalTrack->py(), generalTrack->pz()));
+        // Re-run the CPE on this cluster with the lv above
+        // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
+        // from this we pick the 2nd, the QualWordType
+        auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, generalTrack->charge())));
+        // extract probQ and probXY from this
+        float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+        float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+
+        // To measure how often the CPE fails
+        bool cpeHasFailed = false;
+        if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+          cpeHasFailed = true;
+        }
+        if (cpeHasFailed) continue;
+
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+
+        bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+        bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+        bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+
+        /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+        if (!specInCPE && probQ < 0.8) {
+          numRecHitsQ++;
+          // Calculate alpha term needed for the combination
+          probQonTrackWMulti *= probQ;
+        }
+
+        if (!specInCPE && probQ < 0.8 && probXY > 0.f) {
+          numRecHitsXY++;
+          // Calculate alpha term needed for the combination
+          probXYonTrackWMulti *= probXY;
+        }
+       */
+
+        int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+        // Have a separate variable that excludes Layer 1
+        // Layer 1 was very noisy in 2017/2018
+        bool conditionForPhase0 = (numLayers == 3);
+        bool conditionForPhase1 = ((numLayers == 4) && (( detid.subdetId() == PixelSubdetector::PixelEndcap) || ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) != 1))));
+        if (conditionForPhase0 || conditionForPhase1) {
+          nonL1PixHits++;
+          float probQNoL1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+          float probXYNoL1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+
+          if (probQNoL1 <= 0.0 || probQNoL1 >= 1.f) probQNoL1 = 1.f;
+          if (probXYNoL1 <= 0.0 || probXYNoL1 >= 1.f) probXYNoL1 = 0.f;
+
+          if (!specInCPE && probQ < 0.8) {
+            numRecHitsQNoL1++;
+            // Calculate alpha term needed for the combination
+            probQonTrackWMultiNoL1 *= probQNoL1;
+          }
+          /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+          if (!specInCPE && probQ < 0.8 && probXYNoL1 > 0.f) {
+            numRecHitsXYNoL1++;
+            // Calculate alpha term needed for the combination
+            probXYonTrackWMultiNoL1 *= probXYNoL1;
+          }
+          */
+        } // end if on the noL1 pixel side
+      } // end if on the pixel side
+      }// end loop on rechits on the given track
+    
+      // Combine probQ-s into HSCP candidate (track) level quantity
+      /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+      float probQonTrack = -1.f;
+      float probXYonTrack = -1.f;
+      float probXYonTrackNoL1 = -1.f;
+      probQonTrack = combineProbs(probQonTrackWMulti, numRecHitsQ);
+      probXYonTrack = combineProbs(probXYonTrackWMulti, numRecHitsXY);
+      probXYonTrackNoL1 = combineProbs(probXYonTrackWMultiNoL1, numRecHitsXYNoL1);
+      */
+
+    
+      float probQonTrackNoL1 = -1.f;
+      probQonTrackNoL1 = combineProbs(probQonTrackWMultiNoL1, numRecHitsQNoL1);
 
       float ih0_noL1 = (dedxIh_noL1) ?  dedxIh_noL1->dEdx() : 0.0;
       float ih0_strip = (dedxIh_StripOnly) ?  dedxIh_StripOnly->dEdx() : 0.0;
+    
+      
+      // nonL1PixHits now well computed above
+      // unsigned int nonL1PixHits = dedxIh_noL1_Tmp.numberOfMeasurements() - dedxIh_StripOnly_Tmp.numberOfMeasurements() ;
+      unsigned int numDeDxHits = dedxIh_noL1_Tmp.numberOfMeasurements() ;
+
+      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
+      passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
+      // Cut for the number of dEdx hits to ensure good stats on the hits
+      passedTrackCutsArray[8]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+      if (!passPreselection(passedTrackCutsArray, false)) continue;
+
+      if (generalTrack->p() < 50) {
+       if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+        tuple->K_and_C_Ih_noL1_VsP_noFcut1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_noL1_VsP_noFcut2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_noFcut1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_noFcut2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+       }
+      }
+
+      // Cut away background events based on the probQ
+      passedTrackCutsArray[9] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
+      if (!passPreselection(passedTrackCutsArray, false)) continue;
+
 
       if (generalTrack->p() < 50) {
         tuple->K_and_C_Ih_noL1_VsP_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
@@ -4958,6 +5081,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
         tuple->K_and_C_Ih_strip_VsP_1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
         tuple->K_and_C_Ih_strip_VsP_2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+
+        // some kinematical plots
+        float tk_Mass =  GetMass(generalTrack->p(), ih0_noL1, dEdxK_, dEdxC_);
+        if (ih0_noL1> 5.5 && generalTrack->p()<5) {
+          tuple->K_and_C_Kin_Mass->Fill(tk_Mass, preScaleForDeDx*EventWeight_);
+          tuple->K_and_C_Kin_p->Fill(generalTrack->p(), preScaleForDeDx*EventWeight_);
+          tuple->K_and_C_Kin_phi->Fill(generalTrack->phi(), preScaleForDeDx*EventWeight_);
+          tuple->K_and_C_Kin_eta->Fill(generalTrack->eta(), preScaleForDeDx*EventWeight_);
+        }
        }
       }
 

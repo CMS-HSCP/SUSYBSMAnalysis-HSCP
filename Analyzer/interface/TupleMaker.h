@@ -1755,6 +1755,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->K_and_C_Ih_noL1_VsP_eta2_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_2","K_and_C_Ih_noL1_VsP_eta2_2", 250,0,50, 80, 2.,10.);
     tuple->K_and_C_Ih_strip_VsP_1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_1","K_and_C_Ih_strip_VsP_1", 50,0,5, 80, 2.,10.);
     tuple->K_and_C_Ih_strip_VsP_2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_2","K_and_C_Ih_strip_VsP_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_noFcut1","K_and_C_Ih_noL1_VsP_noFcut1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_noFcut2","K_and_C_Ih_noL1_VsP_noFcut2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut1","K_and_C_Ih_strip_VsP_noFcut1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut2","K_and_C_Ih_strip_VsP_noFcut2", 250,0,50, 80, 2.,10.);
+
+    tuple->K_and_C_Kin_Mass = dir.make<TH1D>("K_and_C_Kin_Mass","K_and_C_Kin_Mass",100,0.,5.);
+    tuple->K_and_C_Kin_p = dir.make<TH1D>("K_and_C_Kin_p","K_and_C_Kin_p",50,0.,5.);
+    tuple->K_and_C_Kin_phi = dir.make<TH1D>("K_and_C_Kin_phi","K_and_C_Kin_phi",  24, -1.*acos(-1),acos(-1));
+    tuple->K_and_C_Kin_eta = dir.make<TH1D>("K_and_C_Kin_eta","K_and_C_Kin_eta", 18, -2.25, 2.25);
 
   // Stability
     tuple->Stab_Ih_NoL1_VsRun    = dir.make<TH2D>("Stab_Ih_NoL1_VsRun","Ih(NoL1):Run", 545, 271000,325500, 60, 0.,15.);
