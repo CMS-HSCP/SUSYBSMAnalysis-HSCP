@@ -569,7 +569,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->N1_Eta = dir.make<TH1F>("N1_Eta", ";#eta;Tracks / 0.05", 52, -2.6, 2.6);
   tuple->N1_Pt = dir.make<TH1F>("N1_Pt", ";p_{T} (GeV);Tracks / 100 GeV", 40, 0, PtHistoUpperBound);
-  tuple->N1_Pt_lowPt = dir.make<TH1F>("N1_Pt_lowPt", ";p_{T} (GeV);Tracks / 80 GeV", 50, 0., 500);
+  tuple->N1_Pt_lowPt = dir.make<TH1F>("N1_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500);
   tuple->N1_Chi2oNdof = dir.make<TH1F>("N1_Chi2oNdof", ";#chi^{2} / N_{dof};Tracks / 1", 20, 0, 20);
 
   tuple->N1_Qual = dir.make<TH1F>("N1_Qual", ";;Tracks / category", 2, -0.5, 1.5);
@@ -1417,11 +1417,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostS_Ias = dir.make<TH1F>("PostS_Ias", ";G_{i}^{strips};Events / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostS_FiStrips = dir.make<TH1F>("PostS_FiStrips", ";F_{i}^{strips};Events / 0.1", 10, 0., 1.);
+  tuple->PostS_IasVsFiStrips = dir.make<TH2F>("PostS_IasVsFiStrips", ";G_{i}^{strips};F_{i}^{strips}", 10, 0., 1.,10, 0., 1.);
   tuple->PostS_ProbQNoL1 = dir.make<TH1F>("PostS_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
   tuple->PostS_ProbQNoL1VsIas = dir.make<TH2F>("PostS_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
   tuple->PostS_ProbQNoL1VsFiStrips = dir.make<TH2F>("PostS_ProbQNoL1VsFiStrips", ";F_{i}^{pixels};F_{i}^{strips};Events",20, 0., 1., 20, 0., 1.);
+  
   tuple->PostS_ProbQNoL1VsIasVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-
   tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
   tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
   tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
@@ -1432,6 +1433,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
   tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
   tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Ias_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Ias_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pt_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pt_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
 
 
   // Inclusive 2D plots for Alphabet
