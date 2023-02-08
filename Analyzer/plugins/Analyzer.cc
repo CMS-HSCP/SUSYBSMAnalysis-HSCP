@@ -43,7 +43,7 @@
 // - 33p1: Dedicated version for the GiTemplate production (to be named v4), PileUpTreatment = False, CreateAndRunGitemplates = False, add doBefTrig/PreS booleans
 // - 43p0: Add 3D histos for systematics but then not used, instead 50 bins for GiStrips as input to Alphebet, use v4 GiTemplates, PileUpTreatment = True, CreateAndExitGitemplates = False
 // - 33p3: Dedicated version for the GiTemplate production (to be named v4) for 2016 data, CreateGiTemplates = True, CreateAndExitGitemplates = True, Do*Plots = False
-// - 43p2: CreateGiTemplates = False, CreateAndExitGitemplates = False, Do*Plots = True,
+// - 43p2: CreateGiTemplates = False, CreateAndExitGitemplates = False, Do*Plots = True, Log(FiStrip) plots, Mass plots for G vs F
 
 // v25 Dylan
 // - add EoP in the ntuple

@@ -38,6 +38,7 @@ can.SaveAs("HSCPgluino_GiVsPt_PASS.png")
 
 # Signal fail log Gi
 canLog = ROOT.TCanvas("newname2","newname2",800,800)
+canLog.SetLogy()
 legProjXInRegions =  ROOT.TLegend(.5,.75,.80,.9,"","brNDC")
 legProjXInRegions.SetTextFont(42)
 legProjXInRegions.SetTextSize(0.035)
@@ -47,12 +48,12 @@ legProjXInRegions.SetLineStyle(1);
 legProjXInRegions.SetLineWidth(1);
 legProjXInRegions.SetFillColor(0);
 legProjXInRegions.SetFillStyle(1001);
-canLog.SetLogy()
+
 
 Histo3Dfail.GetXaxis().SetRange(1,18) # makes it the FAIL region
 projFail = Histo3Dfail.Project3D("YZ")
 projFail.SetTitle("FAIL region (F < 0.9)")
-projFail.GetXaxis().SetRangeUser(240,4000)
+projFail.GetXaxis().SetRangeUser(200,4000)
 projFailPt1 = projFail.ProjectionY("name1").Rebin(2)
 projFailPt1.SetStats(0)
 projFailPt1.SetMarkerStyle(20)
@@ -61,16 +62,16 @@ projFailPt1.SetMarkerColor(1)
 projFailPt1.SetMaximum(2)
 projFailPt1.DrawClone("SAMEP")
 
-legProjXInRegions.AddEntry(projFailPt1, "p_{T} = 240 - inf GeV","LP")
+legProjXInRegions.AddEntry(projFailPt1, "p_{T} = 200 - inf GeV","LP")
 
-projFail.GetXaxis().SetRangeUser(320,4000)
+projFail.GetXaxis().SetRangeUser(300,4000)
 projFailPt2 = projFail.ProjectionY("name2").Rebin(2)
 projFailPt2.SetStats(0)
 projFailPt2.SetMarkerStyle(20)
 projFailPt2.SetLineColor(2)
 projFailPt2.SetMarkerColor(2)
 projFailPt2.DrawClone("SAMEP")
-legProjXInRegions.AddEntry(projFailPt2, "p_{T} = 320 - inf  GeV","LP")
+legProjXInRegions.AddEntry(projFailPt2, "p_{T} = 300 - inf  GeV","LP")
 
 projFail.GetXaxis().SetRangeUser(400,4000)
 projFailPt3 = projFail.ProjectionY("name3").Rebin(2)

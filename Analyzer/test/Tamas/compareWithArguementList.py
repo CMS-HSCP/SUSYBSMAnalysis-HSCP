@@ -91,7 +91,7 @@ for i in range(0, fileInArray[0].GetListOfKeys().GetEntries()):
                 print("Create dir")
                 os.makedirs(os.path.dirname("Compare"+sampleInFile[:-4]+"/"))
 #              print(keyname2)
-              if not ("EventCutFlow" in keyname2) : continue
+#              if not ("EventCutFlow" in keyname2) : continue
 
               if (obj.GetEntries() == 0 ) : continue
               if (obj.ClassName() == "TH3F" or obj.ClassName() == "TH3D"):

@@ -129,7 +129,7 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
               if (iDontWannaRunPlots) : continue
               if ("_region" in keyname2 or "CtrlPt_" in keyname2 or "Pred_" in keyname2 or "PDF" in keyname2 or "Hist_" in keyname2) : continue
 #              if not ("Trigger" in keyname2 and obj.ClassName() == "TH3F") : continue
-#              if not ("Calibration" in keyname2) : continue
+              if not ("Calibration_" in keyname2) : continue
 
 
 #              if not ((obj.ClassName() == "TH3F" or obj.ClassName() == "TH3D") and "VsProbQVsIas" in keyname2) : continue
@@ -204,7 +204,222 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                   legProjXInRegions.Draw("SAME")
 
                   can2.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_ProjXInRegions.png")
-                
+                if ("ProbQNoL1VsIasVsPt" in keyname2) :
+                  canLog = ROOT.TCanvas("newname"+keyname2,"newname"+keyname2,800,800)
+                  canLog.SetLogy()
+                  legProjXInRegions =  ROOT.TLegend(.5,.75,.80,.9,"","brNDC")
+                  legProjXInRegions.SetHeader("FAIL region (F_{i}^{pixels} < 0.9)","C")
+                  legProjXInRegions.SetTextFont(42)
+                  legProjXInRegions.SetTextSize(0.035)
+                  legProjXInRegions.SetBorderSize(1);
+                  legProjXInRegions.SetLineColor(0);
+                  legProjXInRegions.SetLineStyle(1);
+                  legProjXInRegions.SetLineWidth(1);
+                  legProjXInRegions.SetFillColor(0);
+                  legProjXInRegions.SetFillStyle(1001);
+                  obj.GetXaxis().SetRange(1,obj.GetXaxis().FindBin(0.9)-1)
+                 
+                  projFail = obj.Project3D("YZ")
+                  projFail.SetTitle("")
+                  projFail.GetXaxis().SetRangeUser(200,4000)
+                  projFailPt1 = projFail.ProjectionY("name1").Rebin(2)
+                  projFailPt1.SetStats(0)
+                  projFailPt1.SetMarkerStyle(20)
+                  projFailPt1.SetLineColor(1)
+                  projFailPt1.SetMarkerColor(1)
+                  projFailPt1.SetMaximum(projFailPt1.GetMaximum()*100)
+                  projFailPt1.DrawClone("SAMEP")
+                  legProjXInRegions.AddEntry(projFailPt1, "p_{T} = 200 - inf GeV","LP")
+
+                  projFail.GetXaxis().SetRangeUser(300,4000)
+                  projFailPt2 = projFail.ProjectionY("name2").Rebin(2)
+                  projFailPt2.SetStats(0)
+                  projFailPt2.SetMarkerStyle(20)
+                  projFailPt2.SetLineColor(2)
+                  projFailPt2.SetMarkerColor(2)
+                  projFailPt2.DrawClone("SAMEP")
+                  legProjXInRegions.AddEntry(projFailPt2, "p_{T} = 300 - inf  GeV","LP")
+
+                  projFail.GetXaxis().SetRangeUser(400,4000)
+                  projFailPt3 = projFail.ProjectionY("name3").Rebin(2)
+                  projFailPt3.SetStats(0)
+                  projFailPt3.SetMarkerStyle(20)
+                  projFailPt3.SetLineColor(3)
+                  projFailPt3.SetMarkerColor(3)
+                  projFailPt3.DrawClone("SAMEP")
+
+                  legProjXInRegions.AddEntry(projFailPt3, "p_{T} = 400 - inf GeV","LP")
+                  legProjXInRegions.Draw("SAMEP")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
+                  canLog.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_FAIL_PtBins.png")
+                  
+                  # repeat the same for PASS now
+                  canLog2 = ROOT.TCanvas("newname2-pass"+keyname2,"newname2-pass"+keyname2,800,800)
+                  canLog2.SetLogy()
+                  obj.GetXaxis().SetRange(obj.GetXaxis().FindBin(0.9),obj.GetXaxis().FindBin(1.0)+1) # makes it the PASS region
+                  projPass = obj.Project3D("YZ")
+                  projPass.SetTitle("")
+                  
+                  legProjXInRegions.SetHeader("PASS region (F_{i}^{pixels} > 0.9)","C")
+
+                  projPass.GetXaxis().SetRangeUser(240,4000)
+                  projPassPt1 = projPass.ProjectionY("name1-pass").Rebin(2)
+                  
+                  projPassPt1.SetStats(0)
+                  projPassPt1.SetMarkerStyle(20)
+                  projPassPt1.SetLineColor(1)
+                  projPassPt1.SetMarkerColor(1)
+                  projPassPt1.SetMaximum(projPassPt1.GetMaximum()*100)
+                  projPassPt1.DrawClone("SAMEP")
+
+                  projPass.GetXaxis().SetRangeUser(320,4000)
+                  projPassPt2 = projPass.ProjectionY("name2-pass").Rebin(2)
+                  projPassPt2.SetStats(0)
+                  projPassPt2.SetMarkerStyle(20)
+                  projPassPt2.SetLineColor(2)
+                  projPassPt2.SetMarkerColor(2)
+                  projPassPt2.DrawClone("SAMEP")
+
+                  projPass.GetXaxis().SetRangeUser(400,4000)
+                  projPassPt3 = projPass.ProjectionY("name3-pass").Rebin(2)
+                  projPassPt3.SetStats(0)
+                  projPassPt3.SetMarkerStyle(20)
+                  projPassPt3.SetLineColor(3)
+                  projPassPt3.SetMarkerColor(3)
+                  projPassPt3.DrawClone("SAMEP")
+
+                  legProjXInRegions.Draw("SAMEP")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
+                  canLog2.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_PASS_PtBins.png")
+
+                if ("PostS_ProbQNoL1VsFiStripsVsPt" in keyname2) :
+                  canLog = ROOT.TCanvas("newnameF"+keyname2,"newnameF"+keyname2,800,800)
+                  canLog.SetLogy()
+                  legProjXInRegions =  ROOT.TLegend(.2,.75,.7,.9,"","brNDC")
+                  legProjXInRegions.SetHeader("FAIL region (F_{i}^{pixels} < 0.9)","C")
+                  legProjXInRegions.SetTextFont(42)
+                  legProjXInRegions.SetTextSize(0.035)
+                  legProjXInRegions.SetBorderSize(1);
+                  legProjXInRegions.SetLineColor(0);
+                  legProjXInRegions.SetLineStyle(1);
+                  legProjXInRegions.SetLineWidth(1);
+                  legProjXInRegions.SetFillColor(0);
+                  legProjXInRegions.SetFillStyle(1001);
+                  obj.GetXaxis().SetRange(1,obj.GetXaxis().FindBin(0.9)-1)
+                 
+                  projFail = obj.Project3D("YZ")
+                  projFail.SetTitle("")
+                  projFail.GetXaxis().SetRangeUser(100,4000)
+                  projFailPt1 = projFail.ProjectionY("name1F").Rebin(2)
+                  projFailPt1.GetYaxis().SetTitle("Normalized events")
+                  numEvents1 = projFailPt1.Integral()
+                  projFailPt1.SetStats(0)
+                  projFailPt1.SetMarkerStyle(20)
+                  projFailPt1.SetLineColor(1)
+                  projFailPt1.SetMarkerColor(1)
+                  if (numEvents1 > 0) : projFailPt1.Scale(1/numEvents1)
+                  projFailPt1.SetMaximum(projFailPt1.GetMaximum()*50)
+                  projFailPt1.DrawClone("SAMEP")
+                  legProjXInRegions.AddEntry(projFailPt1, "p_{T} = 100 - inf GeV, #Events: " +str(round(numEvents1)),"LP")
+
+                  projFail.GetXaxis().SetRangeUser(200,4000)
+                  projFailPt2 = projFail.ProjectionY("name2F").Rebin(2)
+                  numEvents2 = projFailPt2.Integral()
+                  projFailPt2.SetStats(0)
+                  projFailPt2.SetMarkerStyle(20)
+                  projFailPt2.SetLineColor(2)
+                  projFailPt2.SetMarkerColor(2)
+                  if (numEvents2 > 0) : projFailPt2.Scale(1/numEvents2)
+                  projFailPt2.DrawClone("SAMEP")
+                  legProjXInRegions.AddEntry(projFailPt2, "p_{T} = 200 - inf GeV, #Events: " +str(round(numEvents2)),"LP")
+
+                  projFail.GetXaxis().SetRangeUser(300,4000)
+                  projFailPt3 = projFail.ProjectionY("name3F").Rebin(2)
+                  numEvents3 = projFailPt3.Integral()
+                  projFailPt3.SetStats(0)
+                  projFailPt3.SetMarkerStyle(20)
+                  projFailPt3.SetLineColor(3)
+                  projFailPt3.SetMarkerColor(3)
+                  if (numEvents3 > 0) : projFailPt3.Scale(1/numEvents3)
+                  projFailPt3.DrawClone("SAMEP")
+
+                  legProjXInRegions.AddEntry(projFailPt3, "p_{T} = 300 - inf GeV, #Events: " +str(round(numEvents3)),"LP")
+                  legProjXInRegions.Draw("SAMEP")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
+                  canLog.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_FAIL_PtBins.png")
+                  
+                  # repeat the same for PASS now
+                  legProjXInRegionsPass =  ROOT.TLegend(.2,.75,.7,.9,"","brNDC")
+                  legProjXInRegionsPass.SetHeader("FAIL region (F_{i}^{pixels} < 0.9)","C")
+                  legProjXInRegionsPass.SetTextFont(42)
+                  legProjXInRegionsPass.SetTextSize(0.035)
+                  legProjXInRegionsPass.SetBorderSize(1);
+                  legProjXInRegionsPass.SetLineColor(0);
+                  legProjXInRegionsPass.SetLineStyle(1);
+                  legProjXInRegionsPass.SetLineWidth(1);
+                  legProjXInRegionsPass.SetFillColor(0);
+                  legProjXInRegionsPass.SetFillStyle(1001);
+                  canLog2 = ROOT.TCanvas("newname2-passF"+keyname2,"newname2-passF"+keyname2,800,800)
+                  canLog2.SetLogy()
+                  obj.GetXaxis().SetRange(obj.GetXaxis().FindBin(0.9),obj.GetXaxis().FindBin(1.0)+1) # makes it the PASS region
+                  projPass = obj.Project3D("YZ")
+                  projPass.SetTitle("")
+                  
+                  legProjXInRegionsPass.SetHeader("PASS region (F_{i}^{pixels} > 0.9)","C")
+
+                  projPass.GetXaxis().SetRangeUser(100,4000)
+                  projPassPt1 = projPass.ProjectionY("name1-passF").Rebin(2)
+                  projPassPt1.GetYaxis().SetTitle("Normalized events")
+                  numEvents1 = projPassPt1.Integral()
+                  legProjXInRegionsPass.AddEntry(projPassPt1, "p_{T} = 100 - inf GeV, #Events: " +str(round(numEvents1)),"LP")
+                  
+                  projPassPt1.SetStats(0)
+                  projPassPt1.SetMarkerStyle(20)
+                  projPassPt1.SetLineColor(1)
+                  projPassPt1.SetMarkerColor(1)
+                  if (numEvents1 > 0) : projPassPt1.Scale(1/numEvents1)
+                  projPassPt1.SetMaximum(projPassPt1.GetMaximum()*50)
+                  projPassPt1.DrawClone("SAMEP")
+
+                  projPass.GetXaxis().SetRangeUser(200,4000)
+                  projPassPt2 = projPass.ProjectionY("name2-passF").Rebin(2)
+                  numEvents2 = projPassPt2.Integral()
+                  legProjXInRegionsPass.AddEntry(projPassPt2, "p_{T} = 200 - inf GeV, #Events: " +str(round(numEvents2)),"LP")
+                  projPassPt2.SetStats(0)
+                  projPassPt2.SetMarkerStyle(20)
+                  projPassPt2.SetLineColor(2)
+                  projPassPt2.SetMarkerColor(2)
+                  if (numEvents2 > 0) : projPassPt2.Scale(1/numEvents2)
+                  projPassPt2.DrawClone("SAMEP")
+
+                  projPass.GetXaxis().SetRangeUser(300,4000)
+                  projPassPt3 = projPass.ProjectionY("name3-passF").Rebin(2)
+                  numEvents3 = projPassPt3.Integral()
+                  legProjXInRegionsPass.AddEntry(projPassPt3, "p_{T} = 300 - inf GeV, #Events: " +str(round(numEvents3)),"LP")
+                  projPassPt3.SetStats(0)
+                  projPassPt3.SetMarkerStyle(20)
+                  projPassPt3.SetLineColor(3)
+                  projPassPt3.SetMarkerColor(3)
+                  if (numEvents3 > 0) : projPassPt3.Scale(1/numEvents3)
+                  projPassPt3.DrawClone("SAMEP")
+
+                  legProjXInRegionsPass.Draw("SAMEP")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
+                  canLog2.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_PASS_PtBins.png")
+
+
                 if ("ProbQVsProbXY" in keyname2) :
                   obj.GetXaxis().SetRange(obj.GetXaxis().FindBin(3.22),-1)
                   obj.GetYaxis().SetRange(obj.GetYaxis().FindBin(0.0),obj.GetYaxis().FindBin(0.1))
