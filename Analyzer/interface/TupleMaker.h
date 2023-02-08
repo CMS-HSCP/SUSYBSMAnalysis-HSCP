@@ -569,7 +569,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->N1_Eta = dir.make<TH1F>("N1_Eta", ";#eta;Tracks / 0.05", 52, -2.6, 2.6);
   tuple->N1_Pt = dir.make<TH1F>("N1_Pt", ";p_{T} (GeV);Tracks / 100 GeV", 40, 0, PtHistoUpperBound);
-  tuple->N1_Pt_lowPt = dir.make<TH1F>("N1_Pt_lowPt", ";p_{T} (GeV);Tracks / 80 GeV", 50, 0., 500);
+  tuple->N1_Pt_lowPt = dir.make<TH1F>("N1_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500);
   tuple->N1_Chi2oNdof = dir.make<TH1F>("N1_Chi2oNdof", ";#chi^{2} / N_{dof};Tracks / 1", 20, 0, 20);
 
   tuple->N1_Qual = dir.make<TH1F>("N1_Qual", ";;Tracks / category", 2, -0.5, 1.5);
@@ -1417,22 +1417,47 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostS_Ias = dir.make<TH1F>("PostS_Ias", ";G_{i}^{strips};Events / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostS_FiStrips = dir.make<TH1F>("PostS_FiStrips", ";F_{i}^{strips};Events / 0.1", 10, 0., 1.);
+  tuple->PostS_FiStripsLog = dir.make<TH1F>("PostS_FiStripsLog", ";-log(F_{i}^{strips});Events / 0.05", 40, 0., 2.);
+  tuple->PostS_IasVsFiStrips = dir.make<TH2F>("PostS_IasVsFiStrips", ";G_{i}^{strips};F_{i}^{strips}", 20, 0., 1.,20, 0., 1.);
   tuple->PostS_ProbQNoL1 = dir.make<TH1F>("PostS_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
   tuple->PostS_ProbQNoL1VsIas = dir.make<TH2F>("PostS_ProbQNoL1VsIas", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
   tuple->PostS_ProbQNoL1VsFiStrips = dir.make<TH2F>("PostS_ProbQNoL1VsFiStrips", ";F_{i}^{pixels};F_{i}^{strips};Events",20, 0., 1., 20, 0., 1.);
-  tuple->PostS_ProbQNoL1VsIasVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
+  
+  tuple->PostS_ProbQNoL1VsIasVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Ias_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Ias_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pt_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Pt_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
 
-  tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pileup_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pt_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Pt_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-  tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 50, 0., 1.,40, 0., PtHistoUpperBound);
-
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_up", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_down", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_up", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
+  tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_down", ";F_{i}^{pixels};-log(F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 40, 0., 2.,160, 0., PtHistoUpperBound);
 
   // Inclusive 2D plots for Alphabet
   tuple->PostS_ProbQNoL1VsIas_Pileup_up = dir.make<TH2F>("PostS_ProbQNoL1VsIas_Pileup_up", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
@@ -1474,6 +1499,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
   tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
   tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR2_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
+  
+  tuple->PostS_SR2_ProbQNoL1VsIasVsMass = dir.make<TH3F>("PostS_SR2_ProbQNoL1VsIasVsMass", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.,80,0.,4000.);
   
   tuple->PostS_SR3_Ias = dir.make<TH1F>("PostS_SR3_Ias", ";G_{i}^{strips};Events / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR3_ProbQNoL1 = dir.make<TH1F>("PostS_SR3_ProbQNoL1", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
@@ -1674,48 +1701,48 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->RegionH_Ias_Flip =
         dir.make<TH2F>("RegionH_Ias_Flip", ";NCuts_Flip;RegionH_Ias_Flip", NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
 
-
-    tuple->CtrlPt_S1_Is = dir.make<TH1D>("CtrlPt_S1_Is", "CtrlPt_S1_Is", 200, 0, dEdxS_UpLim);
-    tuple->CtrlPt_S2_Is = dir.make<TH1D>("CtrlPt_S2_Is", "CtrlPt_S2_Is", 200, 0, dEdxS_UpLim);
-    tuple->CtrlPt_S3_Is = dir.make<TH1D>("CtrlPt_S3_Is", "CtrlPt_S3_Is", 200, 0, dEdxS_UpLim);
-    tuple->CtrlPt_S4_Is = dir.make<TH1D>("CtrlPt_S4_Is", "CtrlPt_S4_Is", 200, 0, dEdxS_UpLim);
-
-    tuple->CtrlPt_S1_Ih = dir.make<TH1D>("CtrlPt_S1_Ih", "CtrlPt_S1_Ih", 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S2_Ih = dir.make<TH1D>("CtrlPt_S2_Ih", "CtrlPt_S2_Ih", 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S3_Ih = dir.make<TH1D>("CtrlPt_S3_Ih", "CtrlPt_S3_Ih", 400, 0, dEdxM_UpLim);
-    tuple->CtrlPt_S4_Ih = dir.make<TH1D>("CtrlPt_S4_Ih", "CtrlPt_S4_Ih", 400, 0, dEdxM_UpLim);
-
-    tuple->CtrlIs_S1_TOF = dir.make<TH1D>("CtrlIs_S1_TOF", "CtrlIs_S1_TOF", 200, 0, 5);
-    tuple->CtrlIs_S2_TOF = dir.make<TH1D>("CtrlIs_S2_TOF", "CtrlIs_S2_TOF", 200, 0, 5);
-    tuple->CtrlIs_S3_TOF = dir.make<TH1D>("CtrlIs_S3_TOF", "CtrlIs_S3_TOF", 200, 0, 5);
-    tuple->CtrlIs_S4_TOF = dir.make<TH1D>("CtrlIs_S4_TOF", "CtrlIs_S4_TOF", 200, 0, 5);
-
-    tuple->CtrlIh_S1_TOF = dir.make<TH1D>("CtrlIh_S1_TOF", "CtrlIh_S1_TOF", 200, 0, 5);
-    tuple->CtrlIh_S2_TOF = dir.make<TH1D>("CtrlIh_S2_TOF", "CtrlIh_S2_TOF", 200, 0, 5);
-    tuple->CtrlIh_S3_TOF = dir.make<TH1D>("CtrlIh_S3_TOF", "CtrlIh_S3_TOF", 200, 0, 5);
-    tuple->CtrlIh_S4_TOF = dir.make<TH1D>("CtrlIh_S4_TOF", "CtrlIh_S4_TOF", 200, 0, 5);
-
-    tuple->CtrlPt_S1_TOF = dir.make<TH1D>("CtrlPt_S1_TOF", "CtrlPt_S1_TOF", 200, -2, 7);
-    tuple->CtrlPt_S2_TOF = dir.make<TH1D>("CtrlPt_S2_TOF", "CtrlPt_S2_TOF", 200, -2, 7);
-    tuple->CtrlPt_S3_TOF = dir.make<TH1D>("CtrlPt_S3_TOF", "CtrlPt_S3_TOF", 200, -2, 7);
-    tuple->CtrlPt_S4_TOF = dir.make<TH1D>("CtrlPt_S4_TOF", "CtrlPt_S4_TOF", 200, -2, 7);
-
-    for (int i = 0; i < PredBins; i++) {
-      char Suffix[1024];
-      sprintf(Suffix, "_%i", i);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S1_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S1_TOF_Binned", "CtrlPt_S1_TOF_Binned", 200, -2, 7);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S2_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S2_TOF_Binned", "CtrlPt_S2_TOF_Binned", 200, -2, 7);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S3_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S3_TOF_Binned", "CtrlPt_S3_TOF_Binned", 200, -2, 7);
-
-      Name.append(Suffix);
-      tuple->CtrlPt_S4_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S4_TOF_Binned", "CtrlPt_S4_TOF_Binned", 200, -2, 7);
-    }
+      //  I think this is not use, let's remove it if nobody complains
+//    tuple->CtrlPt_S1_Is = dir.make<TH1D>("CtrlPt_S1_Is", "CtrlPt_S1_Is", 200, 0, dEdxS_UpLim);
+//    tuple->CtrlPt_S2_Is = dir.make<TH1D>("CtrlPt_S2_Is", "CtrlPt_S2_Is", 200, 0, dEdxS_UpLim);
+//    tuple->CtrlPt_S3_Is = dir.make<TH1D>("CtrlPt_S3_Is", "CtrlPt_S3_Is", 200, 0, dEdxS_UpLim);
+//    tuple->CtrlPt_S4_Is = dir.make<TH1D>("CtrlPt_S4_Is", "CtrlPt_S4_Is", 200, 0, dEdxS_UpLim);
+//
+//    tuple->CtrlPt_S1_Ih = dir.make<TH1D>("CtrlPt_S1_Ih", "CtrlPt_S1_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S2_Ih = dir.make<TH1D>("CtrlPt_S2_Ih", "CtrlPt_S2_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S3_Ih = dir.make<TH1D>("CtrlPt_S3_Ih", "CtrlPt_S3_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S4_Ih = dir.make<TH1D>("CtrlPt_S4_Ih", "CtrlPt_S4_Ih", 400, 0, dEdxM_UpLim);
+//
+//    tuple->CtrlIs_S1_TOF = dir.make<TH1D>("CtrlIs_S1_TOF", "CtrlIs_S1_TOF", 200, 0, 5);
+//    tuple->CtrlIs_S2_TOF = dir.make<TH1D>("CtrlIs_S2_TOF", "CtrlIs_S2_TOF", 200, 0, 5);
+//    tuple->CtrlIs_S3_TOF = dir.make<TH1D>("CtrlIs_S3_TOF", "CtrlIs_S3_TOF", 200, 0, 5);
+//    tuple->CtrlIs_S4_TOF = dir.make<TH1D>("CtrlIs_S4_TOF", "CtrlIs_S4_TOF", 200, 0, 5);
+//
+//    tuple->CtrlIh_S1_TOF = dir.make<TH1D>("CtrlIh_S1_TOF", "CtrlIh_S1_TOF", 200, 0, 5);
+//    tuple->CtrlIh_S2_TOF = dir.make<TH1D>("CtrlIh_S2_TOF", "CtrlIh_S2_TOF", 200, 0, 5);
+//    tuple->CtrlIh_S3_TOF = dir.make<TH1D>("CtrlIh_S3_TOF", "CtrlIh_S3_TOF", 200, 0, 5);
+//    tuple->CtrlIh_S4_TOF = dir.make<TH1D>("CtrlIh_S4_TOF", "CtrlIh_S4_TOF", 200, 0, 5);
+//
+//    tuple->CtrlPt_S1_TOF = dir.make<TH1D>("CtrlPt_S1_TOF", "CtrlPt_S1_TOF", 200, -2, 7);
+//    tuple->CtrlPt_S2_TOF = dir.make<TH1D>("CtrlPt_S2_TOF", "CtrlPt_S2_TOF", 200, -2, 7);
+//    tuple->CtrlPt_S3_TOF = dir.make<TH1D>("CtrlPt_S3_TOF", "CtrlPt_S3_TOF", 200, -2, 7);
+//    tuple->CtrlPt_S4_TOF = dir.make<TH1D>("CtrlPt_S4_TOF", "CtrlPt_S4_TOF", 200, -2, 7);
+//
+//    for (int i = 0; i < PredBins; i++) {
+//      char Suffix[1024];
+//      sprintf(Suffix, "_%i", i);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S1_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S1_TOF_Binned", "CtrlPt_S1_TOF_Binned", 200, -2, 7);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S2_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S2_TOF_Binned", "CtrlPt_S2_TOF_Binned", 200, -2, 7);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S3_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S3_TOF_Binned", "CtrlPt_S3_TOF_Binned", 200, -2, 7);
+//
+//      Name.append(Suffix);
+//      tuple->CtrlPt_S4_TOF_Binned[std::to_string(i)] = dir.make<TH1D>("CtrlPt_S4_TOF_Binned", "CtrlPt_S4_TOF_Binned", 200, -2, 7);
+//    }
 
  // Calibration
  // Scale Factors
@@ -2816,65 +2843,66 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       bin = muonStations(track->hitPattern()) + 1;
   }
 
-  if (!isCosmicSB) {
-    if (track->pt() > PtLimits[0]) {
-      tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S4_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    } else if (track->pt() > PtLimits[1]) {
-      tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S3_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    } else if (track->pt() > PtLimits[2]) {
-      tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S2_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    } else {
-      tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
-      tuple->CtrlPt_S1_Ih->Fill(Ih, Event_Weight);
-      if (tof)
-        tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
-      if (tof && bin >= 0 && bin < MaxPredBins)
-        tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
-    }
-
-    if (Is > 0.2) {
-      if (tof)
-        tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Is > 0.1) {
-      if (tof)
-        tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Is > 0.05) {
-      if (tof)
-        tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
-    } else {
-      if (tof)
-        tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
-    }
-
-    if (Ih > 4.4) {
-      if (tof)
-        tuple->CtrlIh_S4_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Ih > 4.1) {
-      if (tof)
-        tuple->CtrlIh_S3_TOF->Fill(MuonTOF, Event_Weight);
-    } else if (Ih > 3.8) {
-      if (tof)
-        tuple->CtrlIh_S2_TOF->Fill(MuonTOF, Event_Weight);
-    } else {
-      if (tof)
-        tuple->CtrlIh_S1_TOF->Fill(MuonTOF, Event_Weight);
-    }
-  }
+//  I think this is not use, let's remove it if nobody complains
+//  if (!isCosmicSB) {
+//    if (track->pt() > PtLimits[0]) {
+//      tuple->CtrlPt_S4_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S4_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S4_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S4_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    } else if (track->pt() > PtLimits[1]) {
+//      tuple->CtrlPt_S3_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S3_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S3_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S3_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    } else if (track->pt() > PtLimits[2]) {
+//      tuple->CtrlPt_S2_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S2_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S2_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S2_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    } else {
+//      tuple->CtrlPt_S1_Is->Fill(Is, Event_Weight);
+//      tuple->CtrlPt_S1_Ih->Fill(Ih, Event_Weight);
+//      if (tof)
+//        tuple->CtrlPt_S1_TOF->Fill(MuonTOF, Event_Weight);
+//      if (tof && bin >= 0 && bin < MaxPredBins)
+//        tuple->CtrlPt_S1_TOF_Binned[to_string(bin)]->Fill(MuonTOF, Event_Weight);
+//    }
+//
+//    if (Is > 0.2) {
+//      if (tof)
+//        tuple->CtrlIs_S4_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Is > 0.1) {
+//      if (tof)
+//        tuple->CtrlIs_S3_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Is > 0.05) {
+//      if (tof)
+//        tuple->CtrlIs_S2_TOF->Fill(MuonTOF, Event_Weight);
+//    } else {
+//      if (tof)
+//        tuple->CtrlIs_S1_TOF->Fill(MuonTOF, Event_Weight);
+//    }
+//
+//    if (Ih > 4.4) {
+//      if (tof)
+//        tuple->CtrlIh_S4_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Ih > 4.1) {
+//      if (tof)
+//        tuple->CtrlIh_S3_TOF->Fill(MuonTOF, Event_Weight);
+//    } else if (Ih > 3.8) {
+//      if (tof)
+//        tuple->CtrlIh_S2_TOF->Fill(MuonTOF, Event_Weight);
+//    } else {
+//      if (tof)
+//        tuple->CtrlIh_S1_TOF->Fill(MuonTOF, Event_Weight);
+//    }
+//  }
 
   float Ick = 0;
   if (dedxMObj)
