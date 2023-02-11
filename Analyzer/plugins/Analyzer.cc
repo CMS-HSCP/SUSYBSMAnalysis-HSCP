@@ -47,6 +47,7 @@
 // - 31p3: ExitWhenGenMatchNotFound = true, MET triggers IN, fix trigger matching for trigger efficiency
 // - 31p4: Adding {"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
 // - 43p3: Move to -log(1-F_{i}^{strips}), ExitWhenGenMatchNotFound = false, no MET triggers
+// - 31p5: ExitWhenGenMatchNotFound = true, MET triggers IN, fix trigger matching for trigger efficiency (round 3)
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -707,20 +708,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
   
-  if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
-    trigInfo_ = 1;
-    if (doBefPreSplots_) tuple->BefPreS_TriggerType->Fill(1., EventWeight_);
-  }
-  if (metTrig) {
-    trigInfo_ = 2;
-    if (doBefPreSplots_) tuple->BefPreS_TriggerType->Fill(2., EventWeight_);
-  }
+  if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 1; }
+  if (metTrig) { trigInfo_ = 2; }
   if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 3; }
   if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 4; }
 
   // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
 //  bool triggerPassed = (trigInfo_ == 1);
-  if (doBefPreSplots_) tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+  if (doBefPreSplots_) {
+    if (!metTrig && !muTrig) { tuple->BefPreS_TriggerType->Fill(0., EventWeight_); }
+    if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(1., EventWeight_); }
+    if (metTrig) { tuple->BefPreS_TriggerType->Fill(2., EventWeight_); }
+    if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(3., EventWeight_); }
+    if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(4., EventWeight_); }
+  }
   // If triggering is intended (not the case when we make ntuples)
   if (trigInfo_ > 0) {
     if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
@@ -4860,16 +4861,13 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   // so we never get 1 or 2
   if (doPostPreSplots_) {
     if (postPreS_candidate_count > 0) {
-      if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
-        tuple->PostPreS_TriggerType->Fill(1., EventWeight_);
-      }
-      if (metTrig) {
-        tuple->PostPreS_TriggerType->Fill(2., EventWeight_);
-      }
-      tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+        if (!metTrig && !muTrig) { tuple->PostPreS_TriggerType->Fill(0., EventWeight_); }
+        if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(1., EventWeight_); }
+        if (metTrig) { tuple->PostPreS_TriggerType->Fill(2., EventWeight_); }
+        if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(3., EventWeight_); }
+        if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(4., EventWeight_); }
     }
   }
-
 
   // Calibration information
   // loop on the tracks
@@ -5650,7 +5648,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",false)
+  desc.addUntracked("ExitWhenGenMatchNotFound",true)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
@@ -5677,9 +5675,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
 //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
   ->setComment("Add the list of muon triggers");
-//  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
 //     Possibly used in a next version of the analysis
-     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+//     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
