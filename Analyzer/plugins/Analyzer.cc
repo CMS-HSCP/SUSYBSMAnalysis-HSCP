@@ -44,6 +44,9 @@
 // - 43p0: Add 3D histos for systematics but then not used, instead 50 bins for GiStrips as input to Alphebet, use v4 GiTemplates, PileUpTreatment = True, CreateAndExitGitemplates = False
 // - 33p3: Dedicated version for the GiTemplate production (to be named v4) for 2016 data, CreateGiTemplates = True, CreateAndExitGitemplates = True, Do*Plots = False
 // - 43p2: CreateGiTemplates = False, CreateAndExitGitemplates = False, Do*Plots = True, Log(FiStrip) plots, Mass plots for G vs F
+// - 31p3: ExitWhenGenMatchNotFound = true, MET triggers IN, fix trigger matching for trigger efficiency
+// - 31p4: Adding {"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
+// - 43p3: Move to -log(1-F_{i}^{strips}), ExitWhenGenMatchNotFound = false, no MET triggers
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -712,8 +715,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     trigInfo_ = 2;
     if (doBefPreSplots_) tuple->BefPreS_TriggerType->Fill(2., EventWeight_);
   }
-  if (metTrig || muTrig) { trigInfo_ = 3; }
-  if (metTrig && muTrig) { trigInfo_ = 4; }
+  if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 3; }
+  if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 4; }
 
   // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
 //  bool triggerPassed = (trigInfo_ == 1);
@@ -2531,7 +2534,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
           numSiblingsF  = float(numSiblings);
           for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-            if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0)  std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+            if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0)  std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
             float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
             float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -2591,7 +2594,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -3628,7 +3631,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoL1, globalIas_, EventWeight_);
         tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoL1, 1 - probQonTrackNoL1, EventWeight_);
 
-        if (globalIas_ > 0.3) {
+        if (globalIas_ > 0.25) {
           tuple->PostPreS_ProbXY_highIas->Fill(probXYonTrack, EventWeight_);
           tuple->PostPreS_ProbXYVsIas_highIas->Fill(probXYonTrack, globalIas_, EventWeight_);
           tuple->PostPreS_ProbXYVsProbQ_highIas->Fill(probXYonTrack, 1 - probQonTrack, EventWeight_);
@@ -3852,8 +3855,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       }
 
-      if ((((globalIas_ > 0.3 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
-        if (globalIas_ > 0.3)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.3";}
+      if ((((globalIas_ > 0.25 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
+        if (globalIas_ > 0.25)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
         if (Mass > 1000) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
         LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
         LogPrint(MOD) << "        >> -----------------------------------------------";
@@ -3888,7 +3891,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bestCandidateIas = globalIas_;
         bestCandidateMass = Mass;
         bestCandidateFiStrips = globalFiStrips_;
-        bestCandidateFiStripsLog = -log(globalFiStrips_);
+        bestCandidateFiStripsLog = -log(1-globalFiStrips_);
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hlt_muon;
         bestCandidateGenBeta = genBeta;
@@ -3961,14 +3964,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pt());
             unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
             numSiblingsF  = float(numSiblings);
-            if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
+            if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
             for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-              if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+              if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
               float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+              if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
               if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                 dRMinGenAndSibling = siblingDr;
                 closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
@@ -3981,37 +3984,37 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             break;
           }
         }
-        if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
+        if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
         
         // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
         if (!motherFound) {
-          if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
+          if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
                 closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
                 closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pt());
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
-                if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
                   float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                  if (globalIas_ > 0.3) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+                  if (globalIas_ > 0.25) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
                 }
-                if (globalIas_ > 0.3) std::cout << std::endl;
+                if (globalIas_ > 0.25) std::cout << std::endl;
                 unsigned int numAunts = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
-                if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
+                if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numAunts+1; daughterIndx++) {
-                  if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float auntEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
                   float auntPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
                   float auntPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pt();
                   float auntDr = deltaR(genEta, genPhi, auntEta, auntPhi);
-                  if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
+                  if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
                   if( (auntDr != 0.0) && (auntDr < dRMinGenAndAunt)) {
                     dRMinGenAndAunt = auntDr;
                     closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -4026,7 +4029,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             }
             if (motherFound) break;
           }
-          if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
+          if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
         }
 
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
@@ -4040,14 +4043,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                   closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pt());
                   unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                   numSiblingsF  = float(numSiblings);
-                  if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
+                  if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
                   for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                    if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                    if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                     float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                     float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                     float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pt();
                     float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                    if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
+                    if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
                     if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                       dRMinGenAndSibling = siblingDr;
                       closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -4076,7 +4079,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
         closestBackgroundPDGsIDs[6] = numSiblingsF;
 
-        if ((((debug_> 2) || (!isSignal && globalIas_ > 0.3))) && (trigInfo_ > 0)) {
+        if ((((debug_> 2) || (!isSignal && globalIas_ > 0.25))) && (trigInfo_ > 0)) {
           LogPrint(MOD) << "      >> Track's gen ID: " << closestBackgroundPDGsIDs[0];
           LogPrint(MOD) << "      >> Track's gen pt: " << closestBackgroundPDGsIDs[5];
 
@@ -4206,7 +4209,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2., pixLayerIndex, EventWeight_);
           }
           tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3., pixLayerIndex, EventWeight_);
-          if (globalIas_ > 0.3) {
+          if (globalIas_ > 0.25) {
             tuple->PostPreS_CluProbQVsPixelLayer_highIas->Fill(probQ, pixLayerIndex, EventWeight_);
             tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Fill(probXY, pixLayerIndex, EventWeight_);
             tuple->PostPreS_CluSizeVsPixelLayer_highIas->Fill(clustSize, pixLayerIndex, EventWeight_);
@@ -4231,9 +4234,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           }
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
           // (globalIas_ > 0.02 && globalIas_ < 0.03)
-          if ((!isSignal && globalIas_ > 0.3) || debug_ > 4) {
+          if ((!isSignal && globalIas_ > 0.25) || debug_ > 4) {
             if (!headerPixPrintedAlready) {
-              std::cout << std::endl << "        | $G_{i}^{strips}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
+              std::cout << std::endl << "        | $F_{i}^{pixels}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
               std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
               std::cout << "        |--- | ---| " << std::endl;
 
@@ -4273,7 +4276,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           }
         }
         // || (globalIas_ > 0.025 && globalIas_ < 0.03)
-        if  (globalIas_ > 0.3 && debug_ > 4) {
+        if  ((globalIas_ > 0.25 && debug_ > 4) || debug_ > 8) {
           unsigned int isGlued = (tTopo->glued(detid) > 0) ? 1 : 0;
           if (!headerStripsPrintedAlready) {
             std::cout << std::endl <<  "        | $G_{i}^{strips}$  | Layer | gammaBeta | eta | Norm. Charge | size | stereo | glued | cleaned | " << std::endl;
@@ -4735,16 +4738,16 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
     
     // Systematics plots for Fi rescaling
-    //float theFiSystFactorUp = 1.005;
-    //float theFiSystFactorDown = 0.995;
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
-    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_);
-    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
+    float theFiSystFactorUp = 1.005;
+    float theFiSystFactorDown = 0.995;
+    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
+    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
     
     // Systematics plots for trigger rescaling
     float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
@@ -4782,8 +4785,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
         // Systematics plots for Fi rescaling
-      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
       
         // Systematics plots for trigger rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
@@ -4813,8 +4816,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
       // Systematics plots for Fi rescaling
-      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
       
       // Systematics plots for trigger rescaling
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
@@ -4843,8 +4846,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
       // Systematics plots for Fi rescaling
-      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
       
       // Systematics plots for trigger rescaling
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
@@ -4857,7 +4860,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   // so we never get 1 or 2
   if (doPostPreSplots_) {
     if (postPreS_candidate_count > 0) {
-      if (muTrig) {
+      if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
         tuple->PostPreS_TriggerType->Fill(1., EventWeight_);
       }
       if (metTrig) {
@@ -4865,9 +4868,6 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
     }
-
-    // Trigger type after preSelection at the event level
-    tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   }
 
 
@@ -5675,6 +5675,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
+//  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
   ->setComment("Add the list of muon triggers");
 //  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
 //     Possibly used in a next version of the analysis
