@@ -5650,7 +5650,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",true)
+  desc.addUntracked("ExitWhenGenMatchNotFound",false)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
@@ -5677,9 +5677,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
 //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
   ->setComment("Add the list of muon triggers");
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
+//  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
 //     Possibly used in a next version of the analysis
-//     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
+     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
