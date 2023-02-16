@@ -330,12 +330,14 @@ struct Tuple {
   TProfile* XSection;
   TH1F* NumEvents;
   TH1F* dRMinHLTMuon;
+  TH1F* dRMinHLTMuon_lowDeltaR;
   TH1F* ErrorHisto;
 
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;
   TH2F* BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt;
   TH1F* BefPreS_HltMatchTrackLevel;
+  TH1F* BefPreS_TriggerGenMatch;
   TH1F* BefPreS_TriggerType;
   TH1F* Gen_HSCPCandidateType;
   TH1F* BefPreS_HSCPCandidateType;
@@ -414,6 +416,7 @@ struct Tuple {
   TH1F* BefTrig_ProbQNoL1;
   TH1F* BefTrig_Ias;
   TH2F* BefTrig_TriggerMuon50VsPt_lowPt;
+  TH2F* BefTrig_TriggerMuonAllVsPt_lowPt;
 
   TH1F* BefPreS_MassT;
   TH1F* BefPreS_MassT_highMassT;
@@ -579,7 +582,19 @@ struct Tuple {
   TH2F* BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
   
+  TH2F* BefPreS_TriggerMuonAllVsBeta;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaA;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaB;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaC;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp;
+  TH2F* BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown;
+  
   TH2F* BefPreS_TriggerMuon50VsPt;
+  TH2F* BefPreS_TriggerMuonAllVsPt;
   TH2F* BefPreS_TriggerMETallVsBeta;
   TH2F* BefPreS_TriggerMETallVsMet;
   TH2F* BefPreS_TriggerMETallVsHT;
@@ -854,8 +869,20 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  
+  TH2F* PostPreS_TriggerMuonAllVsBeta;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaA;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaA_BetaDown;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaB;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaB_BetaUp;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaB_BetaDown;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaC;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaC_BetaUp;
+  TH2F* PostPreS_TriggerMuonAllVsBeta_EtaC_BetaDown;
 
   TH2F* PostPreS_TriggerMuon50VsPt;
+  TH2F* PostPreS_TriggerMuonAllVsPt;
   TH2F* PostPreS_TriggerMETallVsBeta;
   TH2F* PostPreS_TriggerMETallVsMet;
   TH2F* PostPreS_TriggerMETallVsHT;
