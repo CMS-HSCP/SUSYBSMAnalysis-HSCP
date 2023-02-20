@@ -333,6 +333,7 @@ struct Tuple {
   TH1F* dRMinHLTMuon_lowDeltaR;
   TH1F* ErrorHisto;
 
+  TH1F* BefPreS_RelDiffMatchedMuonPtAndTrigObjPt;
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;
   TH2F* BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt;
@@ -1096,10 +1097,10 @@ struct Tuple {
   TH1D* H_H;
 
   //Prediction histograms for muon only analysis which is binned depending on eta nd number of muon stations
-  std::map<std::string, TH1D*> H_B_Binned;  //TH1D* H_B_Binned[MaxPredBins];
-  std::map<std::string, TH1D*> H_D_Binned;  //TH1D* H_D_Binned[MaxPredBins];
-  std::map<std::string, TH1D*> H_F_Binned;  //TH1D* H_F_Binned[MaxPredBins];
-  std::map<std::string, TH1D*> H_H_Binned;  //TH1D* H_H_Binned[MaxPredBins];
+  std::map<std::string, TH1D*> H_B_Binned;
+  std::map<std::string, TH1D*> H_D_Binned;
+  std::map<std::string, TH1D*> H_F_Binned;
+  std::map<std::string, TH1D*> H_H_Binned;
 
   TH1D* HCuts_Pt;
   TH1D* HCuts_Is;
@@ -1197,10 +1198,10 @@ struct Tuple {
   TH2F* MassTOF_Flip;
   TH2F* MassComb_Flip;
 
-  std::map<std::string, TH1D*> H_B_Binned_Flip;  //TH1D* H_B_Binned_Flip[MaxPredBins];
-  std::map<std::string, TH1D*> H_D_Binned_Flip;  //TH1D* H_D_Binned_Flip[MaxPredBins];
-  std::map<std::string, TH1D*> H_F_Binned_Flip;  //TH1D* H_F_Binned_Flip[MaxPredBins];
-  std::map<std::string, TH1D*> H_H_Binned_Flip;  //TH1D* H_H_Binned_Flip[MaxPredBins];
+  std::map<std::string, TH1D*> H_B_Binned_Flip;
+  std::map<std::string, TH1D*> H_D_Binned_Flip;
+  std::map<std::string, TH1D*> H_F_Binned_Flip;
+  std::map<std::string, TH1D*> H_H_Binned_Flip;
 
   TH3F* Pred_EtaP_Flip;
   TH2F* Pred_I_Flip;
@@ -1251,10 +1252,10 @@ struct Tuple {
   TH1D* CtrlPt_S3_TOF;
   TH1D* CtrlPt_S4_TOF;
 
-  std::map<std::string, TH1D*> CtrlPt_S1_TOF_Binned;  //TH1D* CtrlPt_S1_TOF_Binned[MaxPredBins];
-  std::map<std::string, TH1D*> CtrlPt_S2_TOF_Binned;  //TH1D* CtrlPt_S2_TOF_Binned[MaxPredBins];
-  std::map<std::string, TH1D*> CtrlPt_S3_TOF_Binned;  //TH1D* CtrlPt_S3_TOF_Binned[MaxPredBins];
-  std::map<std::string, TH1D*> CtrlPt_S4_TOF_Binned;  //TH1D* CtrlPt_S4_TOF_Binned[MaxPredBins];
+  std::map<std::string, TH1D*> CtrlPt_S1_TOF_Binned;
+  std::map<std::string, TH1D*> CtrlPt_S2_TOF_Binned;
+  std::map<std::string, TH1D*> CtrlPt_S3_TOF_Binned;
+  std::map<std::string, TH1D*> CtrlPt_S4_TOF_Binned;
 
   Region rA_ias50;
   Region rC_ias50;
@@ -1276,49 +1277,50 @@ struct Tuple {
 
  // Calibration
  // Scale Factors
- TH2D* SF_HHit2DPix_loose;
- TH2D* SF_HHit2DStrip_loose;
- TH2D* SF_HHit2DPix;
- TH2D* SF_HHit2DStrip;
+ TH2F* SF_HHit2DPix_loose;
+ TH2F* SF_HHit2DStrip_loose;
+ TH2F* SF_HHit2DPix;
+ TH2F* SF_HHit2DStrip;
 
  // K and C
- TH2D* K_and_C_Ih_noL1_VsP_loose1;
- TH2D* K_and_C_Ih_noL1_VsP_loose2;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_loose1;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_loose2;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_loose1;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_loose2;
- TH2D* K_and_C_Ih_strip_VsP_loose1;
- TH2D* K_and_C_Ih_strip_VsP_loose2;
+ TH2F* K_and_C_Ih_noL1_VsP_loose1;
+ TH2F* K_and_C_Ih_noL1_VsP_loose2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_loose1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_loose2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_loose1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_loose2;
+ TH2F* K_and_C_Ih_strip_VsP_loose1;
+ TH2F* K_and_C_Ih_strip_VsP_loose2;
 
- TH2D* K_and_C_Ih_noL1_VsP_1;
- TH2D* K_and_C_Ih_noL1_VsP_2;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_1;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_2;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_1;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_2;
- TH2D* K_and_C_Ih_strip_VsP_1;
- TH2D* K_and_C_Ih_strip_VsP_2;
- TH2D* K_and_C_Ih_noL1_VsP_noFcut1;
- TH2D* K_and_C_Ih_noL1_VsP_noFcut2;
- TH2D* K_and_C_Ih_strip_VsP_noFcut1;
- TH2D* K_and_C_Ih_strip_VsP_noFcut2;
- TH1D* K_and_C_Kin_Mass;
- TH1D* K_and_C_Kin_p;
- TH1D* K_and_C_Kin_phi;
- TH1D* K_and_C_Kin_eta;
+ TH2F* K_and_C_Ih_noL1_VsP_1;
+ TH2F* K_and_C_Ih_noL1_VsP_2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_2;
+ TH2F* K_and_C_Ih_strip_VsP_1;
+ TH2F* K_and_C_Ih_strip_VsP_2;
+ TH2F* K_and_C_Ih_noL1_VsP_noFcut1;
+ TH2F* K_and_C_Ih_noL1_VsP_noFcut2;
+ TH2F* K_and_C_Ih_strip_VsP_noFcut1;
+ TH2F* K_and_C_Ih_strip_VsP_noFcut2;
+  
+ TH1F* K_and_C_Kin_Mass;
+ TH1F* K_and_C_Kin_p;
+ TH1F* K_and_C_Kin_phi;
+ TH1F* K_and_C_Kin_eta;
 
 
  // Stability
- TH2D* Stab_Ih_NoL1_VsRun;
- TH2D* Stab_Ih_pixNoL1_VsRun;
- TH2D* Stab_Ih_strip_VsRun;
- TH2D* Stab_Gi_strip_VsRun;
- TH2D* Stab_Gi_NoL1_VsRun;
- TH2D* Stab_Fi_pixNoL1_VsRun;
- TH2D* Stab_invB_VsRun;
- TH2D* Stab_invB_DT_VsRun;
- TH2D* Stab_invB_CSC_VsRun;
+ TH2F* Stab_Ih_NoL1_VsRun;
+ TH2F* Stab_Ih_pixNoL1_VsRun;
+ TH2F* Stab_Ih_strip_VsRun;
+ TH2F* Stab_Gi_strip_VsRun;
+ TH2F* Stab_Gi_NoL1_VsRun;
+ TH2F* Stab_Fi_pixNoL1_VsRun;
+ TH2F* Stab_invB_VsRun;
+ TH2F* Stab_invB_DT_VsRun;
+ TH2F* Stab_invB_CSC_VsRun;
 };
 
 #endif

@@ -49,7 +49,8 @@
 // - 31p5: ExitWhenGenMatchNotFound = true, MET triggers IN, fix trigger matching for trigger efficiency (round 3)
 // - 31p6: Adding {"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"}) (round 2)
 // - 43p3: Move to -log(1-F_{i}^{strips}), ExitWhenGenMatchNotFound = false, no MET triggers, all three Muon triggers
-// - 43p4: Zoomed in on dRMinHLTMuon_lowDeltaR, all muon trig plots for systematics and pt and beta dependence, study for trigger gen match 
+// - 43p4: Zoomed in on dRMinHLTMuon_lowDeltaR, all muon trig plots for systematics and pt and beta dependence, study for trigger gen match
+// - 43p5: Change K_and_C plots for TH1F, add axis title to them. Add RelDiffMatchedMuonPtAndTrigObjPt. Change trigger matching to a tight muon
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -504,6 +505,56 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   //------------------------------------------------------------------
+  // Vertex related quantities, finding the best (sum pT squared) vertex
+  //------------------------------------------------------------------
+  // Collection for vertices
+  vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
+  int numGoodVerts = 0;
+  std::vector<float> pvX;
+  std::vector<float> pvY;
+  std::vector<float> pvZ;
+  std::vector<float> pvRho;
+  std::vector<int> pvNdof;
+  std::vector<float> pvChi2;
+  std::vector<float> pvSumPt2;
+  
+  // Loop on the vertices in the event
+  bool foundPV = false;
+  int highestSumPt2VertexIndex = -1;
+  reco::Vertex highestSumPt2Vertex = vertexColl.front();
+  
+  for (unsigned int i = 0; i < vertexColl.size(); i++) {
+    if (vertexColl[i].isFake())continue;
+    if (!vertexColl[i].isValid())continue;
+    numGoodVerts++;
+    
+    pvX.push_back(vertexColl[i].x());
+    pvY.push_back(vertexColl[i].y());
+    pvZ.push_back(vertexColl[i].z());
+    pvRho.push_back(vertexColl[i].position().rho());
+    pvNdof.push_back(vertexColl[i].ndof());
+    pvChi2.push_back(vertexColl[i].chi2());
+    
+    // calculate sum pT squared
+    double sum = 0.;
+    double pT;
+    for (reco::Vertex::trackRef_iterator it = vertexColl[i].tracks_begin(); it != vertexColl[i].tracks_end(); it++) {
+      pT = (**it).pt();
+      double epT = (**it).ptError();
+      pT = pT > epT ? pT - epT : 0;
+      
+      sum += pT * pT;
+    }
+    pvSumPt2.push_back(sum);
+    
+    if (!foundPV) {
+      highestSumPt2Vertex = vertexColl[i];
+      foundPV = true;
+      highestSumPt2VertexIndex = i;
+    }
+  } // end loop on vertexColl
+
+  //------------------------------------------------------------------
   // GenParticles to be saved in the HSCP candidate ntuples (Christina Wang)
   //------------------------------------------------------------------
   std::vector<int> gParticleId;
@@ -686,8 +737,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
       if (mu->pt() < 50) continue;
+      // this is the def of muon::isTightMuon()
+      // bool muID = mu->isGlobalMuon() && mu->globalTrack()->normalizedChi2()<10. && mu->globalTrack()->hitPattern().numberOfValidMuonHits()>0 && mu->numberOfMatchedStations()>1;
+      // bool hits = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement()>5 && mu->innerTrack()->hitPattern().numberOfValidPixelHits()>0;
+      // bool ip = fabs(mu->muonBestTrack()->dxy(highestSumPt2Vertex.position()))<0.2 && fabs(mu->muonBestTrack()->dz(highestSumPt2Vertex.position()))<0.5;
+      
       // this is the def of muon::isLooseMuon()
-      if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
+      // if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
+      if (muon::isTightMuon(*mu, highestSumPt2Vertex)) {
         float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
         if (dr_hltmu_muon < dr_min_hlt_muon_inEvent){
           dr_min_hlt_muon_inEvent = dr_hltmu_muon;
@@ -706,7 +763,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Number of events that pass the matching
   if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
     matchedMuonWasFound = true;
+    const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
     tuple->NumEvents->Fill(3., EventWeight_);
+    tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt->Fill((triggerObjMatchedMu->pt()-trigObjP4s[closestTrigObjIndex].Pt())/(trigObjP4s[closestTrigObjIndex].Pt()), EventWeight_);
   }
   
   // Check if the event is passing trigger
@@ -727,6 +786,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     for (unsigned int g = 0; g < genColl.size(); g++) {
       if (genColl[g].pt() < 10) { continue; }
       if (genColl[g].status() != 1) { continue; }
+      
+//      int genPdgId = genColl[g].pdgId();
+//      float genPt = genColl[g].pt();
+//      float genEta = genColl[g].eta();
+//      float genPhi = genColl[g].phi();
+//      LogPrint(MOD) << "  >> The gen index " << g << " has PDG ID " << genPdgId << " with pT " << genPt << " and eta " << genEta << " and phi " << genPhi << " vz = " << genColl[g].vz();
+      
+//      if (g==1783) {
+//        LogPrint(MOD) << "  >> The gen index " << g << " has mother of ID = " << genColl[g].mother()->pdgId() << " has a gramma " <<  genColl[g].mother()->mother()->pdgId();
+//      }
 
       // Let's match the matched muon to gen level tracks
       float drGenTrigMatchedMu = deltaR(genColl[g].eta(),genColl[g].phi(),triggerObjMatchedMu->eta(),triggerObjMatchedMu->phi());
@@ -754,11 +823,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (isHSCPgenID(genColl[triggerObjGenIndex])) {
           // Gen match is an HSCP
           tuple->BefPreS_TriggerGenMatch->Fill(3.);
-        } else if (abs((genColl[triggerObjGenIndex].pdgId()) == 13)) {
+        } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 13) {
           // Gen match is a muon
           tuple->BefPreS_TriggerGenMatch->Fill(4.);
           if (isSignal) {
-            LogPrint(MOD) << "Gen match is a muon with eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() ;
+            LogPrint(MOD) << "Gen match is a muon with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
+            LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
           }
         } else {
           LogPrint(MOD) << "Gen match has an ID of " << genColl[triggerObjGenIndex].pdgId();
@@ -876,54 +946,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
          nPUmean.push_back(pu.getTrueNumInteractions());
     }
   }
-
-  // Collection for vertices
-  vector<reco::Vertex> vertexColl = iEvent.get(offlinePrimaryVerticesToken_);
-  int numGoodVerts = 0;
-  std::vector<float> pvX;
-  std::vector<float> pvY;
-  std::vector<float> pvZ;
-  std::vector<float> pvRho;
-  std::vector<int> pvNdof;
-  std::vector<float> pvChi2;
-  std::vector<float> pvSumPt2;
-
-  // Loop on the vertices in the event
-  bool foundPV = false;
-  int highestSumPt2VertexIndex = -1;
-  reco::Vertex highestSumPt2Vertex = vertexColl.front();
-
-  for (unsigned int i = 0; i < vertexColl.size(); i++) {
-    if (vertexColl[i].isFake())continue;
-    if (!vertexColl[i].isValid())continue;
-    numGoodVerts++;
-    
-    pvX.push_back(vertexColl[i].x());
-    pvY.push_back(vertexColl[i].y());
-    pvZ.push_back(vertexColl[i].z());
-    pvRho.push_back(vertexColl[i].position().rho());
-    pvNdof.push_back(vertexColl[i].ndof());
-    pvChi2.push_back(vertexColl[i].chi2());
-
-    // calculate sum pT squared
-    double sum = 0.;
-    double pT;
-     for (reco::Vertex::trackRef_iterator it = vertexColl[i].tracks_begin(); it != vertexColl[i].tracks_end(); it++) {
-       pT = (**it).pt();
-       double epT = (**it).ptError();
-       pT = pT > epT ? pT - epT : 0;
-
-       sum += pT * pT;
-     }
-     pvSumPt2.push_back(sum);
-
-     if (!foundPV) {
-        highestSumPt2Vertex = vertexColl[i];
-        foundPV = true;
-        highestSumPt2VertexIndex = i;
-      }
-  } // end loop on vertexColl
-
+  
   // Needs to be defined at event level, used in several functions
   float RecoCaloMET = -10, RecoCaloMET_phi = -10, RecoCaloMET_sigf = -10;
 
@@ -5041,12 +5064,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       //load dedx quantity associated to this track
       const reco::DeDxHitInfo* dedxHits = nullptr;
       reco::DeDxHitInfoRef dedxHitsRef = dedxCollH->get(generalTrack.key());
-      if (!dedxHitsRef.isNull())
+      if (!dedxHitsRef.isNull()) {
         dedxHits = &(*dedxHitsRef);
+      }
 
-//      if(!dedxHits)  cout << "track " << c << " pt : " <<  generalTrack->pt()  << ", eta : " << generalTrack->eta()  << " without dedxHit info " << endl;
-      if(!dedxHits)continue;
-//      cout << "track " << c << " pt : " <<  generalTrack->pt()  << ", eta : " << generalTrack->eta()  << " with dedxHit info " << endl;
+      if(!dedxHits) continue;
 
       reco::DeDxHitInfoRef dedxHitsPrescRef;
       dedxHitsPrescRef = dedxCollH->get(generalTrack.key());
@@ -5055,22 +5077,21 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
       }
 
-
       float dEdxErr = 0;
 
       // Ih no pixel L1
-      auto dedxIh_noL1_Tmp =
+      auto dedxIh_noL1_TmpFromGeneralTrack =
         computedEdx(generalTrack->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true);
 
-      reco::DeDxData* dedxIh_noL1 = dedxIh_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIh_noL1_Tmp : nullptr;
+      reco::DeDxData* dedxIh_noL1FromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() > 0 ? &dedxIh_noL1_TmpFromGeneralTrack : nullptr;
 
       // Ih Strip only
-      auto dedxIh_StripOnly_Tmp =
+      auto dedxIh_StripOnly_TmpFromGeneralTrack =
         computedEdx(generalTrack->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_);
 
-      reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
+      reco::DeDxData* dedxIh_StripOnlyFromGeneralTrack = dedxIh_StripOnly_TmpFromGeneralTrack.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_TmpFromGeneralTrack : nullptr;
 
 
 
@@ -5084,7 +5105,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       */
       int numRecHitsQNoL1 = 0;
       float probQonTrackWMultiNoL1 = 1;
-      unsigned int nonL1PixHits = 0;
+      unsigned int nonL1PixHitsFromGeneralTrack = 0;
     
       for (unsigned int i = 0; i < dedxHits->size(); i++) {
 
@@ -5141,7 +5162,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bool conditionForPhase0 = (numLayers == 3);
         bool conditionForPhase1 = ((numLayers == 4) && (( detid.subdetId() == PixelSubdetector::PixelEndcap) || ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) != 1))));
         if (conditionForPhase0 || conditionForPhase1) {
-          nonL1PixHits++;
+          nonL1PixHitsFromGeneralTrack++;
           float probQNoL1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
           float probXYNoL1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
 
@@ -5178,18 +5199,17 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       float probQonTrackNoL1 = -1.f;
       probQonTrackNoL1 = combineProbs(probQonTrackWMultiNoL1, numRecHitsQNoL1);
 
-      float ih0_noL1 = (dedxIh_noL1) ?  dedxIh_noL1->dEdx() : 0.0;
-      float ih0_strip = (dedxIh_StripOnly) ?  dedxIh_StripOnly->dEdx() : 0.0;
+      float ih0_noL1 = (dedxIh_noL1FromGeneralTrack) ?  dedxIh_noL1FromGeneralTrack->dEdx() : 0.0;
+      float ih0_strip = (dedxIh_StripOnlyFromGeneralTrack) ?  dedxIh_StripOnlyFromGeneralTrack->dEdx() : 0.0;
     
       
-      // nonL1PixHits now well computed above
-      // unsigned int nonL1PixHits = dedxIh_noL1_Tmp.numberOfMeasurements() - dedxIh_StripOnly_Tmp.numberOfMeasurements() ;
-      unsigned int numDeDxHits = dedxIh_noL1_Tmp.numberOfMeasurements() ;
+      // nonL1PixHitsFromGeneralTrack now well computed above in the loop
+      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() ;
 
       // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
-      passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
+      passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHitsFromGeneralTrack >= globalMinNOPH_) ? true : false;
       // Cut for the number of dEdx hits to ensure good stats on the hits
-      passedTrackCutsArray[8]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+      passedTrackCutsArray[8]  = (numDeDxHitsFromGeneralTrack >= globalMinNOM_)  ? true : false;
       if (!passPreselection(passedTrackCutsArray, false)) continue;
 
       if (generalTrack->p() < 50) {
