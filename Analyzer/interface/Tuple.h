@@ -334,6 +334,8 @@ struct Tuple {
   TH1F* ErrorHisto;
 
   TH1F* BefPreS_RelDiffMatchedMuonPtAndTrigObjPt;
+  TH1F* BefPreS_RelDiffTrigObjPtAndMatchedMuonPt;
+  TH1F* BefPreS_MatchedMuonPt25Pt;
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;
   TH2F* BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt;

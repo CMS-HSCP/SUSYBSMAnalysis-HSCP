@@ -637,18 +637,20 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->Gen_pT = dir.make<TH1F>("Gen_pT", ";Generator candidate p_{T} (GeV);Gen candidate / 100 GeV", 40, 0, PtHistoUpperBound);
   tuple->Gen_Eta = dir.make<TH1F>("Gen_Eta", ";Generator candidate #eta;Gen candidate / 0.05", 52, -2.6, 2.6);
   tuple->Gen_Beta = dir.make<TH1F>("Gen_Beta", ";Generator candidate #beta;Gen candidate / 0.05", 20, 0., 1.);
-  tuple->Gen_BetaGamma = dir.make<TH1F>("Gen_BetaGamma", ";Generator candidate #beta #gamma;Gen canidate/ 0.1",4500,0.,450.);
-  tuple->Gen_BetaGamma_lowBetaGamma = dir.make<TH1F>("Gen_BetaGamma_lowBetaGamma", ";Generator candidate #beta #gamma;Gen canidate/ 0.1",100,0.,10.);
+  tuple->Gen_BetaGamma = dir.make<TH1F>("Gen_BetaGamma", ";Generator candidate #beta #gamma;Gen candidate/ 0.1",4500,0.,450.);
+  tuple->Gen_BetaGamma_lowBetaGamma = dir.make<TH1F>("Gen_BetaGamma_lowBetaGamma", ";Generator candidate #beta #gamma;Gen candidate/ 0.1",100,0.,10.);
   
   if (doBefTrigPlots_) {
     tuple->BefTrig_ProbQNoL1 = dir.make<TH1F>("BefTrig_ProbQNoL1", ";F_{i}^{pixels};Tracks / 0.1", 10, 0., 1.);
     tuple->BefTrig_Ih = dir.make<TH1F>("BefTrig_Ih", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->BefTrig_Ias = dir.make<TH1F>("BefTrig_Ias", ";G_{i}^{strips};Tracks / 0.05", 20, 0., 1.);
-    tuple->BefTrig_TriggerMuon50VsPt_lowPt = dir.make<TH2F>("BefTrig_TriggerMuon50VsPt_lowPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,200.05);
-    tuple->BefTrig_TriggerMuonAllVsPt_lowPt = dir.make<TH2F>("BefTrig_TriggerMuonAllVsPt_lowPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,200.05);
+    tuple->BefTrig_TriggerMuon50VsPt_lowPt = dir.make<TH2F>("BefTrig_TriggerMuon50VsPt_lowPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,40,-0.05,200.05);
+    tuple->BefTrig_TriggerMuonAllVsPt_lowPt = dir.make<TH2F>("BefTrig_TriggerMuonAllVsPt_lowPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,40,-0.05,200.05);
   }
   if (doBefPreSplots_) {
+    tuple->BefPreS_MatchedMuonPt25Pt = dir.make<TH1F>("BefPreS_MatchedMuonPt25Pt", ";Matched muon ( p_{T} > 25)  p_{T} (GeV);Events / 5 GeV", 40,-0.05,200.05);
     tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt = dir.make<TH1F>("BefPreS_RelDiffMatchedMuonPtAndTrigObjPt", ";(Matched offline muon p_{T} - trigger object p_{T}) / trigger object p_{T};Tracks / bin", 60,-1.0,2.0);
+    tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt = dir.make<TH1F>("BefPreS_RelDiffTrigObjPtAndMatchedMuonPt", ";(trigger object p_{T} - matched offline muon p_{T} ) / matched offline muon p_{T};Tracks / bin", 60,-1.0,2.0);
     tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - general track p_{T}) / general track p_{T};Tracks / bin", 60,-1.0,2.0);
     tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};general track p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
     tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};general track p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
@@ -1420,10 +1422,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_RecoPfHT = dir.make<TH1F>("PostPreS_RecoPfHT", ";PfHT",100,0.,2000.);
     tuple->PostPreS_GenBeta = dir.make<TH1F>("PostPreS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
   }
-  tuple->PostS_HltMatchTrackLevel = dir.make<TH1F>("PostS_HltMatchTrackLevel", ";;Events / category", 3, 0.5, 3.5);
+  tuple->PostS_HltMatchTrackLevel = dir.make<TH1F>("PostS_HltMatchTrackLevel", ";;Events / category", 4, 0.5, 4.5);
   tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"HLT + any muon match");
   tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(2,"Bin 1 + best HSCP cand matches muon");
-  tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(3,"Bin 1 + best HSCP cand matches HLT muon");
+  tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(3,"Bin 2 + Tight ID");
+  tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(4,"Bin 1 + best HSCP cand matches HLT muon");
+  
   tuple->PostPreS_RecoPfMet = dir.make<TH1F>("PostPreS_RecoPfMet", ";PfMet",200,0.,2000.);
   tuple->PostPreS_RecoPfMetPhi = dir.make<TH1F>("PostPreS_RecoPfMetPhi", ";PfMetPhi",30,0.,3.2);
 

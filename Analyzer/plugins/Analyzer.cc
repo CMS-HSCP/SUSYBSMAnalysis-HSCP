@@ -52,6 +52,7 @@
 // - 43p4: Zoomed in on dRMinHLTMuon_lowDeltaR, all muon trig plots for systematics and pt and beta dependence, study for trigger gen match
 // - 43p5: Change K_and_C plots for TH1F, add axis title to them. Add RelDiffMatchedMuonPtAndTrigObjPt. Change trigger matching to a tight muon
 // - 43p6: Fix TrackLevel HLT matching plot, RelDiffMuonPtAndTruthPt and RelDiffTrackPtAndTruthPt
+// - 43p7: Add RelDiffTrigObjPtAndMatchedMuonPt, add tight ID check to PostS_HltMatchTrackLevel, add BefPreS_MatchedMuonPt25Pt plots
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -731,28 +732,37 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool matchedMuonWasFound = false;
   
   int closestTrigMuIndex = -1;
+  int closestTrigMuPt25Index = -1;
   int closestTrigObjIndex = -1;
   float dr_min_hlt_muon_inEvent = 9999.0;
+  float dr_min_hlt_muonPt25_inEvent = 9999.0;
   for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
     if (trigObjP4s[objNr].Pt() < 50) continue;
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
-      if (mu->pt() < 50) continue;
-      // this is the def of muon::isTightMuon()
+      // this is the def of (muon::isTightMuon(*mu, highestSumPt2Vertex))
       // bool muID = mu->isGlobalMuon() && mu->globalTrack()->normalizedChi2()<10. && mu->globalTrack()->hitPattern().numberOfValidMuonHits()>0 && mu->numberOfMatchedStations()>1;
       // bool hits = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement()>5 && mu->innerTrack()->hitPattern().numberOfValidPixelHits()>0;
       // bool ip = fabs(mu->muonBestTrack()->dxy(highestSumPt2Vertex.position()))<0.2 && fabs(mu->muonBestTrack()->dz(highestSumPt2Vertex.position()))<0.5;
-      
-      // this is the def of muon::isLooseMuon()
+    
+      // this is the def of (muon::isLooseMuon(*mu))
       // if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
-      // if (muon::isLooseMuon(*mu)) {
-      if (muon::isTightMuon(*mu, highestSumPt2Vertex)) {
-        float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
-        if (dr_hltmu_muon < dr_min_hlt_muon_inEvent) {
-          dr_min_hlt_muon_inEvent = dr_hltmu_muon;
-          closestTrigMuIndex = i;
-          closestTrigObjIndex = objNr;
-        }
+      if (!muon::isTightMuon(*mu, highestSumPt2Vertex)) continue;
+      
+      // For checking the trigger pT let's consider tracks with pT > 25 GeV
+      if (mu->pt() < 25)  continue;
+      float drTemp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+      if (drTemp < dr_min_hlt_muonPt25_inEvent) {
+        dr_min_hlt_muonPt25_inEvent = drTemp;
+        closestTrigMuPt25Index = i;
+      }
+      // But otherwise just consider pT > 50 GeV for the real matching
+      if (mu->pt() < 50)  continue;
+      float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+      if (dr_hltmu_muon < dr_min_hlt_muon_inEvent) {
+        dr_min_hlt_muon_inEvent = dr_hltmu_muon;
+        closestTrigMuIndex = i;
+        closestTrigObjIndex = objNr;
       }
     }
   }
@@ -762,12 +772,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->dRMinHLTMuon_lowDeltaR->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
   }
   
+  // Check for the HLT muon pt vs offline pt
+  if (muTrig && dr_min_hlt_muonPt25_inEvent < 0.15) {
+    const reco::Muon* triggerObjMatchedMuPt25 = &(muonColl)[closestTrigMuPt25Index];
+    tuple->BefPreS_MatchedMuonPt25Pt->Fill(triggerObjMatchedMuPt25->pt(), EventWeight_);
+  }
+  
   // Number of events that pass the matching
   if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
     matchedMuonWasFound = true;
     const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
     tuple->NumEvents->Fill(3., EventWeight_);
     tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt->Fill((triggerObjMatchedMu->pt()-trigObjP4s[closestTrigObjIndex].Pt())/(trigObjP4s[closestTrigObjIndex].Pt()), EventWeight_);
+    tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()), EventWeight_);
   }
   
   // Check if the event is passing trigger
@@ -4834,9 +4851,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_HltMatchTrackLevel->Fill(1.0, EventWeight_);
     if (bestCandidateMuon.isNonnull()) {
       tuple->PostS_HltMatchTrackLevel->Fill(2.0, EventWeight_);
+      if (muon::isTightMuon(*bestCandidateMuon, highestSumPt2Vertex)) {
+        tuple->PostS_HltMatchTrackLevel->Fill(3.0, EventWeight_);
+      }
     }
     if (bestCandidateDrMinHltMuon < 0.15) {
-      tuple->PostS_HltMatchTrackLevel->Fill(3.0, EventWeight_);
+      tuple->PostS_HltMatchTrackLevel->Fill(4.0, EventWeight_);
     }
 
     // SR1-3 bins in the cutflow
