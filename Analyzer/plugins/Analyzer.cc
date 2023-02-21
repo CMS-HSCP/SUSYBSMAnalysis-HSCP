@@ -51,6 +51,7 @@
 // - 43p3: Move to -log(1-F_{i}^{strips}), ExitWhenGenMatchNotFound = false, no MET triggers, all three Muon triggers
 // - 43p4: Zoomed in on dRMinHLTMuon_lowDeltaR, all muon trig plots for systematics and pt and beta dependence, study for trigger gen match
 // - 43p5: Change K_and_C plots for TH1F, add axis title to them. Add RelDiffMatchedMuonPtAndTrigObjPt. Change trigger matching to a tight muon
+// - 43p6: Fix TrackLevel HLT matching plot, RelDiffMuonPtAndTruthPt and RelDiffTrackPtAndTruthPt
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -744,9 +745,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       
       // this is the def of muon::isLooseMuon()
       // if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
+      // if (muon::isLooseMuon(*mu)) {
       if (muon::isTightMuon(*mu, highestSumPt2Vertex)) {
         float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
-        if (dr_hltmu_muon < dr_min_hlt_muon_inEvent){
+        if (dr_hltmu_muon < dr_min_hlt_muon_inEvent) {
           dr_min_hlt_muon_inEvent = dr_hltmu_muon;
           closestTrigMuIndex = i;
           closestTrigObjIndex = objNr;
@@ -830,12 +832,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             LogPrint(MOD) << "Gen match is a muon with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
             LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
           }
+        } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 211 || abs(genColl[triggerObjGenIndex].pdgId()) == 321) {
+          // Gen match is a pion or kaon
+          tuple->BefPreS_TriggerGenMatch->Fill(5.);
+          if (isSignal) {
+            LogPrint(MOD) << "Gen match is a pion or kaon (ID=" << genColl[triggerObjGenIndex].pdgId() << ") with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
+            LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
+          }
         } else {
           LogPrint(MOD) << "Gen match has an ID of " << genColl[triggerObjGenIndex].pdgId();
         }
         if (fabs(genColl[triggerObjGenIndex].eta()) > globalMaxEta_) {
           // Eta cut kills gen match
-          tuple->BefPreS_TriggerGenMatch->Fill(5.);
+          tuple->BefPreS_TriggerGenMatch->Fill(6.);
         }
       } else {
         LogPrint(MOD) << "Gen match found but too far, drGenTrigObjMin = " << drGenTrigObjMin;
@@ -1231,18 +1240,18 @@ std::vector<std::vector<float>> triggerObjectEta;
 std::vector<std::vector<float>> triggerObjectPhi;
 
 
-// std::vector<TLorentzVector> trigObjP4s;
+ std::vector<TLorentzVector> trigObjP4sAll;
 for ( int q=0; q<MAX_MuonHLTFilters;q++) {
-  trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,muonHLTFilterNames[q].c_str(),"HLT");
+  trigtools::getP4sOfObsPassingFilter(trigObjP4sAll,*trigEvent,muonHLTFilterNames[q].c_str(),"HLT");
   std::vector<float> triggerObjectE_temp;
   std::vector<float> triggerObjectPt_temp;
   std::vector<float> triggerObjectEta_temp;
   std::vector<float> triggerObjectPhi_temp;
-  for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
-    triggerObjectE_temp.push_back(trigObjP4s[objNr].Energy());
-    triggerObjectPt_temp.push_back(trigObjP4s[objNr].Pt());
-    triggerObjectEta_temp.push_back(trigObjP4s[objNr].Eta());
-    triggerObjectPhi_temp.push_back(trigObjP4s[objNr].Phi());
+  for(size_t objNr=0; objNr<trigObjP4sAll.size(); objNr++) {
+    triggerObjectE_temp.push_back(trigObjP4sAll[objNr].Energy());
+    triggerObjectPt_temp.push_back(trigObjP4sAll[objNr].Pt());
+    triggerObjectEta_temp.push_back(trigObjP4sAll[objNr].Eta());
+    triggerObjectPhi_temp.push_back(trigObjP4sAll[objNr].Phi());
   }
   triggerObjectE.push_back(triggerObjectE_temp);
   triggerObjectPt.push_back(triggerObjectPt_temp);
@@ -1744,6 +1753,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->BefPreS_GendRMin->Fill(dRMinGen);
       tuple->BefPreS_GenPtVsdRMinGen->Fill(genPt, dRMinGen);
       tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
+      tuple->BefPreS_RelDiffMuonPtAndTruthPt->Fill((muonPt-genPt)/genPt, EventWeight_);
+      tuple->BefPreS_RelDiffTrackPtAndTruthPt->Fill((trackerPt-genPt)/genPt, EventWeight_);
     }
     
     if (!isData && exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
@@ -1817,7 +1828,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
       }
     }
-
+    
     // Match candidate track to HLT muon
     float hlt_match_pt = -9999.0;
     float temp_dr = 9999.;
@@ -3714,6 +3725,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
         tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt, trackerPt/genPt, EventWeight_);
         tuple->PostPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
+        tuple->PostPreS_RelDiffMuonPtAndTruthPt->Fill((muonPt-genPt)/genPt, EventWeight_);
+        tuple->PostPreS_RelDiffTrackPtAndTruthPt->Fill((trackerPt-genPt)/genPt, EventWeight_);
         tuple->PostPreS_PfType->Fill(0., EventWeight_);
         tuple->PostPreS_PfTypeVsIas->Fill(0., globalIas_, EventWeight_);
         if (pf_isPfTrack) {
@@ -4046,7 +4059,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       if (globalIh_ > maxIhSoFar) {
         maxIhSoFar = globalIh_;
-        bestCandidateIndex = candidate_count;
+        bestCandidateIndex = candidate_count-1;
         bestCandidateIas = globalIas_;
         bestCandidateMass = Mass;
         bestCandidateFiStrips = globalFiStrips_;
@@ -4792,52 +4805,50 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     if (debug_ > 2) LogPrint(MOD) << "Trigger passed, but number of postPreSelected candidates is zero";
   }
   
-  
-  int hscpIndex = 0;
-  for (const auto& hscp : iEvent.get(hscpToken_)) {
-    hscpIndex++;
-    if (bestCandidateIndex != hscpIndex) {
-      continue;
-    }
+  // Make sure the track that passed preselection + highest Ih selection was filled
+  if ((trigInfo_ > 0) && (bestCandidateIndex >= 0)) {
+    const auto hscpColl = iEvent.get(hscpToken_);
+    const auto bestCandidateHSCP = &(hscpColl)[bestCandidateIndex];
     
-    if (debug_ > 3 && trigInfo_ > 0) LogPrint(MOD) << "After choosing the best candidate track";
+    if (debug_ > 3) LogPrint(MOD) << "After choosing the best candidate track" << endl;
     
-    if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
+    if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::globalMuon) {
       tuple->PostS_RecoHSCParticleType->Fill(0.);
-    } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
+    } else if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::trackerMuon) {
       tuple->PostS_RecoHSCParticleType->Fill(1.);
-    } else if ( hscp.type() == susybsm::HSCParticleType::matchedStandAloneMuon) {
+    } else if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::matchedStandAloneMuon) {
       tuple->PostS_RecoHSCParticleType->Fill(2.);
-    } else if ( hscp.type() == susybsm::HSCParticleType::standAloneMuon) {
+    } else if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::standAloneMuon) {
       tuple->PostS_RecoHSCParticleType->Fill(3.);
-    } else if ( hscp.type() == susybsm::HSCParticleType::innerTrack) {
+    } else if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::innerTrack) {
       tuple->PostS_RecoHSCParticleType->Fill(4.);
-    } else if ( hscp.type() == susybsm::HSCParticleType::unknown) {
+    } else if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::unknown) {
       tuple->PostS_RecoHSCParticleType->Fill(5.);
     }
-
-    reco::TrackRef bestCandidateTrack =  hscp.trackRef();
-    reco::MuonRef bestCandidateMuon = hscp.muonRef();
     
-    if (trigInfo_ > 0) {
-      tuple->PostS_HltMatchTrackLevel->Fill(1.0, EventWeight_);
-      if (bestCandidateMuon.isNonnull()) {
-        tuple->PostS_HltMatchTrackLevel->Fill(2.0, EventWeight_);
-      }
-      if (bestCandidateDrMinHltMuon < 0.15) {
-        if (trigInfo_ > 0) tuple->PostS_HltMatchTrackLevel->Fill(3.0, EventWeight_);
-      }
+    reco::TrackRef bestCandidateTrack =  bestCandidateHSCP->trackRef();
+    reco::MuonRef bestCandidateMuon = bestCandidateHSCP->muonRef();
+    
+    // More studies on the nature of the best candidate track
+    // if it is a muon and/or its the triggered object
+    tuple->PostS_HltMatchTrackLevel->Fill(1.0, EventWeight_);
+    if (bestCandidateMuon.isNonnull()) {
+      tuple->PostS_HltMatchTrackLevel->Fill(2.0, EventWeight_);
     }
-    
+    if (bestCandidateDrMinHltMuon < 0.15) {
+      tuple->PostS_HltMatchTrackLevel->Fill(3.0, EventWeight_);
+    }
+
+    // SR1-3 bins in the cutflow
     if (bestCandidateIas > 0.25 && bestCandidateProbQNoL1 < 0.1) {
         tuple->EventCutFlow->Fill(17.0, EventWeight_);
       if (bestCandidateTrack->pt() > 100) {
         tuple->EventCutFlow->Fill(18.0, EventWeight_);
       } if (bestCandidateTrack->pt() > 200) {
         tuple->EventCutFlow->Fill(19.0, EventWeight_);
-      } if (bestCandidateTrack->pt() > 400) {
+      } if (bestCandidateTrack->pt() > 300) {
       tuple->EventCutFlow->Fill(20.0, EventWeight_);
-    }
+      }
     }
     
     float shiftForPtValue = shiftForPt(bestCandidateTrack->pt(),bestCandidateTrack->eta(),bestCandidateTrack->phi(),bestCandidateTrack->charge());
@@ -4985,16 +4996,16 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
       // now for even higher pT
-    if (bestCandidateTrack->pt() >= 400) {
+    if (bestCandidateTrack->pt() >= 300) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= 400) {
+      if (rescaledPtUp >= 300) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtUp >= 400) {
+      if (rescaledPtUp >= 300) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -5014,20 +5025,16 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
-  } // end of "loop" on the single best HSCP candidate
-  
-  // Trigger type after preSelection at the event level
-  // I need these two lines because the OR of MET/Muon will be overwriting the trigInfo_
-  // so we never get 1 or 2
-  if (doPostPreSplots_) {
-    if (postPreS_candidate_count > 0) {
+    
+    // Trigger type after preSelection at the event level
+    if (doPostPreSplots_) {
         if (!metTrig && !muTrig) { tuple->PostPreS_TriggerType->Fill(0., EventWeight_); }
         if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(1., EventWeight_); }
         if (metTrig) { tuple->PostPreS_TriggerType->Fill(2., EventWeight_); }
         if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(3., EventWeight_); }
         if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(4., EventWeight_); }
     }
-  }
+  } // end on making sure the bestCandidateIndex is assigned
 
   // Calibration information
   // loop on the tracks

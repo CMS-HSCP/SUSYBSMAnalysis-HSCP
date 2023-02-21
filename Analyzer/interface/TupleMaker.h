@@ -649,21 +649,24 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   }
   if (doBefPreSplots_) {
     tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt = dir.make<TH1F>("BefPreS_RelDiffMatchedMuonPtAndTrigObjPt", ";(Matched offline muon p_{T} - trigger object p_{T}) / trigger object p_{T};Tracks / bin", 60,-1.0,2.0);
-    tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - tracker p_{T}) / tracker p_{T};Tracks / bin", 60,-1.0,2.0);
-    tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};tracker p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
-    tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};tracker p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
+    tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - general track p_{T}) / general track p_{T};Tracks / bin", 60,-1.0,2.0);
+    tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};general track p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
+    tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};general track p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
+    tuple->BefPreS_RelDiffMuonPtAndTruthPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTruthPt", ";(TuneP muon p_{T} - gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
+    tuple->BefPreS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("BefPreS_RelDiffTrackPtAndTruthPt", ";(general track p_{T}- gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
     
     
     tuple->BefPreS_HltMatchTrackLevel = dir.make<TH1F>("BefPreS_HltMatchTrackLevel", ";;Tracks/category", 5, -0.5, 4.5);
     tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"All tracks");
     tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(2,"Tracks matched to HLT muon");
     
-    tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events/category", 5, 0.5, 5.5);
+    tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events/category", 6, 0.5, 6.5);
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(1,"Triggered w/ muon match");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(2,"Gen match was found");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(3,"Gen match is an HSCP");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(4,"Gen match is a muon");
-    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(5,"But eta cut kills it");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(5,"Gen match is a kaon or pion");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(6,"But eta cut kills it");
     
     tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
@@ -1009,9 +1012,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   if (doPostPreSplots_) {
     tuple->PostPreS_NumCandidates = dir.make<TH1F>("PostPreS_NumCandidates", ";Number of HSCP candidates;Events / bin", 11, -0.5, 10.5);
-    tuple->PostPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("PostPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - tracker p_{T}) / tracker p_{T};Tracks / bin", 60,-1.0,2.0);
-    tuple->PostPreS_MuonPtVsTrackPt = dir.make<TH2F>("PostPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};tracker p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
-    tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};tracker p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
+    tuple->PostPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("PostPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - general track p_{T}) / general track p_{T};Tracks / bin", 60,-1.0,2.0);
+    tuple->PostPreS_MuonPtVsTrackPt = dir.make<TH2F>("PostPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};general track p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
+    tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};general track p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
+    
+    tuple->PostPreS_RelDiffMuonPtAndTruthPt = dir.make<TH1F>("PostPreS_RelDiffMuonPtAndTruthPt", ";(TuneP muon p_{T} - gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
+    tuple->PostPreS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("PostPreS_RelDiffTrackPtAndTruthPt", ";(general track p_{T} - gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
     
     tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
     tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");

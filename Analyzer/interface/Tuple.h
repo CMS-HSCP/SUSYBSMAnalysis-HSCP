@@ -337,6 +337,9 @@ struct Tuple {
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;
   TH2F* BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt;
+  TH1F* BefPreS_RelDiffMuonPtAndTruthPt;
+  TH1F* BefPreS_RelDiffTrackPtAndTruthPt;
+  
   TH1F* BefPreS_HltMatchTrackLevel;
   TH1F* BefPreS_TriggerGenMatch;
   TH1F* BefPreS_TriggerType;
@@ -615,6 +618,9 @@ struct Tuple {
   TH1F* PostPreS_RelDiffMuonPtAndTrackPt;
   TH2F* PostPreS_MuonPtVsTrackPt;
   TH2F* PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt;
+  TH1F* PostPreS_RelDiffMuonPtAndTruthPt;
+  TH1F* PostPreS_RelDiffTrackPtAndTruthPt;
+  
   TH1F* PostPreS_TriggerType;
   TH1F* PostPreS_RecoHSCParticleType;
   TH1F* PostPreS_PfType;
