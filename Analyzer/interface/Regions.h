@@ -59,16 +59,17 @@ class Region{
         float massup;
         std::vector<double> VectOfBins_P_;
         std::string suffix_;
-        TH3F* ih_p_eta;
+        //TH3F* ih_p_eta;
         TH2F* eta_p;
         TH2F* ih_eta;
         TH2F* ih_p;
         TH2F* ias_p;
         TH2F* ias_pt;
+        //TH2F* ias_ih;
         TH1F* mass;
         TH1F* pred_mass;
         TH2F* eta_p_rebinned;
-        TH2F* pt_pterroverpt;
+        //TH2F* pt_pterroverpt;
         TH1F* hTOF;
 };
 
@@ -79,7 +80,20 @@ Region::Region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,
     initHisto(dir,etabins,ihbins,pbins,massbins);
 } 
 
-Region::~Region(){}
+Region::~Region(){
+        /*//delete ih_p_eta;
+        delete eta_p;
+        delete ih_eta;
+        delete ih_p;
+        delete ias_p;
+        delete ias_pt;
+        //delete ias_ih;
+        delete mass;
+        delete pred_mass;
+        delete eta_p_rebinned;
+        //delete pt_pterroverpt;
+        delete hTOF;*/
+}
 
 void Region::setSuffix(std::string suffix){
     suffix_ = suffix;
@@ -92,47 +106,49 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     TH3::SetDefaultSumw2(kTRUE);
     np = pbins;
     plow = 0;
-    pup = 10000;
+    pup = 200;
     npt = pbins;
     ptlow = 0;
     ptup = 10000; 
     nih = ihbins;
-    ihlow = 0;
-    ihup = 20;
+    ihlow = 3;
+    ihup = 8;
     nias = ihbins;
     iaslow = 0;
     iasup = 1;
     neta = etabins;
-    etalow = -3;
-    etaup = 3;
+    etalow = -1;
+    etaup = 1;
     nmass = massbins;
     masslow = 0;
     massup = 4000;
     std::string suffix = suffix_;
-    ih_p_eta = dir.make<TH3F>(("ih_p_eta"+suffix).c_str(),";#eta;p [GeV];I_{h} [MeV/cm]",neta,etalow,etaup,np,plow,pup,nih,ihlow,ihup); 
-    eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";p [GeV];#eta",np,plow,pup,neta,etalow,etaup); 
+    //ih_p_eta = dir.make<TH3F>(("ih_p_eta"+suffix).c_str(),";#eta;10^{-4}/p [GeV^{-1}];I_{h} [MeV/cm]",neta,etalow,etaup,np,plow,pup,nih,ihlow,ihup); 
+    eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];#eta",np,plow,pup,neta,etalow,etaup); 
     ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup); 
-    ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup);
-    ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";p [GeV];I_{as}",np,plow,pup,nias,iaslow,iasup); 
-    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];I_{as}",npt,ptlow,ptup,nias,iaslow,iasup);
+    ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup);
+    ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];G_{i}",np,plow,pup,nias,iaslow,iasup); 
+    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];G_{i}",npt,ptlow,ptup,nias,iaslow,iasup);
+    //ias_ih = dir.make<TH2F>(("ias_ih"+suffix).c_str(),";I_{h} [MeV/cm];G_{i}",nih,ihlow,ihup,nias,iaslow,iasup);
     mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
     pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
     mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     pred_mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
-    pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); 
-    hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10); 
+    //pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); 
+    hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10);
 }
 
 // Function which fills histograms
 void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w){
-   ih_p_eta->Fill(eta,p,ih,w);
+   //ih_p_eta->Fill(eta,p,ih,w);
    eta_p->Fill(p,eta,w);
    ih_eta->Fill(eta,ih,w);
    ih_p->Fill(p,ih,w);
    ias_p->Fill(p,ias,w);
    ias_pt->Fill(pt,ias,w);
+   //ias_ih->Fill(ih,ias,w);
    mass->Fill(m,w);
-   pt_pterroverpt->Fill(pt,pterr/pt,w);
+   //pt_pterroverpt->Fill(pt,pterr/pt,w);
    hTOF->Fill(tof,w);
 }
 
@@ -184,27 +200,29 @@ void Region::fillPredMass(const std::string& st_sample,float weight_=-1) {
 }
 
 void Region::write(){
-    ih_p_eta->Write();
+    //ih_p_eta->Write();
     eta_p->Write();
     ih_eta->Write();
     ih_p->Write();
     ias_p->Write();
     ias_pt->Write();
+    //ias_ih->Write();
     mass->Write();
     pred_mass->Write();
-    pt_pterroverpt->Write();
+    //pt_pterroverpt->Write();
     hTOF->Write();
 }
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
     //std::string dir = "analyzer/BaseName/";
     std::string dir = "HSCParticleAnalyzer/BaseName/";
-    r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
+    //r.ih_p_eta                          = (TH3F*)f->Get((dir+"ih_p_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p_eta->Rebin3D(rebineta,rebinp,rebinih);
     r.eta_p                             = (TH2F*)f->Get((dir+"eta_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.eta_p->Rebin2D(rebinp,rebineta);
     r.ih_eta                            = (TH2F*)f->Get((dir+"ih_eta_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_eta->Rebin2D(rebineta,rebinih);
     r.ih_p                              = (TH2F*)f->Get((dir+"ih_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ih_p->Rebin2D(rebinp,rebinih);
     r.ias_p                             = (TH2F*)f->Get((dir+"ias_p_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_p->Rebin2D(rebinp,rebinih);
     r.ias_pt                            = (TH2F*)f->Get((dir+"ias_pt_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_pt->Rebin2D(rebinp,rebinih);
+    //r.ias_ih                            = (TH2F*)f->Get((dir+"ias_ih_"+regionName).c_str())->Clone(); if(bool_rebin) r.ias_ih->Rebin2D(rebinih,rebinih);
     r.mass                              = (TH1F*)f->Get((dir+"mass_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
     //r.mass                              = (TH1F*)f->Get((dir+"massFromTree_"+regionName).c_str())->Clone(); if(bool_rebin) r.mass->Rebin(rebinmass);
     r.pred_mass                         = (TH1F*)f->Get((dir+"pred_mass_"+regionName).c_str())->Clone(); r.pred_mass->Reset(); if(bool_rebin) r.pred_mass->Rebin(rebinmass);

@@ -347,7 +347,7 @@ public:
 
   void fillRegions(Tuple *&tuple,
                    float pt_cut,
-                   float Ias_quantiles[5],
+                   float Ias_quantiles[8],
                    float eta,
                    float p,
                    float pt,
@@ -1402,6 +1402,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_CutIdVsPt = dir.make<TH2F>("PostS_CutIdVsPt", ";NCuts;p_{T} (GeV)", NCuts, 0, NCuts, 40, 0, PtHistoUpperBound);
   tuple->PostS_CutIdVsIas = dir.make<TH2F>("PostS_CutIdVsIas", ";NCuts;G_{i}^{strips}", NCuts, 0, NCuts, 10, 0., 1.);
   tuple->PostS_CutIdVsIh = dir.make<TH2F>("PostS_CutIdVsIh", ";NCuts;I_{h} (MeV/cm)", NCuts, 0, NCuts, 100, 0, dEdxM_UpLim);
+
     // not running this for a bit, they are not used currently, and being 3D histos they are quite big
 //    tuple->PostS_CutIdVsPVsIas = dir.make<TH3F>("PostS_CutIdVsPVsIas", ";NCuts;p (GeV);G_{i}^{strips}", NCuts, 0, NCuts, 40, 0., PtHistoUpperBound, 10, 0., 1.);
 //    tuple->PostS_CutIdVsPVsIh = dir.make<TH3F>("PostS_CutIdVsPVsIh", ";NCuts;P;I_{h} (MeV/cm)", NCuts, 0, NCuts, 40, 0., PtHistoUpperBound, 100, 0, dEdxM_UpLim);
@@ -1516,6 +1517,133 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Trigger_up", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
   tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down = dir.make<TH2F>("PostS_SR3_ProbQNoL1VsIas_Trigger_down", ";F_{i}^{pixels};G_{i}^{strips};Events",20, 0., 1., 50, 0., 1.);
 
+  tuple->PostS_VR1_Mass = dir.make<TH1F>("PostS_VR1_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Pileup_up = dir.make<TH1F>("PostS_VR1_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Pileup_down = dir.make<TH1F>("PostS_VR1_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR1_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR1_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Ias_up = dir.make<TH1F>("PostS_VR1_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Ias_down = dir.make<TH1F>("PostS_VR1_Mass_Ias_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Pt_up = dir.make<TH1F>("PostS_VR1_Mass_Pt_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Pt_down = dir.make<TH1F>("PostS_VR1_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Trigger_up = dir.make<TH1F>("PostS_VR1_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_Trigger_down = dir.make<TH1F>("PostS_VR1_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_up1 = dir.make<TH1F>("PostS_VR1_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_down1 = dir.make<TH1F>("PostS_VR1_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_up1 = dir.make<TH1F>("PostS_VR1_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_down1 = dir.make<TH1F>("PostS_VR1_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_up2 = dir.make<TH1F>("PostS_VR1_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_down2 = dir.make<TH1F>("PostS_VR1_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_up2 = dir.make<TH1F>("PostS_VR1_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_down2 = dir.make<TH1F>("PostS_VR1_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
+
+  tuple->PostS_VR2_Mass = dir.make<TH1F>("PostS_VR2_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Pileup_up = dir.make<TH1F>("PostS_VR2_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Pileup_down = dir.make<TH1F>("PostS_VR2_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR2_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR2_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Ias_up = dir.make<TH1F>("PostS_VR2_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Ias_down = dir.make<TH1F>("PostS_VR2_Mass_Ias_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Pt_up = dir.make<TH1F>("PostS_VR2_Mass_Pt_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Pt_down = dir.make<TH1F>("PostS_VR2_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Trigger_up = dir.make<TH1F>("PostS_VR2_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_Trigger_down = dir.make<TH1F>("PostS_VR2_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_up1 = dir.make<TH1F>("PostS_VR2_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_down1 = dir.make<TH1F>("PostS_VR2_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_up1 = dir.make<TH1F>("PostS_VR2_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_down1 = dir.make<TH1F>("PostS_VR2_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_up2 = dir.make<TH1F>("PostS_VR2_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_down2 = dir.make<TH1F>("PostS_VR2_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_up2 = dir.make<TH1F>("PostS_VR2_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_down2 = dir.make<TH1F>("PostS_VR2_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
+
+  tuple->PostS_VR3_Mass = dir.make<TH1F>("PostS_VR3_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Pileup_up = dir.make<TH1F>("PostS_VR3_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Pileup_down = dir.make<TH1F>("PostS_VR3_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR3_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR3_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Ias_up = dir.make<TH1F>("PostS_VR3_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Ias_down = dir.make<TH1F>("PostS_VR3_Mass_Ias_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Pt_up = dir.make<TH1F>("PostS_VR3_Mass_Pt_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Pt_down = dir.make<TH1F>("PostS_VR3_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Trigger_up = dir.make<TH1F>("PostS_VR3_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_Trigger_down = dir.make<TH1F>("PostS_VR3_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_up1 = dir.make<TH1F>("PostS_VR3_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_down1 = dir.make<TH1F>("PostS_VR3_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_up1 = dir.make<TH1F>("PostS_VR3_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_down1 = dir.make<TH1F>("PostS_VR3_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_up2 = dir.make<TH1F>("PostS_VR3_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_down2 = dir.make<TH1F>("PostS_VR3_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_up2 = dir.make<TH1F>("PostS_VR3_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_down2 = dir.make<TH1F>("PostS_VR3_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
+
+  tuple->PostS_SR1_Mass = dir.make<TH1F>("PostS_SR1_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR1_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR1_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Ias_up = dir.make<TH1F>("PostS_SR1_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Ias_down = dir.make<TH1F>("PostS_SR1_Mass_Ias_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Pt_up = dir.make<TH1F>("PostS_SR1_Mass_Pt_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Pt_down = dir.make<TH1F>("PostS_SR1_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Trigger_up = dir.make<TH1F>("PostS_SR1_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_Trigger_down = dir.make<TH1F>("PostS_SR1_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_up1 = dir.make<TH1F>("PostS_SR1_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_down1 = dir.make<TH1F>("PostS_SR1_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_up1 = dir.make<TH1F>("PostS_SR1_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_down1 = dir.make<TH1F>("PostS_SR1_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_up2 = dir.make<TH1F>("PostS_SR1_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_down2 = dir.make<TH1F>("PostS_SR1_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_up2 = dir.make<TH1F>("PostS_SR1_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_down2 = dir.make<TH1F>("PostS_SR1_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
+
+  tuple->PostS_SR2_Mass = dir.make<TH1F>("PostS_SR2_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Pileup_up = dir.make<TH1F>("PostS_SR2_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Pileup_down = dir.make<TH1F>("PostS_SR2_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR2_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR2_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Ias_up = dir.make<TH1F>("PostS_SR2_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Ias_down = dir.make<TH1F>("PostS_SR2_Mass_Ias_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Pt_up = dir.make<TH1F>("PostS_SR2_Mass_Pt_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Pt_down = dir.make<TH1F>("PostS_SR2_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Trigger_up = dir.make<TH1F>("PostS_SR2_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_Trigger_down = dir.make<TH1F>("PostS_SR2_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_up1 = dir.make<TH1F>("PostS_SR2_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_down1 = dir.make<TH1F>("PostS_SR2_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_up1 = dir.make<TH1F>("PostS_SR2_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_down1 = dir.make<TH1F>("PostS_SR2_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_up2 = dir.make<TH1F>("PostS_SR2_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_down2 = dir.make<TH1F>("PostS_SR2_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_up2 = dir.make<TH1F>("PostS_SR2_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_down2 = dir.make<TH1F>("PostS_SR2_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
+
+  tuple->PostS_SR3_Mass = dir.make<TH1F>("PostS_SR3_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Pileup_up = dir.make<TH1F>("PostS_SR3_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Pileup_down = dir.make<TH1F>("PostS_SR3_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR3_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR3_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Ias_up = dir.make<TH1F>("PostS_SR3_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Ias_down = dir.make<TH1F>("PostS_SR3_Mass_Ias_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Pt_up = dir.make<TH1F>("PostS_SR3_Mass_Pt_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Pt_down = dir.make<TH1F>("PostS_SR3_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Trigger_up = dir.make<TH1F>("PostS_SR3_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_Trigger_down = dir.make<TH1F>("PostS_SR3_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_up1 = dir.make<TH1F>("PostS_SR3_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_down1 = dir.make<TH1F>("PostS_SR3_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_up1 = dir.make<TH1F>("PostS_SR3_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_down1 = dir.make<TH1F>("PostS_SR3_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_up2 = dir.make<TH1F>("PostS_SR3_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_down2 = dir.make<TH1F>("PostS_SR3_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_up2 = dir.make<TH1F>("PostS_SR3_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_down2 = dir.make<TH1F>("PostS_SR3_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
+  
+  
   // Background prediction histograms don't need to be made for signal or individual MC samples
   // if (!isSignal) {
   // Although not needed let's still do it for every input
@@ -1566,6 +1694,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
         // I think these are not used
 //        tuple->PDF_G_EtaP = dir.make<TH3F>("PDF_G_EtaP", ";NCuts;PDF_G_Eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
 //        tuple->PDF_C_EtaP = dir.make<TH3F>("PDF_C_EtaP", ";NCuts;PDF_C_Eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
+
 
 //        tuple->PDF_A_Eta = dir.make<TH2F>("PDF_A_Eta", ";NCuts;PDF_A_Eta", NCuts, 0, NCuts, EtaBins, -3., 3.);
 //        tuple->PDF_E_Eta = dir.make<TH2F>("PDF_E_Eta", ";NCuts;PDF_E_Eta", NCuts, 0, NCuts, EtaBins, -3., 3.);
@@ -2140,13 +2269,21 @@ void TupleMaker::initializeRegions(Tuple *&tuple,
     tuple->rB_70ias80.setSuffix("_regionB_70ias80"); tuple->rB_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rB_50ias90.setSuffix("_regionB_50ias90"); tuple->rB_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_50ias99.setSuffix("_regionB_50ias99"); tuple->rB_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_99ias100.setSuffix("_regionB_99ias100"); tuple->rB_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rD_50ias90.setSuffix("_regionD_50ias90"); tuple->rD_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_50ias99.setSuffix("_regionD_50ias99"); tuple->rD_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_99ias100.setSuffix("_regionD_99ias100"); tuple->rD_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+    tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
 }
 
 //=============================================================
@@ -3092,7 +3229,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
 
 void TupleMaker::fillRegions(Tuple *&tuple,
                              float pt_cut,
-                             float Ias_quantiles[5],
+                             float Ias_quantiles[8],
                              float eta,
                              float p,
                              float pt,
@@ -3103,21 +3240,29 @@ void TupleMaker::fillRegions(Tuple *&tuple,
                              float tof,
                              float w){
   if(pt<=pt_cut){
-    if(ias<Ias_quantiles[0]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[1]) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[4])                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias<Ias_quantiles[1]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6]) tuple->rB_50ias99.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7]) tuple->rB_50ias999.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[5])                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[6])                         tuple->rB_99ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[7])                         tuple->rB_999ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
   }else{
-    if(ias<Ias_quantiles[0]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[1]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[0] && ias<Ias_quantiles[4]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[4])        {m<500?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
+    if(ias<Ias_quantiles[1]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6]) tuple->rD_50ias99.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7]) tuple->rD_50ias999.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias>=Ias_quantiles[5])        {m<400?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
+    if(ias>=Ias_quantiles[6])        {m<400?m=m:m=-1; tuple->rD_99ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
+    if(ias>=Ias_quantiles[7])        {m<400?m=m:m=-1; tuple->rD_999ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
   }
 }
 
@@ -3131,11 +3276,19 @@ void TupleMaker::writeRegions(Tuple *&tuple,
   tuple->rB_70ias80.write();
   tuple->rB_80ias90.write();
   tuple->rB_50ias90.write();
+  tuple->rB_50ias99.write();
+  tuple->rB_50ias999.write();
   tuple->rB_90ias100.write();
+  tuple->rB_99ias100.write();
+  tuple->rB_999ias100.write();
   tuple->rD_50ias60.write();
   tuple->rD_60ias70.write();
   tuple->rD_70ias80.write();
   tuple->rD_80ias90.write();
   tuple->rD_50ias90.write();
+  tuple->rD_50ias99.write();
+  tuple->rD_50ias999.write();
   tuple->rD_90ias100.write();
+  tuple->rD_99ias100.write();
+  tuple->rD_999ias100.write();
 }
