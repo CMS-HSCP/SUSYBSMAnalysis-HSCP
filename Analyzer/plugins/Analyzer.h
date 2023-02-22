@@ -346,7 +346,7 @@ private:
   float minSegEtaSep = 0.1;  //Minimum eta separation between SA track and muon segment on opposite side of detector
 
   // Thresholds for candidate preselection
-  float globalMaxEta_, globalMinPt_;
+  float globalMaxEta_, globalMinPt_, globalMaxPt_;
   unsigned int globalMinNOPH_;
   float globalMinFOVH_;
   unsigned int globalMinNOM_;

@@ -1360,10 +1360,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_VR1_Mass_Pt_down = dir.make<TH1F>("PostS_VR1_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR1_Mass_Trigger_up = dir.make<TH1F>("PostS_VR1_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR1_Mass_Trigger_down = dir.make<TH1F>("PostS_VR1_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR1_Mass_K_up = dir.make<TH1F>("PostS_VR1_Mass_K_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR1_Mass_K_down = dir.make<TH1F>("PostS_VR1_Mass_K_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR1_Mass_C_up = dir.make<TH1F>("PostS_VR1_Mass_C_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR1_Mass_C_down = dir.make<TH1F>("PostS_VR1_Mass_C_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_up1 = dir.make<TH1F>("PostS_VR1_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_down1 = dir.make<TH1F>("PostS_VR1_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_up1 = dir.make<TH1F>("PostS_VR1_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_down1 = dir.make<TH1F>("PostS_VR1_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_up2 = dir.make<TH1F>("PostS_VR1_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_K_down2 = dir.make<TH1F>("PostS_VR1_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_up2 = dir.make<TH1F>("PostS_VR1_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR1_Mass_C_down2 = dir.make<TH1F>("PostS_VR1_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
 
   tuple->PostS_VR2_Mass = dir.make<TH1F>("PostS_VR2_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR2_Mass_Pileup_up = dir.make<TH1F>("PostS_VR2_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -1376,10 +1381,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_VR2_Mass_Pt_down = dir.make<TH1F>("PostS_VR2_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR2_Mass_Trigger_up = dir.make<TH1F>("PostS_VR2_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR2_Mass_Trigger_down = dir.make<TH1F>("PostS_VR2_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR2_Mass_K_up = dir.make<TH1F>("PostS_VR2_Mass_K_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR2_Mass_K_down = dir.make<TH1F>("PostS_VR2_Mass_K_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR2_Mass_C_up = dir.make<TH1F>("PostS_VR2_Mass_C_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR2_Mass_C_down = dir.make<TH1F>("PostS_VR2_Mass_C_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_up1 = dir.make<TH1F>("PostS_VR2_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_down1 = dir.make<TH1F>("PostS_VR2_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_up1 = dir.make<TH1F>("PostS_VR2_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_down1 = dir.make<TH1F>("PostS_VR2_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_up2 = dir.make<TH1F>("PostS_VR2_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_K_down2 = dir.make<TH1F>("PostS_VR2_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_up2 = dir.make<TH1F>("PostS_VR2_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR2_Mass_C_down2 = dir.make<TH1F>("PostS_VR2_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
 
   tuple->PostS_VR3_Mass = dir.make<TH1F>("PostS_VR3_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR3_Mass_Pileup_up = dir.make<TH1F>("PostS_VR3_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -1392,10 +1402,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_VR3_Mass_Pt_down = dir.make<TH1F>("PostS_VR3_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR3_Mass_Trigger_up = dir.make<TH1F>("PostS_VR3_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR3_Mass_Trigger_down = dir.make<TH1F>("PostS_VR3_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR3_Mass_K_up = dir.make<TH1F>("PostS_VR3_Mass_K_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR3_Mass_K_down = dir.make<TH1F>("PostS_VR3_Mass_K_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR3_Mass_C_up = dir.make<TH1F>("PostS_VR3_Mass_C_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_VR3_Mass_C_down = dir.make<TH1F>("PostS_VR3_Mass_C_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_up1 = dir.make<TH1F>("PostS_VR3_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_down1 = dir.make<TH1F>("PostS_VR3_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_up1 = dir.make<TH1F>("PostS_VR3_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_down1 = dir.make<TH1F>("PostS_VR3_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_up2 = dir.make<TH1F>("PostS_VR3_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_K_down2 = dir.make<TH1F>("PostS_VR3_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_up2 = dir.make<TH1F>("PostS_VR3_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_VR3_Mass_C_down2 = dir.make<TH1F>("PostS_VR3_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
 
   tuple->PostS_SR1_Mass = dir.make<TH1F>("PostS_SR1_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -1408,10 +1423,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR1_Mass_Pt_down = dir.make<TH1F>("PostS_SR1_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Trigger_up = dir.make<TH1F>("PostS_SR1_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Trigger_down = dir.make<TH1F>("PostS_SR1_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR1_Mass_K_up = dir.make<TH1F>("PostS_SR1_Mass_K_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR1_Mass_K_down = dir.make<TH1F>("PostS_SR1_Mass_K_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR1_Mass_C_up = dir.make<TH1F>("PostS_SR1_Mass_C_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR1_Mass_C_down = dir.make<TH1F>("PostS_SR1_Mass_C_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_up1 = dir.make<TH1F>("PostS_SR1_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_down1 = dir.make<TH1F>("PostS_SR1_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_up1 = dir.make<TH1F>("PostS_SR1_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_down1 = dir.make<TH1F>("PostS_SR1_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_up2 = dir.make<TH1F>("PostS_SR1_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_K_down2 = dir.make<TH1F>("PostS_SR1_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_up2 = dir.make<TH1F>("PostS_SR1_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR1_Mass_C_down2 = dir.make<TH1F>("PostS_SR1_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
 
   tuple->PostS_SR2_Mass = dir.make<TH1F>("PostS_SR2_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR2_Mass_Pileup_up = dir.make<TH1F>("PostS_SR2_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -1424,10 +1444,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR2_Mass_Pt_down = dir.make<TH1F>("PostS_SR2_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR2_Mass_Trigger_up = dir.make<TH1F>("PostS_SR2_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR2_Mass_Trigger_down = dir.make<TH1F>("PostS_SR2_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR2_Mass_K_up = dir.make<TH1F>("PostS_SR2_Mass_K_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR2_Mass_K_down = dir.make<TH1F>("PostS_SR2_Mass_K_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR2_Mass_C_up = dir.make<TH1F>("PostS_SR2_Mass_C_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR2_Mass_C_down = dir.make<TH1F>("PostS_SR2_Mass_C_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_up1 = dir.make<TH1F>("PostS_SR2_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_down1 = dir.make<TH1F>("PostS_SR2_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_up1 = dir.make<TH1F>("PostS_SR2_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_down1 = dir.make<TH1F>("PostS_SR2_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_up2 = dir.make<TH1F>("PostS_SR2_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_K_down2 = dir.make<TH1F>("PostS_SR2_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_up2 = dir.make<TH1F>("PostS_SR2_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR2_Mass_C_down2 = dir.make<TH1F>("PostS_SR2_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
 
   tuple->PostS_SR3_Mass = dir.make<TH1F>("PostS_SR3_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_Pileup_up = dir.make<TH1F>("PostS_SR3_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -1440,10 +1465,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR3_Mass_Pt_down = dir.make<TH1F>("PostS_SR3_Mass_Pt_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_Trigger_up = dir.make<TH1F>("PostS_SR3_Mass_Trigger_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_Trigger_down = dir.make<TH1F>("PostS_SR3_Mass_Trigger_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR3_Mass_K_up = dir.make<TH1F>("PostS_SR3_Mass_K_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR3_Mass_K_down = dir.make<TH1F>("PostS_SR3_Mass_K_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR3_Mass_C_up = dir.make<TH1F>("PostS_SR3_Mass_C_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
-  tuple->PostS_SR3_Mass_C_down = dir.make<TH1F>("PostS_SR3_Mass_C_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_up1 = dir.make<TH1F>("PostS_SR3_Mass_K_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_down1 = dir.make<TH1F>("PostS_SR3_Mass_K_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_up1 = dir.make<TH1F>("PostS_SR3_Mass_C_up1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_down1 = dir.make<TH1F>("PostS_SR3_Mass_C_down1", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_up2 = dir.make<TH1F>("PostS_SR3_Mass_K_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_K_down2 = dir.make<TH1F>("PostS_SR3_Mass_K_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_up2 = dir.make<TH1F>("PostS_SR3_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_C_down2 = dir.make<TH1F>("PostS_SR3_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
   
   
   // Background prediction histograms don't need to be made for signal or individual MC samples

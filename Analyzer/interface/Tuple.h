@@ -784,10 +784,14 @@ struct Tuple {
   TH1F* PostS_VR1_Mass_Pt_down;
   TH1F* PostS_VR1_Mass_Trigger_up;
   TH1F* PostS_VR1_Mass_Trigger_down;
-  TH1F* PostS_VR1_Mass_K_up;
-  TH1F* PostS_VR1_Mass_K_down;
-  TH1F* PostS_VR1_Mass_C_up;
-  TH1F* PostS_VR1_Mass_C_down;
+  TH1F* PostS_VR1_Mass_K_up1;
+  TH1F* PostS_VR1_Mass_K_down1;
+  TH1F* PostS_VR1_Mass_C_up1;
+  TH1F* PostS_VR1_Mass_C_down1;
+  TH1F* PostS_VR1_Mass_K_up2;
+  TH1F* PostS_VR1_Mass_K_down2;
+  TH1F* PostS_VR1_Mass_C_up2;
+  TH1F* PostS_VR1_Mass_C_down2;
   
   // VR2: Ias-quantile 50-99% & pT>70 GeV
   TH1F* PostS_VR2_Mass;
@@ -801,10 +805,14 @@ struct Tuple {
   TH1F* PostS_VR2_Mass_Pt_down;
   TH1F* PostS_VR2_Mass_Trigger_up;
   TH1F* PostS_VR2_Mass_Trigger_down;
-  TH1F* PostS_VR2_Mass_K_up;
-  TH1F* PostS_VR2_Mass_K_down;
-  TH1F* PostS_VR2_Mass_C_up;
-  TH1F* PostS_VR2_Mass_C_down;
+  TH1F* PostS_VR2_Mass_K_up1;
+  TH1F* PostS_VR2_Mass_K_down1;
+  TH1F* PostS_VR2_Mass_C_up1;
+  TH1F* PostS_VR2_Mass_C_down1;
+  TH1F* PostS_VR2_Mass_K_up2;
+  TH1F* PostS_VR2_Mass_K_down2;
+  TH1F* PostS_VR2_Mass_C_up2;
+  TH1F* PostS_VR2_Mass_C_down2;
   
   // VR3: Ias-quantile 50-99.9% & pT>70 GeV
   TH1F* PostS_VR3_Mass;
@@ -818,11 +826,14 @@ struct Tuple {
   TH1F* PostS_VR3_Mass_Pt_down;
   TH1F* PostS_VR3_Mass_Trigger_up;
   TH1F* PostS_VR3_Mass_Trigger_down;
-  TH1F* PostS_VR3_Mass_K_up;
-  TH1F* PostS_VR3_Mass_K_down;
-  TH1F* PostS_VR3_Mass_C_up;
-  TH1F* PostS_VR3_Mass_C_down;
-
+  TH1F* PostS_VR3_Mass_K_up1;
+  TH1F* PostS_VR3_Mass_K_down1;
+  TH1F* PostS_VR3_Mass_C_up1;
+  TH1F* PostS_VR3_Mass_C_down1;
+  TH1F* PostS_VR3_Mass_K_up2;
+  TH1F* PostS_VR3_Mass_K_down2;
+  TH1F* PostS_VR3_Mass_C_up2;
+  TH1F* PostS_VR3_Mass_C_down2;
 
   // SR1: Ias-quantile 90% & pT>70 GeV
   TH1F* PostS_SR1_Mass;
@@ -836,10 +847,14 @@ struct Tuple {
   TH1F* PostS_SR1_Mass_Pt_down;
   TH1F* PostS_SR1_Mass_Trigger_up;
   TH1F* PostS_SR1_Mass_Trigger_down;
-  TH1F* PostS_SR1_Mass_K_up;
-  TH1F* PostS_SR1_Mass_K_down;
-  TH1F* PostS_SR1_Mass_C_up;
-  TH1F* PostS_SR1_Mass_C_down;
+  TH1F* PostS_SR1_Mass_K_up1;
+  TH1F* PostS_SR1_Mass_K_down1;
+  TH1F* PostS_SR1_Mass_C_up1;
+  TH1F* PostS_SR1_Mass_C_down1;
+  TH1F* PostS_SR1_Mass_K_up2;
+  TH1F* PostS_SR1_Mass_K_down2;
+  TH1F* PostS_SR1_Mass_C_up2;
+  TH1F* PostS_SR1_Mass_C_down2;
   
   // SR2: Ias-quantile 99% & pT>70 GeV
   TH1F* PostS_SR2_Mass;
@@ -853,10 +868,14 @@ struct Tuple {
   TH1F* PostS_SR2_Mass_Pt_down;
   TH1F* PostS_SR2_Mass_Trigger_up;
   TH1F* PostS_SR2_Mass_Trigger_down;
-  TH1F* PostS_SR2_Mass_K_up;
-  TH1F* PostS_SR2_Mass_K_down;
-  TH1F* PostS_SR2_Mass_C_up;
-  TH1F* PostS_SR2_Mass_C_down;
+  TH1F* PostS_SR2_Mass_K_up1;
+  TH1F* PostS_SR2_Mass_K_down1;
+  TH1F* PostS_SR2_Mass_C_up1;
+  TH1F* PostS_SR2_Mass_C_down1;
+  TH1F* PostS_SR2_Mass_K_up2;
+  TH1F* PostS_SR2_Mass_K_down2;
+  TH1F* PostS_SR2_Mass_C_up2;
+  TH1F* PostS_SR2_Mass_C_down2;
   
   // SR3: Ias-quantile 99.9% & pT>70 GeV
   TH1F* PostS_SR3_Mass;
@@ -870,10 +889,14 @@ struct Tuple {
   TH1F* PostS_SR3_Mass_Pt_down;
   TH1F* PostS_SR3_Mass_Trigger_up;
   TH1F* PostS_SR3_Mass_Trigger_down;
-  TH1F* PostS_SR3_Mass_K_up;
-  TH1F* PostS_SR3_Mass_K_down;
-  TH1F* PostS_SR3_Mass_C_up;
-  TH1F* PostS_SR3_Mass_C_down;
+  TH1F* PostS_SR3_Mass_K_up1;
+  TH1F* PostS_SR3_Mass_K_down1;
+  TH1F* PostS_SR3_Mass_C_up1;
+  TH1F* PostS_SR3_Mass_C_down1;
+  TH1F* PostS_SR3_Mass_K_up2;
+  TH1F* PostS_SR3_Mass_K_down2;
+  TH1F* PostS_SR3_Mass_C_up2;
+  TH1F* PostS_SR3_Mass_C_down2;
 
   TH1F* PostPreS_ProbQNoL1;
   TH2F* PostPreS_ProbQNoL1VsIas;
