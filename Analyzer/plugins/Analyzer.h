@@ -369,6 +369,17 @@ private:
 
   //=============================================================
   Tuple* tuple;
+  Tuple* tuple_SigmaPt1_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt2_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt4_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt5_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut2_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut3_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut2;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut3;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut4;
   TupleMaker* tuple_maker;
   //=============================================================
 

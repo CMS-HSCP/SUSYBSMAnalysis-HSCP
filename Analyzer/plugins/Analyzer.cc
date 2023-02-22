@@ -222,9 +222,53 @@ void Analyzer::beginJob() {
   // Book histograms using TFileService
   edm::Service<TFileService> fs;
   TFileDirectory dir = fs->mkdir(sampleName_.c_str(), sampleName_.c_str());
+  
+  // -------- NOMENCLATURE 
+  //SigmaPt1 : no SigmaPt cut
+  //SigmaPt2 : SigmaPtOverPt2 cut
+  //SigmaPt3 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 2.0
+  //SigmaPt4 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 1.0
+  //SigmaPt5 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 
+  //iso1 : miniGeneralIso < 15 GeV + miniRelIso cut 
+  //iso2 : FixedConeGeneralIso < 15 GeV + miniRelIso cut 
+  //IhCut1 : no Ih cut
+  //IhCut2 : Ih > C
+  //IhCut3 : Ih > 3.47 (C ultra-relativistic) 
+  //PtCut1 : no pT cut max
+  //PtCut2 : pT < 2500 GeV
+  //PtCut3 : pT < 3000 GeV
+  //PtCut4 : pT < 4000 GeV
+  
+  TFileDirectory dir_SigmaPt1_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt1_iso1_IhCut1_PtCut1", "SigmaPt1_iso1_IhCut1_PtCut1");
+  TFileDirectory dir_SigmaPt2_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt2_iso1_IhCut1_PtCut1", "SigmaPt2_iso1_IhCut1_PtCut1");
+  TFileDirectory dir_SigmaPt3_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso1_IhCut1_PtCut1", "SigmaPt3_iso1_IhCut1_PtCut1");
+  TFileDirectory dir_SigmaPt4_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt4_iso1_IhCut1_PtCut1", "SigmaPt4_iso1_IhCut1_PtCut1");
+  TFileDirectory dir_SigmaPt5_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt5_iso1_IhCut1_PtCut1", "SigmaPt5_iso1_IhCut1_PtCut1");
+  
+  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut1", "SigmaPt3_iso2_IhCut1_PtCut1");
+  
+  TFileDirectory dir_SigmaPt3_iso2_IhCut2_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut2_PtCut1", "SigmaPt3_iso2_IhCut2_PtCut1");
+  TFileDirectory dir_SigmaPt3_iso2_IhCut3_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut3_PtCut1", "SigmaPt3_iso2_IhCut3_PtCut1");
+  
+  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut2 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut2", "SigmaPt3_iso2_IhCut1_PtCut2");
+  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut3 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut3", "SigmaPt3_iso2_IhCut1_PtCut3");
+  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut4 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut4", "SigmaPt3_iso2_IhCut1_PtCut4");
 
   // create histograms & trees
   tuple = new Tuple();
+  
+  tuple_SigmaPt1_iso1_IhCut1_PtCut1 = new Tuple();
+  tuple_SigmaPt2_iso1_IhCut1_PtCut1 = new Tuple();
+  tuple_SigmaPt3_iso1_IhCut1_PtCut1 = new Tuple();
+  tuple_SigmaPt4_iso1_IhCut1_PtCut1 = new Tuple();
+  tuple_SigmaPt5_iso1_IhCut1_PtCut1 = new Tuple();
+  tuple_SigmaPt3_iso2_IhCut1_PtCut1 = new Tuple();
+  tuple_SigmaPt3_iso2_IhCut2_PtCut1 = new Tuple();
+  tuple_SigmaPt3_iso2_IhCut3_PtCut1 = new Tuple();
+  tuple_SigmaPt3_iso2_IhCut1_PtCut2 = new Tuple();
+  tuple_SigmaPt3_iso2_IhCut1_PtCut3 = new Tuple();
+  tuple_SigmaPt3_iso2_IhCut1_PtCut4 = new Tuple();
+  
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
   
   tuple_maker->initializeTuple(tuple,
@@ -259,6 +303,82 @@ void Analyzer::beginJob() {
                                  reg_pbins_,
                                  reg_massbins_);
 
+  tuple_maker->initializeRegions(tuple_SigmaPt1_iso1_IhCut1_PtCut1,
+                                 dir_SigmaPt1_iso1_IhCut1_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
+                                 dir_SigmaPt2_iso1_IhCut1_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
+                                 dir_SigmaPt3_iso1_IhCut1_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
+                                 dir_SigmaPt4_iso1_IhCut1_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
+                                 dir_SigmaPt5_iso1_IhCut1_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
+                                 dir_SigmaPt3_iso2_IhCut1_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
+                                 dir_SigmaPt3_iso2_IhCut2_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
+                                 dir_SigmaPt3_iso2_IhCut3_PtCut1,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
+                                 dir_SigmaPt3_iso2_IhCut1_PtCut2,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+  
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
+                                 dir_SigmaPt3_iso2_IhCut1_PtCut3,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
+  
+  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
+                                 dir_SigmaPt3_iso2_IhCut1_PtCut4,
+                                 reg_etabins_,
+                                 reg_ihbins_,
+                                 reg_pbins_,
+                                 reg_massbins_);
 
 
 
@@ -2671,6 +2791,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       // Loop on generalTracks
     float track_genTrackMiniIsoSumPt = 0;
+    float track_genTrackIsoSumPt = 0;
     for(unsigned int c=0;c<trackCollectionHandle->size();c++){
       reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
         // Dont count the HSCP candidate in
@@ -2688,6 +2809,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         //drForMiniIso = 0.3;  // test by Dylan on genTrackIsoSumPt (fixed size cone)
         if (dr<drForMiniIso) {
           track_genTrackMiniIsoSumPt+=pt;
+        }
+        if (dr<0.3) {
+          track_genTrackIsoSumPt+=pt;
         }
       }
     }
@@ -4395,7 +4519,251 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       MassDownComb = GetMassFromBeta(track->p(), (1 / tof->inverseBeta()));
 
     bool PassNonTrivialSelection = false;
+
+  // -------- NOMENCLATURE 
+  //SigmaPt1 : no SigmaPt cut
+  //SigmaPt2 : SigmaPtOverPt2 cut
+  //SigmaPt3 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 2.0
+  //SigmaPt4 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 1.0
+  //SigmaPt5 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 
+  //iso1 : miniGeneralIso < 15 GeV + miniRelIso cut 
+  //iso2 : FixedConeGeneralIso < 15 GeV + miniRelIso cut 
+  //IhCut1 : no Ih cut
+  //IhCut2 : Ih > C
+  //IhCut3 : Ih > 3.47 (C ultra-relativistic) 
+  //PtCut1 : no pT cut max
+  //PtCut2 : pT < 2500 GeV
+  //PtCut3 : pT < 3000 GeV
+  //PtCut4 : pT < 4000 GeV
   
+    
+    bool passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1[15];
+    bool passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1[15];
+    bool passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1[15];
+    bool passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1[15];
+    bool passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1[15];
+    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1[15];
+    bool passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1[15];
+    bool passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1[15];
+    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2[15];
+    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3[15];
+    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4[15];
+
+    
+    std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1));
+    passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1[13] = true;
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1));
+    passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1[13] = passedCutsArray[13];
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1));
+    passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0) && (track->ptError() / (track->pt()) < 2.0)) ? true : false;
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1));
+    passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0) && (track->ptError() / (track->pt()) < 1.0)) ? true : false;
+
+    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1));
+    passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0)) ? true : false;
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1));
+    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1[11] = ( track_genTrackIsoSumPt < globalMaxTIsol_ ) ? true : false;
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1));
+    passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_ && globalIh_ > dEdxC_) ? true : false; 
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1));
+    passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_ && globalIh_ > 3.47) ? true : false; 
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2));
+    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2[1] = ((track->pt() > globalMinPt_) && (track->pt() < 2500))? true : false;
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3));
+    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3[1] = ((track->pt() > globalMinPt_) && (track->pt() < 3000))? true : false;
+    
+    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4));
+    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4[1] = ((track->pt() > globalMinPt_) && (track->pt() < 4000))? true : false;
+
+    bool passPre_SigmaPt1_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1, false);
+    bool passPre_SigmaPt2_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1, false);
+    bool passPre_SigmaPt3_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1, false);
+    bool passPre_SigmaPt4_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1, false);
+    bool passPre_SigmaPt5_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1, false);
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1, false);
+    bool passPre_SigmaPt3_iso2_IhCut2_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1, false);
+    bool passPre_SigmaPt3_iso2_IhCut3_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1, false);
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut2 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2, false);
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut3 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3, false);
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut4 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4, false);
+/*
+    bool passPre_SigmaPt1_iso1_IhCut1_PtCut1 = true;
+    bool passPre_SigmaPt2_iso1_IhCut1_PtCut1 = false;
+    bool passPre_SigmaPt3_iso1_IhCut1_PtCut1 = false;
+    bool passPre_SigmaPt4_iso1_IhCut1_PtCut1 = false;
+    bool passPre_SigmaPt5_iso1_IhCut1_PtCut1 = false;
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut1 = false;
+    bool passPre_SigmaPt3_iso2_IhCut2_PtCut1 = false;
+    bool passPre_SigmaPt3_iso2_IhCut3_PtCut1 = false;
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut2 = false;
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut3 = false;
+    bool passPre_SigmaPt3_iso2_IhCut1_PtCut4 = false;
+    */
+
+ 
+    if(passPre_SigmaPt1_iso1_IhCut1_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt1_iso1_IhCut1_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt2_iso1_IhCut1_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso1_IhCut1_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt4_iso1_IhCut1_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt5_iso1_IhCut1_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso2_IhCut1_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso2_IhCut2_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso2_IhCut3_PtCut1){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso2_IhCut1_PtCut2){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso2_IhCut1_PtCut3){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    if(passPre_SigmaPt3_iso2_IhCut1_PtCut4){
+        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
+                                 pT_cut,
+                                 Ias_quantiles,
+                                 track->eta(),
+                                 10000./track->p(),
+                                 track->pt(),
+                                 track->ptError(),
+                                 dedxMObj ? dedxMObj->dEdx() : -1,
+                                 dedxSObj ? dedxSObj->dEdx() : -1,
+                                 Mass,
+                                 tof ? tof->inverseBeta() : -99,
+                                 EventWeight_);
+    }
+    
     if (passPre) {
         tuple_maker->fillRegions(tuple,
                                  pT_cut,
