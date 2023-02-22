@@ -18,13 +18,13 @@ def draw(file_map, h_name, h_name2, layer,  outfile, fileName):
         
     mgGainResult =  ROOT.TMultiGraph()
     mgGainResult.Add(Gain_40E14Ne_T253K,"p");
-    mgGainResult.SetTitle(";HSCP mass [GeV];Signal efficiency [%]")
+    mgGainResult.SetTitle(";HSCP mass [GeV];Signal efficiency")
     mgGainResult.GetYaxis().SetTitleSize(.05)
     mgGainResult.GetYaxis().SetTitleOffset(1.5)
     mgGainResult.GetYaxis().SetLabelSize(.04)
     mgGainResult.GetXaxis().SetTitleSize(.05)
     mgGainResult.GetXaxis().SetLabelSize(.04)
-    mgGainResult.GetYaxis().SetRangeUser(0.,100.)
+    mgGainResult.GetYaxis().SetRangeUser(0.,1.)
     
     legGainResult = ROOT.TLegend(.5,.30,.8,.545)
     legGainResult.SetTextFont(42)

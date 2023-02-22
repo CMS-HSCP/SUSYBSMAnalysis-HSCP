@@ -39,6 +39,16 @@
 // - 42p8: BefTrig trigger turnon plot, possibility to have Phase-0 data, cut on muon pt to be > 50 GeV in the trigger selection
 // - 32p0: Like 42p8, but exit when MC match now found (exitWhenGenMatchNotFound_)
 // - 42p8: Add FiStrips plots
+// - 42p9: Add new templates from Raphael, inclusive pT bins (>=100,>=200,>=400), remove extra requirements on Calibration plots
+// - 33p1: Dedicated version for the GiTemplate production (to be named v4), PileUpTreatment = False, CreateAndRunGitemplates = False, add doBefTrig/PreS booleans
+// - 43p0: Add 3D histos for systematics but then not used, instead 50 bins for GiStrips as input to Alphebet, use v4 GiTemplates, PileUpTreatment = True, CreateAndExitGitemplates = False
+// - 33p3: Dedicated version for the GiTemplate production (to be named v4) for 2016 data, CreateGiTemplates = True, CreateAndExitGitemplates = True, Do*Plots = False
+// - 43p2: CreateGiTemplates = False, CreateAndExitGitemplates = False, Do*Plots = True, Log(FiStrip) plots, Mass plots for G vs F
+// - 31p3: ExitWhenGenMatchNotFound = true, MET triggers IN, fix trigger matching for trigger efficiency
+// - 31p4: Adding {"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
+// - 31p5: ExitWhenGenMatchNotFound = true, MET triggers IN, fix trigger matching for trigger efficiency (round 3)
+// - 31p6: Adding {"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"}) (round 2)
+// - 43p3: Move to -log(1-F_{i}^{strips}), ExitWhenGenMatchNotFound = false, no MET triggers, all three Muon triggers
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -109,6 +119,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       sampleName_(iConfig.getUntrackedParameter<string>("SampleName")),
       period_(iConfig.getUntrackedParameter<string>("Period")),
       skipSelectionPlot_(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot")),
+      doBefTrigPlots_(iConfig.getUntrackedParameter<bool>("DoBefTrigPlots")),
+      doBefPreSplots_(iConfig.getUntrackedParameter<bool>("DoBefPreSplots")),
+      doPostPreSplots_(iConfig.getUntrackedParameter<bool>("DoPostPreSplots")),
       ptHistoUpperBound_(iConfig.getUntrackedParameter<double>("PtHistoUpperBound")),
       pHistoUpperBound_(iConfig.getUntrackedParameter<double>("PHistoUpperBound")),
       massHistoUpperBound_(iConfig.getUntrackedParameter<double>("MassHistoUpperBound")),
@@ -146,7 +159,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       globalMinTOF_(iConfig.getUntrackedParameter<double>("GlobalMinTOF")),
       puTreatment_(iConfig.getUntrackedParameter<bool>("PileUpTreatment")),
       createGiTemplates_(iConfig.getUntrackedParameter<bool>("CreateGiTemplates")),
-      CreateAndRunGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndRunGitemplates")),
+      createAndExitGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndExitGitemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")),
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
       exitWhenGenMatchNotFound_(iConfig.getUntrackedParameter<bool>("ExitWhenGenMatchNotFound")),
@@ -186,17 +199,12 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   dEdxTemplatesPU.resize(NbPuBins_, NULL);
 
   // Option for Gi to have PU dependence
-  if(!createGiTemplates_){
-    if(puTreatment_){
-      for (int i = 0; i < NbPuBins_ ; i++){
-        dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,true,(i+1));
-      }
-    } else {
-        dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
+  if (puTreatment_){
+    for (int i = 0; i < NbPuBins_ ; i++){
+      dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,true,(i+1));
     }
-  }
-  if(CreateAndRunGitemplates_){
-    dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
+  } else {
+      dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
   }
 
   tofCalculator.loadTimeOffset(timeOffset_);
@@ -226,6 +234,10 @@ void Analyzer::beginJob() {
                                calcSyst_,
                                typeMode_,
                                isSignal,
+                               doBefTrigPlots_,
+                               doBefPreSplots_,
+                               doPostPreSplots_,
+                               createGiTemplates_,
                                CutPt_.size(),
                                CutPt_Flip_.size(),
                                ptHistoUpperBound_,
@@ -354,7 +366,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool skipPixelL1 = false;
     int  skip_templates_ias = 0;
     TH3F* localdEdxTemplates;
-    if(!createGiTemplates_ && !puTreatment_){
+    if (!createGiTemplates_ && !puTreatment_){
       localdEdxTemplates = dEdxTemplates;
     }
 
@@ -702,28 +714,31 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
   
-  if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
-    trigInfo_ = 1;
-    tuple->BefPreS_TriggerType->Fill(1., EventWeight_);
-  }
-  if (metTrig) {
-    trigInfo_ = 2;
-    tuple->BefPreS_TriggerType->Fill(2., EventWeight_);
-  }
-  if (metTrig || muTrig) { trigInfo_ = 3; }
-  if (metTrig && muTrig) { trigInfo_ = 4; }
+  if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 1; }
+  if (metTrig) { trigInfo_ = 2; }
+  if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 3; }
+  if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 4; }
 
   // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
 //  bool triggerPassed = (trigInfo_ == 1);
-  tuple->BefPreS_TriggerType->Fill(trigInfo_, EventWeight_);
+  if (doBefPreSplots_) {
+    if (!metTrig && !muTrig) { tuple->BefPreS_TriggerType->Fill(0., EventWeight_); }
+    if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(1., EventWeight_); }
+    if (metTrig) { tuple->BefPreS_TriggerType->Fill(2., EventWeight_); }
+    if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(3., EventWeight_); }
+    if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(4., EventWeight_); }
+  }
   // If triggering is intended (not the case when we make ntuples)
   if (trigInfo_ > 0) {
     if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
     // Number of events that pass the trigger
     tuple->NumEvents->Fill(2., EventWeight_);
-  }
-  else {
+  } else {
     if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers";
+    if (createAndExitGitemplates_) {
+      if (debug_ > 2 ) LogPrint(MOD) << " > The purpose of this is to run the Gi templates only, triggers dont pass -- skip event";
+      return;
+    }
   }
   // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
 
@@ -1460,6 +1475,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   float bestCandidatePt = -1.;
   float bestCandidateIas = -1.;
   float bestCandidateFiStrips = -1.;
+  float bestCandidateFiStripsLog = -1.;
   float bestCandidateProbQNoL1 = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
   float bestCandidateGenBeta = -1.;
@@ -1475,11 +1491,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     
     candidate_count++;
     int ErrorHisto_bin = 0;
-    if (trigInfo_ > 0) {
+    if (trigInfo_ > 0 && doBefPreSplots_) {
       // First bin of the error histo is all tracks (after trigger)
       tuple->ErrorHisto->Fill(0.);
       
-      if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
+      if ( hscp.type() == susybsm::HSCParticleType::globalMuon && doBefPreSplots_) {
         tuple->BefPreS_RecoHSCParticleType->Fill(0.);
       } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
         tuple->BefPreS_RecoHSCParticleType->Fill(1.);
@@ -1499,7 +1515,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     if (typeMode_ == 0)  {
       if ((hscp.type() != susybsm::HSCParticleType::trackerMuon) && (hscp.type() != susybsm::HSCParticleType::globalMuon) && (hscp.type() != susybsm::HSCParticleType::innerTrack)) {
-        if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis w/o a tracker track";
+        if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "  >> Tracker only analysis w/o a tracker track -- skipping it";
         // Second bin of the error histo, num tracks that fail the track existence checks
         if (trigInfo_ > 0) {
           tuple->ErrorHisto->Fill(1.);
@@ -1550,7 +1566,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       }
     }
-    if (trigInfo_ > 0) {
+    if (trigInfo_ > 0 && doBefPreSplots_) {
       tuple->BefPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
       tuple->BefPreS_RelDiffMuonPtAndTrackPt->Fill((muonPt-trackerPt)/trackerPt, EventWeight_);
     }
@@ -1576,8 +1592,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (trigInfo_ > 0) tuple->ErrorHisto->Fill(3.);
         continue;
     }
-
-
+    
     // tune P muon
     float tuneP_Pt = -999;
     float tuneP_PtErr = -999;
@@ -1591,7 +1606,6 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuneP_Phi = muon->tunePMuonBestTrack()->phi();
       tunePMuonBestTrackType = muon->tunePMuonBestTrackType();
     }
-
 
     // Reco - GEN track matching
     // For signal only, make sure that the candidate is associated to a true HSCP
@@ -1634,7 +1648,6 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (debug_> 0 && trigInfo_ > 0) cout << endl;
     }
     
-    // should be conf from config
     if (!isData && closestGenIndex < 0 ) {
       if (debug_ > 4 && trigInfo_ > 0) {
         LogPrint(MOD) << "min dr: " << dRMinGen << endl;
@@ -1656,7 +1669,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float genBeta = (closestGenIndex > 0) ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1.f;
   
 
-    if (trigInfo_ > 0 && !isData) {
+    if (!isData && trigInfo_ > 0 && doBefPreSplots_) {
       if (debug_ > 5) {
         LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genPdgId << " with pT " << genPt << " and eta " << genEta ;
       }
@@ -1665,14 +1678,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt,trackerPt/genPt, EventWeight_);
     }
     
-    if (exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
+    if (!isData && exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
     
-    if (trigInfo_ > 0 && !isData) {
+    if (trigInfo_ > 0 && !isData && doBefPreSplots_) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genPt, dRMinGen);
       tuple->BefPreS_GenPtVsGenMinPt->Fill(genPt, dPtMinGen);
     }
       // 2D plot to compare gen pt vs reco pt
-    tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
+    if (doBefPreSplots_) tuple->BefPreS_GenPtVsRecoPt->Fill(genPt, track->pt());
 
     // ID for the candidate, it's mother, and it's nearest sibling, and their angle
     // the pt of the candidate and the number of siblings
@@ -1682,7 +1695,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       closestHSCPsPDGsID = abs(genPdgId);
       // All HSCP candidates
       tuple->Gen_HSCPCandidateType->Fill(0., EventWeight_);
-      if (trigInfo_ > 0) {
+      if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_HSCPCandidateType->Fill(0., EventWeight_);
       }
       // Neutral HSCP candidates
@@ -1694,7 +1707,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           || closestHSCPsPDGsID == 1006113 || closestHSCPsPDGsID == 1006311
           || closestHSCPsPDGsID == 1006313 || closestHSCPsPDGsID == 1006333) {
         tuple->Gen_HSCPCandidateType->Fill(1., EventWeight_);
-        if (trigInfo_ > 0) {
+        if (trigInfo_ > 0 && doBefPreSplots_) {
           tuple->BefPreS_HSCPCandidateType->Fill(1., EventWeight_);
         }
       }
@@ -1708,14 +1721,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                || closestHSCPsPDGsID == 1006213 || closestHSCPsPDGsID == 1006321
                || closestHSCPsPDGsID == 1006323 || closestHSCPsPDGsID == 1000015) {
         tuple->Gen_HSCPCandidateType->Fill(2., EventWeight_);
-        if (trigInfo_ > 0) {
+        if (trigInfo_ > 0 && doBefPreSplots_) {
           tuple->BefPreS_HSCPCandidateType->Fill(2., EventWeight_);
         }
       }
       // Double-charged R-hadrons
       else if (closestHSCPsPDGsID == 1092224 || closestHSCPsPDGsID == 1006223) {
         tuple->Gen_HSCPCandidateType->Fill(3., EventWeight_);
-        if (trigInfo_ > 0) {
+        if (trigInfo_ > 0 && doBefPreSplots_) {
           tuple->BefPreS_HSCPCandidateType->Fill(3., EventWeight_);
         }
         // Dont mix double charged R-hadrons with the rest
@@ -1725,7 +1738,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       // tau prime, could be single or multiple charged
       else if (closestHSCPsPDGsID == 17) {
         tuple->Gen_HSCPCandidateType->Fill(4., EventWeight_);
-        if (trigInfo_ > 0) {
+        if (trigInfo_ > 0 && doBefPreSplots_) {
           tuple->BefPreS_HSCPCandidateType->Fill(4., EventWeight_);
         }
       }
@@ -1742,8 +1755,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float temp_dr = 9999.;
     for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
       temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
-      if (temp_dr < dr_min_hlt_muon)
-      {
+      if (temp_dr < dr_min_hlt_muon) {
         dr_min_hlt_muon = temp_dr;
         hlt_match_pt = trigObjP4s[objNr].Pt();
       }
@@ -1780,8 +1792,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           NVTrack = noVertexTrackColl[i];
         }
       }
-      if (trigInfo_ > 0) {
-      tuple->BefPreS_dR_NVTrack->Fill(minDr, EventWeight_);
+      if (trigInfo_ > 0 && doBefPreSplots_) {
+        tuple->BefPreS_dR_NVTrack->Fill(minDr, EventWeight_);
       }
       if (minDr < 0.4) {
         // Find displacement of tracks with respect to beam spot
@@ -1808,9 +1820,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float closestPfJetElectronFraction = 0.0;
     float closestPfJetPhotonFraction = 0.0;
 
-    // This is again repeated in the preselection
+    if (debug_ > 5) LogPrint(MOD) << "      >> Calculating PF quantities";
     bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
-
     bool pf_isPfTrack = false,  pf_isPhoton = false, pf_isUndefined = false;
     float track_PFMiniIso_sumLeptonPt = 0;
     float track_PFMiniIso_otherPt = 0;
@@ -1840,7 +1851,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           pf_ecal_energy = pfCand->ecalEnergy();
           pf_hcal_energy = pfCand->hcalEnergy();
 
-          if (trigInfo_ > 0) {
+          if (trigInfo_ > 0 && doBefPreSplots_) {
               // Number of PF tracks matched to HSCP candidate track
             tuple->BefPreS_PfType->Fill(1., EventWeight_);
             if (pf_isElectron) {
@@ -2024,7 +2035,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
 
     if (!isData && candidateEnvHasStatus91) {
-      if (trigInfo_ > 0) {
+      if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
         // Has status 91 around
         tuple->ErrorHisto->Fill(8.);
@@ -2034,12 +2045,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     }
 
     passTechnicalChecks = true;
+    if (debug_> 5 && trigInfo_ > 0) LogPrint(MOD) << "      >> We passed technical checks";
     
     // Plot to see the trigger turn-on
-    if (!HLT_Mu50) {
-      tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(0., track->pt());
-    } else if (HLT_Mu50) {
-      tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(1., track->pt());
+    if (doBefTrigPlots_) {
+      if (!HLT_Mu50) {
+        tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(0., track->pt());
+      } else if (HLT_Mu50) {
+        tuple->BefTrig_TriggerMuon50VsPt_lowPt->Fill(1., track->pt());
+      }
     }
     
     int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
@@ -2057,6 +2071,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float ratioCleanAndAllPixelClu = 0.0;
     
     // Loop through the rechits on the given track **before** preselection
+    if (debug_> 5 && trigInfo_ > 0) LogPrint(MOD) << "      >> Loop through the rechits on the given track **before** preselection";
     unsigned int nonL1PixHits = 0;
     unsigned int allStripsHits = 0;
     unsigned int cleanStripsHits = 0;
@@ -2094,11 +2109,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bool cpeHasFailed = false;
         if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
           cpeHasFailed = true;
-          if (trigInfo_ > 0) {
+          if (trigInfo_ > 0 && doBefPreSplots_) {
             tuple->BefPreS_CluProbHasFilled->Fill(0., EventWeight_);
           }
         } else {
-          if (trigInfo_ > 0) {
+          if (trigInfo_ > 0 && doBefPreSplots_) {
             tuple->BefPreS_CluProbHasFilled->Fill(1., EventWeight_);
           }
         }
@@ -2123,7 +2138,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         if (clustCharge != dedxHits->charge(i)) {
           LogPrint(MOD) << "clustCharge != dedxHits->charge(i) -- this shouldnt happen";
         }
-        if (trigInfo_ > 0) {
+        if (trigInfo_ > 0 && doBefPreSplots_) {
           if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
             auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
             tuple->BefPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
@@ -2149,7 +2164,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
               tuple->BefPreS_CluCotBetaVsPixelLayer->Fill(cotBeta, pixLayerIndex, EventWeight_);
               tuple->BefPreS_CluCotAlphaVsPixelLayer->Fill(cotAlpha, pixLayerIndex, EventWeight_);
             }
-            if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+            if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6) {
               tuple->BefPreS_CluNormChargeVsPixelLayer_lowBetaGamma->Fill(pixelNormCharge, pixLayerIndex, EventWeight_);
             }
           } // end of IF on barrel pixel
@@ -2225,7 +2240,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
           if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
           if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6  && doBefPreSplots_) {
             tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
           } else if (!isData && genGammaBeta > 0.6 ) {
             tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
@@ -2242,7 +2257,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           nofClust_dEdxLowerThan++;
         }
       }// end loop on rechits on the given track
-
+    if (debug_> 5) LogPrint(MOD) << "      >> End loop on rechits on the given track";
     // Combine probQ-s into HSCP candidate (track) level quantity
     float probQonTrack = -1.f;
     float probXYonTrack = -1.f;
@@ -2269,7 +2284,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         " ProbQ = " << probQonTrack << " ProbXY = " << probXYonTrack <<  " ProbQNoL1 = "<< probQonTrackNoL1 << " ProbXYNoL1 = " << probXYonTrackNoL1;
     }
     
-    if (trigInfo_ > 0) {
+    if (trigInfo_ > 0 && doBefPreSplots_) {
       tuple->BefPreS_genGammaBetaVsProbXYNoL1->Fill(genGammaBeta, probXYonTrackNoL1, EventWeight_);
     }
   
@@ -2375,121 +2390,118 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     reco::DeDxData* dedxMorrisMethod_StripOnly = nullptr; // FiStrips
 
     int NPV = vertexColl.size();
-    //if(!createGiTemplates_){
-        if(!puTreatment_ || CreateAndRunGitemplates_){
-            dedxIas_FullTrackerTmp =
-            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                       mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
+    if(!puTreatment_) {
+        dedxIas_FullTrackerTmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                   mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
 
-            dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+        dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
 
-            dedxIas_noL1Tmp =
-            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                   mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_,skipPixelL1 = true, skip_templates_ias = 2);
+        dedxIas_noL1Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+               mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_,skipPixelL1 = true, skip_templates_ias = 2);
 
-            dedxIas_noL1 = dedxIas_noL1Tmp.numberOfMeasurements() > 0 ? &dedxIas_noL1Tmp : nullptr;
+        dedxIas_noL1 = dedxIas_noL1Tmp.numberOfMeasurements() > 0 ? &dedxIas_noL1Tmp : nullptr;
 
-            dedxIas_noTIBnoTIDno3TEC_Tmp =
-            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
+        dedxIas_noTIBnoTIDno3TEC_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
 
 
-            dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
+        dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
-            dedxIas_PixelOnly_Tmp =
-            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
-
-            dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
-
-            dedxIas_StripOnly_Tmp =
-            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
-
-            dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
-
-            dedxIas_PixelOnly_noL1_Tmp =
-            computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                        mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
-
-            dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
-
-            dedxIs_StripOnly_Tmp =
+        dedxIas_PixelOnly_Tmp =
         computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
 
-            dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
-          
-          // the FiStrips variable
-          dedxMorrisMethod_StripOnly_Tmp =
-          computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                      mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0, symmetricSmirnov = false, useMorrisMethod = true);
-          
-          dedxMorrisMethod_StripOnly = dedxMorrisMethod_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxMorrisMethod_StripOnly_Tmp : nullptr;
-        }
+        dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
 
-        else{
-            for(int i = 0 ; i < NbPuBins_ ; i++){
-                if ( NPV > PuBins_[i] && NPV <= PuBins_[i+1] ){
-                    //globalIas_
-                    dedxIas_FullTrackerTmp =
+        dedxIas_StripOnly_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
+
+        dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
+
+        dedxIas_PixelOnly_noL1_Tmp =
+        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
+
+        dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
+
+        dedxIs_StripOnly_Tmp =
+    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+
+        dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+      
+      // the FiStrips variable
+      dedxMorrisMethod_StripOnly_Tmp =
+      computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplates, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                  mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0, symmetricSmirnov = false, useMorrisMethod = true);
+      
+      dedxMorrisMethod_StripOnly = dedxMorrisMethod_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxMorrisMethod_StripOnly_Tmp : nullptr;
+      } else {
+        for(int i = 0 ; i < NbPuBins_ ; i++){
+            if ( NPV > PuBins_[i] && NPV <= PuBins_[i+1] ){
+                //globalIas_
+                dedxIas_FullTrackerTmp =
+                computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                            mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
+
+                dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+
+                //globalIas_ no BPIXL1
+                dedxIas_noL1Tmp =
+                computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
+                       mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_,skipPixelL1 = true, skip_templates_ias = 2);
+
+                dedxIas_noL1 = dedxIas_noL1Tmp.numberOfMeasurements() > 0 ? &dedxIas_noL1Tmp : nullptr;
+
+                //globalIas_ without TIB, TID, and 3 first TEC layers
+                dedxIas_noTIBnoTIDno3TEC_Tmp =
                     computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_);
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
 
-                    dedxIas_FullTracker = dedxIas_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxIas_FullTrackerTmp : nullptr;
+                dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
 
-                    //globalIas_ no BPIXL1
-                    dedxIas_noL1Tmp =
-                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                           mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_,skipPixelL1 = true, skip_templates_ias = 2);
-
-                    dedxIas_noL1 = dedxIas_noL1Tmp.numberOfMeasurements() > 0 ? &dedxIas_noL1Tmp : nullptr;
-
-                    //globalIas_ without TIB, TID, and 3 first TEC layers
-                    dedxIas_noTIBnoTIDno3TEC_Tmp =
-                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
-                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 1);
-
-                    dedxIas_noTIBnoTIDno3TEC = dedxIas_noTIBnoTIDno3TEC_Tmp.numberOfMeasurements() > 0 ? &dedxIas_noTIBnoTIDno3TEC_Tmp : nullptr;
-
-                    //globalIas_ Pixel only
-                    dedxIas_PixelOnly_Tmp =
-                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
-
-                    dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
-
-                    //globalIas_ Strip only
-                    dedxIas_StripOnly_Tmp =
-                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
-
-                    dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
-
-                    //globalIas_ Pixel only no BPIXL1
-                    dedxIas_PixelOnly_noL1_Tmp =
-                        computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                                    mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
-
-                    dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
-
-                    //symmetric Smirnov discriminator - Is
-                    dedxIs_StripOnly_Tmp =
+                //globalIas_ Pixel only
+                dedxIas_PixelOnly_Tmp =
                     computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 2);
 
-                    dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
-                  
-                    // the FiStrips variable
-                    dedxMorrisMethod_StripOnly_Tmp =
+                dedxIas_PixelOnly = dedxIas_PixelOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_Tmp : nullptr;
+
+                //globalIas_ Strip only
+                dedxIas_StripOnly_Tmp =
                     computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
-                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0, symmetricSmirnov = false, useMorrisMethod = true);
-                    
-                    dedxMorrisMethod_StripOnly = dedxMorrisMethod_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxMorrisMethod_StripOnly_Tmp : nullptr;
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0);
 
-                }//end vertex coll size for PU treatment
-            }
+                dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
+
+                //globalIas_ Pixel only no BPIXL1
+                dedxIas_PixelOnly_noL1_Tmp =
+                    computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                                mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2);
+
+                dedxIas_PixelOnly_noL1 = dedxIas_PixelOnly_noL1_Tmp.numberOfMeasurements() > 0 ? &dedxIas_PixelOnly_noL1_Tmp : nullptr;
+
+                //symmetric Smirnov discriminator - Is
+                dedxIs_StripOnly_Tmp =
+                computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false,
+                            mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2, symmetricSmirnov = true);
+
+                dedxIs_StripOnly = dedxIs_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIs_StripOnly_Tmp : nullptr;
+              
+                // the FiStrips variable
+                dedxMorrisMethod_StripOnly_Tmp =
+                computedEdx(track->eta(),run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
+                            mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0, symmetricSmirnov = false, useMorrisMethod = true);
+                
+                dedxMorrisMethod_StripOnly = dedxMorrisMethod_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxMorrisMethod_StripOnly_Tmp : nullptr;
+
+            }//end vertex coll size for PU treatment
         }
+      }
     //}
     // Choose of Ih definition - Ih_nodrop_noPixL1 for Phase-1 detector
     //                         - Ih_FullTracker for Phase-0 detector
@@ -2538,7 +2550,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
           numSiblingsF  = float(numSiblings);
           for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-            if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0)  std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+            if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0)  std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
             float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
             float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
             float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -2598,7 +2610,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
@@ -2673,7 +2685,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
         float pt = genTrackRef->pt();
         float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
-        //drForMiniIso = 0.3;
+        //drForMiniIso = 0.3;  // test by Dylan on genTrackIsoSumPt (fixed size cone)
         if (dr<drForMiniIso) {
           track_genTrackMiniIsoSumPt+=pt;
         }
@@ -2681,7 +2693,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     }
 
     // number of tracks as the first bin
-    if (trigInfo_ > 0) {
+    if (trigInfo_ > 0 && doBefPreSplots_) {
       tuple->BefPreS_PfType->Fill(0., EventWeight_);
     }
 
@@ -2705,7 +2717,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             }
           }
         }
-        if (trigInfo_ > 0) {
+        if (trigInfo_ > 0 && doBefPreSplots_) {
           tuple->BefPreS_dRVsdPtPfCaloJet->Fill(dRMinPfCaloJet,dPtPfCaloJet, EventWeight_);
         }
         
@@ -2722,7 +2734,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
 
       const reco::PFJet* nearestJetWithNoCuts = &(*pfJetColl)[nearestJetIndex];
-      if (trigInfo_ > 0) {
+      if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_dRVsPtPfJet->Fill(dRMinPfJetWithNoCuts, nearestJetWithNoCuts->pt(), EventWeight_);
       }
 
@@ -2798,16 +2810,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     const float furthersHitDxy = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y());
     const float furthersHitDistance = sqrt(outerHit.x()*outerHit.x()+outerHit.y()*outerHit.y()+outerHit.z()*outerHit.z());
     
-    bool doBefTrigPlots = true;
-    if (doBefTrigPlots) {
+    if (doBefTrigPlots_) {
       tuple->BefTrig_Ih->Fill(globalIh_, EventWeight_);
       tuple->BefTrig_ProbQNoL1->Fill(1 - probQonTrackNoL1, EventWeight_);
       tuple->BefTrig_Ias->Fill(globalIas_, EventWeight_);
     }
 
-    bool doBefPreSplots = true;
     // Before pre-selection, after trigger plots
-    if (doBefPreSplots && trigInfo_ > 0) {
+    if (doBefPreSplots_ && trigInfo_ > 0) {
+      
       tuple->BefPreS_RecoPFMET->Fill(RecoPFMET, EventWeight_);
       tuple->BefPreS_Eta->Fill(track->eta(), EventWeight_);
       tuple->BefPreS_MatchedStations->Fill(muonStations(track->hitPattern()), EventWeight_);
@@ -2834,9 +2845,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->BefPreS_TNOHFractionTillLast->Fill(validFractionTillLast, EventWeight_);
       tuple->BefPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
       tuple->BefPreS_TNOM->Fill(numDeDxHits, EventWeight_);
-      if (track->found() - numDeDxHits) {
-        tuple->BefPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, EventWeight_);
-      }
+      tuple->BefPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, EventWeight_);
+
       tuple->BefPreS_ProbQ->Fill(1 - probQonTrack, EventWeight_);
       tuple->BefPreS_ProbXY->Fill(probXYonTrack, EventWeight_);
       tuple->BefPreS_ProbQNoL1->Fill(1 - probQonTrackNoL1, EventWeight_);
@@ -2907,7 +2917,6 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (genBeta >= 0) {
         tuple->BefPreS_GenBeta->Fill(genBeta, EventWeight_);
       }
-    }
 
     //Plotting segment separation depending on whether track passed dz cut
     if (fabs(dz) > globalMaxDZ_) {
@@ -2942,6 +2951,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       tuple->BefPreS_EtaVsTOF->Fill(track->eta(), tof->inverseBeta(), EventWeight_);
     }
+
     
     // Check if HSCP is compatible with cosmics
     bool isDxyHigh = ((typeMode_ != 3 && fabs(dxy) > globalMaxDXY_) || (typeMode_ == 3 && fabs(dxyFromBeamSpot) > globalMaxDXY_)) ? true : false;
@@ -2959,11 +2969,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     if (isDxyHigh && isOpenAngleHigh) {
       tuple->BefPreS_Dz_Cosmic->Fill(dz, EventWeight_);
     }
-    if (isDxyHigh && isDzHigh) {
+    if (isDxyHigh && isDzHigh && doBefPreSplots_) {
       tuple->BefPreS_OpenAngle_Cosmic->Fill(maxOpenAngle, EventWeight_);
     }
 
-    if (isDxyHigh && isDzHigh && isOpenAngleHigh) {
+    if (isDxyHigh && isDzHigh && isOpenAngleHigh && doBefPreSplots_) {
       tuple->BefPreS_Pt_Cosmic->Fill(track->pt(), EventWeight_);
       tuple->BefPreS_Ias_Cosmic->Fill(globalIas_, EventWeight_);
       tuple->BefPreS_Ih_Cosmic->Fill(globalIh_, EventWeight_);
@@ -3006,6 +3016,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
       tuple->BefPreS_Pt_Binned[to_string(bin)]->Fill(track->pt(), EventWeight_);
     }
+    }
+    
+    if (debug_ > 6 && trigInfo_ > 0) LogPrint(MOD) << "      >> Define preselection cuts   ";
     // ----------------------------------------------------------------------------|
     // Define preselection cuts                                                    |
     // ----------------------------------------------------------------------------|
@@ -3019,7 +3032,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     // Cut on transverse momentum
     // Single muon trigger threshold is 50 GeV
     passedCutsArray[1]  = (track->pt() > globalMinPt_)? true : false;
-    //passedCutsArray[1]  = ((track->pt() > globalMinPt_) && (track->pt() < globalMaxPt_))? true : false;
+    //passedCutsArray[1]  = ((track->pt() > globalMinPt_) && (track->pt() < globalMaxPt_))? true : false;  // test done by Dylan for the mass spectrum method
     // Check if eta is inside the max eta cut for detector homogeneity
     passedCutsArray[2]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
@@ -3046,7 +3059,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
     // Cut on the uncertainty of the pt measurement, TODO the cut value should be made a global variable
     passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008)) ? true : false;
-    //passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0)) ? true : false;
+    //passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0)) ? true : false; // test done by Dylan for the mass spectrum method
+
     // Cut away background events based on the probQ
     passedCutsArray[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
     //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
@@ -3093,6 +3107,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     passedCutsArraySept8[9] = passedCutsArray[9];
 
     // N-1 plots
+    if (debug_ > 6 && trigInfo_ > 0) LogPrint(MOD) << "      >> Doing N1 plots";
     for (size_t i=0;i<sizeof(passedCutsArray);i++) {
       bool allOtherCutsPassed = true;
       if (passedCutsArray[i] && trigInfo_ > 0) {
@@ -3269,7 +3284,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     passedCutsArrayForCR[1] = (track->pt() > 50 && track->pt() < 55) ? true : false;
     
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "\n      >> Check if we pass Preselection for CR";
-    if (passPreselection(passedCutsArrayForCR, false)) {
+    if (passPreselection(passedCutsArrayForCR, false) && doPostPreSplots_) {
       tuple->PostPreS_Ias_CR->Fill(globalIas_, EventWeight_);
       tuple->PostPreS_Pt_lowPt_CR->Fill(track->pt(), EventWeight_);
       tuple->PostPreS_ProbQNoL1_CR->Fill(1 - probQonTrackNoL1, EventWeight_);
@@ -3290,17 +3305,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     //Preselection steps that can be changed for template generation
     passedCutsArrayForGiTemplates[0] = true;
     passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) );
-    passedCutsArrayForGiTemplates[2]  = (fabs(track->eta()) < 2.1);
-
-    passedCutsArrayForGiTemplates[10] = true; //miniIso
-    //[11] is TrackerIso > 15
-    passedCutsArrayForGiTemplates[12] = true; //EoP
-    passedCutsArrayForGiTemplates[13] = true; //sigma pt / pt2 cut
-    passedCutsArrayForGiTemplates[14] = true; //ProbQ cut
-
     // PAY ATTENTION : PU == NPV for the following loop !
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
-      tuple->PostPreS_Ias_CR_veryLowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_);
+      if (doPostPreSplots_) {
+        tuple->PostPreS_Ias_CR_veryLowPt->Fill(globalIas_,preScaleForDeDx*EventWeight_);
+        tuple->PostPreS_P_CR_veryLowPt->Fill(track->p(),preScaleForDeDx*EventWeight_);
+      }
       for(unsigned int h=0; h< dedxHits->size(); h++) {
         DetId detid(dedxHits->detId(h));
         int modulgeomForIndxH = 0;
@@ -3316,51 +3326,43 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
         pathlenghtForIndxH = dedxHits->pathlength(h) * 10;
         chargeForIndxH = dedxHits->charge(h);
-        if(createGiTemplates_){
-            if(puTreatment_){
-               int npv = vertexColl.size();
-               for(int i = 0 ; i < NbPuBins_ ; i++){
-                   if ( npv > PuBins_[i] && npv <= PuBins_[i+1] ){
-                       //std::cout << "We are then in PU bin #" << (i+1) << std::endl;
-                       if(detid.subdetId() >= 3){ // For strips only 1 question : charge is already multiplied by sclae factor ?
-                           if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                           else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                           else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                           else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                           else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                       }
-                       else{ // for pixels , we multiply pathlenght by normMult
-                           scaleFactor *= dEdxSF_1_;
-                           if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                           else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                           else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                           else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                           else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-
-                       }
-                   }
-               }
-            } else {
-              // Standard approach, no PU dependence
-              //We should have pixel and strips in different loops : in pixels, we divide charge * SF / pathlenght * normMult
-              if(detid.subdetId() >= 3){
-                  tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-                  tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
-              }
-              else{
-                  scaleFactor *= dEdxSF_1_;
-                  tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-                  tuple->Calibration_GiTemplate_noL1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
-              }
-            }
-
+        if (createGiTemplates_) {
+           int npv = vertexColl.size();
+           for (int i = 0 ; i < NbPuBins_ ; i++){
+             if (npv > PuBins_[i] && npv <= PuBins_[i+1]) {
+               std::cout << "We are then in PU bin #" << (i+1) << std::endl;
+               if(detid.subdetId() >= 3) { // For strips only 1 question : charge is already multiplied by sclae factor ?
+                 if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                 else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                 else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                 else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+                 else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+               } else { // for pixels , we multiply pathlenght by normMult
+                 scaleFactor *= dEdxSF_1_;
+                 if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                 else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                 else if(i==2) tuple->Calibration_GiTemplate_PU_3->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                 else if(i==3) tuple->Calibration_GiTemplate_PU_4->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+                 else if(i==4) tuple->Calibration_GiTemplate_PU_5->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+               } // end condition on pixel or strips
+             } // end condition on which PU bin we are in
+           } // end loop on PU bins
+          // Standard approach, no PU dependence
+          // We should have pixel and strips in different loops : in pixels, we divide charge * SF / pathlenght * normMult
+          if (detid.subdetId() >= 3) {
+            tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
+          } else {
+            scaleFactor *= dEdxSF_1_;
+            tuple->Calibration_GiTemplate->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/(pathlenghtForIndxH*normMult), preScaleForDeDx);
+          }
         }//end condition createGitemplates
       } // end loop on dEdx hits
     } // end condition on passing preselection cuts for the Gi templates
 
 
-    if (createGiTemplates_ && !CreateAndRunGitemplates_) {
+    if (createAndExitGitemplates_) {
       // If the purpose of this is to run the Gi templates only, exit here
+      if (debug_ > 2) LogPrint(MOD) << "      >> The purpose of this is to run the Gi templates only, exit here";
       return;
     }
     
@@ -3373,10 +3375,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     unsigned int passedCutsArraySize = sizeof(passedCutsArray);
     if (globalIas_ > 0.25 && probQonTrackNoL1 < 0.1 && passPre) {
       tuple->CutFlow->Fill(passedCutsArraySize + 2, EventWeight_);
-      if (track->pt() > 100 && track->pt() < 200) {
+      if (track->pt() > 100) {
         tuple->CutFlow->Fill(passedCutsArraySize+ 3, EventWeight_);
       } if (track->pt() > 200) {
         tuple->CutFlow->Fill(passedCutsArraySize + 4, EventWeight_);
+      } if (track->pt() > 400) {
+        tuple->CutFlow->Fill(passedCutsArraySize + 5, EventWeight_);
       }
     }
     
@@ -3409,37 +3413,40 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForPtSyst));
     passedCutsArrayForPtSyst[1] = (rescaledPtUp > globalMinPt_) ? true : false;
     if (debug_ > 2) LogPrint(MOD) << "      >> Check if we pass Preselection for pT systematics";
-    if (passPreselection(passedCutsArrayForPtSyst, false)) {
+    if (passPreselection(passedCutsArrayForPtSyst, false) && doPostPreSplots_) {
       tuple->PostPreS_ProbQNoL1VsIas_Pt_up->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_);
     }
 
     float rescaledPtDown = track->pt()*(1-shiftForPtValue);
     passedCutsArrayForPtSyst[1] = (rescaledPtDown > globalMinPt_) ? true : false;
-    if (passPreselection(passedCutsArrayForPtSyst, false)) {
+    if (passPreselection(passedCutsArrayForPtSyst, false) && doPostPreSplots_) {
       tuple->PostPreS_ProbQNoL1VsIas_Pt_down->Fill(1 - probQonTrackNoL1, globalIas_,  EventWeight_);
     }
 
     // Systematics plots for Ias rescaling
     // TODODec20 --> Ias smearing isntead of a shift
-    tuple->PostPreS_ProbQNoL1VsIas_Ias_up->Fill(1 - probQonTrackNoL1, std::min(1.0,globalIas_*1.05),  EventWeight_);
-    tuple->PostPreS_ProbQNoL1VsIas_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_*0.95,  EventWeight_);
+    if (doPostPreSplots_ && trigInfo_ > 0) {
+      tuple->PostPreS_ProbQNoL1VsIas_Ias_up->Fill(1 - probQonTrackNoL1, std::min(1.0,globalIas_*1.05),  EventWeight_);
+      tuple->PostPreS_ProbQNoL1VsIas_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_*0.95,  EventWeight_);
+    }
 
     // Systematics plots for trigger
+    // TODO Jan 26
     bool passedCutsArrayForTriggerSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForTriggerSyst));
     passedCutsArrayForTriggerSyst[0] = (true) ? true : false;
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection for trigger systematics";
-    if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
-      float distanceAtThisEta = 500.0/sin(track->phi());
-      float speedOfLightInCmPerNs = 29.97;
-      float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
-      
-      float genBetaPrimeUp =  -1.f;
-      float genBetaPrimeDown = -1.f;
-      genBetaPrimeUp = distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs);
-      if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
-        genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
-      }
+    float distanceAtThisEta = 500.0/sin(track->phi());
+    float speedOfLightInCmPerNs = 29.97;
+    float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
+    
+    float genBetaPrimeUp =  -1.f;
+    float genBetaPrimeDown = -1.f;
+    genBetaPrimeUp = distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs);
+    if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
+    }
+    if (passPreselection(passedCutsArrayForTriggerSyst, false) && dr_min_hlt_muon < 0.15 && doPostPreSplots_) {
       if (!HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
         tuple->PostPreS_TriggerMuon50VsPt->Fill(0., track->pt());
@@ -3488,6 +3495,55 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
       }
     } // end of passedCutsArrayForTriggerSyst loop
+    else if (dr_min_hlt_muon < 0.15 && doBefPreSplots_) {
+      if (!HLT_Mu50) {
+        tuple->BefPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
+        tuple->BefPreS_TriggerMuon50VsPt->Fill(0., track->pt());
+        if (fabs(track->eta()) < 0.3) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(0., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(0., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(0., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+        }
+        
+      } else if (HLT_Mu50) {
+        tuple->BefPreS_TriggerMuon50VsBeta->Fill(1., genBeta);
+        tuple->BefPreS_TriggerMuon50VsPt->Fill(1., track->pt());
+        if (fabs(track->eta()) < 0.3) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(1., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(1., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(1., genBeta);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
+          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+        }
+      }
+      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+        tuple->BefPreS_TriggerMETallVsBeta->Fill(0., genBeta);
+        tuple->BefPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
+        tuple->BefPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
+      } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+        tuple->BefPreS_TriggerMETallVsBeta->Fill(1., genBeta);
+        tuple->BefPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+        tuple->BefPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
+        tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
+      }
+    }
     
 
     //fill the ABCD histograms and a few other control plots
@@ -3495,8 +3551,10 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (trigInfo_ < 1) {
         cout << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
       }
-      tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT, EventWeight_);
-      tuple->PostPreS_MetOverHt->Fill(RecoPFMET/pfJetHT, EventWeight_);
+      if  (doPostPreSplots_) {
+        tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT, EventWeight_);
+        tuple->PostPreS_MetOverHt->Fill(RecoPFMET/pfJetHT, EventWeight_);
+      }
       if (trigInfo_ > 0) postPreS_candidate_count++;
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Passed pre-selection";
       if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Fill control and prediction histos";
@@ -3521,9 +3579,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                                 CutI_Flip_,
                                                 CutTOF_Flip_);
       // After pre-selection plots
-      // TODO: controll this from config
-      bool doPostPreSplots = true;
-      if (doPostPreSplots && trigInfo_ > 0) {
+      if (trigInfo_ > 0 && doPostPreSplots_) {
         if (debug_ > 3) LogPrint(MOD) << "      >> Fill post preselection histos";
         tuple->PostPreS_MuonPtVsTrackPt->Fill(muonPt, trackerPt, EventWeight_);
         tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt->Fill(muonPt/genPt, trackerPt/genPt, EventWeight_);
@@ -3584,6 +3640,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_TNOMHTillLast->Fill(missingHitsTillLast, EventWeight_);
         tuple->PostPreS_TNOM->Fill(numDeDxHits, EventWeight_);
         tuple->PostPreS_TNOMVsIas->Fill(numDeDxHits, globalIas_, EventWeight_);
+        tuple->PostPreS_EtaVsNBH->Fill(track->eta(), track->found() - numDeDxHits, EventWeight_);
         tuple->PostPreS_ProbQ->Fill(1 - probQonTrack, EventWeight_);
         tuple->PostPreS_ProbQVsIas->Fill(1 - probQonTrack, globalIas_, EventWeight_);
         tuple->PostPreS_IhVsProbQNoL1VsIas->Fill(globalIh_, 1 - probQonTrackNoL1, globalIas_, EventWeight_);
@@ -3603,7 +3660,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->PostPreS_ProbXYNoL1VsIas->Fill(probXYonTrackNoL1, globalIas_, EventWeight_);
         tuple->PostPreS_ProbXYNoL1VsProbQNoL1->Fill(probXYonTrackNoL1, 1 - probQonTrackNoL1, EventWeight_);
 
-        if (globalIas_ > 0.3) {
+        if (globalIas_ > 0.25) {
           tuple->PostPreS_ProbXY_highIas->Fill(probXYonTrack, EventWeight_);
           tuple->PostPreS_ProbXYVsIas_highIas->Fill(probXYonTrack, globalIas_, EventWeight_);
           tuple->PostPreS_ProbXYVsProbQ_highIas->Fill(probXYonTrack, 1 - probQonTrack, EventWeight_);
@@ -3827,8 +3884,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       }
 
-      if ((((globalIas_ > 0.3 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
-        if (globalIas_ > 0.3)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.3";}
+      if ((((globalIas_ > 0.25 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
+        if (globalIas_ > 0.25)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
         if (Mass > 1000) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
         LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
         LogPrint(MOD) << "        >> -----------------------------------------------";
@@ -3872,6 +3929,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bestCandidatePt = track->pt();
         bestCandidateIas = globalIas_;
         bestCandidateFiStrips = globalFiStrips_;
+        bestCandidateFiStripsLog = -log(1-globalFiStrips_);
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hlt_muon;
         bestCandidateGenBeta = genBeta;
@@ -3944,14 +4002,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->pt());
             unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
             numSiblingsF  = float(numSiblings);
-            if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
+            if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
             for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-              if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+              if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
               float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
               float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
               float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
               float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-              if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+              if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
               if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                 dRMinGenAndSibling = siblingDr;
                 closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId());
@@ -3964,37 +4022,37 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             break;
           }
         }
-        if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
+        if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
         
         // If the loop on the mothers didnt find the mother (e.g. all moms had the same ID), let's look at the grandmas
         if (!motherFound) {
-          if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
+          if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> All moms had the same ID as the candidate, let's look at the grammas";
           for (unsigned int numMomIndx = 0; numMomIndx < genCandidateUnderStudy.numberOfMothers(); numMomIndx++) {
             for (unsigned int numGramMomIndx = 0; numGramMomIndx < genCandidateUnderStudy.mother(numMomIndx)->numberOfMothers(); numGramMomIndx++) {
               if (abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId())  != abs(genCandidateUnderStudy.pdgId())) {
                 closestBackgroundPDGsIDs[1] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pdgId());
                 closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->pt());
                 unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->numberOfDaughters() -1;
-                if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
+                if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of siblings: " << numSiblings << ". Me and my syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                  if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> " << genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->eta();
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
                   float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                  if (globalIas_ > 0.3) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+                  if (globalIas_ > 0.25) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
                 }
-                if (globalIas_ > 0.3) std::cout << std::endl;
+                if (globalIas_ > 0.25) std::cout << std::endl;
                 unsigned int numAunts = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
                 numSiblingsF  = float(numSiblings);
-                if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
+                if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of aunts: " << numAunts << ". Mom with same ID as the candidate and her syblings: ";
                 for (unsigned int daughterIndx = 0; daughterIndx < numAunts+1; daughterIndx++) {
-                  if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                  if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                   float auntEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->eta();
                   float auntPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->phi();
                   float auntPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pt();
                   float auntDr = deltaR(genEta, genPhi, auntEta, auntPhi);
-                  if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
+                  if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << auntDr << ", pt =  " << auntPt <<  ") , ";
                   if( (auntDr != 0.0) && (auntDr < dRMinGenAndAunt)) {
                     dRMinGenAndAunt = auntDr;
                     closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -4009,7 +4067,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             }
             if (motherFound) break;
           }
-          if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
+          if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) std::cout << std::endl;
         }
 
         // If none of the mothers' mother's is the real mother (e.g. all moms'moms had the same ID as the candidate), let's look at the grand-grandmas
@@ -4023,14 +4081,14 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                   closestBackgroundPDGsIDs[7] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->pt());
                   unsigned int numSiblings = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->numberOfDaughters() -1;
                   numSiblingsF  = float(numSiblings);
-                  if (globalIas_ > 0.3 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
+                  if (globalIas_ > 0.25 && trigInfo_ > 0 && debug_ > 4) LogPrint(MOD) << "      >> Number of great-aunts: " << numSiblings << ". Gramma with same ID the candidate and her syblings: ";
                   for (unsigned int daughterIndx = 0; daughterIndx < numSiblings+1; daughterIndx++) {
-                    if (globalIas_ > 0.3 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
+                    if (globalIas_ > 0.25 && debug_ > 4 && trigInfo_ > 0) std::cout << "      >> "  << genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId() ;
                     float siblingEta = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->eta();
                     float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->phi();
                     float siblingPt = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pt();
                     float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                    if (globalIas_ > 0.3 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
+                    if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt =  " << siblingPt <<  ") , ";
                     if( (siblingDr != 0.0) && (siblingDr < dRMinGenAndSibling)) {
                       dRMinGenAndSibling = siblingDr;
                       closestBackgroundPDGsIDs[2] = (float)abs(genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->mother(numGrandGramMomIndx)->daughter(daughterIndx)->pdgId());
@@ -4059,7 +4117,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         closestBackgroundPDGsIDs[5] = fabs(genColl[closestGenIndex].pt());
         closestBackgroundPDGsIDs[6] = numSiblingsF;
 
-        if ((((debug_> 2) || (!isSignal && globalIas_ > 0.3))) && (trigInfo_ > 0)) {
+        if ((((debug_> 2) || (!isSignal && globalIas_ > 0.25))) && (trigInfo_ > 0)) {
           LogPrint(MOD) << "      >> Track's gen ID: " << closestBackgroundPDGsIDs[0];
           LogPrint(MOD) << "      >> Track's gen pt: " << closestBackgroundPDGsIDs[5];
 
@@ -4091,7 +4149,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       }
     }
     
-    if (!isData && passPre) {
+    if (!isData && passPre && doPostPreSplots_) {
       if ( hscp.type() == susybsm::HSCParticleType::globalMuon) {
         tuple->PostPreS_RecoHSCParticleType->Fill(0.);
       } else if ( hscp.type() == susybsm::HSCParticleType::trackerMuon) {
@@ -4121,12 +4179,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         if (genColl[g].status() == 91) hasStatus91Around = true;
         // Consider non-status 1 particles
         if (genColl[g].status() != 1) continue;
-        tuple->PostPreS_ProbQVsGenEnviromentID->Fill(probQonTrack, abs(genColl[g].pdgId()), EventWeight_);
-        tuple->PostPreS_IasVsGenEnviromentID->Fill(globalIas_, abs(genColl[g].pdgId()), EventWeight_);
+        if (doPostPreSplots_) tuple->PostPreS_ProbQVsGenEnviromentID->Fill(probQonTrack, abs(genColl[g].pdgId()), EventWeight_);
+        if (doPostPreSplots_) tuple->PostPreS_IasVsGenEnviromentID->Fill(globalIas_, abs(genColl[g].pdgId()), EventWeight_);
       }
-      if (hasStatus91Around && passPre && trigInfo_ > 0) {
+      if (hasStatus91Around && passPre && trigInfo_ > 0 && doPostPreSplots_) {
         tuple->PostPreS_IasForStatus91->Fill(globalIas_, EventWeight_);
-      } else if (passPre && trigInfo_ > 0) {
+      } else if (passPre && trigInfo_ > 0 && doPostPreSplots_) {
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, EventWeight_);
       }
     }
@@ -4173,7 +4231,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
 
 
-        if ( detid.subdetId() == PixelSubdetector::PixelBarrel) {
+        if ( detid.subdetId() == PixelSubdetector::PixelBarrel && doPostPreSplots_) {
 
           auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
           tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, EventWeight_);
@@ -4189,7 +4247,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
             tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(2., pixLayerIndex, EventWeight_);
           }
           tuple->PostPreS_CluSpecInCPEVsPixelLayer->Fill(3., pixLayerIndex, EventWeight_);
-          if (globalIas_ > 0.3) {
+          if (globalIas_ > 0.25) {
             tuple->PostPreS_CluProbQVsPixelLayer_highIas->Fill(probQ, pixLayerIndex, EventWeight_);
             tuple->PostPreS_CluProbXYVsPixelLayer_highIas->Fill(probXY, pixLayerIndex, EventWeight_);
             tuple->PostPreS_CluSizeVsPixelLayer_highIas->Fill(clustSize, pixLayerIndex, EventWeight_);
@@ -4214,9 +4272,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           }
           // 0.31623 [Bichsel's smallest entry]  && genGammaBeta > 0.31623
           // (globalIas_ > 0.02 && globalIas_ < 0.03)
-          if ((!isSignal && globalIas_ > 0.3) || debug_ > 4) {
+          if ((!isSignal && globalIas_ > 0.25) || debug_ > 4) {
             if (!headerPixPrintedAlready) {
-              std::cout << std::endl << "        | $G_{i}^{strips}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
+              std::cout << std::endl << "        | $F_{i}^{pixels}$ | Layer | gammaBeta | flipped | cotAlpha | cotBeta | momentum | sizeX | sizeY";
               std::cout << " | Norm. Charge | edge | bad | double | cProbXY | cProbQ | " << std::endl;
               std::cout << "        |--- | ---| " << std::endl;
 
@@ -4232,7 +4290,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
 
       // the strip part
-      } else if (passPre && trigInfo_ > 0 && detid.subdetId() >= 3) {
+      } else if (passPre && trigInfo_ > 0 && detid.subdetId() >= 3 && doPostPreSplots_) {
           // Taking the strips cluster
         auto const* stripsCluster = dedxHits->stripCluster(i);
         std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
@@ -4248,14 +4306,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
         if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidWheel(detid))) + 10;
         if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecWheel(detid))) + 13;
-        
-        if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
-          tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
-        } else if (!isData && genGammaBeta > 0.6 ) {
-          tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+        if (doPostPreSplots_) {
+          if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6 ) {
+            tuple->PostPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          } else if (!isData && genGammaBeta > 0.6 ) {
+            tuple->PostPreS_CluNormChargeVsStripLayer_higherBetaGamma->Fill(stripNormCharge, stripLayerIndex, EventWeight_);
+          }
         }
         // || (globalIas_ > 0.025 && globalIas_ < 0.03)
-        if  (globalIas_ > 0.3 && debug_ > 4) {
+        if  ((globalIas_ > 0.25 && debug_ > 4) || debug_ > 8) {
           unsigned int isGlued = (tTopo->glued(detid) > 0) ? 1 : 0;
           if (!headerStripsPrintedAlready) {
             std::cout << std::endl <<  "        | $G_{i}^{strips}$  | Layer | gammaBeta | eta | Norm. Charge | size | stereo | glued | cleaned | " << std::endl;
@@ -4281,7 +4340,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       } // end of the strip part
     } // end the loop on the rechits
-    }
+    } // end condition on passPre
     
     //Find the number of tracks passing selection for TOF<1 that will be used to check the background prediction
     //float Mass = -1;
@@ -4567,13 +4626,13 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   }
   
   // Event level information, after choosing the best candidate track
-  if (trigInfo_ > 0) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
+  if (trigInfo_ > 0 && doBefPreSplots_) tuple->BefPreS_NumCandidates->Fill(candidate_count, EventWeight_);
   if (trigInfo_ > 0) {
-    tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
+    if (doPostPreSplots_) tuple->PostPreS_NumCandidates->Fill(postPreS_candidate_count, EventWeight_);
     tuple->EventCutFlow->Fill(2.0, EventWeight_);
   }
   
-  if (trigInfo_ > 0) {
+  if (trigInfo_ > 0 && doPostPreSplots_) {
     if (postPreS_candidate_count == 0) {
       tuple->PostS_MetOverHt_Cand0->Fill(RecoPFMET/pfJetHT, EventWeight_);
     } else if (postPreS_candidate_count == 1) {
@@ -4582,22 +4641,23 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_MetOverHt_Cand2->Fill(RecoPFMET/pfJetHT, EventWeight_);
     }
   }
-  
-  if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
-    if (postPreS_candidate_count == 0) {
-      tuple->PostS_TriggerMETallVsMetOverHt_Cand0->Fill(0.,RecoPFMET/pfJetHT);
-    } else if (postPreS_candidate_count == 1) {
-      tuple->PostS_TriggerMETallVsMetOverHt_Cand1->Fill(0.,RecoPFMET/pfJetHT);
-    } else if (postPreS_candidate_count == 2) {
-      tuple->PostS_TriggerMETallVsMetOverHt_Cand2->Fill(0.,RecoPFMET/pfJetHT);
-    }
-  } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
-    if (postPreS_candidate_count == 0) {
-      tuple->PostS_TriggerMETallVsMetOverHt_Cand0->Fill(1.,RecoPFMET/pfJetHT);
-    } else if (postPreS_candidate_count == 1) {
-      tuple->PostS_TriggerMETallVsMetOverHt_Cand1->Fill(1.,RecoPFMET/pfJetHT);
-    } else if (postPreS_candidate_count == 2) {
-      tuple->PostS_TriggerMETallVsMetOverHt_Cand2->Fill(1.,RecoPFMET/pfJetHT);
+  if (doPostPreSplots_) {
+    if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+      if (postPreS_candidate_count == 0) {
+        tuple->PostS_TriggerMETallVsMetOverHt_Cand0->Fill(0.,RecoPFMET/pfJetHT);
+      } else if (postPreS_candidate_count == 1) {
+        tuple->PostS_TriggerMETallVsMetOverHt_Cand1->Fill(0.,RecoPFMET/pfJetHT);
+      } else if (postPreS_candidate_count == 2) {
+        tuple->PostS_TriggerMETallVsMetOverHt_Cand2->Fill(0.,RecoPFMET/pfJetHT);
+      }
+    } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+      if (postPreS_candidate_count == 0) {
+        tuple->PostS_TriggerMETallVsMetOverHt_Cand0->Fill(1.,RecoPFMET/pfJetHT);
+      } else if (postPreS_candidate_count == 1) {
+        tuple->PostS_TriggerMETallVsMetOverHt_Cand1->Fill(1.,RecoPFMET/pfJetHT);
+      } else if (postPreS_candidate_count == 2) {
+        tuple->PostS_TriggerMETallVsMetOverHt_Cand2->Fill(1.,RecoPFMET/pfJetHT);
+      }
     }
   }
   
@@ -4654,7 +4714,9 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->EventCutFlow->Fill(18.0, EventWeight_);
       } if (bestCandidateTrack->pt() > 200) {
         tuple->EventCutFlow->Fill(19.0, EventWeight_);
-      }
+      } if (bestCandidateTrack->pt() > 400) {
+      tuple->EventCutFlow->Fill(20.0, EventWeight_);
+    }
     }
     
     float shiftForPtValue = shiftForPt(bestCandidateTrack->pt(),bestCandidateTrack->eta(),bestCandidateTrack->phi(),bestCandidateTrack->charge());
@@ -4666,17 +4728,27 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
     tuple->PostS_FiStrips->Fill(bestCandidateFiStrips, EventWeight_);
+    tuple->PostS_FiStripsLog->Fill(bestCandidateFiStripsLog, EventWeight_);
+    tuple->PostS_IasVsFiStrips->Fill(bestCandidateIas, bestCandidateFiStrips, EventWeight_);
     tuple->PostS_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
     tuple->PostS_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
     tuple->PostS_ProbQNoL1VsFiStrips->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, EventWeight_);
     tuple->PostS_ProbQNoL1VsIasVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_);
     
     // Systematics plots for pT rescaling
     if (rescaledPtUp > globalMinPt_) {
       tuple->PostS_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
+      tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_);
+      tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
+      tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
     }
     if (rescaledPtDown > globalMinPt_) {
       tuple->PostS_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
+      tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_);
+      tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
+      tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
     }
     
     // Systematics plots for Gi rescaling
@@ -4686,15 +4758,35 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
     tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
     
+    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp), bestCandidateTrack->pt(),  EventWeight_);
+    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown, bestCandidateTrack->pt(),  EventWeight_);
+    
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStrips*theGiSystFactorUp), bestCandidateTrack->pt(),  EventWeight_);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips*theGiSystFactorDown, bestCandidateTrack->pt(),  EventWeight_);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStripsLog*theGiSystFactorUp), bestCandidateTrack->pt(),  EventWeight_);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog*theGiSystFactorDown, bestCandidateTrack->pt(),  EventWeight_);
+    
     // Systematics plots for PU rescaling
     tuple->PostS_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
     tuple->PostS_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
+    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
+    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
     
     // Systematics plots for Fi rescaling
-    //float theFiSystFactorUp = 1.005;
-    //float theFiSystFactorDown = 0.995;
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+    float theFiSystFactorUp = 1.005;
+    float theFiSystFactorDown = 0.995;
+    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
+    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
     
     // Systematics plots for trigger rescaling
     float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
@@ -4702,17 +4794,24 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
     tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
     tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
+    tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * triggerSystFactorUp);
+    tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_  * triggerSystFactorDown);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * triggerSystFactorUp);
+    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_  * triggerSystFactorDown);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * triggerSystFactorUp);
+    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_  * triggerSystFactorDown);
     
-    if (bestCandidateTrack->pt() >= pT_cut && bestCandidateTrack->pt() < 100) {
+    // Repeat for several SRs with higher pT cut
+    if (bestCandidateTrack->pt() >= 100) {
       tuple->PostS_SR1_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR1_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= pT_cut && bestCandidateTrack->pt() < 100) {
+      if (rescaledPtUp >= 100) {
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtDown >= pT_cut && bestCandidateTrack->pt() < 100) {
+      if (rescaledPtDown >= 100) {
         tuple->PostS_SR1_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -4725,24 +4824,25 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR1_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
         // Systematics plots for Fi rescaling
-      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+      tuple->PostS_SR1_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
       
         // Systematics plots for trigger rescaling
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
-    // Repeat for several SRs
-    if (bestCandidateTrack->pt() >= 100 && bestCandidateTrack->pt() < 200) {
+    // now for even higher pT
+    if (bestCandidateTrack->pt() >= 200) {
       tuple->PostS_SR2_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR2_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
+      tuple->PostS_SR2_ProbQNoL1VsIasVsMass->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateMass, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= 100 && rescaledPtUp < 200) {
+      if (rescaledPtUp >= 200) {
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtUp >= 100 && rescaledPtUp < 200) {
+      if (rescaledPtUp >= 200) {
         tuple->PostS_SR2_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -4755,23 +4855,24 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
       // Systematics plots for Fi rescaling
-      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+      tuple->PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
       
       // Systematics plots for trigger rescaling
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR2_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
-    if (bestCandidateTrack->pt() >= 200) {
+      // now for even higher pT
+    if (bestCandidateTrack->pt() >= 400) {
       tuple->PostS_SR3_Ias->Fill(bestCandidateIas, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1->Fill(1 - bestCandidateProbQNoL1, EventWeight_);
       tuple->PostS_SR3_ProbQNoL1VsIas->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, EventWeight_);
       
         // Systematics plots for pT rescaling
-      if (rescaledPtUp >= 200) {
+      if (rescaledPtUp >= 400) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
-      if (rescaledPtUp >= 200) {
+      if (rescaledPtUp >= 400) {
         tuple->PostS_SR3_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
       }
       
@@ -4784,8 +4885,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR3_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
       
       // Systematics plots for Fi rescaling
-      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.,(1 - bestCandidateProbQNoL1)*1.005), bestCandidateIas,  EventWeight_);
-      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1)*0.995, bestCandidateIas,  EventWeight_);
+      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+      tuple->PostS_SR3_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
       
       // Systematics plots for trigger rescaling
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
@@ -5018,19 +5119,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   // Trigger type after preSelection at the event level
   // I need these two lines because the OR of MET/Muon will be overwriting the trigInfo_
   // so we never get 1 or 2
-  if (postPreS_candidate_count > 0) {
-    if (muTrig) {
-      tuple->PostPreS_TriggerType->Fill(1., EventWeight_);
+  if (doPostPreSplots_) {
+    if (postPreS_candidate_count > 0) {
+        if (!metTrig && !muTrig) { tuple->PostPreS_TriggerType->Fill(0., EventWeight_); }
+        if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(1., EventWeight_); }
+        if (metTrig) { tuple->PostPreS_TriggerType->Fill(2., EventWeight_); }
+        if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(3., EventWeight_); }
+        if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(4., EventWeight_); }
     }
-    if (metTrig) {
-      tuple->PostPreS_TriggerType->Fill(2., EventWeight_);
-    }
-    tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
   }
-
-  // Trigger type after preSelection at the event level
-  tuple->PostPreS_TriggerType->Fill(trigInfo_, EventWeight_);
-
 
   // Calibration information
   // loop on the tracks
@@ -5041,23 +5138,25 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
 
       // selection of the tracks
 
-      bool passedTrackCutsArray[8];
+      bool passedTrackCutsArray[10];
       std::fill(std::begin(passedTrackCutsArray), std::end(passedTrackCutsArray),true);
 
+      // No cut, i.e. events after trigger
+      passedTrackCutsArray[0]  = (trigInfo_ > 0) ? true : false;
       // Check if eta is inside the max eta cut for detector homogeneity
-      passedTrackCutsArray[0]  = (fabs(generalTrack->eta()) < globalMaxEta_) ? true : false;
+      passedTrackCutsArray[1]  = (fabs(generalTrack->eta()) < globalMaxEta_) ? true : false;
       // Select only high purity tracks to ensure good quality tracks
-      passedTrackCutsArray[1]  = (generalTrack->quality(reco::TrackBase::highPurity)) ? true : false;
+      passedTrackCutsArray[2]  = (generalTrack->quality(reco::TrackBase::highPurity)) ? true : false;
       // Cut on the chi2 / ndof to ensure good quality tracks
-      passedTrackCutsArray[2] = ((generalTrack->chi2() / generalTrack->ndof()) < globalMaxChi2_) ? true : false;
+      passedTrackCutsArray[3] = ((generalTrack->chi2() / generalTrack->ndof()) < globalMaxChi2_) ? true : false;
       // Check the min fraction of valid hits to ensure good stats on the hits
-      passedTrackCutsArray[3]  = (generalTrack->validFraction() > globalMinFOVH_) ? true : false;
+      passedTrackCutsArray[4]  = (generalTrack->validFraction() > globalMinFOVH_) ? true : false;
       // Cut on the impact parameter to ensure the track is coming from the PV
       // for typeMode_ 3 (TOF only) dz and dxy is supposed to come from the beamspot
       float dzForCalib = generalTrack->dz(highestSumPt2Vertex.position());
       float dxyForCalib = generalTrack->dxy(highestSumPt2Vertex.position());
-      passedTrackCutsArray[4] = (fabs(dzForCalib) < 0.5) ? true : false;
-      passedTrackCutsArray[5] = (fabs(dxyForCalib) < 0.5)  ? true : false;
+      passedTrackCutsArray[5] = (fabs(dzForCalib) < 0.5) ? true : false;
+      passedTrackCutsArray[6] = (fabs(dxyForCalib) < 0.5)  ? true : false;
 
       if (!passPreselection(passedTrackCutsArray, false)) continue;
 
@@ -5097,17 +5196,138 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       reco::DeDxData* dedxIh_StripOnly = dedxIh_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_Tmp : nullptr;
 
 
-      unsigned int nonL1PixHits = dedxIh_noL1_Tmp.numberOfMeasurements() - dedxIh_StripOnly_Tmp.numberOfMeasurements() ;
-      unsigned int numDeDxHits = dedxIh_noL1_Tmp.numberOfMeasurements() ;
 
-      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
-      passedTrackCutsArray[6]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
-      // Cut for the number of dEdx hits to ensure good stats on the hits
-      passedTrackCutsArray[7]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
-      if (!passPreselection(passedTrackCutsArray, false)) continue;
+      // F^pix at track level
+      /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+      int numRecHitsQ = 0, numRecHitsXY = 0;
+      int numRecHitsXYNoL1 = 0;
+      float probQonTrackWMulti = 1;
+      float probXYonTrackWMulti = 1;
+      float probXYonTrackWMultiNoL1 = 1;
+      */
+      int numRecHitsQNoL1 = 0;
+      float probQonTrackWMultiNoL1 = 1;
+      unsigned int nonL1PixHits = 0;
+    
+      for (unsigned int i = 0; i < dedxHits->size(); i++) {
+
+        DetId detid(dedxHits->detId(i));
+        if (detid.subdetId() < 3) {
+        // Calculate probQ and probXY for this pixel rechit
+        // Taking the pixel cluster
+        auto const* pixelCluster =  dedxHits->pixelCluster(i);
+        if (pixelCluster == nullptr)  continue;
+        // Check on which geometry unit the hit is
+        const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+        // Get the local vector for the track direction
+        LocalVector lv = geomDet.toLocal(GlobalVector(generalTrack->px(), generalTrack->py(), generalTrack->pz()));
+        // Re-run the CPE on this cluster with the lv above
+        // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
+        // from this we pick the 2nd, the QualWordType
+        auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(i), lv, generalTrack->charge())));
+        // extract probQ and probXY from this
+        float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+        float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+
+        // To measure how often the CPE fails
+        bool cpeHasFailed = false;
+        if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+          cpeHasFailed = true;
+        }
+        if (cpeHasFailed) continue;
+
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+
+        bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+        bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+        bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+
+        /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+        if (!specInCPE && probQ < 0.8) {
+          numRecHitsQ++;
+          // Calculate alpha term needed for the combination
+          probQonTrackWMulti *= probQ;
+        }
+
+        if (!specInCPE && probQ < 0.8 && probXY > 0.f) {
+          numRecHitsXY++;
+          // Calculate alpha term needed for the combination
+          probXYonTrackWMulti *= probXY;
+        }
+       */
+
+        int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+        // Have a separate variable that excludes Layer 1
+        // Layer 1 was very noisy in 2017/2018
+        bool conditionForPhase0 = (numLayers == 3);
+        bool conditionForPhase1 = ((numLayers == 4) && (( detid.subdetId() == PixelSubdetector::PixelEndcap) || ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) != 1))));
+        if (conditionForPhase0 || conditionForPhase1) {
+          nonL1PixHits++;
+          float probQNoL1 = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+          float probXYNoL1 = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+
+          if (probQNoL1 <= 0.0 || probQNoL1 >= 1.f) probQNoL1 = 1.f;
+          if (probXYNoL1 <= 0.0 || probXYNoL1 >= 1.f) probXYNoL1 = 0.f;
+
+          if (!specInCPE && probQ < 0.8) {
+            numRecHitsQNoL1++;
+            // Calculate alpha term needed for the combination
+            probQonTrackWMultiNoL1 *= probQNoL1;
+          }
+          /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+          if (!specInCPE && probQ < 0.8 && probXYNoL1 > 0.f) {
+            numRecHitsXYNoL1++;
+            // Calculate alpha term needed for the combination
+            probXYonTrackWMultiNoL1 *= probXYNoL1;
+          }
+          */
+        } // end if on the noL1 pixel side
+      } // end if on the pixel side
+      }// end loop on rechits on the given track
+    
+      // Combine probQ-s into HSCP candidate (track) level quantity
+      /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
+      float probQonTrack = -1.f;
+      float probXYonTrack = -1.f;
+      float probXYonTrackNoL1 = -1.f;
+      probQonTrack = combineProbs(probQonTrackWMulti, numRecHitsQ);
+      probXYonTrack = combineProbs(probXYonTrackWMulti, numRecHitsXY);
+      probXYonTrackNoL1 = combineProbs(probXYonTrackWMultiNoL1, numRecHitsXYNoL1);
+      */
+
+    
+      float probQonTrackNoL1 = -1.f;
+      probQonTrackNoL1 = combineProbs(probQonTrackWMultiNoL1, numRecHitsQNoL1);
 
       float ih0_noL1 = (dedxIh_noL1) ?  dedxIh_noL1->dEdx() : 0.0;
       float ih0_strip = (dedxIh_StripOnly) ?  dedxIh_StripOnly->dEdx() : 0.0;
+    
+      
+      // nonL1PixHits now well computed above
+      // unsigned int nonL1PixHits = dedxIh_noL1_Tmp.numberOfMeasurements() - dedxIh_StripOnly_Tmp.numberOfMeasurements() ;
+      unsigned int numDeDxHits = dedxIh_noL1_Tmp.numberOfMeasurements() ;
+
+      // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
+      passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHits >= globalMinNOPH_) ? true : false;
+      // Cut for the number of dEdx hits to ensure good stats on the hits
+      passedTrackCutsArray[8]  = (numDeDxHits >= globalMinNOM_)  ? true : false;
+      if (!passPreselection(passedTrackCutsArray, false)) continue;
+
+      if (generalTrack->p() < 50) {
+       if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+        tuple->K_and_C_Ih_noL1_VsP_noFcut1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_noL1_VsP_noFcut2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_noFcut1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_noFcut2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+       }
+      }
+
+      // Cut away background events based on the probQ
+      passedTrackCutsArray[9] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
+      if (!passPreselection(passedTrackCutsArray, false)) continue;
+
 
       if (generalTrack->p() < 50) {
         tuple->K_and_C_Ih_noL1_VsP_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*EventWeight_);
@@ -5137,6 +5357,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
         tuple->K_and_C_Ih_strip_VsP_1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
         tuple->K_and_C_Ih_strip_VsP_2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*EventWeight_);
+
+        // some kinematical plots
+        float tk_Mass =  GetMass(generalTrack->p(), ih0_noL1, dEdxK_, dEdxC_);
+        if (ih0_noL1> 5.5 && generalTrack->p()<5) {
+          tuple->K_and_C_Kin_Mass->Fill(tk_Mass, preScaleForDeDx*EventWeight_);
+          tuple->K_and_C_Kin_p->Fill(generalTrack->p(), preScaleForDeDx*EventWeight_);
+          tuple->K_and_C_Kin_phi->Fill(generalTrack->phi(), preScaleForDeDx*EventWeight_);
+          tuple->K_and_C_Kin_eta->Fill(generalTrack->eta(), preScaleForDeDx*EventWeight_);
+        }
        }
       }
 
@@ -5658,6 +5887,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked<std::string>("SampleName","BaseName")->setComment("This can be used to distinguish different signal models");
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
   desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
+  desc.addUntracked("DoBefTrigPlots",true)->setComment("Set to true if you want before trigger histos created");
+  desc.addUntracked("DoBefPreSplots",true)->setComment("Set to true if you want before preselection histos created");
+  desc.addUntracked("DoPostPreSplots",true)->setComment("Set to true if you want post preselection histos created");
   desc.addUntracked("PtHistoUpperBound",4000.0)->setComment("A");
   desc.addUntracked("PHistoUpperBound",10000.0)->setComment("A");
   desc.addUntracked("MassHistoUpperBound",4000.0)->setComment("A");
@@ -5680,19 +5912,19 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
-  desc.addUntracked("DeDxK",2.27)->setComment("A");
-  desc.addUntracked("DeDxC",3.16)->setComment("A");
+  desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
+  desc.addUntracked("DeDxC",3.17)->setComment("C constant, really controlled by the config for each era");
   desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
   desc.addUntracked("SaveGenTree",0)->setComment("A");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
-    ->setComment("globalIas_ vs Pt templates in eta binning");
+    ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector");
 
 
 
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
   desc.add<std::string>("PixelCPE","PixelCPETemplateReco")
-    ->setComment("CPE used in the pixel reco, PixelCPEClusterRepair is the best available so far, template only is PixelCPETemplateReco ");
+    ->setComment("CPE used in the pixel reco, PixelCPEClusterRepair is the best available so far, template only is PixelCPETemplateReco");
   desc.addUntracked("DebugLevel",0)->setComment("Level of the debugging print statements ");
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
@@ -5700,16 +5932,17 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
-  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
+//  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
+  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
   ->setComment("Add the list of muon triggers");
 //  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
-    // Possibly used in a next version of the analysis
+//     Possibly used in a next version of the analysis
      desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
     ->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
-  // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
-  desc.addUntracked("GlobalMaxPt",2500.0)->setComment("Cut on pT at PRE-SELECTION");
+  // Choice of <2500.0 
+  desc.addUntracked("GlobalMaxPt",2500.0)->setComment("Cut on max pT at PRE-SELECTION"); // not used. Only declared for test done by Dylan  
   // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   // Excluding the L1 in BPix because of hardware problems, require >=2 hits for track-probQ
@@ -5746,15 +5979,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("GlobalMinTOF",1.0)->setComment("Cut on the min time-of-flight");
 
   //Templates related parameters
-
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
-
-  desc.addUntracked("CreateAndRunGitemplates",true)->setComment("Boolean to decide if we create PU dependent templates while using other template for analysis");
-
-
-  desc.addUntracked("NbPileUpBins",5)->setComment("Number of Pile-Up bins for IAS templates");
-  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile-Up Bins");
+  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
+  desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
+  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("choice of Pile up bins");
 
  descriptions.add("HSCParticleAnalyzer",desc);
 }
@@ -6196,7 +6425,8 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     return false;
   }
 
-  if (tuple) {
+  if (tuple && false) {
+    // not running this for a bit, they are not used currently, and being 3D histos they are quite big
     if (genBeta >= 0) {
       tuple->PostS_CutIdVsBeta_postPtAndIasAndTOF->Fill(CutIndex, genBeta, EventWeight_);
     }

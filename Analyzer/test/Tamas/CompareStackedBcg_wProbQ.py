@@ -22,7 +22,7 @@ BackgroundSamples = [
 "crab_Analysis_2018_AllTTbar_wProbQ_CodeV"+codeVersion+"_v1.root",
 ]
 
-SingleMuon = ROOT.TFile.Open("crab_Analysis_SingleMuon_Run2018_wProbQ_CodeV"+codeVersion+"_v1.root")
+SingleMuon = ROOT.TFile.Open("crab_Analysis_SingleMuon_Run2018C_wProbQ_CodeV"+codeVersion+"_v1.root")
 
 SelectedSignalSamples1 = ROOT.TFile.Open("crab_Analysis_2018_HSCPgluino_M-1800_wProbQ_CodeV"+codeVersion+"_v1.root")
 SelectedSignalSamples2 = ROOT.TFile.Open("crab_Analysis_2018_HSCPgluino_M-2400_wProbQ_CodeV"+codeVersion+"_v1.root")

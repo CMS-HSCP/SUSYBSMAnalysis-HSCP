@@ -38,7 +38,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_mc_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 4000
-config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v2.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v4.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'
@@ -52,8 +52,8 @@ config.Data.unitsPerJob = 75
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 config.Data.ignoreLocality = True
-config.Data.runRange = '0'
 config.Data.publication = False
+config.Data.partialDataset = True
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_*', 'T2_UK_London_IC']
