@@ -139,6 +139,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       numDzRegions_(iConfig.getUntrackedParameter<int>("DzRegions")),
       globalMaxEta_(iConfig.getUntrackedParameter<double>("GlobalMaxEta")),
       globalMinPt_(iConfig.getUntrackedParameter<double>("GlobalMinPt")),
+      globalMaxPt_(iConfig.getUntrackedParameter<double>("GlobalMaxPt")),
       globalMinNOPH_(iConfig.getUntrackedParameter<int>("GlobalMinNOPH")),
       globalMinFOVH_(iConfig.getUntrackedParameter<double>("GlobalMinFOVH")),
       globalMinNOM_(iConfig.getUntrackedParameter<int>("GlobalMinNOM")),
@@ -220,7 +221,7 @@ void Analyzer::beginJob() {
   // create histograms & trees
   tuple = new Tuple();
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
-
+  
   tuple_maker->initializeTuple(tuple,
                                dir,
                                saveTree_,
@@ -245,13 +246,17 @@ void Analyzer::beginJob() {
                                numDzRegions_,
                                globalMinPt_,
                                globalMinTOF_);
-
+  
   tuple_maker->initializeRegions(tuple,
                                  dir,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
                                  reg_massbins_);
+
+
+
+
 
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
@@ -1517,8 +1522,17 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   unsigned int postPreS_candidate_count = 0;
   int bestCandidateIndex = -1;
   float maxIhSoFar = -1.;
-  float bestCandidateIas = -1.;
   float bestCandidateMass = -1.;
+  float bestCandidateMass_Kup1 = -1.;
+  float bestCandidateMass_Kdown1 = -1.;
+  float bestCandidateMass_Cup1 = -1.;
+  float bestCandidateMass_Cdown1 = -1.;
+  float bestCandidateMass_Kup2 = -1.;
+  float bestCandidateMass_Kdown2 = -1.;
+  float bestCandidateMass_Cup2 = -1.;
+  float bestCandidateMass_Cdown2 = -1.;
+  float bestCandidatePt = -1.;
+  float bestCandidateIas = -1.;
   float bestCandidateFiStrips = -1.;
   float bestCandidateFiStripsLog = -1.;
   float bestCandidateProbQNoL1 = -1.;
@@ -2736,6 +2750,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         }
         float pt = genTrackRef->pt();
         float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
+        //drForMiniIso = 0.3;  // test by Dylan on genTrackIsoSumPt (fixed size cone)
         if (dr<drForMiniIso) {
           track_genTrackMiniIsoSumPt+=pt;
         }
@@ -2835,6 +2850,15 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float IsoTK_SumEt = hscpIso.Get_TK_SumEt();
 
     float Mass =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_) : -1;
+    float Mass_Kup1 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_+0.05, dEdxC_) : -1;
+    float Mass_Kdown1 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_-0.05, dEdxC_) : -1;
+    float Mass_Cup1 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_+0.02) : -1;
+    float Mass_Cdown1 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_-0.02) : -1;
+    float Mass_Kup2 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_+0.1, dEdxC_) : -1;
+    float Mass_Kdown2 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_-0.1, dEdxC_) : -1;
+    float Mass_Cup2 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_+0.03) : -1;
+    float Mass_Cdown2 =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_-0.03) : -1;
+
 
     // Find distance to nearest segment on opposite side of detector
     float minPhi = 0.0, minEta = 0.0;
@@ -3072,7 +3096,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     passedCutsArray[0]  = (trigInfo_ > 0) ? true : false;
     // Cut on transverse momentum
     // Single muon trigger threshold is 50 GeV
-    passedCutsArray[1]  = (track->pt() > globalMinPt_) ? true : false;
+    passedCutsArray[1]  = (track->pt() > globalMinPt_)? true : false;
+    //passedCutsArray[1]  = ((track->pt() > globalMinPt_) && (track->pt() < globalMaxPt_))? true : false;  // test done by Dylan for the mass spectrum method
     // Check if eta is inside the max eta cut for detector homogeneity
     passedCutsArray[2]  = (fabs(track->eta()) < globalMaxEta_) ? true : false;
     // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
@@ -3099,6 +3124,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
     // Cut on the uncertainty of the pt measurement, TODO the cut value should be made a global variable
     passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008)) ? true : false;
+    //passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0)) ? true : false; // test done by Dylan for the mass spectrum method
+
     // Cut away background events based on the probQ
     passedCutsArray[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
     //  passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / track->pt()) < pTerr_over_pT_etaBin(track->pt(), track->eta())) ? true : false;
@@ -4024,8 +4051,17 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       if (globalIh_ > maxIhSoFar) {
         maxIhSoFar = globalIh_;
         bestCandidateIndex = candidate_count;
-        bestCandidateIas = globalIas_;
         bestCandidateMass = Mass;
+        bestCandidateMass_Kup1 = Mass_Kup1;
+        bestCandidateMass_Kdown1 = Mass_Kdown1;
+        bestCandidateMass_Cup1 = Mass_Cup1;
+        bestCandidateMass_Cdown1 = Mass_Cdown1;
+        bestCandidateMass_Kup2 = Mass_Kup2;
+        bestCandidateMass_Kdown2 = Mass_Kdown2;
+        bestCandidateMass_Cup2 = Mass_Cup2;
+        bestCandidateMass_Cdown2 = Mass_Cdown2;
+        bestCandidatePt = track->pt();
+        bestCandidateIas = globalIas_;
         bestCandidateFiStrips = globalFiStrips_;
         bestCandidateFiStripsLog = -log(1-globalFiStrips_);
         bestCandidateProbQNoL1 = probQonTrackNoL1;
@@ -4499,7 +4535,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  pT_cut,
                                  Ias_quantiles,
                                  track->eta(),
-                                 track->p(),
+                                 10000./track->p(),
                                  track->pt(),
                                  track->ptError(),
                                  dedxMObj ? dedxMObj->dEdx() : -1,
@@ -4822,7 +4858,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     
     float rescaledPtUp = bestCandidateTrack->pt()*(1+shiftForPtValue);
     float rescaledPtDown = bestCandidateTrack->pt()*(1-shiftForPtValue);
-    
+
+
     tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
     tuple->PostS_FiStrips->Fill(bestCandidateFiStrips, EventWeight_);
     tuple->PostS_FiStripsLog->Fill(bestCandidateFiStripsLog, EventWeight_);
@@ -4991,6 +5028,228 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
       tuple->PostS_SR3_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     }
+
+
+    // Systematics on mass spectrum 
+
+    //VR1
+    if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[5] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_VR1_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling - scenario 1 & 2 
+        tuple->PostS_VR1_Mass_K_up1->Fill(bestCandidateMass_Kup1, EventWeight_);
+        tuple->PostS_VR1_Mass_K_down1->Fill(bestCandidateMass_Kdown1, EventWeight_);
+        tuple->PostS_VR1_Mass_C_up1->Fill(bestCandidateMass_Cup1, EventWeight_);
+        tuple->PostS_VR1_Mass_C_down1->Fill(bestCandidateMass_Cdown1, EventWeight_);
+        
+        tuple->PostS_VR1_Mass_K_up2->Fill(bestCandidateMass_Kup2, EventWeight_);
+        tuple->PostS_VR1_Mass_K_down2->Fill(bestCandidateMass_Kdown2, EventWeight_);
+        tuple->PostS_VR1_Mass_C_up2->Fill(bestCandidateMass_Cup2, EventWeight_);
+        tuple->PostS_VR1_Mass_C_down2->Fill(bestCandidateMass_Cdown2, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_VR1_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_VR1_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_VR1_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_VR1_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_VR1_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_VR1_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+
+    //VR2
+    if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[6] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_VR2_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling - scenario 1 & 2 
+        tuple->PostS_VR2_Mass_K_up1->Fill(bestCandidateMass_Kup1, EventWeight_);
+        tuple->PostS_VR2_Mass_K_down1->Fill(bestCandidateMass_Kdown1, EventWeight_);
+        tuple->PostS_VR2_Mass_C_up1->Fill(bestCandidateMass_Cup1, EventWeight_);
+        tuple->PostS_VR2_Mass_C_down1->Fill(bestCandidateMass_Cdown1, EventWeight_);
+        
+        tuple->PostS_VR2_Mass_K_up2->Fill(bestCandidateMass_Kup2, EventWeight_);
+        tuple->PostS_VR2_Mass_K_down2->Fill(bestCandidateMass_Kdown2, EventWeight_);
+        tuple->PostS_VR2_Mass_C_up2->Fill(bestCandidateMass_Cup2, EventWeight_);
+        tuple->PostS_VR2_Mass_C_down2->Fill(bestCandidateMass_Cdown2, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_VR2_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_VR2_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_VR2_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_VR2_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_VR2_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_VR2_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+        
+    //VR3
+    if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[7] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_VR3_Mass->Fill(bestCandidateMass, EventWeight_);
+        
+        // K&C rescaling - scenario 1 & 2 
+        tuple->PostS_VR3_Mass_K_up1->Fill(bestCandidateMass_Kup1, EventWeight_);
+        tuple->PostS_VR3_Mass_K_down1->Fill(bestCandidateMass_Kdown1, EventWeight_);
+        tuple->PostS_VR3_Mass_C_up1->Fill(bestCandidateMass_Cup1, EventWeight_);
+        tuple->PostS_VR3_Mass_C_down1->Fill(bestCandidateMass_Cdown1, EventWeight_);
+        
+        tuple->PostS_VR3_Mass_K_up2->Fill(bestCandidateMass_Kup2, EventWeight_);
+        tuple->PostS_VR3_Mass_K_down2->Fill(bestCandidateMass_Kdown2, EventWeight_);
+        tuple->PostS_VR3_Mass_C_up2->Fill(bestCandidateMass_Cup2, EventWeight_);
+        tuple->PostS_VR3_Mass_C_down2->Fill(bestCandidateMass_Cdown2, EventWeight_);
+
+        // PU systematics
+        tuple->PostS_VR3_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_VR3_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_VR3_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_VR3_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_VR3_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_VR3_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+    
+    //SR1
+    if (bestCandidateIas>Ias_quantiles[5] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_SR1_Mass->Fill(bestCandidateMass, EventWeight_);
+        
+        // K&C rescaling - scenario 1 & 2 
+        tuple->PostS_SR1_Mass_K_up1->Fill(bestCandidateMass_Kup1, EventWeight_);
+        tuple->PostS_SR1_Mass_K_down1->Fill(bestCandidateMass_Kdown1, EventWeight_);
+        tuple->PostS_SR1_Mass_C_up1->Fill(bestCandidateMass_Cup1, EventWeight_);
+        tuple->PostS_SR1_Mass_C_down1->Fill(bestCandidateMass_Cdown1, EventWeight_);
+        
+        tuple->PostS_SR1_Mass_K_up2->Fill(bestCandidateMass_Kup2, EventWeight_);
+        tuple->PostS_SR1_Mass_K_down2->Fill(bestCandidateMass_Kdown2, EventWeight_);
+        tuple->PostS_SR1_Mass_C_up2->Fill(bestCandidateMass_Cup2, EventWeight_);
+        tuple->PostS_SR1_Mass_C_down2->Fill(bestCandidateMass_Cdown2, EventWeight_);
+
+        // PU systematics
+        tuple->PostS_SR1_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_SR1_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_SR1_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_SR1_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_SR1_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_SR1_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+
+    //SR2
+    if (bestCandidateIas>Ias_quantiles[6] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_SR2_Mass->Fill(bestCandidateMass, EventWeight_);
+        
+        // K&C rescaling - scenario 1 & 2 
+        tuple->PostS_SR2_Mass_K_up1->Fill(bestCandidateMass_Kup1, EventWeight_);
+        tuple->PostS_SR2_Mass_K_down1->Fill(bestCandidateMass_Kdown1, EventWeight_);
+        tuple->PostS_SR2_Mass_C_up1->Fill(bestCandidateMass_Cup1, EventWeight_);
+        tuple->PostS_SR2_Mass_C_down1->Fill(bestCandidateMass_Cdown1, EventWeight_);
+        
+        tuple->PostS_SR2_Mass_K_up2->Fill(bestCandidateMass_Kup2, EventWeight_);
+        tuple->PostS_SR2_Mass_K_down2->Fill(bestCandidateMass_Kdown2, EventWeight_);
+        tuple->PostS_SR2_Mass_C_up2->Fill(bestCandidateMass_Cup2, EventWeight_);
+        tuple->PostS_SR2_Mass_C_down2->Fill(bestCandidateMass_Cdown2, EventWeight_);
+
+        // PU systematics
+        tuple->PostS_SR2_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_SR2_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_SR2_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_SR2_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_SR2_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_SR2_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+
+    //SR3
+    if (bestCandidateIas>Ias_quantiles[7] && bestCandidatePt > pT_cut){
+        // nominal
+        tuple->PostS_SR3_Mass->Fill(bestCandidateMass, EventWeight_);
+
+        // K&C rescaling - scenario 1 & 2 
+        tuple->PostS_SR3_Mass_K_up1->Fill(bestCandidateMass_Kup1, EventWeight_);
+        tuple->PostS_SR3_Mass_K_down1->Fill(bestCandidateMass_Kdown1, EventWeight_);
+        tuple->PostS_SR3_Mass_C_up1->Fill(bestCandidateMass_Cup1, EventWeight_);
+        tuple->PostS_SR3_Mass_C_down1->Fill(bestCandidateMass_Cdown1, EventWeight_);
+        
+        tuple->PostS_SR3_Mass_K_up2->Fill(bestCandidateMass_Kup2, EventWeight_);
+        tuple->PostS_SR3_Mass_K_down2->Fill(bestCandidateMass_Kdown2, EventWeight_);
+        tuple->PostS_SR3_Mass_C_up2->Fill(bestCandidateMass_Cup2, EventWeight_);
+        tuple->PostS_SR3_Mass_C_down2->Fill(bestCandidateMass_Cdown2, EventWeight_);
+        
+        // PU systematics
+        tuple->PostS_SR3_Mass_Pileup_up->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[0]);
+        tuple->PostS_SR3_Mass_Pileup_down->Fill(bestCandidateMass, EventWeight_ * PUSystFactor_[1]);
+        
+        // ProbQ rescaling
+        if ((bestCandidateProbQNoL1 * 1.005) < globalMaxTrackProbQCut_) tuple->PostS_SR3_Mass_ProbQNoL1_up->Fill(bestCandidateMass, EventWeight_);
+        if ((bestCandidateProbQNoL1 * 0.995) < globalMaxTrackProbQCut_) tuple->PostS_SR3_Mass_ProbQNoL1_down->Fill(bestCandidateMass, EventWeight_);
+
+        // Trigger rescaling
+        tuple->PostS_SR3_Mass_Trigger_up->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorUp);
+        tuple->PostS_SR3_Mass_Trigger_down->Fill(bestCandidateMass, EventWeight_ * triggerSystFactorDown);
+
+    }
+        
+    // Ias rescaling
+    if (bestCandidatePt > pT_cut) {
+        float rescaledUpIas = bestCandidateIas*theGiSystFactorUp;
+        float rescaledDownIas = bestCandidateIas*theGiSystFactorDown;
+        cout<<"Ias: "<<bestCandidateIas<<" rescaledUp: "<<rescaledUpIas<<" rescaledDown: "<<rescaledDownIas<<" q1: "<<Ias_quantiles[1]<<" q5: "<<Ias_quantiles[5]<<" q6: "<<Ias_quantiles[6]<<" q7: "<<Ias_quantiles[7]<<endl;
+        if (rescaledUpIas > Ias_quantiles[1] && rescaledUpIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[1] && rescaledUpIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[1] && rescaledUpIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledUpIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Ias_up->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[1] && rescaledDownIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[1] && rescaledDownIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[1] && rescaledDownIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+        if (rescaledDownIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Ias_down->Fill(bestCandidateMass, EventWeight_);
+    }
+        
+
+    // pT rescaling
+    if (rescaledPtUp > globalMinPt_ && rescaledPtUp > pT_cut) {
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Pt_up->Fill(bestCandidateMass, EventWeight_);
+    }
+    if (rescaledPtDown > globalMinPt_ && rescaledPtDown > pT_cut) {
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[6]) tuple->PostS_VR2_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[7]) tuple->PostS_VR3_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+        if (bestCandidateIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Pt_down->Fill(bestCandidateMass, EventWeight_);
+    }
+
   } // end of "loop" on the single best HSCP candidate
   
   // Trigger type after preSelection at the event level
@@ -5777,10 +6036,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   ->setComment("How many different bins the prediction is split in for analysis being run, sets how many histograms are actually initialized.");
   desc.addUntracked("EtaBins",60)
   ->setComment("How many bins we use for the background prediction method in Eta -- impacts background prediction method -- histograms with the name of the form Pred_Eta in Analysis_PlotStructure.h");
-  desc.addUntracked("RegEtaBins",120)->setComment("How many bins we use for the validation of the background estimate method");
-  desc.addUntracked("RegIhBins",200)->setComment("How many bins we use for the validation of the background estimate method");
-  desc.addUntracked("RegPBins",200)->setComment("How many bins we use for the validation of the background estimate method");
-  desc.addUntracked("RegMassBins",50)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegEtaBins",80)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegIhBins",400)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegPBins",1000)->setComment("How many bins we use for the validation of the background estimate method");
+  desc.addUntracked("RegMassBins",400)->setComment("How many bins we use for the validation of the background estimate method");
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
@@ -5818,6 +6077,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
+  // Choice of <2500.0 
+  desc.addUntracked("GlobalMaxPt",2500.0)->setComment("Cut on max pT at PRE-SELECTION"); // not used. Only declared for test done by Dylan  
   // Choice of <1.0 is for detector homogeneity - use only barrel for now - not use disks
   desc.addUntracked("GlobalMaxEta",1.0)->setComment("Cut on inner tracker track eta");
   // Excluding the L1 in BPix because of hardware problems, require >=2 hits for track-probQ
@@ -6310,14 +6571,14 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     tuple->PostS_CutIdVsIas->Fill(CutIndex, globalIas_, EventWeight_);
     tuple->PostS_CutIdVsIh->Fill(CutIndex, globalIh_, EventWeight_);
 
-    tuple->PostS_CutIdVsPVsIas->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
-    tuple->PostS_CutIdVsPVsIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
-    tuple->PostS_CutIdVsPtVsIas->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
-    tuple->PostS_CutIdVsPtVsIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
+    //tuple->PostS_CutIdVsPVsIas->Fill(CutIndex, track->p(), globalIas_, EventWeight_);
+    //tuple->PostS_CutIdVsPVsIh->Fill(CutIndex, track->p(), globalIh_, EventWeight_);
+    //tuple->PostS_CutIdVsPtVsIas->Fill(CutIndex, track->pt(), globalIas_, EventWeight_);
+    //tuple->PostS_CutIdVsPtVsIh->Fill(CutIndex, track->pt(), globalIh_, EventWeight_);
     if (typeMode_ > 1) {
       tuple->PostS_CutIdVsTOF->Fill(CutIndex, MuonTOF, EventWeight_);
-      tuple->PostS_CutIdVsTOFVsIas->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
-      tuple->PostS_CutIdVsTOFVsIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
+      //tuple->PostS_CutIdVsTOFVsIas->Fill(CutIndex, MuonTOF, globalIas_, EventWeight_);
+      //tuple->PostS_CutIdVsTOFVsIh->Fill(CutIndex, MuonTOF, globalIh_, EventWeight_);
     }
   }
   return true;
