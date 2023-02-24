@@ -365,6 +365,8 @@ struct Tuple {
   TH1F* N1_MTOF;
   TH1F* N1_TIsol;
   TH1F* N1_EoP;
+  TH1F* N1_ECalEoP;
+  TH1F* N1_HCalEoP;
   TH1F* N1_SumpTOverpT;
   TH1F* N1_DrMinPfJet;
   TH1F* N1_PtErrOverPt;
@@ -464,11 +466,14 @@ struct Tuple {
   TH1F* BefPreS_Ias_PUA;
   TH1F* BefPreS_Ias_PUB;
   TH1F* BefPreS_IasForStatus91;
+  TH1F* BefPreS_IasForStatusNot91;
   TH1F* BefPreS_Ih;
   TH1F* BefPreS_Ih_PUA;
   TH1F* BefPreS_Ih_PUB;
   TH1F* BefPreS_MTOF;
   TH1F* BefPreS_TIsol;
+  TH1F* BefPreS_ECalEoP;
+  TH1F* BefPreS_HCalEoP;
   TH1F* BefPreS_EoP;
   TH1F* BefPreS_SumpTOverpT;
   TH1F* BefPreS_dR_NVTrack;
@@ -686,6 +691,8 @@ struct Tuple {
   TH1F* PostPreS_TIsol;
   TH2F* PostPreS_TIsolVsIas;
   TH1F* PostPreS_EoP;
+  TH1F* PostPreS_ECalEoP;
+  TH1F* PostPreS_HCalEoP;
   TH2F* PostPreS_EoPVsIas;
   TH1F* PostPreS_SumpTOverpT;
   TH2F* PostPreS_SumpTOverpTVsIas;

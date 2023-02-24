@@ -140,7 +140,9 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-  float scaleFactor(float eta);
+  float muonRecoSFsForTrackEta(float eta, int syst);
+  float muonIdSFsForTrackEta(float eta, int syst);
+  float muonTriggerSFsForTrackEta(float eta, int syst);
   float triggerSystFactor(float eta, float beta, int syst);
 
   void initializeCuts(edm::Service<TFileService>& fs,
@@ -157,7 +159,6 @@ public:
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
-                     const edm::Event& iEvent,
                      const int& CutIndex,
                      Tuple* tuple,
                      const bool isFlip,

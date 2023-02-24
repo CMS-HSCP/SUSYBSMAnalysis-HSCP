@@ -582,7 +582,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 //  tuple->N1_nDof = dir.make<TH1F>("nDof", ";N_{dof}", 40, -0.5, 39.5);
 //  tuple->N1_tofError = dir.make<TH1F>("tofError", ";tofError", 25, 0, 0.25);
   tuple->N1_TIsol = dir.make<TH1F>("TIsol", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} (GeV) / 4 GeV", 25, 0, 100);
-  tuple->N1_EoP = dir.make<TH1F>("N1_EoP", ";PF energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+  tuple->N1_EoP = dir.make<TH1F>("N1_EoP", ";PF calo energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+  tuple->N1_ECalEoP = dir.make<TH1F>("N1_ECalEoP", ";PF ECal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+  tuple->N1_HCalEoP = dir.make<TH1F>("N1_HCalEoP", ";PF HCal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
   tuple->N1_DrMinPfJet = dir.make<TH1F>("N1_DrMinPfJet", ";dRMinPfJet",100,0.,5.0);
   tuple->N1_SumpTOverpT = dir.make<TH1F>("N1_SumpTOverpT", ";#Sigma p_{T} / p_{T}; Tracks / 0.025", 80, 0, 2);
   tuple->N1_Ih = dir.make<TH1F>("N1_Ih", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
@@ -662,13 +664,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"All tracks");
     tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(2,"Tracks matched to HLT muon");
     
-    tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events/category", 6, 0.5, 6.5);
+    tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events/category", 7, 0.5, 7.5);
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(1,"Triggered w/ muon match");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(2,"Gen match was found");
-    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(3,"Gen match is an HSCP");
-    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(4,"Gen match is a muon");
-    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(5,"Gen match is a kaon or pion");
-    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(6,"But eta cut kills it");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(3,"Gen match: HSCP");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(4,"Gen match: muon");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(5,"Gen match: kaon or pion");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(6,"Gen match: else");
+    tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(7,"Gen eta < 1.0");
     
     tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
@@ -755,11 +758,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_Pt = dir.make<TH1F>("BefPreS_Pt", ";p_{T} (GeV);Tracks / 100 GeV", 40, 0, PtHistoUpperBound);
     tuple->BefPreS_Pt_lowPt = dir.make<TH1F>("BefPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500);
     tuple->BefPreS_Ias = dir.make<TH1F>("BefPreS_Ias", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
-    tuple->BefPreS_IasForStatus91 = dir.make<TH1F>("BefPreS_Ias", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
+    tuple->BefPreS_IasForStatus91 = dir.make<TH1F>("BefPreS_IasForStatus91", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
+    tuple->BefPreS_IasForStatusNot91 = dir.make<TH1F>("BefPreS_IasForStatusNot91", ";G_{i}^{strips};Tracks / 0.1", 10, 0., 1.);
     tuple->BefPreS_Ih = dir.make<TH1F>("BefPreS_Ih", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->BefPreS_MTOF = dir.make<TH1F>("BefPreS_MTOF", ";MTOF;Tracks / bin", 50, -2, 5);
     tuple->BefPreS_TIsol = dir.make<TH1F>("BefPreS_TIsol", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} (GeV);Tracks / 4 GeV", 25, 0, 100);
-    tuple->BefPreS_EoP = dir.make<TH1F>("BefPreS_EoP", ";PF energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+    tuple->BefPreS_EoP = dir.make<TH1F>("BefPreS_EoP", ";PF calo energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+    tuple->BefPreS_ECalEoP = dir.make<TH1F>("BefPreS_ECalEoP", ";PF ECal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+    tuple->BefPreS_HCalEoP = dir.make<TH1F>("BefPreS_HCalEoP", ";PF HCal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
     tuple->BefPreS_SumpTOverpT = dir.make<TH1F>("BefPreS_SumpTOverpT", ";#Sigma p_{T} / p_{T};Tracks / bin", 80, 0.0, 2.0);
     tuple->BefPreS_LastHitDXY = dir.make<TH1F>("BefPreS_LastHitDXY", ";LastHitDXY;Tracks / bin", 75, 0, 150);
     tuple->BefPreS_LastHitD3D = dir.make<TH1F>("BefPreS_LastHitD3D", ";LastHitD3D;Tracks / bin", 175, 0, 350);
@@ -1018,8 +1024,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_MuonPtVsTrackPt = dir.make<TH2F>("PostPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};general track p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
     tuple->PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("PostPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};general track p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);
     
-    tuple->PostPreS_RelDiffMuonPtAndTruthPt = dir.make<TH1F>("PostPreS_RelDiffMuonPtAndTruthPt", ";(TuneP muon p_{T} - gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
-    tuple->PostPreS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("PostPreS_RelDiffTrackPtAndTruthPt", ";(general track p_{T} - gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
+    tuple->PostPreS_RelDiffMuonPtAndTruthPt = dir.make<TH1F>("PostPreS_RelDiffMuonPtAndTruthPt", ";(TuneP muon p_{T} - gen  p_{T}) / gen  p_{T};Tracks / bin", 60,-1.0,2.0);
+    tuple->PostPreS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("PostPreS_RelDiffTrackPtAndTruthPt", ";(general track p_{T} - gen  p_{T}) / gen  p_{T};Tracks / bin", 60,-1.0,2.0);
     
     tuple->PostPreS_TriggerType = dir.make<TH1F>("PostPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
     tuple->PostPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
@@ -1077,11 +1083,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_Qual->GetXaxis()->SetBinLabel(1,"Not-HighPurity");
     tuple->PostPreS_Qual->GetXaxis()->SetBinLabel(2,"HighPurity");
 
-    tuple->PostPreS_TNOH_PUA = dir.make<TH1F>("PostPreS_TNOH_PUA", "Number of hits (low PU);Tracks / 1", 40, -0.5, 39.5);
-    tuple->PostPreS_TNOH_PUB = dir.make<TH1F>("PostPreS_TNOH_PUB", "Number of hits (mid PU);Tracks / 1", 40, -0.5, 39.5);
-    tuple->PostPreS_TNOH_PUC = dir.make<TH1F>("PostPreS_TNOH_PUC", "Number of hits (high PU);Tracks / 1", 40, -0.5, 39.5);
+    tuple->PostPreS_TNOH_PUA = dir.make<TH1F>("PostPreS_TNOH_PUA", ";Number of hits (low PU);Tracks / 1", 40, -0.5, 39.5);
+    tuple->PostPreS_TNOH_PUB = dir.make<TH1F>("PostPreS_TNOH_PUB", ";Number of hits (mid PU);Tracks / 1", 40, -0.5, 39.5);
+    tuple->PostPreS_TNOH_PUC = dir.make<TH1F>("PostPreS_TNOH_PUC", ";Number of hits (high PU);Tracks / 1", 40, -0.5, 39.5);
     tuple->PostPreS_TNOHFraction = dir.make<TH1F>("PostPreS_TNOHFraction", ";Number of valid hit fraction;Tracks / 0.05", 20, 0, 1);
-    tuple->PostPreS_TNOHFractionVsIas = dir.make<TH2F>("PostPreS_TNOHFractionVsIas","TNOHFraction;Ias;Tracks",20, 0., 1.,10,0.,1.);
+    tuple->PostPreS_TNOHFractionVsIas = dir.make<TH2F>("PostPreS_TNOHFractionVsIas",";TNOHFraction;Ias;Tracks",20, 0., 1.,10,0.,1.);
     tuple->PostPreS_TNOPH = dir.make<TH1F>( "PostPreS_TNOPH", ";Number of pixel hits;Tracks / 1", 8, -0.5, 7.5);
     tuple->PostPreS_RatioCleanAndAllStripsClu = dir.make<TH1F>("PostPreS_RatioCleanAndAllStripsClu",";Clean / all strips clu;Tracks / 0.05",20,-0.05,1.05);
     tuple->PostPreS_RatioCleanAndAllStripsCluVsIas = dir.make<TH2F>("PostPreS_RatioCleanAndAllStripsCluVsIas",";Clean / all strips clu;G_{i}^{strips};Tracks / 0.05",20,-0.05,1.05,20,0.,1.);
@@ -1120,7 +1126,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_MTOF = dir.make<TH1F>("PostPreS_MTOF", ";MTOF;Tracks / bin", 50, -2, 5);
     tuple->PostPreS_TIsol = dir.make<TH1F>("PostPreS_TIsol", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} (GeV);Tracks / 4 GeV", 25, 0, 100);
     tuple->PostPreS_TIsolVsIas = dir.make<TH2F>("PostPreS_TIsolVsIas","TIsol;Cluster G_{i}^{strips};Tracks / bin",25, 0, 100, 10, 0., 1.);
-    tuple->PostPreS_EoP = dir.make<TH1F>("PostPreS_EoP", ";PF energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+    tuple->PostPreS_EoP = dir.make<TH1F>("PostPreS_EoP", ";PF calo energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+    tuple->PostPreS_ECalEoP = dir.make<TH1F>("PostPreS_ECalEoP", ";PF ECal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
+    tuple->PostPreS_HCalEoP = dir.make<TH1F>("PostPreS_HCalEoP", ";PF HCal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
     tuple->PostPreS_EoPVsIas = dir.make<TH2F>("PostPreS_EoPVsIas","PostPreS_EoPVsIas;PF E/p;G_{i}^{strips}",25, 0, 1.5, 20, 0.,1.);
     tuple->PostPreS_SumpTOverpT = dir.make<TH1F>("PostPreS_SumpTOverpT", ";SumpTOverpT", 80, 0.0, 2.0);
     tuple->PostPreS_SumpTOverpTVsIas = dir.make<TH2F>("PostPreS_SumpTOverpTVsIas",";SumpTOverpT;G_{i}^{strips}", 80, 0.0, 2.0, 20, 0.,1.);
