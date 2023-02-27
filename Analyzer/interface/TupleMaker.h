@@ -30,7 +30,8 @@ public:
                        float dEdxM_UpLim,
                        int DzRegions,
                        float GlobalMinPt,
-                       float GlobalMinTOF);
+                       float GlobalMinTOF,
+                       bool tapeRecallOnly_);
 
   void initializeRegions(Tuple *&tuple,
                         TFileDirectory &dir,
@@ -391,10 +392,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                                  float dEdxM_UpLim,
                                  int DzRegions,
                                  float GlobalMinPt,
-                                 float GlobalMinTOF) {
+                                 float GlobalMinTOF,
+                                 bool tapeRecallOnly_) {
   std::string Name;
 
   TH1::SetDefaultSumw2(kTRUE);
+  // if the only purpose is to trick CRAB to do a TAPERECALL
+  if (tapeRecallOnly_) return;
 
   tuple->IntLumi = dir.make<TProfile>("IntLumi", ";IntLumi", 1, 0, 1);
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
@@ -670,6 +674,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_MatchedMuonPt25Pt = dir.make<TH1F>("BefPreS_MatchedMuonPt25Pt", ";Matched muon ( p_{T} > 25)  p_{T} (GeV);Events / 5 GeV", 40,-0.05,200.05);
     tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt = dir.make<TH1F>("BefPreS_RelDiffMatchedMuonPtAndTrigObjPt", ";(Matched offline muon p_{T} - trigger object p_{T}) / trigger object p_{T};Tracks / bin", 60,-1.0,2.0);
     tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt = dir.make<TH1F>("BefPreS_RelDiffTrigObjPtAndMatchedMuonPt", ";(trigger object p_{T} - matched offline muon p_{T} ) / matched offline muon p_{T};Tracks / bin", 60,-1.0,2.0);
+    tuple->BefPreS_NumPassedMatchingTrigObj = dir.make<TH1F>("BefPreS_NumPassedMatchingTrigObj", ";Num of trig objects passing matching;Trig objects / 1", 5, -0.5, 4.5);
+    tuple->BefPreS_NumPassedMatchingTrigObjEtaCut = dir.make<TH1F>("BefPreS_NumPassedMatchingTrigObjEtaCut", ";Num of trig objects passing matching and #eta < 1;Trig objects / 1", 5, -0.5, 4.5);
+    
+    
     tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - general track p_{T}) / general track p_{T};Tracks / bin", 60,-1.0,2.0);
     tuple->BefPreS_MuonPtVsTrackPt = dir.make<TH2F>("BefPreS_MuonPtVsTrackPt", ";TuneP muon p_{T};general track p_{T};", 100, 0.0, 4000.0, 100, 0.0, 4000.0);
     tuple->BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt = dir.make<TH2F>("BefPreS_MuonPtOverGenPtVsTrackPtOverGenPt", ";TuneP muon p_{T} / gen  p_{T};general track p_{T} / gen  p_{T};", 20, 0.0, 3.0, 20, 0.0, 3.0);

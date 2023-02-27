@@ -54,7 +54,8 @@
 // - 43p6: Fix TrackLevel HLT matching plot, RelDiffMuonPtAndTruthPt and RelDiffTrackPtAndTruthPt
 // - 43p7: Add RelDiffTrigObjPtAndMatchedMuonPt, add tight ID check to PostS_HltMatchTrackLevel, add BefPreS_MatchedMuonPt25Pt plots
 // - 43p8: Add else, switch logic for eta < 1 in TriggerGenMatch, fix for trigger eff plots, go back to HLT_Mu50_v only so we can have SFs for everything, EoP plots for ECal and HCal separately
-// - 33p4: Same as 43p8 but for GiTemplate production only for 2017 MCs,  CreateGiTemplates = True, CreateAndExitGitemplates = True, Do*Plots = False
+// - 33p4: Same as 43p8 but for GiTemplate production only for 2017 MCs,  CreateGiTemplates = true, CreateAndExitGitemplates = true
+// - 43p9: CreateGiTemplates = false, CreateAndExitGitemplates = false, change logic on trigger + muon matching, plots for num trig objs
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -123,7 +124,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       sampleType_(iConfig.getUntrackedParameter<int>("SampleType")),
       sampleName_(iConfig.getUntrackedParameter<string>("SampleName")),
       period_(iConfig.getUntrackedParameter<string>("Period")),
-      skipSelectionPlot_(iConfig.getUntrackedParameter<bool>("SkipSelectionPlot")),
+      tapeRecallOnly_(iConfig.getUntrackedParameter<bool>("TapeRecallOnly")),
       doBefTrigPlots_(iConfig.getUntrackedParameter<bool>("DoBefTrigPlots")),
       doBefPreSplots_(iConfig.getUntrackedParameter<bool>("DoBefPreSplots")),
       doPostPreSplots_(iConfig.getUntrackedParameter<bool>("DoPostPreSplots")),
@@ -245,7 +246,8 @@ void Analyzer::beginJob() {
                                dEdxM_UpLim_,
                                numDzRegions_,
                                globalMinPt_,
-                               globalMinTOF_);
+                               globalMinTOF_,
+                               tapeRecallOnly_);
 
   tuple_maker->initializeRegions(tuple,
                                  dir,
@@ -262,7 +264,7 @@ void Analyzer::beginJob() {
     mcWeight->getSampleWeights(period_, sampleName_.c_str(), IntegratedLuminosity_, CrossSection_);
   }
 
-  loadSFPixel();
+  loadSFPixel(sampleType_);
 
   // Set in Analyzer/interface/MCWeight.h
   // 58970.47 for 2018
@@ -367,7 +369,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const edm::Handle<GenEventInfoProduct> genEvt = iEvent.getHandle(genEventToken_);
       if (genEvt.isValid()){
           GeneratorWeight_ = genEvt->weight();
-        if(genEvt->binningValues().size()>0) {
+        if(genEvt->binningValues().size() > 0) {
           GeneratorBinningValues_ = genEvt->binningValues()[0];
           tuple->Gen_Binning->Fill(GeneratorBinningValues_);
         }
@@ -729,9 +731,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   int closestTrigMuPt25Index = -1;
   int closestTrigObjIndex = -1;
   float dr_min_hlt_muon_inEvent = 9999.0;
+  
   float dr_min_hlt_muonPt25_inEvent = 9999.0;
+  int numPassedMatchingTrigObj = 0;
+  int numPassedMatchingTrigObjEtaCut = 0;
+  bool doNotMatchThis = false;
   for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
     if (trigObjP4s[objNr].Pt() < 50) continue;
+    float dr_min_hltMuon_trigObj = 9999.0;
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
     // this is the def of (muon::isTightMuon(*mu, highestSumPt2Vertex))
@@ -753,13 +760,34 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // But otherwise just consider pT > 50 GeV for the real matching
       if (mu->pt() < 50)  continue;
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+      // min distance from all muons to this specific trigger object
+      if (dr_hltmu_muon < dr_min_hltMuon_trigObj) {
+        dr_min_hltMuon_trigObj = dr_hltmu_muon;
+      }
+      // min distance from all muons and all trigger objects in the event
       if (dr_hltmu_muon < dr_min_hlt_muon_inEvent) {
-        dr_min_hlt_muon_inEvent = dr_hltmu_muon;
-        closestTrigMuIndex = i;
-        closestTrigObjIndex = objNr;
+        // If a match was already found, think twice if you want to update the match
+        // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
+        if (closestTrigObjIndex > -1 && trigObjP4s[objNr].Eta() > globalMaxEta_) {
+          doNotMatchThis = true;
+        }
+        if (!doNotMatchThis) {
+          dr_min_hlt_muon_inEvent = dr_hltmu_muon;
+          closestTrigMuIndex = i;
+          closestTrigObjIndex = objNr;
+        }
+      }
+    } // end loop on muon objects
+    if (dr_min_hltMuon_trigObj < 0.15 ) {
+      // the closest muon to this specific trigger object is angularly matched
+      // lets see how many of them are like this
+      numPassedMatchingTrigObj++;
+      // from that how many are inside the eta
+      if (trigObjP4s[objNr].Eta() < 1.0) {
+        numPassedMatchingTrigObjEtaCut++;
       }
     }
-  }
+  } // end loop on trigger objects
   
   if (muTrig) {
     tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
@@ -777,8 +805,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     matchedMuonWasFound = true;
     const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
     tuple->NumEvents->Fill(3., EventWeight_);
-    tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt->Fill((triggerObjMatchedMu->pt()-trigObjP4s[closestTrigObjIndex].Pt())/(trigObjP4s[closestTrigObjIndex].Pt()), EventWeight_);
-    tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()), EventWeight_);
+    if (doBefPreSplots_) {
+      tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt->Fill((triggerObjMatchedMu->pt()-trigObjP4s[closestTrigObjIndex].Pt())/(trigObjP4s[closestTrigObjIndex].Pt()), EventWeight_);
+      tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()), EventWeight_);
+      tuple->BefPreS_NumPassedMatchingTrigObj->Fill(numPassedMatchingTrigObj, EventWeight_);
+      tuple->BefPreS_NumPassedMatchingTrigObjEtaCut->Fill(numPassedMatchingTrigObjEtaCut, EventWeight_);
+    }
   }
   
   // Check if the event is passing trigger
@@ -5814,7 +5846,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("0:Data, 1:Background, 2:Signal, 3:Signal Systematics");
   desc.addUntracked<std::string>("SampleName","BaseName")->setComment("This can be used to distinguish different signal models");
   desc.addUntracked<std::string>("Period","2017")->setComment("A");
-  desc.addUntracked("SkipSelectionPlot",false)->setComment("A");
+  desc.addUntracked("TapeRecallOnly",false)->setComment("Set to true if the only purpose is to trick CRAB to do a TAPERECALL");
   desc.addUntracked("DoBefTrigPlots",true)->setComment("Set to true if you want before trigger histos created");
   desc.addUntracked("DoBefPreSplots",true)->setComment("Set to true if you want before preselection histos created");
   desc.addUntracked("DoPostPreSplots",true)->setComment("Set to true if you want post preselection histos created");
@@ -5906,10 +5938,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   //GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
-  desc.addUntracked("CreateAndExitGitemplates",true)->setComment("Set to true if the only purpose is to create templates");
+  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
-  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("choice of Pile up bins");
+  desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile up bins");
 
  descriptions.add("HSCParticleAnalyzer",desc);
 }

@@ -335,6 +335,9 @@ struct Tuple {
 
   TH1F* BefPreS_RelDiffMatchedMuonPtAndTrigObjPt;
   TH1F* BefPreS_RelDiffTrigObjPtAndMatchedMuonPt;
+  TH1F* BefPreS_NumPassedMatchingTrigObj;
+  TH1F* BefPreS_NumPassedMatchingTrigObjEtaCut;
+  
   TH1F* BefPreS_MatchedMuonPt25Pt;
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;

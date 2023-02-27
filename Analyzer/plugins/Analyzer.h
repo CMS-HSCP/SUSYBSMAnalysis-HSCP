@@ -302,7 +302,7 @@ private:
   string sampleName_;
   string period_;
 
-  bool skipSelectionPlot_,doBefTrigPlots_,doBefPreSplots_,doPostPreSplots_;
+  bool tapeRecallOnly_, doBefTrigPlots_, doBefPreSplots_, doPostPreSplots_;
 
   // binning for the pT, mass, IP distributions
   float ptHistoUpperBound_ = 4000;
