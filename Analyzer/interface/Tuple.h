@@ -1023,6 +1023,7 @@ struct Tuple {
   TH1F* CutFlowReverse;
 
   TH2F* CutFlowEta;
+  TH2F* CutFlowEoP;
   TH2F* N1_FlowEta;
   TH2F* CutFlowPfType;
   TH2F* CutFlowProbQ;

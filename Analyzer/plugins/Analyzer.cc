@@ -54,6 +54,7 @@
 // - 43p6: Fix TrackLevel HLT matching plot, RelDiffMuonPtAndTruthPt and RelDiffTrackPtAndTruthPt
 // - 43p7: Add RelDiffTrigObjPtAndMatchedMuonPt, add tight ID check to PostS_HltMatchTrackLevel, add BefPreS_MatchedMuonPt25Pt plots
 // - 43p8: Add else, switch logic for eta < 1 in TriggerGenMatch, fix for trigger eff plots, go back to HLT_Mu50_v only so we can have SFs for everything, EoP plots for ECal and HCal separately
+// - 33p4: Same as 43p8 but for GiTemplate production only for 2017 MCs,  CreateGiTemplates = True, CreateAndExitGitemplates = True, Do*Plots = False
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -3338,6 +3339,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (allCutsPassedSoFar) {
         tuple->CutFlowEta->Fill(track->eta(), i);
         tuple->CutFlowProbQ->Fill(1 - probQonTrackNoL1, i);
+        tuple->CutFlowEoP->Fill(EoP, i);
         tuple->CutFlowPfType->Fill(0., i);
         if (pf_isPfTrack) {
           tuple->CutFlowPfType->Fill(1., i);
@@ -5904,8 +5906,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   //GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
-  desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateAndExitGitemplates",true)->setComment("Set to true if the only purpose is to create templates");
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("choice of Pile up bins");
 

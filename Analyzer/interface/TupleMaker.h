@@ -523,6 +523,23 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(13,"E/p");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
   tuple->CutFlowEta->GetYaxis()->SetBinLabel(15,"F_{i}");
+  
+  tuple->CutFlowEoP = dir.make<TH2F>("CutFlowEoP", ";PF calo energy / momentum;", 25, 0, 1.5, 17, -0.5, 16.5);
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(1,"Trigger");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(2,"p_{T}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(3,"#eta");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(4,"N_{no-L1 pixel hits}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(5,"f_{valid/all hits}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(6,"N_{dEdx hits}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(7,"HighPurity");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(8,"#chi^{2} / N_{dof}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(9,"d_{z}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(10,"d_{xy}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(11,"MiniRelIsoAll");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(12,"MiniRelTkIso");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(13,"E/p");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(14,"#sigma_{p_{T}} / p_{T}^{2}");
+  tuple->CutFlowEoP->GetYaxis()->SetBinLabel(15,"F_{i}");
 
   tuple->CutFlowPfType = dir.make<TH2F>("CutFlowPfType", ";;", 9, -0.5, 8.5, 17, -0.5, 16.5);
   tuple->CutFlowPfType->GetYaxis()->SetBinLabel(1,"Trigger");
@@ -660,11 +677,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("BefPreS_RelDiffTrackPtAndTruthPt", ";(general track p_{T}- gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
     
     
-    tuple->BefPreS_HltMatchTrackLevel = dir.make<TH1F>("BefPreS_HltMatchTrackLevel", ";;Tracks/category", 5, -0.5, 4.5);
+    tuple->BefPreS_HltMatchTrackLevel = dir.make<TH1F>("BefPreS_HltMatchTrackLevel", ";;Tracks / category", 5, -0.5, 4.5);
     tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"All tracks");
     tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(2,"Tracks matched to HLT muon");
     
-    tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events/category", 7, 0.5, 7.5);
+    tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events / category", 7, 0.5, 7.5);
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(1,"Triggered w/ muon match");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(2,"Gen match was found");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(3,"Gen match: HSCP");
@@ -673,7 +690,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(6,"Gen match: else");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(7,"Gen eta < 1.0");
     
-    tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events/category", 5, -0.5, 4.5);
+    tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(3,"MET triggered");
