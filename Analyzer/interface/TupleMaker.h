@@ -684,11 +684,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_RelDiffMuonPtAndTruthPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTruthPt", ";(TuneP muon p_{T} - gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
     tuple->BefPreS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("BefPreS_RelDiffTrackPtAndTruthPt", ";(general track p_{T}- gen  p_{T}) / gen  p_{T};", 60,-1.0,2.0);
     
-    
-    tuple->BefPreS_HltMatchTrackLevel = dir.make<TH1F>("BefPreS_HltMatchTrackLevel", ";;Tracks / category", 5, -0.5, 4.5);
-    tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"All tracks");
-    tuple->BefPreS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(2,"Tracks matched to HLT muon");
-    
     tuple->BefPreS_TriggerGenMatch = dir.make<TH1F>("BefPreS_TriggerGenMatch", ";;Events / category", 7, 0.5, 7.5);
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(1,"Triggered w/ muon match");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(2,"Gen match was found");
@@ -1869,6 +1864,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->K_and_C_Kin_eta = dir.make<TH1F>("K_and_C_Kin_eta",";#eta", 18, -2.25, 2.25);
 
   // Stability
+    tuple->Stab_RunNumVsPixCluChargeAfterSFsL1 = dir.make<TH2F>("Stab_RunNumVsPixCluChargeAfterSFsL1",";Run;Norm pixel cluster charge after SFs on L1", 545, 271000,325500, 150, 0.,300.);
+    tuple->Stab_RunNumVsPixCluChargeAfterSFsL2 = dir.make<TH2F>("Stab_RunNumVsPixCluChargeAfterSFsL2",";Run;Norm pixel cluster charge after SFs on L2", 545, 271000,325500, 150, 0.,300.);
+    tuple->Stab_RunNumVsPixCluChargeAfterSFsL3 = dir.make<TH2F>("Stab_RunNumVsPixCluChargeAfterSFsL3",";Run;Norm pixel cluster charge after SFs on L4", 545, 271000,325500, 150, 0.,300.);
+    tuple->Stab_RunNumVsPixCluChargeAfterSFsL4 = dir.make<TH2F>("Stab_RunNumVsPixCluChargeAfterSFsL4",";Run;Norm pixel cluster charge after SFs on L4", 545, 271000,325500, 150, 0.,300.);
     tuple->Stab_Ih_NoL1_VsRun    = dir.make<TH2F>("Stab_Ih_NoL1_VsRun",";Run;I_{h,NoL1}", 545, 271000,325500, 60, 0.,15.);
     tuple->Stab_Ih_pixNoL1_VsRun = dir.make<TH2F>("Stab_Ih_pixNoL1_VsRun",";Run;I_{h,NoPixL1}", 545, 271000,325500, 60, 0.,15.);
     tuple->Stab_Ih_strip_VsRun   = dir.make<TH2F>("Stab_Ih_strip_VsRun",";Run;dEdX(strip)", 545, 271000,325500, 60, 0.,15.);

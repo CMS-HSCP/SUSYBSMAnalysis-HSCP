@@ -57,6 +57,7 @@
 // - 33p4: Same as 43p8 but for GiTemplate production only for 2017 MCs,  CreateGiTemplates = true, CreateAndExitGitemplates = true
 // - 43p9: CreateGiTemplates = false, CreateAndExitGitemplates = false, change logic on trigger + muon matching, plots for num trig objs, should check if the HSCP candidate matched to trig obj vs trig matched to gen with eta cut now makes more sense or not, add CutFlowEoP plot
 // - 44p0: Include SFs in the last bin of CutFlow, fix last bin of HltMatchTrackLevel
+// - 44p1: Add stability plot for pixel charge on layers1-4, ExitWhenGenMatchNotFound = true
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -284,7 +285,7 @@ void Analyzer::beginJob() {
   dttof = nullptr;
   csctof = nullptr;
 
-  CurrentRun_ = 0;
+  currentRun_ = 0;
   RNG = new TRandom3();
 
   // TODO: This is needed when there is no PU reweighting, i.e. data
@@ -330,9 +331,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   using namespace trigger;
 
   //if run change, update conditions
-  if (CurrentRun_ != iEvent.id().run()) {
-    CurrentRun_ = iEvent.id().run();
-    tofCalculator.setRun(CurrentRun_);
+  if (currentRun_ != iEvent.id().run()) {
+    currentRun_ = iEvent.id().run();
+    tofCalculator.setRun(currentRun_);
     dEdxSF[0] = dEdxSF_0_;
     dEdxSF[1] = dEdxSF_1_;
   }
@@ -3436,7 +3437,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool passedCutsArrayForGiTemplates[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForGiTemplates));
     
-    //Preselection steps that can be changed for template generation
+    // Preselection steps that can be changed for template generation
     passedCutsArrayForGiTemplates[0] = true;
     passedCutsArrayForGiTemplates[1] = ( (track->p() > 20) && (track->p() < 48) );
     // PAY ATTENTION : PU == NPV for the following loop !
@@ -4078,16 +4079,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         
         // stability plots
-        tuple->Stab_Ih_NoL1_VsRun->Fill(CurrentRun_, globalIh_ , TrackWeight_);
-        tuple->Stab_Ih_pixNoL1_VsRun->Fill(CurrentRun_, (dedxIh_PixelOnlyh_noL1 ? dedxIh_PixelOnlyh_noL1->dEdx() : -1) , TrackWeight_);
-        tuple->Stab_Ih_strip_VsRun->Fill(CurrentRun_, (dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) , TrackWeight_);
-        tuple->Stab_Gi_strip_VsRun->Fill(CurrentRun_, globalIas_ , TrackWeight_);
-        tuple->Stab_Gi_NoL1_VsRun->Fill(CurrentRun_, (dedxIas_noL1 ? dedxIas_noL1->dEdx() : -1), TrackWeight_);
-        tuple->Stab_Fi_pixNoL1_VsRun->Fill(CurrentRun_, 1 - probQonTrackNoL1, TrackWeight_);
+        tuple->Stab_Ih_NoL1_VsRun->Fill(currentRun_, globalIh_ , TrackWeight_);
+        tuple->Stab_Ih_pixNoL1_VsRun->Fill(currentRun_, (dedxIh_PixelOnlyh_noL1 ? dedxIh_PixelOnlyh_noL1->dEdx() : -1) , TrackWeight_);
+        tuple->Stab_Ih_strip_VsRun->Fill(currentRun_, (dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) , TrackWeight_);
+        tuple->Stab_Gi_strip_VsRun->Fill(currentRun_, globalIas_ , TrackWeight_);
+        tuple->Stab_Gi_NoL1_VsRun->Fill(currentRun_, (dedxIas_noL1 ? dedxIas_noL1->dEdx() : -1), TrackWeight_);
+        tuple->Stab_Fi_pixNoL1_VsRun->Fill(currentRun_, 1 - probQonTrackNoL1, TrackWeight_);
         if (tof) {
-          tuple->Stab_invB_VsRun->Fill(CurrentRun_, tof->inverseBeta(), TrackWeight_);
-          tuple->Stab_invB_DT_VsRun->Fill(CurrentRun_, dttof->inverseBeta(), TrackWeight_);
-          tuple->Stab_invB_CSC_VsRun->Fill(CurrentRun_, csctof->inverseBeta(), TrackWeight_);
+          tuple->Stab_invB_VsRun->Fill(currentRun_, tof->inverseBeta(), TrackWeight_);
+          tuple->Stab_invB_DT_VsRun->Fill(currentRun_, dttof->inverseBeta(), TrackWeight_);
+          tuple->Stab_invB_CSC_VsRun->Fill(currentRun_, csctof->inverseBeta(), TrackWeight_);
         }
         
       }
@@ -4413,6 +4414,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           auto clustSizeX = pixelCluster->sizeX();
           auto clustSizeY = pixelCluster->sizeY();
           auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
+          auto pixelNormChargeAfterSF = pixelNormCharge *  dEdxSF[1] *  GetSFPixel(detid.subdetId(), detid, year, currentRun_);
           
           float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
           float tmp2 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,1.)).perp();
@@ -4423,12 +4425,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           (isOnEdge || hasBadPixels || spansTwoROCs) ? specInCPE = true : specInCPE = false;
           
           
-          if ( detid.subdetId() == PixelSubdetector::PixelBarrel && doPostPreSplots_) {
+          if (detid.subdetId() == PixelSubdetector::PixelBarrel && doPostPreSplots_) {
             
             auto pixLayerIndex = abs(int(tTopo->pxbLayer(detid)));
             tuple->PostPreS_CluProbQVsPixelLayer->Fill(probQ, pixLayerIndex, TrackWeight_);
             tuple->PostPreS_CluProbXYVsPixelLayer->Fill(probXY, pixLayerIndex, TrackWeight_);
             tuple->PostPreS_CluSizeVsPixelLayer->Fill(clustSize, pixLayerIndex, TrackWeight_);
+            if (pixLayerIndex == 1) tuple->Stab_RunNumVsPixCluChargeAfterSFsL1->Fill(currentRun_, pixelNormChargeAfterSF);
+            else if (pixLayerIndex == 2) tuple->Stab_RunNumVsPixCluChargeAfterSFsL2->Fill(currentRun_, pixelNormChargeAfterSF);
+            else if (pixLayerIndex == 3) tuple->Stab_RunNumVsPixCluChargeAfterSFsL3->Fill(currentRun_, pixelNormChargeAfterSF);
+            else if (pixLayerIndex == 4) tuple->Stab_RunNumVsPixCluChargeAfterSFsL4->Fill(currentRun_, pixelNormChargeAfterSF);
+            
             tuple->PostPreS_CluSizeXVsPixelLayer->Fill(clustSizeX, pixLayerIndex, TrackWeight_);
             tuple->PostPreS_CluSizeYVsPixelLayer->Fill(clustSizeY, pixLayerIndex, TrackWeight_);
             if (isOnEdge) {
@@ -5367,7 +5374,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
            else {
               // pixel
               scaleFactor *= dEdxSF[1];
-              //correction de tamas
+              // Corrections from Tamas
               float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
               scaleFactor *= pixelScaling;
               float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
@@ -5869,7 +5876,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",false)
+  desc.addUntracked("ExitWhenGenMatchNotFound",true)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");

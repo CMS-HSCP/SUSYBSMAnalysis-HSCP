@@ -345,7 +345,6 @@ struct Tuple {
   TH1F* BefPreS_RelDiffMuonPtAndTruthPt;
   TH1F* BefPreS_RelDiffTrackPtAndTruthPt;
   
-  TH1F* BefPreS_HltMatchTrackLevel;
   TH1F* BefPreS_TriggerGenMatch;
   TH1F* BefPreS_TriggerType;
   TH1F* Gen_HSCPCandidateType;
@@ -1331,6 +1330,10 @@ struct Tuple {
 
 
  // Stability
+ TH2F* Stab_RunNumVsPixCluChargeAfterSFsL1;
+ TH2F* Stab_RunNumVsPixCluChargeAfterSFsL2;
+ TH2F* Stab_RunNumVsPixCluChargeAfterSFsL3;
+ TH2F* Stab_RunNumVsPixCluChargeAfterSFsL4;
  TH2F* Stab_Ih_NoL1_VsRun;
  TH2F* Stab_Ih_pixNoL1_VsRun;
  TH2F* Stab_Ih_strip_VsRun;

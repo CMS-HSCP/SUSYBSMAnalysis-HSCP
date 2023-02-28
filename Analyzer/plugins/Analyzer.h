@@ -386,7 +386,7 @@ private:
 
   bool useClusterCleaning, isData, isBckg, isSignal;
 
-  unsigned int CurrentRun_ = 0;
+  unsigned int currentRun_ = 0;
 
   MCWeight* mcWeight;
 
