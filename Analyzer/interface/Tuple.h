@@ -1124,10 +1124,6 @@ struct Tuple {
   TH1D* HCuts_Is;
   TH1D* HCuts_TOF;
 
-  TH1D* Hist_Pt;
-  TH1D* Hist_Is;
-  TH1D* Hist_TOF;
-
   TH3F* Pred_EtaP;
   TH2F* Pred_I;
   TH3F* Pred_EtaI;

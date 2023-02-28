@@ -28,7 +28,6 @@ public:
                        int EtaBins,
                        float dEdxS_UpLim,
                        float dEdxM_UpLim,
-                       int DzRegions,
                        float GlobalMinPt,
                        float GlobalMinTOF,
                        bool tapeRecallOnly_);
@@ -390,7 +389,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                                  int EtaBins,
                                  float dEdxS_UpLim,
                                  float dEdxM_UpLim,
-                                 int DzRegions,
                                  float GlobalMinPt,
                                  float GlobalMinTOF,
                                  bool tapeRecallOnly_) {
@@ -869,7 +867,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_PtVsTOF = dir.make<TH2F>("BefPreS_PtVsTOF", ";Pt;TOF;Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 50, 0., 5);
       //tuple->BefPreS_TOFIs = dir.make<TH2F>("BefPreS_TOFIs", ";TOFIs", 100, 1, 5, 100, 0, dEdxS_UpLim);
     tuple->BefPreS_TOFVsIs = dir.make<TH2F>("BefPreS_TOFVsIs", ";TOF;G_{i}^{strips};Tracks / bin", 50, 0., 5, 10, 0., 1.);
-      //tuple->BefPreS_TOFIm = dir.make<TH2F>("BefPreS_TOFIh", ";TOFIh", 100, 1, 5, 200, 0, dEdxM_UpLim);
+      //tuple->BefPreS_TOFIm = dir.make<TH2F>("BefPreS_TOFIh", ";TOFIh", 100, 1, 5, 100, 0, dEdxM_UpLim);
     tuple->BefPreS_TOFVsIh = dir.make<TH2F>("BefPreS_TOFVsIh", ";TOF;I_{h} (MeV/cm);Tracks / bin", 50, 0., 5, 100, 0, dEdxM_UpLim);
 
     tuple->BefPreS_CluProbHasFilled = dir.make<TH1F>("BefPreS_CluProbHasFilled", ";;Clusters / category", 2, -0.5, 1.5);
@@ -1631,19 +1629,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->H_H_Binned[std::to_string(i)] = dir.make<TH1D>(Name.c_str(), ";NCuts;H_H_Binned", NCuts, 0, NCuts);
     }
 
-    // Where are these used?
-      tuple->Hist_Is = dir.make<TH1D>("Hist_Is", "Hist_Is", 200, 0, dEdxS_UpLim);
-      tuple->Hist_Pt = dir.make<TH1D>("Hist_Pt", "Hist_Pt", 200, 0, PtHistoUpperBound);
-      tuple->Hist_TOF = dir.make<TH1D>("Hist_TOF", "Hist_TOF", 200, -10, 20);
     //The following are only used to create the predicted mass spectrum.  Memory intensive so don't initialize for analyses not doing mass fits
     if (TypeMode < 3) {
-      tuple->Pred_I = dir.make<TH2F>("Pred_I", ";NCuts;Pred_I", NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
-      tuple->Pred_EtaI = dir.make<TH3F>("Pred_EtaI", ";NCuts;Pred_EtaI", NCuts, 0, NCuts, EtaBins, -3., 3., 400, 0, dEdxM_UpLim);
+      tuple->Pred_I = dir.make<TH2F>("Pred_I", ";NCuts;Pred_I", NCuts, 0, NCuts, 40, 0, dEdxM_UpLim);
+      tuple->Pred_EtaI = dir.make<TH3F>("Pred_EtaI", ";NCuts;Pred_EtaI", NCuts, 0, NCuts, EtaBins, -3., 3., 40, 0, dEdxM_UpLim);
       tuple->Pred_EtaB = dir.make<TH2F>("Pred_EtaB", ";NCuts;Pred_EtaB", NCuts, 0, NCuts, EtaBins, -3., 3.);
       tuple->Pred_EtaS = dir.make<TH2F>("Pred_EtaS", ";NCuts;Pred_EtaS", NCuts, 0, NCuts, EtaBins, -3., 3.);
       tuple->Pred_EtaS2 = dir.make<TH2F>("Pred_EtaS2", ";NCuts;Pred_EtaS2", NCuts, 0, NCuts, EtaBins, -3., 3.);
       tuple->Pred_EtaP = dir.make<TH3F>("Pred_EtaP", ";NCuts;#eta;P", NCuts, 0, NCuts, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
-      tuple->Pred_TOF = dir.make<TH2F>("Pred_TOF", ";NCuts;Pred_TOF", NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
+//      tuple->Pred_TOF = dir.make<TH2F>("Pred_TOF", ";NCuts;Pred_TOF", NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
       //pz
       
 //      if (false) {
@@ -1673,7 +1667,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 //      }
     }
 
-    tuple->RegionD_I = dir.make<TH2F>("RegionD_I", ";NCuts;RegionD_I", NCuts, 0, NCuts, 400, 0, dEdxM_UpLim);
+    tuple->RegionD_I = dir.make<TH2F>("RegionD_I", ";NCuts;RegionD_I", NCuts, 0, NCuts, 40, 0, dEdxM_UpLim);
     tuple->RegionD_Ias = dir.make<TH2F>("RegionD_Ias", ";NCuts;RegionD_Ias", NCuts, 0, NCuts, 100, 0, dEdxS_UpLim);
     tuple->RegionD_P = dir.make<TH2F>("RegionD_P", ";NCuts;RegionD_P", NCuts, 0, NCuts, 200, GlobalMinPt, PtHistoUpperBound);
     tuple->RegionD_TOF = dir.make<TH2F>("RegionD_TOF", ";NCuts;RegionD_TOF", NCuts, 0, NCuts, 200, GlobalMinTOF, 5);
@@ -1767,21 +1761,21 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
     //The following are only used to create the predicted mass spectrum.  Memory intensive so don't initialize for analyses not doing mass fits
     if (TypeMode < 3) {
-      tuple->Pred_I_Flip = dir.make<TH2F>("Pred_I_Flip", ";NCuts_Flip;Pred_I_Flip", NCuts_Flip, 0, NCuts_Flip, 400, 0, dEdxM_UpLim);
+      tuple->Pred_I_Flip = dir.make<TH2F>("Pred_I_Flip", ";NCuts_Flip;Pred_I_Flip", NCuts_Flip, 0, NCuts_Flip, 40, 0, dEdxM_UpLim);
       tuple->Pred_EtaB_Flip = dir.make<TH2F>("Pred_EtaB_Flip", ";NCuts_Flip;Pred_EtaB_Flip", NCuts_Flip, 0, NCuts_Flip, EtaBins, -3., 3.);
       tuple->Pred_EtaS_Flip = dir.make<TH2F>("Pred_EtaS_Flip", ";NCuts_Flip;Pred_EtaS_Flip", NCuts_Flip, 0, NCuts_Flip, EtaBins, -3., 3.);
       tuple->Pred_EtaS2_Flip = dir.make<TH2F>("Pred_EtaS2_Flip", ";NCuts_Flip;Pred_EtaS2_Flip", NCuts_Flip, 0, NCuts_Flip, EtaBins, -3., 3.);
       tuple->Pred_EtaP_Flip = dir.make<TH3F>("Pred_EtaP_Flip", ";NCuts_Flip;Pred_EtaP_Flip", NCuts_Flip, 0, NCuts_Flip, EtaBins, -3., 3., 200, GlobalMinPt, PtHistoUpperBound);
-      tuple->Pred_TOF_Flip = dir.make<TH2F>("Pred_TOF_Flip", ";NCuts_Flip;Pred_TOF_Flip", NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinTOF, 5);
+//      tuple->Pred_TOF_Flip = dir.make<TH2F>("Pred_TOF_Flip", ";NCuts_Flip;Pred_TOF_Flip", NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinTOF, 5);
     }
 
 
-    tuple->RegionD_I_Flip = dir.make<TH2F>("RegionD_I_Flip", ";NCuts_Flip;RegionD_I_Flip", NCuts_Flip, 0, NCuts_Flip, 400, 0, dEdxM_UpLim);
+    tuple->RegionD_I_Flip = dir.make<TH2F>("RegionD_I_Flip", ";NCuts_Flip;RegionD_I_Flip", NCuts_Flip, 0, NCuts_Flip, 40, 0, dEdxM_UpLim);
     tuple->RegionD_Ias_Flip =
         dir.make<TH2F>("RegionD_Ias_Flip", ";NCuts_Flip;RegionD_Ias_Flip", NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
     tuple->RegionD_P_Flip =
         dir.make<TH2F>("RegionD_P_Flip", ";NCuts_Flip;RegionD_P_Flip", NCuts_Flip, 0, NCuts_Flip, 200, GlobalMinPt, PtHistoUpperBound);
-    tuple->RegionD_TOF_Flip = dir.make<TH2F>("RegionD_TOF_Flip", ";NCuts_Flip;RegionD_TOF_Flip", NCuts_Flip, 0, NCuts_Flip, 200, -3, 1);
+//    tuple->RegionD_TOF_Flip = dir.make<TH2F>("RegionD_TOF_Flip", ";NCuts_Flip;RegionD_TOF_Flip", NCuts_Flip, 0, NCuts_Flip, 200, -3, 1);
     tuple->RegionH_Ias_Flip =
         dir.make<TH2F>("RegionH_Ias_Flip", ";NCuts_Flip;RegionH_Ias_Flip", NCuts_Flip, 0, NCuts_Flip, 100, 0, dEdxS_UpLim);
 
@@ -1791,10 +1785,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 //    tuple->CtrlPt_S3_Is = dir.make<TH1D>("CtrlPt_S3_Is", "CtrlPt_S3_Is", 200, 0, dEdxS_UpLim);
 //    tuple->CtrlPt_S4_Is = dir.make<TH1D>("CtrlPt_S4_Is", "CtrlPt_S4_Is", 200, 0, dEdxS_UpLim);
 //
-//    tuple->CtrlPt_S1_Ih = dir.make<TH1D>("CtrlPt_S1_Ih", "CtrlPt_S1_Ih", 400, 0, dEdxM_UpLim);
-//    tuple->CtrlPt_S2_Ih = dir.make<TH1D>("CtrlPt_S2_Ih", "CtrlPt_S2_Ih", 400, 0, dEdxM_UpLim);
-//    tuple->CtrlPt_S3_Ih = dir.make<TH1D>("CtrlPt_S3_Ih", "CtrlPt_S3_Ih", 400, 0, dEdxM_UpLim);
-//    tuple->CtrlPt_S4_Ih = dir.make<TH1D>("CtrlPt_S4_Ih", "CtrlPt_S4_Ih", 400, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S1_Ih = dir.make<TH1D>("CtrlPt_S1_Ih", "CtrlPt_S1_Ih", 40, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S2_Ih = dir.make<TH1D>("CtrlPt_S2_Ih", "CtrlPt_S2_Ih", 40, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S3_Ih = dir.make<TH1D>("CtrlPt_S3_Ih", "CtrlPt_S3_Ih", 40, 0, dEdxM_UpLim);
+//    tuple->CtrlPt_S4_Ih = dir.make<TH1D>("CtrlPt_S4_Ih", "CtrlPt_S4_Ih", 40, 0, dEdxM_UpLim);
 //
 //    tuple->CtrlIs_S1_TOF = dir.make<TH1D>("CtrlIs_S1_TOF", "CtrlIs_S1_TOF", 200, 0, 5);
 //    tuple->CtrlIs_S2_TOF = dir.make<TH1D>("CtrlIs_S2_TOF", "CtrlIs_S2_TOF", 200, 0, 5);
@@ -1845,18 +1839,18 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->K_and_C_Ih_strip_VsP_loose1 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_loose1","K_and_C_Ih_strip_VsP_loose1", 50,0,5, 80, 2.,10.);
     tuple->K_and_C_Ih_strip_VsP_loose2 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_loose2","K_and_C_Ih_strip_VsP_loose2", 250,0,50, 80, 2.,10.);
 
-    tuple->K_and_C_Ih_noL1_VsP_1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_1","K_and_C_Ih_noL1_VsP_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_2","K_and_C_Ih_noL1_VsP_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta1_1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta1_1","K_and_C_Ih_noL1_VsP_eta1_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta1_2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta1_2","K_and_C_Ih_noL1_VsP_eta1_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta2_1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta2_1","K_and_C_Ih_noL1_VsP_eta2_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta2_2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta2_2","K_and_C_Ih_noL1_VsP_eta2_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_1 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_1","K_and_C_Ih_strip_VsP_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_2 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_2","K_and_C_Ih_strip_VsP_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_noFcut1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_noFcut1","K_and_C_Ih_noL1_VsP_noFcut1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_noFcut2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_noFcut2","K_and_C_Ih_noL1_VsP_noFcut2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_noFcut1 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_noFcut1","K_and_C_Ih_strip_VsP_noFcut1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_noFcut2 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_noFcut2","K_and_C_Ih_strip_VsP_noFcut2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_1",";K_and_C_Ih_noL1;P_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_2",";K_and_C_Ih_noL1;P_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta1_1",";K_and_C_Ih_noL1;P_eta1_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta1_2",";K_and_C_Ih_noL1;P_eta1_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta2_1",";K_and_C_Ih_noL1;P_eta2_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_eta2_2",";K_and_C_Ih_noL1;P_eta2_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_1 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_1",";K_and_C_Ih_strip;P_1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_2 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_2",";K_and_C_Ih_strip;P_2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_noFcut1 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_noFcut1",";K_and_C_Ih_noL1;P_noFcut1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_noFcut2 = dir.make<TH2F>("K_and_C_Ih_noL1_VsP_noFcut2",";K_and_C_Ih_noL1;P_noFcut2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_noFcut1 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_noFcut1",";K_and_C_Ih_strip;P_noFcut1", 50,0,5, 80, 2.,10.);
+    tuple->K_and_C_Ih_strip_VsP_noFcut2 = dir.make<TH2F>("K_and_C_Ih_strip_VsP_noFcut2",";K_and_C_Ih_strip;P_noFcut2", 250,0,50, 80, 2.,10.);
 
     tuple->K_and_C_Kin_Mass = dir.make<TH1F>("K_and_C_Kin_Mass",";Mass (GeV)",100,0.,5.);
     tuple->K_and_C_Kin_p = dir.make<TH1F>("K_and_C_Kin_p",";p (GeV)",50,0.,5.);
@@ -2883,13 +2877,6 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
   if (dedxMObj) {
     Ih = dedxMObj->dEdx();
   }
-
-  if (!isCosmicSB) {
-    tuple->Hist_Pt->Fill(track->pt(), Event_Weight);
-    tuple->Hist_Is->Fill(Is, Event_Weight);
-    tuple->Hist_TOF->Fill(MuonTOF, Event_Weight);
-  }
-
   // std::cout << "Init After PT, Is and TOF plots are filled" << std::endl;
   //          /\ Ias
   //       /\  |----------------------------
@@ -3041,7 +3028,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     } else if (PassTOFCut && !PassPtCut && !PassICut) {  //Region A
       tuple->H_A->Fill(CutIndex, Event_Weight);
       if (TypeMode == 2)
-        tuple->Pred_TOF->Fill(CutIndex, MuonTOF, Event_Weight);
+//        tuple->Pred_TOF->Fill(CutIndex, MuonTOF, Event_Weight);
       if (TypeMode < 2)
         tuple->Pred_EtaB->Fill(CutIndex, track->eta(), Event_Weight);
       if (TypeMode == 2)
@@ -3106,7 +3093,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
       tuple->RegionD_P_Flip->Fill(CutIndex, track->p(), Event_Weight);
       tuple->RegionD_I_Flip->Fill(CutIndex, Ih, Event_Weight);
       tuple->RegionD_Ias_Flip->Fill(CutIndex, Is, Event_Weight);
-      tuple->RegionD_TOF_Flip->Fill(CutIndex, MuonTOF, Event_Weight);
+//      tuple->RegionD_TOF_Flip->Fill(CutIndex, MuonTOF, Event_Weight);
       tuple->H_D_Flip->Fill(CutIndex, Event_Weight);
       if (bin > -1 && bin < MaxPredBins)
         tuple->H_D_Binned_Flip[to_string(bin)]->Fill(CutIndex, Event_Weight);
@@ -3129,7 +3116,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle &hscp,
     } else if (PassTOFCut && !PassPtCut && !PassICut) {  //Region A
       tuple->H_A_Flip->Fill(CutIndex, Event_Weight);
       if (TypeMode == 2)
-        tuple->Pred_TOF_Flip->Fill(CutIndex, MuonTOF, Event_Weight);
+//        tuple->Pred_TOF_Flip->Fill(CutIndex, MuonTOF, Event_Weight);
       if (TypeMode < 2)
         tuple->Pred_EtaB_Flip->Fill(CutIndex, track->eta(), Event_Weight);
       if (TypeMode == 2)

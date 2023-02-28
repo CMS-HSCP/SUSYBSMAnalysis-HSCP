@@ -57,7 +57,8 @@
 // - 33p4: Same as 43p8 but for GiTemplate production only for 2017 MCs,  CreateGiTemplates = true, CreateAndExitGitemplates = true
 // - 43p9: CreateGiTemplates = false, CreateAndExitGitemplates = false, change logic on trigger + muon matching, plots for num trig objs, should check if the HSCP candidate matched to trig obj vs trig matched to gen with eta cut now makes more sense or not, add CutFlowEoP plot
 // - 44p0: Include SFs in the last bin of CutFlow, fix last bin of HltMatchTrackLevel
-// - 44p1: Add stability plot for pixel charge on layers1-4, ExitWhenGenMatchNotFound = true
+// - 44p1: Add stability plot for pixel charge on layers1-4, ExitWhenGenMatchNotFound = true, just for temp to see what's up with EoP plots
+// - 44p2: ExitWhenGenMatchNotFound = false, remove some unused histos, add 2017MC_v4 template
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -143,7 +144,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       reg_massbins_(iConfig.getUntrackedParameter<int>("RegMassBins")),
       dEdxS_UpLim_(iConfig.getUntrackedParameter<double>("DeDxS_UpLim")),
       dEdxM_UpLim_(iConfig.getUntrackedParameter<double>("DeDxM_UpLim")),
-      numDzRegions_(iConfig.getUntrackedParameter<int>("DzRegions")),
       globalMaxEta_(iConfig.getUntrackedParameter<double>("GlobalMaxEta")),
       globalMinPt_(iConfig.getUntrackedParameter<double>("GlobalMinPt")),
       globalMinNOPH_(iConfig.getUntrackedParameter<int>("GlobalMinNOPH")),
@@ -246,7 +246,6 @@ void Analyzer::beginJob() {
                                etaBins_,
                                dEdxS_UpLim_,
                                dEdxM_UpLim_,
-                               numDzRegions_,
                                globalMinPt_,
                                globalMinTOF_,
                                tapeRecallOnly_);
@@ -5874,9 +5873,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("RegMassBins",50)->setComment("How many bins we use for the validation of the background estimate method");
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
-  desc.addUntracked("DzRegions",6)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",true)
+  desc.addUntracked("ExitWhenGenMatchNotFound",false)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
   desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
