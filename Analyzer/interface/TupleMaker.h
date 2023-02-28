@@ -452,7 +452,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->CutFlow->GetXaxis()->SetBinLabel(18,"SR0");
   tuple->CutFlow->GetXaxis()->SetBinLabel(19,"SR1");
   tuple->CutFlow->GetXaxis()->SetBinLabel(20,"SR2");
-  tuple->CutFlow->GetXaxis()->SetBinLabel(21,"SR3");
+  tuple->CutFlow->GetXaxis()->SetBinLabel(21,"SR2 with SFs");
   
   tuple->EventCutFlow = dir.make<TH1F>("EventCutFlow", ";;Events / category", 21, -0.5, 20.5);
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(1,"All tracks");
@@ -475,7 +475,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(18,"SR0");
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(19,"SR1");
   tuple->EventCutFlow->GetXaxis()->SetBinLabel(20,"SR2");
-  tuple->EventCutFlow->GetXaxis()->SetBinLabel(21,"SR3");
+  tuple->EventCutFlow->GetXaxis()->SetBinLabel(21,"SR2 with SFs");
   
   tuple->CutFlowReverse = dir.make<TH1F>("CutFlowReverse", ";;Tracks / category", 17, -0.5, 16.5);
   tuple->CutFlowReverse->GetXaxis()->SetBinLabel(1,"F_{i}");
@@ -674,8 +674,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_MatchedMuonPt25Pt = dir.make<TH1F>("BefPreS_MatchedMuonPt25Pt", ";Matched muon ( p_{T} > 25)  p_{T} (GeV);Events / 5 GeV", 40,-0.05,200.05);
     tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt = dir.make<TH1F>("BefPreS_RelDiffMatchedMuonPtAndTrigObjPt", ";(Matched offline muon p_{T} - trigger object p_{T}) / trigger object p_{T};Tracks / bin", 60,-1.0,2.0);
     tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt = dir.make<TH1F>("BefPreS_RelDiffTrigObjPtAndMatchedMuonPt", ";(trigger object p_{T} - matched offline muon p_{T} ) / matched offline muon p_{T};Tracks / bin", 60,-1.0,2.0);
-    tuple->BefPreS_NumPassedMatchingTrigObj = dir.make<TH1F>("BefPreS_NumPassedMatchingTrigObj", ";Num of trig objects passing matching;Trig objects / 1", 5, -0.5, 4.5);
-    tuple->BefPreS_NumPassedMatchingTrigObjEtaCut = dir.make<TH1F>("BefPreS_NumPassedMatchingTrigObjEtaCut", ";Num of trig objects passing matching and #eta < 1;Trig objects / 1", 5, -0.5, 4.5);
+    tuple->BefPreS_NumPassedMatchingTrigObj = dir.make<TH1F>("BefPreS_NumPassedMatchingTrigObj", ";Trigger objects passing matching;Events / 1", 5, -0.5, 4.5);
+    tuple->BefPreS_NumPassedMatchingTrigObjEtaCut = dir.make<TH1F>("BefPreS_NumPassedMatchingTrigObjEtaCut", ";Trigger objects passing matching and #eta < 1;Events / 1", 5, -0.5, 4.5);
     
     
     tuple->BefPreS_RelDiffMuonPtAndTrackPt = dir.make<TH1F>("BefPreS_RelDiffMuonPtAndTrackPt", ";(TuneP muon p_{T} - general track p_{T}) / general track p_{T};Tracks / bin", 60,-1.0,2.0);
@@ -755,8 +755,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_MiniRelTkIso = dir.make<TH1F>("BefPreS_MiniRelTkIso", ";MiniRelTkIso;Tracks / 0.01",  150, 0.0, 1.5);
     tuple->BefPreS_MiniTkIso = dir.make<TH1F>("BefPreS_MiniTkIso", ";MiniTkIso;Tracks / 0.05",  100, 0.0, 50);
     
-    tuple->BefPreS_RecoPFMET = dir.make<TH1F>("BefPreS_RecoPFMET", ";RecoPFMET (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
-    tuple->BefPreS_RecoPfHT = dir.make<TH1F>("BefPreS_RecoPfHT", ";RecoPFHT (GeV);Events / 10 GeV",  200, 0.0, 2000.0);
+    tuple->BefPreS_RecoPFMET = dir.make<TH1F>("BefPreS_RecoPFMET", ";RecoPFMET (GeV);Events / 20 GeV",  100, 0.0, 2000.0);
+    tuple->BefPreS_RecoPfHT = dir.make<TH1F>("BefPreS_RecoPfHT", ";RecoPFHT (GeV);Events / 20 GeV",  100, 0.0, 2000.0);
     tuple->BefPreS_RecoPfJetsNum = dir.make<TH1F>("BefPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / 1",  16, -0.5, 15.5);
     tuple->BefPreS_CaloJetsNum = dir.make<TH1F>("BefPreS_CaloJetsNum", ";Number of calo jets;Tracks / 1",  16, -0.5, 15.5);
 

@@ -55,7 +55,8 @@
 // - 43p7: Add RelDiffTrigObjPtAndMatchedMuonPt, add tight ID check to PostS_HltMatchTrackLevel, add BefPreS_MatchedMuonPt25Pt plots
 // - 43p8: Add else, switch logic for eta < 1 in TriggerGenMatch, fix for trigger eff plots, go back to HLT_Mu50_v only so we can have SFs for everything, EoP plots for ECal and HCal separately
 // - 33p4: Same as 43p8 but for GiTemplate production only for 2017 MCs,  CreateGiTemplates = true, CreateAndExitGitemplates = true
-// - 43p9: CreateGiTemplates = false, CreateAndExitGitemplates = false, change logic on trigger + muon matching, plots for num trig objs
+// - 43p9: CreateGiTemplates = false, CreateAndExitGitemplates = false, change logic on trigger + muon matching, plots for num trig objs, should check if the HSCP candidate matched to trig obj vs trig matched to gen with eta cut now makes more sense or not, add CutFlowEoP plot
+// - 44p0: Include SFs in the last bin of CutFlow, fix last bin of HltMatchTrackLevel
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -650,7 +651,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     myfile.close();
   }
   else {
-    std::cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(triggerPathNamesFile_.c_str()).fullPath().c_str() << "\n";
+    LogError(MOD) << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(triggerPathNamesFile_.c_str()).fullPath().c_str() << "\n";
   }
 
 
@@ -730,9 +731,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   int closestTrigMuIndex = -1;
   int closestTrigMuPt25Index = -1;
   int closestTrigObjIndex = -1;
-  float dr_min_hlt_muon_inEvent = 9999.0;
+  float dr_min_hltMuon_hscpCand_inEvent = 9999.0;
   
-  float dr_min_hlt_muonPt25_inEvent = 9999.0;
+  float dr_min_hltMuon_hscpCandPt25_inEvent = 9999.0;
   int numPassedMatchingTrigObj = 0;
   int numPassedMatchingTrigObjEtaCut = 0;
   bool doNotMatchThis = false;
@@ -753,8 +754,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // For checking the trigger pT let's consider tracks with pT > 25 GeV
       if (mu->pt() < 25)  continue;
       float drTemp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
-      if (drTemp < dr_min_hlt_muonPt25_inEvent) {
-        dr_min_hlt_muonPt25_inEvent = drTemp;
+      if (drTemp < dr_min_hltMuon_hscpCandPt25_inEvent) {
+        dr_min_hltMuon_hscpCandPt25_inEvent = drTemp;
         closestTrigMuPt25Index = i;
       }
     // But otherwise just consider pT > 50 GeV for the real matching
@@ -765,14 +766,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         dr_min_hltMuon_trigObj = dr_hltmu_muon;
       }
       // min distance from all muons and all trigger objects in the event
-      if (dr_hltmu_muon < dr_min_hlt_muon_inEvent) {
+      if (dr_hltmu_muon < dr_min_hltMuon_hscpCand_inEvent) {
         // If a match was already found, think twice if you want to update the match
         // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
         if (closestTrigObjIndex > -1 && trigObjP4s[objNr].Eta() > globalMaxEta_) {
           doNotMatchThis = true;
         }
         if (!doNotMatchThis) {
-          dr_min_hlt_muon_inEvent = dr_hltmu_muon;
+          dr_min_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
           closestTrigMuIndex = i;
           closestTrigObjIndex = objNr;
         }
@@ -790,18 +791,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   } // end loop on trigger objects
   
   if (muTrig) {
-    tuple->dRMinHLTMuon->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
-    tuple->dRMinHLTMuon_lowDeltaR->Fill(dr_min_hlt_muon_inEvent, EventWeight_);
+    tuple->dRMinHLTMuon->Fill(dr_min_hltMuon_hscpCand_inEvent, EventWeight_);
+    tuple->dRMinHLTMuon_lowDeltaR->Fill(dr_min_hltMuon_hscpCand_inEvent, EventWeight_);
   }
   
   // Check for the HLT muon pt vs offline pt
-  if (muTrig && dr_min_hlt_muonPt25_inEvent < 0.15) {
+  if (muTrig && dr_min_hltMuon_hscpCandPt25_inEvent < 0.15) {
     const reco::Muon* triggerObjMatchedMuPt25 = &(muonColl)[closestTrigMuPt25Index];
     tuple->BefPreS_MatchedMuonPt25Pt->Fill(triggerObjMatchedMuPt25->pt(), EventWeight_);
   }
   
+    // Check if the event is passing trigger
+  if (debug_ > 1) LogPrint(MOD) << "\nChecking if the LS " << iEvent.id().luminosityBlock() <<  " / event " << iEvent.id().event() << "  is passing trigger...";
+  
   // Number of events that pass the matching
-  if (muTrig && dr_min_hlt_muon_inEvent < 0.15) {
+  if (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15) {
     matchedMuonWasFound = true;
     const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
     tuple->NumEvents->Fill(3., EventWeight_);
@@ -810,17 +814,39 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()), EventWeight_);
       tuple->BefPreS_NumPassedMatchingTrigObj->Fill(numPassedMatchingTrigObj, EventWeight_);
       tuple->BefPreS_NumPassedMatchingTrigObjEtaCut->Fill(numPassedMatchingTrigObjEtaCut, EventWeight_);
+      if (debug_ > 5) LogPrint(MOD) << "NumPassedMatchingTrigObj = " << numPassedMatchingTrigObj << " and numPassedMatchingTrigObjEtaCut = " << numPassedMatchingTrigObjEtaCut;
     }
   }
   
-  // Check if the event is passing trigger
-  if (debug_ > 1) LogPrint(MOD) << "\nChecking if the LS " << iEvent.id().luminosityBlock() <<  " / event " << iEvent.id().event() << "  is passing trigger...";
-  
-  if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 1; }
+  // Categories into trigInfo_
+  if (muTrig && (dr_min_hltMuon_hscpCand_inEvent < 0.15)) { trigInfo_ = 1; }
   if (metTrig) { trigInfo_ = 2; }
-  if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 3; }
-  if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { trigInfo_ = 4; }
+  if (metTrig || (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15)) { trigInfo_ = 3; }
+  if (metTrig && (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15)) { trigInfo_ = 4; }
   
+  // why not let the MET triggers into this plot? then make a new boolean for the trigger choices
+  //  bool triggerPassed = (trigInfo_ == 1);
+  if (doBefPreSplots_) {
+    if (!metTrig && !muTrig) { tuple->BefPreS_TriggerType->Fill(0., EventWeight_); }
+    if (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15) { tuple->BefPreS_TriggerType->Fill(1., EventWeight_); }
+    if (metTrig) { tuple->BefPreS_TriggerType->Fill(2., EventWeight_); }
+    if (metTrig || (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(3., EventWeight_); }
+    if (metTrig && (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(4., EventWeight_); }
+  }
+    // If triggering is intended (not the case when we make ntuples)
+  if (trigInfo_ > 0) {
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
+      // Number of events that pass the trigger
+    tuple->NumEvents->Fill(2., EventWeight_);
+  } else {
+    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers";
+    if (createAndExitGitemplates_) {
+      if (debug_ > 2 ) LogPrint(MOD) << " > The purpose of this is to run the Gi templates only, triggers dont pass -- skip event";
+      return;
+    }
+  }
+    // For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+
   if (!isData && (trigInfo_ > 0)) {
     if (debug_> 0 ) LogPrint(MOD) << "Triggered(Mu|Obj) - GEN track matching";
     const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
@@ -854,8 +880,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         drGenTrigObjMin = drGenTrigObj;
         triggerObjGenIndex = g;
       }
-    }
-    if (dr_min_hlt_muon_inEvent < 0.15 && doBefPreSplots_) {
+    } // end loop on gen collection
+    if (dr_min_hltMuon_hscpCand_inEvent < 0.15 && doBefPreSplots_) {
       // Event triggered with reco muon match
       tuple->BefPreS_TriggerGenMatch->Fill(1.);
       if (triggerObjGenIndex != triggerObjMatchedMuGenIndex) {
@@ -863,6 +889,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
       
       if (drGenTrigObjMin < 0.015 || drGenTrigMatchedMuMin < 0.015) {
+        if (debug_> 5 ) LogPrint(MOD) << " > Trig object matches to muon that matches to gen object, drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin = " << drGenTrigMatchedMuMin ;
         // Gen match was found
         tuple->BefPreS_TriggerGenMatch->Fill(2.);
         if (isHSCPgenID(genColl[triggerObjGenIndex])) {
@@ -895,30 +922,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         LogPrint(MOD) << "Gen match found but too far, drGenTrigObjMin = " << drGenTrigObjMin;
       }
     }
-  }
-
-// why not let the MET triggers into this plot? then make a new boolean for the trigger choices
-//  bool triggerPassed = (trigInfo_ == 1);
-  if (doBefPreSplots_) {
-    if (!metTrig && !muTrig) { tuple->BefPreS_TriggerType->Fill(0., EventWeight_); }
-    if (muTrig && dr_min_hlt_muon_inEvent < 0.15) { tuple->BefPreS_TriggerType->Fill(1., EventWeight_); }
-    if (metTrig) { tuple->BefPreS_TriggerType->Fill(2., EventWeight_); }
-    if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(3., EventWeight_); }
-    if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->BefPreS_TriggerType->Fill(4., EventWeight_); }
-  }
-  // If triggering is intended (not the case when we make ntuples)
-  if (trigInfo_ > 0) {
-    if (debug_ > 2 ) LogPrint(MOD) << " > This event passeed the needed triggers! trigInfo_ = " << trigInfo_;
-  // Number of events that pass the trigger
-    tuple->NumEvents->Fill(2., EventWeight_);
-  } else {
-    if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers";
-    if (createAndExitGitemplates_) {
-      if (debug_ > 2 ) LogPrint(MOD) << " > The purpose of this is to run the Gi templates only, triggers dont pass -- skip event";
-      return;
-    }
-  }
-// For TOF only analysis if the event doesn't pass the signal triggers check if it was triggered by the no BPTX cosmic trigger
+  } // end condition for being MC and passed trigger
 
   //keep beta distribution for signal after the trigger
   if (trigInfo_ > 0) {
@@ -1179,7 +1183,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
        }
      }
      myMuonHLTFilterFile.close();
-   } else cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
+   } else {
+    LogError(MOD) << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
+   }
 
   // loop on the muon collection
   for (unsigned int i = 0; i < muonColl.size(); i++) {
@@ -1576,9 +1582,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   std::vector<int> HSCP_ErrorHisto_bin;
   std::vector<int> HSCP_type;
-
-  float dr_min_hlt_muon = 9999.0;
-
+  
 //====================loop over HSCP candidates===================
   if (debug_ > 0 && trigInfo_ > 0) LogPrint(MOD) << "Loop over HSCP candidates:";
   unsigned int candidate_count = 0;
@@ -1755,8 +1759,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         float dr = deltaR(genColl[g].eta(),genColl[g].phi(),track->eta(),track->phi());
         float dPt = (fabs(genColl[g].pt() - track->pt()))/track->pt();
-        // We need to make this gen charge dependent for TauPrime2e
-        //        cout << "genColl[g].charge(): " << genColl[g].charge() << endl;
+
         if (dr < dRMinGen) {
           dRMinGen = dr;
           closestGenIndex = g;
@@ -1873,12 +1876,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Match candidate track to HLT muon
+    float dr_min_hltMuon_hscpCand = 9999.0;
     float hlt_match_pt = -9999.0;
-    float temp_dr = 9999.;
     for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
-      temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
-      if (temp_dr < dr_min_hlt_muon) {
-        dr_min_hlt_muon = temp_dr;
+      float temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
+      if (temp_dr < dr_min_hltMuon_hscpCand) {
+        dr_min_hltMuon_hscpCand = temp_dr;
         hlt_match_pt = trigObjP4s[objNr].Pt();
       }
     }
@@ -2443,7 +2446,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       ratioCleanAndAllPixelClu = numRecHitsQNoL1 / float(nonL1PixHits);
     }
     
-    if (probQonTrackNoL1 < 0.0) cout << "probQonTrackNoL1 < 0.0, but it shouldnt...";
+    if (probQonTrackNoL1 < 0.0) LogError(MOD) << "probQonTrackNoL1 < 0.0, but it shouldnt...";
     
     // Cleaning of tracks that had failed the template CPE (prob <= 0.0 and prob >= 1.0 cases)
     if (probQonTrack < 0.0 || probXYonTrack < 0.0 || probQonTrack > 1.f || probXYonTrack > 1.f) {
@@ -3358,7 +3361,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
     
-    // Plot Eta after each cut
+    // Plot Eta/ProbQ/EoP/PfType after each cut
     for (size_t i=0;i<sizeof(passedCutsArray);i++) {
       bool allCutsPassedSoFar = true;
       for (size_t j=0;j<=i;j++) {
@@ -3461,7 +3464,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           int npv = vertexColl.size();
           for (int i = 0 ; i < NbPuBins_ ; i++){
             if (npv > PuBins_[i] && npv <= PuBins_[i+1]) {
-              std::cout << "Creating GiS templates for PU bin #" << (i+1) << std::endl;
+              LogPrint(MOD) << "Creating GiS templates for PU bin #" << (i+1) << std::endl;
               if(detid.subdetId() >= 3) { // For strips only 1 question : charge is already multiplied by sclae factor ?
                 if(i==0) tuple->Calibration_GiTemplate_PU_1->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
                 else if(i==1) tuple->Calibration_GiTemplate_PU_2->Fill(modulgeomForIndxH, pathlenghtForIndxH, scaleFactor*chargeForIndxH/pathlenghtForIndxH, preScaleForDeDx);
@@ -3510,8 +3513,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->CutFlow->Fill(passedCutsArraySize+ 3);
       } if (track->pt() > 200) {
         tuple->CutFlow->Fill(passedCutsArraySize + 4);
-      } if (track->pt() > 300) {
-        tuple->CutFlow->Fill(passedCutsArraySize + 5);
+        tuple->CutFlow->Fill(passedCutsArraySize + 5, EventWeight_);
       }
     }
     
@@ -3576,7 +3578,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
       genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
     }
-    // // dr_min_hlt_muon < 0.15 to make it event level? doesnt really work for the denominator
+    // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
     if (passPreselection(passedCutsArrayForTriggerSyst, false) && doPostPreSplots_) {
       if (!HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
@@ -3662,7 +3664,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
       }
     } // end of passedCutsArrayForTriggerSyst loop
-    // dr_min_hlt_muon < 0.15 to make it event level? doesnt really work for the denominator
+    // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
     else if (doBefPreSplots_) {
       if (!HLT_Mu50) {
         tuple->BefPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
@@ -3751,7 +3753,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
       if (trigInfo_ < 1) {
-        cout << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
+        LogError(MOD) << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
       }
       if  (doPostPreSplots_) {
         tuple->PostPreS_MetVsHT->Fill(RecoPFMET, pfJetHT, TrackWeight_);
@@ -4128,7 +4130,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bestCandidateFiStrips = globalFiStrips_;
         bestCandidateFiStripsLog = -log(1-globalFiStrips_);
         bestCandidateProbQNoL1 = probQonTrackNoL1;
-        bestCandidateDrMinHltMuon = dr_min_hlt_muon;
+        bestCandidateDrMinHltMuon = dr_min_hltMuon_hscpCand;
         bestCandidateGenBeta = genBeta;
       }
     }
@@ -4752,7 +4754,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_NOMH.push_back(missingHitsTillLast);
     HSCP_FOVHD.push_back(validFractionTillLast);
     HSCP_NOM.push_back(numDeDxHits);
-    HSCP_matchTrigMuon_minDeltaR.push_back(dr_min_hlt_muon);
+    HSCP_matchTrigMuon_minDeltaR.push_back(dr_min_hltMuon_hscpCand);
     HSCP_matchTrigMuon_pT.push_back(hlt_match_pt);
     HSCP_iso_TK.push_back(iso_TK);
     HSCP_iso_ECAL.push_back(iso_ECAL);
@@ -4906,8 +4908,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->EventCutFlow->Fill(18.0);
       } if (bestCandidateTrack->pt() > 200) {
         tuple->EventCutFlow->Fill(19.0);
-      } if (bestCandidateTrack->pt() > 300) {
-      tuple->EventCutFlow->Fill(20.0);
+        tuple->EventCutFlow->Fill(20.0, EventWeight_);
       }
     }
     
@@ -5089,10 +5090,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Trigger type after preSelection at the event level
     if (doPostPreSplots_) {
         if (!metTrig && !muTrig) { tuple->PostPreS_TriggerType->Fill(0., EventWeight_); }
-        if (muTrig && (dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(1., EventWeight_); }
+        if (muTrig && (dr_min_hltMuon_hscpCand_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(1., EventWeight_); }
         if (metTrig) { tuple->PostPreS_TriggerType->Fill(2., EventWeight_); }
-        if (metTrig || (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(3., EventWeight_); }
-        if (metTrig && (muTrig && dr_min_hlt_muon_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(4., EventWeight_); }
+        if (metTrig || (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(3., EventWeight_); }
+        if (metTrig && (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15)) { tuple->PostPreS_TriggerType->Fill(4., EventWeight_); }
     }
   } // end on making sure the bestCandidateIndex is assigned
 
