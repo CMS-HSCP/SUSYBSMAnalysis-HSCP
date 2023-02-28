@@ -6,6 +6,13 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
+#"/SingleMuon/Run2016B-21Feb2020_ver2_UL2016_HIPM-v1/AOD",
+#"/SingleMuon/Run2016C-21Feb2020_UL2016_HIPM-v1/AOD",
+#"/SingleMuon/Run2016D-21Feb2020_UL2016_HIPM-v1/AOD",
+#"/SingleMuon/Run2016E-21Feb2020_UL2016_HIPM-v1/AOD",
+#"/SingleMuon/Run2016F-21Feb2020_UL2016_HIPM-v1/AOD",
+#"/SingleMuon/Run2016G-21Feb2020_UL2016-v1/AOD",
+#"/SingleMuon/Run2016H-21Feb2020_UL2016-v1/AOD",
 "/SingleMuon/Run2017B-15Feb2022_UL2017-v1/AOD",
 "/SingleMuon/Run2017C-15Feb2022_UL2017-v1/AOD",
 "/SingleMuon/Run2017D-15Feb2022_UL2017-v1/AOD",
@@ -48,6 +55,7 @@ config.section_('Data')
 config.Data.inputDataset = 'MINTA'
 config.Data.splitting = 'LumiBased'
 config.Data.unitsPerJob = 50
+#MASZK2016config.Data.lumiMask = 'https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions16/13TeV/Legacy_2016/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt'
 #MASZK2018config.Data.lumiMask = 'https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions18/13TeV/Legacy_2018/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt'
 #MASZK2017config.Data.lumiMask = 'https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt'
 config.Data.outputDatasetTag = config.General.requestName
@@ -75,6 +83,10 @@ for i in datasetList:
   os.system(replaceROVIDMINTA)
   replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceMINTA)
+
+  if ("2016" in i) :
+    EVAD = "2016"
+    replaceMASZK = "sed -i 's/#MASZK2016//g' 4crab_toSubmit_Data.py"
   if ("2017" in i) :
     EVAD = "2017"
     replaceMASZK = "sed -i 's/#MASZK2017//g' 4crab_toSubmit_Data.py"

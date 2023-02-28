@@ -14,10 +14,12 @@ if(didVoms):
  sys.exit()
 
 os.system("python3 submitCrabJobsData.py "+str(codeVersion))
+os.system("python3 submitCrabJobsData2016Only.py "+str(codeVersion))
 os.system("python3 submitCrabJobsBackgroundWJetsOnly.py "+str(codeVersion))
 os.system("python3 submitCrabJobsBackgroundQCDOnly.py "+str(codeVersion))
 os.system("python3 submitCrabJobsBackgroundTTbarOnly.py "+str(codeVersion))
 os.system("python3 submitCrabJobsSignalGluinoOnly.py "+str(codeVersion))
+os.system("python3 submitCrabJobsSignalStausOnly.py "+str(codeVersion))
 os.system("python3 submitCrabJobsBackgroundZToMuMuOnly.py "+str(codeVersion))
 
 

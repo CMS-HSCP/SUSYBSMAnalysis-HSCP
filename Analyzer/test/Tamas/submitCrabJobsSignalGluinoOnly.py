@@ -16,8 +16,6 @@ datasetList = [
 "/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-500_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 "/HSCPgluino_M-800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPpairStau_M-557_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-
 ]
 
 codeVersion = sys.argv[1]
@@ -34,6 +32,7 @@ config.section_('General')
 config.General.requestName = 'Analysis_2018_ROVIDMINTA_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
+config.General.transferLogs = True
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
@@ -48,7 +47,7 @@ config.Data.inputDataset = 'MINTA'
 #config.Data.inputDBS = 'phys03'
 #config.Data.splitting = 'Automatic'
 config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 2
+config.Data.unitsPerJob = 1 
 config.Data.totalUnits = config.Data.unitsPerJob * 1000
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'

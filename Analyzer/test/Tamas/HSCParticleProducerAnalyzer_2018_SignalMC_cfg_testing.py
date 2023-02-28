@@ -9,7 +9,7 @@ options = VarParsing('analysis')
 # defaults
 options.outputFile = 'Histos.root'
 # -1 means all events
-options.maxEvents = 2000 
+options.maxEvents = 2010 
 
 #options.register('GTAG', '106X_upgrade2018_realistic_v11_L1v1',
 options.register('GTAG', '106X_upgrade2018_realistic_v11BasedCandidateTmp_2022_08_09_01_32_34',
@@ -81,9 +81,15 @@ process.source = cms.Source("PoolSource",
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
    fileNames = cms.untracked.vstring("file:9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
+#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/B0CBF8C8-042E-7A4A-A26C-02245F2025C2.root"),
 
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
+
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18515')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18186')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18282')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18120')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -261,7 +267,7 @@ process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
 process.HSCParticleAnalyzer.Period = options.YEAR
-process.HSCParticleAnalyzer.DebugLevel = 0 
+process.HSCParticleAnalyzer.DebugLevel = 0
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C
 process.HSCParticleAnalyzer.DeDxSF_0 = SF0
