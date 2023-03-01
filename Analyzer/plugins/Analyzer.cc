@@ -58,7 +58,7 @@
 // - 43p9: CreateGiTemplates = false, CreateAndExitGitemplates = false, change logic on trigger + muon matching, plots for num trig objs, should check if the HSCP candidate matched to trig obj vs trig matched to gen with eta cut now makes more sense or not, add CutFlowEoP plot
 // - 44p0: Include SFs in the last bin of CutFlow, fix last bin of HltMatchTrackLevel
 // - 44p1: Add stability plot for pixel charge on layers1-4, ExitWhenGenMatchNotFound = true, just for temp to see what's up with EoP plots
-// - 44p2: ExitWhenGenMatchNotFound = false, remove some unused histos, add 2017MC_v4 template
+// - 44p2: ExitWhenGenMatchNotFound = false, remove some unused histos, add 2017MC_v4 template, add SR2FAIL and SR2PASS plots for GiStrips, and pT err related , PV related
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -554,6 +554,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       highestSumPt2VertexIndex = i;
     }
   } // end loop on vertexColl
+  
+  // A,B,C for 3 categories of PU
+  bool PUA = (numGoodVerts < 15);
+  bool PUB = (numGoodVerts >= 15 && numGoodVerts < 30);
+  bool PUC = (numGoodVerts >= 30 );
 
   //------------------------------------------------------------------
   // GenParticles to be saved in the HSCP candidate ntuples (Christina Wang)
@@ -1588,6 +1593,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   unsigned int candidate_count = 0;
   unsigned int postPreS_candidate_count = 0;
   int bestCandidateIndex = -1;
+  int bestCandidateGenIndex = -1;
   float maxIhSoFar = -1.;
   float bestCandidateIas = -1.;
   float bestCandidateMass = -1.;
@@ -1909,7 +1915,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       //Find closest NV track
       const std::vector<reco::Track> noVertexTrackColl = iEvent.get(refittedStandAloneMuonsToken_);
       reco::Track NVTrack;
-      float minDr = 15;
+      float minDr = 9999.;
       for (unsigned int i = 0; i < noVertexTrackColl.size(); i++) {
         auto dR = deltaR(track->eta(), track->phi(), noVertexTrackColl[i].eta(), noVertexTrackColl[i].phi());
         if (dR < minDr) {
@@ -2918,11 +2924,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) +
     track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);
     float validFractionTillLast = track->found() <= 0 ? -1 : track->found() / float(track->found() + missingHitsTillLast);
-    
-    // A,B,C for 3 categories of PU
-    bool PUA = (numGoodVerts < 15);
-    bool PUB = (numGoodVerts >= 15 && numGoodVerts < 30);
-    bool PUC = (numGoodVerts >= 30 );
         
     float Mass =  dedxMObj ?  GetMass(track->p(), globalIh_, dEdxK_, dEdxC_) : -1;
     
@@ -4132,6 +4133,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hltMuon_hscpCand;
         bestCandidateGenBeta = genBeta;
+        bestCandidateGenIndex = closestGenIndex;
       }
     }
     
@@ -4934,6 +4936,32 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->PostS_ProbQNoL1VsIasVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_);
     tuple->PostS_ProbQNoL1VsFiStripsVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_);
+    
+    // Almost SR2 plots, pT > 200, F < 0.9
+    if (((1 - bestCandidateProbQNoL1) < 0.9) && bestCandidateTrack->pt() > 200) {
+      tuple->PostS_SR2FAIL_PV->Fill(numGoodVerts, EventWeight_);
+      if (PUA) tuple->PostS_SR2FAIL_Ias_PUA->Fill(bestCandidateIas, EventWeight_);
+      else if (PUB) tuple->PostS_SR2FAIL_Ias_PUB->Fill(bestCandidateIas, EventWeight_);
+      else if (PUC) tuple->PostS_SR2FAIL_Ias_PUC->Fill(bestCandidateIas, EventWeight_);
+      
+      if (bestCandidateIas > 0.25) {
+        tuple->PostS_SR2FAIL_PtErrOverPt2->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt() * bestCandidateTrack->pt()), EventWeight_);
+        if (bestCandidateGenIndex > 0) tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), EventWeight_);
+      }
+    }
+    // Fully SR2 plots, needs to be blinded for data (but fine for MC)!!
+    else if (((1 - bestCandidateProbQNoL1) > 0.9) && bestCandidateTrack->pt() > 200) {
+      tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, EventWeight_);
+      if (PUA) tuple->PostS_SR2PASS_Ias_PUA->Fill(bestCandidateIas, EventWeight_);
+      else if (PUB) tuple->PostS_SR2PASS_Ias_PUB->Fill(bestCandidateIas, EventWeight_);
+      else if (PUC) tuple->PostS_SR2PASS_Ias_PUC->Fill(bestCandidateIas, EventWeight_);
+      
+      
+      if (bestCandidateIas > 0.25) {
+        tuple->PostS_SR2PASS_PtErrOverPt2->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt() * bestCandidateTrack->pt()), EventWeight_);
+        if (bestCandidateGenIndex > 0) tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), EventWeight_);
+      }
+    }
     
     // Systematics plots for pT rescaling
     if (rescaledPtUp > globalMinPt_) {
@@ -6053,8 +6081,6 @@ void Analyzer::initializeCuts(edm::Service<TFileService>& fs,
     }
   }
 
-//printf("%i Different Final Selection will be tested\n",(int)CutPt.size());
-//printf("%i Different Final Selection will be tested for background uncertainty\n",(int)CutPt_Flip.size());
   edm::LogInfo("Analyzer") << CutPt.size() << " Different Final Selection will be tested\n"
                            << CutPt_Flip.size()
                            << " Different Final Selection will be tested for background uncertainty";
@@ -6391,8 +6417,7 @@ bool Analyzer::passSelection(const reco::TrackRef track,
   using namespace edm;
   
   if (track.isNull()) {
-  // Should be a LogError I believe...
-    LogPrint(MOD) << "@passSelection: track.isNull() -- this should never happen!!!";
+    LogError(MOD) << "@passSelection: track.isNull() -- this should never happen!!!";
     return false;
   }
 
@@ -6407,30 +6432,19 @@ bool Analyzer::passSelection(const reco::TrackRef track,
     if (typeMode_ > 1) TOFCut = CutTOF_Flip_[CutIndex];
   }
 
-// Check if we pass the momentum selection
+  // Check if we pass the momentum selection
   if (RescaleP) {
     if (track->pt()*(1+shiftForPt(track->pt(),track->eta(),track->phi(),track->charge())) < PtCut)
       return false;
   } else if (track->pt() < PtCut) {
       return false;
   }
-  
-// Distribtution of genBeta after Pt selection is passed
-  if (tuple && genBeta >= 0) {
-    tuple->PostS_CutIdVsBeta_postPt->Fill(CutIndex, genBeta, EventWeight_);
-  }
-
-// Check if we pass the (rescalled) Ias selection
+  // if we pass the (rescalled) Ias selection
   if (typeMode_ != 3 && globalIas_ + RescaleI < IasCut) {
     return false;
   }
 
-// Distribtution of genBeta after Pt and Ias selection is passed
-  if (tuple && genBeta >= 0) {
-      tuple->PostS_CutIdVsBeta_postPtAndIas->Fill(CutIndex, genBeta, EventWeight_);
-  }
-
-// Check if we pass the TOF selection
+  // Check if we pass the TOF selection
   if ((typeMode_ > 1 && typeMode_ != 5) && !isFlip && MuonTOF + RescaleT < TOFCut) {
     return false;
   }
