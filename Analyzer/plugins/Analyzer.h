@@ -107,14 +107,6 @@
 
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #define FWCORE
-#include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
@@ -127,6 +119,14 @@
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
 
+#include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 
 using namespace std;
