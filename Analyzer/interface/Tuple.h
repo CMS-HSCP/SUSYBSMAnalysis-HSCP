@@ -610,6 +610,7 @@ struct Tuple {
   TH3F* Calibration_GiTemplate_PU_4;
   TH3F* Calibration_GiTemplate_PU_5;
 
+
   // Post preselection plots
   TH1F* PostPreS_RelDiffMuonPtAndTrackPt;
   TH2F* PostPreS_MuonPtVsTrackPt;
@@ -734,6 +735,9 @@ struct Tuple {
   TH2F* PostPreS_ProbXYVsProbQ_highIas;
 
   TH1F* PostPreS_Ias_CR;
+  TH1F* PostPreS_Ih_CR;
+  TH1F* PostPreS_Ihstrip_CR;
+  TH1F* PostPreS_Ih_nopixcl_CR;
   TH1F* PostPreS_Pt_lowPt_CR;
   TH1F* PostPreS_Ias_CR_veryLowPt;
   TH1F* PostPreS_P_CR_veryLowPt;
@@ -747,7 +751,17 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Ias_down;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_down;
-  
+ 
+  TH1F* PostPreS_Ih_CR_veryLowPt;
+  TH1F* PostPreS_Ihstrip_CR_veryLowPt;
+  TH1F* PostPreS_Ih_noclean_CR_veryLowPt;
+  TH1F* PostPreS_Ih_noinside_CR_veryLowPt;
+  TH1F* PostPreS_Ih_nopixcl_CR_veryLowPt;
+  TH1F* PostPreS_Pt_CR_veryLowPt; 
+  TH1F* PostPreS_ProbQNoL1_CR_veryLowPt; 
+  TH2F* PostPreS_CpPL_pix_CR_veryLowPt;
+  TH2F* PostPreS_CpPL_strip_CR_veryLowPt;
+
   TH1F* PostS_RelativePtShift;
   TH1F* PostS_ProbQNoL1;
   TH1F* PostS_Ias;
@@ -1415,6 +1429,8 @@ struct Tuple {
  TH2D* SF_HHit2DStrip_loose;
  TH2D* SF_HHit2DPix;
  TH2D* SF_HHit2DStrip;
+ TH2D* SF_HHit2DPix_nosf;
+ TH2D* SF_HHit2DStrip_nosf;
 
  // K and C
  TH2D* K_and_C_Ih_noL1_VsP_loose1;
@@ -1438,10 +1454,13 @@ struct Tuple {
  TH2D* K_and_C_Ih_noL1_VsP_noFcut2;
  TH2D* K_and_C_Ih_strip_VsP_noFcut1;
  TH2D* K_and_C_Ih_strip_VsP_noFcut2;
- TH1D* K_and_C_Kin_Mass;
- TH1D* K_and_C_Kin_p;
- TH1D* K_and_C_Kin_phi;
- TH1D* K_and_C_Kin_eta;
+ TH1F* K_and_C_Kin_Mass;
+ TH1F* K_and_C_Kin_p;
+ TH1F* K_and_C_Kin_phi;
+ TH1F* K_and_C_Kin_eta;
+
+ TH1F* K_and_C_nsat;
+ TH1F* K_and_C_fracsat;
 
 
  // Stability
@@ -1454,6 +1473,10 @@ struct Tuple {
  TH2D* Stab_invB_VsRun;
  TH2D* Stab_invB_DT_VsRun;
  TH2D* Stab_invB_CSC_VsRun;
+
+ // Saturatopm
+ TH1F* Sat_nsat;
+ TH1F* Sat_fracsat;
 };
 
 #endif

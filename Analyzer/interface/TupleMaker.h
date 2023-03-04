@@ -1099,6 +1099,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
     tuple->PostPreS_PtVsIas = dir.make<TH2F>("PostPreS_PtVsIas",";p_{T};G_{i}^{strips};Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 20, 0., 1.);
     tuple->PostPreS_Ias_CR = dir.make<TH1F>("PostPreS_Ias_CR", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
+    tuple->PostPreS_Ih_CR= dir.make<TH1F>("PostPreS_Ih_CR", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
+    tuple->PostPreS_Ihstrip_CR= dir.make<TH1F>("PostPreS_Ihstrip_CR", ";I_{h} (strip only) (MeV/cm)", 200, 0, dEdxM_UpLim);
+    tuple->PostPreS_Ih_nopixcl_CR= dir.make<TH1F>("PostPreS_Ih_nopixcl_CR", ";I_{h}(no pix cleaning) (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->PostPreS_Pt_lowPt_CR = dir.make<TH1F>("PostPreS_Pt_lowPt_CR", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
     tuple->PostPreS_Ias_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ias_CR_veryLowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
     tuple->PostPreS_P_CR_veryLowPt = dir.make<TH1F>("PostPreS_P_CR_veryLowPt", ";p (GeV);Tracks / 10 GeV", 50, 0., 50);
@@ -1412,6 +1415,19 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_RecoPfJetsNum = dir.make<TH1F>("PostPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / 1",  15, -0.5, 15.5);
     tuple->PostPreS_RecoPfHT = dir.make<TH1F>("PostPreS_RecoPfHT", ";PfHT",100,0.,2000.);
     tuple->PostPreS_GenBeta = dir.make<TH1F>("PostPreS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
+
+
+    // add  plots in Gitemplate region  to answer Slava's questions
+     tuple->PostPreS_CpPL_pix_CR_veryLowPt = dir.make<TH2F>("PostPreS_CpPL_pix_CR_veryLowPt","PostPreS_CpPL_pix_CR_veryLowPt",100,0,10,10,0,10);
+     tuple->PostPreS_CpPL_strip_CR_veryLowPt = dir.make<TH2F>("PostPreS_CpPL_strip_CR_veryLowPt","PostPreS_CpPL_strip_CR_veryLowPt",100,0,10,25,0,25);
+     tuple->PostPreS_Ih_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_CR_veryLowPt", ";I_{h} (MeV/cm)", 200, 0, dEdxM_UpLim);
+     tuple->PostPreS_Ihstrip_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ihstrip_CR_veryLowPt", ";I_{h} (strip only) (MeV/cm)", 200, 0, dEdxM_UpLim);
+     tuple->PostPreS_Ih_noclean_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_noclean_CR_veryLowPt", ";I_{h}(no cleaning) (MeV/cm)", 200, 0, dEdxM_UpLim);
+     tuple->PostPreS_Ih_noinside_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_noinside_CR_veryLowPt", ";I_{h}(no clean no inside) (MeV/cm)", 200, 0, dEdxM_UpLim);
+     tuple->PostPreS_Ih_nopixcl_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_nopixcl_CR_veryLowPt", ";I_{h}(no pix cleaning) (MeV/cm)", 200, 0, dEdxM_UpLim);
+     tuple->PostPreS_Pt_CR_veryLowPt = dir.make<TH1F>("PostPreS_Pt_CR_veryLowPt", ";p_{T} (GeV)", 50, 0., 50.);
+     tuple->PostPreS_ProbQNoL1_CR_veryLowPt = dir.make<TH1F>("PostPreS_ProbQNoL1_CR_veryLowPt", ";F_{i}^{pixels}", 20, 0., 1.);
+
   }
   tuple->PostS_HltMatchTrackLevel = dir.make<TH1F>("PostS_HltMatchTrackLevel", ";;Events / category", 3, 0.5, 3.5);
   tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(1,"HLT + any muon match");
@@ -1924,6 +1940,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->SF_HHit2DStrip_loose =  dir.make<TH2D>("SF_HHit2DStrip_loose", "SF_HHit2DStrip_loose",  50, 0., 100., 200, 0., 20.);
     tuple->SF_HHit2DPix   =  dir.make<TH2D>("SF_HHit2DPix", "SF_HHit2DPix",  50, 0., 100., 200, 0., 20.);
     tuple->SF_HHit2DStrip =  dir.make<TH2D>("SF_HHit2DStrip", "SF_HHit2DStrip",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DPix_nosf   =  dir.make<TH2D>("SF_HHit2DPix_nosf", "SF_HHit2DPix_nosf",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DStrip_nosf =  dir.make<TH2D>("SF_HHit2DStrip_nosf", "SF_HHit2DStrip_nosf",  50, 0., 100., 200, 0., 20.);
 
   // K and C
     tuple->K_and_C_Ih_noL1_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose1","K_and_C_Ih_noL1_VsP_loose1", 50,0,5, 80, 2.,10.);
@@ -1948,10 +1966,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->K_and_C_Ih_strip_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut1","K_and_C_Ih_strip_VsP_noFcut1", 50,0,5, 80, 2.,10.);
     tuple->K_and_C_Ih_strip_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut2","K_and_C_Ih_strip_VsP_noFcut2", 250,0,50, 80, 2.,10.);
 
-    tuple->K_and_C_Kin_Mass = dir.make<TH1D>("K_and_C_Kin_Mass","K_and_C_Kin_Mass",100,0.,5.);
-    tuple->K_and_C_Kin_p = dir.make<TH1D>("K_and_C_Kin_p","K_and_C_Kin_p",50,0.,5.);
-    tuple->K_and_C_Kin_phi = dir.make<TH1D>("K_and_C_Kin_phi","K_and_C_Kin_phi",  24, -1.*acos(-1),acos(-1));
-    tuple->K_and_C_Kin_eta = dir.make<TH1D>("K_and_C_Kin_eta","K_and_C_Kin_eta", 18, -2.25, 2.25);
+    tuple->K_and_C_Kin_Mass = dir.make<TH1F>("K_and_C_Kin_Mass","K_and_C_Kin_Mass",100,0.,5.);
+    tuple->K_and_C_Kin_p = dir.make<TH1F>("K_and_C_Kin_p","K_and_C_Kin_p",50,0.,5.);
+    tuple->K_and_C_Kin_phi = dir.make<TH1F>("K_and_C_Kin_phi","K_and_C_Kin_phi",  24, -1.*acos(-1),acos(-1));
+    tuple->K_and_C_Kin_eta = dir.make<TH1F>("K_and_C_Kin_eta","K_and_C_Kin_eta", 18, -2.25, 2.25);
+
+    tuple->K_and_C_nsat = dir.make<TH1F>("K_and_C_nsat","K_and_C_nsat", 11, -0.5, 10.5);
+    tuple->K_and_C_fracsat = dir.make<TH1F>("K_and_C_fracsat","K_and_C_fracsat", 50, 0., 1.);
 
   // Stability
     tuple->Stab_Ih_NoL1_VsRun    = dir.make<TH2D>("Stab_Ih_NoL1_VsRun","Ih(NoL1):Run", 545, 271000,325500, 60, 0.,15.);
@@ -1964,6 +1985,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Stab_invB_DT_VsRun    = dir.make<TH2D>("Stab_invB_DT_VsRun","invBeta(DT):Run", 545, 271000,325500, 90,-1,2);
     tuple->Stab_invB_CSC_VsRun   = dir.make<TH2D>("Stab_invB_CSC_VsRun","invBeta(CSC):Run", 545, 271000,325500, 90,-1,2);
 
+  // saturation
+    tuple->Sat_nsat = dir.make<TH1F>("Sat_nsat","Sat_nsat", 11, -0.5, 10.5);
+    tuple->Sat_fracsat = dir.make<TH1F>("Sat_fracsat","Sat_fracsat", 50, 0., 1.);
 
 
   }
