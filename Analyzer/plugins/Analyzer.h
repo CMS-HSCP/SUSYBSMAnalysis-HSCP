@@ -302,7 +302,7 @@ private:
   string sampleName_;
   string period_;
 
-  bool tapeRecallOnly_, doBefTrigPlots_, doBefPreSplots_, doPostPreSplots_;
+  bool tapeRecallOnly_, doBefTrigPlots_, doBefPreSplots_, doPostPreSplots_, doSystsPlots_;
 
   // binning for the pT, mass, IP distributions
   float ptHistoUpperBound_ = 4000;
@@ -390,7 +390,7 @@ private:
 
   MCWeight* mcWeight;
 
-  float EventWeight_ = 1.;
+  float eventWeight_ = 1.;
   float GeneratorWeight_ = 1.;
   float GeneratorBinningValues_ = 1.;
   //double SampleWeight_ = 1.;
@@ -400,7 +400,7 @@ private:
 
   TRandom3* RNG = nullptr;
   TRandom3* RNG2 = nullptr;
-  TRandom3* RNG3 = nullptr;
+  //TRandom3* RNG3 = nullptr;
   bool is2016;
   bool is2016G;
 

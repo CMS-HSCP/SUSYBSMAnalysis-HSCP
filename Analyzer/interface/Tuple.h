@@ -836,6 +836,13 @@ struct Tuple {
   TH2F* PostS_ProbQNoL1VsIas_Trigger_up;
   TH2F* PostS_ProbQNoL1VsIas_Trigger_down;
   
+  TH3F* PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_up;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_down;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_MuonIDSF_up;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_MuonIDSF_down;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_up;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_down;
+  
   TH1F* PostS_SR1_ProbQNoL1;
   TH1F* PostS_SR1_Ias;
   TH2F* PostS_SR1_ProbQNoL1VsIas;
