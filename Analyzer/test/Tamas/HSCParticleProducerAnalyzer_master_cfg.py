@@ -27,7 +27,7 @@ options.register('YEAR', '2018',
 options.register('ERA', 'A', 
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string, 
-    'Sample Type. Use: A,B,C,D,E,F,G'
+    'Sample Type. Use: A,B,C,D,E,F,G,H'
 )
 options.register('isSkimmedSample', False,
     VarParsing.multiplicity.singleton,
@@ -200,6 +200,27 @@ else:
 
 if options.SAMPLE == 'isData':
     SampleType = 0
+    if options.YEAR == '2016':
+        K = 2.3
+        C = 3.17
+        SF0 = 1.0
+        SF1 = 1.0325
+        if options.ERA == 'A':
+            IasTemplate = 'template_2016B_v4.root'
+        if options.ERA == 'B':
+            IasTemplate = 'template_2016B_v4.root'
+        if options.ERA == 'C':
+            IasTemplate = 'template_2016C_v4.root'
+        if options.ERA == 'D':
+            IasTemplate = 'template_2016D_v4.root'
+        if options.ERA == 'E':
+            IasTemplate = 'template_2016E_v4.root'
+        if options.ERA == 'F':
+            IasTemplate = 'template_2016F_v4.root'
+        if options.ERA == 'G':
+            IasTemplate = 'template_2016G_v4.root'
+        if options.ERA == 'H':
+            IasTemplate = 'template_2016H_v4.root'
     if options.YEAR == '2017':
         K = 2.3
         C = 3.17

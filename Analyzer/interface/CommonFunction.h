@@ -74,7 +74,8 @@ void LoadCorrectionParameters() {
 //
 //====================================================================
 
-void loadSFPixel() {
+void loadSFPixel(int sampleType_) {
+   if (sampleType_ > 0) return;
    std::ifstream file_calib1;
    file_calib1.open("CorrFact2017PixL1.txt");
    icalibL1=0;

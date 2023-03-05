@@ -1,6 +1,6 @@
 import sys, os, time, re
 import numpy as np
-#from common_functions import *
+from threading import Thread
 from optparse import OptionParser
 parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
@@ -38,7 +38,7 @@ codeVersion = sys.argv[1]
 
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
-if not os.path.exists("4crab_Template.py"):
+if not os.path.exists("4crab_Bkg_TemplateMT.py"):
   TEMPLATE = '''
 from CRABClient.UserUtilities import config
 config = config()
@@ -55,42 +55,44 @@ config.JobType.allowUndistributedCMSSW = True
 config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 4000
 config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2017MC_v4.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
+config.JobType.pyCfgParams = ['GTAG=106X_mc2017_realistic_v10', 'SAMPLE=isBckg', 'YEAR=2017', 'ERA=MC']
 
 config.section_('Data')
 config.Data.inputDataset = 'MINTA'
 #config.Data.inputDBS = 'phys03'
-#config.Data.splitting = 'Automatic'
 config.Data.splitting = 'LumiBased'
-    #config.Data.unitsPerJob = 1 #20
-#config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 75
-#config.Data.totalUnits = config.Data.unitsPerJob * 800
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 config.Data.ignoreLocality = True
-config.Data.publication = False
 config.Data.partialDataset = True
+config.Data.publication = False
 
 config.section_('Site')
 config.Site.whitelist = ['T2_DE_DESY','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_*', 'T2_UK_London_IC']
-config.Site.blacklist = ['T2_US_Nebraska']
 config.Site.storageSite = 'T2_HU_Budapest'
   '''
 
-  with open("4crab_Template.py", "w") as text_file:
+  with open("4crab_Bkg_TemplateMT.py", "w") as text_file:
       text_file.write(TEMPLATE)
 
-for i in datasetList:
-  print("Submit for sample "+i)
-  os.system("cp 4crab_Template.py 4crab_toSubmit.py")
-  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_toSubmit.py"
+def task(i):
+  #print("Submit for sample "+i)
+  os.system("cp 4crab_Bkg_TemplateMT.py 4crab_Bkg_toSubmit"+str(i.replace("/","_"))+".py")
+  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_Bkg_toSubmit"+str(i.replace("/","_"))+".py"
   os.system(replaceVERZIO)
   shortSampleName = i[1:(i.find('TuneCP5'))-1]
-  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_toSubmit.py"
+  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_Bkg_toSubmit"+str(i.replace("/","_"))+".py"
   os.system(replaceROVIDMINTA)
-  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_toSubmit.py"
+  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_Bkg_toSubmit"+str(i.replace("/","_"))+".py"
   os.system(replaceMINTA)
-  os.system("crab submit -c 4crab_toSubmit.py")
-  os.system("mv 4crab_toSubmit.py submittedConfigs/.")
+  os.system("crab submit -c 4crab_Bkg_toSubmit"+str(i.replace("/","_"))+".py")
+  os.system("mv 4crab_Bkg_toSubmit"+str(i.replace("/","_"))+".py submittedConfigs/.")
+  
 
-os.system("rm 4crab_Template.py")
+for dataset in datasetList:
+  t = Thread(target=task, args=(dataset,))
+  t.start()
+
+os.system("rm 4crab_Bkg_TemplateMT.py")
+os.system("rm *pyc")
