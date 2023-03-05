@@ -60,7 +60,7 @@
 // - 44p1: Add stability plot for pixel charge on layers1-4, ExitWhenGenMatchNotFound = true, just for temp to see what's up with EoP plots
 // - 44p2: ExitWhenGenMatchNotFound = false, remove some unused histos, add 2017MC_v4 template, add SR2FAIL and SR2PASS plots for GiStrips, and pT err related , PV related
 // - 44p3: Add one more bin to the PostS_HltMatchTrackLevel plot, apply all SFs from the POG, make new syst plots for each POG SFs, change Ias systematics back to factor on the Gi value, postPreS status 91 plot fix
-// - 44p4: Adding PR107 and PR113, pixel cleaning in Ih, corrections for Gi templates, new dEdX SF, saturation plots
+// - 44p4: Adding PR107 and PR113, pixel cleaning in Ih, corrections for Gi templates, new dEdX SF, saturation plots, new DeDxSF_1 and  DeDxSF_0 values, CreateGiTemplates = True
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -3565,7 +3565,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
         if (cleaning && dedx_inside)  {
-         if (createGiTemplates_) {
+          if (createGiTemplates_) {
            int npv = vertexColl.size();
            for (int i = 0 ; i < NbPuBins_ ; i++){
              if (npv > PuBins_[i] && npv <= PuBins_[i+1]) {
@@ -3599,26 +3599,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
         // ADD plots to answer Slava's questions about Charge Resolution
         if (doPostPreSplots_) {
-             int layer_num = 0;
-             float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
-             float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-             float pathL = dedxHits->pathlength(h);
+         int layer_num = 0;
+         float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
+         float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+         float pathL = dedxHits->pathlength(h);
 //             cout << " test  ScaleF " << detid.subdetId() << " scaleF " << scaleF << endl;
-             if (detid.subdetId() < 3) {
-                if (detid.subdetId() == PixelSubdetector::PixelBarrel) layer_num=tTopo->pxbLayer(detid);
-                else layer_num=tTopo->pxfDisk(detid)+4;
-                tuple->PostPreS_CpPL_pix_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
-             }
-             else {
-               if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
-               if (detid.subdetId() == StripSubdetector::TOB) layer_num = abs(int(tTopo->tobLayer(detid))) + 4;
-               if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
-               if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
-               tuple->PostPreS_CpPL_strip_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
-             }
-        }
-       } // end if on the cleaning and the inside 
-
+          // check if we are on the pixels
+         if (detid.subdetId() < 3) {
+            if (detid.subdetId() == PixelSubdetector::PixelBarrel) layer_num=tTopo->pxbLayer(detid);
+            else layer_num=tTopo->pxfDisk(detid)+4;
+            tuple->PostPreS_CpPL_pix_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+         } // otherwise we are on the strips
+         else {
+           if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
+           if (detid.subdetId() == StripSubdetector::TOB) layer_num = abs(int(tTopo->tobLayer(detid))) + 4;
+           if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
+           if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
+           tuple->PostPreS_CpPL_strip_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+         } // end on condition for pixels or strips
+        } // end condition on doPostPreSplots_
+       } // end if on the cleaning and the inside
       } // end loop on dEdx hits
     } // end condition on passing preselection cuts for the Gi templates
     
@@ -6314,14 +6314,14 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
   desc.addUntracked("ExitWhenGenMatchNotFound",false)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
-  desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
-  desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
+  desc.addUntracked("DeDxSF_0",1.0)->setComment(", really controlled by the config for each era");
+  desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
   desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
   desc.addUntracked("DeDxC",3.17)->setComment("C constant, really controlled by the config for each era");
   desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
-  desc.addUntracked("SaveGenTree",0)->setComment("A");
+  desc.addUntracked("SaveGenTree",0)->setComment("Prob should be removed anyways, we save the gen info in the main ntuple now: TODO");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
-    ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector");
+    ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector, really controlled by the config for each era");
 
 
 
@@ -6384,7 +6384,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   //GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
   desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile up bins");
