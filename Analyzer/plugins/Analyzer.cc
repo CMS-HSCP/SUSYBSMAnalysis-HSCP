@@ -191,7 +191,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 //now do what ever initialization is needed
 // define the selection to be considered later for the optimization
 // WARNING: recall that this has a huge impact on the analysis time AND on the output file size --> be carefull with your choice
-
+   
   useClusterCleaning = true;
   if (typeMode_ == 4) {
     useClusterCleaning = false;//switch off cluster cleaning for mCHAMPs
@@ -219,6 +219,8 @@ Analyzer::~Analyzer() = default;
 
 // ------------ method called once each job just before starting event loop  ------------
 void Analyzer::beginJob() {
+  // if the only purpose is to trick CRAB to do a TAPERECALL
+  if (tapeRecallOnly_) return;
   static constexpr const char* const MOD = "Analyzer";
 
   // Book histograms using TFileService
@@ -254,16 +256,13 @@ void Analyzer::beginJob() {
                                globalMinPt_,
                                globalMinTOF_,
                                tapeRecallOnly_);
+  
   tuple_maker->initializeRegions(tuple,
                                  dir,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
                                  reg_massbins_);
-
-
-
-
 
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
@@ -332,6 +331,9 @@ void Analyzer::beginJob() {
 
 // ------------ method called for each event  ------------
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  // if the only purpose is to trick CRAB to do a TAPERECALL
+  if (tapeRecallOnly_) return;
+  
   static constexpr const char* const MOD = "Analyzer";
   static constexpr const float cm2umUnit = 0.0001;
   using namespace edm;
@@ -6145,6 +6147,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 // ------------ method called once each job just after ending the event loop  ------------
 void Analyzer::endJob() {
+  if (tapeRecallOnly_) return;
+  
   delete RNG;
   delete RNG2;
 //  delete RNG3;
