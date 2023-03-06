@@ -240,7 +240,7 @@ void Analyzer::beginJob() {
   //PtCut4 : pT < 4000 GeV
   
   TFileDirectory dir_SigmaPt1_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt1_iso1_IhCut1_PtCut1", "SigmaPt1_iso1_IhCut1_PtCut1");
-  TFileDirectory dir_SigmaPt2_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt2_iso1_IhCut1_PtCut1", "SigmaPt2_iso1_IhCut1_PtCut1");
+  //TFileDirectory dir_SigmaPt2_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt2_iso1_IhCut1_PtCut1", "SigmaPt2_iso1_IhCut1_PtCut1");
   TFileDirectory dir_SigmaPt3_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso1_IhCut1_PtCut1", "SigmaPt3_iso1_IhCut1_PtCut1");
   TFileDirectory dir_SigmaPt4_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt4_iso1_IhCut1_PtCut1", "SigmaPt4_iso1_IhCut1_PtCut1");
   TFileDirectory dir_SigmaPt5_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt5_iso1_IhCut1_PtCut1", "SigmaPt5_iso1_IhCut1_PtCut1");
@@ -248,11 +248,11 @@ void Analyzer::beginJob() {
   TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut1", "SigmaPt3_iso2_IhCut1_PtCut1");
   
   TFileDirectory dir_SigmaPt3_iso2_IhCut2_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut2_PtCut1", "SigmaPt3_iso2_IhCut2_PtCut1");
-  TFileDirectory dir_SigmaPt3_iso2_IhCut3_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut3_PtCut1", "SigmaPt3_iso2_IhCut3_PtCut1");
+  //TFileDirectory dir_SigmaPt3_iso2_IhCut3_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut3_PtCut1", "SigmaPt3_iso2_IhCut3_PtCut1");
   
   TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut2 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut2", "SigmaPt3_iso2_IhCut1_PtCut2");
-  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut3 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut3", "SigmaPt3_iso2_IhCut1_PtCut3");
-  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut4 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut4", "SigmaPt3_iso2_IhCut1_PtCut4");
+  //TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut3 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut3", "SigmaPt3_iso2_IhCut1_PtCut3");
+  //TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut4 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut4", "SigmaPt3_iso2_IhCut1_PtCut4");
 
   // create histograms & trees
   tuple = new Tuple();
@@ -308,65 +308,72 @@ void Analyzer::beginJob() {
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
 
-  tuple_maker->initializeRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
+  /*tuple_maker->initializeRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
                                  dir_SigmaPt2_iso1_IhCut1_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_);*/
 
   tuple_maker->initializeRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
                                  dir_SigmaPt3_iso1_IhCut1_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
 
   tuple_maker->initializeRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
                                  dir_SigmaPt4_iso1_IhCut1_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
 
   tuple_maker->initializeRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
                                  dir_SigmaPt5_iso1_IhCut1_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
 
   tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
                                  dir_SigmaPt3_iso2_IhCut1_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
 
   tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
                                  dir_SigmaPt3_iso2_IhCut2_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
 
-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
+  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
                                  dir_SigmaPt3_iso2_IhCut3_PtCut1,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_);*/
 
   tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
                                  dir_SigmaPt3_iso2_IhCut1_PtCut2,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_,
+                                 false);
   
-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
+  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
                                  dir_SigmaPt3_iso2_IhCut1_PtCut3,
                                  reg_etabins_,
                                  reg_ihbins_,
@@ -378,7 +385,7 @@ void Analyzer::beginJob() {
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
-                                 reg_massbins_);
+                                 reg_massbins_);*/
 
 
 
@@ -1594,8 +1601,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
   float bestCandidateMass_Cdown2 = -1.;
   float bestCandidatePt = -1.;
   float bestCandidateIas = -1.;
-  float bestCandidateFiStrips = -1.;
-  float bestCandidateFiStripsLog = -1.;
+  //float bestCandidateFiStrips = -1.;
+  //float bestCandidateFiStripsLog = -1.;
   float bestCandidateProbQNoL1 = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
   float bestCandidateGenBeta = -1.;
@@ -3654,7 +3661,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
           tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
         }
       }
-      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+      /*if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
         tuple->BefPreS_TriggerMETallVsBeta->Fill(0., genBeta);
         tuple->BefPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
         tuple->BefPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
@@ -3666,7 +3673,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         tuple->BefPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
         tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
         tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
-      }
+      }*/
     }
     
 
@@ -4052,8 +4059,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
         bestCandidateMass_Cdown2 = Mass_Cdown2;
         bestCandidatePt = track->pt();
         bestCandidateIas = globalIas_;
-        bestCandidateFiStrips = globalFiStrips_;
-        bestCandidateFiStripsLog = -log(1-globalFiStrips_);
+        //bestCandidateFiStrips = globalFiStrips_;
+        //bestCandidateFiStripsLog = -log(1-globalFiStrips_);
         bestCandidateProbQNoL1 = probQonTrackNoL1;
         bestCandidateDrMinHltMuon = dr_min_hlt_muon;
         bestCandidateGenBeta = genBeta;
@@ -4594,19 +4601,19 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     bool passPre_SigmaPt3_iso2_IhCut1_PtCut2 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2, false);
     bool passPre_SigmaPt3_iso2_IhCut1_PtCut3 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3, false);
     bool passPre_SigmaPt3_iso2_IhCut1_PtCut4 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4, false);
-/*
-    bool passPre_SigmaPt1_iso1_IhCut1_PtCut1 = true;
-    bool passPre_SigmaPt2_iso1_IhCut1_PtCut1 = false;
-    bool passPre_SigmaPt3_iso1_IhCut1_PtCut1 = false;
-    bool passPre_SigmaPt4_iso1_IhCut1_PtCut1 = false;
-    bool passPre_SigmaPt5_iso1_IhCut1_PtCut1 = false;
-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut1 = false;
-    bool passPre_SigmaPt3_iso2_IhCut2_PtCut1 = false;
-    bool passPre_SigmaPt3_iso2_IhCut3_PtCut1 = false;
-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut2 = false;
-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut3 = false;
-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut4 = false;
-    */
+
+    //passPre_SigmaPt1_iso1_IhCut1_PtCut1 = false;
+    passPre_SigmaPt2_iso1_IhCut1_PtCut1 = false;
+    //passPre_SigmaPt3_iso1_IhCut1_PtCut1 = false;
+    //passPre_SigmaPt4_iso1_IhCut1_PtCut1 = false;
+    //passPre_SigmaPt5_iso1_IhCut1_PtCut1 = false;
+    //passPre_SigmaPt3_iso2_IhCut1_PtCut1 = false;
+    //passPre_SigmaPt3_iso2_IhCut2_PtCut1 = false;
+    passPre_SigmaPt3_iso2_IhCut3_PtCut1 = false;
+    //passPre_SigmaPt3_iso2_IhCut1_PtCut2 = false;
+    passPre_SigmaPt3_iso2_IhCut1_PtCut3 = false;
+    passPre_SigmaPt3_iso2_IhCut1_PtCut4 = false;
+    
 
  
     if(passPre_SigmaPt1_iso1_IhCut1_PtCut1){
@@ -4621,7 +4628,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt2_iso1_IhCut1_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
@@ -4635,7 +4643,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso1_IhCut1_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
@@ -4649,7 +4658,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt4_iso1_IhCut1_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
@@ -4663,7 +4673,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt5_iso1_IhCut1_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
@@ -4677,7 +4688,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso2_IhCut1_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
@@ -4691,7 +4703,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso2_IhCut2_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
@@ -4705,7 +4718,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso2_IhCut3_PtCut1){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
@@ -4719,7 +4733,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso2_IhCut1_PtCut2){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
@@ -4733,7 +4748,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso2_IhCut1_PtCut3){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
@@ -4747,7 +4763,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     if(passPre_SigmaPt3_iso2_IhCut1_PtCut4){
         tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
@@ -4761,7 +4778,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 false);
     }
     
     if (passPre) {
@@ -4776,7 +4794,8 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
                                  dedxSObj ? dedxSObj->dEdx() : -1,
                                  Mass,
                                  tof ? tof->inverseBeta() : -99,
-                                 EventWeight_);
+                                 EventWeight_,
+                                 true);
 
       if (debug_ > 3  && trigInfo_ > 0) LogPrint(MOD) << "      >> We enter the selection cut loop now";
       //==========================================================
@@ -5094,7 +5113,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     float rescaledPtDown = bestCandidateTrack->pt()*(1-shiftForPtValue);
 
 
-    tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
+    /*tuple->PostS_Ias->Fill(bestCandidateIas, EventWeight_);
     tuple->PostS_FiStrips->Fill(bestCandidateFiStrips, EventWeight_);
     tuple->PostS_FiStripsLog->Fill(bestCandidateFiStripsLog, EventWeight_);
     tuple->PostS_IasVsFiStrips->Fill(bestCandidateIas, bestCandidateFiStrips, EventWeight_);
@@ -5118,11 +5137,12 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
     }
-    
+    */
     // Systematics plots for Gi rescaling
     RNG3 = new TRandom3(long(time(NULL)));
     float theGiSystFactorUp =  std::max((double)1, RNG3->Gaus(1,1.02));
     float theGiSystFactorDown =  std::max((double)0, std::min((double)1, RNG3->Gaus(1,1.02)));
+    /*
     tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
     tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
     
@@ -5143,10 +5163,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
-    
+    */
     // Systematics plots for Fi rescaling
     float theFiSystFactorUp = 1.005;
     float theFiSystFactorDown = 0.995;
+    /*
     tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
     tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
     tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
@@ -5155,11 +5176,11 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
-    
+    */
     // Systematics plots for trigger rescaling
     float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
     float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
-
+    /*
     tuple->PostS_ProbQNoL1VsIas_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * triggerSystFactorUp);
     tuple->PostS_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_  * triggerSystFactorDown);
     tuple->PostS_ProbQNoL1VsIasVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * triggerSystFactorUp);
@@ -5168,7 +5189,7 @@ for ( int q=0; q<MAX_MuonHLTFilters;q++) {
     tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_  * triggerSystFactorDown);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * triggerSystFactorUp);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_  * triggerSystFactorDown);
-    
+    */
     // Repeat for several SRs with higher pT cut
     if (bestCandidateTrack->pt() >= 100) {
       tuple->PostS_SR1_Ias->Fill(bestCandidateIas, EventWeight_);
@@ -6117,6 +6138,17 @@ void Analyzer::endJob() {
   delete RNG2;
   delete RNG3;
   delete tuple;
+  delete tuple_SigmaPt1_iso1_IhCut1_PtCut1;
+  delete tuple_SigmaPt2_iso1_IhCut1_PtCut1;
+  delete tuple_SigmaPt3_iso1_IhCut1_PtCut1;
+  delete tuple_SigmaPt4_iso1_IhCut1_PtCut1;
+  delete tuple_SigmaPt5_iso1_IhCut1_PtCut1;
+  delete tuple_SigmaPt3_iso2_IhCut1_PtCut1;
+  delete tuple_SigmaPt3_iso2_IhCut2_PtCut1;
+  delete tuple_SigmaPt3_iso2_IhCut3_PtCut1;
+  delete tuple_SigmaPt3_iso2_IhCut1_PtCut2;
+  delete tuple_SigmaPt3_iso2_IhCut1_PtCut3;
+  delete tuple_SigmaPt3_iso2_IhCut1_PtCut4;
   if (!isData) {
     delete mcWeight;
   }
