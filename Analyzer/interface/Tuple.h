@@ -771,6 +771,8 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Ias_down;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pt_down;
+  TH2F* PostPreS_MassVsIas_fail_CR;
+  TH2F* PostPreS_MassVsIas_pass_CR;
  
   TH1F* PostPreS_Ih_CR_veryLowPt;
   TH1F* PostPreS_Ihstrip_CR_veryLowPt;
@@ -1470,6 +1472,12 @@ struct Tuple {
  TH2D* SF_HHit2DStrip;
  TH2D* SF_HHit2DPix_nosf;
  TH2D* SF_HHit2DStrip_nosf;
+ TH2D* SF_HHit2DPix_eta1;
+ TH2D* SF_HHit2DStrip_eta1;
+ TH2D* SF_HHit2DPix_nosf_eta1;
+ TH2D* SF_HHit2DStrip_nosf_eta1;
+ TH2D* SF_HHit2DPix_vs_eta;
+ TH2D* SF_HHit2DStrip_vs_eta;
 
  // K and C
  TH2D* K_and_C_Ih_noL1_VsP_loose1;
@@ -1493,6 +1501,9 @@ struct Tuple {
  TH2D* K_and_C_Ih_noL1_VsP_noFcut2;
  TH2D* K_and_C_Ih_strip_VsP_noFcut1;
  TH2D* K_and_C_Ih_strip_VsP_noFcut2;
+
+ TH1F* K_and_C_Ih_noL1_1d;
+ TH1F* K_and_C_Ih_strip_1d;
 
  TH1F* K_and_C_Kin_Mass;
  TH1F* K_and_C_Kin_p;

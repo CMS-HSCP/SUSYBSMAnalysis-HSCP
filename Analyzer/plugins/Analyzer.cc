@@ -3442,6 +3442,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostPreS_Pt_lowPt_CR->Fill(track->pt(), eventWeight_);
       tuple->PostPreS_ProbQNoL1_CR->Fill(1 - probQonTrackNoL1, eventWeight_);
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, eventWeight_);
+
+      tuple->PostPreS_Ih_CR->Fill(globalIh_,eventWeight_);
+      tuple->PostPreS_Ihstrip_CR->Fill((dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) ,eventWeight_);
+      tuple->PostPreS_Ih_nopixcl_CR->Fill((dedxtest_nopixcl ? dedxtest_nopixcl->dEdx() : -1) ,eventWeight_);
+
+
+      float Masstest =0;
+      if (globalIh_>3.18) Masstest= GetMass(track->p(), globalIh_, 2.52, 3.18);  // K and C values fixed to some test values
+      if ((1 - probQonTrackNoL1)<0.9) {
+         tuple->PostPreS_MassVsIas_fail_CR->Fill(globalIas_, Masstest, eventWeight_);
+      }
+      else {
+          tuple->PostPreS_MassVsIas_pass_CR->Fill(globalIas_, Masstest,  eventWeight_);
+      }
       if (doSystsPlots_) {
         tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  eventWeight_ * PUSystFactor_[0]);
         tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  eventWeight_ * PUSystFactor_[1]);
@@ -5698,6 +5712,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
         tuple->K_and_C_Ih_noL1_VsP_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
         tuple->K_and_C_Ih_noL1_VsP_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+        if (generalTrack->p()>3. && generalTrack->p()<5.) {
+             tuple->K_and_C_Ih_noL1_1d->Fill(ih0_noL1, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_1d->Fill(ih0_strip, preScaleForDeDx*eventWeight_);
+        }
         if (fabs(generalTrack->eta())<1) {
              tuple->K_and_C_Ih_noL1_VsP_eta1_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
              tuple->K_and_C_Ih_noL1_VsP_eta1_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
@@ -5764,6 +5782,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                      tuple->SF_HHit2DStrip_nosf->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
                    }
                  }
+                 if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+                     tuple->SF_HHit2DStrip_eta1->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                     tuple->SF_HHit2DStrip_nosf_eta1->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
+                      if (generalTrack->pt()>10 && generalTrack->pt()<50) {
+                        tuple->SF_HHit2DStrip_vs_eta->Fill(generalTrack->eta(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                      }
+                 }
               }
            }
            else {
@@ -5774,10 +5799,46 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               scaleFactor *= pixelScaling;
               float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
               float charge_over_path_nosf = dedx_charge * factorChargeToE / dedx_pathlength;
-              // BPIXL1
+
+//
+              // Taking the pixel cluster
+              auto const* pixelCluster =  dedxHits->pixelCluster(h);
+              if (pixelCluster == nullptr)  continue;
+              // Check on which geometry unit the hit is
+              const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+              // Get the local vector for the track direction
+              LocalVector lv = geomDet.toLocal(GlobalVector(generalTrack->px(), generalTrack->py(), generalTrack->pz()));
+              // Re-run the CPE on this cluster with the lv above
+              // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
+              // from this we pick the 2nd, the QualWordType
+              auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, generalTrack->charge())));
+              // extract probQ and probXY from this
+              float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+
+              // To measure how often the CPE fails
+              bool cpeHasFailed = false;
+              if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+                  cpeHasFailed = true;
+              }
+              if (cpeHasFailed) continue;
+
+              if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+
+              bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+              bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+              bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+              bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+
+
+              // BPIXL1 only for 2017 and 2018
               bool isBPIXL1=false;
-              if (detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) isBPIXL1=true;
-              if (!isBPIXL1) {
+//              if (detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) isBPIXL1=true;
+              int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+              if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;
+
+               // cleaning in the pixel 
+              if (!specInCPE && probQ < 0.8 && (!isBPIXL1)) {
+//              if ((!isBPIXL1)) {
                  if (fabs(generalTrack->eta()<0.4)){
                    tuple->SF_HHit2DPix_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
                    if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
@@ -5785,6 +5846,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                       tuple->SF_HHit2DPix_nosf->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
                    }
                  }
+                 if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+                      tuple->SF_HHit2DPix_eta1->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                      tuple->SF_HHit2DPix_nosf_eta1->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
+                      if (generalTrack->pt()>10 && generalTrack->pt()<50) {
+                        tuple->SF_HHit2DPix_vs_eta->Fill(generalTrack->eta(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                      }
+
+                 }
+
               }
            }
 
