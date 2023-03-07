@@ -6,7 +6,7 @@ options = VarParsing('analysis')
 
 # defaults
 options.outputFile = 'Histos.root'
-options.maxEvents = -1 # -1 means all events
+options.maxEvents = 100 # -1 means all events
 
 # was 106X_dataRun2_v20
 options.register('GTAG', '106X_dataRun2_v36',
@@ -65,7 +65,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring("/store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/270002/64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
+   fileNames = cms.untracked.vstring("file:64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
@@ -283,10 +283,9 @@ IasTemplate = 'template_2018MC_v4.root'
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.SampleType = SampleType
 process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
-process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
-process.HSCParticleAnalyzer.DebugLevel = 7
+process.HSCParticleAnalyzer.DebugLevel = 17
 process.HSCParticleAnalyzer.Period = options.YEAR
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C

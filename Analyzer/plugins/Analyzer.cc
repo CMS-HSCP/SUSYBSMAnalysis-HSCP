@@ -60,7 +60,8 @@
 // - 44p1: Add stability plot for pixel charge on layers1-4, ExitWhenGenMatchNotFound = true, just for temp to see what's up with EoP plots
 // - 44p2: ExitWhenGenMatchNotFound = false, remove some unused histos, add 2017MC_v4 template, add SR2FAIL and SR2PASS plots for GiStrips, and pT err related , PV related
 // - 44p3: Add one more bin to the PostS_HltMatchTrackLevel plot, apply all SFs from the POG, make new syst plots for each POG SFs, change Ias systematics back to factor on the Gi value, postPreS status 91 plot fix
-// - 44p4: Adding PR107 and PR113, pixel cleaning in Ih, corrections for Gi templates, new dEdX SF, saturation plots
+// - 44p4: Adding PR107 and PR113, pixel cleaning in Ih, corrections for Gi templates, new dEdX SF, saturation plots, new DeDxSF_1 and  DeDxSF_0 values, CreateGiTemplates = True
+// - 44p5: CreateGiTemplates = True, BefPreS_RelDiffTrigObjPtAndMatchedMuonPtVsPt, reset eventWeight_ event level, dRMinHLTMuonLoose_lowDeltaR, get rid of SaveGenTree
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -182,7 +183,6 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       dEdxTemplate_(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
       timeOffset_(iConfig.getUntrackedParameter<string>("TimeOffset")),
       saveTree_(iConfig.getUntrackedParameter<int>("SaveTree")),
-      saveGenTree_(iConfig.getUntrackedParameter<int>("SaveGenTree")),
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
@@ -191,7 +191,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 //now do what ever initialization is needed
 // define the selection to be considered later for the optimization
 // WARNING: recall that this has a huge impact on the analysis time AND on the output file size --> be carefull with your choice
-
+   
   useClusterCleaning = true;
   if (typeMode_ == 4) {
     useClusterCleaning = false;//switch off cluster cleaning for mCHAMPs
@@ -219,6 +219,8 @@ Analyzer::~Analyzer() = default;
 
 // ------------ method called once each job just before starting event loop  ------------
 void Analyzer::beginJob() {
+  // if the only purpose is to trick CRAB to do a TAPERECALL
+  if (tapeRecallOnly_) return;
   static constexpr const char* const MOD = "Analyzer";
 
   // Book histograms using TFileService
@@ -232,7 +234,6 @@ void Analyzer::beginJob() {
   tuple_maker->initializeTuple(tuple,
                                dir,
                                saveTree_,
-                               saveGenTree_,
                                calcSyst_,
                                typeMode_,
                                sampleType_,
@@ -254,16 +255,13 @@ void Analyzer::beginJob() {
                                globalMinPt_,
                                globalMinTOF_,
                                tapeRecallOnly_);
+  
   tuple_maker->initializeRegions(tuple,
                                  dir,
                                  reg_etabins_,
                                  reg_ihbins_,
                                  reg_pbins_,
                                  reg_massbins_);
-
-
-
-
 
   // Re-weighting
   // Functions defined in Analyzer/interface/MCWeight.h
@@ -272,7 +270,7 @@ void Analyzer::beginJob() {
     mcWeight->loadPileupWeights(period_);
     mcWeight->getSampleWeights(period_, sampleName_.c_str(), IntegratedLuminosity_, CrossSection_);
   }
-
+  
   loadSFPixel(sampleType_);
 
   // Set in Analyzer/interface/MCWeight.h
@@ -332,6 +330,11 @@ void Analyzer::beginJob() {
 
 // ------------ method called for each event  ------------
 void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  // if the only purpose is to trick CRAB to do a TAPERECALL
+  if (tapeRecallOnly_) return;
+  
+  eventWeight_ = 1.;
+  
   static constexpr const char* const MOD = "Analyzer";
   static constexpr const float cm2umUnit = 0.0001;
   using namespace edm;
@@ -428,34 +431,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->Gen_DecayLength->Fill(notHSCPDLength2);
   }
 
-
-  //initialize counters: nw - wrong, na - other, nd - double charged, nn - neutral
-  unsigned int nw = 0, na = 0, nd = 0, nn = 0;
-  vector<float> genid;
-  vector<float> gencharge;
-  vector<float> genmass;
-  vector<float> genpt;
-  vector<float> geneta;
-  vector<float> genphi;
-
-  // Loop on gen collection to fill up gen level plots / branch
+  // Loop on gen collection to fill up gen level plots
   if (!isData) {
     for (auto const& gen : genColl) {
-      int GenId = abs(gen.pdgId());
       if (isSignal && isHSCPgenID(gen)) {
-      // Categorise event with R-hadrons for additional weighting
-        if (GenId == 1000612 || GenId == 1092214) {
-          nw += 1;// count wrong
-        } else if (GenId == 1006223 || GenId == 1092224) {
-           nd += 1;// count doble charged
-        } else if ((GenId) == 1006113 || (GenId) == 1006333 || (GenId) == 1006313 || (GenId) == 1000622 ||
-                   (GenId) == 1092114 || (GenId) == 1093324 || (GenId) == 1093214 || (GenId) == 1009333 ||
-                   (GenId) == 1009223 || (GenId) == 1009113 || (GenId) == 1009313 || (GenId) == 1000993) {
-          nn += 1;// count neutral
-        } else if ((GenId) > 1000000) {
-          na += 1;
-        }// count other R-hadrons
-
         // Fill up pT, eta, and beta plots for gen-level HSCP particles
         tuple->Gen_pT->Fill(gen.pt(), SignalEventWeight);
         tuple->Gen_Eta->Fill(gen.eta(), SignalEventWeight);
@@ -463,13 +442,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
         tuple->Gen_BetaGamma_lowBetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
 
-        // Variables for the tuple gen tree branch
-        genid.push_back(gen.pdgId());
-        gencharge.push_back(gen.charge());
-        genmass.push_back(gen.mass());
-        genpt.push_back(gen.pt());
-        geneta.push_back(gen.eta());
-        genphi.push_back(gen.phi());
       } else if (isBckg) {
         // Fill up pT, eta, and beta plots for gen-level background particles
         tuple->Gen_pT->Fill(gen.pt());
@@ -477,36 +449,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->Gen_Beta->Fill(gen.p() / gen.energy());
         tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass());
         tuple->Gen_BetaGamma_lowBetaGamma->Fill(gen.p() / gen.mass());
-
-        // Variables for the tuple gen tree branch
-        genid.push_back(gen.pdgId());
-        gencharge.push_back(gen.charge());
-        genmass.push_back(gen.mass());
-        genpt.push_back(gen.pt());
-        geneta.push_back(gen.eta());
-        genphi.push_back(gen.phi());
       }
     }
-
-    if (saveGenTree_ > 0) {
-      if (debug_ > 4 ) LogPrint(MOD) << "Fill GenTree with basics gen info";
-      tuple_maker->fillGenTreeBranches(tuple,
-                                       iEvent.id().run(),
-                                       iEvent.id().event(),
-                                       iEvent.id().luminosityBlock(),
-                                       // this used to be eventWeight_ but who is that relevant for gen level quantities?
-                                       // also it's now calculated with the SFs from trigger a bit later in the code so not known yet
-                                       1.0,
-                                       GeneratorWeight_,
-                                       GeneratorBinningValues_,
-                                       genid,
-                                       gencharge,
-                                       genmass,
-                                       genpt,
-                                       geneta,
-                                       genphi);
-    }
-  }
+  } // end condition for MC for gen stuff
 
   //------------------------------------------------------------------
   // Vertex related quantities, finding the best (sum pT squared) vertex
@@ -733,24 +678,40 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   int closestTrigMuIndex = -1;
   int closestTrigMuPt25Index = -1;
   int closestTrigObjIndex = -1;
+  int closestTrigObjIndexLoose = -1;
   float dr_min_hltMuon_hscpCand_inEvent = 9999.0;
-  
   float dr_min_hltMuon_hscpCandPt25_inEvent = 9999.0;
+  float dr_min_hltMuonLoose_hscpCand_inEvent = 9999.0;
   int numPassedMatchingTrigObj = 0;
   int numPassedMatchingTrigObjEtaCut = 0;
   bool doNotMatchThis = false;
+  bool doNotMatchThisLoose = false;
   for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
     if (trigObjP4s[objNr].Pt() < 50) continue;
     float dr_min_hltMuon_trigObj = 9999.0;
     for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
+      // this is the def of (muon::isLooseMuon(*mu))
+      // if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
+      if (muon::isLooseMuon(*mu) && mu->pt() > 50) {
+        float drTempLoose = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+        if (drTempLoose < dr_min_hltMuonLoose_hscpCand_inEvent) {
+          // If a match was already found, think twice if you want to update the match
+          // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
+          if (closestTrigObjIndexLoose > -1 && trigObjP4s[objNr].Eta() > globalMaxEta_) {
+            doNotMatchThisLoose = true;
+          }
+          if (!doNotMatchThisLoose) {
+            dr_min_hltMuonLoose_hscpCand_inEvent = drTempLoose;
+            closestTrigObjIndexLoose = objNr;
+          }
+        } // end condition on temp being smaller than the current min
+      } // end condition on loose mu ID
+      
       // this is the def of (muon::isTightMuon(*mu, highestSumPt2Vertex))
       // bool muID = mu->isGlobalMuon() && mu->globalTrack()->normalizedChi2()<10. && mu->globalTrack()->hitPattern().numberOfValidMuonHits()>0 && mu->numberOfMatchedStations()>1;
       // bool hits = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement()>5 && mu->innerTrack()->hitPattern().numberOfValidPixelHits()>0;
       // bool ip = fabs(mu->muonBestTrack()->dxy(highestSumPt2Vertex.position()))<0.2 && fabs(mu->muonBestTrack()->dz(highestSumPt2Vertex.position()))<0.5;
-      
-      // this is the def of (muon::isLooseMuon(*mu))
-      // if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
       if (!muon::isTightMuon(*mu, highestSumPt2Vertex)) continue;
       
       // For checking the trigger pT let's consider tracks with pT > 25 GeV
@@ -795,6 +756,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (muTrig) {
     tuple->dRMinHLTMuon->Fill(dr_min_hltMuon_hscpCand_inEvent);
     tuple->dRMinHLTMuon_lowDeltaR->Fill(dr_min_hltMuon_hscpCand_inEvent);
+    tuple->dRMinHLTMuonLoose_lowDeltaR->Fill(dr_min_hltMuonLoose_hscpCand_inEvent);
   }
   
   // Check for the HLT muon pt vs offline pt
@@ -812,6 +774,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (doBefPreSplots_) {
       tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt->Fill((triggerObjMatchedMu->pt()-trigObjP4s[closestTrigObjIndex].Pt())/(trigObjP4s[closestTrigObjIndex].Pt()));
       tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()));
+      tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPtVsPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()),triggerObjMatchedMu->pt());
       tuple->BefPreS_NumPassedMatchingTrigObj->Fill(numPassedMatchingTrigObj);
       tuple->BefPreS_NumPassedMatchingTrigObjEtaCut->Fill(numPassedMatchingTrigObjEtaCut);
       if (debug_ > 5) LogPrint(MOD) << "NumPassedMatchingTrigObj = " << numPassedMatchingTrigObj << " and numPassedMatchingTrigObjEtaCut = " << numPassedMatchingTrigObjEtaCut;
@@ -865,7 +828,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       // Event triggered with reco muon match
       tuple->BefPreS_TriggerGenMatch->Fill(1.);
       if (triggerObjGenIndex != triggerObjMatchedMuGenIndex) {
-        LogPrint(MOD) << "TrigObj based genID= " << triggerObjGenIndex << " with dR= " << drGenTrigObjMin << " != TrigObjMatchedMuon based genID= " << triggerObjMatchedMuGenIndex << " with dR= " << drGenTrigMatchedMuMin;
+        LogPrint(MOD) << "TrigObj based gen index= " << triggerObjGenIndex << " with PDG ID = " << genColl[triggerObjGenIndex].pdgId() << " with dR= " << drGenTrigObjMin << " != TrigObjMatchedMuon based gen index = " << triggerObjMatchedMuGenIndex  << " with PDG ID = " << genColl[triggerObjMatchedMuGenIndex].pdgId() << " with dR= " << drGenTrigMatchedMuMin;
       }
 
       if (drGenTrigObjMin < 0.015 || drGenTrigMatchedMuMin < 0.015) {
@@ -905,9 +868,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   } // end condition for being MC and passed trigger
   
   // Compute event weight from different SFs
-  if (isData) {
-    eventWeight_ = 1.;
-  } else {
+  if (!isData) {
     float PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_, PUSystFactor_);
     eventWeight_ *= PUWeight;
     if (closestTrigObjIndex > 0) {
@@ -917,6 +878,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       eventWeight_ *= muonRecoSFs * muonIdSFs * muonTriggerSFs;
     }
   }
+  tuple->EventWeight->Fill(eventWeight_);
+
   // Number of all events
   tuple->NumEvents->Fill(1.);
   // Number of events after trigger path
@@ -2215,7 +2178,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!isData && candidateEnvHasStatus91) {
       if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatus91->Fill(globalIas_, eventWeight_);
-      } if (doPostPreSplots_ && almostPassPre) {
+      }
+      if (doPostPreSplots_ && almostPassPre) {
         tuple->PostPreS_IasForStatus91->Fill(globalIas_, eventWeight_);
       }
       // Has status 91 around
@@ -2225,7 +2189,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     } else if (!isData && !candidateEnvHasStatus91) {
       if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatusNot91->Fill(globalIas_, eventWeight_);
-      } else if (doPostPreSplots_ && almostPassPre) {
+      }
+      if (doPostPreSplots_ && almostPassPre) {
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, eventWeight_);
       }
     }
@@ -3322,7 +3287,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           tuple->N1_ProbXY->Fill(probXYonTrack, eventWeight_);
           tuple->N1_Stations->Fill(muonStations(track->hitPattern()), eventWeight_);
           tuple->N1_DrMinPfJet->Fill(dRMinPfJetWithCuts, eventWeight_);
-          tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), eventWeight_);
         };
         
         if (i==1)  {
@@ -3346,8 +3310,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (i==10) {
           tuple->N1_MiniRelIsoAll->Fill(miniRelIsoAll, eventWeight_);
           tuple->N1_MiniRelIsoAll_lowMiniRelIso->Fill(miniRelIsoAll, eventWeight_);
+          tuple->N1_SumpTOverpT->Fill(IsoTK_SumEt / track->pt(), eventWeight_);
         }
         if (i==11) {
+          tuple->N1_TIsol->Fill(IsoTK_SumEt, eventWeight_);
           tuple->N1_MiniTkIso->Fill(track_genTrackMiniIsoSumPt, eventWeight_);
           
           tuple->N1_MiniRelTkIso->Fill(track_genTrackMiniIsoSumPt / track->pt(), eventWeight_);
@@ -3577,7 +3543,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
         if (cleaning && dedx_inside)  {
-         if (createGiTemplates_) {
+          if (createGiTemplates_) {
            int npv = vertexColl.size();
            for (int i = 0 ; i < NbPuBins_ ; i++){
              if (npv > PuBins_[i] && npv <= PuBins_[i+1]) {
@@ -3611,26 +3577,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
         // ADD plots to answer Slava's questions about Charge Resolution
         if (doPostPreSplots_) {
-             int layer_num = 0;
-             float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
-             float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-             float pathL = dedxHits->pathlength(h);
+         int layer_num = 0;
+         float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
+         float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+         float pathL = dedxHits->pathlength(h);
 //             cout << " test  ScaleF " << detid.subdetId() << " scaleF " << scaleF << endl;
-             if (detid.subdetId() < 3) {
-                if (detid.subdetId() == PixelSubdetector::PixelBarrel) layer_num=tTopo->pxbLayer(detid);
-                else layer_num=tTopo->pxfDisk(detid)+4;
-                tuple->PostPreS_CpPL_pix_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
-             }
-             else {
-               if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
-               if (detid.subdetId() == StripSubdetector::TOB) layer_num = abs(int(tTopo->tobLayer(detid))) + 4;
-               if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
-               if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
-               tuple->PostPreS_CpPL_strip_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
-             }
-        }
-       } // end if on the cleaning and the inside 
-
+          // check if we are on the pixels
+         if (detid.subdetId() < 3) {
+            if (detid.subdetId() == PixelSubdetector::PixelBarrel) layer_num=tTopo->pxbLayer(detid);
+            else layer_num=tTopo->pxfDisk(detid)+4;
+            tuple->PostPreS_CpPL_pix_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+         } // otherwise we are on the strips
+         else {
+           if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
+           if (detid.subdetId() == StripSubdetector::TOB) layer_num = abs(int(tTopo->tobLayer(detid))) + 4;
+           if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
+           if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
+           tuple->PostPreS_CpPL_strip_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+         } // end on condition for pixels or strips
+        } // end condition on doPostPreSplots_
+       } // end if on the cleaning and the inside
       } // end loop on dEdx hits
     } // end condition on passing preselection cuts for the Gi templates
     
@@ -6215,6 +6181,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 // ------------ method called once each job just after ending the event loop  ------------
 void Analyzer::endJob() {
+  if (tapeRecallOnly_) return;
+  
   delete RNG;
   delete RNG2;
 //  delete RNG3;
@@ -6380,14 +6348,13 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
   desc.addUntracked("ExitWhenGenMatchNotFound",false)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
-  desc.addUntracked("DeDxSF_0",1.0)->setComment("A");
-  desc.addUntracked("DeDxSF_1",1.0325)->setComment("A");
+  desc.addUntracked("DeDxSF_0",1.0)->setComment(", really controlled by the config for each era");
+  desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
   desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
   desc.addUntracked("DeDxC",3.17)->setComment("C constant, really controlled by the config for each era");
   desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
-  desc.addUntracked("SaveGenTree",0)->setComment("A");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
-    ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector");
+    ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector, really controlled by the config for each era");
 
 
 
@@ -6450,7 +6417,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   //GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
   desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile up bins");
