@@ -62,6 +62,7 @@
 // - 44p3: Add one more bin to the PostS_HltMatchTrackLevel plot, apply all SFs from the POG, make new syst plots for each POG SFs, change Ias systematics back to factor on the Gi value, postPreS status 91 plot fix
 // - 44p4: Adding PR107 and PR113, pixel cleaning in Ih, corrections for Gi templates, new dEdX SF, saturation plots, new DeDxSF_1 and  DeDxSF_0 values, CreateGiTemplates = True
 // - 44p5: CreateGiTemplates = True, BefPreS_RelDiffTrigObjPtAndMatchedMuonPtVsPt, reset eventWeight_ event level, dRMinHLTMuonLoose_lowDeltaR, get rid of SaveGenTree
+// - 44p6: Include PR120 (many CR_veryLowPt), Move SR2 PV plot under GiS > 0.25 region, intro RelDiffTrackPtAndTruthPtVsTruthPt, dRMinHLTMuon_numTrigObj plots, fix when not to update
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -397,8 +398,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float HSCPDLength1 = -1, HSCPDLength2 = -1;
 
     SignalEventWeight = mcWeight->getFGluinoWeight(NChargedHSCP, typeMode_);
-    //TODO, does this do anything rn?
-    if (SignalEventWeight != 1.0) cout << "SignalEventWeight = " << SignalEventWeight << endl;
+    //TODO, does this do anything rn? nope
+    if (SignalEventWeight != 1.0) LogPrint(MOD) << "SignalEventWeight = " << SignalEventWeight;
 
     GetGenHSCPDecayLength(genColl, HSCPDLength1, HSCPDLength2, true);
 
@@ -682,6 +683,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float dr_min_hltMuon_hscpCand_inEvent = 9999.0;
   float dr_min_hltMuon_hscpCandPt25_inEvent = 9999.0;
   float dr_min_hltMuonLoose_hscpCand_inEvent = 9999.0;
+  float dr_minGlobally_hltMuon_hscpCand_inEvent = 9999.0;
   int numPassedMatchingTrigObj = 0;
   int numPassedMatchingTrigObjEtaCut = 0;
   bool doNotMatchThis = false;
@@ -698,8 +700,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (drTempLoose < dr_min_hltMuonLoose_hscpCand_inEvent) {
           // If a match was already found, think twice if you want to update the match
           // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
-          if (closestTrigObjIndexLoose > -1 && trigObjP4s[objNr].Eta() > globalMaxEta_) {
-            doNotMatchThisLoose = true;
+          if (closestTrigObjIndexLoose > -1) {
+            if ((trigObjP4s[closestTrigObjIndexLoose].Eta() < globalMaxEta_) && (dr_min_hltMuonLoose_hscpCand_inEvent < 0.015)) {
+              doNotMatchThisLoose = true;
+            }
           }
           if (!doNotMatchThisLoose) {
             dr_min_hltMuonLoose_hscpCand_inEvent = drTempLoose;
@@ -730,10 +734,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
       // min distance from all muons and all trigger objects in the event
       if (dr_hltmu_muon < dr_min_hltMuon_hscpCand_inEvent) {
+        dr_minGlobally_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
         // If a match was already found, think twice if you want to update the match
         // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
-        if (closestTrigObjIndex > -1 && trigObjP4s[objNr].Eta() > globalMaxEta_) {
-          doNotMatchThis = true;
+        if (closestTrigObjIndex > -1) {
+          if ((trigObjP4s[closestTrigObjIndex].Eta() < globalMaxEta_) && (dr_min_hltMuon_hscpCand_inEvent < 0.015) ) {
+            doNotMatchThis = true;
+          }
         }
         if (!doNotMatchThis) {
           dr_min_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
@@ -756,7 +763,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (muTrig) {
     tuple->dRMinHLTMuon->Fill(dr_min_hltMuon_hscpCand_inEvent);
     tuple->dRMinHLTMuon_lowDeltaR->Fill(dr_min_hltMuon_hscpCand_inEvent);
+
+    if (numPassedMatchingTrigObjEtaCut == 0) tuple->dRMinHLTMuon_numTrigObjZero->Fill(dr_min_hltMuon_hscpCand_inEvent);
+    if (numPassedMatchingTrigObjEtaCut == 1) tuple->dRMinHLTMuon_numTrigObjOne->Fill(dr_min_hltMuon_hscpCand_inEvent);
+    if (numPassedMatchingTrigObjEtaCut == 2) tuple->dRMinHLTMuon_numTrigObjTwo->Fill(dr_min_hltMuon_hscpCand_inEvent);
     tuple->dRMinHLTMuonLoose_lowDeltaR->Fill(dr_min_hltMuonLoose_hscpCand_inEvent);
+    tuple->dRGloballyMinHLTMuon->Fill(dr_minGlobally_hltMuon_hscpCand_inEvent);
   }
   
   // Check for the HLT muon pt vs offline pt
@@ -841,8 +853,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 13) {
           // Gen match is a muon
           tuple->BefPreS_TriggerGenMatch->Fill(4.);
-          if (isSignal) {
-            LogPrint(MOD) << "Gen match is a muon with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
+          if (isSignal && debug_ > 3) {
+            LogPrint(MOD) << "Trigger object's gen match is a muon with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
             LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
           }
         } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 211 || abs(genColl[triggerObjGenIndex].pdgId()) == 321) {
@@ -2179,6 +2191,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatus91->Fill(globalIas_, eventWeight_);
       }
+      // almostPassPre contains trigInfo_ > 0
       if (doPostPreSplots_ && almostPassPre) {
         tuple->PostPreS_IasForStatus91->Fill(globalIas_, eventWeight_);
       }
@@ -2186,10 +2199,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->ErrorHisto->Fill(8.);
       ErrorHisto_bin = 8;
       continue;
-    } else if (!isData && !candidateEnvHasStatus91) {
+    }
+    // now do the StatusNot91 plots
+    if (!isData && !candidateEnvHasStatus91) {
       if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatusNot91->Fill(globalIas_, eventWeight_);
       }
+      // almostPassPre contains trigInfo_ > 0
       if (doPostPreSplots_ && almostPassPre) {
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, eventWeight_);
       }
@@ -3449,7 +3465,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 
       float Masstest =0;
-      if (globalIh_>3.18) Masstest= GetMass(track->p(), globalIh_, 2.52, 3.18);  // K and C values fixed to some test values
+      // K and C values fixed to some test values
+      if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), globalIh_, 2.52, 3.18);
       if ((1 - probQonTrackNoL1)<0.9) {
          tuple->PostPreS_MassVsIas_fail_CR->Fill(globalIas_, Masstest, eventWeight_);
       }
@@ -3581,7 +3598,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
          float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
          float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
          float pathL = dedxHits->pathlength(h);
-//             cout << " test  ScaleF " << detid.subdetId() << " scaleF " << scaleF << endl;
           // check if we are on the pixels
          if (detid.subdetId() < 3) {
             if (detid.subdetId() == PixelSubdetector::PixelBarrel) layer_num=tTopo->pxbLayer(detid);
@@ -5068,27 +5084,32 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Almost SR2 plots, pT > 200, F < 0.9
     if (((1 - bestCandidateProbQNoL1) < 0.9) && bestCandidateTrack->pt() > 200) {
-      tuple->PostS_SR2FAIL_PV->Fill(numGoodVerts, eventWeight_);
       if (PUA) tuple->PostS_SR2FAIL_Ias_PUA->Fill(bestCandidateIas, eventWeight_);
       else if (PUB) tuple->PostS_SR2FAIL_Ias_PUB->Fill(bestCandidateIas, eventWeight_);
       else if (PUC) tuple->PostS_SR2FAIL_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
       
       if (bestCandidateIas > 0.25) {
+        tuple->PostS_SR2FAIL_PV->Fill(numGoodVerts, eventWeight_);
         tuple->PostS_SR2FAIL_PtErrOverPt2->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt() * bestCandidateTrack->pt()), eventWeight_);
-        if (bestCandidateGenIndex > 0) tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), eventWeight_);
+        if (bestCandidateGenIndex > 0) {
+          tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), eventWeight_);
+          tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), genColl[bestCandidateGenIndex].pt(), eventWeight_);
+        }
       }
     }
     // Fully SR2 plots, needs to be blinded for data (but fine for MC)!!
     else if (((1 - bestCandidateProbQNoL1) > 0.9) && bestCandidateTrack->pt() > 200) {
-      tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, eventWeight_);
       if (PUA) tuple->PostS_SR2PASS_Ias_PUA->Fill(bestCandidateIas, eventWeight_);
       else if (PUB) tuple->PostS_SR2PASS_Ias_PUB->Fill(bestCandidateIas, eventWeight_);
       else if (PUC) tuple->PostS_SR2PASS_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
       
-      
       if (bestCandidateIas > 0.25) {
+        tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, eventWeight_);
         tuple->PostS_SR2PASS_PtErrOverPt2->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt() * bestCandidateTrack->pt()), eventWeight_);
-        if (bestCandidateGenIndex > 0) tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), eventWeight_);
+        if (bestCandidateGenIndex > 0) {
+          tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), eventWeight_);
+          tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt->Fill((bestCandidateTrack->pt() - genColl[bestCandidateGenIndex].pt()) / genColl[bestCandidateGenIndex].pt(), genColl[bestCandidateGenIndex].pt(), eventWeight_);
+        }
       }
     }
     
@@ -5577,7 +5598,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       unsigned int nonL1PixHitsFromGeneralTrack = 0;
     
       for (unsigned int i = 0; i < dedxHits->size(); i++) {
-
         DetId detid(dedxHits->detId(i));
         if (detid.subdetId() < 3) {
         // Calculate probQ and probXY for this pixel rechit
@@ -5596,12 +5616,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
 
-        // To measure how often the CPE fails
-        bool cpeHasFailed = false;
-        if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
-          cpeHasFailed = true;
-        }
-        if (cpeHasFailed) continue;
+        if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE))  continue;
 
         if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
         if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
@@ -5671,7 +5686,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float ih0_noL1 = (dedxIh_noL1FromGeneralTrack) ?  dedxIh_noL1FromGeneralTrack->dEdx() : 0.0;
       float ih0_strip = (dedxIh_StripOnlyFromGeneralTrack) ?  dedxIh_StripOnlyFromGeneralTrack->dEdx() : 0.0;
     
-      
       // nonL1PixHitsFromGeneralTrack now well computed above in the loop
       unsigned int numDeDxHitsFromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() ;
 
@@ -5749,115 +5763,109 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       // Loop on the dedxHits belonging to the generalTrack under study
       for(unsigned int h=0;h< dedxHits->size();h++){
-           DetId detid(dedxHits->detId(h));
-           float dedx_charge=dedxHits->charge(h);
-           float dedx_pathlength=dedxHits->pathlength(h);
-           float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
-           float scaleFactor =dEdxSF[0];
-           if (detid.subdetId() >=3 ) {
-            // strip
-
+          DetId detid(dedxHits->detId(h));
+          float dedx_charge = dedxHits->charge(h);
+          float dedx_pathlength = dedxHits->pathlength(h);
+          float factorChargeToE = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+          float scaleFactor = dEdxSF[0];
+          // start with the strip part
+          if (detid.subdetId() >=3 ) {
             // saturation correction of the charge
-              const SiStripCluster* cluster = dedxHits->stripCluster(h);
-              std::vector<int> amplitudes = convert(cluster->amplitudes());
-              amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
-              dedx_charge = 0;
-              for (unsigned int s = 0; s < amplitudes.size(); s++) {
-                 dedx_charge+=amplitudes[s];
-              }
-              float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
-              float charge_over_path_nosf = dedx_charge * factorChargeToE / dedx_pathlength;
+            const SiStripCluster* cluster = dedxHits->stripCluster(h);
+            std::vector<int> amplitudes = convert(cluster->amplitudes());
+            amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+            dedx_charge = 0;
+            for (unsigned int s = 0; s < amplitudes.size(); s++) {
+               dedx_charge+=amplitudes[s];
+            }
+            float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
+            float charge_over_path_nosf = dedx_charge * factorChargeToE / dedx_pathlength;
 
             // cleaning cuts
-              std::vector<int> amplitudes2 = convert(cluster->amplitudes());
-              std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
-              bool cleaning = clusterCleaning(amplitudesPrim, 1);
-              bool dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
+            std::vector<int> amplitudes2 = convert(cluster->amplitudes());
+            std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
+            bool cleaning = clusterCleaning(amplitudesPrim, 1);
+            bool dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
 
-              if (cleaning && dedx_inside)  {
-                 if (fabs(generalTrack->eta()<0.4)){
-                   tuple->SF_HHit2DStrip_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                   if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
-                     tuple->SF_HHit2DStrip->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                     tuple->SF_HHit2DStrip_nosf->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
-                   }
-                 }
+            if (cleaning && dedx_inside)  {
+               if (fabs(generalTrack->eta()<0.4)){
+                 tuple->SF_HHit2DStrip_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
                  if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
-                     tuple->SF_HHit2DStrip_eta1->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                     tuple->SF_HHit2DStrip_nosf_eta1->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
-                      if (generalTrack->pt()>10 && generalTrack->pt()<50) {
-                        tuple->SF_HHit2DStrip_vs_eta->Fill(generalTrack->eta(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                      }
+                   tuple->SF_HHit2DStrip->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                   tuple->SF_HHit2DStrip_nosf->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
                  }
-              }
-           }
-           else {
-              // pixel
-              scaleFactor *= dEdxSF[1];
-              // Corrections from Tamas
-              float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
-              scaleFactor *= pixelScaling;
-              float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
-              float charge_over_path_nosf = dedx_charge * factorChargeToE / dedx_pathlength;
+               }
+               if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+                   tuple->SF_HHit2DStrip_eta1->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                   tuple->SF_HHit2DStrip_nosf_eta1->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
+                    if (generalTrack->pt()>10 && generalTrack->pt()<50) {
+                      tuple->SF_HHit2DStrip_vs_eta->Fill(generalTrack->eta(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                    }
+               }
+            } // check on clean strips hits
+          } // end on strip part
+          // beginning of pixel part
+          else {
+            scaleFactor *= dEdxSF[1];
+            // Corrections from Tamas
+            float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
+            scaleFactor *= pixelScaling;
+            float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
+            float charge_over_path_nosf = dedx_charge * factorChargeToE / dedx_pathlength;
 
-//
-              // Taking the pixel cluster
-              auto const* pixelCluster =  dedxHits->pixelCluster(h);
-              if (pixelCluster == nullptr)  continue;
-              // Check on which geometry unit the hit is
-              const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
-              // Get the local vector for the track direction
-              LocalVector lv = geomDet.toLocal(GlobalVector(generalTrack->px(), generalTrack->py(), generalTrack->pz()));
-              // Re-run the CPE on this cluster with the lv above
-              // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
-              // from this we pick the 2nd, the QualWordType
-              auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, generalTrack->charge())));
-              // extract probQ and probXY from this
-              float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+  //
+            // Taking the pixel cluster
+            auto const* pixelCluster =  dedxHits->pixelCluster(h);
+            if (pixelCluster == nullptr)  continue;
+            // Check on which geometry unit the hit is
+            const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+            // Get the local vector for the track direction
+            LocalVector lv = geomDet.toLocal(GlobalVector(generalTrack->px(), generalTrack->py(), generalTrack->pz()));
+            // Re-run the CPE on this cluster with the lv above
+            // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
+            // from this we pick the 2nd, the QualWordType
+            auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, generalTrack->charge())));
+            // extract probQ and probXY from this
+            float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
 
-              // To measure how often the CPE fails
-              bool cpeHasFailed = false;
-              if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
-                  cpeHasFailed = true;
-              }
-              if (cpeHasFailed) continue;
+            // To measure how often the CPE fails
+            bool cpeHasFailed = false;
+            if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+                cpeHasFailed = true;
+            }
+            if (cpeHasFailed) continue;
 
-              if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+            if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
 
-              bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
-              bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
-              bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
-              bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+            bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+            bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+            bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+            bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
 
 
-              // BPIXL1 only for 2017 and 2018
-              bool isBPIXL1=false;
-//              if (detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) isBPIXL1=true;
-              int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
-              if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;
+            // BPIXL1 only for 2017 and 2018
+            bool isBPIXL1=false;
+            int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+            if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;
 
-               // cleaning in the pixel 
-              if (!specInCPE && probQ < 0.8 && (!isBPIXL1)) {
-//              if ((!isBPIXL1)) {
-                 if (fabs(generalTrack->eta()<0.4)){
-                   tuple->SF_HHit2DPix_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                   if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
-                      tuple->SF_HHit2DPix->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                      tuple->SF_HHit2DPix_nosf->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
-                   }
-                 }
-                 if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
-                      tuple->SF_HHit2DPix_eta1->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                      tuple->SF_HHit2DPix_nosf_eta1->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
-                      if (generalTrack->pt()>10 && generalTrack->pt()<50) {
-                        tuple->SF_HHit2DPix_vs_eta->Fill(generalTrack->eta(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
-                      }
-
-                 }
-
-              }
-           }
-
+             // cleaning in the pixel
+            if ((!specInCPE) && (probQ < 0.8) && (!isBPIXL1)) {
+              if (fabs(generalTrack->eta()<0.4)) {
+                tuple->SF_HHit2DPix_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+                  tuple->SF_HHit2DPix->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                  tuple->SF_HHit2DPix_nosf->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
+                }
+              } // end on check eta cut
+              if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
+                tuple->SF_HHit2DPix_eta1->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                tuple->SF_HHit2DPix_nosf_eta1->Fill(generalTrack->p(), charge_over_path_nosf, preScaleForDeDx*eventWeight_);
+                if (generalTrack->pt()>10 && generalTrack->pt()<50) {
+                  tuple->SF_HHit2DPix_vs_eta->Fill(generalTrack->eta(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
+                }
+              } // check the impact param requirements
+            } // check if the clusters are clean / non-L1
+         } // end on condition for being pixels
       } // end dEdX loop
     } // end general track loop
    } // end if selection before looping on track
