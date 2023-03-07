@@ -263,7 +263,6 @@ process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
 process.HSCParticleAnalyzer.SampleType = SampleType 
 process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
-process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
 process.HSCParticleAnalyzer.Period = options.YEAR

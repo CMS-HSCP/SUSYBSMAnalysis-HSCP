@@ -328,13 +328,17 @@ struct Tuple {
 
   TProfile* IntLumi;
   TProfile* XSection;
+  TH1F* EventWeight;
+  
   TH1F* NumEvents;
   TH1F* dRMinHLTMuon;
   TH1F* dRMinHLTMuon_lowDeltaR;
+  TH1F* dRMinHLTMuonLoose_lowDeltaR;
   TH1F* ErrorHisto;
 
   TH1F* BefPreS_RelDiffMatchedMuonPtAndTrigObjPt;
   TH1F* BefPreS_RelDiffTrigObjPtAndMatchedMuonPt;
+  TH2F* BefPreS_RelDiffTrigObjPtAndMatchedMuonPtVsPt;
   TH1F* BefPreS_NumPassedMatchingTrigObj;
   TH1F* BefPreS_NumPassedMatchingTrigObjEtaCut;
   
@@ -364,7 +368,6 @@ struct Tuple {
   TH1F* N1_Pt;
   TH1F* N1_Pt_lowPt;
   TH1F* N1_Ih;
-  TH1F* N1_MTOF;
   TH1F* N1_TIsol;
   TH1F* N1_EoP;
   TH1F* N1_ECalEoP;
@@ -380,7 +383,6 @@ struct Tuple {
   TH2F* N1_PtErrOverPt2VsProbQNoL1;
   TH1F* N1_I;
   TH1F* N1_TOF;
-  TH1F* NVTrack;
   TH1F* N1_Stations;
   TH1F* N1_Dxy;
   TH1F* N1_Dz;
