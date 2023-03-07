@@ -1139,6 +1139,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_Ihstrip_CR= dir.make<TH1F>("PostPreS_Ihstrip_CR", ";I_{h} (strip only) (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->PostPreS_Ih_nopixcl_CR= dir.make<TH1F>("PostPreS_Ih_nopixcl_CR", ";I_{h}(no pix cleaning) (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->PostPreS_Pt_lowPt_CR = dir.make<TH1F>("PostPreS_Pt_lowPt_CR", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
+    tuple->PostPreS_MassVsIas_fail_CR= dir.make<TH2F>("PostPreS_MassVsIas_fail_CR", ";G_{i}^{strips} in Fail ; Mass(GeV)",10,0,1, 80, 0, 4000);
+    tuple->PostPreS_MassVsIas_pass_CR= dir.make<TH2F>("PostPreS_MassVsIas_pass_CR", ";G_{i}^{strips} in Pass ; Mass(GeV)",10,0,1, 80, 0, 4000);
+
+
     tuple->PostPreS_Ias_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ias_CR_veryLowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
     tuple->PostPreS_P_CR_veryLowPt = dir.make<TH1F>("PostPreS_P_CR_veryLowPt", ";p (GeV);Tracks / 10 GeV", 50, 0., 50);
     tuple->PostPreS_Pt_lowPt = dir.make<TH1F>("PostPreS_Pt_lowPt", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
@@ -2017,29 +2021,38 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->SF_HHit2DStrip =  dir.make<TH2D>("SF_HHit2DStrip", ";SF_HHit2DStrip",  50, 0., 100., 200, 0., 20.);
     tuple->SF_HHit2DPix_nosf   =  dir.make<TH2D>("SF_HHit2DPix_nosf", ";SF_HHit2DPix_nosf",  50, 0., 100., 200, 0., 20.);
     tuple->SF_HHit2DStrip_nosf =  dir.make<TH2D>("SF_HHit2DStrip_nosf", ";SF_HHit2DStrip_nosf",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DPix_eta1   =  dir.make<TH2D>("SF_HHit2DPix_eta1", ";SF_HHit2DPix_eta1",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DStrip_eta1 =  dir.make<TH2D>("SF_HHit2DStrip_eta1", ";SF_HHit2DStrip_eta1",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DPix_nosf_eta1  =  dir.make<TH2D>("SF_HHit2DPix_nosf_eta1", ";SF_HHit2DPix_nosf_eta1",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DStrip_nosf_eta1 =  dir.make<TH2D>("SF_HHit2DStrip_nosf_eta1", ";SF_HHit2DStrip_nosf_eta1",  50, 0., 100., 200, 0., 20.);
+    tuple->SF_HHit2DPix_vs_eta  =  dir.make<TH2D>("SF_HHit2DPix_vs_eta", ";SF_HHit2DPix_vs_eta",  42, -2.1, 2.1, 200, 0., 20.);
+    tuple->SF_HHit2DStrip_vs_eta =  dir.make<TH2D>("SF_HHit2DStrip_vs_eta", ";SF_HHit2DStrip_vs_eta",  42, -2.1, 2.1, 200, 0., 20.);
 
   // K and C
-    tuple->K_and_C_Ih_noL1_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose1",";P_loose1;Ih_noL1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose2",";P_loose2;Ih_noL1", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta1_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_loose1",";eta1_loose1;Ih_noL1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta1_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_loose2",";eta1_loose2;Ih_noL1", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta2_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_loose1",";P_eta2_loose1;Ih_noL1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta2_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_loose2",";P_eta2_loose2;Ih_noL1", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_loose1",";P_loose1;Ih_strip", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_loose2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_loose2",";P_loose2;Ih_strip", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose1",";P_loose1;Ih_noL1", 50,0,5, 240, 2.,14.);
+    tuple->K_and_C_Ih_noL1_VsP_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_loose2",";P_loose2;Ih_noL1", 250,0,50, 240, 2.,14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_loose1",";eta1_loose1;Ih_noL1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_loose2",";eta1_loose2;Ih_noL1", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_loose1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_loose1",";P_eta2_loose1;Ih_noL1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_loose2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_loose2",";P_eta2_loose2;Ih_noL1", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_strip_VsP_loose1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_loose1",";P_loose1;Ih_strip", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_strip_VsP_loose2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_loose2",";P_loose2;Ih_strip", 250,0,50, 240, 2., 14.);
 
-    tuple->K_and_C_Ih_noL1_VsP_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_1",";Ih_noL1_VsP_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_2",";Ih_noL1_VsP_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta1_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_1",";Ih_noL1_VsP_eta1_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta1_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_2",";Ih_noL1_VsP_eta1_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta2_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_1",";Ih_noL1_VsP_eta2_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_eta2_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_2",";Ih_noL1_VsP_eta2_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_1",";Ih_strip_VsP_1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_2",";Ih_strip_VsP_2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_noFcut1",";Ih_noL1_VsP_noFcut1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_noL1_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_noFcut2",";Ih_noL1_VsP_noFcut2", 250,0,50, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut1",";Ih_strip_VsP_noFcut1", 50,0,5, 80, 2.,10.);
-    tuple->K_and_C_Ih_strip_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut2",";Ih_strip_VsP_noFcut2", 250,0,50, 80, 2.,10.);
+    tuple->K_and_C_Ih_noL1_VsP_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_1",";Ih_noL1_VsP_1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_2",";Ih_noL1_VsP_2", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_1",";Ih_noL1_VsP_eta1_1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta1_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta1_2",";Ih_noL1_VsP_eta1_2", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_1",";Ih_noL1_VsP_eta2_1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_eta2_2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_eta2_2",";Ih_noL1_VsP_eta2_2", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_strip_VsP_1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_1",";Ih_strip_VsP_1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_strip_VsP_2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_2",";Ih_strip_VsP_2", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_noFcut1",";Ih_noL1_VsP_noFcut1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_noL1_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_noL1_VsP_noFcut2",";Ih_noL1_VsP_noFcut2", 250,0,50, 240, 2., 14.);
+    tuple->K_and_C_Ih_strip_VsP_noFcut1 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut1",";Ih_strip_VsP_noFcut1", 50,0,5, 240, 2., 14.);
+    tuple->K_and_C_Ih_strip_VsP_noFcut2 = dir.make<TH2D>("K_and_C_Ih_strip_VsP_noFcut2",";Ih_strip_VsP_noFcut2", 250,0,50, 240, 2., 14.);
+
+    tuple->K_and_C_Ih_noL1_1d = dir.make<TH1F>("K_and_C_Ih_noL1_1d",";Ih_noL1 (for 3<p<5)",170,2.5,4.2);
+    tuple->K_and_C_Ih_strip_1d = dir.make<TH1F>("K_and_C_Ih_strip_1d",";Ih_noL1 (for 3<p<5)",170,2.5,4.2);
 
     tuple->K_and_C_Kin_Mass = dir.make<TH1F>("K_and_C_Kin_Mass",";Mass (GeV)",100,0.,5.);
     tuple->K_and_C_Kin_p = dir.make<TH1F>("K_and_C_Kin_p",";p (GeV)",50,0.,5.);
