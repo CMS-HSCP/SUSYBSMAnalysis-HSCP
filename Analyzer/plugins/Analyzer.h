@@ -347,6 +347,7 @@ private:
   float minSegEtaSep = 0.1;  //Minimum eta separation between SA track and muon segment on opposite side of detector
 
   // Thresholds for candidate preselection
+  // TAV: I think these could / should be const 
   float globalMaxEta_, globalMinPt_, globalMaxPt_;
   unsigned int globalMinNOPH_;
   float globalMinFOVH_;
@@ -390,7 +391,7 @@ private:
   string timeOffset_;
   muonTimingCalculator tofCalculator;
 
-  unsigned int saveTree_, saveGenTree_;
+  unsigned int saveTree_;
 
   bool useClusterCleaning, isData, isBckg, isSignal;
 
