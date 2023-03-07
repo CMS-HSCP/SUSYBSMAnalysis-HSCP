@@ -2179,6 +2179,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatus91->Fill(globalIas_, eventWeight_);
       }
+      // almostPassPre contains trigInfo_ > 0
       if (doPostPreSplots_ && almostPassPre) {
         tuple->PostPreS_IasForStatus91->Fill(globalIas_, eventWeight_);
       }
@@ -2186,10 +2187,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->ErrorHisto->Fill(8.);
       ErrorHisto_bin = 8;
       continue;
-    } else if (!isData && !candidateEnvHasStatus91) {
+    }
+    // now do the StatusNot91 plots
+    if (!isData && !candidateEnvHasStatus91) {
       if (trigInfo_ > 0 && doBefPreSplots_) {
         tuple->BefPreS_IasForStatusNot91->Fill(globalIas_, eventWeight_);
       }
+      // almostPassPre contains trigInfo_ > 0
       if (doPostPreSplots_ && almostPassPre) {
         tuple->PostPreS_IasForStatusNot91->Fill(globalIas_, eventWeight_);
       }
@@ -5758,6 +5762,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
               if (cleaning && dedx_inside)  {
                  if (fabs(generalTrack->eta()<0.4)){
+                   cout << "we are before SF_HHit2DStrip_loose fill " << endl;
                    tuple->SF_HHit2DStrip_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
                    if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
                      tuple->SF_HHit2DStrip->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
@@ -5779,6 +5784,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               if (detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) isBPIXL1=true;
               if (!isBPIXL1) {
                  if (fabs(generalTrack->eta()<0.4)){
+                   cout << "Before SF_HHit2DPix_loose fill" << endl;
                    tuple->SF_HHit2DPix_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
                    if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
                       tuple->SF_HHit2DPix->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
