@@ -332,8 +332,13 @@ struct Tuple {
   
   TH1F* NumEvents;
   TH1F* dRMinHLTMuon;
+  TH1F* dRMinHLTMuon_numTrigObjZero;
+  TH1F* dRMinHLTMuon_numTrigObjOne;
+  TH1F* dRMinHLTMuon_numTrigObjTwo;
   TH1F* dRMinHLTMuon_lowDeltaR;
   TH1F* dRMinHLTMuonLoose_lowDeltaR;
+  TH1F* dRGloballyMinHLTMuon;
+  
   TH1F* ErrorHisto;
 
   TH1F* BefPreS_RelDiffMatchedMuonPtAndTrigObjPt;
@@ -793,19 +798,21 @@ struct Tuple {
   TH2F* PostS_ProbQNoL1VsIas;
   TH2F* PostS_ProbQNoL1VsFiStrips;
   
-  TH1F* PostS_SR2FAIL_PV;
   TH1F* PostS_SR2FAIL_Ias_PUA;
   TH1F* PostS_SR2FAIL_Ias_PUB;
   TH1F* PostS_SR2FAIL_Ias_PUC;
+  TH1F* PostS_SR2FAIL_PV;
   TH1F* PostS_SR2FAIL_PtErrOverPt2;
   TH1F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPt;
+  TH2F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt;
   
-  TH1F* PostS_SR2PASS_PV;
   TH1F* PostS_SR2PASS_Ias_PUA;
   TH1F* PostS_SR2PASS_Ias_PUB;
   TH1F* PostS_SR2PASS_Ias_PUC;
+  TH1F* PostS_SR2PASS_PV;
   TH1F* PostS_SR2PASS_PtErrOverPt2;
   TH1F* PostS_SR2PASS_RelDiffTrackPtAndTruthPt;
+  TH2F* PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt;
   
   TH3F* PostS_ProbQNoL1VsIasVsPt;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_up;
@@ -1466,41 +1473,41 @@ struct Tuple {
 
  // Calibration
  // Scale Factors
- TH2D* SF_HHit2DPix_loose;
- TH2D* SF_HHit2DStrip_loose;
- TH2D* SF_HHit2DPix;
- TH2D* SF_HHit2DStrip;
- TH2D* SF_HHit2DPix_nosf;
- TH2D* SF_HHit2DStrip_nosf;
- TH2D* SF_HHit2DPix_eta1;
- TH2D* SF_HHit2DStrip_eta1;
- TH2D* SF_HHit2DPix_nosf_eta1;
- TH2D* SF_HHit2DStrip_nosf_eta1;
- TH2D* SF_HHit2DPix_vs_eta;
- TH2D* SF_HHit2DStrip_vs_eta;
+ TH2F* SF_HHit2DPix_loose;
+ TH2F* SF_HHit2DStrip_loose;
+ TH2F* SF_HHit2DPix;
+ TH2F* SF_HHit2DStrip;
+ TH2F* SF_HHit2DPix_nosf;
+ TH2F* SF_HHit2DStrip_nosf;
+ TH2F* SF_HHit2DPix_eta1;
+ TH2F* SF_HHit2DStrip_eta1;
+ TH2F* SF_HHit2DPix_nosf_eta1;
+ TH2F* SF_HHit2DStrip_nosf_eta1;
+ TH2F* SF_HHit2DPix_vs_eta;
+ TH2F* SF_HHit2DStrip_vs_eta;
 
  // K and C
- TH2D* K_and_C_Ih_noL1_VsP_loose1;
- TH2D* K_and_C_Ih_noL1_VsP_loose2;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_loose1;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_loose2;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_loose1;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_loose2;
- TH2D* K_and_C_Ih_strip_VsP_loose1;
- TH2D* K_and_C_Ih_strip_VsP_loose2;
+ TH2F* K_and_C_Ih_noL1_VsP_loose1;
+ TH2F* K_and_C_Ih_noL1_VsP_loose2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_loose1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_loose2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_loose1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_loose2;
+ TH2F* K_and_C_Ih_strip_VsP_loose1;
+ TH2F* K_and_C_Ih_strip_VsP_loose2;
 
- TH2D* K_and_C_Ih_noL1_VsP_1;
- TH2D* K_and_C_Ih_noL1_VsP_2;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_1;
- TH2D* K_and_C_Ih_noL1_VsP_eta1_2;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_1;
- TH2D* K_and_C_Ih_noL1_VsP_eta2_2;
- TH2D* K_and_C_Ih_strip_VsP_1;
- TH2D* K_and_C_Ih_strip_VsP_2;
- TH2D* K_and_C_Ih_noL1_VsP_noFcut1;
- TH2D* K_and_C_Ih_noL1_VsP_noFcut2;
- TH2D* K_and_C_Ih_strip_VsP_noFcut1;
- TH2D* K_and_C_Ih_strip_VsP_noFcut2;
+ TH2F* K_and_C_Ih_noL1_VsP_1;
+ TH2F* K_and_C_Ih_noL1_VsP_2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta1_2;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_1;
+ TH2F* K_and_C_Ih_noL1_VsP_eta2_2;
+ TH2F* K_and_C_Ih_strip_VsP_1;
+ TH2F* K_and_C_Ih_strip_VsP_2;
+ TH2F* K_and_C_Ih_noL1_VsP_noFcut1;
+ TH2F* K_and_C_Ih_noL1_VsP_noFcut2;
+ TH2F* K_and_C_Ih_strip_VsP_noFcut1;
+ TH2F* K_and_C_Ih_strip_VsP_noFcut2;
 
  TH1F* K_and_C_Ih_noL1_1d;
  TH1F* K_and_C_Ih_strip_1d;
