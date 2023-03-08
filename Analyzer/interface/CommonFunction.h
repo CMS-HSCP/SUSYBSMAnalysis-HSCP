@@ -323,7 +323,6 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
 
      }
      else if (layerorside==3) {
-     }
 
        if (year=="2017") {
         for (int i=0; i<icalibL3_2017; i++) {
@@ -346,6 +345,7 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
         }
        }
 
+     }
      else if (layerorside==4) {
 
        if (year=="2017") {

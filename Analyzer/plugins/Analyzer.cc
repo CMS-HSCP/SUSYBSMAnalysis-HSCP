@@ -3466,7 +3466,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       float Masstest =0;
       // K and C values fixed to some test values
-      if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), globalIh_, 2.52, 3.18);
+      if (dedxIh_StripOnly) {
+         if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
+      }
       if ((1 - probQonTrackNoL1)<0.9) {
          tuple->PostPreS_MassVsIas_fail_CR->Fill(globalIas_, Masstest, eventWeight_);
       }
