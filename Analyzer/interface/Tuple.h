@@ -338,6 +338,7 @@ struct Tuple {
   TH1F* dRMinHLTMuon_lowDeltaR;
   TH1F* dRMinHLTMuonLoose_lowDeltaR;
   TH1F* dRGloballyMinHLTMuon;
+  TH1F* PostS_dRMinHLTMuon;
   
   TH1F* ErrorHisto;
 

@@ -62,7 +62,8 @@
 // - 44p3: Add one more bin to the PostS_HltMatchTrackLevel plot, apply all SFs from the POG, make new syst plots for each POG SFs, change Ias systematics back to factor on the Gi value, postPreS status 91 plot fix
 // - 44p4: Adding PR107 and PR113, pixel cleaning in Ih, corrections for Gi templates, new dEdX SF, saturation plots, new DeDxSF_1 and  DeDxSF_0 values, CreateGiTemplates = True
 // - 44p5: CreateGiTemplates = True, BefPreS_RelDiffTrigObjPtAndMatchedMuonPtVsPt, reset eventWeight_ event level, dRMinHLTMuonLoose_lowDeltaR, get rid of SaveGenTree
-// - 44p6: Include PR120 (many CR_veryLowPt), Move SR2 PV plot under GiS > 0.25 region, intro RelDiffTrackPtAndTruthPtVsTruthPt, dRMinHLTMuon_numTrigObj plots, fix when not to update
+// - 44p6: Include PR120 (many CR_veryLowPt), Move SR2 PV plot under GiS > 0.25 region, intro RelDiffTrackPtAndTruthPtVsTruthPt, dRMinHLTMuon_numTrigObj plots, fix when not to update the trigger match
+// - 44p7: Include PR122 (fix to pixel SFs), PostS_dRMinHLTMuon
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -5050,6 +5051,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (anyCandidateDrMinHltMuon < 0.15) {
       tuple->PostS_HltMatchTrackLevel->Fill(4.0, eventWeight_);
     }
+    tuple->PostS_dRMinHLTMuon->Fill(dr_min_hltMuon_hscpCand_inEvent);
     if (bestCandidateDrMinHltMuon < 0.15) {
       tuple->PostS_HltMatchTrackLevel->Fill(5.0, eventWeight_);
     }
