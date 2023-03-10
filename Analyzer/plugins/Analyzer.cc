@@ -64,6 +64,7 @@
 // - 44p5: CreateGiTemplates = True, BefPreS_RelDiffTrigObjPtAndMatchedMuonPtVsPt, reset eventWeight_ event level, dRMinHLTMuonLoose_lowDeltaR, get rid of SaveGenTree
 // - 44p6: Include PR120 (many CR_veryLowPt), Move SR2 PV plot under GiS > 0.25 region, intro RelDiffTrackPtAndTruthPtVsTruthPt, dRMinHLTMuon_numTrigObj plots, fix when not to update the trigger match
 // - 44p7: Include PR122 (fix to pixel SFs), PostS_dRMinHLTMuon
+// - 44p8: SR2PASS_TriggerMuon50VsBeta plots, PostS_GenBeta
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -3467,9 +3468,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       float Masstest =0;
       // K and C values fixed to some test values
-      if (dedxIh_StripOnly) {
-         if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
-      }
+      if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), globalIh_, 2.52, 3.18);
       if ((1 - probQonTrackNoL1)<0.9) {
          tuple->PostPreS_MassVsIas_fail_CR->Fill(globalIas_, Masstest, eventWeight_);
       }
@@ -3698,10 +3697,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
     
     float genBetaPrimeUp =  -1.f;
+    float genBetaPrimeUpHalfSigma =  -1.f;
+    float genBetaPrimeUpTwoSigma =  -1.f;
     float genBetaPrimeDown = -1.f;
+    float genBetaPrimeDownHalfSigma = -1.f;
+    float genBetaPrimeDownTwoSigma = -1.f;
     genBetaPrimeUp = distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs);
+    genBetaPrimeUpHalfSigma = distanceAtThisEta / ((timing+0.75)*speedOfLightInCmPerNs);
+    genBetaPrimeUpTwoSigma = distanceAtThisEta / ((timing+3.0)*speedOfLightInCmPerNs);
     if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
       genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
+      genBetaPrimeDownHalfSigma = distanceAtThisEta / ((timing-0.75)*speedOfLightInCmPerNs);
+      genBetaPrimeDownTwoSigma = distanceAtThisEta / ((timing-3.0)*speedOfLightInCmPerNs);
     }
     // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
     if (passPreselection(passedCutsArrayForTriggerSyst, false) && doPostPreSplots_) {
@@ -3721,7 +3728,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
         }
-        
+        if (1 - probQonTrackNoL1 > 0.9 && globalIas_ > 0.25 && track->pt() > 200 ) {
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(0., genBeta);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(0., genBetaPrimeDownHalfSigma);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(0., genBetaPrimeDown);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma->Fill(0., genBetaPrimeDownTwoSigma);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma->Fill(0., genBetaPrimeUpHalfSigma);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma->Fill(0., genBetaPrimeUp);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma->Fill(0., genBetaPrimeUpTwoSigma);
+        }
       } else if (HLT_Mu50) {
         tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., genBeta);
         tuple->PostPreS_TriggerMuon50VsPt->Fill(1., track->pt());
@@ -3738,7 +3753,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
           tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
         }
-      }
+        
+        if (1 - probQonTrackNoL1 > 0.9 && globalIas_ > 0.25 && track->pt() > 200 ) {
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(1., genBeta);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(1., genBetaPrimeDownHalfSigma);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(1., genBetaPrimeDown);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma->Fill(1., genBetaPrimeDownTwoSigma);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma->Fill(1., genBetaPrimeUpHalfSigma);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma->Fill(1., genBetaPrimeUp);
+          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma->Fill(1., genBetaPrimeUpTwoSigma);
+        }
+      } // end condition on passing the Mu50 trigger
       // Repeat the above but with all muon triggers
       if (!muTrig) {
         tuple->PostPreS_TriggerMuonAllVsBeta->Fill(0., genBeta);
@@ -5137,6 +5162,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float theFiSystFactorDown = 0.995;
     float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
     float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
+    
+    tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
     
     float muonRecoSFsUp = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
     float muonIdSFsUp = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);

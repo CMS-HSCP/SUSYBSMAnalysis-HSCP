@@ -1062,6 +1062,14 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
   
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_Beta;
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma;
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma;
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma;
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma;
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma;
+  TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma;
+  
   TH2F* PostPreS_TriggerMuonAllVsBeta;
   TH2F* PostPreS_TriggerMuonAllVsBeta_EtaA;
   TH2F* PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp;
@@ -1278,6 +1286,8 @@ struct Tuple {
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
 
   TH1F* PostPreS_GenBeta;
+  TH1F* PostS_GenBeta;
+  
 
   //Prediction histograms
   TH1D* H_A;

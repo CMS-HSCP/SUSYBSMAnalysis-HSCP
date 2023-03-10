@@ -1262,6 +1262,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_Beta", ";Muon50 triggered (SR2 region);Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (down half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma", ";Muon50 triggered (SR2 region);Gen #beta (down one sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma", ";Muon50 triggered (SR2 region);Gen #beta (down two sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (up half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma", ";Muon50 triggered (SR2 region);Gen #beta (up one sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma", ";Muon50 triggered (SR2 region);Gen #beta (up two sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+        
     tuple->PostPreS_TriggerMuonAllVsBeta = dir.make<TH2F>("PostPreS_TriggerMuonAllVsBeta", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuonAllVsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuonAllVsBeta_EtaA", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -1588,6 +1596,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   }
 
   tuple->PostS_ProbQNoL1VsFiStripsLogVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
+  tuple->PostS_GenBeta = dir.make<TH1F>("PostS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
+
   if (doSystsPlots_) {
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
