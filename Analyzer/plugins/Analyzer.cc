@@ -5840,7 +5840,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             scaleFactor *= dEdxSF[1];
             // Corrections from Tamas
             float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
-            scaleFactor *= pixelScaling;
+            dedx_charge *= pixelScaling;
             float charge_over_pathlength = dedx_charge * scaleFactor * factorChargeToE / dedx_pathlength;
             float charge_over_path_nosf = dedx_charge * factorChargeToE / dedx_pathlength;
 
