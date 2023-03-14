@@ -23,7 +23,7 @@ codeVersion = sys.argv[1]
 
 if not os.path.exists("submittedConfigs"): os.makedirs("submittedConfigs")
 
-if not os.path.exists("4crab_Signal_Template.py"):
+if not os.path.exists("4crab_SignalGlu_Template.py"):
   TEMPLATE = '''
 from CRABClient.UserUtilities import config
 config = config()
@@ -59,20 +59,20 @@ config.Site.whitelist = ['T2_DE_DESY','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US
 config.Site.storageSite = 'T2_HU_Budapest'
   '''
 
-  with open("4crab_Signal_Template.py", "w") as text_file:
+  with open("4crab_SignalGlu_Template.py", "w") as text_file:
       text_file.write(TEMPLATE)
 
 for i in datasetList:
   print("Submit for sample "+i)
-  os.system("cp 4crab_Signal_Template.py 4crab_Signal_toSubmit.py")
-  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_Signal_toSubmit.py"
+  os.system("cp 4crab_SignalGlu_Template.py 4crab_SignalGlu_toSubmit.py")
+  replaceVERZIO = "sed -i 's/VERZIO/"+codeVersion+"/g' 4crab_SignalGlu_toSubmit.py"
   os.system(replaceVERZIO)
   shortSampleName = i[1:(i.find('TuneCP5'))-1]
-  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_Signal_toSubmit.py"
+  replaceROVIDMINTA = "sed -i 's/ROVIDMINTA/"+shortSampleName+"/g' 4crab_SignalGlu_toSubmit.py"
   os.system(replaceROVIDMINTA)
-  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_Signal_toSubmit.py"
+  replaceMINTA = "sed -i 's/MINTA/"+i.replace("/","\/")+"/g' 4crab_SignalGlu_toSubmit.py"
   os.system(replaceMINTA)
-  os.system("crab submit -c 4crab_Signal_toSubmit.py")
-  os.system("mv 4crab_Signal_toSubmit.py submittedConfigs/.")
+  os.system("crab submit -c 4crab_SignalGlu_toSubmit.py")
+  os.system("mv 4crab_SignalGlu_toSubmit.py submittedConfigs/.")
 
-os.system("rm 4crab_Signal_Template.py")
+os.system("rm 4crab_SignalGlu_Template.py")

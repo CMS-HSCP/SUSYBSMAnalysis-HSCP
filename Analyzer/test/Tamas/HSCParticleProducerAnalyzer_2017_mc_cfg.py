@@ -217,55 +217,55 @@ if options.SAMPLE == 'isData':
         SF0 = 1.0
         SF1 = 1.0325
         if options.ERA == 'A':
-            IasTemplate = 'template_2016B_v4.root'
+            IasTemplate = 'template_2016B_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2016B_v4.root'
+            IasTemplate = 'template_2016B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2016C_v4.root'
+            IasTemplate = 'template_2016C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2016D_v4.root'
+            IasTemplate = 'template_2016D_v5.root'
         if options.ERA == 'E':
-            IasTemplate = 'template_2016E_v4.root'
+            IasTemplate = 'template_2016E_v5.root'
         if options.ERA == 'F':
-            IasTemplate = 'template_2016F_v4.root'
+            IasTemplate = 'template_2016F_v5.root'
         if options.ERA == 'G':
-            IasTemplate = 'template_2016G_v4.root'
+            IasTemplate = 'template_2016G_v5.root'
         if options.ERA == 'H':
-            IasTemplate = 'template_2016H_v4.root'
+            IasTemplate = 'template_2016H_v5.root'
     if options.YEAR == '2017':
         K = 2.3
         C = 3.17
         SF0 = 1.0
         SF1 = 0.990
         if options.ERA == 'A':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2017C_v4.root'
+            IasTemplate = 'template_2017C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2017D_v4.root'
+            IasTemplate = 'template_2017D_v5.root'
         if options.ERA == 'E':
-            IasTemplate = 'template_2017E_v4.root'
+            IasTemplate = 'template_2017E_v5.root'
         if options.ERA == 'F':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
         if options.ERA == 'G':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
         if options.ERA == 'H':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
     if options.YEAR == '2018':
         K = 2.27
         C = 3.16
         SF0 = 1.0
         SF1 = 1.035
         if options.ERA == 'A':
-            IasTemplate = 'template_2018A_v4.root'
+            IasTemplate = 'template_2018A_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2018B_v4.root'
+            IasTemplate = 'template_2018B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2018C_v4.root'
+            IasTemplate = 'template_2018C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2018D_v4.root'
+            IasTemplate = 'template_2018D_v5.root'
 else:
     if options.SAMPLE == 'isBckg':
         SampleType = 1
@@ -274,13 +274,13 @@ else:
             C = 3.22
             SF0 = 1.009
             SF1 = 1.044
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.006
             SF1 = 1.097
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v5.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
@@ -288,13 +288,13 @@ else:
             C = 3.22
             SF0 = 1.009
             SF1 = 1.044
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.006
             SF1 = 1.097
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v5.root'
 
 
 # run the EDAnalyzer
