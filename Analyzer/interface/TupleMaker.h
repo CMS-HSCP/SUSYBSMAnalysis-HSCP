@@ -400,7 +400,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->IntLumi = dir.make<TProfile>("IntLumi", ";IntLumi", 1, 0, 1);
   tuple->XSection = dir.make<TProfile>("XSection", ";XSection", 1, 0, 1);
-  tuple->EventWeight = dir.make<TH1F>("EventWeight", ";EventWeight", 50, 0.75, 1.25);
+  tuple->EventWeight = dir.make<TH1F>("EventWeight", ";EventWeight;Events / 0.02", 25, 0.75, 1.25);
 
   tuple->NumEvents = dir.make<TH1F>("NumEvents", ";;Number of events / category", 5, 0.5, 5.5);
   tuple->NumEvents->GetXaxis()->SetBinLabel(1,"All events");
@@ -411,12 +411,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
 
   tuple->dRMinHLTMuon = dir.make<TH1F>("dRMinHLTMuon", ";#Delta R_{min,muReco,HLT};Events / 0.04",100,0.,4.);
+  
   tuple->dRMinHLTMuon_numTrigObjZero = dir.make<TH1F>("dRMinHLTMuon_numTrigObjZero", ";#Delta R_{min,muReco,HLT} (N_{HLT match} = 0, #eta < 1);Events / 0.04",100,0.,4.);
   tuple->dRMinHLTMuon_numTrigObjOne = dir.make<TH1F>("dRMinHLTMuon_numTrigObjOne", ";#Delta R_{min,muReco,HLT} (N_{HLT match} = 1, #eta < 1);Events / 0.04",100,0.,4.);
   tuple->dRMinHLTMuon_numTrigObjTwo = dir.make<TH1F>("dRMinHLTMuon_numTrigObjTwo", ";#Delta R_{min,muReco,HLT} (N_{HLT match} = 2, #eta < 1);Events / 0.04",100,0.,4.);
   tuple->dRMinHLTMuon_lowDeltaR = dir.make<TH1F>("dRMinHLTMuon_lowDeltaR", ";#Delta R_{min,muReco,HLT};Events / 0.01",40,0.,0.4);
   tuple->dRMinHLTMuonLoose_lowDeltaR = dir.make<TH1F>("dRMinHLTMuonLoose_lowDeltaR", ";#Delta R_{min,muRecoLoose,HLT};Events / 0.01",40,0.,0.4);
   tuple->dRGloballyMinHLTMuon = dir.make<TH1F>("dRGloballyMinHLTMuon", ";#Delta R_{min,muReco,HLT};Events / 0.04",100,0.,4.);
+  tuple->PostS_dRMinHLTMuon = dir.make<TH1F>("dRMinHLTMuon", ";#Delta R_{min,muReco,HLT};Events / 0.04",100,0.,4.);
 
   tuple->ErrorHisto = dir.make<TH1F>("ErrorHisto", ";;", 11, -0.5, 10.5);
   tuple->ErrorHisto->GetXaxis()->SetBinLabel(1,"All tracks");
@@ -1260,6 +1262,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_Beta", ";Muon50 triggered (SR2 region);Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (down half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma", ";Muon50 triggered (SR2 region);Gen #beta (down one sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma", ";Muon50 triggered (SR2 region);Gen #beta (down two sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (up half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma", ";Muon50 triggered (SR2 region);Gen #beta (up one sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma", ";Muon50 triggered (SR2 region);Gen #beta (up two sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
+        
     tuple->PostPreS_TriggerMuonAllVsBeta = dir.make<TH2F>("PostPreS_TriggerMuonAllVsBeta", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuonAllVsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuonAllVsBeta_EtaA", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -1556,7 +1566,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR2PASS_PV = dir.make<TH1F>("PostS_SR2PASS_PV", ";PV (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / 1", 60, -0.5, 59.5);
   tuple->PostS_SR2PASS_PtErrOverPt2 = dir.make<TH1F>("PostS_SR2PASS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / bin", 40, 0, 0.003);
   tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("PostS_SR2PASS_RelDiffTrackPtAndTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / bin", 60,-1.0,2.0);
-  tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt = dir.make<TH2F>("PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);p_{T}^{gen}", 60,-1.0,2.0,20,0.,4000.);
+  tuple->PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt = dir.make<TH2F>("PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);p_{T}^{gen}", 60,-1.0,2.0,20,0.,4000.);
   
   tuple->PostS_ProbQNoL1VsIasVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsIasVsPt", ";F_{i}^{pixels};G_{i}^{strips};p_{T} (GeV)",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
   if (doSystsPlots_) {
@@ -1586,6 +1596,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   }
 
   tuple->PostS_ProbQNoL1VsFiStripsLogVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
+  tuple->PostS_GenBeta = dir.make<TH1F>("PostS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
+
   if (doSystsPlots_) {
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
@@ -2065,8 +2077,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->K_and_C_Kin_p = dir.make<TH1F>("K_and_C_Kin_p",";p (GeV)",50,0.,5.);
     tuple->K_and_C_Kin_phi = dir.make<TH1F>("K_and_C_Kin_phi",";#phi",  24, -1.*acos(-1),acos(-1));
     tuple->K_and_C_Kin_eta = dir.make<TH1F>("K_and_C_Kin_eta",";#eta", 18, -2.25, 2.25);
-    tuple->K_and_C_NumSat = dir.make<TH1F>("K_and_C_NumSat",";Number of saturated measurements", 11, -0.5, 10.5);
-    tuple->K_and_C_FracSat = dir.make<TH1F>("K_and_C_FracSat",";Fraction of saturated measurements", 50, 0., 1.);
+    tuple->K_and_C_NumSat = dir.make<TH1F>("K_and_C_NumSat",";Number of saturated measurements;Tracks / 1", 11, -0.5, 10.5);
+    tuple->K_and_C_FracSat = dir.make<TH1F>("K_and_C_FracSat",";Fraction of saturated measurements;Tracks / 0.05", 20, 0., 1.);
 
   // Stability
     tuple->Stab_RunNumVsPixCluChargeAfterSFsL1 = dir.make<TH2F>("Stab_RunNumVsPixCluChargeAfterSFsL1",";Run;Norm pixel cluster charge after SFs on L1", 545, 271000,325500, 150, 0.,300.);
@@ -2084,8 +2096,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Stab_invB_CSC_VsRun   = dir.make<TH2F>("Stab_invB_CSC_VsRun",";Run;invBeta(CSC)", 545, 271000,325500, 90,-1.,2.);
 
   // saturation
-    tuple->PostPreS_NumSat = dir.make<TH1F>("PostPreS_NumSat",";Number of saturated measurements", 11, -0.5, 10.5);
-    tuple->PostPreS_FracSat = dir.make<TH1F>("PostPreS_FracSat",";Fraction of saturated measurements", 50, 0., 1.);
+    tuple->PostPreS_NumSat = dir.make<TH1F>("PostPreS_NumSat",";Number of saturated measurements;Tracks / 1", 11, -0.5, 10.5);
+    tuple->PostPreS_FracSat = dir.make<TH1F>("PostPreS_FracSat",";Fraction of saturated measurements;Tracks / 0.05", 20, 0., 1.);
 
   }
 
