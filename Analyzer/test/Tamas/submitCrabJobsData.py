@@ -65,7 +65,7 @@ config.Data.partialDataset = True
 config.Data.publication = False
 
 config.section_('Site')
-config.Site.whitelist = ['T2_DE_DESY','T2_CH_CERN','T2_IT_Bari','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T2_HU_Budapest','T2_FR_*', 'T2_UK_London_IC']
+config.Site.whitelist = ['T2_ES_*,'T2_IN_TIFR','T2_DE_DESY','T2_CH_CERN','T2_IT_*','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T3_US_*','T2_HU_Budapest','T2_FR_*', 'T2_UK_*']
 config.Site.storageSite = 'T2_HU_Budapest'
 #config.Site.storageSite = 'T3_US_FNALLPC'
   '''
