@@ -12,7 +12,7 @@ public:
                        unsigned int saveTree,
                        bool calcSyst_,
                        int TypeMode,
-                       bool sampleType_,
+                       int sampleType_,
                        bool doBefTrigPlots_,
                        bool doBefPreSplots_,
                        bool doPostPreSplots_,
@@ -373,7 +373,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
                                  unsigned int saveTree,
                                  bool calcSyst_,
                                  int TypeMode,
-                                 bool sampleType_,
+                                 int sampleType_,
                                  bool doBefTrigPlots_,
                                  bool doBefPreSplots_,
                                  bool doPostPreSplots_,
@@ -700,6 +700,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(6,"Gen match: else");
     tuple->BefPreS_TriggerGenMatch->GetXaxis()->SetBinLabel(7,"Gen eta < 1.0");
     
+    tuple->BefPreS_TriggerGenBeta = dir.make<TH1F>("BefPreS_TriggerGenBeta", ";#beta^{HLT};Tracks / 0.05", 20, 0., 1.);
+    
     tuple->BefPreS_TriggerType = dir.make<TH1F>("BefPreS_TriggerType", ";;Events / category", 5, -0.5, 4.5);
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(1,"Neither Muon nor MET triggered");
     tuple->BefPreS_TriggerType->GetXaxis()->SetBinLabel(2,"Muon triggered");
@@ -945,7 +947,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TriggerMETallVsMetVsHT = dir.make<TH3F>("BefPreS_TriggerMETallVsMetVsHT", ";OR of MET triggered;MET (GeV);H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05,50,-0.05,2000.05);
   }
   
-  if (createGiTemplates_) {
+  if (createGiTemplates_ && sampleType_ < 2) {
     tuple->Calibration_GiTemplate =  dir.make<TH3F>("Calibration_GiTemplate", ";Module geometry;Path lenght (mm);Path normalised charge (ke / cm)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
     tuple->Calibration_GiTemplate->GetXaxis()->SetBinLabel(1,"IB1");
     tuple->Calibration_GiTemplate->GetXaxis()->SetBinLabel(2,"IB2");
@@ -1251,6 +1253,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->PostPreS_ProbQNoL1VsIas_Ias_up = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Ias_up", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
       tuple->PostPreS_ProbQNoL1VsIas_Ias_down = dir.make<TH2F>("PostPreS_ProbQNoL1VsIas_Ias_down", ";F_{i}^{pixels};G_{i}^{strips};Tracks / bin",20, 0., 1., 20, 0., 1.);
     }
+    
+    tuple->PostPreS_TriggerTimingPass = dir.make<TH1F>("PostPreS_TriggerTimingPass", ";#Delta t_{PV,DT L2} (ns) (trigger passed);Tracks / bin", 100, 0.0, 100);
+    tuple->PostPreS_TriggerTimingReject = dir.make<TH1F>("PostPreS_TriggerTimingReject", ";#Delta t_{PV,DT L2} (ns) (trigger rejected);Tracks / bin", 100, 0.0, 100);
+    tuple->PostPreS_MuonTightVsBeta = dir.make<TH2F>("PostPreS_MuonTightVsBeta", ";Tight ID mu;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -1261,6 +1267,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    
+    tuple->PostS_SR2PASS_TriggerGenBeta = dir.make<TH1F>("PostS_SR2PASS_TriggerGenBeta", ";#beta^{HLT);Tracks / 0.05", 20, 0., 1.);
     
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_Beta", ";Muon50 triggered (SR2 region);Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (down half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -1475,6 +1483,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_RecoPfJetsNum = dir.make<TH1F>("PostPreS_RecoPfJetsNum", ";Number of PF jets;Tracks / 1",  15, -0.5, 15.5);
     tuple->PostPreS_RecoPfHT = dir.make<TH1F>("PostPreS_RecoPfHT", ";PfHT",100,0.,2000.);
     tuple->PostPreS_GenBeta = dir.make<TH1F>("PostPreS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
+    tuple->PostPreS_TriggerGenBeta = dir.make<TH1F>("PostPreS_TriggerGenBeta", ";#beta^{HLT};Tracks / 0.05", 20, 0., 1.);
 
 
     // add  plots in Gitemplate region  to answer Slava's questions about charge resolution
@@ -1597,6 +1606,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
   tuple->PostS_ProbQNoL1VsFiStripsLogVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
   tuple->PostS_GenBeta = dir.make<TH1F>("PostS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
+  tuple->PostS_TriggerGenBeta = dir.make<TH1F>("PostS_TriggerGenBeta", ";#beta^{HLT};Events / 0.05", 20, 0., 1.);
 
   if (doSystsPlots_) {
     tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);

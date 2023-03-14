@@ -356,6 +356,8 @@ struct Tuple {
   TH1F* BefPreS_RelDiffTrackPtAndTruthPt;
   
   TH1F* BefPreS_TriggerGenMatch;
+  TH1F* BefPreS_TriggerGenBeta;
+  
   TH1F* BefPreS_TriggerType;
   TH1F* Gen_HSCPCandidateType;
   TH1F* BefPreS_HSCPCandidateType;
@@ -815,6 +817,8 @@ struct Tuple {
   TH1F* PostS_SR2PASS_RelDiffTrackPtAndTruthPt;
   TH2F* PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt;
   
+  TH1F* PostS_SR2PASS_TriggerGenBeta;
+  
   TH3F* PostS_ProbQNoL1VsIasVsPt;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_up;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_down;
@@ -1051,6 +1055,9 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
 
+  TH1F* PostPreS_TriggerTimingPass;
+  TH1F* PostPreS_TriggerTimingReject;
+  TH2F* PostPreS_MuonTightVsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
@@ -1286,7 +1293,9 @@ struct Tuple {
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
 
   TH1F* PostPreS_GenBeta;
+  TH1F* PostPreS_TriggerGenBeta;
   TH1F* PostS_GenBeta;
+  TH1F* PostS_TriggerGenBeta;
   
 
   //Prediction histograms
