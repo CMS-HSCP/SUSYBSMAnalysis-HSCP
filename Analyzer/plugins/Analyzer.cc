@@ -66,6 +66,8 @@
 // - 44p7: Include PR122 (fix to pixel SFs), PostS_dRMinHLTMuon
 // - 44p8: SR2PASS_TriggerMuon50VsBeta plots, PostS_GenBeta
 // - 44p9: Take beta from the trigger object in the systematics plots, PostPreS_MuonTightVsBeta, PostPreS_TriggerTiming* plots
+// - 45p0: Submission for 2017 MC samples
+// - 45p1: Fix trigObjPt for non-triggered objects
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -818,6 +820,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float maxGenBeta = -1;
   float maxGenEta = 9999;
   float maxGenTheta = 9999;
+  float maxGenPt = -1;
   if (!isData) {
     if (trigInfo_ > 0) {
       if (debug_> 0 ) LogPrint(MOD) << "Triggered(Mu|Obj) - GEN track matching";
@@ -899,6 +902,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           maxGenBeta = tempBeta;
           maxGenEta =  genColl[g].eta();
           maxGenTheta =  genColl[g].theta();
+          maxGenPt =  genColl[g].pt();
         }
       } // end loop on gen collection
     } // situation when the trigger is not passed
@@ -907,7 +911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float trigObjBeta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].p() / genColl[triggerObjGenIndex].energy() : maxGenBeta;
   float trigObjTheta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].theta() : maxGenTheta;
   float trigObjEta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].eta() : maxGenEta;
-  float trigObjPt = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].pt() : -1;
+  float trigObjPt = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].pt() : maxGenPt;
   
   // Compute event weight from different SFs
   if (!isData) {

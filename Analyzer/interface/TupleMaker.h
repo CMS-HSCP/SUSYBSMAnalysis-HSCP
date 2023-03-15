@@ -1268,7 +1268,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     
-    tuple->PostS_SR2PASS_TriggerGenBeta = dir.make<TH1F>("PostS_SR2PASS_TriggerGenBeta", ";#beta^{HLT);Tracks / 0.05", 20, 0., 1.);
+    tuple->PostS_SR2PASS_TriggerGenBeta = dir.make<TH1F>("PostS_SR2PASS_TriggerGenBeta", ";#beta^{HLT};Tracks / 0.05", 20, 0., 1.);
     
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_Beta", ";Muon50 triggered (SR2 region);Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (down half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
