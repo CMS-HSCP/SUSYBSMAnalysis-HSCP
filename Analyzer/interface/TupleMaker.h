@@ -1256,7 +1256,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     
     tuple->PostPreS_TriggerTimingPass = dir.make<TH1F>("PostPreS_TriggerTimingPass", ";#Delta t_{PV,DT L2} (ns) (trigger passed);Tracks / bin", 100, 0.0, 100);
     tuple->PostPreS_TriggerTimingReject = dir.make<TH1F>("PostPreS_TriggerTimingReject", ";#Delta t_{PV,DT L2} (ns) (trigger rejected);Tracks / bin", 100, 0.0, 100);
-    tuple->PostPreS_MuonTightVsBeta = dir.make<TH2F>("PostPreS_MuonTightVsBeta", ";Tight ID mu;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->PostS_MuonTightVsBeta = dir.make<TH2F>("PostS_MuonTightVsBeta", ";Tight ID mu;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);

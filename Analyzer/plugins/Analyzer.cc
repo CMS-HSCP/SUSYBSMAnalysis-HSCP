@@ -68,6 +68,8 @@
 // - 44p9: Take beta from the trigger object in the systematics plots, PostPreS_MuonTightVsBeta, PostPreS_TriggerTiming* plots
 // - 45p0: Submission for 2017 MC samples
 // - 45p1: Fix trigObjPt for non-triggered objects
+// - 45p2: Dont cut on trigObjPt for the systematics checks plots
+// - 45p3: Move PostS_MuonTightVsBeta to the end, add eta < 1 to TriggerMuon50VsBeta
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -3738,14 +3740,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
       if (HLT_Mu50 && dRclosestTrigAndCandidate < 0.15 ) trigObjPassedPres = true;
       if (!HLT_Mu50 ) trigObjPassedPres = true;
-      if (!hscp.muonRef().isNull()) {
-        reco::MuonRef muonRefAtIndexHscpPrePassButNoTrigReq = hscp.muonRef();
-        if (muon::isTightMuon(*muonRefAtIndexHscpPrePassButNoTrigReq, highestSumPt2Vertex)) {
-          tuple->PostPreS_MuonTightVsBeta->Fill(1.,genBeta);
-        }
-      } else {
-        tuple->PostPreS_MuonTightVsBeta->Fill(0.,genBeta);
-      }
     } // if preselection w/o trigger requirement is passed
     
     //fill the ABCD histograms and a few other control plots
@@ -4884,7 +4878,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
       }
-      if (bestCandidateProbQNoL1 < 0.1 && bestCandidateIas > 0.25 && trigObjPt > 200 ) {
+      if (fabs(trigObjEta) < 1.0) {
         tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(0., trigObjBeta);
         tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(0., genBetaPrimeDownHalfSigma);
         tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(0., genBetaPrimeDown);
@@ -4910,8 +4904,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
       }
-      
-      if (bestCandidateProbQNoL1 < 0.1 && bestCandidateIas > 0.25 && trigObjPt > 200 ) {
+      if (fabs(trigObjEta) < 1.0) {
         tuple->PostS_SR2PASS_TriggerGenBeta->Fill(trigObjBeta);
         tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(1., trigObjBeta);
         tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(1., genBetaPrimeDownHalfSigma);
@@ -5135,8 +5128,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (bestCandidateMuon.isNonnull()) {
       tuple->PostS_HltMatchTrackLevel->Fill(2.0, eventWeight_);
       if (muon::isTightMuon(*bestCandidateMuon, highestSumPt2Vertex)) {
+        tuple->PostS_MuonTightVsBeta->Fill(1.,bestCandidateGenBeta);
         tuple->PostS_HltMatchTrackLevel->Fill(3.0, eventWeight_);
       }
+    } else {
+      tuple->PostS_MuonTightVsBeta->Fill(0.,bestCandidateGenBeta);
     }
     if (anyCandidateDrMinHltMuon < 0.15) {
       tuple->PostS_HltMatchTrackLevel->Fill(4.0, eventWeight_);

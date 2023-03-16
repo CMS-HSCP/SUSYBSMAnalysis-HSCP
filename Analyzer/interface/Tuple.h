@@ -1057,7 +1057,7 @@ struct Tuple {
 
   TH1F* PostPreS_TriggerTimingPass;
   TH1F* PostPreS_TriggerTimingReject;
-  TH2F* PostPreS_MuonTightVsBeta;
+  TH2F* PostS_MuonTightVsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
