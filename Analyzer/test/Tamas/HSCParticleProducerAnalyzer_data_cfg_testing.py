@@ -68,10 +68,14 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
    #fileNames = cms.untracked.vstring("/store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/270002/64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
-   #fileNames = cms.untracked.vstring("/store/data/Run2016C/SingleMuon/AOD/21Feb2020_UL2016_HIPM-v1/20001/A5AF471E-0879-FE4A-B7DD-54ACF11FD49E.root"),
-   fileNames = cms.untracked.vstring("file:64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
+   #fileNames = cms.untracked.vstring("/store/data/Run2016C/SingleMuon/AOD/21Feb2020_UL2016_HIPM-v1/20001/A5AF471E-0879-FE4A-B7DD-54ACF11FD49E.root"),#
+   #fileNames = cms.untracked.vstring("file:64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
+   fileNames = cms.untracked.vstring("file:007C5664-DA30-2C44-AF05-BF031A742E0C.root"),
+   #fileNames = cms.untracked.vstring("/store/data/Run2018A/SingleMuon/AOD/15Feb2022_UL2018-v1/2430000/007C5664-DA30-2C44-AF05-BF031A742E0C.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
+
+#process.source.eventsToProcess = cms.untracked.VEventRange('316380:689:541773664')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -185,11 +189,6 @@ process.Out = cms.OutputModule("PoolOutputModule",
     ),
 )
 
-if(options.SAMPLE=='isData' and len(options.LUMITOPROCESS)>0):
-   import FWCore.PythonUtilities.LumiList as LumiList
-   process.source.lumisToProcess = LumiList.LumiList(filename = options.LUMITOPROCESS).getVLuminosityBlockRange()
-   #process.source.lumisToProcess = LumiList.LumiList(url = https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt).getVLuminosityBlockRange()
-
 if(options.SAMPLE=='isBckg' or options.SAMPLE=='isData'):
    process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')  #take just the skimmed ones
    process.Out.outputCommands.extend(["drop triggerTriggerEvent_hltTriggerSummaryAOD_*_*"])
@@ -204,34 +203,34 @@ if options.SAMPLE == 'isData':
         SF0 = 1.0
         SF1 = 1.0325
         if options.ERA == 'A':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2017C_v4.root'
+            IasTemplate = 'template_2017C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2017D_v4.root'
+            IasTemplate = 'template_2017D_v5.root'
         if options.ERA == 'E':
-            IasTemplate = 'template_2017E_v4.root'
+            IasTemplate = 'template_2017E_v5.root'
         if options.ERA == 'F':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
         if options.ERA == 'G':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
         if options.ERA == 'H':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
     if options.YEAR == '2018':
         K = 2.27
         C = 3.16
         SF0 = 1.0
         SF1 = 1.0817
         if options.ERA == 'A':
-            IasTemplate = 'template_2018A_v4.root'
+            IasTemplate = 'template_2018A_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2018B_v4.root'
+            IasTemplate = 'template_2018B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2018C_v4.root'
+            IasTemplate = 'template_2018C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2018D_v4.root'
+            IasTemplate = 'template_2018D_v5.root'
 else:
     if options.SAMPLE == 'isBckg':
         SampleType = 1
@@ -240,13 +239,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v5.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
@@ -254,18 +253,17 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v5.root'
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.SampleType = SampleType
 process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
-process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
 process.HSCParticleAnalyzer.DebugLevel = 0

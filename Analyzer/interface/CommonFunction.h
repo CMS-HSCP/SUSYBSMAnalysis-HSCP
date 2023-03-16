@@ -265,6 +265,7 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
         else {
                 layerorside = int((detid_>>20)&0xF);
         }
+
    }
    if (subdetid_==2) {
         pix =2 ;
@@ -322,7 +323,6 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
 
      }
      else if (layerorside==3) {
-     }
 
        if (year=="2017") {
         for (int i=0; i<icalibL3_2017; i++) {
@@ -345,6 +345,7 @@ float GetSFPixel(int subdetid_, UInt_t detid_, string year, int run) {
         }
        }
 
+     }
      else if (layerorside==4) {
 
        if (year=="2017") {
@@ -1696,6 +1697,7 @@ crossTalkInvAlgo=1;
         SiStripDetId SSdetId(detid);
         moduleGeometry = SSdetId.moduleGeometry();
       }
+/*
       if (detid.subdetId() == 3) {
         layer = ((detid >> 14) & 0x7);
       }  //TIB
@@ -1708,6 +1710,11 @@ crossTalkInvAlgo=1;
       if (detid.subdetId() == 6) {
         layer = ((detid >> 5) & 0x7) + 13;
       }  //TEC
+*/
+      if (detid.subdetId() == StripSubdetector::TIB) layer= abs(int(tTopo->tibLayer(detid)));
+      if (detid.subdetId() == StripSubdetector::TOB) layer= abs(int(tTopo->tobLayer(detid))) + 4;
+      if (detid.subdetId() == StripSubdetector::TID) layer= abs(int(tTopo->tidWheel(detid))) + 10;
+      if (detid.subdetId() == StripSubdetector::TEC) layer= abs(int(tTopo->tecWheel(detid))) + 13;
 
       //skip templates ias = 1 --> skip pixel, TIB, TID, 3 first TEC layers
       if (skip_templates_ias == 1 && (
@@ -1719,10 +1726,15 @@ crossTalkInvAlgo=1;
         ){continue;}
 
       //skip templates ias = 2 --> pixel only, with pixL1 or not
+      //
+      bool isBPIXL1=false;
+      int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+      if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;  // only for 2017 and 2018
       if (skip_templates_ias == 2 && (
                   detid.subdetId()>2 ||
+                  isBPIXL1 
                   //(skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1) //decoding mask for 2016 !
-                  (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
+                  //(skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
                   )
         ){continue;}
 

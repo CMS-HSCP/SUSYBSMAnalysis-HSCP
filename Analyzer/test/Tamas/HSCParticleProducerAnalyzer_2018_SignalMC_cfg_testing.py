@@ -90,6 +90,7 @@ process.source = cms.Source("PoolSource",
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18186')
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18282')
 #process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18120')
+#process.source.eventsToProcess = cms.untracked.VEventRange('1:19:18185') #18339
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
@@ -201,34 +202,34 @@ if options.SAMPLE == 'isData':
         SF0 = 1.0
         SF1 = 1.0325
         if options.ERA == 'A':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2017B_v4.root'
+            IasTemplate = 'template_2017B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2017C_v4.root'
+            IasTemplate = 'template_2017C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2017D_v4.root'
+            IasTemplate = 'template_2017D_v5.root'
         if options.ERA == 'E':
-            IasTemplate = 'template_2017E_v4.root'
+            IasTemplate = 'template_2017E_v5.root'
         if options.ERA == 'F':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
         if options.ERA == 'G':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
         if options.ERA == 'H':
-            IasTemplate = 'template_2017F_v4.root'
+            IasTemplate = 'template_2017F_v5.root'
     if options.YEAR == '2018':
         K = 2.27
         C = 3.16
         SF0 = 1.0
         SF1 = 1.0817
         if options.ERA == 'A':
-            IasTemplate = 'template_2018A_v4.root'
+            IasTemplate = 'template_2018A_v5.root'
         if options.ERA == 'B':
-            IasTemplate = 'template_2018B_v4.root'
+            IasTemplate = 'template_2018B_v5.root'
         if options.ERA == 'C':
-            IasTemplate = 'template_2018C_v4.root'
+            IasTemplate = 'template_2018C_v5.root'
         if options.ERA == 'D':
-            IasTemplate = 'template_2018D_v4.root'
+            IasTemplate = 'template_2018D_v5.root'
 else:
     if options.SAMPLE == 'isBckg':
         SampleType = 1
@@ -237,13 +238,13 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v5.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
@@ -251,23 +252,22 @@ else:
             C = 3.22
             SF0 = 1.0079
             SF1 = 1.0875
-            IasTemplate = 'template_2017MC_v4.root'
+            IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
             K = 2.27
             C = 3.22
             SF0 = 1.0047
             SF1 = 1.1429
-            IasTemplate = 'template_2018MC_v4.root'
+            IasTemplate = 'template_2018MC_v5.root'
 
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
 process.HSCParticleAnalyzer.SampleType = SampleType 
 process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
-process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
 process.HSCParticleAnalyzer.Period = options.YEAR
-process.HSCParticleAnalyzer.DebugLevel = 0
+process.HSCParticleAnalyzer.DebugLevel = 0 
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C
 process.HSCParticleAnalyzer.DeDxSF_0 = SF0
