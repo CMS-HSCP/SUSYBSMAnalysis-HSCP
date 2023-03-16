@@ -6,16 +6,18 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
-"/HSCPgluino_M-1000_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-1400_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2000_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2200_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2400_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-500_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
-"/HSCPgluino_M-800_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-1029_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-1218_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-1409_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-1599_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-200_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-247_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-308_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-432_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-557_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-651_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-745_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
+"/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/RunIISummer20UL18RECO-106X_upgrade2018_realistic_v11_L1v1-v2/AODSIM",
 ]
 
 codeVersion = sys.argv[1]
@@ -32,13 +34,12 @@ config.section_('General')
 config.General.requestName = 'Analysis_2018_ROVIDMINTA_CodeVVERZIO_v1'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
-config.General.transferLogs = True
 
 config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
-#config.JobType.maxJobRuntimeMin = 3000
+config.JobType.maxJobRuntimeMin = 600
 config.JobType.maxMemoryMB = 3500
 config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/template_2018MC_v4.root','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 
@@ -48,10 +49,10 @@ config.Data.inputDataset = 'MINTA'
 #config.Data.splitting = 'Automatic'
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 1 
-config.Data.totalUnits = config.Data.unitsPerJob * 1000
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 config.Data.ignoreLocality = True
+config.Data.partialDataset = True
 config.Data.publication = False
 
 config.section_('Site')

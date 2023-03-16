@@ -6,25 +6,13 @@ parser = OptionParser(usage="Usage: python %prog codeVersion")
 (opt,args) = parser.parse_args()
 
 datasetList = [
-#"/SingleMuon/Run2016B-21Feb2020_ver2_UL2016_HIPM-v1/AOD",
-#"/SingleMuon/Run2016C-21Feb2020_UL2016_HIPM-v1/AOD",
-#"/SingleMuon/Run2016D-21Feb2020_UL2016_HIPM-v1/AOD",
-#"/SingleMuon/Run2016E-21Feb2020_UL2016_HIPM-v1/AOD",
-#"/SingleMuon/Run2016F-21Feb2020_UL2016_HIPM-v1/AOD",
-#"/SingleMuon/Run2016G-21Feb2020_UL2016-v1/AOD",
-#"/SingleMuon/Run2016H-21Feb2020_UL2016-v1/AOD",
-"/SingleMuon/Run2017B-15Feb2022_UL2017-v1/AOD",
-"/SingleMuon/Run2017C-15Feb2022_UL2017-v1/AOD",
-"/SingleMuon/Run2017D-15Feb2022_UL2017-v1/AOD",
-"/SingleMuon/Run2017E-15Feb2022_UL2017-v1/AOD",
-"/SingleMuon/Run2017F-15Feb2022_UL2017-v1/AOD",
-#"/SingleMuon/Run2017G-15Feb2022_UL2017-v1/AOD", # 5 TeV
-#"/SingleMuon/Run2017H-15Feb2022_UL2017-v1/AOD", # lowPU
-"/SingleMuon/Run2018A-15Feb2022_UL2018-v1/AOD",
-"/SingleMuon/Run2018B-15Feb2022_UL2018-v1/AOD", 
-"/SingleMuon/Run2018C-15Feb2022_UL2018-v1/AOD",
-"/SingleMuon/Run2018D-15Feb2022_UL2018-v1/AOD"
-#"/MET/Run2018C-15Feb2022_UL2018-v1/AOD",
+"/SingleMuon/Run2016B-21Feb2020_ver2_UL2016_HIPM-v1/AOD",
+"/SingleMuon/Run2016C-21Feb2020_UL2016_HIPM-v1/AOD",
+"/SingleMuon/Run2016D-21Feb2020_UL2016_HIPM-v1/AOD",
+"/SingleMuon/Run2016E-21Feb2020_UL2016_HIPM-v1/AOD",
+"/SingleMuon/Run2016F-21Feb2020_UL2016_HIPM-v1/AOD",
+"/SingleMuon/Run2016G-21Feb2020_UL2016-v1/AOD",
+"/SingleMuon/Run2016H-21Feb2020_UL2016-v1/AOD",
 ]
 
 codeVersion = sys.argv[1]

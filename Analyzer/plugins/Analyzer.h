@@ -107,14 +107,6 @@
 
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #define FWCORE
-#include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
-#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoLocalTracker/Records/interface/TkPixelCPERecord.h"
@@ -127,6 +119,14 @@
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertex.h"
 
+#include "SUSYBSMAnalysis/Analyzer/interface/CommonFunction.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/DeDxUtility.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
 
 
 using namespace std;
@@ -140,7 +140,9 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
-  float scaleFactor(float eta);
+  float muonRecoSFsForTrackEta(float eta, int syst);
+  float muonIdSFsForTrackEta(float eta, int syst);
+  float muonTriggerSFsForTrackEta(float eta, int syst);
   float triggerSystFactor(float eta, float beta, int syst);
 
   void initializeCuts(edm::Service<TFileService>& fs,
@@ -157,7 +159,6 @@ public:
                      const reco::DeDxData* dedxSObj,
                      const reco::DeDxData* dedxMObj,
                      const reco::MuonTimeExtra* tof,
-                     const edm::Event& iEvent,
                      const int& CutIndex,
                      Tuple* tuple,
                      const bool isFlip,
@@ -301,7 +302,7 @@ private:
   string sampleName_;
   string period_;
 
-  bool skipSelectionPlot_,doBefTrigPlots_,doBefPreSplots_,doPostPreSplots_;
+  bool tapeRecallOnly_, doBefTrigPlots_, doBefPreSplots_, doPostPreSplots_, doSystsPlots_;
 
   // binning for the pT, mass, IP distributions
   float ptHistoUpperBound_ = 4000;
@@ -374,6 +375,7 @@ private:
   Tuple* tuple_SigmaPt3_iso1_IhCut1_PtCut1;
   Tuple* tuple_SigmaPt4_iso1_IhCut1_PtCut1;
   Tuple* tuple_SigmaPt5_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso0_IhCut1_PtCut1;
   Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut1;
   Tuple* tuple_SigmaPt3_iso2_IhCut2_PtCut1;
   Tuple* tuple_SigmaPt3_iso2_IhCut3_PtCut1;
@@ -404,11 +406,11 @@ private:
 
   bool useClusterCleaning, isData, isBckg, isSignal;
 
-  unsigned int CurrentRun_ = 0;
+  unsigned int currentRun_ = 0;
 
   MCWeight* mcWeight;
 
-  float EventWeight_ = 1.;
+  float eventWeight_ = 1.;
   float GeneratorWeight_ = 1.;
   float GeneratorBinningValues_ = 1.;
   //double SampleWeight_ = 1.;

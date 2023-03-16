@@ -14,6 +14,6 @@ for fname in os.listdir("crab_projects") :
   if (codeVersion in fname) :
     datasetList.append("crab_projects/"+fname)
 
-for i in datasetList:
-  outTask = "crab out -d "+i+" --checksum=no --jobids 2"
+for dataset in datasetList:
+  outTask = "crab status -d "+dataset
   os.system(outTask)

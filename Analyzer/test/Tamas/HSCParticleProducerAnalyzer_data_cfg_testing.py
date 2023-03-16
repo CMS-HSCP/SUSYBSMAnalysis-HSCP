@@ -68,6 +68,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
    #fileNames = cms.untracked.vstring("/store/data/Run2017C/SingleMuon/AOD/09Aug2019_UL2017-v1/270002/64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
+   #fileNames = cms.untracked.vstring("/store/data/Run2016C/SingleMuon/AOD/21Feb2020_UL2016_HIPM-v1/20001/A5AF471E-0879-FE4A-B7DD-54ACF11FD49E.root"),
    fileNames = cms.untracked.vstring("file:64A91A70-C88F-FF46-B735-3E53B3FDB790.root"),
    inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )

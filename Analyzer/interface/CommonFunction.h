@@ -2,6 +2,7 @@
 #ifndef SUSYBSMAnalysis_Analyzer_CommonFunction_h
 #define SUSYBSMAnalysis_Analyzer_CommonFunction_h
 
+//#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 //=======================================================================================
 //
 // Global use of the SaturationCorrection class
@@ -73,7 +74,8 @@ void LoadCorrectionParameters() {
 //
 //====================================================================
 
-void loadSFPixel() {
+void loadSFPixel(int sampleType_) {
+   if (sampleType_ > 0) return;
    std::ifstream file_calib1;
    file_calib1.open("CorrFact2017PixL1.txt");
    icalibL1=0;
@@ -1500,6 +1502,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
 }
 
 reco::DeDxData computedEdx(const float& track_eta,
+                           const edm::EventSetup& iSetup,
                            const int& run_number,
                            string year,
                            const reco::DeDxHitInfo* dedxHits,
@@ -1519,7 +1522,14 @@ reco::DeDxData computedEdx(const float& track_eta,
                            bool skipPixelL1 = false,
                            int  skip_templates_ias = 0,
                            bool symmetricSmirnov = false,
-                           bool useMorrisMethod = false) {
+                           bool useMorrisMethod = false,
+                           bool usePixelClusterCleaning = true,
+                           const std::string pixelCPE_ = "",
+                           const TrackerTopology* tTopo = nullptr,
+                           const float& track_px=0,
+                           const float& track_py=0,
+                           const float& track_pz=0,
+                           const int& track_charge=0) {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
@@ -1527,6 +1537,12 @@ reco::DeDxData computedEdx(const float& track_eta,
   std::vector<float> vect;
   std::vector<float> vectStrip;
   std::vector<float> vectPixel;
+
+
+  edm::ESHandle<TrackerGeometry> tkGeometry;
+  iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
+  edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
+  iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
 
   // loop in order to have the number of saturated clusters in a track
   unsigned int nsatclust = 0;
@@ -1565,10 +1581,36 @@ reco::DeDxData computedEdx(const float& track_eta,
 
     int ClusterCharge = dedxHits->charge(h);
 
-    // Tav: This really should be done through the topology
-    if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
+//    if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
+    if (skipPixelL1 && detid.subdetId() == 1 && abs(int(tTopo->pxbLayer(detid))) == 1) //decoding mask through the topology
       continue;
 
+//
+    if (detid.subdetId() <3 && usePixelClusterCleaning) { // for pixel only
+         auto const* pixelCluster =  dedxHits->pixelCluster(h);
+         if (pixelCluster == nullptr)  continue;
+         const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+         LocalVector lv = geomDet.toLocal(GlobalVector(track_px, track_py, track_pz));
+         auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, track_charge)));
+         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+         bool cpeHasFailed = false;
+         if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+          cpeHasFailed = true;
+         }
+         if (cpeHasFailed) continue;
+
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+        bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+        bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+        bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+
+        if (specInCPE) continue;
+        if (probQ>0.8) continue;
+
+    }
     if (detid.subdetId() >= 3) {  //for strip only
       
       if(fabs(track_eta) < 1.0 && !(detid.subdetId() == 3 || detid.subdetId() == 5)) continue; // eta < 1.0 -> only TIB+TOB hits
