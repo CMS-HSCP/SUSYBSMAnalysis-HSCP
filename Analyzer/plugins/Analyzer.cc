@@ -70,6 +70,7 @@
 // - 45p1: Fix trigObjPt for non-triggered objects
 // - 45p2: Dont cut on trigObjPt for the systematics checks plots
 // - 45p3: Move PostS_MuonTightVsBeta to the end, add eta < 1 to TriggerMuon50VsBeta
+// - 45p4: Add PostS_NotMuonsGenBeta, encode interesting events PostS_SR2PASS_RunVsLs and PostS_SR2PASS_Ls
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -5133,6 +5134,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     } else {
       tuple->PostS_MuonTightVsBeta->Fill(0.,bestCandidateGenBeta);
+      tuple->PostS_NotMuonsGenBeta->Fill(bestCandidateGenBeta);
     }
     if (anyCandidateDrMinHltMuon < 0.15) {
       tuple->PostS_HltMatchTrackLevel->Fill(4.0, eventWeight_);
@@ -5192,6 +5194,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       else if (PUC) tuple->PostS_SR2PASS_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
       
       if (bestCandidateIas > 0.25) {
+        tuple->PostS_SR2PASS_Ls->Fill(iEvent.id().luminosityBlock());
+        tuple->PostS_SR2PASS_RunVsLs->Fill(currentRun_,iEvent.id().luminosityBlock());
         tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, eventWeight_);
         tuple->PostS_SR2PASS_PtErrOverPt2->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt() * bestCandidateTrack->pt()), eventWeight_);
         if (bestCandidateGenIndex > 0) {

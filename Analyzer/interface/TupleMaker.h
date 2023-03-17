@@ -1269,7 +1269,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     
     tuple->PostS_SR2PASS_TriggerGenBeta = dir.make<TH1F>("PostS_SR2PASS_TriggerGenBeta", ";#beta^{HLT};Tracks / 0.05", 20, 0., 1.);
-    
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_Beta", ";Muon50 triggered (SR2 region);Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma", ";Muon50 triggered (SR2 region);Gen #beta (down half sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma = dir.make<TH2F>("PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma", ";Muon50 triggered (SR2 region);Gen #beta (down one sigma);Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -1506,6 +1505,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_HltMatchTrackLevel->GetXaxis()->SetBinLabel(5,"Bin 1 + best HSCP = #mu^{HLT}");
 //  tuple->PostS_HltMatchTrackLevel->GetYaxis()->SetLabelSize(12)
   
+  tuple->PostS_NotMuonsGenBeta = dir.make<TH1F>("PostS_NotMuonsGenBeta", ";Not Tight ID mu's gen #beta;Tracks / bin",20,0.,1.);
+  
   tuple->PostPreS_RecoPfMet = dir.make<TH1F>("PostPreS_RecoPfMet", ";PfMet",200,0.,2000.);
   tuple->PostPreS_RecoPfMetPhi = dir.make<TH1F>("PostPreS_RecoPfMetPhi", ";PfMetPhi",30,0.,3.2);
 
@@ -1571,6 +1572,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR2PASS_Ias_PUA = dir.make<TH1F>("PostS_SR2PASS_Ias_PUA", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, PU < 15);Events / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR2PASS_Ias_PUB = dir.make<TH1F>("PostS_SR2PASS_Ias_PUB", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, 15 < PU < 30);Events / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR2PASS_Ias_PUC = dir.make<TH1F>("PostS_SR2PASS_Ias_PUC", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, PU > 30);Events / 0.1", 10, 0, dEdxS_UpLim);
+  
+  tuple->PostS_SR2PASS_RunVsLs = dir.make<TH2F>("PostS_SR2PASS_RunVsLs", ";Run number;Lumisection",  545, 271000,325500, 500, 0.,500.);
+  tuple->PostS_SR2PASS_Ls = dir.make<TH1F>("PostS_SR2PASS_Ls", ";Lumisection", 500, 0.,500.);
   
   tuple->PostS_SR2PASS_PV = dir.make<TH1F>("PostS_SR2PASS_PV", ";PV (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / 1", 60, -0.5, 59.5);
   tuple->PostS_SR2PASS_PtErrOverPt2 = dir.make<TH1F>("PostS_SR2PASS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / bin", 40, 0, 0.003);

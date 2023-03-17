@@ -812,13 +812,16 @@ struct Tuple {
   TH1F* PostS_SR2PASS_Ias_PUA;
   TH1F* PostS_SR2PASS_Ias_PUB;
   TH1F* PostS_SR2PASS_Ias_PUC;
+  
+  TH2F* PostS_SR2PASS_RunVsLs;
+  TH1F* PostS_SR2PASS_Ls;
+  
   TH1F* PostS_SR2PASS_PV;
   TH1F* PostS_SR2PASS_PtErrOverPt2;
   TH1F* PostS_SR2PASS_RelDiffTrackPtAndTruthPt;
   TH2F* PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt;
   
   TH1F* PostS_SR2PASS_TriggerGenBeta;
-  
   TH3F* PostS_ProbQNoL1VsIasVsPt;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_up;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_down;
@@ -1434,6 +1437,8 @@ struct Tuple {
   
   TH1F* PostS_RecoHSCParticleType;
   TH1F* PostS_HltMatchTrackLevel;
+  TH1F* PostS_NotMuonsGenBeta;
+  
 
   TH1D* CtrlPt_S1_Is;
   TH1D* CtrlPt_S2_Is;
