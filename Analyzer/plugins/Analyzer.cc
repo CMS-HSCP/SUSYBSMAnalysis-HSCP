@@ -664,9 +664,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = true;
     if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50_v") && triggerH->accept(i))
       HLT_MET105_IsoTrk50 = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_isoMu27_v") && triggerH->accept(i))
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_IsoMu27_v") && triggerH->accept(i))
       HLT_isoMu27 = true;
-    if (TString(triggerNames.triggerName(i)).Contains("HLT_isoMu24_v") && triggerH->accept(i))
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_IsoMu24_v") && triggerH->accept(i))
       HLT_isoMu24 = true;
   }
 
