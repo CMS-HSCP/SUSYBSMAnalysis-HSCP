@@ -1071,6 +1071,15 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown;
   
   TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_Beta;
   TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma;
