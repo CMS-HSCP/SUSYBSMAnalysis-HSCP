@@ -1145,8 +1145,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_Ihstrip_CR= dir.make<TH1F>("PostPreS_Ihstrip_CR", ";I_{h} (strip only) (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->PostPreS_Ih_nopixcl_CR= dir.make<TH1F>("PostPreS_Ih_nopixcl_CR", ";I_{h}(no pix cleaning) (MeV/cm)", 200, 0, dEdxM_UpLim);
     tuple->PostPreS_Pt_lowPt_CR = dir.make<TH1F>("PostPreS_Pt_lowPt_CR", ";p_{T} (GeV);Tracks / 10 GeV", 50, 0., 500.);
-    tuple->PostPreS_MassVsIas_fail_CR= dir.make<TH2F>("PostPreS_MassVsIas_fail_CR", ";G_{i}^{strips} in Fail ;Mass(GeV)", 10,0., 1., 80, 0., 400.);
-    tuple->PostPreS_MassVsIas_pass_CR= dir.make<TH2F>("PostPreS_MassVsIas_pass_CR", ";G_{i}^{strips} in Pass ;Mass(GeV)", 10,0., 1., 80, 0., 400.);
+    tuple->PostPreS_MassVsIas_fail_CR= dir.make<TH2F>("PostPreS_MassVsIas_fail_CR", ";G_{i}^{strips} in Fail ;Mass(GeV)", 20,0., 1., 80, 0., 400.);
+    tuple->PostPreS_MassVsIas_pass_CR= dir.make<TH2F>("PostPreS_MassVsIas_pass_CR", ";G_{i}^{strips} in Pass ;Mass(GeV)", 20,0., 1., 80, 0., 400.);
 
 
     tuple->PostPreS_Ias_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ias_CR_veryLowPt", ";G_{i}^{strips};Tracks / 0.1", 10, 0, dEdxS_UpLim);
@@ -1223,6 +1223,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_ProbXYVsIas_highIas = dir.make<TH2F>("PostPreS_ProbXYVsIas_highIas", ";ProbXY (G_{i}^{strips} > 0.6);G_{i}^{strips} (G_{i}^{strips} > 0.6);Tracks / bin",  100, 0, 1, 10, 0., 1.);
     tuple->PostPreS_ProbXYVsProbQ = dir.make<TH2F>("PostPreS_ProbXYVsProbQ", ";Prob_{XY,pixelAV} (pixels);F_{i}^{pixels};Tracks / bin",  100, 0., 1., 10, 0., 1.);
     tuple->PostPreS_ProbXYVsProbQ_highIas = dir.make<TH2F>("PostPreS_ProbXYVsProbQ_highIas", ";ProbXY (G_{i}^{strips} > 0.6);ProbQ (G_{i}^{strips} > 0.6);Tracks / bin",  100, 0., 1., 10, 0., 1.);
+
+    tuple->PostPreS_MassVsIas_fail= dir.make<TH2F>("PostPreS_MassVsIas_fail", "TO BLIND ! ;G_{i}^{strips} in Fail ;Mass(GeV)", 20,0., 1., 80, 0., 4000.);
+    tuple->PostPreS_MassVsIas_pass= dir.make<TH2F>("PostPreS_MassVsIas_pass", "TO BLIND ! ;G_{i}^{strips} in Pass ;Mass(GeV)", 20,0., 1., 80, 0., 4000.);
     
     tuple->PostPreS_ProbQNoL1_CR = dir.make<TH1F>("PostPreS_ProbQNoL1_CR", ";F_{i}^{pixels};Tracks / 0.05", 20, 0., 1.);
     

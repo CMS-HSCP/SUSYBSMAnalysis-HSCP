@@ -646,6 +646,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool HLT_PFHT500_PFMET100_PFMHT100_IDTight = false;
   bool HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = false;
   bool HLT_MET105_IsoTrk50 = false;
+  bool HLT_isoMu24 = false;
+  bool HLT_isoMu27 = false;
   
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
@@ -662,6 +664,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = true;
     if (TString(triggerNames.triggerName(i)).Contains("HLT_MET105_IsoTrk50_v") && triggerH->accept(i))
       HLT_MET105_IsoTrk50 = true;
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_IsoMu27_v") && triggerH->accept(i))
+      HLT_isoMu27 = true;
+    if (TString(triggerNames.triggerName(i)).Contains("HLT_IsoMu24_v") && triggerH->accept(i))
+      HLT_isoMu24 = true;
   }
 
   // Should this be a bin in error histo?
@@ -3468,7 +3474,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
       float Masstest =0;
       // K and C values fixed to some test values
-      if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), globalIh_, 2.52, 3.18);
+      if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
       if ((1 - probQonTrackNoL1)<0.9) {
          tuple->PostPreS_MassVsIas_fail_CR->Fill(globalIas_, Masstest, eventWeight_);
       }
@@ -3542,6 +3548,42 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               // Pixel corrections
               float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
               chargeForIndxH *= pixelScaling;
+
+
+              // Taking the pixel cluster
+              auto const* pixelCluster =  dedxHits->pixelCluster(h);
+              if (pixelCluster == nullptr)  continue;
+              // Check on which geometry unit the hit is
+              const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+              // Get the local vector for the track direction
+              LocalVector lv = geomDet.toLocal(GlobalVector(track->px(), track->py(), track->pz()));
+              // Re-run the CPE on this cluster with the lv above
+              // getParameters will return std::tuple<LocalPoint, LocalError, SiPixelRecHitQuality::QualWordType>;
+              // from this we pick the 2nd, the QualWordType
+              auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, track->charge())));
+              // extract probQ and probXY from this
+              //float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+              // To measure how often the CPE fails
+              bool cpeHasFailed = false;
+              if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+                  cpeHasFailed = true;
+              }
+              if (cpeHasFailed) continue;
+
+             //  if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+
+              bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+              bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+              bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+              bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+
+             //  bool isBPIXL1=false;
+             //  int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+             //  if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;
+
+             // cleaning in the pixel : ok if (!specInCPE) 
+              if (specInCPE) cleaning = false;
+
         }
         else {
               // saturation correction of the charge
@@ -4007,6 +4049,21 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_ProbQNoL1->Fill(1 - probQonTrackNoL1, eventWeight_);
         tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoL1, globalIas_, eventWeight_);
         tuple->PostPreS_ProbQNoL1VsFiStrips->Fill(1 - probQonTrackNoL1, globalFiStrips_, eventWeight_);
+
+
+        // test --> Need to blind the data at the drawing
+        // for the moment K and C are hard-coded...
+        float Masstest =0;
+        // K and C values fixed to some test values
+        if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
+        if ((1 - probQonTrackNoL1)<0.9) {
+           tuple->PostPreS_MassVsIas_fail->Fill(globalIas_, Masstest, eventWeight_);
+        }
+        else {
+            tuple->PostPreS_MassVsIas_pass->Fill(globalIas_, Masstest,  eventWeight_);
+        }
+
+
         if (doSystsPlots_) {
           tuple->PostPreS_ProbQNoL1VsIas_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  eventWeight_ * PUSystFactor_[0]);
           tuple->PostPreS_ProbQNoL1VsIas_Pileup_down->Fill(1 - probQonTrackNoL1, globalIas_,  eventWeight_ * PUSystFactor_[1]);
@@ -5554,8 +5611,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // Calibration information
   // loop on the general tracks
-  bool apply_trigger_sel_for_calib = true;
-  if (typeMode_ != 3 && apply_trigger_sel_for_calib && trigInfo_ > 0) {
+  if (typeMode_ != 3) {
     for(unsigned int c=0;c<trackCollectionHandle->size();c++){
       reco::TrackRef generalTrack = reco::TrackRef( trackCollectionHandle.product(), c );
 
@@ -5564,7 +5620,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       std::fill(std::begin(passedTrackCutsArray), std::end(passedTrackCutsArray),true);
 
       // Pass the trigger
-      passedTrackCutsArray[0]  = (trigInfo_ > 0) ? true : false;
+//      passedTrackCutsArray[0]  = (trigInfo_ > 0) ? true : false;
+      passedTrackCutsArray[0]  = ((trigInfo_ > 0) || HLT_isoMu27 || HLT_isoMu24) ? true : false;
       // Check if eta is inside the max eta cut for detector homogeneity
       passedTrackCutsArray[1]  = (fabs(generalTrack->eta()) < globalMaxEta_) ? true : false;
       // Select only high purity tracks to ensure good quality tracks
@@ -5880,7 +5937,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;
 
              // cleaning in the pixel
-            if ((!specInCPE) && (probQ < 0.8) && (!isBPIXL1)) {
+//            if ((!specInCPE) && (probQ < 0.8) && (!isBPIXL1)) {
+//            No cut on individual probQ
+            if ((!specInCPE)  && (!isBPIXL1)) {
               if (fabs(generalTrack->eta()<0.4)) {
                 tuple->SF_HHit2DPix_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
                 if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
