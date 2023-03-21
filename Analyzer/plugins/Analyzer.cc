@@ -5611,8 +5611,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // Calibration information
   // loop on the general tracks
-  bool apply_trigger_sel_for_calib = true;
-  if (typeMode_ != 3 && apply_trigger_sel_for_calib && trigInfo_ > 0) {
+  if (typeMode_ != 3) {
     for(unsigned int c=0;c<trackCollectionHandle->size();c++){
       reco::TrackRef generalTrack = reco::TrackRef( trackCollectionHandle.product(), c );
 

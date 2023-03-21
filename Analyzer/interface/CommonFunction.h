@@ -1609,8 +1609,7 @@ reco::DeDxData computedEdx(const float& track_eta,
         bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
 
         if (specInCPE) continue;
-//        20 March 2023 : no cut on individual probQ for Ih computation
-//        if (probQ>0.8) continue;
+        if (probQ>0.8) continue;
 
     }
     if (detid.subdetId() >= 3) {  //for strip only
