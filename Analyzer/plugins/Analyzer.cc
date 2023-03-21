@@ -3604,6 +3604,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           // sampleType_ < 2 means dont create templates for signal samples
           if (createGiTemplates_ && (sampleType_ < 2)) {
            int npv = vertexColl.size();
+            // TADA
+            cout << " PuBins_.size() " << PuBins_.size() << " NbPuBins_ " << NbPuBins_ << endl;
            for (int i = 0 ; i < NbPuBins_ ; i++){
              if (npv > PuBins_[i] && npv <= PuBins_[i+1]) {
                std::cout << "Creating GiS templates for PU bin #" << (i+1) << std::endl;
@@ -3634,7 +3636,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }//end condition createGitemplates
 
-        // ADD plots to answer Slava's questions about Charge Resolution
+        // Plots to answer Slava's questions about Charge Resolution
         if (doPostPreSplots_) {
          int layer_num = 0;
          float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
@@ -3646,19 +3648,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
              layer_num=tTopo->pxbLayer(detid);
            }
            else {
-             cout << "We are in the FPix part" << endl;
-                // TODO can pxfDisk be negative? will layer_num be ever weird due to the +4 and the FPix
+            cout << "We are in the FPix part" << endl;
+            // TODO can pxfDisk be negative? will layer_num be ever weird due to the +4 and the FPix
             layer_num=tTopo->pxfDisk(detid)+4;
           }
-            
-            tuple->PostPreS_CpPL_pix_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+           //TADA March21
+          tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
          } // otherwise we are on the strips
          else {
            if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
            if (detid.subdetId() == StripSubdetector::TOB) layer_num = abs(int(tTopo->tobLayer(detid))) + 4;
            if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
            if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
-           tuple->PostPreS_CpPL_strip_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+           tuple->PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
          } // end on condition for pixels or strips
         } // end condition on doPostPreSplots_
        } // end if on the cleaning and the inside
@@ -6547,7 +6549,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   //GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
   desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile up bins");

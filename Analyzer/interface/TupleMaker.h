@@ -903,7 +903,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma", ";CluNormCharge;Layer",600,0.,600.,24,-0.5,23.5);
     tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_Stat91", ";CluNormCharge;Layer",600,0.,600.,24,-0.5,23.5);
     tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatNot91", ";CluNormCharge;Layer",600,0.,600.,24,-0.5,23.5);
-    tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2", ";CluNormCharge;Layer",600,0.,600.,20,0.,20.);
+    tuple->BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2 = dir.make<TH2F>("BefPreS_CluNormChargeVsStripLayer_higherBetaGamma_StatHigherThan2", ";CluNormCharge;Layer",600,0.,600.,24,-0.5,23.5);
 
     tuple->BefPreS_dRMinPfJet = dir.make<TH1F>("BefPreS_dRMinPfJet", ";dRMinPfJet;Tracks / bin",100,0.,5.0);
     tuple->BefPreS_dRMinPfJetVsIas =  dir.make<TH2F>("BefPreS_dRMinPfJetVsIas", ";dRMinPfJet;G_{i}^{strips};Tracks / bin",100,0.,5.0,10,0.,1.);
@@ -1495,8 +1495,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
 
     // add  plots in Gitemplate region  to answer Slava's questions about charge resolution
-     tuple->PostPreS_CpPL_pix_CR_veryLowPt = dir.make<TH2F>("PostPreS_CpPL_pix_CR_veryLowPt","PostPreS_CpPL_pix_CR_veryLowPt",100,0,10,10,0,10);
-     tuple->PostPreS_CpPL_strip_CR_veryLowPt = dir.make<TH2F>("PostPreS_CpPL_strip_CR_veryLowPt","PostPreS_CpPL_strip_CR_veryLowPt",100,0,10,25,0,25);
+     tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluDeDxVsPixLayer_CR_veryLowPt",";Cluser dEdx (MeV/cm); Pixel layer",100,0.,10.,10,0.,10.);
+     tuple->PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt",";Cluser dEdx (MeV/cm); Strip layer",100,0.,10.,25,0.,25.);
      tuple->PostPreS_Ih_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_CR_veryLowPt", ";I_{h} (MeV/cm);Tracks / bin", 200, 0, dEdxM_UpLim);
      tuple->PostPreS_Ihstrip_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ihstrip_CR_veryLowPt", ";I_{h} (strip only) (MeV/cm);Tracks / bin", 200, 0, dEdxM_UpLim);
      tuple->PostPreS_Ih_noclean_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_noclean_CR_veryLowPt", ";I_{h}(no cleaning) (MeV/cm);Tracks / bin", 200, 0, dEdxM_UpLim);
@@ -1582,8 +1582,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR2PASS_Ias_PUB = dir.make<TH1F>("PostS_SR2PASS_Ias_PUB", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, 15 < PU < 30);Events / 0.1", 10, 0, dEdxS_UpLim);
   tuple->PostS_SR2PASS_Ias_PUC = dir.make<TH1F>("PostS_SR2PASS_Ias_PUC", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, PU > 30);Events / 0.1", 10, 0, dEdxS_UpLim);
   
-  tuple->PostS_SR2PASS_RunVsLs = dir.make<TH2F>("PostS_SR2PASS_RunVsLs", ";Run number;Lumisection",  545, 271000,325500, 500, 0.,500.);
-  tuple->PostS_SR2PASS_Ls = dir.make<TH1F>("PostS_SR2PASS_Ls", ";Lumisection", 500, 0.,500.);
+  tuple->PostS_SR2PASS_RunVsLs = dir.make<TH2F>("PostS_SR2PASS_RunVsLs", ";Run number;Lumisection",  545, 271000,325500, 1500, 0.,1500.);
+  tuple->PostS_SR2PASS_Ls = dir.make<TH1F>("PostS_SR2PASS_Ls", ";Lumisection", 1500, 0.,1500.);
   
   tuple->PostS_SR2PASS_PV = dir.make<TH1F>("PostS_SR2PASS_PV", ";PV (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / 1", 60, -0.5, 59.5);
   tuple->PostS_SR2PASS_PtErrOverPt2 = dir.make<TH1F>("PostS_SR2PASS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, G_{i}^{strips} > 0.25);Events / bin", 40, 0, 0.003);

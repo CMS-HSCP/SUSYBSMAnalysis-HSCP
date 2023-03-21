@@ -789,8 +789,8 @@ struct Tuple {
   TH1F* PostPreS_Ih_nopixcl_CR_veryLowPt;
   TH1F* PostPreS_Pt_CR_veryLowPt; 
   TH1F* PostPreS_ProbQNoL1_CR_veryLowPt; 
-  TH2F* PostPreS_CpPL_pix_CR_veryLowPt;
-  TH2F* PostPreS_CpPL_strip_CR_veryLowPt;
+  TH2F* PostPreS_CluDeDxVsPixLayer_CR_veryLowPt;
+  TH2F* PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt;
 
   TH1F* PostS_RelativePtShift;
   TH1F* PostS_ProbQNoL1;
