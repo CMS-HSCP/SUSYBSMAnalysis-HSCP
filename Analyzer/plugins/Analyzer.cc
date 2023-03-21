@@ -65,6 +65,13 @@
 // - 44p6: Include PR120 (many CR_veryLowPt), Move SR2 PV plot under GiS > 0.25 region, intro RelDiffTrackPtAndTruthPtVsTruthPt, dRMinHLTMuon_numTrigObj plots, fix when not to update the trigger match
 // - 44p7: Include PR122 (fix to pixel SFs), PostS_dRMinHLTMuon
 // - 44p8: SR2PASS_TriggerMuon50VsBeta plots, PostS_GenBeta
+// - 44p9: Take beta from the trigger object in the systematics plots, PostPreS_MuonTightVsBeta, PostPreS_TriggerTiming* plots
+// - 45p0: Submission for 2017 MC samples
+// - 45p1: Fix trigObjPt for non-triggered objects
+// - 45p2: Dont cut on trigObjPt for the systematics checks plots
+// - 45p3: Move PostS_MuonTightVsBeta to the end, add eta < 1 to TriggerMuon50VsBeta
+// - 45p4: Add PostS_NotMuonsGenBeta, encode interesting events PostS_SR2PASS_RunVsLs and PostS_SR2PASS_Ls
+// - 45p5: Add D-F Eta bins in the systematics
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -819,73 +826,102 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // Triggered(Mu|Obj) - GEN track matching
   int triggerObjMatchedMuGenIndex = -1;
-  if (!isData && (trigInfo_ > 0)) {
-    if (debug_> 0 ) LogPrint(MOD) << "Triggered(Mu|Obj) - GEN track matching";
-    const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
+  int triggerObjGenIndex = -1;
+  float maxGenBeta = -1;
+  float maxGenEta = 9999;
+  float maxGenTheta = 9999;
+  float maxGenPt = -1;
+  if (!isData) {
+    if (trigInfo_ > 0) {
+      if (debug_> 0 ) LogPrint(MOD) << "Triggered(Mu|Obj) - GEN track matching";
+      const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
 
-    float drGenTrigMatchedMuMin = 9999.0;
-    float drGenTrigObjMin = 9999.0;
-    int triggerObjGenIndex = -1;
-    for (unsigned int g = 0; g < genColl.size(); g++) {
-      if (genColl[g].pt() < 10) { continue; }
-      if (genColl[g].status() != 1) { continue; }
+      float drGenTrigMatchedMuMin = 9999.0;
+      float drGenTrigObjMin = 9999.0;
       
-      // Let's match the matched muon to gen level tracks
-      float drGenTrigMatchedMu = deltaR(genColl[g].eta(),genColl[g].phi(),triggerObjMatchedMu->eta(),triggerObjMatchedMu->phi());
-      if (drGenTrigMatchedMu < drGenTrigMatchedMuMin) {
-        drGenTrigMatchedMuMin = drGenTrigMatchedMu;
-        triggerObjMatchedMuGenIndex = g;
-      }
-      // Let's match the original trigger object to gen level tracks
-      float drGenTrigObj = deltaR(genColl[g].eta(),genColl[g].phi(),trigObjP4s[closestTrigObjIndex].Eta(),trigObjP4s[closestTrigObjIndex].Phi());
-      if (drGenTrigObj < drGenTrigObjMin) {
-        drGenTrigObjMin = drGenTrigObj;
-        triggerObjGenIndex = g;
-      }
-    } // end loop on gen collection
+      for (unsigned int g = 0; g < genColl.size(); g++) {
+        if (genColl[g].pt() < 10) { continue; }
+        if (genColl[g].status() != 1) { continue; }
+        
+        // Let's match the matched muon to gen level tracks
+        float drGenTrigMatchedMu = deltaR(genColl[g].eta(),genColl[g].phi(),triggerObjMatchedMu->eta(),triggerObjMatchedMu->phi());
+        if (drGenTrigMatchedMu < drGenTrigMatchedMuMin) {
+          drGenTrigMatchedMuMin = drGenTrigMatchedMu;
+          triggerObjMatchedMuGenIndex = g;
+        }
+        // Let's match the original trigger object to gen level tracks
+        float drGenTrigObj = deltaR(genColl[g].eta(),genColl[g].phi(),trigObjP4s[closestTrigObjIndex].Eta(),trigObjP4s[closestTrigObjIndex].Phi());
+        if (drGenTrigObj < drGenTrigObjMin) {
+          drGenTrigObjMin = drGenTrigObj;
+          triggerObjGenIndex = g;
+        }
+      } // end loop on gen collection
+      
+      if (dr_min_hltMuon_hscpCand_inEvent < 0.15 && doBefPreSplots_) {
+        // Event triggered with reco muon match
+        tuple->BefPreS_TriggerGenMatch->Fill(1.);
+        if (triggerObjGenIndex != triggerObjMatchedMuGenIndex) {
+          LogPrint(MOD) << "TrigObj based gen index= " << triggerObjGenIndex << " with PDG ID = " << genColl[triggerObjGenIndex].pdgId() << " with dR= " << drGenTrigObjMin << " != TrigObjMatchedMuon based gen index = " << triggerObjMatchedMuGenIndex  << " with PDG ID = " << genColl[triggerObjMatchedMuGenIndex].pdgId() << " with dR= " << drGenTrigMatchedMuMin;
+        }
 
-    if (dr_min_hltMuon_hscpCand_inEvent < 0.15 && doBefPreSplots_) {
-      // Event triggered with reco muon match
-      tuple->BefPreS_TriggerGenMatch->Fill(1.);
-      if (triggerObjGenIndex != triggerObjMatchedMuGenIndex) {
-        LogPrint(MOD) << "TrigObj based gen index= " << triggerObjGenIndex << " with PDG ID = " << genColl[triggerObjGenIndex].pdgId() << " with dR= " << drGenTrigObjMin << " != TrigObjMatchedMuon based gen index = " << triggerObjMatchedMuGenIndex  << " with PDG ID = " << genColl[triggerObjMatchedMuGenIndex].pdgId() << " with dR= " << drGenTrigMatchedMuMin;
-      }
-
-      if (drGenTrigObjMin < 0.015 || drGenTrigMatchedMuMin < 0.015) {
-        if (debug_> 5 ) LogPrint(MOD) << " > Trig object matches to muon that matches to gen object, drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin = " << drGenTrigMatchedMuMin ;
-        // Gen match was found
-        tuple->BefPreS_TriggerGenMatch->Fill(2.);
-        if (isHSCPgenID(genColl[triggerObjGenIndex])) {
-          // Gen match is an HSCP
-          tuple->BefPreS_TriggerGenMatch->Fill(3.);
-        } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 13) {
-          // Gen match is a muon
-          tuple->BefPreS_TriggerGenMatch->Fill(4.);
-          if (isSignal && debug_ > 3) {
-            LogPrint(MOD) << "Trigger object's gen match is a muon with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
-            LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
+        if (drGenTrigObjMin < 0.015 || drGenTrigMatchedMuMin < 0.015) {
+          if (debug_> 5 ) LogPrint(MOD) << " > Trig object matches to muon that matches to gen object, drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin = " << drGenTrigMatchedMuMin ;
+          // Gen match was found
+          tuple->BefPreS_TriggerGenMatch->Fill(2.);
+          if (isHSCPgenID(genColl[triggerObjGenIndex])) {
+            // Gen match is an HSCP
+            tuple->BefPreS_TriggerGenMatch->Fill(3.);
+          } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 13) {
+            // Gen match is a muon
+            tuple->BefPreS_TriggerGenMatch->Fill(4.);
+            if (isSignal && debug_ > 3) {
+              LogPrint(MOD) << "Trigger object's gen match is a muon with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
+              LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
+            }
+          } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 211 || abs(genColl[triggerObjGenIndex].pdgId()) == 321) {
+            // Gen match is a pion or kaon
+            tuple->BefPreS_TriggerGenMatch->Fill(5.);
+            if (isSignal) {
+              LogPrint(MOD) << "Gen match is a pion or kaon (ID=" << genColl[triggerObjGenIndex].pdgId() << ") with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
+              LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
+            }
+          } else {
+            // Gen match: else
+            tuple->BefPreS_TriggerGenMatch->Fill(6.);
+            LogPrint(MOD) << "Gen match has an ID of " << genColl[triggerObjGenIndex].pdgId();
           }
-        } else if (abs(genColl[triggerObjGenIndex].pdgId()) == 211 || abs(genColl[triggerObjGenIndex].pdgId()) == 321) {
-          // Gen match is a pion or kaon
-          tuple->BefPreS_TriggerGenMatch->Fill(5.);
-          if (isSignal) {
-            LogPrint(MOD) << "Gen match is a pion or kaon (ID=" << genColl[triggerObjGenIndex].pdgId() << ") with drGenTrigObjMin = " << drGenTrigObjMin << " and drGenTrigMatchedMuMin= " << drGenTrigMatchedMuMin << " has eta = " << genColl[triggerObjGenIndex].eta() << " in the event = " << iEvent.id().event() << ", lumi =  " << iEvent.id().luminosityBlock() << " vx = " << genColl[triggerObjGenIndex].vx()  << " vy = " << genColl[triggerObjGenIndex].vy()  << " vz = " << genColl[triggerObjGenIndex].vz() << " pT = " << genColl[triggerObjGenIndex].pt();
-            LogPrint(MOD) << "MatchedMu has eta = " << triggerObjMatchedMu->eta() << " dz = " << triggerObjMatchedMu->muonBestTrack()->dz(highestSumPt2Vertex.position()) << " pT = " << triggerObjMatchedMu->muonBestTrack()->pt();
+          if (fabs(genColl[triggerObjGenIndex].eta()) < globalMaxEta_) {
+          // Eta cut enforced
+            tuple->BefPreS_TriggerGenMatch->Fill(7.);
           }
         } else {
-          // Gen match: else
-          tuple->BefPreS_TriggerGenMatch->Fill(6.);
-          LogPrint(MOD) << "Gen match has an ID of " << genColl[triggerObjGenIndex].pdgId();
+          LogPrint(MOD) << "Gen match found but too far, drGenTrigObjMin = " << drGenTrigObjMin;
         }
-        if (fabs(genColl[triggerObjGenIndex].eta()) < globalMaxEta_) {
-        // Eta cut enforced
-          tuple->BefPreS_TriggerGenMatch->Fill(7.);
-        }
-      } else {
-        LogPrint(MOD) << "Gen match found but too far, drGenTrigObjMin = " << drGenTrigObjMin;
       }
-    }
-  } // end condition for being MC and passed trigger
+    } // end condiions on passed trigger
+    // let's find the beta of the non-triggered event, we choose the highest
+    else {
+      for (unsigned int g = 0; g < genColl.size(); g++) {
+        if (isSignal && !isHSCPgenID(genColl[g])) {
+          continue;
+        }
+        if (genColl[g].pt() < 10) { continue; }
+        if (genColl[g].status() != 1) { continue; }
+        float tempBeta = genColl[g].p() / genColl[g].energy();
+        if (tempBeta > maxGenBeta) {
+          maxGenBeta = tempBeta;
+          maxGenEta =  genColl[g].eta();
+          maxGenTheta =  genColl[g].theta();
+          maxGenPt =  genColl[g].pt();
+        }
+      } // end loop on gen collection
+    } // situation when the trigger is not passed
+  } // end condition for being MC
+  
+  float trigObjBeta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].p() / genColl[triggerObjGenIndex].energy() : maxGenBeta;
+  float trigObjTheta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].theta() : maxGenTheta;
+  float trigObjEta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].eta() : maxGenEta;
+  float trigObjPt = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].pt() : maxGenPt;
   
   // Compute event weight from different SFs
   if (!isData) {
@@ -1612,6 +1648,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float anyCandidateDrMinHltMuon = 9999.0;
   unsigned int bestSoFarCandCutInd = 0;
   bool passTechnicalChecks = false;
+  bool trigObjPassedPres = false;
   
   tuple->EventCutFlow->Fill(0.0, eventWeight_);
   
@@ -1881,6 +1918,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dr_min_hltMuon_hscpCand = 9999.0;
     float hlt_match_pt = -9999.0;
     for(size_t objNr=0; objNr<trigObjP4s.size(); objNr++) {
+      if (trigObjP4s[objNr].Pt() < 50) continue;
       float temp_dr = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(), track->eta(), track->phi());
       if (temp_dr < dr_min_hltMuon_hscpCand) {
         dr_min_hltMuon_hscpCand = temp_dr;
@@ -3079,6 +3117,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_RecoPfJetsNum->Fill(pfJetsNum, eventWeight_);
       if (genBeta >= 0) {
         tuple->BefPreS_GenBeta->Fill(genBeta, eventWeight_);
+        if (triggerObjGenIndex > -1) tuple->BefPreS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
       }
       
       //Plotting segment separation depending on whether track passed dz cut
@@ -3187,7 +3226,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // ----------------------------------------------------------------------------|
     // int sizeOfpassedCutsArrays = 15;
     // bool passedCutsArray[sizeOfpassedCutsArrays]; --> this didnt work out, TODO come back to this?
-    //TADA
+    //TODO
     bool passedCutsArray[15];
     std::fill(std::begin(passedCutsArray), std::end(passedCutsArray),false);
     
@@ -3604,8 +3643,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
 
         if (cleaning && dedx_inside)  {
-          if (createGiTemplates_) {
+          // sampleType_ < 2 means dont create templates for signal samples
+          if (createGiTemplates_ && (sampleType_ < 2)) {
            int npv = vertexColl.size();
+            // TADA
+            cout << " PuBins_.size() " << PuBins_.size() << " NbPuBins_ " << NbPuBins_ << endl;
            for (int i = 0 ; i < NbPuBins_ ; i++){
              if (npv > PuBins_[i] && npv <= PuBins_[i+1]) {
                std::cout << "Creating GiS templates for PU bin #" << (i+1) << std::endl;
@@ -3636,7 +3678,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           }
         }//end condition createGitemplates
 
-        // ADD plots to answer Slava's questions about Charge Resolution
+        // Plots to answer Slava's questions about Charge Resolution
         if (doPostPreSplots_) {
          int layer_num = 0;
          float scaleF = (detid.subdetId() < 3) ? dEdxSF_0_*dEdxSF_1_ : dEdxSF_0_;
@@ -3644,16 +3686,23 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
          float pathL = dedxHits->pathlength(h);
           // check if we are on the pixels
          if (detid.subdetId() < 3) {
-            if (detid.subdetId() == PixelSubdetector::PixelBarrel) layer_num=tTopo->pxbLayer(detid);
-            else layer_num=tTopo->pxfDisk(detid)+4;
-            tuple->PostPreS_CpPL_pix_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+           if (detid.subdetId() == PixelSubdetector::PixelBarrel) {
+             layer_num=tTopo->pxbLayer(detid);
+           }
+           else {
+            cout << "We are in the FPix part" << endl;
+            // TODO can pxfDisk be negative? will layer_num be ever weird due to the +4 and the FPix
+            layer_num=tTopo->pxfDisk(detid)+4;
+          }
+           //TADA March21
+          tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
          } // otherwise we are on the strips
          else {
            if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
            if (detid.subdetId() == StripSubdetector::TOB) layer_num = abs(int(tTopo->tobLayer(detid))) + 4;
            if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
            if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
-           tuple->PostPreS_CpPL_strip_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+           tuple->PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
          } // end on condition for pixels or strips
         } // end condition on doPostPreSplots_
        } // end if on the cleaning and the inside
@@ -3729,218 +3778,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostPreS_ProbQNoL1VsIas_Ias_down->Fill(1 - probQonTrackNoL1, globalIas_,  eventWeight_*0.98);
     }
     
-    // Systematics plots for trigger
     bool passedCutsArrayForTriggerSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForTriggerSyst));
     passedCutsArrayForTriggerSyst[0] = true;
-    if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection for trigger systematics";
-    float distanceAtThisEta = 500.0/sin(track->phi());
-    float speedOfLightInCmPerNs = 29.97;
-    float timing = distanceAtThisEta / (genBeta*speedOfLightInCmPerNs);
     
-    float genBetaPrimeUp =  -1.f;
-    float genBetaPrimeUpHalfSigma =  -1.f;
-    float genBetaPrimeUpTwoSigma =  -1.f;
-    float genBetaPrimeDown = -1.f;
-    float genBetaPrimeDownHalfSigma = -1.f;
-    float genBetaPrimeDownTwoSigma = -1.f;
-    genBetaPrimeUp = distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs);
-    genBetaPrimeUpHalfSigma = distanceAtThisEta / ((timing+0.75)*speedOfLightInCmPerNs);
-    genBetaPrimeUpTwoSigma = distanceAtThisEta / ((timing+3.0)*speedOfLightInCmPerNs);
-    if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
-      genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
-      genBetaPrimeDownHalfSigma = distanceAtThisEta / ((timing-0.75)*speedOfLightInCmPerNs);
-      genBetaPrimeDownTwoSigma = distanceAtThisEta / ((timing-3.0)*speedOfLightInCmPerNs);
-    }
-    // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
-    if (passPreselection(passedCutsArrayForTriggerSyst, false) && doPostPreSplots_) {
-      if (!HLT_Mu50) {
-        tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
-        tuple->PostPreS_TriggerMuon50VsPt->Fill(0., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(0., genBeta);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(0., genBeta);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(0., genBeta);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
-        }
-        if (1 - probQonTrackNoL1 > 0.9 && globalIas_ > 0.25 && track->pt() > 200 ) {
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(0., genBeta);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(0., genBetaPrimeDownHalfSigma);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(0., genBetaPrimeDown);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma->Fill(0., genBetaPrimeDownTwoSigma);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma->Fill(0., genBetaPrimeUpHalfSigma);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma->Fill(0., genBetaPrimeUp);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma->Fill(0., genBetaPrimeUpTwoSigma);
-        }
-      } else if (HLT_Mu50) {
-        tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., genBeta);
-        tuple->PostPreS_TriggerMuon50VsPt->Fill(1., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., genBeta);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(1., genBeta);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(1., genBeta);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
-        }
-        
-        if (1 - probQonTrackNoL1 > 0.9 && globalIas_ > 0.25 && track->pt() > 200 ) {
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(1., genBeta);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(1., genBetaPrimeDownHalfSigma);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(1., genBetaPrimeDown);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma->Fill(1., genBetaPrimeDownTwoSigma);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma->Fill(1., genBetaPrimeUpHalfSigma);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma->Fill(1., genBetaPrimeUp);
-          tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma->Fill(1., genBetaPrimeUpTwoSigma);
-        }
-      } // end condition on passing the Mu50 trigger
-      // Repeat the above but with all muon triggers
-      if (!muTrig) {
-        tuple->PostPreS_TriggerMuonAllVsBeta->Fill(0., genBeta);
-        tuple->PostPreS_TriggerMuonAllVsPt->Fill(0., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaA->Fill(0., genBeta);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaB->Fill(0., genBeta);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaC->Fill(0., genBeta);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
-        }
-        
-      } else if (muTrig) {
-        tuple->PostPreS_TriggerMuonAllVsBeta->Fill(1., genBeta);
-        tuple->PostPreS_TriggerMuonAllVsPt->Fill(1., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaA->Fill(1., genBeta);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaB->Fill(1., genBeta);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaC->Fill(1., genBeta);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
-        }
-      }
-      // Now for all MET triggers
-      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
-        tuple->PostPreS_TriggerMETallVsBeta->Fill(0., genBeta);
-        tuple->PostPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
-        tuple->PostPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
-        tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
-        tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
-      } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
-        tuple->PostPreS_TriggerMETallVsBeta->Fill(1., genBeta);
-        tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
-        tuple->PostPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
-        tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
-        tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
-      }
-    } // end of passedCutsArrayForTriggerSyst loop
-    // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
-    else if (doBefPreSplots_) {
-      if (!HLT_Mu50) {
-        tuple->BefPreS_TriggerMuon50VsBeta->Fill(0., genBeta);
-        tuple->BefPreS_TriggerMuon50VsPt->Fill(0., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(0., genBeta);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(0., genBeta);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(0., genBeta);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
-        }
-      } else if (HLT_Mu50) {
-        tuple->BefPreS_TriggerMuon50VsBeta->Fill(1., genBeta);
-        tuple->BefPreS_TriggerMuon50VsPt->Fill(1., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(1., genBeta);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(1., genBeta);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(1., genBeta);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
-        }
-      }
-      // Repeat the same with all muon trigs recom by POG
-      if (!muTrig) {
-        tuple->BefPreS_TriggerMuonAllVsBeta->Fill(0., genBeta);
-        tuple->BefPreS_TriggerMuonAllVsPt->Fill(0., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA->Fill(0., genBeta);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB->Fill(0., genBeta);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC->Fill(0., genBeta);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
-        }
-      } else if (muTrig) {
-        tuple->BefPreS_TriggerMuonAllVsBeta->Fill(1., genBeta);
-        tuple->BefPreS_TriggerMuonAllVsPt->Fill(1., track->pt());
-        if (fabs(track->eta()) < 0.3) {
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA->Fill(1., genBeta);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB->Fill(1., genBeta);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
-        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC->Fill(1., genBeta);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
-          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
-        }
-      }
-      // Now for all MET triggers
-      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
-        tuple->BefPreS_TriggerMETallVsBeta->Fill(0., genBeta);
-        tuple->BefPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
-        tuple->BefPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
-        tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
-        tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
-      } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
-        tuple->BefPreS_TriggerMETallVsBeta->Fill(1., genBeta);
-        tuple->BefPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
-        tuple->BefPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
-        tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
-        tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
-      }
-    }
-    
+    float dRclosestTrigAndCandidate = (closestTrigObjIndex > -1) ? deltaR(trigObjP4s[closestTrigObjIndex].Eta(), trigObjP4s[closestTrigObjIndex].Phi(), track->eta(), track->phi()) : 9999;
+    if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
+      if (HLT_Mu50 && dRclosestTrigAndCandidate < 0.15 ) trigObjPassedPres = true;
+      if (!HLT_Mu50 ) trigObjPassedPres = true;
+    } // if preselection w/o trigger requirement is passed
     
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
@@ -4284,6 +4130,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_RecoPfHT->Fill(pfJetHT, eventWeight_);
         if (genBeta >= 0) {
           tuple->PostPreS_GenBeta->Fill(genBeta, eventWeight_);
+          if (triggerObjGenIndex > -1) tuple->PostPreS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
         }
         
         // stability plots
@@ -4362,7 +4209,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bestCandidateGenBeta = genBeta;
         bestCandidateGenIndex = closestGenIndex;
       }
-    }
+    } // passPre
     
     // Let's do some printouts after preselections for gen particles
     if (passPre && trigInfo_ > 0 && closestGenIndex > 0) {
@@ -5052,6 +4899,243 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->EventCutFlow->Fill(1.0);
   }
   
+  // Systematics plots for trigger at event level
+  float distanceAtThisEta = (trigObjTheta < 9999) ? 500.0/sin(trigObjTheta) : 0;
+  float speedOfLightInCmPerNs = 29.97;
+  float timing = distanceAtThisEta / (trigObjBeta*speedOfLightInCmPerNs);
+  
+  float genBetaPrimeUp =  -1.f;
+  float genBetaPrimeUpHalfSigma =  -1.f;
+  float genBetaPrimeUpTwoSigma =  -1.f;
+  float genBetaPrimeDown = -1.f;
+  float genBetaPrimeDownHalfSigma = -1.f;
+  float genBetaPrimeDownTwoSigma = -1.f;
+  if (timing > 0) {
+    genBetaPrimeUp = std::min(1.,distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs));
+    genBetaPrimeUpHalfSigma = std::min(1.,distanceAtThisEta / ((timing+0.75)*speedOfLightInCmPerNs));
+    genBetaPrimeUpTwoSigma = std::min(1.,distanceAtThisEta / ((timing+3.0)*speedOfLightInCmPerNs));
+    if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
+      genBetaPrimeDownHalfSigma = distanceAtThisEta / ((timing-0.75)*speedOfLightInCmPerNs);
+      genBetaPrimeDownTwoSigma = distanceAtThisEta / ((timing-3.0)*speedOfLightInCmPerNs);
+    }
+  }
+    // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
+  if (trigObjPassedPres && doPostPreSplots_) {
+    if (!HLT_Mu50) {
+      tuple->PostPreS_TriggerTimingReject->Fill(timing);
+      tuple->PostPreS_TriggerMuon50VsBeta->Fill(0., trigObjBeta);
+      tuple->PostPreS_TriggerMuon50VsPt->Fill(0., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 0.6 && fabs(trigObjEta) < 0.9) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 0.9 && fabs(trigObjEta) < 1.2) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 1.2 && fabs(trigObjEta) < 2.1) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 2.1 && fabs(trigObjEta) < 2.4) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown->Fill(0., genBetaPrimeDown);
+      }
+      if (fabs(trigObjEta) < 1.0) {
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(0., trigObjBeta);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(0., genBetaPrimeDownHalfSigma);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(0., genBetaPrimeDown);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma->Fill(0., genBetaPrimeDownTwoSigma);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma->Fill(0., genBetaPrimeUpHalfSigma);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma->Fill(0., genBetaPrimeUp);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma->Fill(0., genBetaPrimeUpTwoSigma);
+      }
+    } else if (HLT_Mu50) {
+      tuple->PostPreS_TriggerTimingPass->Fill(timing);
+      tuple->PostPreS_TriggerMuon50VsBeta->Fill(1., trigObjBeta);
+      tuple->PostPreS_TriggerMuon50VsPt->Fill(1., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 0.6 && fabs(trigObjEta) < 0.9) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 0.9 && fabs(trigObjEta) < 1.2) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 1.2 && fabs(trigObjEta) < 2.1) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) >= 2.1 && fabs(trigObjEta) < 2.4) {
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown->Fill(1., genBetaPrimeDown);
+      }
+      if (fabs(trigObjEta) < 1.0) {
+        tuple->PostS_SR2PASS_TriggerGenBeta->Fill(trigObjBeta);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(1., trigObjBeta);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma->Fill(1., genBetaPrimeDownHalfSigma);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownOneSigma->Fill(1., genBetaPrimeDown);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownTwoSigma->Fill(1., genBetaPrimeDownTwoSigma);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpHalfSigma->Fill(1., genBetaPrimeUpHalfSigma);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpOneSigma->Fill(1., genBetaPrimeUp);
+        tuple->PostS_SR2PASS_TriggerMuon50VsBeta_BetaUpTwoSigma->Fill(1., genBetaPrimeUpTwoSigma);
+      }
+    } // end condition on passing the Mu50 trigger
+      // Repeat the above but with all muon triggers
+    if (!muTrig) {
+      tuple->PostPreS_TriggerMuonAllVsBeta->Fill(0., trigObjBeta);
+      tuple->PostPreS_TriggerMuonAllVsPt->Fill(0., trigObjPt);
+      if (fabs(trigObjEta)< 0.3) {
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaA->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaB->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaC->Fill(0., trigObjBeta);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+      }
+      
+    } else if (muTrig) {
+      tuple->PostPreS_TriggerMuonAllVsBeta->Fill(1., trigObjBeta);
+      tuple->PostPreS_TriggerMuonAllVsPt->Fill(1., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaA->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaB->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaC->Fill(1., trigObjBeta);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+      }
+    }
+      // Now for all MET triggers
+    if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+      tuple->PostPreS_TriggerMETallVsBeta->Fill(0., trigObjBeta);
+      tuple->PostPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
+      tuple->PostPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
+      tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
+      tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
+    } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+      tuple->PostPreS_TriggerMETallVsBeta->Fill(1., trigObjBeta);
+      tuple->PostPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+      tuple->PostPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
+      tuple->PostPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
+      tuple->PostPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
+    }
+  } // end of passedCutsArrayForTriggerSyst loop
+    // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
+  if (doBefPreSplots_) {
+    if (!HLT_Mu50) {
+      tuple->BefPreS_TriggerMuon50VsBeta->Fill(0., trigObjBeta);
+      tuple->BefPreS_TriggerMuon50VsPt->Fill(0., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(0., trigObjBeta);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(0., trigObjBeta);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(0., trigObjBeta);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+      }
+    } else if (HLT_Mu50) {
+      tuple->BefPreS_TriggerMuon50VsBeta->Fill(1., trigObjBeta);
+      tuple->BefPreS_TriggerMuon50VsPt->Fill(1., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaA->Fill(1., trigObjBeta);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaB->Fill(1., trigObjBeta);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaC->Fill(1., trigObjBeta);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+      }
+    }
+      // Repeat the same with all muon trigs recom by POG
+    if (!muTrig) {
+      tuple->BefPreS_TriggerMuonAllVsBeta->Fill(0., trigObjBeta);
+      tuple->BefPreS_TriggerMuonAllVsPt->Fill(0., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaA->Fill(0., trigObjBeta);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaB->Fill(0., trigObjBeta);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaC->Fill(0., trigObjBeta);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+      }
+    } else if (muTrig) {
+      tuple->BefPreS_TriggerMuonAllVsBeta->Fill(1., trigObjBeta);
+      tuple->BefPreS_TriggerMuonAllVsPt->Fill(1., trigObjPt);
+      if (fabs(trigObjEta) < 0.3) {
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaA->Fill(1., trigObjBeta);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaB->Fill(1., trigObjBeta);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaC->Fill(1., trigObjBeta);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
+        tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+      }
+    }
+      // Now for all MET triggers
+    if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+      tuple->BefPreS_TriggerMETallVsBeta->Fill(0., trigObjBeta);
+      tuple->BefPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
+      tuple->BefPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
+      tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(0., RecoPFMET, pfJetHT);
+      tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(0.,RecoPFMET/pfJetHT);
+    } else if (HLT_PFMET120_PFMHT120_IDTight || HLT_PFHT500_PFMET100_PFMHT100_IDTight || HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 || HLT_MET105_IsoTrk50) {
+      tuple->BefPreS_TriggerMETallVsBeta->Fill(1., trigObjBeta);
+      tuple->BefPreS_TriggerMETallVsMet->Fill(1., RecoPFMET);
+      tuple->BefPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
+      tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
+      tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
+    }
+  }
+  
+  
   // Event level information, after choosing the best candidate track
   if (trigInfo_ > 0 && doBefPreSplots_) tuple->BefPreS_NumCandidates->Fill(candidate_count, eventWeight_);
   if (trigInfo_ > 0) {
@@ -5129,8 +5213,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (bestCandidateMuon.isNonnull()) {
       tuple->PostS_HltMatchTrackLevel->Fill(2.0, eventWeight_);
       if (muon::isTightMuon(*bestCandidateMuon, highestSumPt2Vertex)) {
+        tuple->PostS_MuonTightVsBeta->Fill(1.,bestCandidateGenBeta);
         tuple->PostS_HltMatchTrackLevel->Fill(3.0, eventWeight_);
       }
+    } else {
+      tuple->PostS_MuonTightVsBeta->Fill(0.,bestCandidateGenBeta);
+      tuple->PostS_NotMuonsGenBeta->Fill(bestCandidateGenBeta);
     }
     if (anyCandidateDrMinHltMuon < 0.15) {
       tuple->PostS_HltMatchTrackLevel->Fill(4.0, eventWeight_);
@@ -5190,6 +5278,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       else if (PUC) tuple->PostS_SR2PASS_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
       
       if (bestCandidateIas > 0.25) {
+        tuple->PostS_SR2PASS_Ls->Fill(iEvent.id().luminosityBlock());
+        tuple->PostS_SR2PASS_RunVsLs->Fill(currentRun_,iEvent.id().luminosityBlock());
         tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, eventWeight_);
         tuple->PostS_SR2PASS_PtErrOverPt2->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt() * bestCandidateTrack->pt()), eventWeight_);
         if (bestCandidateGenIndex > 0) {
@@ -5221,6 +5311,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
     
     tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
+    if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
+    
+    
     
     float muonRecoSFsUp = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
     float muonIdSFsUp = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
@@ -6515,7 +6608,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   //GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
   desc.addUntracked("CreateAndExitGitemplates",false)->setComment("Set to true if the only purpose is to create templates");
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile up bins");

@@ -356,6 +356,8 @@ struct Tuple {
   TH1F* BefPreS_RelDiffTrackPtAndTruthPt;
   
   TH1F* BefPreS_TriggerGenMatch;
+  TH1F* BefPreS_TriggerGenBeta;
+  
   TH1F* BefPreS_TriggerType;
   TH1F* Gen_HSCPCandidateType;
   TH1F* BefPreS_HSCPCandidateType;
@@ -789,8 +791,8 @@ struct Tuple {
   TH1F* PostPreS_Ih_nopixcl_CR_veryLowPt;
   TH1F* PostPreS_Pt_CR_veryLowPt; 
   TH1F* PostPreS_ProbQNoL1_CR_veryLowPt; 
-  TH2F* PostPreS_CpPL_pix_CR_veryLowPt;
-  TH2F* PostPreS_CpPL_strip_CR_veryLowPt;
+  TH2F* PostPreS_CluDeDxVsPixLayer_CR_veryLowPt;
+  TH2F* PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt;
 
   TH1F* PostS_RelativePtShift;
   TH1F* PostS_ProbQNoL1;
@@ -812,11 +814,16 @@ struct Tuple {
   TH1F* PostS_SR2PASS_Ias_PUA;
   TH1F* PostS_SR2PASS_Ias_PUB;
   TH1F* PostS_SR2PASS_Ias_PUC;
+  
+  TH2F* PostS_SR2PASS_RunVsLs;
+  TH1F* PostS_SR2PASS_Ls;
+  
   TH1F* PostS_SR2PASS_PV;
   TH1F* PostS_SR2PASS_PtErrOverPt2;
   TH1F* PostS_SR2PASS_RelDiffTrackPtAndTruthPt;
   TH2F* PostS_SR2PASS_RelDiffTrackPtAndTruthPtVsTruthPt;
   
+  TH1F* PostS_SR2PASS_TriggerGenBeta;
   TH3F* PostS_ProbQNoL1VsIasVsPt;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_up;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pileup_down;
@@ -1053,6 +1060,9 @@ struct Tuple {
   TH2F* PostPreS_ProbQNoL1VsIas_Pt_up;
   TH2F* PostPreS_ProbQNoL1VsIas_Pt_down;
 
+  TH1F* PostPreS_TriggerTimingPass;
+  TH1F* PostPreS_TriggerTimingReject;
+  TH2F* PostS_MuonTightVsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
@@ -1063,6 +1073,15 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown;
   
   TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_Beta;
   TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma;
@@ -1288,7 +1307,9 @@ struct Tuple {
   TH2F* PostS_CutIdVsBeta_postPtAndIasAndTOF;
 
   TH1F* PostPreS_GenBeta;
+  TH1F* PostPreS_TriggerGenBeta;
   TH1F* PostS_GenBeta;
+  TH1F* PostS_TriggerGenBeta;
   
 
   //Prediction histograms
@@ -1427,6 +1448,8 @@ struct Tuple {
   
   TH1F* PostS_RecoHSCParticleType;
   TH1F* PostS_HltMatchTrackLevel;
+  TH1F* PostS_NotMuonsGenBeta;
+  
 
   TH1D* CtrlPt_S1_Is;
   TH1D* CtrlPt_S2_Is;
