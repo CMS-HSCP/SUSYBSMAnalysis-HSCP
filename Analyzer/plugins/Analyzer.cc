@@ -347,7 +347,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   eventWeight_ = 1.;
   
   static constexpr const char* const MOD = "Analyzer";
-  static constexpr const float cm2umUnit = 0.0001;
+  static constexpr const float um2cmUnit = 0.0001;
   using namespace edm;
   using namespace trigger;
 
@@ -2353,7 +2353,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         auto clustSizeY = pixelCluster->sizeY();
         auto clustCharge = pixelCluster->charge();
         
-        auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
+        auto pixelNormCharge = um2cmUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
         
         if (clustCharge != dedxHits->charge(i)) {
           LogPrint(MOD) << "clustCharge != dedxHits->charge(i) -- this shouldnt happen";
@@ -2454,7 +2454,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         
         if (trigInfo_ > 0) {
-          float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+          float stripNormCharge = um2cmUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
           unsigned int stripLayerIndex = 0;
           if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
           if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
@@ -3693,7 +3693,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             layer_num=tTopo->pxfDisk(detid)+4;
           }
            //TADA March21
-          tuple->PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt->Fill(pathL*cm2umUnit, layer_num, eventWeight_);
+          tuple->PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt->Fill(pathL/um2cmUnit, layer_num, eventWeight_);
           tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
          } // otherwise we are on the strips
          else {
@@ -4487,7 +4487,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           auto clustSize = pixelCluster->size();
           auto clustSizeX = pixelCluster->sizeX();
           auto clustSizeY = pixelCluster->sizeY();
-          auto pixelNormCharge = cm2umUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
+          auto pixelNormCharge = um2cmUnit * dedxHits->charge(i) / dedxHits->pathlength(i);
           auto pixelNormChargeAfterSF = pixelNormCharge *  dEdxSF[1] *  GetSFPixel(detid.subdetId(), detid, year, currentRun_);
           
           float tmp1 = geomDet.surface().toGlobal(Local3DPoint(0.,0.,0.)).perp();
@@ -4571,7 +4571,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           unsigned int clusterCleaned = (clusterCleaning(amplitudesPrim, 1)) ? 0 : 1;
           
           
-          float stripNormCharge = cm2umUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
+          float stripNormCharge = um2cmUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
           float stripSize = stripsCluster->amplitudes().size();
           
           unsigned int stripLayerIndex = 0;
