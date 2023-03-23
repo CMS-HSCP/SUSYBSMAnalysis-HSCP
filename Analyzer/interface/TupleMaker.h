@@ -925,6 +925,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TriggerMuon50VsBeta_EtaC = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaC", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaD = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaD", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaD_BetaUp = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaD_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaD_BetaDown = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaD_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaE = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaE", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaE_BetaUp = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaE_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaE_BetaDown = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaE_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaF = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaF", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaF_BetaUp = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaF_BetaUp", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+    tuple->BefPreS_TriggerMuon50VsBeta_EtaF_BetaDown = dir.make<TH2F>("BefPreS_TriggerMuon50VsBeta_EtaF_BetaDown", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     
     tuple->BefPreS_TriggerMuonAllVsBeta = dir.make<TH2F>("BefPreS_TriggerMuonAllVsBeta", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->BefPreS_TriggerMuonAllVsBeta_EtaA = dir.make<TH2F>("BefPreS_TriggerMuonAllVsBeta_EtaA", ";MuonAll triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -945,7 +954,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TriggerMETallVsHT = dir.make<TH2F>("BefPreS_TriggerMETallVsHT", ";OR of MET triggered;H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
     tuple->BefPreS_TriggerMETallVsMetOverHt = dir.make<TH2F>("BefPreS_TriggerMETallVsMetOverHt", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
     tuple->BefPreS_TriggerMETallVsMetVsHT = dir.make<TH3F>("BefPreS_TriggerMETallVsMetVsHT", ";OR of MET triggered;MET (GeV);H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05,50,-0.05,2000.05);
-  }
+    tuple->BefPreS_TriggerTimingPass = dir.make<TH1F>("BefPreS_TriggerTimingPass", ";#Delta t_{PV,DT L2} (ns) (trigger passed);Tracks / bin", 100, 0.0, 100);
+    tuple->BefPreS_TriggerTimingReject = dir.make<TH1F>("BefPreS_TriggerTimingReject", ";#Delta t_{PV,DT L2} (ns) (trigger rejected);Tracks / bin", 100, 0.0, 100);
+    
+    tuple->BefPreS_TriggerEtaReject = dir.make<TH1F>("BefPreS_TriggerEtaReject", ";Trigger object #eta (trigger passed);Tracks / bin", 25, 0.0, 2.5);
+    tuple->BefPreS_TriggerEtaPass = dir.make<TH1F>("BefPreS_TriggerEtaPass", ";Trigger object #eta (trigger passed);Tracks / bin", 25, 0.0, 2.5);
+  } // end condition on bef pre plots
   
   if (createGiTemplates_ && sampleType_ < 2) {
     tuple->Calibration_GiTemplate =  dir.make<TH3F>("Calibration_GiTemplate", ";Module geometry;Path lenght (mm);Path normalised charge (ke / cm)", 15, 1.0, 16.0, 42, 0.2, 1.6, 500, 0.0, 5000.0);
@@ -1259,6 +1273,10 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     
     tuple->PostPreS_TriggerTimingPass = dir.make<TH1F>("PostPreS_TriggerTimingPass", ";#Delta t_{PV,DT L2} (ns) (trigger passed);Tracks / bin", 100, 0.0, 100);
     tuple->PostPreS_TriggerTimingReject = dir.make<TH1F>("PostPreS_TriggerTimingReject", ";#Delta t_{PV,DT L2} (ns) (trigger rejected);Tracks / bin", 100, 0.0, 100);
+    
+    tuple->PostPreS_TriggerEtaReject = dir.make<TH1F>("PostPreS_TriggerEtaReject", ";Trigger object #eta (trigger passed);Tracks / bin", 25, 0.0, 2.5);
+    tuple->PostPreS_TriggerEtaPass = dir.make<TH1F>("PostPreS_TriggerEtaPass", ";Trigger object #eta (trigger passed);Tracks / bin", 25, 0.0, 2.5);
+    
     tuple->PostS_MuonTightVsBeta = dir.make<TH2F>("PostS_MuonTightVsBeta", ";Tight ID mu;Gen #beta",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta_EtaA = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta_EtaA", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
@@ -1498,8 +1516,9 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
 
     // add  plots in Gitemplate region  to answer Slava's questions about charge resolution
-     tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluDeDxVsPixLayer_CR_veryLowPt",";Cluser dEdx (MeV/cm); Pixel layer",100,0.,10.,10,0.,10.);
-     tuple->PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt",";Cluser dEdx (MeV/cm); Strip layer",100,0.,10.,25,0.,25.);
+    tuple->PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt",";Path lenght (um); Pixel layer",500, 250., 750.,10,0.,10.);
+     tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluDeDxVsPixLayer_CR_veryLowPt",";Cluster dEdx (MeV/cm); Pixel layer",100,0.,10.,10,0.,10.);
+     tuple->PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt = dir.make<TH2F>("PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt",";Cluster dEdx (MeV/cm); Strip layer",100,0.,10.,25,0.,25.);
      tuple->PostPreS_Ih_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_CR_veryLowPt", ";I_{h} (MeV/cm);Tracks / bin", 200, 0, dEdxM_UpLim);
      tuple->PostPreS_Ihstrip_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ihstrip_CR_veryLowPt", ";I_{h} (strip only) (MeV/cm);Tracks / bin", 200, 0, dEdxM_UpLim);
      tuple->PostPreS_Ih_noclean_CR_veryLowPt = dir.make<TH1F>("PostPreS_Ih_noclean_CR_veryLowPt", ";I_{h}(no cleaning) (MeV/cm);Tracks / bin", 200, 0, dEdxM_UpLim);

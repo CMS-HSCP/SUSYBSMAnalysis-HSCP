@@ -604,6 +604,15 @@ struct Tuple {
   TH2F* BefPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* BefPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaD;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaD_BetaUp;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaD_BetaDown;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaE;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaE_BetaUp;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaE_BetaDown;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaF;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaF_BetaUp;
+  TH2F* BefPreS_TriggerMuon50VsBeta_EtaF_BetaDown;
   
   TH2F* BefPreS_TriggerMuonAllVsBeta;
   TH2F* BefPreS_TriggerMuonAllVsBeta_EtaA;
@@ -623,6 +632,11 @@ struct Tuple {
   TH2F* BefPreS_TriggerMETallVsHT;
   TH2F* BefPreS_TriggerMETallVsMetOverHt;
   TH3F* BefPreS_TriggerMETallVsMetVsHT;
+  
+  TH1F* BefPreS_TriggerTimingPass;
+  TH1F* BefPreS_TriggerTimingReject;
+  TH1F* BefPreS_TriggerEtaReject;
+  TH1F* BefPreS_TriggerEtaPass;
   
   TH1F* PostPreS_NumCandidates;
 
@@ -790,7 +804,8 @@ struct Tuple {
   TH1F* PostPreS_Ih_noinside_CR_veryLowPt;
   TH1F* PostPreS_Ih_nopixcl_CR_veryLowPt;
   TH1F* PostPreS_Pt_CR_veryLowPt; 
-  TH1F* PostPreS_ProbQNoL1_CR_veryLowPt; 
+  TH1F* PostPreS_ProbQNoL1_CR_veryLowPt;
+  TH2F* PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt;
   TH2F* PostPreS_CluDeDxVsPixLayer_CR_veryLowPt;
   TH2F* PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt;
 
@@ -1062,6 +1077,8 @@ struct Tuple {
 
   TH1F* PostPreS_TriggerTimingPass;
   TH1F* PostPreS_TriggerTimingReject;
+  TH1F* PostPreS_TriggerEtaReject;
+  TH1F* PostPreS_TriggerEtaPass;
   TH2F* PostS_MuonTightVsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
