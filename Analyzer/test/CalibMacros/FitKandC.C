@@ -30,19 +30,19 @@
 
 using namespace std;
 
-void ExtractConstants(TH2D* input1, TH2D* input2, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8, double yPionMax=4.2); // by default use protons
+void ExtractConstants(TH2F* input1, TH2F* input2, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8, double yPionMax=4.2); // by default use protons
 double GetMass(double P, double I, double* K, double* C);
 void SaveCanvas(TCanvas* c, std::string path, std::string name, bool OnlyPPNG=false);
 TF1* GetMassLine(double M, double K, double C, bool left=false);
-void ExtracttheCConstants(TH2D* inputlong, double* C,  double* Cerr) ;
+void ExtracttheCConstants(TH2F* inputlong, double* C,  double* Cerr) ;
 void FitCalone(TString filename);
 void FitKandC_sig();
-void ExtractConstants_sig(TH2D* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875); // by default use protons
-void ExtractProj(TH2D* inputlong, TH2D* inputshort,double* K, double* C, 
+void ExtractConstants_sig(TH2F* input, double* K, double* C, double* Kerr, double* Cerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875); // by default use protons
+void ExtractProj(TH2F* inputlong, TH2F* inputshort,double* K, double* C, 
       double MinRange, double MaxRange, double MassCenter, double LeftMassMargin, double RightMassMargin, double yPionMax,
-      TH1D* FitResultpion,  TH1D* FitResult);
+      TH1F* FitResultpion,  TH1F* FitResult);
 void compaFits(TString filename1, TString filename2, double Kval, double Cval);
-void TestExtractConstants(TH2D* input1, TH2D* input2, double* K, double* C, double* N, double* Kerr, double* Cerr, double* Nerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8, double yPionMax=4.2); // by default use protons
+void TestExtractConstants(TH2F* input1, TH2F* input2, double* K, double* C, double* N, double* Kerr, double* Cerr, double* Nerr, double MinRange = 1.0, double MaxRange = 1.6, double MassCenter = 1.875, double LeftMassMargin = 0.2, double RightMassMargin = 0.8, double yPionMax=4.2); // by default use protons
 TF1* TestGetMassLine(double M, double K, double C, double N, bool left=false);
 Double_t TestfitSpecial(Double_t *x, Double_t *par);
 Double_t TestfitSpecial2(Double_t *x, Double_t *par);
@@ -54,8 +54,8 @@ void FitKandC(TString filename){
    TFile* myfile;
    myfile = new TFile (filename);
 
-   TH2D* HdedxVsP_1fit;
-   TH2D* HdedxVsP_2fit;
+   TH2F* HdedxVsP_1fit;
+   TH2F* HdedxVsP_2fit;
    bool pixelOnly = false;
 //   myfile->cd();
 
@@ -63,19 +63,31 @@ void FitKandC(TString filename){
 // ---->>  THE HISTO (original name in ntuple : dEdX0noL1VsP_lowp)
 
 
+/*
    myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_1",HdedxVsP_1fit);
    myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_1",HdedxVsP_2fit);
-//
+*/
+/*
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_noFcut1",HdedxVsP_1fit);
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_noFcut1",HdedxVsP_2fit);
+*/
+
 /*
    myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_loose1",HdedxVsP_1fit);
    myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_loose1",HdedxVsP_2fit);
 */
 
   // Ih strip only
-  /*
+  
+/*
    myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_strip_VsP_1",HdedxVsP_1fit);
    myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_strip_VsP_1",HdedxVsP_2fit);
-  */
+*/
+
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_strip_VsP_noFcut1",HdedxVsP_1fit);
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_strip_VsP_noFcut1",HdedxVsP_2fit);
+
+ 
 
 //     if (!pixelOnly) ExtractConstants (HdedxVsP_2fit, HdedxVsP_1fit, &Ktmp, &Ctmp, &KerrTmp, &CerrTmp, 0.5, 1.5, 0.938, 0.2, 0.5, 4.2);
      if (!pixelOnly) ExtractConstants (HdedxVsP_2fit, HdedxVsP_1fit, &Ktmp, &Ctmp, &KerrTmp, &CerrTmp, 0.5, 1.2, 0.938, 0.2, 0.5, 4.2);
@@ -145,9 +157,9 @@ void FitKandC_sig(){
         myfile = new TFile ("testMass2400.root");
         cout << " opening testMass2400.root" << endl;
 
-   TH2D* HdedxVsP_2fit;
+   TH2F* HdedxVsP_2fit;
    myfile->cd();
-   HdedxVsP_2fit = (TH2D*)gROOT->FindObject("dEdXVsP");
+   HdedxVsP_2fit = (TH2F*)gROOT->FindObject("dEdXVsP");
    ExtractConstants_sig (HdedxVsP_2fit, &Ktmp, &Ctmp, &KerrTmp, &CerrTmp, 500., 3000., 2400);
 
    TCanvas* c2 = new TCanvas("c2", "c2", 800,600);
@@ -171,10 +183,9 @@ void FitCalone(TString filename){
    TFile* myfile;
    myfile = new TFile (filename);
 
-   TH2D* HdedxVsP_2fit;
-   myfile->cd();
-   HdedxVsP_2fit = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp2");
-   HdedxVsP_2fit->Rebin2D(2,1);
+   TH2F* HdedxVsP_2fit;
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_1",HdedxVsP_2fit);
+//   HdedxVsP_2fit->Rebin2D(2,1);
 
    ExtracttheCConstants (HdedxVsP_2fit, &Ctmp, &CerrTmp);
 
@@ -193,41 +204,39 @@ void FitCalone(TString filename){
 }
 
 
-void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, double* Kerr, double* Cerr,
+void ExtractConstants(TH2F* inputlong, TH2F* inputshort,double* K, double* C, double* Kerr, double* Cerr,
       double MinRange, double MaxRange, double MassCenter, double LeftMassMargin, double RightMassMargin, double yPionMax)
 {
        char buffer[2048];
        bool hasConverged = false;
 
-//       for(unsigned int loop=0;loop<5 and !hasConverged; loop++){
-//       for(unsigned int loop=0;loop<8 and !hasConverged; loop++){
        for(unsigned int loop=0;loop<20 and !hasConverged; loop++){
-	      TH2D* inputnew = (TH2D*)inputshort->Clone("tempTH2D");
-	      TH2D* inputnewPion = (TH2D*)inputlong->Clone("tempTH2D2");
-//	      inputnew->Rebin2D(5,10);
+	      TH2F* inputnew = (TH2F*)inputshort->Clone("tempTH2F");
+	      TH2F* inputnewPion = (TH2F*)inputlong->Clone("tempTH2F2");
 	      for(int x=0;x<=inputnew->GetNbinsX()+1;x++){
 	      for(int y=0;y<=inputnew->GetNbinsY()+1;y++){
 		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
 		if(isnan (float(Mass)) || Mass<MassCenter-(LeftMassMargin) || Mass>MassCenter+RightMassMargin){
 		  inputnew->SetBinContent(x,y,0);        
 		  inputnew->SetBinError(x,y,0);        
-		  //cout<<x<<"   "<<y<<endl;
 		}
+                if (inputnew->GetXaxis()->GetBinCenter(x)>5.) {
+		  inputnew->SetBinContent(x,y,0);        
+		  inputnew->SetBinError(x,y,0);        
+                }
 	      }}
 	      for(int x=0;x<=inputnewPion->GetNbinsX()+1;x++){
    	        for(int y=0;y<=inputnewPion->GetNbinsY()+1;y++){
-//                    if (inputnewPion->GetXaxis()->GetBinCenter(x)<10) inputnewPion->SetBinContent(x,y,0);
-                    if (inputnewPion->GetXaxis()->GetBinCenter(x)<2.5) {
+//                    if (inputnewPion->GetXaxis()->GetBinCenter(x)<2.5) {
+                    if (inputnewPion->GetXaxis()->GetBinCenter(x)<3. || inputnewPion->GetXaxis()->GetBinCenter(x)>5.) {
                           inputnewPion->SetBinContent(x,y,0);
                           inputnewPion->SetBinError(x,y,0);
                     }
-//                    if (inputnewPion->GetXaxis()->GetBinCenter(x)>10) inputnewPion->SetBinContent(x,y,0);
 	  	    if (inputnewPion->GetYaxis()->GetBinCenter(y)<2 || inputnewPion->GetYaxis()->GetBinCenter(y)>yPionMax) {
                           inputnewPion->SetBinContent(x,y,0);
                           inputnewPion->SetBinError(x,y,0);
                     }
 	      }}
-//	      inputnewPion->Rebin2D(10,10);
 
 	      
 
@@ -239,11 +248,6 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 	      inputnew->SetAxisRange(0,25,"X");
 	      inputnew->SetAxisRange(0,15,"Y");
 	      inputnew->Draw("COLZ");
-
-	//      KaonLine->Draw("same");
-	//      ProtonLine->Draw("same");
-	//      DeuteronLine->Draw("same");
-	//      TritonLine->Draw("same");
 
 	      SaveCanvas(c1, "dirtest/", "dedxVsP");
 
@@ -258,7 +262,7 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 	      SaveCanvas(c1, "dirtest/", "dedxVsP_pion");
 
 	      delete c1;
-               TH1D* FitResult = new TH1D("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
+               TH1F* FitResult = new TH1F("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
 	       FitResult->SetTitle("");
 	       FitResult->SetStats(kFALSE);  
 	       FitResult->GetXaxis()->SetTitle("P [GeV]");
@@ -266,7 +270,7 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 	       FitResult->GetYaxis()->SetTitleOffset(1.20);
 	       FitResult->Reset();     
 
-	       TH1D* FitResultPion = new TH1D("FitResultPion", "FitResultPion" ,inputnewPion->GetXaxis()->GetNbins(),inputnewPion->GetXaxis()->GetXmin(),inputnewPion->GetXaxis()->GetXmax());
+	       TH1F* FitResultPion = new TH1F("FitResultPion", "FitResultPion" ,inputnewPion->GetXaxis()->GetNbins(),inputnewPion->GetXaxis()->GetXmin(),inputnewPion->GetXaxis()->GetXmax());
                FitResultPion->SetTitle("");
                FitResultPion->SetStats(kFALSE);
                FitResultPion->GetXaxis()->SetTitle("P [GeV]");
@@ -274,11 +278,13 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
                FitResultPion->GetYaxis()->SetTitleOffset(1.20);
                FitResultPion->Reset();
 
+
+
+
                for(int x=1;x<inputnewPion->GetNbinsX();x++){
-		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
+		  TH1F* ProjectionPion = (TH1F*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
                   if(ProjectionPion->Integral()<100)continue;
                   ProjectionPion->SetAxisRange(0.1,25,"X");
-//                  ProjectionPion->Sumw2();
                   ProjectionPion->Scale(1.0/ProjectionPion->Integral());
 
                   TF1* mygausPion = new TF1("mygausPion","gaus", 2., 15);
@@ -291,10 +297,9 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 	       for(int x=1;x<inputnew->GetXaxis()->FindBin(1.5);x++){
 		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
 	    
-		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
+		  TH1F* Projection = (TH1F*)(inputnew->ProjectionY("proj",x,x))->Clone();
 		  if(Projection->Integral()<100)continue;
 		  Projection->SetAxisRange(0.1,25,"X");
-//		  Projection->Sumw2();
 		  Projection->Scale(1.0/Projection->Integral());
 
 		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
@@ -306,32 +311,6 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 		  mygaus->SetLineWidth(2);
 		  cout<<x<<"  "<<mygaus->GetParameter(1)<<endl;
 
-		  /*
-		  c1  = new TCanvas("canvas", "canvas", 600,600);
-		  Projection->Draw();
-		  Projection->SetTitle("");
-		  Projection->SetStats(kFALSE);
-		  Projection->GetXaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
-		  Projection->GetYaxis()->SetTitle("#Entries");
-		  Projection->GetYaxis()->SetTitleOffset(1.30);
-		  Projection->SetAxisRange(1E-5,1.0,"Y");
-
-		  mygaus->Draw("same");
-
-		  TPaveText* stt = new TPaveText(0.55,0.82,0.79,0.92, "NDC");
-		  stt->SetFillColor(0);
-		  stt->SetTextAlign(31);
-		  sprintf(buffer,"Proton  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
-		  sprintf(buffer,"Proton  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
-		  stt->Draw("same");
-
-		  //std::cout << "P = " << P << "  --> Proton dE/dx = " << mygaus->GetParameter(1) << endl;
-		  c1->SetLogy(true);
-		  sprintf(buffer,"%sProjectionFit_P%03i_%03i","fit/",(int)(100*FitResult->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResult->GetXaxis()->GetBinUpEdge(x)) );
-		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"dirtest/",buffer);}
-		  delete c1;
-                  delete stt;
-                  */
                   delete Projection;
                   delete mygaus;
 	       }
@@ -354,6 +333,50 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 
 	       double prevConstants [] = {*K, *Kerr, *C, *Cerr};
 
+///
+//
+
+
+              cout << " ============== " << endl;
+              cout << " ============== " << endl;
+              cout << " ============== " << endl;
+              cout << " debug " << endl;
+              cout << " inputnewPion Entries " << inputnewPion->GetEntries() << "  integral " << inputnewPion->Integral() << endl;
+              TH1F* test_projX = (TH1F*)inputnewPion->ProjectionX("proj");
+              cout << " test_projX " << test_projX->GetEntries() << " mean " << test_projX->GetMean() << " RMS " << test_projX->GetRMS() << endl;
+
+	      TH1F* ProjectionPion = (TH1F*)inputnewPion->ProjectionY("proj");
+              cout << " ProjectionPion " << ProjectionPion->GetEntries()  ;
+              cout << " mean value " << ProjectionPion->GetMean() << " RMS " << ProjectionPion->GetRMS() << endl;
+              float xminval = ProjectionPion->GetMean() - 0.4;
+              float xmaxval = ProjectionPion->GetMean() + 0.4;
+              TF1* mygausPion = new TF1("mygausPion","gaus", xminval, xmaxval);
+              ProjectionPion->Fit("mygausPion","Q0 RME");
+	      cout<< " mygausPion  mean   " <<mygausPion->GetParameter(1) << "  "<<mygausPion->GetParError(1)<<endl;
+	      cout<< " mygausPion  sigma   " <<mygausPion->GetParameter(2)<<"  "<<mygausPion->GetParError(2)<<endl;
+
+	       *C    = mygausPion->GetParameter(1);
+	       *Cerr = mygausPion->GetParError(1);
+	       cout<< "FitResultPion : "<<*C<<"   " <<*Cerr<< " with sigma " << mygausPion->GetParameter(2) << endl;
+
+               gStyle->SetOptFit(1011);
+               ProjectionPion->Draw();
+               ProjectionPion->SetTitle("Fit C in range 3<p<5 GeV");
+               ProjectionPion->GetXaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
+               mygausPion->Draw("same");
+	       sprintf(buffer,"%sFitPion","fit/");
+	       SaveCanvas(c1,"dirtest/",buffer);              
+
+
+
+
+
+//
+//
+//
+
+/*
+
 	       TF1* fitC =  new TF1("fitC","[0]", 1,25);
 	       fitC->SetParName(0,"C");
 	       fitC->SetParameter(0, 3.);
@@ -370,11 +393,16 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
 	       cout<< "FitResultPion : "<<*C<<"   " <<*Cerr<< endl;
                
                c1->SetLogz(1);
+               inputnewPion->SetAxisRange(2.8,5.2,"X");
+               inputnewPion->SetAxisRange(2.,4.5,"Y");
                inputnewPion->Draw("COLZ");
                FitResultPion->Draw("same");
                fitC->Draw("same");
 	       sprintf(buffer,"%sFitPion","fit/");
 	       SaveCanvas(c1,"dirtest/",buffer);              
+
+*/
+
 
 
 
@@ -436,14 +464,14 @@ void ExtractConstants(TH2D* inputlong, TH2D* inputshort,double* K, double* C, do
        }
 }
 
-void ExtracttheCConstants(TH2D* inputlong, double* C,  double* Cerr) 
+void ExtracttheCConstants(TH2F* inputlong, double* C,  double* Cerr) 
 {
        char buffer[2048];
 
-	      TH2D* inputnewPion = (TH2D*)inputlong->Clone("tempTH2D2");
+	      TH2F* inputnewPion = (TH2F*)inputlong->Clone("tempTH2F2");
 	      for(int x=0;x<=inputnewPion->GetNbinsX()+1;x++){
    	        for(int y=0;y<=inputnewPion->GetNbinsY()+1;y++){
-                    if (inputnewPion->GetXaxis()->GetBinCenter(x)<10) {
+                    if (inputnewPion->GetXaxis()->GetBinCenter(x)<3. || inputnewPion->GetXaxis()->GetBinCenter(x)>5.) {
                        inputnewPion->SetBinContent(x,y,0); 
                        inputnewPion->SetBinError(x,y,0); 
                     }
@@ -460,17 +488,19 @@ void ExtracttheCConstants(TH2D* inputlong, double* C,  double* Cerr)
 	      inputnewPion->SetStats(kFALSE);
 	      inputnewPion->GetXaxis()->SetTitle("track momentum (GeV)");
 	      inputnewPion->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
-	      inputnewPion->SetAxisRange(0,25,"X");
-	      inputnewPion->SetAxisRange(0,15,"Y");
+	      inputnewPion->SetAxisRange(2.5,12.5,"X");
+	      inputnewPion->SetAxisRange(2,4.2,"Y");
               inputnewPion->Draw("COLZ");
+//              TProfile* pr1 = inputnewPion->ProfileX();
+//              pr1->Draw("same");
 
 	      SaveCanvas(c1, "dirtest/", "testCalone_region");
 
 
-	      TH1D* ProjectionPion = (TH1D*)inputnewPion->ProjectionY("proj");
+	      TH1F* ProjectionPion = (TH1F*)inputnewPion->ProjectionY("proj");
               cout << " mean value " << ProjectionPion->GetMean() << " RMS " << ProjectionPion->GetRMS() << endl;
-              float xminval = ProjectionPion->GetMean() - 0.5;
-              float xmaxval = ProjectionPion->GetMean() + 0.5;
+              float xminval = ProjectionPion->GetMean() - 0.4;
+              float xmaxval = ProjectionPion->GetMean() + 0.4;
 //              TF1* mygausPion = new TF1("mygausPion","gaus", 2., 5.);
               TF1* mygausPion = new TF1("mygausPion","gaus", xminval, xmaxval);
               ProjectionPion->Fit("mygausPion","Q0 RME");
@@ -488,14 +518,14 @@ void ExtracttheCConstants(TH2D* inputlong, double* C,  double* Cerr)
 
 }
 
-void ExtractConstants_sig(TH2D* input, double* K, double* C, double* Kerr, double* Cerr,
+void ExtractConstants_sig(TH2F* input, double* K, double* C, double* Kerr, double* Cerr,
       double MinRange, double MaxRange, double MassCenter)
 {
        char buffer[2048];
        bool hasConverged = false;
 
        for(unsigned int loop=0;loop<5 and !hasConverged; loop++){
-	      TH2D* inputnew = (TH2D*)input->Clone("tempTH2D");
+	      TH2F* inputnew = (TH2F*)input->Clone("tempTH2F");
 	      for(int x=1;x<=inputnew->GetNbinsX();x++){
 	       for(int y=1;y<=inputnew->GetNbinsY();y++){
                 if (inputnew->GetYaxis()->GetBinCenter(y)<5. && inputnew->GetXaxis()->GetBinCenter(x)<1000) {
@@ -519,7 +549,7 @@ void ExtractConstants_sig(TH2D* input, double* K, double* C, double* Kerr, doubl
 	      SaveCanvas(c1, "dirtest/", "Sig_dedxVsP");
 
 	      delete c1;
-               TH1D* FitResult = new TH1D("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
+               TH1F* FitResult = new TH1F("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
 	       FitResult->SetTitle("");
 	       FitResult->SetStats(kFALSE);  
 	       FitResult->GetXaxis()->SetTitle("P [GeV]");
@@ -530,7 +560,7 @@ void ExtractConstants_sig(TH2D* input, double* K, double* C, double* Kerr, doubl
 	       for(int x=inputnew->GetXaxis()->FindBin(MinRange);x<inputnew->GetXaxis()->FindBin(MaxRange);x++){
 		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
 	    
-		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
+		  TH1F* Projection = (TH1F*)(inputnew->ProjectionY("proj",x,x))->Clone();
 		  if(Projection->Integral()<100)continue;
 		  Projection->SetAxisRange(0.1,25,"X");
 		  Projection->Sumw2();
@@ -603,6 +633,7 @@ void ExtractConstants_sig(TH2D* input, double* K, double* C, double* Kerr, doubl
 	       myfit->SetLineColor(2);
 	       FitResult->Fit("myfit", "M R E I 0");
 	       myfit->SetRange(MinRange,MaxRange);
+	       c1->SetLogz(true);
                inputnew->Draw("COLZ");
                FitResult->Draw("same");
 	       myfit->Draw("same");
@@ -693,23 +724,23 @@ void compaFits(TString filename1, TString filename2, double Kval, double Cval){
    TFile* myfile2;
    myfile2 = new TFile (filename2);
 
-   TH2D* HdedxVsP_1fit1;
-   TH2D* HdedxVsP_2fit1;
-   TH2D* HdedxVsP_1fit2;
-   TH2D* HdedxVsP_2fit2;
-   TH1D* resuHdedxVsP_1fit1;
-   TH1D* resuHdedxVsP_2fit1 ;
-   TH1D* resuHdedxVsP_1fit2;
-   TH1D* resuHdedxVsP_2fit2 ;
+   TH2F* HdedxVsP_1fit1;
+   TH2F* HdedxVsP_2fit1;
+   TH2F* HdedxVsP_1fit2;
+   TH2F* HdedxVsP_2fit2;
+   TH1F* resuHdedxVsP_1fit1;
+   TH1F* resuHdedxVsP_2fit1 ;
+   TH1F* resuHdedxVsP_1fit2;
+   TH1F* resuHdedxVsP_2fit2 ;
 
 
    myfile1->cd();
 //    // Ih no drop, no L1
-   HdedxVsP_1fit1 = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp");
-   HdedxVsP_2fit1 = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp2");
+   HdedxVsP_1fit1 = (TH2F*)gROOT->FindObject("dEdX0noL1VsP_lowp");
+   HdedxVsP_2fit1 = (TH2F*)gROOT->FindObject("dEdX0noL1VsP_lowp2");
    HdedxVsP_2fit1->Rebin2D(2,1);
 
-   resuHdedxVsP_1fit1 = new TH1D("resuHdedxVsP_1fit1", "resuHdedxVsP_1fit1", HdedxVsP_1fit1->GetXaxis()->GetNbins(),HdedxVsP_1fit1->GetXaxis()->GetXmin(),HdedxVsP_1fit1->GetXaxis()->GetXmax());
+   resuHdedxVsP_1fit1 = new TH1F("resuHdedxVsP_1fit1", "resuHdedxVsP_1fit1", HdedxVsP_1fit1->GetXaxis()->GetNbins(),HdedxVsP_1fit1->GetXaxis()->GetXmin(),HdedxVsP_1fit1->GetXaxis()->GetXmax());
 	       resuHdedxVsP_1fit1->SetTitle("");
 	       resuHdedxVsP_1fit1->SetStats(kFALSE);  
 	       resuHdedxVsP_1fit1->GetXaxis()->SetTitle("P [GeV]");
@@ -717,7 +748,7 @@ void compaFits(TString filename1, TString filename2, double Kval, double Cval){
 	       resuHdedxVsP_1fit1->GetYaxis()->SetTitleOffset(1.20);
 	       resuHdedxVsP_1fit1->Reset();     
 
-  resuHdedxVsP_2fit1 = new TH1D("resuHdedxVsP_2fit1", "resuHdedxVsP_2fit1" ,HdedxVsP_2fit1->GetXaxis()->GetNbins(),HdedxVsP_2fit1->GetXaxis()->GetXmin(),HdedxVsP_2fit1->GetXaxis()->GetXmax());
+  resuHdedxVsP_2fit1 = new TH1F("resuHdedxVsP_2fit1", "resuHdedxVsP_2fit1" ,HdedxVsP_2fit1->GetXaxis()->GetNbins(),HdedxVsP_2fit1->GetXaxis()->GetXmin(),HdedxVsP_2fit1->GetXaxis()->GetXmax());
                resuHdedxVsP_2fit1->SetTitle("");
                resuHdedxVsP_2fit1->SetStats(kFALSE);
                resuHdedxVsP_2fit1->GetXaxis()->SetTitle("P [GeV]");
@@ -729,10 +760,10 @@ void compaFits(TString filename1, TString filename2, double Kval, double Cval){
    ExtractProj(HdedxVsP_2fit1, HdedxVsP_1fit1, &Kval, &Cval, 0.5, 1.5, 0.938, 0.2, 0.5, 4.2,resuHdedxVsP_2fit1,resuHdedxVsP_1fit1);
 
    myfile2->cd();
-   HdedxVsP_1fit2 = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp");
-   HdedxVsP_2fit2 = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp2");
+   HdedxVsP_1fit2 = (TH2F*)gROOT->FindObject("dEdX0noL1VsP_lowp");
+   HdedxVsP_2fit2 = (TH2F*)gROOT->FindObject("dEdX0noL1VsP_lowp2");
    HdedxVsP_2fit2->Rebin2D(2,1);
-   resuHdedxVsP_1fit2 = new TH1D("resuHdedxVsP_1fit2"       , "resuHdedxVsP_1fit2"      ,HdedxVsP_1fit2->GetXaxis()->GetNbins(),HdedxVsP_1fit2->GetXaxis()->GetXmin(),HdedxVsP_1fit2->GetXaxis()->GetXmax());
+   resuHdedxVsP_1fit2 = new TH1F("resuHdedxVsP_1fit2"       , "resuHdedxVsP_1fit2"      ,HdedxVsP_1fit2->GetXaxis()->GetNbins(),HdedxVsP_1fit2->GetXaxis()->GetXmin(),HdedxVsP_1fit2->GetXaxis()->GetXmax());
 	       resuHdedxVsP_1fit2->SetTitle("");
 	       resuHdedxVsP_1fit2->SetStats(kFALSE);  
 	       resuHdedxVsP_1fit2->GetXaxis()->SetTitle("P [GeV]");
@@ -740,7 +771,7 @@ void compaFits(TString filename1, TString filename2, double Kval, double Cval){
 	       resuHdedxVsP_1fit2->GetYaxis()->SetTitleOffset(1.20);
 	       resuHdedxVsP_1fit2->Reset();     
 
-   resuHdedxVsP_2fit2 = new TH1D("resuHdedxVsP_2fit2", "resuHdedxVsP_2fit2" ,HdedxVsP_2fit2->GetXaxis()->GetNbins(),HdedxVsP_2fit2->GetXaxis()->GetXmin(),HdedxVsP_2fit2->GetXaxis()->GetXmax());
+   resuHdedxVsP_2fit2 = new TH1F("resuHdedxVsP_2fit2", "resuHdedxVsP_2fit2" ,HdedxVsP_2fit2->GetXaxis()->GetNbins(),HdedxVsP_2fit2->GetXaxis()->GetXmin(),HdedxVsP_2fit2->GetXaxis()->GetXmax());
                resuHdedxVsP_2fit2->SetTitle("");
                resuHdedxVsP_2fit2->SetStats(kFALSE);
                resuHdedxVsP_2fit2->GetXaxis()->SetTitle("P [GeV]");
@@ -812,12 +843,12 @@ void compaFits(TString filename1, TString filename2, double Kval, double Cval){
 
 }
 
-void ExtractProj(TH2D* inputlong, TH2D* inputshort,double* K, double* C, 
+void ExtractProj(TH2F* inputlong, TH2F* inputshort,double* K, double* C, 
       double MinRange, double MaxRange, double MassCenter, double LeftMassMargin, double RightMassMargin, double yPionMax,
-      TH1D* FitResultPion,  TH1D* FitResult)
+      TH1F* FitResultPion,  TH1F* FitResult)
 {
-	      TH2D* inputnew = (TH2D*)inputshort->Clone("tempTH2D");
-	      TH2D* inputnewPion = (TH2D*)inputlong->Clone("tempTH2D2");
+	      TH2F* inputnew = (TH2F*)inputshort->Clone("tempTH2F");
+	      TH2F* inputnewPion = (TH2F*)inputlong->Clone("tempTH2F2");
 	      for(int x=0;x<=inputnew->GetNbinsX()+1;x++){
 	      for(int y=0;y<=inputnew->GetNbinsY()+1;y++){
 		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
@@ -841,7 +872,7 @@ void ExtractProj(TH2D* inputlong, TH2D* inputshort,double* K, double* C,
 	      
 
                for(int x=1;x<inputnewPion->GetNbinsX();x++){
-		  TH1D* ProjectionPion = (TH1D*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
+		  TH1F* ProjectionPion = (TH1F*)(inputnewPion->ProjectionY("proj",x,x))->Clone();
                   if(ProjectionPion->Integral()<100)continue;
                   ProjectionPion->SetAxisRange(0.1,25,"X");
 //                  ProjectionPion->Sumw2();
@@ -859,7 +890,7 @@ void ExtractProj(TH2D* inputlong, TH2D* inputshort,double* K, double* C,
 	       for(int x=1;x<inputnew->GetXaxis()->FindBin(1.5);x++){
 		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
 	    
-		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
+		  TH1F* Projection = (TH1F*)(inputnew->ProjectionY("proj",x,x))->Clone();
 		  if(Projection->Integral()<100)continue;
 		  Projection->SetAxisRange(0.1,25,"X");
 //		  Projection->Sumw2();
@@ -887,12 +918,12 @@ void TestFitKandC(TString filename){
    TFile* myfile;
    myfile = new TFile (filename);
 
-   TH2D* HdedxVsP_1fit;
-   TH2D* HdedxVsP_2fit;
+   TH2F* HdedxVsP_1fit;
+   TH2F* HdedxVsP_2fit;
    myfile->cd();
 //    // Ih no drop, no L1
-   HdedxVsP_1fit = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp");
-   HdedxVsP_2fit = (TH2D*)gROOT->FindObject("dEdX0noL1VsP_lowp2");
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_strip_VsP_noFcut1",HdedxVsP_1fit);
+   myfile->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_strip_VsP_noFcut1",HdedxVsP_2fit);
    HdedxVsP_2fit->Rebin2D(2,1);
    TestExtractConstants (HdedxVsP_2fit, HdedxVsP_1fit, &Ktmp, &Ctmp, &Ntmp, &KerrTmp, &CerrTmp, &NerrTmp, 0.5, 20., 0.938, 0.2, 0.5, 4.2);
    
@@ -936,15 +967,15 @@ void TestFitKandC(TString filename){
     SaveCanvas(c3, "dirtest/", "TestdedxVsP_lines_logZ"); 
 
 }
-void TestExtractConstants(TH2D* inputlong, TH2D* inputshort, double* K, double* C, double* N, double* Kerr, double* Cerr, double* Nerr, double MinRange , double MaxRange , double MassCenter , double LeftMassMargin , double RightMassMargin , double yPionMax) {
+void TestExtractConstants(TH2F* inputlong, TH2F* inputshort, double* K, double* C, double* N, double* Kerr, double* Cerr, double* Nerr, double MinRange , double MaxRange , double MassCenter , double LeftMassMargin , double RightMassMargin , double yPionMax) {
        char buffer[2048];
        bool hasConverged = false;
 
        for(unsigned int loop=0;loop<8 and !hasConverged; loop++){
-              TH2D* Myinputnew = new TH2D("Myinputnew","Myinputnew", 250,0,25, 80, 2.,10.);
+              TH2F* Myinputnew = new TH2F("Myinputnew","Myinputnew", 250,0,25, 80, 2.,10.);
               Myinputnew->Sumw2();
-	      TH2D* inputnew = (TH2D*)inputshort->Clone("tempTH2D");
-	      TH2D* inputnewPion = (TH2D*)inputlong->Clone("tempTH2D2");
+	      TH2F* inputnew = (TH2F*)inputshort->Clone("tempTH2F");
+	      TH2F* inputnewPion = (TH2F*)inputlong->Clone("tempTH2F2");
 	      for(int x=0;x<=inputnew->GetNbinsX()+1;x++){
 	      for(int y=0;y<=inputnew->GetNbinsY()+1;y++){
 		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y), K, C);
@@ -992,7 +1023,7 @@ void TestExtractConstants(TH2D* inputlong, TH2D* inputshort, double* K, double* 
 	      SaveCanvas(c1, "dirtest/", "testMyinputnew");
 
 	      delete c1;
-               TH1D* FitResult = new TH1D("FitResult"       , "FitResult"      ,Myinputnew->GetXaxis()->GetNbins(),Myinputnew->GetXaxis()->GetXmin(),Myinputnew->GetXaxis()->GetXmax());
+               TH1F* FitResult = new TH1F("FitResult"       , "FitResult"      ,Myinputnew->GetXaxis()->GetNbins(),Myinputnew->GetXaxis()->GetXmin(),Myinputnew->GetXaxis()->GetXmax());
 	       FitResult->SetTitle("");
 	       FitResult->SetStats(kFALSE);  
 	       FitResult->GetXaxis()->SetTitle("P [GeV]");
@@ -1001,7 +1032,7 @@ void TestExtractConstants(TH2D* inputlong, TH2D* inputshort, double* K, double* 
 	       FitResult->Reset();     
 
                for(int x=1;x<Myinputnew->GetNbinsX();x++){
-		  TH1D* ProjectionPion = (TH1D*)(Myinputnew->ProjectionY("proj",x,x))->Clone();
+		  TH1F* ProjectionPion = (TH1F*)(Myinputnew->ProjectionY("proj",x,x))->Clone();
                   if(ProjectionPion->Integral()<100)continue;
                   ProjectionPion->SetAxisRange(0.1,25,"X");
                   ProjectionPion->Scale(1.0/ProjectionPion->Integral());
@@ -1143,17 +1174,17 @@ void CaroBla(){
    TFile* myfilemc1 = new TFile ("crab_Analysis_2018_AllBackground_CodeV42p6_v1.root");
    TFile* myfilemc2 = new TFile ("crab_Analysis_2018_AllWJets_CodeV42p6_v1.root");
 
-   TH2D* HdedxVsP_1fit1;
-   TH2D* HdedxVsP_1fit2;
-   TH2D* HdedxVsP_1fit3;
-   TH2D* HdedxVsP_1fit4;
-   TH2D* HdedxVsP_1fit5;
-   TH2D* HdedxVsP_1fit6;
-   TH2D* HdedxVsP_1fit7;
-   TH2D* HdedxVsP_1fit8;
-   TH2D* HdedxVsP_1fit9;
-   TH2D* HdedxVsP_1fitmc1;
-   TH2D* HdedxVsP_1fitmc2;
+   TH2F* HdedxVsP_1fit1;
+   TH2F* HdedxVsP_1fit2;
+   TH2F* HdedxVsP_1fit3;
+   TH2F* HdedxVsP_1fit4;
+   TH2F* HdedxVsP_1fit5;
+   TH2F* HdedxVsP_1fit6;
+   TH2F* HdedxVsP_1fit7;
+   TH2F* HdedxVsP_1fit8;
+   TH2F* HdedxVsP_1fit9;
+   TH2F* HdedxVsP_1fitmc1;
+   TH2F* HdedxVsP_1fitmc2;
    myfile1->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_1",HdedxVsP_1fit1);
    myfile2->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_1",HdedxVsP_1fit2);
    myfile3->GetObject("HSCParticleAnalyzer/BaseName/K_and_C_Ih_noL1_VsP_1",HdedxVsP_1fit3);

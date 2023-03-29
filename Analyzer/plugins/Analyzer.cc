@@ -2534,7 +2534,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_,
                     false,0, false, false, true, pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge());
     
-    reco::DeDxData* dedxMObj_FullTracker = dedxMObj_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxMObj_FullTrackerTmp : nullptr;
+//    reco::DeDxData* dedxMObj_FullTracker = dedxMObj_FullTrackerTmp.numberOfMeasurements() > 0 ? &dedxMObj_FullTrackerTmp : nullptr;
     
     // Ih Up
     auto dedxMUpObjTmp =
@@ -2554,7 +2554,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     reco::DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements() > 0 ? &dedxMDownObjTmp : nullptr;
 
-    // Ih no pixel L1 =====> THE GOLDEN VARIABLE :
+    // Ih no pixel L1 
     auto dedxIh_noL1_Tmp =
         computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = true, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_, skipPixelL1 = true,
@@ -2570,7 +2570,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     false,0, false, false, true,  pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge());
     reco::DeDxData* dedxIh_15drop = dedxIh_15drop_Tmp.numberOfMeasurements() > 0 ? &dedxIh_15drop_Tmp : nullptr;
     
-    // Ih Strip only
+    // Ih Strip only  =======>  THE GOLDEN VARIABLE (change applied on March 29, 2023):
     auto dedxIh_StripOnly_Tmp =
     computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = nullptr, usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false,
                     mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, &dEdxErr, useTemplateLayer_,
@@ -2739,9 +2739,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         } // end loop on vertex collection
       } // end else
 
+    //
+    // Choice before March 29,2023
     // Choose of Ih definition - Ih_nodrop_noPixL1 for Phase-1 detector
     //                         - Ih_FullTracker for Phase-0 detector
-    auto dedxMObj = (numLayers > 3) ? dedxIh_noL1 : dedxMObj_FullTracker;
+    // auto dedxMObj = (numLayers > 3) ? dedxIh_noL1 : dedxMObj_FullTracker;
+    // Choice on March 29, 2023
+    auto dedxMObj = dedxIh_StripOnly;
     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : -1.f;
     
     //Choose of Ias definition - strips only
@@ -3508,18 +3512,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostPreS_ProbQNoL1VsIas_CR->Fill(1 - probQonTrackNoL1, globalIas_, eventWeight_);
 
       tuple->PostPreS_Ih_CR->Fill(globalIh_,eventWeight_);
-      tuple->PostPreS_Ihstrip_CR->Fill((dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) ,eventWeight_);
+//      tuple->PostPreS_Ihstrip_CR->Fill((dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) ,eventWeight_);
+      tuple->PostPreS_Ih_noL1_CR->Fill((dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1) ,eventWeight_);
       tuple->PostPreS_Ih_nopixcl_CR->Fill((dedxtest_nopixcl ? dedxtest_nopixcl->dEdx() : -1) ,eventWeight_);
 
 
       float Masstest =0;
       // K and C values fixed to some test values
-      if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
+      // if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
+      if (globalIh_ > dEdxC_) Masstest= GetMass(track->p(), globalIh_, dEdxK_, dEdxC_);
       if ((1 - probQonTrackNoL1)<0.9) {
          tuple->PostPreS_MassVsIas_fail_CR->Fill(globalIas_, Masstest, eventWeight_);
       }
       else {
-          tuple->PostPreS_MassVsIas_pass_CR->Fill(globalIas_, Masstest,  eventWeight_);
+         tuple->PostPreS_MassVsIas_pass_CR->Fill(globalIas_, Masstest,  eventWeight_);
       }
       if (doSystsPlots_) {
         tuple->PostPreS_ProbQNoL1VsIas_CR_Pileup_up->Fill(1 - probQonTrackNoL1, globalIas_,  eventWeight_ * PUSystFactor_[0]);
@@ -3557,14 +3563,15 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
 
         tuple->PostPreS_Ih_CR_veryLowPt->Fill(globalIh_,preScaleForDeDx*eventWeight_);
-        tuple->PostPreS_Ihstrip_CR_veryLowPt->Fill((dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) ,preScaleForDeDx*eventWeight_);
+//        tuple->PostPreS_Ihstrip_CR_veryLowPt->Fill((dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) ,preScaleForDeDx*eventWeight_);
+        tuple->PostPreS_Ih_noL1_CR_veryLowPt->Fill((dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1) ,preScaleForDeDx*eventWeight_);
         tuple->PostPreS_Ih_nopixcl_CR_veryLowPt->Fill((dedxtest_nopixcl ? dedxtest_nopixcl->dEdx() : -1) ,preScaleForDeDx*eventWeight_);
         tuple->PostPreS_Ih_noclean_CR_veryLowPt->Fill((dedxtest_noclean ? dedxtest_noclean->dEdx() : -1) ,preScaleForDeDx*eventWeight_);
         tuple->PostPreS_Ih_noinside_CR_veryLowPt->Fill((dedxtest_noinside ? dedxtest_noinside->dEdx() : -1) ,preScaleForDeDx*eventWeight_);
         tuple->PostPreS_Ias_CR_veryLowPt->Fill(globalIas_,preScaleForDeDx*eventWeight_);
         tuple->PostPreS_P_CR_veryLowPt->Fill(track->p(),preScaleForDeDx*eventWeight_);
         tuple->PostPreS_Pt_CR_veryLowPt->Fill(track->pt(),preScaleForDeDx*eventWeight_);
-        tuple->PostPreS_ProbQNoL1_CR_veryLowPt->Fill(1 - probQonTrackNoL1, eventWeight_);
+        tuple->PostPreS_ProbQNoL1_CR_veryLowPt->Fill(1 - probQonTrackNoL1,preScaleForDeDx*eventWeight_);
       }
       for(unsigned int h=0; h< dedxHits->size(); h++) {
         DetId detid(dedxHits->detId(h));
@@ -3608,6 +3615,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
                   cpeHasFailed = true;
               }
+              if (cpeHasFailed) cleaning = false;
               if (cpeHasFailed) continue;
 
              //  if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
@@ -3617,12 +3625,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
               bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
 
+
              //  bool isBPIXL1=false;
              //  int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
              //  if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;
 
              // cleaning in the pixel : ok if (!specInCPE) 
               if (specInCPE) cleaning = false;
+   
+              auto clustSizeX = pixelCluster->sizeX();
+              auto clustSizeY = pixelCluster->sizeY();
+              if (clustSizeX==1 && clustSizeY==1) cleaning = false;
 
         }
         else {
@@ -3695,6 +3708,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
            //TADA March21
           tuple->PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt->Fill(pathL/um2cmUnit, layer_num, eventWeight_);
           tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+          if (detid.subdetId() == PixelSubdetector::PixelBarrel && layer_num==2) tuple->Stab_CluDeDxPixLayer2_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+          if (detid.subdetId() == PixelSubdetector::PixelBarrel && layer_num==3) tuple->Stab_CluDeDxPixLayer3_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+          if (detid.subdetId() == PixelSubdetector::PixelBarrel && layer_num==4) tuple->Stab_CluDeDxPixLayer4_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
          } // otherwise we are on the strips
          else {
            if (detid.subdetId() == StripSubdetector::TIB) layer_num = abs(int(tTopo->tibLayer(detid)));
@@ -3702,6 +3718,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
            if (detid.subdetId() == StripSubdetector::TID) layer_num = abs(int(tTopo->tidWheel(detid))) + 10;
            if (detid.subdetId() == StripSubdetector::TEC) layer_num = abs(int(tTopo->tecWheel(detid))) + 13;
            tuple->PostPreS_CluDeDxVsStripsLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
+           if (layer_num==1) tuple->Stab_CluDeDxStripsLayer1_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==2) tuple->Stab_CluDeDxStripsLayer2_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==3) tuple->Stab_CluDeDxStripsLayer3_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==4) tuple->Stab_CluDeDxStripsLayer4_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==5) tuple->Stab_CluDeDxStripsLayer5_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==6) tuple->Stab_CluDeDxStripsLayer6_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==7) tuple->Stab_CluDeDxStripsLayer7_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==8) tuple->Stab_CluDeDxStripsLayer8_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==9) tuple->Stab_CluDeDxStripsLayer9_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
+           if (layer_num==10) tuple->Stab_CluDeDxStripsLayer10_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
          } // end on condition for pixels or strips
         } // end condition on doPostPreSplots_
        } // end if on the cleaning and the inside
@@ -3895,17 +3921,53 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_ProbQNoL1VsIas->Fill(1 - probQonTrackNoL1, globalIas_, eventWeight_);
         tuple->PostPreS_ProbQNoL1VsFiStrips->Fill(1 - probQonTrackNoL1, globalFiStrips_, eventWeight_);
 
+        if (55 < track->pt() && track->pt() < 70) {
+         tuple->PostPreS_Ias_CR2->Fill(globalIas_, eventWeight_);
+         tuple->PostPreS_Pt_CR2->Fill(track->pt(), eventWeight_);
+         tuple->PostPreS_ProbQNoL1_CR2->Fill(1 - probQonTrackNoL1, eventWeight_);
+         tuple->PostPreS_ProbQNoL1VsIas_CR2->Fill(1 - probQonTrackNoL1, globalIas_, eventWeight_);
+         tuple->PostPreS_Ih_CR2->Fill(globalIh_,eventWeight_);
+         tuple->PostPreS_Ih_noL1_CR2->Fill((dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1) ,eventWeight_);
+        }
+        else if (track->pt() <70 && track->pt()<200) {
+         tuple->PostPreS_Ias_CR3->Fill(globalIas_, eventWeight_);
+         tuple->PostPreS_Pt_CR3->Fill(track->pt(), eventWeight_);
+         tuple->PostPreS_ProbQNoL1_CR3->Fill(1 - probQonTrackNoL1, eventWeight_);
+         tuple->PostPreS_ProbQNoL1VsIas_CR3->Fill(1 - probQonTrackNoL1, globalIas_, eventWeight_);
+         tuple->PostPreS_Ih_CR3->Fill(globalIh_,eventWeight_);
+         tuple->PostPreS_Ih_noL1_CR3->Fill((dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1) ,eventWeight_);
+        }
+
 
         // test --> Need to blind the data at the drawing
         // for the moment K and C are hard-coded...
         float Masstest =0;
         // K and C values fixed to some test values
-        if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
+        // if (dedxIh_StripOnly->dEdx() > 3.18) Masstest= GetMass(track->p(), dedxIh_StripOnly->dEdx(), 2.52, 3.18);
+        if (globalIh_ > dEdxC_) Masstest= GetMass(track->p(), globalIh_, dEdxK_, dEdxC_);
         if ((1 - probQonTrackNoL1)<0.9) {
            tuple->PostPreS_MassVsIas_fail->Fill(globalIas_, Masstest, eventWeight_);
+           if (55 < track->pt() && track->pt() < 70) {
+             tuple->PostPreS_MassVsIas_fail_CR2->Fill(globalIas_, Masstest, eventWeight_);
+           }
+           else if (track->pt() <70 && track->pt()<200) {
+             tuple->PostPreS_MassVsIas_fail_CR3->Fill(globalIas_, Masstest, eventWeight_);
+           }
+           else if (track->pt()>200) {
+             tuple->PostPreS_MassVsIas_fail_SR2->Fill(globalIas_, Masstest, eventWeight_);
+           }
         }
         else {
             tuple->PostPreS_MassVsIas_pass->Fill(globalIas_, Masstest,  eventWeight_);
+           if (55 < track->pt() && track->pt() < 70) {
+             tuple->PostPreS_MassVsIas_pass_CR2->Fill(globalIas_, Masstest, eventWeight_);
+           }
+           else if (track->pt() <70 && track->pt()<200) {
+             tuple->PostPreS_MassVsIas_pass_CR3->Fill(globalIas_, Masstest, eventWeight_);
+           }
+           else if (track->pt()>200) {
+             tuple->PostPreS_MassVsIas_pass_SR2->Fill(globalIas_, Masstest, eventWeight_);
+           }
         }
 
 
@@ -4133,9 +4195,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         
         // stability plots
-        tuple->Stab_Ih_NoL1_VsRun->Fill(currentRun_, globalIh_ , eventWeight_);
+        tuple->Stab_Ih_NoL1_VsRun->Fill(currentRun_, (dedxIh_noL1 ? dedxIh_noL1->dEdx() : -1)  , eventWeight_);
         tuple->Stab_Ih_pixNoL1_VsRun->Fill(currentRun_, (dedxIh_PixelOnlyh_noL1 ? dedxIh_PixelOnlyh_noL1->dEdx() : -1) , eventWeight_);
-        tuple->Stab_Ih_strip_VsRun->Fill(currentRun_, (dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) , eventWeight_);
+//        tuple->Stab_Ih_strip_VsRun->Fill(currentRun_, (dedxIh_StripOnly ? dedxIh_StripOnly->dEdx() : -1) , eventWeight_);
+        tuple->Stab_Ih_strip_VsRun->Fill(currentRun_, globalIh_ , eventWeight_);
         tuple->Stab_Gi_strip_VsRun->Fill(currentRun_, globalIas_ , eventWeight_);
         tuple->Stab_Gi_NoL1_VsRun->Fill(currentRun_, (dedxIas_noL1 ? dedxIas_noL1->dEdx() : -1), eventWeight_);
         tuple->Stab_Fi_pixNoL1_VsRun->Fill(currentRun_, 1 - probQonTrackNoL1, eventWeight_);
@@ -4790,7 +4853,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
     HSCP_Ias_StripOnly.push_back(dedxIas_StripOnly ? dedxIas_StripOnly->dEdx() : -1);
     HSCP_Ias_PixelOnly_noL1.push_back(dedxIas_PixelOnly_noL1 ? dedxIas_PixelOnly_noL1->dEdx() : -1);
-    HSCP_Ih.push_back(dedxMObj_FullTracker ? dedxMObj_FullTracker->dEdx() : -1);
+//    HSCP_Ih.push_back(dedxMObj_FullTracker ? dedxMObj_FullTracker->dEdx() : -1);
+    HSCP_Ih.push_back(globalIh_);
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
     HSCP_ProbXY.push_back(probXYonTrack);
@@ -5738,7 +5802,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       reco::TrackRef generalTrack = reco::TrackRef( trackCollectionHandle.product(), c );
 
       // selection of the general tracks
-      bool passedTrackCutsArray[10];
+      bool passedTrackCutsArray[9];
       std::fill(std::begin(passedTrackCutsArray), std::end(passedTrackCutsArray),true);
 
       // Pass the trigger
@@ -5897,7 +5961,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       float ih0_strip = (dedxIh_StripOnlyFromGeneralTrack) ?  dedxIh_StripOnlyFromGeneralTrack->dEdx() : 0.0;
     
       // nonL1PixHitsFromGeneralTrack now well computed above in the loop
-      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() ;
+//      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() ;
+      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_StripOnlyFromGeneralTrack->numberOfMeasurements() + nonL1PixHitsFromGeneralTrack;
 
       // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
       passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHitsFromGeneralTrack >= globalMinNOPH_) ? true : false;
@@ -5905,6 +5970,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       passedTrackCutsArray[8]  = (numDeDxHitsFromGeneralTrack >= globalMinNOM_)  ? true : false;
       if (!passPreselection(passedTrackCutsArray, false)) continue;
 
+/*
       if (generalTrack->p() < 50) {
        if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
         tuple->K_and_C_Ih_noL1_VsP_noFcut1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
@@ -5914,43 +5980,58 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
        }
       }
 
-      // Cut away background events based on the probQ
+       Cut away background events based on the probQ
       passedTrackCutsArray[9] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
       if (!passPreselection(passedTrackCutsArray, false)) continue;
+*/
 
       if (generalTrack->p() < 50) {
         tuple->K_and_C_Ih_noL1_VsP_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
         tuple->K_and_C_Ih_noL1_VsP_loose2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-        if (fabs(generalTrack->eta()) < 1) {
-             tuple->K_and_C_Ih_noL1_VsP_eta1_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-             tuple->K_and_C_Ih_noL1_VsP_eta1_loose2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-        }
-        else {
-             tuple->K_and_C_Ih_noL1_VsP_eta2_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-             tuple->K_and_C_Ih_noL1_VsP_eta2_loose2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-        }
         tuple->K_and_C_Ih_strip_VsP_loose1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
         tuple->K_and_C_Ih_strip_VsP_loose2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+        if (fabs(generalTrack->eta()) < 1) {
+//             tuple->K_and_C_Ih_noL1_VsP_eta1_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+//             tuple->K_and_C_Ih_noL1_VsP_eta1_loose2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta1_loose1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta1_loose2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+        }
+        else {
+//             tuple->K_and_C_Ih_noL1_VsP_eta2_loose1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+//             tuple->K_and_C_Ih_noL1_VsP_eta2_loose2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta2_loose1->Fill(generalTrack->p(),ih0_strip , preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta2_loose2->Fill(generalTrack->p(),ih0_strip , preScaleForDeDx*eventWeight_);
+        }
 
        if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
 
         tuple->K_and_C_Ih_noL1_VsP_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
         tuple->K_and_C_Ih_noL1_VsP_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+        tuple->K_and_C_Ih_strip_VsP_2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
         if (generalTrack->p()>3. && generalTrack->p()<5.) {
              tuple->K_and_C_Ih_noL1_1d->Fill(ih0_noL1, preScaleForDeDx*eventWeight_);
              tuple->K_and_C_Ih_strip_1d->Fill(ih0_strip, preScaleForDeDx*eventWeight_);
         }
         if (fabs(generalTrack->eta())<1) {
-             tuple->K_and_C_Ih_noL1_VsP_eta1_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-             tuple->K_and_C_Ih_noL1_VsP_eta1_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+//             tuple->K_and_C_Ih_noL1_VsP_eta1_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+//             tuple->K_and_C_Ih_noL1_VsP_eta1_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta1_1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta1_2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
         }
         else {
-             tuple->K_and_C_Ih_noL1_VsP_eta2_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
-             tuple->K_and_C_Ih_noL1_VsP_eta2_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+//             tuple->K_and_C_Ih_noL1_VsP_eta2_1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+//             tuple->K_and_C_Ih_noL1_VsP_eta2_2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta2_1->Fill(generalTrack->p(),ih0_strip , preScaleForDeDx*eventWeight_);
+             tuple->K_and_C_Ih_strip_VsP_eta2_2->Fill(generalTrack->p(),ih0_strip , preScaleForDeDx*eventWeight_);
         }
-        tuple->K_and_C_Ih_strip_VsP_1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
-        tuple->K_and_C_Ih_strip_VsP_2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
 
+        if (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) {
+          tuple->K_and_C_Ih_noL1_VsP_wFcut1->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+          tuple->K_and_C_Ih_noL1_VsP_wFcut2->Fill(generalTrack->p(),ih0_noL1, preScaleForDeDx*eventWeight_);
+          tuple->K_and_C_Ih_strip_VsP_wFcut1->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+          tuple->K_and_C_Ih_strip_VsP_wFcut2->Fill(generalTrack->p(),ih0_strip, preScaleForDeDx*eventWeight_);
+        }
 
         int nsat_lowp = (dedxIh_noL1FromGeneralTrack) ?  dedxIh_noL1FromGeneralTrack->numberOfSaturatedMeasurements() : 0.0;
         int nsize_lowp = (dedxIh_noL1FromGeneralTrack) ?  dedxIh_noL1FromGeneralTrack->numberOfMeasurements() : 0.0;
@@ -6052,6 +6133,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
             bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
 
+   
+            bool HasCluSize1=false;
+            auto clustSizeX = pixelCluster->sizeX();
+            auto clustSizeY = pixelCluster->sizeY();
+            if (clustSizeX==1 && clustSizeY==1) HasCluSize1 = true;
 
             // BPIXL1 only for 2017 and 2018
             bool isBPIXL1=false;
@@ -6061,7 +6147,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
              // cleaning in the pixel
 //            if ((!specInCPE) && (probQ < 0.8) && (!isBPIXL1)) {
 //            No cut on individual probQ
-            if ((!specInCPE)  && (!isBPIXL1)) {
+            if ((!specInCPE)  && (!isBPIXL1) && !(HasCluSize1)) {
               if (fabs(generalTrack->eta()<0.4)) {
                 tuple->SF_HHit2DPix_loose->Fill(generalTrack->p(), charge_over_pathlength, preScaleForDeDx*eventWeight_);
                 if ( fabs(dzForCalib) < globalMaxDZ_ && fabs(dxyForCalib) < globalMaxDXY_) {
