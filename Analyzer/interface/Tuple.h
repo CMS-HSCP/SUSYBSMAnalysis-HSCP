@@ -788,6 +788,8 @@ struct Tuple {
   TH1F* PostPreS_Ias_CR_veryLowPt;
   TH1F* PostPreS_P_CR_veryLowPt;
   TH1F* PostPreS_ProbQNoL1_CR;
+  
+
   TH2F* PostPreS_ProbQNoL1VsIas_CR;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_up;
   TH2F* PostPreS_ProbQNoL1VsIas_CR_Pileup_down;
@@ -841,7 +843,10 @@ struct Tuple {
   TH2F* PostS_IasVsFiStrips;
   TH2F* PostS_ProbQNoL1VsIas;
   TH2F* PostS_ProbQNoL1VsFiStrips;
-  
+ 
+    
+
+ 
   TH1F* PostS_SR2FAIL_Ias_PUA;
   TH1F* PostS_SR2FAIL_Ias_PUB;
   TH1F* PostS_SR2FAIL_Ias_PUC;
@@ -869,7 +874,10 @@ struct Tuple {
   TH3F* PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up;
   TH3F* PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Ias_up;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_IasShift_up;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Ias_down;
+  TH3F* PostS_ProbQNoL1VsIasVsPt_IasShift_down;
+
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pt_up;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Pt_down;
   TH3F* PostS_ProbQNoL1VsIasVsPt_Trigger_up;
@@ -939,7 +947,12 @@ struct Tuple {
   TH2F* PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_up;
   TH2F* PostS_SR2_ProbQNoL1VsIas_ProbQNoL1_down;
   TH2F* PostS_SR2_ProbQNoL1VsIas_Ias_up;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_IasShift_up;
+  
   TH2F* PostS_SR2_ProbQNoL1VsIas_Ias_down;
+  TH2F* PostS_SR2_ProbQNoL1VsIas_IasShift_down;
+
+
   TH2F* PostS_SR2_ProbQNoL1VsIas_Pt_up;
   TH2F* PostS_SR2_ProbQNoL1VsIas_Pt_down;
   TH2F* PostS_SR2_ProbQNoL1VsIas_Trigger_up;

@@ -185,6 +185,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       createAndExitGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndExitGitemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")),
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
+      GiSysParamOne_(iConfig.getUntrackedParameter<int>("GiSysParamOne")),
+      GiSysParamTwo_(iConfig.getUntrackedParameter<int>("GiSysParamTwo")),
+      NominalEntries_(iConfig.getUntrackedParameter<vector<int>>("NominalEntries")),
       exitWhenGenMatchNotFound_(iConfig.getUntrackedParameter<bool>("ExitWhenGenMatchNotFound")),
       useTemplateLayer_(iConfig.getUntrackedParameter<bool>("UseTemplateLayer")),
       dEdxSF_0_(iConfig.getUntrackedParameter<double>("DeDxSF_0")),
@@ -5415,13 +5418,34 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float muonIdSFsDown = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
     float muonTriggerSFsDown = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
     
+
+    float ratioEntries=1.0;
+    int NPV = vertexColl.size();
+    for (int i = 0; i < NbPuBins_ ; i++){
+        if (NPV > PuBins_[i] && NPV <= PuBins_[i+1]) {
+            ratioEntries = (dEdxTemplatesPU[i]->GetEntries()*1.0)/NominalEntries_[i];
+        }
+    }
+    float scaledParamTwo = (GiSysParamTwo_*1.0)/sqrt(ratioEntries);
+    float deltaGi = bestCandidateIas*scaledParamTwo + GiSysParamOne_;
+    
     if (doSystsPlots_) {
       // Systematics plots for Gi rescaling
+      //
+      //
+
+      //sys Gi stat`
+
+       
+
       tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorUp,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  eventWeight_);
       
       tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
+      tuple->PostS_ProbQNoL1VsIasVsPt_IasShift_up->Fill(1 - bestCandidateProbQNoL1,std::min(1.f,(bestCandidateIas+deltaGi)), bestCandidateTrack->pt(),  eventWeight_);
+
       tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
+      tuple->PostS_ProbQNoL1VsIasVsPt_IasShift_down->Fill(1 - bestCandidateProbQNoL1, std::max(0.f,(bestCandidateIas-deltaGi)), bestCandidateTrack->pt(),  eventWeight_);
       
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStrips*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
@@ -5514,8 +5538,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         
         // Systematics plots for Gi rescaling
+
+
+
+        
+        //
         tuple->PostS_SR2_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas * theGiSystFactorUp, eventWeight_);
+        tuple->PostS_SR2_ProbQNoL1VsIas_IasShift_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,(bestCandidateIas + deltaGi)), eventWeight_);
+
         tuple->PostS_SR2_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas * theGiSystFactorDown, eventWeight_);
+        tuple->PostS_SR2_ProbQNoL1VsIas_IasShift_down->Fill(1 - bestCandidateProbQNoL1, std::max(0.f,(bestCandidateIas - deltaGi)), eventWeight_);
         
         // Systematics plots for PU rescaling
         tuple->PostS_SR2_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_ * PUSystFactor_[0]);
@@ -6728,6 +6760,12 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   // TODO: This is not really needed, one could take PuBins_ and have its size-1 to be NbPuBins_
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
   desc.addUntracked("PileUpBins",  std::vector<int>{0,20,25,30,35,200})->setComment("Choice of Pile up bins");
+
+  desc.addUntracked("NominalEntries", std::vector<int>{57150,48348,46431,35876,46051})
+  ->setComment("List of #entries per PU bins, in the reference template used to obtain the parametrization of systematics uncertainty due to the statistics within the Gi templates, in a linear form Ax + B");
+
+  desc.addUntracked("GiSysParamOne",0.00103)->setComment("Parameter B from above linear fit");
+  desc.addUntracked("GiSysParamTwo",0.0775)->setComment("Parameter B from above linear fit");
 
  descriptions.add("HSCParticleAnalyzer",desc);
 }
