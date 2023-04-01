@@ -5421,11 +5421,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float ratioEntries=1.0;
     int NPV = vertexColl.size();
-    for (int i = 0; i < NbPuBins_ ; i++){
+
+    if (puTreatment_){
+      for (int i = 0; i < NbPuBins_ ; i++){
         if (NPV > PuBins_[i] && NPV <= PuBins_[i+1]) {
-            ratioEntries = (dEdxTemplatesPU[i]->GetEntries()*1.0)/NominalEntries_[i];
+          ratioEntries = (dEdxTemplatesPU[i]->GetEntries()*1.0)/NominalEntries_[i];
         }
+      }
+    } else {
+        ratioEntries = (dEdxTemplates->GetEntries()*1.0)/std::accumulate(NominalEntries_.begin(),NominalEntries_.end(),0);
     }
+
     float scaledParamTwo = (GiSysParamTwo_*1.0)/sqrt(ratioEntries);
     float deltaGi = bestCandidateIas*scaledParamTwo + GiSysParamOne_;
     
