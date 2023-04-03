@@ -1611,6 +1611,10 @@ reco::DeDxData computedEdx(const float& track_eta,
         if (specInCPE) continue;
         if (probQ>0.8) continue;
 
+        auto clustSizeX = pixelCluster->sizeX();
+        auto clustSizeY = pixelCluster->sizeY();
+        if (clustSizeX==1 && clustSizeY==1) continue;
+
     }
     if (detid.subdetId() >= 3) {  //for strip only
       
