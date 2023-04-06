@@ -74,6 +74,7 @@
 // - 45p5: Add D-F Eta bins in the systematics
 // - 45p6: Add PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt, add PR129, add befPreS plots for EtaD-F, TriggerEtaReject/Pass plots
 // - 45p7: Add PRs PR135 and PR136
+// - 45p8: Patch to GiS systs param types
 
 // v25 Dylan
 // - add EoP in the ntuple
