@@ -185,8 +185,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       createAndExitGitemplates_(iConfig.getUntrackedParameter<bool>("CreateAndExitGitemplates")),
       NbPuBins_(iConfig.getUntrackedParameter<int>("NbPileUpBins")),
       PuBins_(iConfig.getUntrackedParameter<vector<int>>("PileUpBins")),
-      GiSysParamOne_(iConfig.getUntrackedParameter<int>("GiSysParamOne")),
-      GiSysParamTwo_(iConfig.getUntrackedParameter<int>("GiSysParamTwo")),
+      GiSysParamOne_(iConfig.getUntrackedParameter<double>("GiSysParamOne")),
+      GiSysParamTwo_(iConfig.getUntrackedParameter<double>("GiSysParamTwo")),
       NominalEntries_(iConfig.getUntrackedParameter<vector<int>>("NominalEntries")),
       exitWhenGenMatchNotFound_(iConfig.getUntrackedParameter<bool>("ExitWhenGenMatchNotFound")),
       useTemplateLayer_(iConfig.getUntrackedParameter<bool>("UseTemplateLayer")),
@@ -329,6 +329,7 @@ void Analyzer::beginJob() {
   MaxMass_SystPU = new float[CutPt_.size()];
   MaxMass_SystHUp = new float[CutPt_.size()];
   MaxMass_SystHDown = new float[CutPt_.size()];
+
 
   // Check if we are dealing with data or MC
   if (sampleType_ == 0 ) {
@@ -5434,15 +5435,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float scaledParamTwo = (GiSysParamTwo_*1.0)/sqrt(ratioEntries);
     float deltaGi = bestCandidateIas*scaledParamTwo + GiSysParamOne_;
-    
+
     if (doSystsPlots_) {
       // Systematics plots for Gi rescaling
-      //
-      //
-
-      //sys Gi stat`
-
-       
 
       tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorUp,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  eventWeight_);
