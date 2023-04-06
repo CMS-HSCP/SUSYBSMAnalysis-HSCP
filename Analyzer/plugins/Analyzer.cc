@@ -73,6 +73,8 @@
 // - 45p4: Add PostS_NotMuonsGenBeta, encode interesting events PostS_SR2PASS_RunVsLs and PostS_SR2PASS_Ls
 // - 45p5: Add D-F Eta bins in the systematics
 // - 45p6: Add PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt, add PR129, add befPreS plots for EtaD-F, TriggerEtaReject/Pass plots
+// - 45p7: Add PRs PR135 and PR136
+// - 45p8: Patch to GiS systs param types
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -456,7 +458,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->Gen_Beta->Fill(gen.p() / gen.energy(), SignalEventWeight);
         tuple->Gen_BetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
         tuple->Gen_BetaGamma_lowBetaGamma->Fill(gen.p() / gen.mass(), SignalEventWeight);
-
       } else if (isBckg) {
         // Fill up pT, eta, and beta plots for gen-level background particles
         tuple->Gen_pT->Fill(gen.pt());
@@ -3242,7 +3243,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // No cut, i.e. events after trigger
     passedCutsArray[0]  = (trigInfo_ > 0) ? true : false;
     // Cut on transverse momentum
-    // Single muon trigger threshold is 50 GeV
+    // Single muon trigger threshold is 50 GeV, our cut is at 55 Gev
     passedCutsArray[1]  = (track->pt() > globalMinPt_)? true : false;
     //passedCutsArray[1]  = ((track->pt() > globalMinPt_) && (track->pt() < globalMaxPt_))? true : false;  // test done by Dylan for the mass spectrum method
     // Check if eta is inside the max eta cut for detector homogeneity
