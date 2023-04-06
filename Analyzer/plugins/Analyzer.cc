@@ -331,6 +331,7 @@ void Analyzer::beginJob() {
   MaxMass_SystHUp = new float[CutPt_.size()];
   MaxMass_SystHDown = new float[CutPt_.size()];
 
+
   // Check if we are dealing with data or MC
   if (sampleType_ == 0 ) {
     if (debug_> 0) edm::LogPrint(MOD) << "This is data processing";
@@ -5434,15 +5435,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     float scaledParamTwo = (GiSysParamTwo_*1.0)/sqrt(ratioEntries);
     float deltaGi = bestCandidateIas*scaledParamTwo + GiSysParamOne_;
-    
+
     if (doSystsPlots_) {
       // Systematics plots for Gi rescaling
-      //
-      //
-
-      //sys Gi stat`
-
-       
 
       tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorUp,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  eventWeight_);
