@@ -360,8 +360,8 @@ private:
   int NbPuBins_;
   vector<int> PuBins_;
  
-  int GiSysParamOne_; 
-  int GiSysParamTwo_; 
+  double GiSysParamOne_; 
+  double GiSysParamTwo_; 
   vector<int> NominalEntries_;
 
   float GlobalMinNDOF = 8;            // cut on number of     DegreeOfFreedom used for muon TOF measurement
