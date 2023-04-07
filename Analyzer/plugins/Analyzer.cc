@@ -75,6 +75,7 @@
 // - 45p6: Add PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt, add PR129, add befPreS plots for EtaD-F, TriggerEtaReject/Pass plots
 // - 45p7: Add PRs PR135 and PR136
 // - 45p8: Patch to GiS systs param types
+// - 45p9: Possible fix for segfault
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -5892,6 +5893,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                     false, 0, false, false, true, pixelCPE_, tTopo, generalTrack->px(), generalTrack->py(), generalTrack->pz(), generalTrack->charge());
 
       reco::DeDxData* dedxIh_StripOnlyFromGeneralTrack = dedxIh_StripOnly_TmpFromGeneralTrack.numberOfMeasurements() > 0 ? &dedxIh_StripOnly_TmpFromGeneralTrack : nullptr;
+      // TAV: Shouldnt we exit the loop in dedxIh_StripOnlyFromGeneralTrack is a nullptr? Caroline?
 
       // F^pix at track level
       /*  NOT USED BUT KEPT FOR THE RECORD TO BE SYNCH WITH THE HSCP COMPUTATION
@@ -5996,7 +5998,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
       // nonL1PixHitsFromGeneralTrack now well computed above in the loop
 //      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() ;
-      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_StripOnlyFromGeneralTrack->numberOfMeasurements() + nonL1PixHitsFromGeneralTrack;
+      unsigned int numStripsHitsFromGeneralTrack = (dedxIh_StripOnlyFromGeneralTrack) ?  dedxIh_StripOnlyFromGeneralTrack->numberOfMeasurements() : 0.0;
+      unsigned int numDeDxHitsFromGeneralTrack = numStripsHitsFromGeneralTrack + nonL1PixHitsFromGeneralTrack;
 
       // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
       passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHitsFromGeneralTrack >= globalMinNOPH_) ? true : false;
