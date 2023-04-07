@@ -75,6 +75,7 @@
 // - 45p6: Add PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt, add PR129, add befPreS plots for EtaD-F, TriggerEtaReject/Pass plots
 // - 45p7: Add PRs PR135 and PR136
 // - 45p8: Patch to GiS systs param types
+// - 45p9: Possible fix for segfault
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -5996,7 +5997,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
       // nonL1PixHitsFromGeneralTrack now well computed above in the loop
 //      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_noL1_TmpFromGeneralTrack.numberOfMeasurements() ;
-      unsigned int numDeDxHitsFromGeneralTrack = dedxIh_StripOnlyFromGeneralTrack->numberOfMeasurements() + nonL1PixHitsFromGeneralTrack;
+      unsigned int numStripsHitsFromGeneralTrack = (dedxIh_StripOnlyFromGeneralTrack) ?  dedxIh_StripOnlyFromGeneralTrack->numberOfMeasurements() : 0.0;
+      unsigned int numDeDxHitsFromGeneralTrack = numStripsHitsFromGeneralTrack + nonL1PixHitsFromGeneralTrack;
 
       // Check the number of non-layer-1 pixel hits to ensure good stats on the hits
       passedTrackCutsArray[7]  = (typeMode_ != 3 && nonL1PixHitsFromGeneralTrack >= globalMinNOPH_) ? true : false;
