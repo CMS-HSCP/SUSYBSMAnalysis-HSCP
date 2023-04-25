@@ -76,6 +76,8 @@
 // - 45p7: Add PRs PR135 and PR136
 // - 45p8: Patch to GiS systs param types
 // - 45p9: Possible fix for segfault
+// - 46pX: same code as 45p9 but different CRAB productions
+// - 32p1: Same as 45p9, but exit when not MC match found
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -6689,7 +6691,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",false)
+  desc.addUntracked("ExitWhenGenMatchNotFound",true)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment(", really controlled by the config for each era");
   desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
