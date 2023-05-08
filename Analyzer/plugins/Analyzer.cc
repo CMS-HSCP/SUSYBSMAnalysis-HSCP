@@ -79,7 +79,7 @@
 // - 46pX: same code as 45p9 but different CRAB productions
 // - 32p1: Same as 45p9, but exit when not MC match found
 // - 46p3: Same as 45p9
-// - 45p4: ExitWhenGenMatchNotFound = true, new plot TriggerMuonType, adding IsoMu24 temp for the SFs study requested by the muon POG
+// - 46p4: ExitWhenGenMatchNotFound = true, new plot TriggerMuonType, adding IsoMu24 temp for the SFs study requested by the muon POG
 
 // v25 Dylan
 // - add EoP in the ntuple
