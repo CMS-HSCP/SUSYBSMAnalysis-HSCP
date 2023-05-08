@@ -348,6 +348,7 @@ struct Tuple {
   TH1F* BefPreS_NumPassedMatchingTrigObj;
   TH1F* BefPreS_NumPassedMatchingTrigObjEtaCut;
   
+  TH1F* BefPreS_TriggerMuonType;
   TH1F* BefPreS_MatchedMuonPt25Pt;
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;
@@ -1280,12 +1281,14 @@ struct Tuple {
   TH1F* CutFlow;
   TH1F* EventCutFlow;
   TH1F* CutFlowReverse;
-
+  
+  TH2F* CutFlowProbQ;
+  TH2F* CutFlowIas;
   TH2F* CutFlowEta;
   TH2F* CutFlowEoP;
   TH2F* N1_FlowEta;
   TH2F* CutFlowPfType;
-  TH2F* CutFlowProbQ;
+  
 
   // TODO: better deal with these
 //  TH3F* PostPreS_IasAllIhVsLayer;

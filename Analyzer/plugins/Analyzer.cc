@@ -78,6 +78,8 @@
 // - 45p9: Possible fix for segfault
 // - 46pX: same code as 45p9 but different CRAB productions
 // - 32p1: Same as 45p9, but exit when not MC match found
+// - 46p3: Same as 45p9
+// - 45p4: ExitWhenGenMatchNotFound = true, new plot TriggerMuonType, adding IsoMu24 temp for the SFs study requested by the muon POG
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -807,6 +809,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if (muTrig && dr_min_hltMuon_hscpCand_inEvent < 0.15) {
     matchedMuonWasFound = true;
     const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
+    // To prove that it's fine to use the official SFs
+    if (fabs(triggerObjMatchedMu->eta()) < 1.0) {
+      // Baseline: Muon50 + Tight ID
+      if (HLT_Mu50)                tuple->BefPreS_TriggerMuonType->Fill(1);
+        // Exploration: Muon50 + Tight ID + IsoMu24
+      if (HLT_Mu50 || HLT_isoMu24) tuple->BefPreS_TriggerMuonType->Fill(2);
+      bool isPFIsoTight = triggerObjMatchedMu->passed(reco::Muon::PFIsoTight);
+      if ((HLT_Mu50 || HLT_isoMu24) && isPFIsoTight) tuple->BefPreS_TriggerMuonType->Fill(3);
+      bool isHighPtMuon = muon::isHighPtMuon(*triggerObjMatchedMu, highestSumPt2Vertex);
+      if ((HLT_Mu50 || HLT_isoMu24) && isHighPtMuon) tuple->BefPreS_TriggerMuonType->Fill(4);
+    }
+
     if (doBefPreSplots_) {
       tuple->BefPreS_RelDiffMatchedMuonPtAndTrigObjPt->Fill((triggerObjMatchedMu->pt()-trigObjP4s[closestTrigObjIndex].Pt())/(trigObjP4s[closestTrigObjIndex].Pt()));
       tuple->BefPreS_RelDiffTrigObjPtAndMatchedMuonPt->Fill((trigObjP4s[closestTrigObjIndex].Pt()-triggerObjMatchedMu->pt())/(triggerObjMatchedMu->pt()));
@@ -931,7 +945,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float trigObjTheta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].theta() : maxGenTheta;
   float trigObjEta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].eta() : maxGenEta;
   float trigObjPt = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].pt() : maxGenPt;
-  
+//  uint trigObjID = (triggerObjGenIndex > -1) ?  abs(genColl[triggerObjGenIndex].pdgId()) : 0;
+    
   // Compute event weight from different SFs
   if (!isData) {
     float PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_, PUSystFactor_);
@@ -3460,6 +3475,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (allCutsPassedSoFar) {
         tuple->CutFlowEta->Fill(track->eta(), i);
         tuple->CutFlowProbQ->Fill(1 - probQonTrackNoL1, i);
+        tuple->CutFlowIas->Fill(globalIas_, i);
         tuple->CutFlowEoP->Fill(EoP, i);
         tuple->CutFlowPfType->Fill(0., i);
         if (pf_isPfTrack) {
@@ -3713,7 +3729,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             // Given the eta < 1 we nver get here
             layer_num=tTopo->pxfDisk(detid)+4;
           }
-           //TADA March21
+           //TODO March21
           tuple->PostPreS_CluPathLenghtVsPixLayer_CR_veryLowPt->Fill(pathL/um2cmUnit, layer_num, eventWeight_);
           tuple->PostPreS_CluDeDxVsPixLayer_CR_veryLowPt->Fill(scaleF*chargeForIndxH*factorChargeToE/pathL, layer_num, eventWeight_);
           if (detid.subdetId() == PixelSubdetector::PixelBarrel && layer_num==2) tuple->Stab_CluDeDxPixLayer2_VsRun_CR_veryLowPt->Fill(currentRun_, scaleF*chargeForIndxH*factorChargeToE/pathL , eventWeight_);
@@ -6714,7 +6730,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
-  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v"})
+  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"})
 //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
   ->setComment("Add the list of muon triggers");
 //  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
