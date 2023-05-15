@@ -627,7 +627,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_TNOHFraction = dir.make<TH1F>("N1_TNOHFraction", ";Number of valid hit fraction;Tracks / 0.02", 50, 0., 1);
 //  tuple->N1_nDof = dir.make<TH1F>("nDof", ";N_{dof}", 40, -0.5, 39.5);
 //  tuple->N1_tofError = dir.make<TH1F>("tofError", ";tofError", 25, 0, 0.25);
-  tuple->N1_TIsol = dir.make<TH1F>("N1_TIsol", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} [GeV] / 4 GeV", 25, 0, 100);
+  tuple->N1_TIsol = dir.make<TH1F>("N1_TIsol", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} [GeV]; Tracks / 4 GeV", 25, 0, 100);
   tuple->N1_EoP = dir.make<TH1F>("N1_EoP", ";PF calo energy / momentum; Tracks / 0.06", 25, 0, 1.5);
   tuple->N1_ECalEoP = dir.make<TH1F>("N1_ECalEoP", ";PF ECal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
   tuple->N1_HCalEoP = dir.make<TH1F>("N1_HCalEoP", ";PF HCal energy / momentum; Tracks / 0.06", 25, 0, 1.5);
@@ -641,7 +641,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->N1_Dxy = dir.make<TH1F>("N1_Dxy", ";d_{xy} [cm]; Tracks / 0.001 cm", 200, -0.1, 0.1);
   tuple->N1_Dz = dir.make<TH1F>("N1_Dz", ";d_{z} [cm]; Tracks / 0.003 cm", 200, -0.3, 0.3);
 
-  tuple->N1_PtErrOverPt = dir.make<TH1F>("N1_PtErrOverPt", ";#sigma_{p_{T}}/p_{T};Tracks / 0.05", 20, 0, 1);
+  tuple->N1_PtErrOverPt = dir.make<TH1F>("N1_PtErrOverPt", ";#sigma_{p_{T}}/p_{T};Tracks / 0.05", 40, 0., 2.);
   tuple->N1_PtErrOverPt2 = dir.make<TH1F>("N1_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2};Tracks / 7.5e-5 ", 40, 0, 0.003);
   tuple->N1_PtErrOverPtVsPt = dir.make<TH2F>("N1_PtErrOverPtVsPt", ";#sigma_{p_{T}}/p_{T};p_{T} [GeV]",  40, 0., 1., 40, 0., 4000.);
   tuple->N1_PtErrOverPtVsPt_lowPt = dir.make<TH2F>("N1_PtErrOverPtVsPt_lowPt", ";#sigma_{p_{T}}/p_{T};p_{T} [GeV]",  40, 0., 1., 50, 0., 1000.);
@@ -805,7 +805,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_TNOM_PUB = dir.make<TH1F>("BefPreS_TNOM_PUB", ";Number of measurements (high PU); Tracks / 1 ", 40, -0.5, 39.5);
     tuple->BefPreS_nDof = dir.make<TH1F>("BefPreS_nDof", ";Number of DF;Tracks / bin", 40, -0.5, 39.5);
     tuple->BefPreS_TOFError = dir.make<TH1F>("BefPreS_TOFError", ";TOFError;Tracks / bin", 25, 0, 0.25);
-    tuple->BefPreS_PtErrOverPt = dir.make<TH1F>("BefPreS_PtErrOverPt", ";#sigma_{p_{T}}/p_{T};Tracks / 0.05", 20, 0, 1);
+    tuple->BefPreS_PtErrOverPt = dir.make<TH1F>("BefPreS_PtErrOverPt", ";#sigma_{p_{T}}/p_{T};Tracks / 0.05", 40, 0., 2.);
     tuple->BefPreS_PtErrOverPt2 = dir.make<TH1F>("BefPreS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2};Tracks / 7.5e-5 ", 40, 0, 0.003);
     tuple->BefPreS_Pt = dir.make<TH1F>("BefPreS_Pt", ";p_{T} [GeV];Tracks / 100 GeV", 40, 0., PtHistoUpperBound);
     tuple->BefPreS_Pt_lowPt = dir.make<TH1F>("BefPreS_Pt_lowPt", ";p_{T} [GeV];Tracks / 10 GeV", 50, 0., 500);
@@ -1172,7 +1172,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TNOM_PUC = dir.make<TH1F>("PostPreS_TNOM_PUB",  ";Number of measurement (high PU);Tracks / 1",  40, -0.5, 39.5);
     tuple->PostPreS_nDof = dir.make<TH1F>("PostPreS_nDof", ";nDof;Tracks / 1",  40, -0.5, 39.5);
     tuple->PostPreS_TOFError = dir.make<TH1F>("PostPreS_TOFError", ";TOFError;Tracks / 0.01", 25, 0, 0.25);
-    tuple->PostPreS_PtErrOverPt = dir.make<TH1F>("PostPreS_PtErrOverPt", ";#sigma_{p_{T}}/p_{T};Tracks / 0.05", 20, 0, 1);
+    tuple->PostPreS_PtErrOverPt = dir.make<TH1F>("PostPreS_PtErrOverPt", ";#sigma_{p_{T}}/p_{T};Tracks / 0.05", 40, 0., 2.);
     tuple->PostPreS_PtErrOverPtVsIas =  dir.make<TH2F>("PostPreS_PtErrOverPtVsIas", ";#sigma_{p_{T}}/p_{T};G_{i}^{strips};Tracks / bin", 40, 0, 1, 20, 0.,1.);
     tuple->PostPreS_PtErrOverPt2VsIas =  dir.make<TH2F>("PostPreS_PtErrOverPt2VsIas", ";#sigma_{p_{T}}/p_{T}^{2};G_{i}^{strips};Tracks / bin", 40, 0., 0.003, 20, 0.,1.);
     tuple->PostPreS_PtErrOverPt2 = dir.make<TH1F>("PostPreS_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2};Tracks / bin", 40, 0, 0.003);
@@ -1500,8 +1500,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_MassVsProbXYNoL1 = dir.make<TH2F>("PostPreS_MassVsProbXYNoL1", ";Mass [GeV];ProbXY", 80,0.,4000.,20,0.,1.);
     tuple->PostPreS_MassVsEoP = dir.make<TH2F>("PostPreS_MassVsEoP", ";Mass [GeV];E/p", 80,0.,4000.,30, 0, 0.3);
     tuple->PostPreS_MassVsSumpTOverpT = dir.make<TH2F>("PostPreS_MassVsSumpTOverpT", ";Mass [GeV];SumpTOverpT", 80,0.,4000.,80, 0, 2);
-    tuple->PostPreS_MassVsPtErrOverPt = dir.make<TH2F>("PostPreS_MassVsPtErrOverPt", ";Mass [GeV];PtErrOverPt", 80,0.,4000.,40, 0, 1);
-    tuple->PostPreS_MassVsTIsol = dir.make<TH2F>("PostPreS_MassVsTIsol", ";Mass [GeV];TIsol [GeV]", 80,0.,4000., 25, 0, 100);
+    tuple->PostPreS_MassVsPtErrOverPt = dir.make<TH2F>("PostPreS_MassVsPtErrOverPt", ";Mass [GeV];PtErrOverPt", 80,0.,4000.,40, 0., 2.);
+    tuple->PostPreS_MassVsTIsol = dir.make<TH2F>("PostPreS_MassVsTIsol", ";Mass [GeV];TIsol [GeV]", 80,0.,4000., 25, 0., 100.);
     tuple->PostPreS_MassVsIh = dir.make<TH2F>("PostPreS_MassVsIh", ";Mass [GeV];I_{h} [MeV/cm]", 80,0.,4000.,200, 0, dEdxM_UpLim);
     tuple->PostPreS_MassVsMassT = dir.make<TH2F>("PostPreS_MassVsMassT", ";Mass [GeV];m_{T} [GeV]", 80,0.,4000.,50, 0.0, 250.0);
     tuple->PostPreS_MassVsMiniRelIsoAll = dir.make<TH2F>("PostPreS_MassVsMiniRelIsoAll", ";Mass [GeV];MiniRelIsoAll", 80,0.,4000.,20, 0., 0.2);
@@ -1644,6 +1644,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR2FAIL_Ias_PUC = dir.make<TH1F>("PostS_SR2FAIL_Ias_PUC", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, PU > 30);Events / 0.1", 10, 0, dEdxS_UpLim);
   
   tuple->PostS_SR2FAIL_PV = dir.make<TH1F>("PostS_SR2FAIL_PV", ";PV (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);Events / 1", 60, -0.5, 59.5);
+  tuple->PostS_SR2FAIL_PtErrOverPtVsIas = dir.make<TH2F>("PostS_SR2FAIL_PtErrOverPtVsIas", ";#sigma_{p_{T}}/p_{T} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9;G_{i}^{strips};Events / bin", 40, 0., 2., 20, 0., 1.);
+  tuple->PostS_SR2FAIL_TIsolVsIas = dir.make<TH2F>("PostS_SR2FAIL_TIsolVsIas", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} [GeV] (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9;G_{i}^{strips};Events / bin", 20, 0., 100., 20, 0., 1.);
   tuple->PostS_SR2FAIL_PtErrOverPt2 = dir.make<TH1F>("PostS_SR2FAIL_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);Events / bin", 40, 0, 0.003);
   tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("PostS_SR2FAIL_RelDiffTrackPtAndTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);Events / bin", 60,-1.0,2.0);
   tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt = dir.make<TH2F>("PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);p_{T}^{gen}", 60,-1.0,2.0,20,0.,4000.);

@@ -845,13 +845,14 @@ struct Tuple {
   TH2F* PostS_ProbQNoL1VsIas;
   TH2F* PostS_ProbQNoL1VsFiStrips;
  
-    
-
- 
   TH1F* PostS_SR2FAIL_Ias_PUA;
   TH1F* PostS_SR2FAIL_Ias_PUB;
   TH1F* PostS_SR2FAIL_Ias_PUC;
   TH1F* PostS_SR2FAIL_PV;
+  
+  TH2F* PostS_SR2FAIL_PtErrOverPtVsIas;
+  TH2F* PostS_SR2FAIL_TIsolVsIas;
+  
   TH1F* PostS_SR2FAIL_PtErrOverPt2;
   TH1F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPt;
   TH2F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt;

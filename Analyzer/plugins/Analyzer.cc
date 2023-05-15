@@ -80,6 +80,8 @@
 // - 32p1: Same as 45p9, but exit when not MC match found
 // - 46p3: Same as 45p9
 // - 46p4: ExitWhenGenMatchNotFound = true, new plot TriggerMuonType, adding IsoMu24 temp for the SFs study requested by the muon POG
+// - 46p5: ExitWhenGenMatchNotFound = false
+// - 46p6: cout for event list in SR, add PostS_SR2FAIL_PtErrOverPtVsIas, PostS_SR2FAIL_TIsolVsIas, CutFlowIas for bkg, ExitWhenGenMatchNotFound = true
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -1667,6 +1669,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float bestCandidateFiStrips = -1.;
   float bestCandidateFiStripsLog = -1.;
   float bestCandidateProbQNoL1 = -1.;
+  float bestCandidateTIsol = -1.;
   float bestCandidateDrMinHltMuon = 9999.;
   float bestCandidateGenBeta = -1.;
   float anyCandidateDrMinHltMuon = 9999.0;
@@ -4054,7 +4057,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_PtErrOverPtVsPtErrOverPt2->Fill(track->ptError() / track->pt(),track->ptError() / (track->pt()*track->pt()), eventWeight_);
         tuple->PostPreS_PtErrOverPtVsPt->Fill(track->ptError() / track->pt(), track->pt(), eventWeight_);
         tuple->PostPreS_TIsol->Fill(IsoTK_SumEt, eventWeight_);
-        tuple->PostPreS_TIsolVsIas->Fill(IsoTK_SumEt, globalIas_,eventWeight_);
+        tuple->PostPreS_TIsolVsIas->Fill(IsoTK_SumEt, globalIas_, eventWeight_);
         tuple->PostPreS_Ih->Fill(globalIh_, eventWeight_);
         tuple->PostPreS_IhVsIas->Fill(globalIh_, globalIas_, eventWeight_);
         tuple->PostPreS_Ih_NoEventWeight->Fill(globalIh_);
@@ -4291,6 +4294,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         bestCandidateFiStrips = globalFiStrips_;
         bestCandidateFiStripsLog = -log(1-globalFiStrips_);
         bestCandidateProbQNoL1 = probQonTrackNoL1;
+        bestCandidateTIsol = IsoTK_SumEt;
         bestCandidateDrMinHltMuon = dr_min_hltMuon_hscpCand;
         bestCandidateGenBeta = genBeta;
         bestCandidateGenIndex = closestGenIndex;
@@ -5378,6 +5382,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (PUA) tuple->PostS_SR2FAIL_Ias_PUA->Fill(bestCandidateIas, eventWeight_);
       else if (PUB) tuple->PostS_SR2FAIL_Ias_PUB->Fill(bestCandidateIas, eventWeight_);
       else if (PUC) tuple->PostS_SR2FAIL_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
+      tuple->PostS_SR2FAIL_PtErrOverPtVsIas->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt()), bestCandidateIas,  eventWeight_);
+      tuple->PostS_SR2FAIL_TIsolVsIas->Fill(bestCandidateTIsol, bestCandidateIas,  eventWeight_);
       
       if (bestCandidateIas > 0.25) {
         tuple->PostS_SR2FAIL_PV->Fill(numGoodVerts, eventWeight_);
@@ -5395,6 +5401,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       else if (PUC) tuple->PostS_SR2PASS_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
       
       if (bestCandidateIas > 0.25) {
+        std::cout << "SR2 event in run " << currentRun_ << " LS " <<  iEvent.id().luminosityBlock() <<  " event " << iEvent.id().event() << std::endl;
         tuple->PostS_SR2PASS_Ls->Fill(iEvent.id().luminosityBlock());
         tuple->PostS_SR2PASS_RunVsLs->Fill(currentRun_,iEvent.id().luminosityBlock());
         tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, eventWeight_);
