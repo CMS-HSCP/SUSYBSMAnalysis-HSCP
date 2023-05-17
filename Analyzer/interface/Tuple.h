@@ -852,6 +852,8 @@ struct Tuple {
   
   TH2F* PostS_SR2FAIL_PtErrOverPtVsIas;
   TH2F* PostS_SR2FAIL_TIsolVsIas;
+  TH2F* PostS_SR2PASS_PtErrOverPtVsIas;
+  TH2F* PostS_SR2PASS_TIsolVsIas;
   
   TH1F* PostS_SR2FAIL_PtErrOverPt2;
   TH1F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPt;

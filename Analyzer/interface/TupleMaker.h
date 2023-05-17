@@ -1645,10 +1645,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   
   tuple->PostS_SR2FAIL_PV = dir.make<TH1F>("PostS_SR2FAIL_PV", ";PV (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);Events / 1", 60, -0.5, 59.5);
   tuple->PostS_SR2FAIL_PtErrOverPtVsIas = dir.make<TH2F>("PostS_SR2FAIL_PtErrOverPtVsIas", ";#sigma_{p_{T}}/p_{T} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9;G_{i}^{strips};Events / bin", 40, 0., 2., 20, 0., 1.);
-  tuple->PostS_SR2FAIL_TIsolVsIas = dir.make<TH2F>("PostS_SR2FAIL_TIsolVsIas", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} [GeV] (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9;G_{i}^{strips};Events / bin", 20, 0., 100., 20, 0., 1.);
+  tuple->PostS_SR2FAIL_TIsolVsIas = dir.make<TH2F>("PostS_SR2FAIL_TIsolVsIas", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} [GeV] (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9);G_{i}^{strips};Events / bin", 20, 0., 100., 20, 0., 1.);
   tuple->PostS_SR2FAIL_PtErrOverPt2 = dir.make<TH1F>("PostS_SR2FAIL_PtErrOverPt2", ";#sigma_{p_{T}}/p_{T}^{2} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);Events / bin", 40, 0, 0.003);
   tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPt = dir.make<TH1F>("PostS_SR2FAIL_RelDiffTrackPtAndTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);Events / bin", 60,-1.0,2.0);
   tuple->PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt = dir.make<TH2F>("PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt", ";(track p_{T}^{reco} - p_{T}^{gen}) / p_{T}^{gen} (p_{T} > 200 GeV, F_{i}^{pixels} < 0.9, G_{i}^{strips} > 0.25);p_{T}^{gen}", 60,-1.0,2.0,20,0.,4000.);
+  
+  tuple->PostS_SR2PASS_PtErrOverPtVsIas = dir.make<TH2F>("PostS_SR2PASS_PtErrOverPtVsIas", ";#sigma_{p_{T}}/p_{T} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9;G_{i}^{strips};Events / bin", 40, 0., 2., 20, 0., 1.);
+  tuple->PostS_SR2PASS_TIsolVsIas = dir.make<TH2F>("PostS_SR2PASS_TIsolVsIas", ";#Sigma_{R<0.3} p_{T} - p_{T,cand} [GeV] (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9);G_{i}^{strips};Events / bin", 20, 0., 100., 20, 0., 1.);
   
   
   tuple->PostS_SR2PASS_Ias_PUA = dir.make<TH1F>("PostS_SR2PASS_Ias_PUA", ";G_{i}^{strips} (p_{T} > 200 GeV, F_{i}^{pixels} > 0.9, PU < 15);Events / 0.1", 10, 0, dEdxS_UpLim);

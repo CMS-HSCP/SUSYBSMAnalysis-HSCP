@@ -82,6 +82,7 @@
 // - 46p4: ExitWhenGenMatchNotFound = true, new plot TriggerMuonType, adding IsoMu24 temp for the SFs study requested by the muon POG
 // - 46p5: ExitWhenGenMatchNotFound = false
 // - 46p6: cout for event list in SR, add PostS_SR2FAIL_PtErrOverPtVsIas, PostS_SR2FAIL_TIsolVsIas, CutFlowIas for bkg, ExitWhenGenMatchNotFound = true
+// - 46p7: Add PostS_SR2PASS_PtErrOverPtVsIas, PostS_SR2PASS_TIsolVsIas
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -5401,7 +5402,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       else if (PUC) tuple->PostS_SR2PASS_Ias_PUC->Fill(bestCandidateIas, eventWeight_);
       
       if (bestCandidateIas > 0.25) {
-        std::cout << "SR2 event in run " << currentRun_ << " LS " <<  iEvent.id().luminosityBlock() <<  " event " << iEvent.id().event() << std::endl;
+//        std::cout << "SR2 event in run " << currentRun_ << " LS " <<  iEvent.id().luminosityBlock() <<  " event " << iEvent.id().event() << std::endl;
+        tuple->PostS_SR2PASS_PtErrOverPtVsIas->Fill(bestCandidateTrack->ptError() / (bestCandidateTrack->pt()), bestCandidateIas,  eventWeight_);
+        tuple->PostS_SR2PASS_TIsolVsIas->Fill(bestCandidateTIsol, bestCandidateIas,  eventWeight_);
         tuple->PostS_SR2PASS_Ls->Fill(iEvent.id().luminosityBlock());
         tuple->PostS_SR2PASS_RunVsLs->Fill(currentRun_,iEvent.id().luminosityBlock());
         tuple->PostS_SR2PASS_PV->Fill(numGoodVerts, eventWeight_);
