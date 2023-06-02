@@ -83,6 +83,7 @@
 // - 46p5: ExitWhenGenMatchNotFound = false
 // - 46p6: cout for event list in SR, add PostS_SR2FAIL_PtErrOverPtVsIas, PostS_SR2FAIL_TIsolVsIas, CutFlowIas for bkg, ExitWhenGenMatchNotFound = true
 // - 46p7: Add PostS_SR2PASS_PtErrOverPtVsIas, PostS_SR2PASS_TIsolVsIas
+// - 46p8: Fix MuonPOG systs
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -4406,7 +4407,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                   float siblingPhi = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->phi();
                   float siblingPt  = genCandidateUnderStudy.mother(numMomIndx)->daughter(daughterIndx)->pt();
                   float siblingDr = deltaR(genEta, genPhi, siblingEta, siblingPhi);
-                  if (globalIas_ > 0.25) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
+                  if (globalIas_ > 0.25 && debug_ > 4) std::cout << " (dR = " << siblingDr << ", pt = " << siblingPt <<  ") , ";
                 }
                 if (globalIas_ > 0.25) std::cout << std::endl;
                 unsigned int numAunts = genCandidateUnderStudy.mother(numMomIndx)->mother(numGramMomIndx)->numberOfDaughters() -1;
@@ -5441,13 +5442,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
     
     
-    
+    float muonTriggerSFsNom = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
+    float muonRecoSFsNom = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
+    float muonIdSFsNom = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
     float muonRecoSFsUp = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
     float muonIdSFsUp = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
     float muonTriggerSFsUp = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
     float muonRecoSFsDown = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
     float muonIdSFsDown = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
     float muonTriggerSFsDown = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
+    
     
 
     float ratioEntries=1.0;
@@ -5513,12 +5517,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_ * triggerSystFactorUp);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_  * triggerSystFactorDown);
       
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonRecoSFsUp);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonRecoSFsDown);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonIdSFsUp);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonIdSFsDown);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonTriggerSFsUp);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonTriggerSFsDown);
+      tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonRecoSFsUp / muonRecoSFsNom);
+      tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonRecoSFsDown / muonRecoSFsNom);
+      tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonIdSFsUp / muonIdSFsNom);
+      tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonIdSFsDown / muonIdSFsNom);
+      tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonTriggerSFsUp / muonTriggerSFsNom);
+      tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonTriggerSFsDown / muonTriggerSFsNom);
     }
     
     // Repeat for several SRs with higher pT cut
