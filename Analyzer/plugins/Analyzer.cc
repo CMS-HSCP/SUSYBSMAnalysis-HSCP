@@ -84,6 +84,7 @@
 // - 46p6: cout for event list in SR, add PostS_SR2FAIL_PtErrOverPtVsIas, PostS_SR2FAIL_TIsolVsIas, CutFlowIas for bkg, ExitWhenGenMatchNotFound = true
 // - 46p7: Add PostS_SR2PASS_PtErrOverPtVsIas, PostS_SR2PASS_TIsolVsIas
 // - 46p8: Fix MuonPOG systs
+// - 46p9: Add AtL1DT and AtL4DT trigger beta plots
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -693,7 +694,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
 
   // Should this be a bin in error histo?
-  if (HLT_Mu50 != triggerDecision.at(196)) cout<<"TRIGGER DECISION DOESN'T AGREE!!"<<endl;
+  if (HLT_Mu50 != triggerDecision.at(196)) cout << "TRIGGER DECISION DOESN'T AGREE!!" << endl;
 
   // Get handle for trigEvent
   edm::Handle<trigger::TriggerEvent> trigEvent = iEvent.getHandle(trigEventToken_);
@@ -1841,8 +1842,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     if (!isData && closestGenIndex < 0 ) {
       if (debug_ > 4 && trigInfo_ > 0) {
-        LogPrint(MOD) << "min dr: " << dRMinGen << endl;
-        LogPrint(MOD) << "min dPt: " << dPtMinGen << endl;
+        LogPrint(MOD) << "min dr: " << dRMinGen;
+        LogPrint(MOD) << "min dPt: " << dPtMinGen;
         LogPrint(MOD) << "  >> Event where we didnt find the gen candidate";
       }
       // 5-th bin of the error histo, didnt find the gen canidate
@@ -4994,21 +4995,31 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   
   // Systematics plots for trigger at event level
   float distanceAtThisEta = (trigObjTheta < 9999) ? 500.0/sin(trigObjTheta) : 0;
+  float distanceAtThisEtaAtL1DT = (trigObjTheta < 9999) ? 400.0/sin(trigObjTheta) : 0;
+  float distanceAtThisEtaAtL4DT = (trigObjTheta < 9999) ? 750.0/sin(trigObjTheta) : 0;
   float speedOfLightInCmPerNs = 29.97;
   float timing = distanceAtThisEta / (trigObjBeta*speedOfLightInCmPerNs);
   
   float genBetaPrimeUp =  -1.f;
+  float genBetaPrimeUpAtL1DT =  -1.f;
+  float genBetaPrimeUpAtL4DT =  -1.f;
   float genBetaPrimeUpHalfSigma =  -1.f;
   float genBetaPrimeUpTwoSigma =  -1.f;
   float genBetaPrimeDown = -1.f;
+  float genBetaPrimeDownAtL1DT = -1.f;
+  float genBetaPrimeDownAtL4DT = -1.f;
   float genBetaPrimeDownHalfSigma = -1.f;
   float genBetaPrimeDownTwoSigma = -1.f;
   if (timing > 0) {
     genBetaPrimeUp = std::min(1.,distanceAtThisEta / ((timing+1.5)*speedOfLightInCmPerNs));
+    genBetaPrimeUpAtL1DT = std::min(1.,distanceAtThisEtaAtL1DT / ((timing+1.5)*speedOfLightInCmPerNs));
+    genBetaPrimeUpAtL4DT = std::min(1.,distanceAtThisEtaAtL4DT / ((timing+1.5)*speedOfLightInCmPerNs));
     genBetaPrimeUpHalfSigma = std::min(1.,distanceAtThisEta / ((timing+0.75)*speedOfLightInCmPerNs));
     genBetaPrimeUpTwoSigma = std::min(1.,distanceAtThisEta / ((timing+3.0)*speedOfLightInCmPerNs));
     if (((timing-1.5)*speedOfLightInCmPerNs) > 0.0) {
       genBetaPrimeDown = distanceAtThisEta / ((timing-1.5)*speedOfLightInCmPerNs);
+      genBetaPrimeDownAtL1DT = distanceAtThisEtaAtL1DT / ((timing-1.5)*speedOfLightInCmPerNs);
+      genBetaPrimeDownAtL4DT = distanceAtThisEtaAtL4DT / ((timing-1.5)*speedOfLightInCmPerNs);
       genBetaPrimeDownHalfSigma = distanceAtThisEta / ((timing-0.75)*speedOfLightInCmPerNs);
       genBetaPrimeDownTwoSigma = distanceAtThisEta / ((timing-3.0)*speedOfLightInCmPerNs);
     }
@@ -5024,14 +5035,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUpAtL1DT->Fill(0., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDownAtL1DT->Fill(0., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUpAtL4DT->Fill(0., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDownAtL4DT->Fill(0., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 0.3 && fabs(trigObjEta) < 0.6) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUpAtL1DT->Fill(0., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDownAtL1DT->Fill(0., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUpAtL4DT->Fill(0., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDownAtL4DT->Fill(0., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 0.6 && fabs(trigObjEta) < 0.9) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUpAtL1DT->Fill(0., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDownAtL1DT->Fill(0., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUpAtL4DT->Fill(0., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDownAtL4DT->Fill(0., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 0.9 && fabs(trigObjEta) < 1.2) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp->Fill(0., genBetaPrimeUp);
@@ -5063,14 +5086,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuon50VsBeta_EtaA->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUpAtL1DT->Fill(1., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDownAtL1DT->Fill(1., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaUpAtL4DT->Fill(1., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaA_BetaDownAtL4DT->Fill(1., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 0.3 && fabs(trigObjEta) < 0.6) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaB->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUpAtL1DT->Fill(1., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDownAtL1DT->Fill(1., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaUpAtL4DT->Fill(1., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaB_BetaDownAtL4DT->Fill(1., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 0.6 && fabs(trigObjEta) < 0.9) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUpAtL1DT->Fill(1., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDownAtL1DT->Fill(1., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaUpAtL4DT->Fill(1., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaC_BetaDownAtL4DT->Fill(1., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 0.9 && fabs(trigObjEta) < 1.2) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp->Fill(1., genBetaPrimeUp);
