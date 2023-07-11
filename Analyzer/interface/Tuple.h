@@ -348,6 +348,7 @@ struct Tuple {
   TH1F* BefPreS_NumPassedMatchingTrigObj;
   TH1F* BefPreS_NumPassedMatchingTrigObjEtaCut;
   
+  TH1F* BefPreS_TriggerMuonType;
   TH1F* BefPreS_MatchedMuonPt25Pt;
   TH1F* BefPreS_RelDiffMuonPtAndTrackPt;
   TH2F* BefPreS_MuonPtVsTrackPt;
@@ -844,13 +845,16 @@ struct Tuple {
   TH2F* PostS_ProbQNoL1VsIas;
   TH2F* PostS_ProbQNoL1VsFiStrips;
  
-    
-
- 
   TH1F* PostS_SR2FAIL_Ias_PUA;
   TH1F* PostS_SR2FAIL_Ias_PUB;
   TH1F* PostS_SR2FAIL_Ias_PUC;
   TH1F* PostS_SR2FAIL_PV;
+  
+  TH2F* PostS_SR2FAIL_PtErrOverPtVsIas;
+  TH2F* PostS_SR2FAIL_TIsolVsIas;
+  TH2F* PostS_SR2PASS_PtErrOverPtVsIas;
+  TH2F* PostS_SR2PASS_TIsolVsIas;
+  
   TH1F* PostS_SR2FAIL_PtErrOverPt2;
   TH1F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPt;
   TH2F* PostS_SR2FAIL_RelDiffTrackPtAndTruthPtVsTruthPt;
@@ -1121,12 +1125,24 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUpAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaDownAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaUpAtL4DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaA_BetaDownAtL4DT;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaB;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaUpAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaDownAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaUpAtL4DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaB_BetaDownAtL4DT;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUpAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDownAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaUpAtL4DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaC_BetaDownAtL4DT;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaD;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown;
@@ -1280,12 +1296,14 @@ struct Tuple {
   TH1F* CutFlow;
   TH1F* EventCutFlow;
   TH1F* CutFlowReverse;
-
+  
+  TH2F* CutFlowProbQ;
+  TH2F* CutFlowIas;
   TH2F* CutFlowEta;
   TH2F* CutFlowEoP;
   TH2F* N1_FlowEta;
   TH2F* CutFlowPfType;
-  TH2F* CutFlowProbQ;
+  
 
   // TODO: better deal with these
 //  TH3F* PostPreS_IasAllIhVsLayer;
