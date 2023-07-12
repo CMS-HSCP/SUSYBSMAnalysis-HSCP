@@ -85,6 +85,8 @@
 // - 46p7: Add PostS_SR2PASS_PtErrOverPtVsIas, PostS_SR2PASS_TIsolVsIas
 // - 46p8: Fix MuonPOG systs
 // - 46p9: Add AtL1DT and AtL4DT trigger beta plots
+// - 47p0: Add AtL1DT and AtL4DT trigger beta plots
+// - 47p1: Fix to DT timings
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -4999,6 +5001,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float distanceAtThisEtaAtL4DT = (trigObjTheta < 9999) ? 750.0/sin(trigObjTheta) : 0;
   float speedOfLightInCmPerNs = 29.97;
   float timing = distanceAtThisEta / (trigObjBeta*speedOfLightInCmPerNs);
+  float timingAtL1DT = distanceAtThisEtaAtL1DT / (trigObjBeta*speedOfLightInCmPerNs);
+  float timingAtL4DT = distanceAtThisEtaAtL4DT / (trigObjBeta*speedOfLightInCmPerNs);
   
   float genBetaPrimeUp =  -1.f;
   float genBetaPrimeUpAtL1DT =  -1.f;
@@ -5022,6 +5026,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       genBetaPrimeDownAtL4DT = distanceAtThisEtaAtL4DT / ((timing-1.5)*speedOfLightInCmPerNs);
       genBetaPrimeDownHalfSigma = distanceAtThisEta / ((timing-0.75)*speedOfLightInCmPerNs);
       genBetaPrimeDownTwoSigma = distanceAtThisEta / ((timing-3.0)*speedOfLightInCmPerNs);
+    }
+  }
+  if (timingAtL1DT > 0) {
+    genBetaPrimeUpAtL1DT = std::min(1.,distanceAtThisEtaAtL1DT / ((timingAtL1DT+1.5)*speedOfLightInCmPerNs));
+    if (((timingAtL1DT-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDownAtL1DT = distanceAtThisEtaAtL1DT / ((timingAtL1DT-1.5)*speedOfLightInCmPerNs);
+    }
+  }
+  if (timingAtL4DT > 0) {
+    genBetaPrimeUpAtL4DT = std::min(1.,distanceAtThisEtaAtL4DT / ((timingAtL4DT+1.5)*speedOfLightInCmPerNs));
+    if (((timingAtL4DT-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDownAtL4DT = distanceAtThisEtaAtL4DT / ((timingAtL4DT-1.5)*speedOfLightInCmPerNs);
     }
   }
     // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
