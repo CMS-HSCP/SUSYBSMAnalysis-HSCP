@@ -1146,12 +1146,24 @@ struct Tuple {
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaD;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaUpAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaDownAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaUpAtL4DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaD_BetaDownAtL4DT;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaE;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaUpAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaDownAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaUpAtL4DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaE_BetaDownAtL4DT;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaF;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp;
   TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaUpAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaDownAtL1DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaUpAtL4DT;
+  TH2F* PostPreS_TriggerMuon50VsBeta_EtaF_BetaDownAtL4DT;
   
   TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_Beta;
   TH2F* PostS_SR2PASS_TriggerMuon50VsBeta_BetaDownHalfSigma;
