@@ -88,6 +88,7 @@
 // - 47p0: Add AtL1DT and AtL4DT trigger beta plots
 // - 47p1: Fix to DT timings
 // - 47p2: Same but for the endcap muon chambers
+// - 47p3: Fix so eta>1 plots are filled too
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -3839,6 +3840,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool passedCutsArrayForTriggerSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForTriggerSyst));
     passedCutsArrayForTriggerSyst[0] = true;
+    passedCutsArrayForTriggerSyst[2] = true;
 
     float dRclosestTrigAndCandidate = (closestTrigObjIndex > -1) ? deltaR(trigObjP4s[closestTrigObjIndex].Eta(), trigObjP4s[closestTrigObjIndex].Phi(), track->eta(), track->phi()) : 9999;
     if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
@@ -4997,13 +4999,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   
   // Systematics plots for trigger at event level
-  float distanceAtThisEta = (trigObjTheta < 9999) ? 500.0/sin(trigObjTheta) : 0;
-  float distanceAtThisEtaAtL1DT = (trigObjTheta < 9999) ? 400.0/sin(trigObjTheta) : 0;
-  float distanceAtThisEtaAtL4DT = (trigObjTheta < 9999) ? 750.0/sin(trigObjTheta) : 0;
-  if (fabs(distanceAtThisEta) > 0.9) {
-    distanceAtThisEta = std::min(500.0/sin(trigObjTheta), 820.0/cos(trigObjTheta));
-    distanceAtThisEtaAtL1DT = std::min(400.0/sin(trigObjTheta), 700.0/cos(trigObjTheta));
-    distanceAtThisEtaAtL4DT = std::min(750.0/sin(trigObjTheta), 1040.0/cos(trigObjTheta));
+  // Calc trigo once to ease computation
+  float sinTrigObjTheta = sin(trigObjTheta);
+  float cosTrigObjTheta = cos(trigObjTheta);
+  
+  float distanceAtThisEta = (trigObjTheta < 9999) ? fabs(500.0/sinTrigObjTheta) : 0;
+  float distanceAtThisEtaAtL1DT = (trigObjTheta < 9999) ? fabs(400.0/sinTrigObjTheta) : 0;
+  float distanceAtThisEtaAtL4DT = (trigObjTheta < 9999) ? fabs(750.0/sinTrigObjTheta) : 0;
+  if (fabs(trigObjEta) > 0.9) {
+    distanceAtThisEta = std::min(fabs(500.0/sinTrigObjTheta), fabs(820.0/cosTrigObjTheta));
+    distanceAtThisEtaAtL1DT = std::min(fabs(400.0/sinTrigObjTheta), fabs(700.0/cosTrigObjTheta));
+    distanceAtThisEtaAtL4DT = std::min(fabs(750.0/sinTrigObjTheta), fabs(1040.0/cosTrigObjTheta));
   }
   float speedOfLightInCmPerNs = 29.97;
   float timing = distanceAtThisEta / (trigObjBeta*speedOfLightInCmPerNs);
@@ -5047,6 +5053,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
   }
     // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
+  // trigObjPassedPres let's in any trigger decision + any eta since here we are studying the trigger
   if (trigObjPassedPres && doPostPreSplots_) {
     if (!HLT_Mu50) {
       tuple->PostPreS_TriggerTimingReject->Fill(timing);

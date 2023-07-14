@@ -1322,8 +1322,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_TriggerTimingPass = dir.make<TH1F>("PostPreS_TriggerTimingPass", ";#Delta t_{PV,DT L2} [ns] (trigger passed);Tracks / bin", 100, 0.0, 100);
     tuple->PostPreS_TriggerTimingReject = dir.make<TH1F>("PostPreS_TriggerTimingReject", ";#Delta t_{PV,DT L2} [ns] (trigger rejected);Tracks / bin", 100, 0.0, 100);
     
-    tuple->PostPreS_TriggerEtaReject = dir.make<TH1F>("PostPreS_TriggerEtaReject", ";Trigger object #eta (trigger passed);Tracks / bin", 25, 0.0, 2.5);
     tuple->PostPreS_TriggerEtaPass = dir.make<TH1F>("PostPreS_TriggerEtaPass", ";Trigger object #eta (trigger passed);Tracks / bin", 25, 0.0, 2.5);
+    tuple->PostPreS_TriggerEtaReject = dir.make<TH1F>("PostPreS_TriggerEtaReject", ";Trigger object #eta (trigger rejected);Tracks / bin", 25, 0.0, 2.5);
     
     tuple->PostS_MuonTightVsBeta = dir.make<TH2F>("PostS_MuonTightVsBeta", ";Tight ID mu;Gen #beta",2,-.5,1.5,20,0.,1.);
     tuple->PostPreS_TriggerMuon50VsBeta = dir.make<TH2F>("PostPreS_TriggerMuon50VsBeta", ";Muon50 triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
