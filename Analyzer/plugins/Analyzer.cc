@@ -89,6 +89,7 @@
 // - 47p1: Fix to DT timings
 // - 47p2: Same but for the endcap muon chambers
 // - 47p3: Fix so eta>1 plots are filled too
+// - 47p4: Include trigger scale factors determined in 47p3
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -7087,50 +7088,104 @@ float Analyzer::muonTriggerSFsForTrackEta(float eta, int syst) {
 //     Method for returning eta and beta dependent trigger syst factors
 //======================================================================
 float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
-  float betaBins[17] = {0.06, 0.12, 0.17, 0.23, 0.28, 0.34, 0.39, 0.45, 0.5, 0.56, 0.61, 0.67, 0.72, 0.78, 0.83, 0.89, 1};
+  float betaBins[7] = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
   if (syst > 0) {
   // Up systematics
     if (fabs(eta) < 0.3) {
-      float scaleBins[17] = {0.0,0.98,1.04,0.98,1.02,0.98,1.01,0.97,1.11,1.05,1.0,0.98,0.99,0.96,1.0,1.05,0.94};
-      for (int i = 0; i < 17; i++) {
+      //EtaA
+      float scaleBins[7] = {1.0,2.3,1.4,1.1,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 0.6) {
-      float scaleBins[17] = {0.0,0.99,1.0,0.99,1.0,1.0,1.01,1.01,1.04,1.06,1.07,0.98,0.97,0.99,1.0,0.96,1.01};
-      for (int i = 0; i < 17; i++) {
+      //EtaB
+      float scaleBins[7] = {1.0,2.3,2.2,1.2,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 0.9) {
+      //EtaC
+      float scaleBins[7] = {1.0,2.3,2.2,1.4,1.1,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 1.2) {
+      //EtaD
+      float scaleBins[7] = {1.0,2.2,2.2,2.1,1.2,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 2.1) {
+      //EtaE
+      float scaleBins[7] = {1.0,2.3,2.2,1.3,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else {
-      float scaleBins[17] = {0.0,0.99,0.9,1.01,1.04,1.01,1.02,0.99,0.97,1.13,1.08,1.1,0.96,0.95,0.98,0.98,0.98};
-      for (int i = 0; i < 17; i++) {
+      //EtaF
+      float scaleBins[7] = {1.0,2.3,2.2,1.1,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     }
   } else {
-  // Down systematics
+      // Up systematics
     if (fabs(eta) < 0.3) {
-      float scaleBins[17] = {0.0,0.49,0.98,0.97,0.93,1.01,1.02,0.97,0.96,0.73,0.78,0.86,0.93,0.95,0.97,1.06,};
-      for (int i = 0; i < 17; i++) {
+        //EtaA
+      float scaleBins[7] = {0.0,0.3,6.4,0.86,0.94,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 0.6) {
-      float scaleBins[17] = {0.0,1.73,0.9,1.18,1.1,0.86,1.07,0.95,0.98,0.79,0.7,0.77,0.88,0.98,1.0,0.99,1.02};
-      for (int i = 0; i < 17; i++) {
+        //EtaB
+      float scaleBins[7] = {0.0,0.34,0.34,0.74,0.96,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 0.9) {
+        //EtaC
+      float scaleBins[7] = {0.0,0.4,0.4,0.59,0.85,0.96,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 1.2) {
+        //EtaD
+      float scaleBins[7] = {0.0,0.37,0.37,0.37,0.7,0.95,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 2.1) {
+        //EtaE
+      float scaleBins[7] = {0.0,0.37,0.38,0.72,0.95,0.98,0.98};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else {
-      float scaleBins[17] = {0.0,0.0,0.95,1.1,0.81,1.11,1.14,0.95,0.99,0.95,0.79,0.7,0.73,0.86,0.96,1.0,0.99};
-      for (int i = 0; i < 17; i++) {
+        //EtaF
+      float scaleBins[7] = {0.0,0.45,0.45,0.8,0.99,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
