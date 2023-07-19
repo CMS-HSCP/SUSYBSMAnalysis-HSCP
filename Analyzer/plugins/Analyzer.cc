@@ -91,6 +91,7 @@
 // - 47p3: Fix so eta>1 plots are filled too
 // - 47p4: Include trigger scale factors determined in 47p3
 // - 47p5: Change so the trigger beta and eta are used for the trig syst
+// - 47p6: Temp to check the most conservative timings at L1 of DT / CSC
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -7088,53 +7089,160 @@ float Analyzer::muonTriggerSFsForTrackEta(float eta, int syst) {
 //======================================================================
 //     Method for returning eta and beta dependent trigger syst factors
 //======================================================================
+//float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
+//  float betaBins[7] = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
+//  if (syst > 0) {
+//  // Up systematics
+//    if (fabs(eta) < 0.3) {
+//      //EtaA
+//      float scaleBins[7] = {1.0,2.3,1.4,1.1,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.6) {
+//      //EtaB
+//      float scaleBins[7] = {1.0,2.3,2.2,1.2,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.9) {
+//      //EtaC
+//      float scaleBins[7] = {1.0,2.3,2.2,1.4,1.1,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 1.2) {
+//      //EtaD
+//      float scaleBins[7] = {1.0,2.2,2.2,2.1,1.2,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 2.1) {
+//      //EtaE
+//      float scaleBins[7] = {1.0,2.3,2.2,1.3,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else {
+//      //EtaF
+//      float scaleBins[7] = {1.0,2.3,2.2,1.1,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    }
+//  } else {
+//      // Down systematics
+//    if (fabs(eta) < 0.3) {
+//        //EtaA
+//      float scaleBins[7] = {0.0,0.3,0.64,0.86,0.94,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.6) {
+//        //EtaB
+//      float scaleBins[7] = {0.0,0.34,0.34,0.74,0.96,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.9) {
+//        //EtaC
+//      float scaleBins[7] = {0.0,0.4,0.4,0.59,0.85,0.96,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 1.2) {
+//        //EtaD
+//      float scaleBins[7] = {0.0,0.37,0.37,0.37,0.7,0.95,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 2.1) {
+//        //EtaE
+//      float scaleBins[7] = {0.0,0.37,0.38,0.72,0.95,0.98,0.98};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else {
+//        //EtaF
+//      float scaleBins[7] = {0.0,0.45,0.45,0.8,0.99,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    }
+//  }
+//  return 0;
+//}
 float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
   float betaBins[7] = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
   if (syst > 0) {
-  // Up systematics
+      // Up systematics
     if (fabs(eta) < 0.3) {
-      //EtaA
-      float scaleBins[7] = {1.0,2.3,1.4,1.1,1.0,1.0,1.0};
+        //EtaA
+      float scaleBins[7] = {1.0,3.6,1.5,1.1,1.0,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 0.6) {
-      //EtaB
-      float scaleBins[7] = {1.0,2.3,2.2,1.2,1.0,1.0,1.0};
+        //EtaB
+      float scaleBins[7] = {1.0,2.5,2.5,1.2,1.0,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 0.9) {
-      //EtaC
-      float scaleBins[7] = {1.0,2.3,2.2,1.4,1.1,1.0,1.0};
+        //EtaC
+      float scaleBins[7] = {1.0,2.7,2.6,1.6,1.1,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 1.2) {
-      //EtaD
-      float scaleBins[7] = {1.0,2.2,2.2,2.1,1.2,1.0,1.0};
+        //EtaD
+      float scaleBins[7] = {1.0,3.7,3.7,2.5,1.3,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 2.1) {
-      //EtaE
-      float scaleBins[7] = {1.0,2.3,2.2,1.3,1.0,1.0,1.0};
+        //EtaE
+      float scaleBins[7] = {1.0,2.6,2.6,1.3,1.0,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else {
-      //EtaF
-      float scaleBins[7] = {1.0,2.3,2.2,1.1,1.0,1.0,1.0};
+        //EtaF
+      float scaleBins[7] = {1.0,2.6,2.6,1.1,1.0,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
@@ -7145,7 +7253,7 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       // Down systematics
     if (fabs(eta) < 0.3) {
         //EtaA
-      float scaleBins[7] = {0.0,0.3,0.64,0.86,0.94,1.0,1.0};
+      float scaleBins[7] = {0.0,0.19,0.56,0.83,0.93,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
@@ -7153,7 +7261,7 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       }
     } else if(fabs(eta) < 0.6) {
         //EtaB
-      float scaleBins[7] = {0.0,0.34,0.34,0.74,0.96,1.0,1.0};
+      float scaleBins[7] = {0.0,0.25,0.26,0.67,0.93,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
@@ -7161,7 +7269,7 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       }
     } else if(fabs(eta) < 0.9) {
         //EtaC
-      float scaleBins[7] = {0.0,0.4,0.4,0.59,0.85,0.96,1.0};
+      float scaleBins[7] = {0.0,0.34,0.34,0.51,0.80,0.96,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
@@ -7169,7 +7277,7 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       }
     } else if(fabs(eta) < 1.2) {
         //EtaD
-      float scaleBins[7] = {0.0,0.37,0.37,0.37,0.7,0.95,1.0};
+      float scaleBins[7] = {0.0,0.0,0.27,0.27,0.63,0.93,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
@@ -7177,7 +7285,7 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       }
     } else if(fabs(eta) < 2.1) {
         //EtaE
-      float scaleBins[7] = {0.0,0.37,0.38,0.72,0.95,0.98,0.98};
+      float scaleBins[7] = {0.0,0.34,0.34,0.67,0.94,0.98,0.98};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
@@ -7185,7 +7293,7 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       }
     } else {
         //EtaF
-      float scaleBins[7] = {0.0,0.45,0.45,0.8,0.99,1.0,1.0};
+      float scaleBins[7] = {0.0,0.41,0.41,0.76,0.98,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
