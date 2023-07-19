@@ -90,6 +90,7 @@
 // - 47p2: Same but for the endcap muon chambers
 // - 47p3: Fix so eta>1 plots are filled too
 // - 47p4: Include trigger scale factors determined in 47p3
+// - 47p5: Change so the trigger beta and eta are used for the trig syst
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -5524,8 +5525,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float theGiSystFactorDown = 0.98;
     float theFiSystFactorUp = 1.005;
     float theFiSystFactorDown = 0.995;
-    float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
-    float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
+    float triggerSystFactorUp = triggerSystFactor(trigObjEta,trigObjBeta,+1);
+    float triggerSystFactorDown = triggerSystFactor(trigObjEta,trigObjBeta,-1);
     
     tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
     if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
@@ -7141,10 +7142,10 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
       }
     }
   } else {
-      // Up systematics
+      // Down systematics
     if (fabs(eta) < 0.3) {
         //EtaA
-      float scaleBins[7] = {0.0,0.3,6.4,0.86,0.94,1.0,1.0};
+      float scaleBins[7] = {0.0,0.3,0.64,0.86,0.94,1.0,1.0};
       for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
