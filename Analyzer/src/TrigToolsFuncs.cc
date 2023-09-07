@@ -60,3 +60,19 @@ void trigtools::dumpTriggerEvent(const trigger::TriggerEvent& trigEvt)
   
 }
 
+
+bool trigtools::passedFilter(const trigger::TriggerEvent& trigEvt, const std::string& givenFilter)
+{
+  for(size_t filterNr=0;filterNr<trigEvt.sizeFilters();filterNr++){
+    const std::string filterName(trigEvt.filterTag(filterNr).label());  
+    const trigger::Keys& trigKeys = trigEvt.filterKeys(filterNr);//trigger::Keys is actually a vector<uint16_t> holding the position of trigger objects in the trigger collection passing the filter
+    if(filterName == givenFilter){
+      if(trigKeys.size()>0) return true;
+      else
+      {
+        return false;
+      }
+    } 
+  }
+  return false;
+}

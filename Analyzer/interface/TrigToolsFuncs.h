@@ -25,6 +25,7 @@ namespace trigtools {
             
   void dumpTriggerEvent(const trigger::TriggerEvent& trigEvt);
 
+  bool passedFilter(const trigger::TriggerEvent& trigEvt,const std::string& givenFilter);
 }
   
 #endif

@@ -104,7 +104,14 @@
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
+#include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
+//#include "DataFormats/L1TGlobalTrigger/interface/GlobalAlgBlk.h"
+//#include "DataFormats/L1TGlobalTrigger/interface/L1TGlobalOutput.h"
 
+
+//
 // ~~~~~~~~~ user include files ~~~~~~~~~
 #define FWCORE
 
@@ -251,6 +258,8 @@ private:
   edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> trackToGenToken_;
   edm::EDGetTokenT<reco::PFCandidateCollection> pfCandToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genEventToken_; // for reading generator weight
+  edm::EDGetTokenT<L1GlobalTriggerReadoutRecord> l1GtReadoutRecordToken_;
+
 
   edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_veto;
   edm::Handle<edm::ValueMap<bool> > electron_cutbasedID_decisions_loose;
@@ -318,6 +327,8 @@ private:
   //Ias-quantiles update
   //Ias-quantiles { 40%, 50%, 60%, 70%, 80%, 90%, 99%, 99.9% }
   float Ias_quantiles[8]={ 0.014565036, 0.017987774, 0.022399569, 0.028518069, 0.038047370, 0.056746799, 0.13331622, 0.22018057 }; //data or signal -- IAS STRIP ONLY NO FSTRIP CUT
+  float Fpix_quantiles[12]={ 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7,0.8,0.9,0.99,1.0 }; //data or signal -- F PIXEL ONLY
+ 
   //float Ias_quantiles[5]={ 0.037, 0.042, 0.048, 0.056, 0.066 }; //data or signal //WIP new quantiles determined with new preselection cuts
   //pT cut update 60-->70 GeV
   float pT_cut = 70;
@@ -425,9 +436,30 @@ private:
   const std::string pixelCPE_;
   const int debug_;
   const bool hasMCMatch_,calcSyst_;
+
   unsigned int trigInfo_;
 
   static constexpr const char* const MOD = "Analyzer";
+  int totMu22;
+  int totMu22or25;
+  int totLastMu;
 
+  int passMu22;
+  int passMu25;
+  int passLastMu;
+
+  int passMu22PostS;
+  int passMu25PostS;
+  int passLastMuPostS;
+
+  TEfficiency* effl1Mu22;
+  TEfficiency* effl1Mu22or25;
+  TEfficiency* effl1LastMu;
+  TEfficiency* effHltMu50;
+
+  TEfficiency* effl1Mu22PostS;
+  TEfficiency* effl1Mu22or25PostS;
+  TEfficiency* effl1LastMuPostS;
+  TEfficiency* effHltMu50PostS;
 };
 #endif
