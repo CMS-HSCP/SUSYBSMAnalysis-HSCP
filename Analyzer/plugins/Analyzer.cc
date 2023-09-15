@@ -209,6 +209,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       dEdxTemplate_(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
       timeOffset_(iConfig.getUntrackedParameter<string>("TimeOffset")),
       saveTree_(iConfig.getUntrackedParameter<int>("SaveTree")),
+      plotsPreS_massSpectrumApproach_(iConfig.getUntrackedParameter<bool>("plotsPreS_massSpectrumApproach")),
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
@@ -3975,7 +3976,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection with Sept8 cuts";
     bool passPreSept8 = passPreselection(passedCutsArraySept8, true);
     bool passPre_massSpectrum = (passPreselection(passedCutsArray_massSpectrum, true) && globalIh_ > dEdxC_) ? true : false;
-    
+   
+    if(plotsPreS_massSpectrumApproach_) passPre=passPre_massSpectrum;
+
+
     // Few more bins in CutFlow for SRs
     unsigned int passedCutsArraySize = sizeof(passedCutsArray);
     if (globalIas_ > 0.25 && probQonTrackNoL1 < 0.1 && passPre) {
@@ -7310,7 +7314,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
     ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector, really controlled by the config for each era");
 
-
+  desc.addUntracked("plotsPreS_massSpectrumApproach",false)->setComment("false: provide plots at PreS step with the ionisation approach preselection; true: provide plots at PreS step with the mass spectrum approach preselection");
 
   desc.addUntracked<std::string>("TimeOffset","SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt")
     ->setComment("MuonTimeOffset info"); // I'm not sure we need this
