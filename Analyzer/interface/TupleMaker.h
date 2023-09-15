@@ -2562,7 +2562,6 @@ void TupleMaker::initializeRegions(Tuple *&tuple,
                                 int pbins,
                                 int massbins,
                                 bool allRegions=true) {
-    bool allRegions2=false;
     tuple->rA_ias50.setSuffix("_regionA_ias50"); tuple->rA_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rC_ias50.setSuffix("_regionC_ias50"); tuple->rC_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
     if(allRegions){tuple->rB_50ias60.setSuffix("_regionB_50ias60"); tuple->rB_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);}
@@ -2571,20 +2570,20 @@ void TupleMaker::initializeRegions(Tuple *&tuple,
     if(allRegions){tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);}
     tuple->rB_50ias90.setSuffix("_regionB_50ias90"); tuple->rB_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
     if(allRegions){tuple->rB_50ias99.setSuffix("_regionB_50ias99"); tuple->rB_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);}
-    if(allRegions2){tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rB_99ias100.setSuffix("_regionB_99ias100"); tuple->rB_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
-    if(allRegions2){tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);}
     tuple->rD_50ias90.setSuffix("_regionD_50ias90"); tuple->rD_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
     if(allRegions){tuple->rD_50ias99.setSuffix("_regionD_50ias99"); tuple->rD_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);}
-    if(allRegions2){tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
     if(allRegions){tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
     if(allRegions){tuple->rD_99ias100.setSuffix("_regionD_99ias100"); tuple->rD_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
-    if(allRegions2){tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
+    if(allRegions){tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
 }
 
 //=============================================================
