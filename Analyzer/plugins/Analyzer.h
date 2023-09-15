@@ -376,6 +376,18 @@ private:
 
   //=============================================================
   Tuple* tuple;
+  Tuple* tuple_SigmaPt1_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt2_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt4_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt5_iso1_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso0_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut2_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut3_PtCut1;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut2;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut3;
+  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut4;
   TupleMaker* tuple_maker;
   //=============================================================
 
@@ -414,7 +426,7 @@ private:
 
   TRandom3* RNG = nullptr;
   TRandom3* RNG2 = nullptr;
-  //TRandom3* RNG3 = nullptr;
+  TRandom3* RNG3 = nullptr;
   bool is2016;
   bool is2016G;
 
