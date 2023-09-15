@@ -1,0 +1,1113 @@
+diff --git a/Analyzer/interface/Regions.h b/Analyzer/interface/Regions.h
+index 78fc848..57327d7 100644
+--- a/Analyzer/interface/Regions.h
++++ b/Analyzer/interface/Regions.h
+@@ -31,13 +31,13 @@ void scale(TH1F* h){
+ class Region{
+     public:
+         Region();
+-        Region(TFileDirectory &dir,std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins,bool saveIhP);
++        Region(TFileDirectory &dir,std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins);
+         ~Region();
+         void setSuffix(std::string suffix);
+-        void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins, bool saveIhP);
+-        void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& probq, float& m, float& tof, float& w, bool saveIhP);
++        void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins);
++        void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w);
+         void fillPredMass(const std::string&, float weight_);
+-        void write(bool saveIhP);
++        void write();
+ 
+         int np;
+         float plow;
+@@ -63,7 +63,6 @@ class Region{
+         TH2F* eta_p;
+         TH2F* ih_eta;
+         TH2F* ih_p;
+-        TH2F* ih_pt;
+         TH2F* ias_p;
+         TH2F* ias_pt;
+         //TH2F* ias_ih;
+@@ -72,22 +71,13 @@ class Region{
+         TH2F* eta_p_rebinned;
+         //TH2F* pt_pterroverpt;
+         TH1F* hTOF;
+-        TH2F* ih_p_m_inf_0;
+-        TH2F* ih_p_m_0_100;
+-        TH2F* ih_p_m_100_200;
+-        TH2F* ih_p_m_200_300;
+-        TH2F* ih_p_m_300_400;
+-        TH2F* ih_p_m_400_600;
+-        TH2F* ih_p_m_600_800;
+-        TH2F* ih_p_m_800_inf;
+-        TH2F* mass_probQ;
+ };
+ 
+ Region::Region(){}
+ 
+-Region::Region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins,bool saveIhP=false){
++Region::Region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins){
+     suffix_ = suffix;
+-    initHisto(dir,etabins,ihbins,pbins,massbins,saveIhP);
++    initHisto(dir,etabins,ihbins,pbins,massbins);
+ } 
+ 
+ Region::~Region(){
+@@ -110,15 +100,14 @@ void Region::setSuffix(std::string suffix){
+ }
+ 
+ // Function which intializes the histograms with given binnings 
+-void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins,bool saveIhP=false){
++void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins){
+     TH1::SetDefaultSumw2(kTRUE);
+     TH2::SetDefaultSumw2(kTRUE);
+     TH3::SetDefaultSumw2(kTRUE);
+     np = pbins;
+     plow = 0;
+     pup = 200;
+-    //npt = pbins;
+-    npt = 200;
++    npt = pbins;
+     ptlow = 0;
+     ptup = 10000; 
+     nih = ihbins;
+@@ -138,9 +127,8 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int
+     eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];#eta",np,plow,pup,neta,etalow,etaup); 
+     ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup); 
+     ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup);
+-    ih_pt = dir.make<TH2F>(("ih_pt"+suffix).c_str(),";p_{T} [GeV];I_{h} [MeV/cm]",npt,plow,pup,nih,ihlow,ihup);
+     ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];G_{i}",np,plow,pup,nias,iaslow,iasup); 
+-    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";p_{T} [GeV];G_{i}",npt,ptlow,ptup,nias,iaslow,iasup);
++    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];G_{i}",npt,ptlow,ptup,nias,iaslow,iasup);
+     //ias_ih = dir.make<TH2F>(("ias_ih"+suffix).c_str(),";I_{h} [MeV/cm];G_{i}",nih,ihlow,ihup,nias,iaslow,iasup);
+     mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
+     pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
+@@ -148,39 +136,20 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int
+     pred_mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
+     //pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); 
+     hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10);
+-    if(saveIhP)ih_p_m_inf_0 = dir.make<TH2F>(("ih_p_m_inf_0"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_0_100 = dir.make<TH2F>(("ih_p_m_0_100"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_100_200 = dir.make<TH2F>(("ih_p_m_100_200"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_200_300 = dir.make<TH2F>(("ih_p_m_200_300"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_300_400 = dir.make<TH2F>(("ih_p_m_300_400"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_400_600 = dir.make<TH2F>(("ih_p_m_400_600"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_600_800 = dir.make<TH2F>(("ih_p_m_600_800"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    if(saveIhP)ih_p_m_800_inf = dir.make<TH2F>(("ih_p_m_800_inf"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+-    mass_probQ = dir.make<TH2F>(("mass_probQ"+suffix).c_str(),";Mass [GeV];F_{i}^{pixel}",nmass,masslow,massup,50,0,1); 
+ }
+ 
+ // Function which fills histograms
+-void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& probq, float& m, float& tof, float& w, bool saveIhP=false){
+-    //ih_p_eta->Fill(eta,p,ih,w);
++void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w){
++   //ih_p_eta->Fill(eta,p,ih,w);
+    eta_p->Fill(p,eta,w);
+    ih_eta->Fill(eta,ih,w);
+    ih_p->Fill(p,ih,w);
+-   ih_p->Fill(pt,ih,w);
+    ias_p->Fill(p,ias,w);
+    ias_pt->Fill(pt,ias,w);
+    //ias_ih->Fill(ih,ias,w);
+    mass->Fill(m,w);
+    //pt_pterroverpt->Fill(pt,pterr/pt,w);
+    hTOF->Fill(tof,w);
+-   if(m<=0 && saveIhP)            ih_p_m_inf_0->Fill(1e-4/p,ih,w);
+-   if(m>0 && m<=100 && saveIhP)   ih_p_m_0_100->Fill(1e-4/p,ih,w);
+-   if(m>100 && m<=200 && saveIhP) ih_p_m_100_200->Fill(1e-4/p,ih,w);
+-   if(m>200 && m<=300 && saveIhP) ih_p_m_200_300->Fill(1e-4/p,ih,w);
+-   if(m>300 && m<=400 && saveIhP) ih_p_m_300_400->Fill(1e-4/p,ih,w);
+-   if(m>400 && m<=600 && saveIhP) ih_p_m_400_600->Fill(1e-4/p,ih,w);
+-   if(m>600 && m<=800 && saveIhP) ih_p_m_600_800->Fill(1e-4/p,ih,w);
+-   if(m>800 && saveIhP)           ih_p_m_800_inf->Fill(1e-4/p,ih,w);
+-   mass_probQ->Fill(m,probq,w);
+ }
+ 
+ // in order to compute properly the uncertainties we use the methods SetBinContent SetBinError instead of Fill
+@@ -230,7 +199,7 @@ void Region::fillPredMass(const std::string& st_sample,float weight_=-1) {
+     }
+ }
+ 
+-void Region::write(bool saveIhP=false){
++void Region::write(){
+     //ih_p_eta->Write();
+     eta_p->Write();
+     ih_eta->Write();
+@@ -242,15 +211,6 @@ void Region::write(bool saveIhP=false){
+     pred_mass->Write();
+     //pt_pterroverpt->Write();
+     hTOF->Write();
+-    if(saveIhP)ih_p_m_inf_0->Write();
+-    if(saveIhP)ih_p_m_0_100->Write();
+-    if(saveIhP)ih_p_m_100_200->Write();
+-    if(saveIhP)ih_p_m_200_300->Write();
+-    if(saveIhP)ih_p_m_300_400->Write();
+-    if(saveIhP)ih_p_m_400_600->Write();
+-    if(saveIhP)ih_p_m_600_800->Write();
+-    if(saveIhP)ih_p_m_800_inf->Write();
+-    mass_probQ->Write();
+ }
+ 
+ void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
+diff --git a/Analyzer/interface/TupleMaker.h b/Analyzer/interface/TupleMaker.h
+index a2c7034..9cdd58b 100644
+--- a/Analyzer/interface/TupleMaker.h
++++ b/Analyzer/interface/TupleMaker.h
+@@ -37,8 +37,7 @@ public:
+                         int etabins,
+                         int ihbins,
+                         int pbins,
+-                        int massbins,
+-                        bool allRegions);
++                        int massbins);
+ 
+   void fillTreeBranches(Tuple *&tuple,
+                         const unsigned int &Trig,
+@@ -355,11 +354,9 @@ public:
+                    float pterr,
+                    float ih,
+                    float ias,
+-                   float probq,
+                    float m,
+                    float tof,
+-                   float w,
+-                   bool allRegions);
++                   float w);
+ 
+   void writeRegions(Tuple *&tuple,
+                     TFileDirectory &dir);
+@@ -941,12 +938,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
+     tuple->BefPreS_TriggerMuon50VsPt = dir.make<TH2F>("BefPreS_TriggerMuon50VsPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,1000.05);
+     tuple->BefPreS_TriggerMuonAllVsPt = dir.make<TH2F>("BefPreS_TriggerMuonAllVsPt", ";MuonAll triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,1000.05);
+     
+-    /*tuple->BefPreS_TriggerMETallVsBeta = dir.make<TH2F>("BefPreS_TriggerMETallVsBeta", ";OR of MET triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
++    tuple->BefPreS_TriggerMETallVsBeta = dir.make<TH2F>("BefPreS_TriggerMETallVsBeta", ";OR of MET triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
+     tuple->BefPreS_TriggerMETallVsMet = dir.make<TH2F>("BefPreS_TriggerMETallVsMet", ";OR of MET triggered;MET (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
+     tuple->BefPreS_TriggerMETallVsHT = dir.make<TH2F>("BefPreS_TriggerMETallVsHT", ";OR of MET triggered;H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
+     tuple->BefPreS_TriggerMETallVsMetOverHt = dir.make<TH2F>("BefPreS_TriggerMETallVsMetOverHt", ";OR of MET triggered;MET / H_{T};Tracks / bin",2,-.5,1.5,30,-0.05,2.95);
+     tuple->BefPreS_TriggerMETallVsMetVsHT = dir.make<TH3F>("BefPreS_TriggerMETallVsMetVsHT", ";OR of MET triggered;MET (GeV);H_{T} (GeV);Tracks / bin",2,-.5,1.5,50,-0.05,2000.05,50,-0.05,2000.05);
+-    */
+   }
+   
+   if (createGiTemplates_) {
+@@ -1600,7 +1596,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
+   }
+ 
+   tuple->PostS_ProbQNoL1VsFiStripsLogVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} (GeV)",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
+-
+   tuple->PostS_GenBeta = dir.make<TH1F>("PostS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
+ 
+   if (doSystsPlots_) {
+@@ -2426,31 +2421,29 @@ void TupleMaker::initializeRegions(Tuple *&tuple,
+                                 int etabins,
+                                 int ihbins,
+                                 int pbins,
+-                                int massbins,
+-                                bool allRegions=true) {
+-    bool allRegions2=false;
++                                int massbins) {
+     tuple->rA_ias50.setSuffix("_regionA_ias50"); tuple->rA_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
+     tuple->rC_ias50.setSuffix("_regionC_ias50"); tuple->rC_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
+-    if(allRegions){tuple->rB_50ias60.setSuffix("_regionB_50ias60"); tuple->rB_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rB_60ias70.setSuffix("_regionB_60ias70"); tuple->rB_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rB_70ias80.setSuffix("_regionB_70ias80"); tuple->rB_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);}
++    tuple->rB_50ias60.setSuffix("_regionB_50ias60"); tuple->rB_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_60ias70.setSuffix("_regionB_60ias70"); tuple->rB_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_70ias80.setSuffix("_regionB_70ias80"); tuple->rB_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+     tuple->rB_50ias90.setSuffix("_regionB_50ias90"); tuple->rB_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+-    if(allRegions){tuple->rB_50ias99.setSuffix("_regionB_50ias99"); tuple->rB_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions2){tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rB_99ias100.setSuffix("_regionB_99ias100"); tuple->rB_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions2){tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);}
++    tuple->rB_50ias99.setSuffix("_regionB_50ias99"); tuple->rB_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_99ias100.setSuffix("_regionB_99ias100"); tuple->rB_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+     tuple->rD_50ias90.setSuffix("_regionD_50ias90"); tuple->rD_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+-    if(allRegions){tuple->rD_50ias99.setSuffix("_regionD_50ias99"); tuple->rD_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions2){tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
+-    if(allRegions){tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
+-    if(allRegions){tuple->rD_99ias100.setSuffix("_regionD_99ias100"); tuple->rD_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
+-    if(allRegions2){tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
++    tuple->rD_50ias99.setSuffix("_regionD_50ias99"); tuple->rD_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_99ias100.setSuffix("_regionD_99ias100"); tuple->rD_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
++    tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+ }
+ 
+ //=============================================================
+@@ -3396,36 +3389,33 @@ void TupleMaker::fillRegions(Tuple *&tuple,
+                              float pterr,
+                              float ih,
+                              float ias,
+-                             float probq,
+                              float m,
+                              float tof,
+-                             float w,
+-                             bool allRegions=true){
+-    bool allRegions2=false;
++                             float w){
+   if(pt<=pt_cut){
+-    if(ias<Ias_quantiles[1]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2] && allRegions) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3] && allRegions) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4] && allRegions) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5] && allRegions) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6] && allRegions) tuple->rB_50ias99.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7] && allRegions2) tuple->rB_50ias999.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[5] && allRegions)                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[6] && allRegions)                         tuple->rB_99ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[7] && allRegions2)                         tuple->rB_999ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
++    if(ias<Ias_quantiles[1]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6]) tuple->rB_50ias99.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7]) tuple->rB_50ias999.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[5])                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[6])                         tuple->rB_99ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[7])                         tuple->rB_999ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+   }else{
+-    if(ias<Ias_quantiles[1]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2] && allRegions) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3] && allRegions) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4] && allRegions) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5] && allRegions) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6] && allRegions) tuple->rD_50ias99.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7] && allRegions2) tuple->rD_50ias999.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+-    if(ias>=Ias_quantiles[5] && allRegions)        {m<400?m=m:m=m; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w,true);} //blind in the last quantile
+-    if(ias>=Ias_quantiles[6] && allRegions)        {m<400?m=m:m=m; tuple->rD_99ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w,true);} //blind in the last quantile
+-    if(ias>=Ias_quantiles[7] && allRegions2)        {m<400?m=m:m=m; tuple->rD_999ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w,true);} //blind in the last quantile
++    if(ias<Ias_quantiles[1]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6]) tuple->rD_50ias99.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7]) tuple->rD_50ias999.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[5])                         tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[6])                         tuple->rD_99ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
++    if(ias>=Ias_quantiles[7])                         tuple->rD_999ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+   }
+ }
+ 
+diff --git a/Analyzer/plugins/Analyzer.cc b/Analyzer/plugins/Analyzer.cc
+index 5b47d6e..00002f2 100644
+--- a/Analyzer/plugins/Analyzer.cc
++++ b/Analyzer/plugins/Analyzer.cc
+@@ -229,60 +229,9 @@ void Analyzer::beginJob() {
+   // Book histograms using TFileService
+   edm::Service<TFileService> fs;
+   TFileDirectory dir = fs->mkdir(sampleName_.c_str(), sampleName_.c_str());
+-  
+-  // -------- NOMENCLATURE 
+-  //SigmaPt1 : no SigmaPt cut
+-  //SigmaPt2 : SigmaPtOverPt2 cut
+-  //SigmaPt3 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 1.0
+-  //SigmaPt4 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 2.0
+-  //SigmaPt5 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 
+-  //iso0 : FixedConeGeneralIso < 50 GeV 
+-  //iso1 : miniGeneralIso < 15 GeV + miniRelIso cut 
+-  //iso2 : FixedConeGeneralIso < 15 GeV + miniRelIso cut 
+-  //IhCut1 : no Ih cut
+-  //IhCut2 : Ih > C
+-  //IhCut3 : Ih > 3.47 (C ultra-relativistic) 
+-  //PtCut1 : no pT cut max
+-  //PtCut2 : pT < 2500 GeV
+-  //PtCut3 : pT < 3000 GeV
+-  //PtCut4 : pT < 4000 GeV
+-  
+-  TFileDirectory dir_SigmaPt1_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt1_iso1_IhCut1_PtCut1", "SigmaPt1_iso1_IhCut1_PtCut1");
+-  //TFileDirectory dir_SigmaPt2_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt2_iso1_IhCut1_PtCut1", "SigmaPt2_iso1_IhCut1_PtCut1");
+-  TFileDirectory dir_SigmaPt3_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso1_IhCut1_PtCut1", "SigmaPt3_iso1_IhCut1_PtCut1");
+-  //TFileDirectory dir_SigmaPt4_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt4_iso1_IhCut1_PtCut1", "SigmaPt4_iso1_IhCut1_PtCut1");
+-  TFileDirectory dir_SigmaPt5_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt5_iso1_IhCut1_PtCut1", "SigmaPt5_iso1_IhCut1_PtCut1");
+-  
+-  
+-  TFileDirectory dir_SigmaPt3_iso0_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso0_IhCut1_PtCut1", "SigmaPt3_iso0_IhCut1_PtCut1");
+-  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut1", "SigmaPt3_iso2_IhCut1_PtCut1");
+-  
+-  //TFileDirectory dir_SigmaPt3_iso2_IhCut2_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut2_PtCut1", "SigmaPt3_iso2_IhCut2_PtCut1");
+-  //TFileDirectory dir_SigmaPt3_iso2_IhCut3_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut3_PtCut1", "SigmaPt3_iso2_IhCut3_PtCut1");
+-  
+-  //TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut2 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut2", "SigmaPt3_iso2_IhCut1_PtCut2");
+-  //TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut3 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut3", "SigmaPt3_iso2_IhCut1_PtCut3");
+-  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut4 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut4", "SigmaPt3_iso2_IhCut1_PtCut4");
+ 
+   // create histograms & trees
+   tuple = new Tuple();
+-  
+-  tuple_SigmaPt1_iso1_IhCut1_PtCut1 = new Tuple();
+-  //tuple_SigmaPt2_iso1_IhCut1_PtCut1 = new Tuple();
+-  tuple_SigmaPt3_iso1_IhCut1_PtCut1 = new Tuple();
+-  //tuple_SigmaPt4_iso1_IhCut1_PtCut1 = new Tuple();
+-  tuple_SigmaPt5_iso1_IhCut1_PtCut1 = new Tuple();
+-  
+-  tuple_SigmaPt3_iso0_IhCut1_PtCut1 = new Tuple();
+-  tuple_SigmaPt3_iso2_IhCut1_PtCut1 = new Tuple();
+-  
+-  //tuple_SigmaPt3_iso2_IhCut2_PtCut1 = new Tuple();
+-  //tuple_SigmaPt3_iso2_IhCut3_PtCut1 = new Tuple();
+-  
+-  //tuple_SigmaPt3_iso2_IhCut1_PtCut2 = new Tuple();
+-  //tuple_SigmaPt3_iso2_IhCut1_PtCut3 = new Tuple();
+-  tuple_SigmaPt3_iso2_IhCut1_PtCut4 = new Tuple();
+-  
+   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
+   
+   tuple_maker->initializeTuple(tuple,
+@@ -317,102 +266,6 @@ void Analyzer::beginJob() {
+                                  reg_pbins_,
+                                  reg_massbins_);
+ 
+-  tuple_maker->initializeRegions(tuple_SigmaPt1_iso1_IhCut1_PtCut1,
+-                                 dir_SigmaPt1_iso1_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_);
+-
+-  /*tuple_maker->initializeRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
+-                                 dir_SigmaPt2_iso1_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_);*/
+-
+-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
+-                                 dir_SigmaPt3_iso1_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_);
+-
+-  /*tuple_maker->initializeRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
+-                                 dir_SigmaPt4_iso1_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_,
+-                                 false);*/
+-
+-  tuple_maker->initializeRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
+-                                 dir_SigmaPt5_iso1_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_
+-                                 );
+-
+-
+-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso0_IhCut1_PtCut1,
+-                                 dir_SigmaPt3_iso0_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_
+-                                 );
+-
+-
+-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
+-                                 dir_SigmaPt3_iso2_IhCut1_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_
+-                                 );
+-
+-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
+-                                 dir_SigmaPt3_iso2_IhCut2_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_,
+-                                 false);*/
+-
+-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
+-                                 dir_SigmaPt3_iso2_IhCut3_PtCut1,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_);*/
+-
+-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
+-                                 dir_SigmaPt3_iso2_IhCut1_PtCut2,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_,
+-                                 false);*/
+-  
+-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
+-                                 dir_SigmaPt3_iso2_IhCut1_PtCut3,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_);*/
+-  
+-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
+-                                 dir_SigmaPt3_iso2_IhCut1_PtCut4,
+-                                 reg_etabins_,
+-                                 reg_ihbins_,
+-                                 reg_pbins_,
+-                                 reg_massbins_
+-                                 );
+-
+-
+-
+-
+   // Re-weighting
+   // Functions defined in Analyzer/interface/MCWeight.h
+   if (!isData) {
+@@ -1732,7 +1585,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+   unsigned int candidate_count = 0;
+   unsigned int postPreS_candidate_count = 0;
+   int bestCandidateIndex = -1;
+-  //int bestCandidateGenIndex = -1;
++  int bestCandidateGenIndex = -1;
+   float maxIhSoFar = -1.;
+   float bestCandidateMass = -1.;
+   float bestCandidateMass_Kup1 = -1.;
+@@ -1745,8 +1598,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+   float bestCandidateMass_Cdown2 = -1.;
+   float bestCandidatePt = -1.;
+   float bestCandidateIas = -1.;
+-  //float bestCandidateFiStrips = -1.;
+-  //float bestCandidateFiStripsLog = -1.;
++  float bestCandidateFiStrips = -1.;
++  float bestCandidateFiStripsLog = -1.;
+   float bestCandidateProbQNoL1 = -1.;
+   float bestCandidateDrMinHltMuon = 9999.;
+   float bestCandidateGenBeta = -1.;
+@@ -2843,8 +2696,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+ 
+     // Choose of Ih definition - Ih_nodrop_noPixL1 for Phase-1 detector
+     //                         - Ih_FullTracker for Phase-0 detector
+-    //auto dedxMObj = (numLayers > 3) ? dedxIh_noL1 : dedxMObj_FullTracker;
+-    auto dedxMObj = dedxIh_StripOnly;
++    auto dedxMObj = (numLayers > 3) ? dedxIh_noL1 : dedxMObj_FullTracker;
+     globalIh_ = (dedxMObj) ?  dedxMObj->dEdx() : -1.f;
+     
+     //Choose of Ias definition - strips only
+@@ -2981,61 +2833,33 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+       closestBackgroundPDGsIDs[6] = numSiblingsF;
+     }
+     // -- end TODO Sept 25
+-
+-      //  // Before preselection print-outs
+-      //  if (debug_ > 7 ) {
+-      //    LogPrint(MOD) << "        >> Before preselection print-outs:";
+-      //    LogPrint(MOD) << "        >> Trigger passed!";
+-      //    LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
+-      //    LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
+-      //    LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
+-      //    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
+-      //    LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
+-      //    LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
+-      //    LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
+-      //    LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
+-      //    LogPrint(MOD) << "        >>   PF E = " << pf_energy <<  " Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " p = " << track->p() ;
+-      //    LogPrint(MOD) << "        >>   dz  " <<   dz ;
+-      //    LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
+-      //    LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
+-      //    LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
+-      //    LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
+-      //    LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
+-      //    LogPrint(MOD) << "        >>   globalIh_  " <<   globalIh_ ;
+-      //    LogPrint(MOD) << "        >>   globalIas_  " << globalIas_;
+-      //    LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
+-      //    LogPrint(MOD) << "        >>   probXYonTrack   " <<  probXYonTrack  ;
+-      //
+-      //  }
+-
+-      // Loop on generalTracks
+-    track_genTrackMiniIsoSumPt = 0;
+-    float track_genTrackIsoSumPt = 0;
+-    for(unsigned int c=0;c<trackCollectionHandle->size();c++){
+-      reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
+-        // Dont count the HSCP candidate in
+-      if (genTrackRef.isNonnull() && genTrackRef.key() != track.key()) {
+-        float drForMiniIso = 0.0;
+-        if (track->pt() < 50 ) {
+-          drForMiniIso = 0.2;
+-        } else if (track->pt() < 200) {
+-          drForMiniIso = 10/track->pt();
+-        } else {
+-          drForMiniIso = 0.05;
+-        }
+-        float pt = genTrackRef->pt();
+-        float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
+-        //drForMiniIso = 0.3;  // test by Dylan on genTrackIsoSumPt (fixed size cone)
+-        if (dr<drForMiniIso) {
+-          track_genTrackMiniIsoSumPt+=pt;
+-        }
+-        if (dr<0.3) {
+-          track_genTrackIsoSumPt+=pt;
+-        }
+-      }
+-    }
+-
+-
++    
++    // Before preselection print-outs
++    //  if (debug_ > 7 ) {
++    //    LogPrint(MOD) << "        >> Before preselection print-outs:";
++    //    LogPrint(MOD) << "        >> Trigger passed!";
++    //    LogPrint(MOD) << "        >>   track->eta()  " <<   track->eta() ;
++    //    LogPrint(MOD) << "        >>   track->pt()  " <<   track->pt() ;
++    //    LogPrint(MOD) << "        >>   track->found()  " <<   track->found() ;
++    //    LogPrint(MOD) << "        >>   track->hitPattern().numberOfValidPixelHits()  " <<   track->hitPattern().numberOfValidPixelHits() ;
++    //    LogPrint(MOD) << "        >>   track->validFraction()  " <<   track->validFraction() ;
++    //    LogPrint(MOD) << "        >>   numDeDxHits  " <<   numDeDxHits ;
++    //    LogPrint(MOD) << "        >>   track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof()  ;
++    //    LogPrint(MOD) << "        >>   EoP   " <<   EoP  ;
++    //    LogPrint(MOD) << "        >>   PF E = " << pf_energy <<  " Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " p = " << track->p() ;
++    //    LogPrint(MOD) << "        >>   dz  " <<   dz ;
++    //    LogPrint(MOD) << "        >>   dxy  " <<   dxy ;
++    //    LogPrint(MOD) << "        >>   track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
++    //    LogPrint(MOD) << "        >>   pTerr_over_pT_etaBin(track->pt(), track->eta())  " <<   pTerr_over_pT_etaBin(track->pt(), track->eta()) ;
++    //    LogPrint(MOD) << "        >>   IsoTK_SumEt   " <<   IsoTK_SumEt  ;
++    //    LogPrint(MOD) << "        >>   miniRelIsoAll   " <<   miniRelIsoAll  ;
++    //    LogPrint(MOD) << "        >>   globalIh_  " <<   globalIh_ ;
++    //    LogPrint(MOD) << "        >>   globalIas_  " << globalIas_;
++    //    LogPrint(MOD) << "        >>   probQonTrack   " <<   probQonTrack  ;
++    //    LogPrint(MOD) << "        >>   probXYonTrack   " <<  probXYonTrack  ;
++    //
++    //  }
++    
+     // number of tracks as the first bin
+     if (trigInfo_ > 0 && doBefPreSplots_) {
+       tuple->BefPreS_PfType->Fill(0., eventWeight_);
+@@ -4025,8 +3849,42 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+           tuple->BefPreS_TriggerMuon50VsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
+         }
+       }
+-      /*if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+-
++      // Repeat the same with all muon trigs recom by POG
++      if (!muTrig) {
++        tuple->BefPreS_TriggerMuonAllVsBeta->Fill(0., genBeta);
++        tuple->BefPreS_TriggerMuonAllVsPt->Fill(0., track->pt());
++        if (fabs(track->eta()) < 0.3) {
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA->Fill(0., genBeta);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
++        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB->Fill(0., genBeta);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
++        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC->Fill(0., genBeta);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
++        }
++      } else if (muTrig) {
++        tuple->BefPreS_TriggerMuonAllVsBeta->Fill(1., genBeta);
++        tuple->BefPreS_TriggerMuonAllVsPt->Fill(1., track->pt());
++        if (fabs(track->eta()) < 0.3) {
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA->Fill(1., genBeta);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(1., genBetaPrimeUp);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(1., genBetaPrimeDown);
++        } else  if (fabs(track->eta()) > 0.3 && fabs(track->eta()) < 0.6) {
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB->Fill(1., genBeta);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(1., genBetaPrimeUp);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(1., genBetaPrimeDown);
++        } else  if (fabs(track->eta()) > 0.6 && fabs(track->eta()) < 1.0) {
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC->Fill(1., genBeta);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(1., genBetaPrimeUp);
++          tuple->BefPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(1., genBetaPrimeDown);
++        }
++      }
++      // Now for all MET triggers
++      if (!HLT_PFMET120_PFMHT120_IDTight && !HLT_PFHT500_PFMET100_PFMHT100_IDTight && !HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 && !HLT_MET105_IsoTrk50) {
+         tuple->BefPreS_TriggerMETallVsBeta->Fill(0., genBeta);
+         tuple->BefPreS_TriggerMETallVsMet->Fill(0., RecoPFMET);
+         tuple->BefPreS_TriggerMETallVsHT->Fill(0., pfJetHT);
+@@ -4038,7 +3896,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+         tuple->BefPreS_TriggerMETallVsHT->Fill(1., pfJetHT);
+         tuple->BefPreS_TriggerMETallVsMetVsHT->Fill(1., RecoPFMET, pfJetHT);
+         tuple->BefPreS_TriggerMETallVsMetOverHt->Fill(1., RecoPFMET/pfJetHT);
+-      }*/
++      }
+     }
+     
+     
+@@ -4440,12 +4298,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+         bestCandidateMass_Cdown2 = Mass_Cdown2;
+         bestCandidatePt = track->pt();
+         bestCandidateIas = globalIas_;
+-        //bestCandidateFiStrips = globalFiStrips_;
+-        //bestCandidateFiStripsLog = -log(1-globalFiStrips_);
++        bestCandidateFiStrips = globalFiStrips_;
++        bestCandidateFiStripsLog = -log(1-globalFiStrips_);
+         bestCandidateProbQNoL1 = probQonTrackNoL1;
+         bestCandidateDrMinHltMuon = dr_min_hltMuon_hscpCand;
+         bestCandidateGenBeta = genBeta;
+-        //bestCandidateGenIndex = closestGenIndex;
++        bestCandidateGenIndex = closestGenIndex;
+       }
+     }
+     
+@@ -4907,299 +4765,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+       MassDownComb = GetMassFromBeta(track->p(), (1 / tof->inverseBeta()));
+     
+     bool PassNonTrivialSelection = false;
+-
+-  // -------- NOMENCLATURE 
+-  //SigmaPt1 : no SigmaPt cut
+-  //SigmaPt2 : SigmaPtOverPt2 cut
+-  //SigmaPt3 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 1.0
+-  //SigmaPt4 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 2.0
+-  //SigmaPt5 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 
+-  //iso0 : FixedConeGeneralIso < 50 GeV
+-  //iso1 : miniGeneralIso < 15 GeV + miniRelIso cut 
+-  //iso2 : FixedConeGeneralIso < 15 GeV + miniRelIso cut 
+-  //IhCut1 : no Ih cut
+-  //IhCut2 : Ih > C
+-  //IhCut3 : Ih > 3.47 (C ultra-relativistic) 
+-  //PtCut1 : no pT cut max
+-  //PtCut2 : pT < 2500 GeV
+-  //PtCut3 : pT < 3000 GeV
+-  //PtCut4 : pT < 4000 GeV
+-  
+-    
+-    bool passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1[15];
+-    bool passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1[15];
+-    bool passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1[15];
+-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2[15];
+-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3[15];
+-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4[15];
+-
+-    
+-    std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1[13] = true;
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1[13] = passedCutsArray[13];
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0) && (track->ptError() / (track->pt()) < 1.0)) ? true : false;
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0) && (track->ptError() / (track->pt()) < 2.0)) ? true : false;
+-
+-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0)) ? true : false;
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1[10] = true;
+-    passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1[11] = ( track_genTrackIsoSumPt < 50 ) ? true : false;
+-
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1));
+-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1[11] = ( track_genTrackIsoSumPt < 15) ? true : false;
+-
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1));
+-    passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_ && globalIh_ > dEdxC_) ? true : false; 
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1));
+-    passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_ && globalIh_ > 3.47) ? true : false; 
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2));
+-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2[1] = ((track->pt() > globalMinPt_) && (track->pt() < 2500))? true : false;
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3));
+-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3[1] = ((track->pt() > globalMinPt_) && (track->pt() < 3000))? true : false;
+-    
+-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4));
+-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4[1] = ((track->pt() > globalMinPt_) && (track->pt() < 4000))? true : false;
+-
+-    bool passPre_SigmaPt1_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1, false);
+-    //bool passPre_SigmaPt2_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1, false);
+-    bool passPre_SigmaPt3_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1, false);
+-    //bool passPre_SigmaPt4_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1, false);
+-    bool passPre_SigmaPt5_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1, false);
+-    bool passPre_SigmaPt3_iso0_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1, false);
+-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1, false);
+-    //bool passPre_SigmaPt3_iso2_IhCut2_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1, false);
+-    //bool passPre_SigmaPt3_iso2_IhCut3_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1, false);
+-    //bool passPre_SigmaPt3_iso2_IhCut1_PtCut2 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2, false);
+-    //bool passPre_SigmaPt3_iso2_IhCut1_PtCut3 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3, false);
+-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut4 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4, false);
+-
+-    /*
+-    //passPre_SigmaPt1_iso1_IhCut1_PtCut1 = false;
+-    passPre_SigmaPt2_iso1_IhCut1_PtCut1 = false;
+-    //passPre_SigmaPt3_iso1_IhCut1_PtCut1 = false;
+-    passPre_SigmaPt4_iso1_IhCut1_PtCut1 = false;
+-    //passPre_SigmaPt5_iso1_IhCut1_PtCut1 = false;
+-    
+-    //passPre_SigmaPt3_iso0_IhCut1_PtCut1 = false;
+-    //passPre_SigmaPt3_iso2_IhCut1_PtCut1 = false;
+-    passPre_SigmaPt3_iso2_IhCut2_PtCut1 = false;
+-    passPre_SigmaPt3_iso2_IhCut3_PtCut1 = false;
+-    passPre_SigmaPt3_iso2_IhCut1_PtCut2 = false;
+-    passPre_SigmaPt3_iso2_IhCut1_PtCut3 = false;
+-    //passPre_SigmaPt3_iso2_IhCut1_PtCut4 = false;
+-    */
+-
+- 
+-    if(passPre_SigmaPt1_iso1_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt1_iso1_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_);
+-    }
+-    /*if(passPre_SigmaPt2_iso1_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 false);
+-    }*/
+-    if(passPre_SigmaPt3_iso1_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_
+-                                 );
+-    }
+-    /*if(passPre_SigmaPt4_iso1_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 false);
+-    }*/
+-    if(passPre_SigmaPt5_iso1_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_
+-                                 );
+-    }
+-    if(passPre_SigmaPt3_iso0_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso0_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_
+-                                 );
+-    }
+-    if(passPre_SigmaPt3_iso2_IhCut1_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_
+-                                 );
+-    }
+-    /*if(passPre_SigmaPt3_iso2_IhCut2_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 false);
+-    }*/
+-    /*if(passPre_SigmaPt3_iso2_IhCut3_PtCut1){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 false);
+-    }*/
+-    /*if(passPre_SigmaPt3_iso2_IhCut1_PtCut2){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 false);
+-    }
+-    if(passPre_SigmaPt3_iso2_IhCut1_PtCut3){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 false);
+-    }*/
+-    if(passPre_SigmaPt3_iso2_IhCut1_PtCut4){
+-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
+-                                 pT_cut,
+-                                 Ias_quantiles,
+-                                 track->eta(),
+-                                 10000./track->p(),
+-                                 track->pt(),
+-                                 track->ptError(),
+-                                 dedxMObj ? dedxMObj->dEdx() : -1,
+-                                 dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+-                                 Mass,
+-                                 tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_
+-                                 );
+-    }
+-
+     
+     if (passPre) {
+         tuple_maker->fillRegions(tuple,
+@@ -5211,11 +4776,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+                                  track->ptError(),
+                                  dedxMObj ? dedxMObj->dEdx() : -1,
+                                  dedxSObj ? dedxSObj->dEdx() : -1,
+-                                 probQonTrackNoL1,
+                                  Mass,
+                                  tof ? tof->inverseBeta() : -99,
+-                                 eventWeight_,
+-                                 true);
++                                 eventWeight_);
+ 
+       if (debug_ > 3  && trigInfo_ > 0) LogPrint(MOD) << "      >> We enter the selection cut loop now";
+       //==========================================================
+@@ -5580,57 +5143,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+     }
+     
+     // Systematics plots for pT rescaling
+-    if (rescaledPtUp > globalMinPt_) {
+-      tuple->PostS_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
+-      tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_);
+-      tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
+-      tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
+-    }
+-    if (rescaledPtDown > globalMinPt_) {
+-      tuple->PostS_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_);
+-      tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_);
+-      tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_);
+-      tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_);
+-    }
+-    // Systematics plots for Gi rescaling
+-    RNG3 = new TRandom3(long(time(NULL)));
+-    float theGiSystFactorUp =  std::max((double)1, RNG3->Gaus(1,1.02));
+-    float theGiSystFactorDown =  std::max((double)0, std::min((double)1, RNG3->Gaus(1,1.02)));
+-    tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  EventWeight_);
+-    tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  EventWeight_);
+-    
+-    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp), bestCandidateTrack->pt(),  EventWeight_);
+-    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown, bestCandidateTrack->pt(),  EventWeight_);
+-    
+-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStrips*theGiSystFactorUp), bestCandidateTrack->pt(),  EventWeight_);
+-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips*theGiSystFactorDown, bestCandidateTrack->pt(),  EventWeight_);
+-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStripsLog*theGiSystFactorUp), bestCandidateTrack->pt(),  EventWeight_);
+-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog*theGiSystFactorDown, bestCandidateTrack->pt(),  EventWeight_);
+-    
+-    // Systematics plots for PU rescaling
+-    tuple->PostS_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[0]);
+-    tuple->PostS_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  EventWeight_ * PUSystFactor_[1]);
+-    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
+-    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
+-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
+-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
+-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[0]);
+-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), EventWeight_ * PUSystFactor_[1]);
+-    // Systematics plots for Fi rescaling
++    if (rescaledPtUp > globalMinPt_ && doSystsPlots_) {
++      tuple->PostS_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_);
++      tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_);
++      tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_);
++      tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_);
++    }
++    if (rescaledPtDown > globalMinPt_ && doSystsPlots_) {
++      tuple->PostS_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_);
++      tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_);
++      tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_);
++      tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_);
++    }
++    
++    float theGiSystFactorUp = 1.02;
++    float theGiSystFactorDown = 0.98;
+     float theFiSystFactorUp = 1.005;
+     float theFiSystFactorDown = 0.995;
+-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  EventWeight_ * theFiSystFactorUp);
+-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  EventWeight_ * theFiSystFactorDown);
+-    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+-    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorUp);
+-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  EventWeight_ * theFiSystFactorDown);
+-    // Systematics plots for trigger rescaling
+     float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
+     float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
+-
+     
+     tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
+     
+@@ -6687,7 +6218,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+   }
+ } // end of analyze()
+ 
+-
+ // ------------ method called once each job just after ending the event loop  ------------
+ void Analyzer::endJob() {
+   if (tapeRecallOnly_) return;
+@@ -6696,18 +6226,6 @@ void Analyzer::endJob() {
+   delete RNG2;
+ //  delete RNG3;
+   delete tuple;
+-  delete tuple_SigmaPt1_iso1_IhCut1_PtCut1;
+-  //delete tuple_SigmaPt2_iso1_IhCut1_PtCut1;
+-  delete tuple_SigmaPt3_iso1_IhCut1_PtCut1;
+-  //delete tuple_SigmaPt4_iso1_IhCut1_PtCut1;
+-  delete tuple_SigmaPt5_iso1_IhCut1_PtCut1;
+-  delete tuple_SigmaPt3_iso0_IhCut1_PtCut1;
+-  delete tuple_SigmaPt3_iso2_IhCut1_PtCut1;
+-  //delete tuple_SigmaPt3_iso2_IhCut2_PtCut1;
+-  //delete tuple_SigmaPt3_iso2_IhCut3_PtCut1;
+-  //delete tuple_SigmaPt3_iso2_IhCut1_PtCut2;
+-  //delete tuple_SigmaPt3_iso2_IhCut1_PtCut3;
+-  delete tuple_SigmaPt3_iso2_IhCut1_PtCut4;
+   if (!isData) {
+     delete mcWeight;
+   }
+diff --git a/Analyzer/plugins/Analyzer.h b/Analyzer/plugins/Analyzer.h
+index 41f0188..e3e39b1 100644
+--- a/Analyzer/plugins/Analyzer.h
++++ b/Analyzer/plugins/Analyzer.h
+@@ -371,18 +371,6 @@ private:
+ 
+   //=============================================================
+   Tuple* tuple;
+-  Tuple* tuple_SigmaPt1_iso1_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt2_iso1_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt3_iso1_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt4_iso1_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt5_iso1_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt3_iso0_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut1;
+-  Tuple* tuple_SigmaPt3_iso2_IhCut2_PtCut1;
+-  Tuple* tuple_SigmaPt3_iso2_IhCut3_PtCut1;
+-  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut2;
+-  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut3;
+-  Tuple* tuple_SigmaPt3_iso2_IhCut1_PtCut4;
+   TupleMaker* tuple_maker;
+   //=============================================================
+ 
+@@ -421,7 +409,7 @@ private:
+ 
+   TRandom3* RNG = nullptr;
+   TRandom3* RNG2 = nullptr;
+-  TRandom3* RNG3 = nullptr;
++  //TRandom3* RNG3 = nullptr;
+   bool is2016;
+   bool is2016G;
+ 

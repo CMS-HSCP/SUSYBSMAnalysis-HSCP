@@ -261,6 +261,7 @@ public:
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
                         const std::vector<float> &track_genTrackMiniIsoSumPt,
+                        const std::vector<float> &track_genTrackIsoSumPt_dr03,
                         const std::vector<float> &PFMiniIso_relative,
                         const std::vector<float> &PFMiniIso_wMuon_relative,
                         const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
@@ -2487,6 +2488,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     tuple->Tree->Branch("track_genTrackMiniIsoSumPt", &tuple->Tree_track_genTrackMiniIsoSumPt);
+    tuple->Tree->Branch("track_genTrackIsoSumPt_dr03", &tuple->Tree_track_genTrackIsoSumPt_dr03);
     tuple->Tree->Branch("HSCP_tuneP_Pt", &tuple->Tree_HSCP_tuneP_Pt);
     tuple->Tree->Branch("HSCP_tuneP_PtErr", &tuple->Tree_HSCP_tuneP_PtErr);
     tuple->Tree->Branch("HSCP_tuneP_Eta", &tuple->Tree_HSCP_tuneP_Eta);
@@ -2811,6 +2813,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
                                   const std::vector<float> &track_genTrackMiniIsoSumPt,
+                                  const std::vector<float> &track_genTrackIsoSumPt_dr03,
 
 
                                   const std::vector<float> &PFMiniIso_relative,
@@ -3094,6 +3097,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_iso_ECAL = iso_ECAL;
   tuple->Tree_iso_HCAL = iso_HCAL;
   tuple->Tree_track_genTrackMiniIsoSumPt = track_genTrackMiniIsoSumPt;
+  tuple->Tree_track_genTrackIsoSumPt_dr03 = track_genTrackIsoSumPt_dr03;
   tuple->Tree_PFMiniIso_relative = PFMiniIso_relative;
   tuple->Tree_PFMiniIso_wMuon_relative = PFMiniIso_wMuon_relative;
   tuple->Tree_track_PFIsolationR005_sumChargedHadronPt = track_PFIsolationR005_sumChargedHadronPt;
