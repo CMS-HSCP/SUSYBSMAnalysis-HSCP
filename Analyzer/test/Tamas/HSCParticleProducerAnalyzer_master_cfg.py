@@ -231,8 +231,8 @@ if options.SAMPLE == 'isData':
         if options.ERA == 'H':
             IasTemplate = 'template_2016H_v5.root'
     if options.YEAR == '2017':
-        K = 2.3
-        C = 3.17
+        K = 2.54
+        C = 3.14
         SF0 = 1.0
         SF1 = 0.990
         if options.ERA == 'A':
@@ -252,8 +252,8 @@ if options.SAMPLE == 'isData':
         if options.ERA == 'H':
             IasTemplate = 'template_2017F_v5.root'
     if options.YEAR == '2018':
-        K = 2.27
-        C = 3.16
+        K = 2.55
+        C = 3.14
         SF0 = 1.0
         SF1 = 1.035
         if options.ERA == 'A':
@@ -268,28 +268,28 @@ else:
     if options.SAMPLE == 'isBckg':
         SampleType = 1
         if options.YEAR == '2017':
-            K = 2.26
-            C = 3.22
+            K = 2.48
+            C = 3.19
             SF0 = 1.009
             SF1 = 1.044
             IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
-            K = 2.27
-            C = 3.22
+            K = 2.49
+            C = 3.18
             SF0 = 1.006
             SF1 = 1.097
             IasTemplate = 'template_2018MC_v5.root'
     else:
         SampleType = 2
         if options.YEAR == '2017':
-            K = 2.26
-            C = 3.22
+            K = 2.48
+            C = 3.19
             SF0 = 1.009
             SF1 = 1.044
             IasTemplate = 'template_2017MC_v5.root'
         if options.YEAR == '2018':
-            K = 2.27
-            C = 3.22
+            K = 2.49
+            C = 3.18
             SF0 = 1.006
             SF1 = 1.097
             IasTemplate = 'template_2018MC_v5.root'

@@ -113,16 +113,52 @@ BackgroundSamples = [
 "crab_Analysis_2018_HSCPtauPrimeCharge1e_M-2200_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge1e_M-2600_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge1e_M-400_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_HSCPtauPrimeCharge1e_M-500_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge1e_M-600_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge1e_M-800_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-500_CodeV"+codeVersion+"_v1.root",
-"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1800_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge2e_M-2200_CodeV"+codeVersion+"_v1.root",
 "crab_Analysis_2018_HSCPtauPrimeCharge2e_M-2600_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-3000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-4000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-5000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-6000_CodeV"+codeVersion+"_v1.root",
+"crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-7000_CodeV"+codeVersion+"_v1.root",
 ]
 
 #intLumi = 4598.37 #10.0 #
@@ -182,15 +218,15 @@ crossSectionArray = {
 'crab_Analysis_2018_HSCPgluinoOnlyNeutral_M-2200_CodeV'+codeVersion+'_v1.root' :  0.000356,
 'crab_Analysis_2018_HSCPgluinoOnlyNeutral_M-2400_CodeV'+codeVersion+'_v1.root' :  0.000128,
 'crab_Analysis_2018_HSCPgluinoOnlyNeutral_M-2600_CodeV'+codeVersion+'_v1.root' :  4.62e-5,
-'crab_Analysis_2018_HSCPpairStau_M-200_CodeV'+codeVersion+'_v1.root' : 0.020313,
-'crab_Analysis_2018_HSCPpairStau_M-247_CodeV'+codeVersion+'_v1.root' : 0.014238,
-'crab_Analysis_2018_HSCPpairStau_M-308_CodeV'+codeVersion+'_v1.root' : 0.006353,
-'crab_Analysis_2018_HSCPpairStau_M-432_CodeV'+codeVersion+'_v1.root' : 0.001455,
-'crab_Analysis_2018_HSCPpairStau_M-557_CodeV'+codeVersion+'_v1.root' : 0.000411,
-'crab_Analysis_2018_HSCPpairStau_M-651_CodeV'+codeVersion+'_v1.root' : 0.000217,
-'crab_Analysis_2018_HSCPpairStau_M-745_CodeV'+codeVersion+'_v1.root' : 9.42939e-5,
-'crab_Analysis_2018_HSCPpairStau_M-871_CodeV'+codeVersion+'_v1.root' : 3.77201e-5,
-'crab_Analysis_2018_HSCPpairStau_M-1029_CodeV'+codeVersion+'_v1.root' : 1.09419e-5,
+'crab_Analysis_2018_HSCPpairStau_M-200_CodeV'+codeVersion+'_v1.root' : 0.0303143567,
+'crab_Analysis_2018_HSCPpairStau_M-247_CodeV'+codeVersion+'_v1.root' : 0.01354210931669562,
+'crab_Analysis_2018_HSCPpairStau_M-308_CodeV'+codeVersion+'_v1.root' : 0.005617969677491303,
+'crab_Analysis_2018_HSCPpairStau_M-432_CodeV'+codeVersion+'_v1.root' : 0.0013205993021946,
+'crab_Analysis_2018_HSCPpairStau_M-557_CodeV'+codeVersion+'_v1.root' : 0.0003982919391389629,
+'crab_Analysis_2018_HSCPpairStau_M-651_CodeV'+codeVersion+'_v1.root' : 0.00018170273864904894,
+'crab_Analysis_2018_HSCPpairStau_M-745_CodeV'+codeVersion+'_v1.root' : 8.760649473515753e-5,
+'crab_Analysis_2018_HSCPpairStau_M-871_CodeV'+codeVersion+'_v1.root' : 3.548748280460506e-5,
+'crab_Analysis_2018_HSCPpairStau_M-1029_CodeV'+codeVersion+'_v1.root' : 1.1684554271190975e-5,
 'crab_Analysis_2018_HSCPpairStau_M-1218_CodeV'+codeVersion+'_v1.root' : 0.00057/1000., #fake
 'crab_Analysis_2018_HSCPpairStau_M-1409_CodeV'+codeVersion+'_v1.root' : 0.00057/1000., #fake
 'crab_Analysis_2018_HSCPpairStau_M-1599_CodeV'+codeVersion+'_v1.root' : 0.00057/1000.  ,
@@ -228,24 +264,71 @@ crossSectionArray = {
 'crab_Analysis_2018_HSCPstop_M-2200_CodeV'+codeVersion+'_v1.root' :  5e-06,
 'crab_Analysis_2018_HSCPstop_M-2400_CodeV'+codeVersion+'_v1.root' :  1.71e-06,
 'crab_Analysis_2018_HSCPstop_M-2600_CodeV'+codeVersion+'_v1.root' :  5.9e-07,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-200_CodeV'+codeVersion+'_v1.root' :  1.1E-01,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-400_CodeV'+codeVersion+'_v1.root' :  7.3E-02,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-500_CodeV'+codeVersion+'_v1.root' :  1.2E-03,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-800_CodeV'+codeVersion+'_v1.root' :  2.6E-04,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-1000_CodeV'+codeVersion+'_v1.root' :  7.6E-05,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-1400_CodeV'+codeVersion+'_v1.root' :  8.5E-06,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-1800_CodeV'+codeVersion+'_v1.root' :  1.2E-06,
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-2200_CodeV'+codeVersion+'_v1.root' :  8.2E-07, #fake
-'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-2600_CodeV'+codeVersion+'_v1.root' :  1.2E-07,#fake
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_CodeV'+codeVersion+'_v1.root' :  3.0E-01,
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_CodeV'+codeVersion+'_v1.root' :  2.3E-02,
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-500_CodeV'+codeVersion+'_v1.root' :  3.5E-03,
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_CodeV'+codeVersion+'_v1.root' :  2.4E-04,
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_CodeV'+codeVersion+'_v1.root' :  2.7E-05,
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1800_CodeV'+codeVersion+'_v1.root' :  3.9E-06,
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-2200_CodeV'+codeVersion+'_v1.root' :  8.2E-07, #fake
-'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-2600_CodeV'+codeVersion+'_v1.root' :  1.2E-07,#fake
+# tau-prime comming from https://gitlab.cern.ch/-/snippets/2617
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-200_CodeV'+codeVersion+'_v1.root' :  1.833e-01, # ± 6.9e-04
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-400_CodeV'+codeVersion+'_v1.root' :  1.361e-02, # ± 5.5e-05
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-600_CodeV'+codeVersion+'_v1.root' :  2.340e-03, # ± 8.5e-06
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-800_CodeV'+codeVersion+'_v1.root' :  5.697e-04, # ± 7.3e-07
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-1000_CodeV'+codeVersion+'_v1.root' : 1.638e-04, # ± 2.1e-07
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-1400_CodeV'+codeVersion+'_v1.root' : 1.869e-05, # ± 1.0e-07
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-1800_CodeV'+codeVersion+'_v1.root' : 2.641e-06, # ± 1.5e-08
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-2200_CodeV'+codeVersion+'_v1.root' : 4.175e-07, # ± 3.1e-09
+'crab_Analysis_2018_HSCPtauPrimeCharge1e_M-2600_CodeV'+codeVersion+'_v1.root' : 7.282e-08, # ± 3.9e-10
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_CodeV'+codeVersion+'_v1.root' :  7.332e-01, # 2.8e-03
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_CodeV'+codeVersion+'_v1.root' :  5.440e-02, # 2.2e-04
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_CodeV'+codeVersion+'_v1.root' :  9.363e-03, # 3.4e-05
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_CodeV'+codeVersion+'_v1.root' :  2.280e-03, # 7.7e-06
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_CodeV'+codeVersion+'_v1.root' : 6.553e-04, # 2.9e-06
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_CodeV'+codeVersion+'_v1.root' : 7.477e-05, # 4.1e-07
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1800_CodeV'+codeVersion+'_v1.root' : 1.056e-05, # 6.2e-08
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-2200_CodeV'+codeVersion+'_v1.root' : 1.670e-06, # 1.2e-08
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-2600_CodeV'+codeVersion+'_v1.root' : 2.913e-07, # 1.6e-09
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-3000_CodeV'+codeVersion+'_v1.root' : 0.000451036,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-4000_CodeV'+codeVersion+'_v1.root' : 4.7749E-5,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-5000_CodeV'+codeVersion+'_v1.root' : 5.34376E-6,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-6000_CodeV'+codeVersion+'_v1.root' : 5.45292E-7,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-200_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8, #extrapolated
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-400_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-600_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-800_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1000_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1200_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8,
+'crab_Analysis_2018_HSCPtauPrimeCharge2e_M-1400_ZPrime_M-7000_CodeV'+codeVersion+'_v1.root' : 5.2E-8,
 }
+
+# ZPrime --> TauPrime with SSM
+# 0.00147992 --> 3 TeV
+# 0.000159354 --> 4 TeV
+# 1.76729E-5 --> 5 TeV
+# 1.80017E-6 --> 6 TeV
+# 1.9E-7 --> 7 TeV (extrapolated with exp(-2.23088*x + 0.155437) when x = 7)
+
+# ZPrime --> TauPrime with Z'Psi
+# exp(-2.27921x-0.809873)
 
 ## TTBar is 832 pb (NNLO)
 # gluino x-sections from
@@ -254,6 +337,8 @@ crossSectionArray = {
 fileInArray = []
 for sample in BackgroundSamples:
   if not os.path.exists(sample): continue
+#  if not ("1400" in sample): continue
+#  if not ("ZPrimeMass3000" in sample): continue
   fileInArray.append(ROOT.TFile.Open(sample,"UPDATE"))
 
 for fileIn in fileInArray:
@@ -271,6 +356,8 @@ for fileIn in fileInArray:
     print("No crossSectionArray for "+str(nameFromTFile))
     continue
   weight = intLumi*crossSectionArray.get(nameFromTFile)/nEvetsPreTrig
+  print(nameFromTFile+" is reweighted with " + str(weight))
+  if (abs(1-weight) < 0.0001) : continue
   
   for i in range(0, fileIn.GetListOfKeys().GetEntries()):
     dirname = fileIn.GetListOfKeys().At(i).GetName()
@@ -292,8 +379,7 @@ for fileIn in fileInArray:
           if (obj.GetEntries() == 0 ) :
 #            print("obj.GetEntries() == 0")
             continue
-          if (keyname2=="HscpCandidates" or keyname2=="GenHscpCandidates"):
-            continue
+          if (keyname2=="HscpCandidates" or keyname2=="GenHscpCandidates"): continue
           if obj.InheritsFrom("TObject"):
             obj.Scale(weight)
   fileIn.Write("",ROOT.TObject.kOverwrite)
