@@ -411,6 +411,7 @@ private:
   unsigned int saveTree_;
 
   bool useClusterCleaning, isData, isBckg, isSignal;
+  bool plotsPreS_massSpectrumApproach_;
 
   unsigned int currentRun_ = 0;
 
