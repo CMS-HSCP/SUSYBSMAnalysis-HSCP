@@ -165,7 +165,7 @@ void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, floa
    eta_p->Fill(p,eta,w);
    ih_eta->Fill(eta,ih,w);
    ih_p->Fill(p,ih,w);
-   ih_p->Fill(pt,ih,w);
+   ih_pt->Fill(pt,ih,w);
    ias_p->Fill(p,ias,w);
    ias_pt->Fill(pt,ias,w);
    //ias_ih->Fill(ih,ias,w);
