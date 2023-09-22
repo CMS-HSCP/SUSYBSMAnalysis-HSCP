@@ -37,7 +37,8 @@ public:
                         int etabins,
                         int ihbins,
                         int pbins,
-                        int massbins);
+                        int massbins,
+                        bool allRegions);
 
   void fillTreeBranches(Tuple *&tuple,
                         const unsigned int &Trig,
@@ -293,7 +294,7 @@ public:
                         const std::vector<float> &iso_HCAL,
                         const std::vector<float> &track_genTrackMiniIsoSumPt,
                         const std::vector<float> &track_genTrackAbsIsoSumPtFix,
-
+                        const std::vector<float> &track_genTrackIsoSumPt_dr03,
                         const std::vector<float> &PFMiniIso_relative,
                         const std::vector<float> &PFMiniIso_wMuon_relative,
                         const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
@@ -388,9 +389,11 @@ public:
                    float pterr,
                    float ih,
                    float ias,
+                   float probq,
                    float m,
                    float tof,
-                   float w);
+                   float w,
+                   bool allRegions);
 
   void writeRegions(Tuple *&tuple,
                     TFileDirectory &dir);
@@ -1005,7 +1008,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     
     tuple->BefPreS_TriggerMuon50VsPt = dir.make<TH2F>("BefPreS_TriggerMuon50VsPt", ";Muon50 triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,1000.05);
     tuple->BefPreS_TriggerMuonAllVsPt = dir.make<TH2F>("BefPreS_TriggerMuonAllVsPt", ";MuonAll triggered;Track p_{T};Tracks / bin",2,-.5,1.5,50,-0.05,1000.05);
-    
+
     tuple->BefPreS_TriggerMETallVsBeta = dir.make<TH2F>("BefPreS_TriggerMETallVsBeta", ";OR of MET triggered;Gen #beta;Tracks / bin",2,-.5,1.5,20,0.,1.);
     tuple->BefPreS_TriggerMETallVsMet = dir.make<TH2F>("BefPreS_TriggerMETallVsMet", ";OR of MET triggered;MET [GeV];Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
     tuple->BefPreS_TriggerMETallVsHT = dir.make<TH2F>("BefPreS_TriggerMETallVsHT", ";OR of MET triggered;H_{T} [GeV];Tracks / bin",2,-.5,1.5,50,-0.05,2000.05);
@@ -1746,7 +1749,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Trigger_up", ";F_{i}^{pixels};F_{i}^{strips};p_{T} [GeV]",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
     tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down", ";F_{i}^{pixels};F_{i}^{strips};p_{T} [GeV]",20, 0., 1., 100, 0., 1.,160, 0., PtHistoUpperBound);
   }
-
   tuple->PostS_ProbQNoL1VsFiStripsLogVsPt = dir.make<TH3F>("PostS_ProbQNoL1VsFiStripsLogVsPt", ";F_{i}^{pixels};-log(1-F_{i}^{strips});p_{T} [GeV]",20, 0., 1., 120, 0., 6.,160, 0., PtHistoUpperBound);
   tuple->PostS_GenBeta = dir.make<TH1F>("PostS_GenBeta", ";#beta;Gen candidate / 0.05", 20, 0., 1.);
   tuple->PostS_TriggerGenBeta = dir.make<TH1F>("PostS_TriggerGenBeta", ";#beta^{HLT};Events / 0.05", 20, 0., 1.);
@@ -3001,8 +3003,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     tuple->Tree->Branch("track_genTrackMiniIsoSumPt", &tuple->Tree_track_genTrackMiniIsoSumPt);
-
     tuple->Tree->Branch("track_genTrackAbsIsoSumPtFix", &tuple->Tree_track_genTrackAbsIsoSumPtFix);
+    tuple->Tree->Branch("track_genTrackIsoSumPt_dr03", &tuple->Tree_track_genTrackIsoSumPt_dr03);
     tuple->Tree->Branch("HSCP_tuneP_Pt", &tuple->Tree_HSCP_tuneP_Pt);
     tuple->Tree->Branch("HSCP_tuneP_PtErr", &tuple->Tree_HSCP_tuneP_PtErr);
     tuple->Tree->Branch("HSCP_tuneP_Eta", &tuple->Tree_HSCP_tuneP_Eta);
@@ -3074,29 +3076,30 @@ void TupleMaker::initializeRegions(Tuple *&tuple,
                                 int etabins,
                                 int ihbins,
                                 int pbins,
-                                int massbins) {
+                                int massbins,
+                                bool allRegions=true) {
     tuple->rA_ias50.setSuffix("_regionA_ias50"); tuple->rA_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
     tuple->rC_ias50.setSuffix("_regionC_ias50"); tuple->rC_ias50.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_50ias60.setSuffix("_regionB_50ias60"); tuple->rB_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_60ias70.setSuffix("_regionB_60ias70"); tuple->rB_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_70ias80.setSuffix("_regionB_70ias80"); tuple->rB_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    if(allRegions){tuple->rB_50ias60.setSuffix("_regionB_50ias60"); tuple->rB_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_60ias70.setSuffix("_regionB_60ias70"); tuple->rB_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_70ias80.setSuffix("_regionB_70ias80"); tuple->rB_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_80ias90.setSuffix("_regionB_80ias90"); tuple->rB_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);}
     tuple->rB_50ias90.setSuffix("_regionB_50ias90"); tuple->rB_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_50ias99.setSuffix("_regionB_50ias99"); tuple->rB_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_99ias100.setSuffix("_regionB_99ias100"); tuple->rB_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
+    if(allRegions){tuple->rB_50ias99.setSuffix("_regionB_50ias99"); tuple->rB_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_50ias999.setSuffix("_regionB_50ias999"); tuple->rB_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_90ias100.setSuffix("_regionB_90ias100"); tuple->rB_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_99ias100.setSuffix("_regionB_99ias100"); tuple->rB_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rB_999ias100.setSuffix("_regionB_999ias100"); tuple->rB_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_50ias60.setSuffix("_regionD_50ias60"); tuple->rD_50ias60.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_60ias70.setSuffix("_regionD_60ias70"); tuple->rD_60ias70.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_70ias80.setSuffix("_regionD_70ias80"); tuple->rD_70ias80.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_80ias90.setSuffix("_regionD_80ias90"); tuple->rD_80ias90.initHisto(dir, etabins, ihbins, pbins, massbins);}
     tuple->rD_50ias90.setSuffix("_regionD_50ias90"); tuple->rD_50ias90.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_50ias99.setSuffix("_regionD_50ias99"); tuple->rD_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_99ias100.setSuffix("_regionD_99ias100"); tuple->rD_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
-    tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins);
+    if(allRegions){tuple->rD_50ias99.setSuffix("_regionD_50ias99"); tuple->rD_50ias99.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_50ias999.setSuffix("_regionD_50ias999"); tuple->rD_50ias999.initHisto(dir, etabins, ihbins, pbins, massbins);}
+    if(allRegions){tuple->rD_90ias100.setSuffix("_regionD_90ias100"); tuple->rD_90ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
+    if(allRegions){tuple->rD_99ias100.setSuffix("_regionD_99ias100"); tuple->rD_99ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
+    if(allRegions){tuple->rD_999ias100.setSuffix("_regionD_999ias100"); tuple->rD_999ias100.initHisto(dir, etabins, ihbins, pbins, massbins,true);}
 }
 
 //=============================================================
@@ -3359,7 +3362,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_HCAL,
                                   const std::vector<float> &track_genTrackMiniIsoSumPt,
                                   const std::vector<float> &track_genTrackAbsIsoSumPtFix,
-
+                                  const std::vector<float> &track_genTrackIsoSumPt_dr03,
                                   const std::vector<float> &PFMiniIso_relative,
                                   const std::vector<float> &PFMiniIso_wMuon_relative,
                                   const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
@@ -3684,6 +3687,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_iso_HCAL = iso_HCAL;
   tuple->Tree_track_genTrackMiniIsoSumPt = track_genTrackMiniIsoSumPt;
   tuple->Tree_track_genTrackAbsIsoSumPtFix = track_genTrackAbsIsoSumPtFix;
+  tuple->Tree_track_genTrackIsoSumPt_dr03 = track_genTrackIsoSumPt_dr03;
   tuple->Tree_PFMiniIso_relative = PFMiniIso_relative;
   tuple->Tree_PFMiniIso_wMuon_relative = PFMiniIso_wMuon_relative;
   tuple->Tree_track_PFIsolationR005_sumChargedHadronPt = track_PFIsolationR005_sumChargedHadronPt;
@@ -4118,33 +4122,35 @@ void TupleMaker::fillRegions(Tuple *&tuple,
                              float pterr,
                              float ih,
                              float ias,
+                             float probq,
                              float m,
                              float tof,
-                             float w){
+                             float w,
+                             bool allRegions=true){
   if(pt<=pt_cut){
-    if(ias<Ias_quantiles[1]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6]) tuple->rB_50ias99.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7]) tuple->rB_50ias999.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[5])                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[6])                         tuple->rB_99ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[7])                         tuple->rB_999ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
+    if(ias<Ias_quantiles[1]) tuple->rA_ias50.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2] && allRegions) tuple->rB_50ias60.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3] && allRegions) tuple->rB_60ias70.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4] && allRegions) tuple->rB_70ias80.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5] && allRegions) tuple->rB_80ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rB_50ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6] && allRegions) tuple->rB_50ias99.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7] && allRegions) tuple->rB_50ias999.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[5] && allRegions)                         tuple->rB_90ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[6] && allRegions)                         tuple->rB_99ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[7] && allRegions)                         tuple->rB_999ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
   }else{
-    if(ias<Ias_quantiles[1]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2]) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3]) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4]) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5]) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6]) tuple->rD_50ias99.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7]) tuple->rD_50ias999.fill(eta,p,pt,pterr,ih,ias,m,tof,w);
-    if(ias>=Ias_quantiles[5])        {m<400?m=m:m=-1; tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
-    if(ias>=Ias_quantiles[6])        {m<400?m=m:m=-1; tuple->rD_99ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
-    if(ias>=Ias_quantiles[7])        {m<400?m=m:m=-1; tuple->rD_999ias100.fill(eta,p,pt,pterr,ih,ias,m,tof,w);} //blind in the last quantile
+    if(ias<Ias_quantiles[1]) tuple->rC_ias50.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[2] && allRegions) tuple->rD_50ias60.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[2] && ias<Ias_quantiles[3] && allRegions) tuple->rD_60ias70.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[3] && ias<Ias_quantiles[4] && allRegions) tuple->rD_70ias80.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[4] && ias<Ias_quantiles[5] && allRegions) tuple->rD_80ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[5]) tuple->rD_50ias90.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[6] && allRegions) tuple->rD_50ias99.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[1] && ias<Ias_quantiles[7] && allRegions) tuple->rD_50ias999.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w);
+    if(ias>=Ias_quantiles[5] && allRegions)        {tuple->rD_90ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w,true);} 
+    if(ias>=Ias_quantiles[6] && allRegions)        {tuple->rD_99ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w,true);} 
+    if(ias>=Ias_quantiles[7] && allRegions)        {tuple->rD_999ias100.fill(eta,p,pt,pterr,ih,ias,probq,m,tof,w,true);} 
   }
 }
 

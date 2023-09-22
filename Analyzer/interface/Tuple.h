@@ -285,6 +285,7 @@ struct Tuple {
   std::vector<float> Tree_iso_HCAL;
   std::vector<float> Tree_track_genTrackMiniIsoSumPt;
   std::vector<float> Tree_track_genTrackAbsIsoSumPtFix;
+  std::vector<float> Tree_track_genTrackIsoSumPt_dr03;
   std::vector<float> Tree_PFMiniIso_relative;
   std::vector<float> Tree_PFMiniIso_wMuon_relative;
 
