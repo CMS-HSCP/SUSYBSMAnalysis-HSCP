@@ -213,7 +213,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
-      calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics"))
+      calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics")),
+      calibrateTOF_(iConfig.getUntrackedParameter<bool>("CalibrateTOF"))
 
  {
 //now do what ever initialization is needed
@@ -239,8 +240,10 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   } else {
       dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
   }
-
-  tofCalculator.loadTimeOffset(timeOffset_);
+  //protection
+  if(calibrateTOF_){ 
+      tofCalculator.loadTimeOffset(timeOffset_);
+  }
   /*
   effl1Mu22 = new TEfficiency("eff1", "RAW EfficiencyL1 mu 22 vs bg", 100, 0, 5);
   effl1Mu22or25 = new TEfficiency("eff2", "RAW Efficiency L1 mu 22 or 25 vs bg", 100, 0, 5);
@@ -383,7 +386,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //if run change, update conditions
   if (currentRun_ != iEvent.id().run()) {
     currentRun_ = iEvent.id().run();
-    tofCalculator.setRun(currentRun_);
+    //same protection bool to recompute with correct calibration
+    if(calibrateTOF_){
+        tofCalculator.setRun(currentRun_);
+    }
     dEdxSF[0] = dEdxSF_0_;
     dEdxSF[1] = dEdxSF_1_;
   }
@@ -2401,9 +2407,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHitsPrescRef.isNull()) {
       preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
     }
-    
+
     if (typeMode_ > 1 && typeMode_ != 5 && !hscp.muonRef().isNull()) {
       if (!isData) {
+
         tof = &(*tofMap)[hscp.muonRef()];
         dttof = &(*tofDtMap)[hscp.muonRef()];
         csctof = &(*tofCscMap)[hscp.muonRef()];
@@ -2411,10 +2418,17 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
         const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
         // Apply T0 correction on data but not on signal MC
+        // Ne pas recalculer sur data ou MC  -> uniquement apres re-calibration
+
+        tof = &(*tofMap)[hscp.muonRef()];
+        dttof = &(*tofDtMap)[hscp.muonRef()];
+        csctof = &(*tofCscMap)[hscp.muonRef()];
+        /*
         tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1);
         tof = &tofCalculator.combinedTOF;
         dttof = &tofCalculator.dtTOF;
         csctof = &tofCalculator.cscTOF;
+        */
       }
     } // end conditions for TOF including analysis variables
     
@@ -7568,7 +7582,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
   desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
   desc.addUntracked("DeDxC",3.17)->setComment("C constant, really controlled by the config for each era");
-  desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
+  desc.addUntracked("SaveTree",6)->setComment("0: do not save tree, 6: everything is saved");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
     ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector, really controlled by the config for each era");
 
@@ -7582,6 +7596,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide whether we want to calculate the systematics");
+
+  desc.addUntracked("CalibrateTOF",true)->setComment("Boolean to decide whether we want to apply calibration on TOF");
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
