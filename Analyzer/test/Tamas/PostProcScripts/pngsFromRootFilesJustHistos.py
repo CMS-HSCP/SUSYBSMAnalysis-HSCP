@@ -1,4 +1,4 @@
-import ROOT, sys, os, time, re
+import ROOT, sys, os, time, re, array
 import numpy as np
 from ctypes import c_double as double
 from optparse import OptionParser
@@ -16,15 +16,15 @@ ROOT.gStyle.SetPadLeftMargin(0.15);
 ROOT.gStyle.SetPadRightMargin(0.13);
 
 fileName = sys.argv[1]
-BinNumber = sys.argv[2]
+BinNumber = sys.argv[2] if (len(sys.argv)==1) else 3
 
 bin = int(BinNumber)
 # bin 3: pt>60 and I_as > 0.05
 # bin 25: pt>65 and I_as > 0.175
 # bin 28: pt>65 and I_as > 0.3
 
-blind = True
-#blind = False
+#blind = True
+blind = False
 
 print("Filename: "+fileName)
 input_file = fileName
@@ -42,7 +42,22 @@ if ("SingleMuon" in fileName) : isData = True
 iDontWannaRunPlots = False
 #iDontWannaRunPlots = True
 
+class Vavilov_Func:
+    def __init__(self):
+        self.pdf = ROOT.Math.VavilovAccurate()
+    
+    def __call__(self, x, p):
+        kappa = p[0]
+        beta2 = p[1]
+        return p[4] * (self.pdf.Pdf((x[0] - p[2]) / p[3], kappa, beta2))
 
+def GaussWithLandau(x, par):
+    landau = ROOT.TMath.Landau(x[0], par[0], par[1])
+    gauss = ROOT.TMath.Gaus(x[0], 0, par[2], 1)
+    dx = x[1] - x[0]
+    conv = np.convolve(landau, gauss, mode='same') * dx
+    return par[3] * conv
+    
 dirs = []
 for i in range(0, f.GetListOfKeys().GetEntries()):
   # Remove/modify unnecessary stuff from the name of the plot that was required by SmartHistos to ditinguish plots
@@ -67,16 +82,17 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
           obj = f.Get(newname)
           
           
-          tex2 = ROOT.TLatex(0.13,0.94,"CMS");
+          tex2 = ROOT.TLatex(0.15,0.94,"CMS");
           #tex2 = ROOT.TLatex(0.20,0.94,"CMS");#if there is 10^x
           tex2.SetNDC();
           tex2.SetTextFont(61);
           tex2.SetTextSize(0.0675);
           tex2.SetLineWidth(2);
 
-          #tex3 = ROOT.TLatex(0.27,0.96,"Simulation"); # for square plots
-          #tex3 = ROOT.TLatex(0.28,0.94,"Work in Progress 2018"); #if there is 10^x
-          tex3 = ROOT.TLatex(0.27,0.94,"Internal");
+#          tex3 = ROOT.TLatex(0.27,0.94,"Simulation"); # for square plots
+#          tex3 = ROOT.TLatex(0.28,0.94,"Work in Progress 2018"); #if there is 10^x
+          tex3 = ROOT.TLatex(0.29,0.94,"Internal");
+#          tex3 = ROOT.TLatex(0.27,0.94,"");
           tex3.SetNDC();
           tex3.SetTextFont(52);
           tex3.SetTextSize(0.0485);
@@ -85,26 +101,28 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
 
           tex4 = ROOT.TLatex()
           if ("BefPreS" in keyname2) :
-            tex4 = ROOT.TLatex(0.6,0.95,"Before pre-selection")
+            tex4 = ROOT.TLatex(0.6,0.94,"Before preselection")
 #            if ("BefPreS_Eta" in keyname2) :
 #              print("BefPreS number of tracks in plot (" +keyname2 + ") : "+str(obj.Integral()))
           elif ("N1" in keyname2) :
-            tex4 = ROOT.TLatex(0.6,0.95,"After N-1 selection")
+            tex4 = ROOT.TLatex(0.6,0.94,"After N-1 selection")
 #            if ("N1_Eta" in keyname2) :
 #              print("N-1 number of tracks in plot (" +keyname2 + ") : "+str(obj.Integral()))
-          elif ("PostPreS" in keyname2) :
-            tex4 = ROOT.TLatex(0.6,0.95,"After pre-selection")
+          elif ("PostPreS" in keyname2 or "Stab" in keyname2) :
+            tex4 = ROOT.TLatex(0.6,0.94,"After preselection")
           elif ("PostS" in keyname2) :
-            tex4 = ROOT.TLatex(0.6,0.95,"After selection")
-#            if ("PostPreS_Eta" in keyname2) :
-#              print("PostPreS number of tracks in plot (" +keyname2 + ") : "+str(obj.Integral()))
+            tex4 = ROOT.TLatex(0.6,0.94,"After selection")
+          elif ("K_and_C" in keyname2) :
+            tex4 = ROOT.TLatex(0.5,0.94,"After calibration selection")
+
           tex4.SetNDC();
           tex4.SetTextFont(52);
           tex4.SetTextSize(0.045);
           tex4.SetLineWidth(2);
           
           codeVersion = fileName[fileName.find("CodeV")+5:fileName.find("CodeV")+9]
-          fileVersion = fileName[fileName.find("2018")+5:fileName.find("CodeV")+9]
+          beginFileVersion = fileName.find("2018")+5 if (fileName.find("2018") > 0) else fileName.find("SingleMuon")
+          fileVersion = fileName[beginFileVersion:fileName.find("CodeV")+9]
           tex5 = ROOT.TLatex(0.07,0.03,fileVersion);
           tex5.SetNDC();
           tex5.SetTextFont(52);
@@ -129,8 +147,17 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
               if (iDontWannaRunPlots) : continue
               if ("_region" in keyname2 or "CtrlPt_" in keyname2 or "Pred_" in keyname2 or "PDF" in keyname2 or "Hist_" in keyname2) : continue
 #              if not ("Trigger" in keyname2 and obj.ClassName() == "TH3F") : continue
-              if not ("Calibration_" in keyname2) : continue
+#              if not ("RunNumVsPixCluChargeAfter" in keyname2) : continue
+#              if not ("PostS_SR2PASS" in keyname2) : continue
 
+              if ("PostS_SR2PASS_RunVsLs" in keyname2) and not blind :
+                  for ix in range(1, obj.GetNbinsX() + 1):
+                    for iy in range(1, obj.GetNbinsY() + 1):
+                        content = obj.GetBinContent(ix, iy)
+                        if content != 0.0:
+                            x = obj.GetXaxis().GetBinCenter(ix)
+                            y = obj.GetYaxis().GetBinCenter(iy)
+                            print(f"Non-zero yield at ({x}, {y}): {content}")
 
 #              if not ((obj.ClassName() == "TH3F" or obj.ClassName() == "TH3D") and "VsProbQVsIas" in keyname2) : continue
               if ("Gen" in keyname2 and isData) : continue
@@ -660,6 +687,211 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 projOb.Draw("COLZ L")
                 can.SaveAs(name)
 
+              elif ("Layer_CR_veryLowPt" in keyname2) :
+                for x in range(1,obj.GetNbinsY()) :
+                  CluDeDxForLayerX =  obj.ProjectionX(newname+"_Layer"+str(x),x,x,"e")
+                  CluDeDxForLayerX.GetYaxis().SetTitle("Clusters")
+                  CluDeDxForLayerX.Draw()
+                  can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_Layer"+str(x)+".png")
+                  #.Rebin(3)
+              if (isData and (obj.ClassName() == "TH2F") and ("RunNumVsPixCluChargeAfter" in keyname2)) :
+                x_values = []
+                y_values = []
+                for i in range(obj.GetNbinsX()+1) :
+#                  if not (i==302): continue
+
+                  chargeForRunI = obj.ProjectionY(newname+"_RunBin"+str(i),i,i,"e").Rebin(3)
+                  if (chargeForRunI.Integral() > 10 and chargeForRunI.GetMean() > 10) :
+                    
+                    vf = Vavilov_Func()
+                    fitForI = ROOT.TF1("fitForI"+str(i), vf, 0, 300, 5)
+#                    fitForI = ROOT.TF1("fitForI", GaussWithLandau, 30, 300, 4)
+#                    fitForI.SetParameters(100,20,20,100000) #,chargeForRunI.GetRMS(),chargeForRunI.GetRMS(),chargeForRunI.GetMaximum())
+                    fitForI.SetParameters(
+                        0.001*chargeForRunI.GetMean(),   # p[0]: kappa [0.01:10]
+                        1.0,                                # p[1]: beta^2
+                        0.9*chargeForRunI.GetMean(),      # p[2]: mpv
+                        0.4*chargeForRunI.GetRMS(),       # p[3]: sigmaQ
+                        0.5*chargeForRunI.GetEntries()    # p[4]: norm
+                    )
+                    fitForI.SetParLimits(0, 0.01, 10.0)
+                    fitForI.SetParLimits(1, 0.9, 1)
+                    fitForI.SetParLimits(2, 75, 100.);
+                    fitForI.SetParLimits(3, 0, 10000.)
+#                    fitForI.SetParLimits(4, 0.0, 100000.0)
+#                    chargeForRunI.Fit("landau")
+  
+                    chargeForRunI.Fit(fitForI,"Q")
+                    chargeForRunI.Draw()
+                    fitForI.Draw("SAME")
+                    fitForI.SetLineColor(ROOT.kRed)
+                    fitForI.SetLineWidth(2)
+                    if (fitForI.GetChisquare() / fitForI.GetNDF() < 100 ) :
+                      x_values.append(obj.GetXaxis().GetBinCenter(i))
+                      y_values.append(fitForI.GetParameter(2))
+                    can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_RunNumber"+str(i)+".png")
+                
+                g_mpv = ROOT.TGraph(len(x_values), array.array('d', x_values), array.array('d', y_values))
+                g_mpv.Draw("AP")
+                g_mpv.SetMarkerStyle(20)
+                g_mpv.SetMarkerColor(4)
+                g_mpv.SetTitle("")
+                g_mpv.SetMinimum(0.)
+                g_mpv.GetYaxis().SetRangeUser(0.,200.)
+                g_mpv.GetXaxis().SetTitleOffset(1)
+                g_mpv.GetXaxis().SetTitle("Run number")
+                g_mpv.GetXaxis().SetLabelSize(0.035)
+                g_mpv.GetYaxis().SetTitle("MPV of norm cluster charge (e/um)")
+                g_mpv.GetYaxis().SetTitleOffset(1.5)
+                
+                nPoints = g_mpv.GetN()
+                yVals = g_mpv.GetY()
+                mean = np.mean(yVals)
+                variance = 0
+
+                for i in range(nPoints):
+                    diff = yVals[i] - mean
+                    variance += diff * diff
+
+                variance /= nPoints
+                stdDev = ROOT.TMath.Sqrt(variance)
+                stdDevOMean = round(stdDev / mean, 4)
+                print("Standard deviation of y-axis values: ", stdDevOMean)
+                
+                yearSepLine = ROOT.TLine();
+                yearSepLine.SetLineWidth(2);
+                yearSepLine.SetLineStyle(ROOT.kDashed);
+                yearSepLine.DrawLine(296500,g_mpv.GetMinimum(),296500,200)
+                yearSepLine.DrawLine(307000,g_mpv.GetMinimum(),307000,200)
+                tex2.Draw("SAME")
+                tex3.Draw("SAME")
+                tex5.Draw("SAME")
+                tex2017 = ROOT.TLatex(0.225,0.8,"2017");
+                tex2017.SetNDC();
+                tex2017.SetTextFont(52)
+                tex2017.SetTextSize(0.0485)
+                tex2017.SetLineWidth(2)
+                tex2017.Draw("SAME")
+                yearSepLine.DrawLine(314500,g_mpv.GetMinimum(),314500,200)
+                yearSepLine.DrawLine(325500,g_mpv.GetMinimum(),325500,200)
+                tex2018 = ROOT.TLatex(0.65,0.8,"2018");
+                tex2018.SetNDC();
+                tex2018.SetTextFont(52)
+                tex2018.SetTextSize(0.0485)
+                tex2018.SetLineWidth(2)
+                tex2018.Draw("SAME")
+                meanLine = ROOT.TLine();
+                meanLine.SetLineWidth(2);
+                meanLine.SetLineColor(ROOT.kGreen)
+#                meanLine.SetLineStyle(ROOT.kDashed);
+                meanLine.DrawLine(295000,mean,327000,mean)
+                texStdOverMean = ROOT.TLatex(0.5,0.94,"L"+str(keyname2[keyname2.find("SFsL")+4:keyname2.find("SFsL")+5]) + ": std / mean = " + str(round(100*stdDevOMean,2)) + "%");
+                texStdOverMean.SetNDC();
+                texStdOverMean.SetTextFont(52)
+                texStdOverMean.SetTextSize(0.0485)
+                texStdOverMean.SetLineWidth(2)
+                texStdOverMean.Draw("SAME")
+                can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_MPVtrend.png")
+                
+                obj.GetXaxis().SetRangeUser(298000,324000)
+                obj.ProfileX().Draw()
+                obj.ProfileX().GetYaxis().SetRangeUser(0,200)
+                obj.ProfileX().GetYaxis().SetTitle("Avg norm clu charge")
+                obj.ProfileX().GetYaxis().SetTitleOffset(1.5)
+                can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_profileX.png")
+                
+              if (isData and (obj.ClassName() == "TH2F") and ("Stab_CluDeDx" in keyname2)) :
+                # ---------------------------- now the avg trend ------------------------------------
+                obj.GetXaxis().SetRangeUser(298000,324000)
+                obj.ProfileX().Draw()
+                obj.ProfileX().SetStats(0)
+                obj.ProfileX().GetYaxis().SetRangeUser(0,10)
+                obj.ProfileX().GetYaxis().SetTitle("Avg dE/dx [MeV/cm]")
+                obj.ProfileX().GetYaxis().SetTitleOffset(1.5)
+                yearSepLine = ROOT.TLine();
+                yearSepLine.SetLineWidth(2);
+                yearSepLine.SetLineStyle(ROOT.kDashed);
+                yearSepLine.DrawLine(307000,obj.ProfileX().GetMinimum(),307000,10)
+                tex2.Draw("SAME")
+                tex3.Draw("SAME")
+                tex5.Draw("SAME")
+                tex2017 = ROOT.TLatex(0.225,0.8,"2017");
+                tex2017.SetNDC();
+                tex2017.SetTextFont(52)
+                tex2017.SetTextSize(0.0485)
+                tex2017.SetLineWidth(2)
+                tex2017.Draw("SAME")
+                yearSepLine.DrawLine(314500,obj.ProfileX().GetMinimum(),314500,10)
+                tex2018 = ROOT.TLatex(0.65,0.8,"2018");
+                tex2018.SetNDC();
+                tex2018.SetTextFont(52)
+                tex2018.SetTextSize(0.0485)
+                tex2018.SetLineWidth(2)
+                tex2018.Draw("SAME")
+                meanLine = ROOT.TLine();
+                meanLine.SetLineWidth(2);
+                meanLine.SetLineColor(ROOT.kGreen)
+                meanLine.DrawLine(298000,obj.GetMean(2),324000,obj.GetMean(2))
+                axisYTitle = obj.GetYaxis().GetTitle()
+                legendText = str(axisYTitle[0:axisYTitle.find(" Cluster")])
+                if (keyname2 == "Stab_CluDeDxStripsLayer10_VsRun_CR_veryLowPt") : legendText = "TOB6"
+                texStdOverMean = ROOT.TLatex(0.5,0.94,legendText + ": Mean = " + str(round(obj.GetMean(2),2)))
+                texStdOverMean.SetNDC();
+                texStdOverMean.SetTextFont(52)
+                texStdOverMean.SetTextSize(0.0485)
+                texStdOverMean.SetLineWidth(2)
+                texStdOverMean.Draw("SAME")
+                can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_profileX.png")
+                
+              if (isData and (obj.ClassName() == "TH2F") and ("Stab_" in keyname2 and not "Clu" in keyname2)) :
+                # ---------------------------- now the avg trend ------------------------------------
+                axisYTitle = obj.GetYaxis().GetTitle()
+                obj.GetXaxis().SetRangeUser(298000,324000)
+                obj.ProfileX().Draw()
+                obj.ProfileX().SetStats(0)
+                maxi = 10 if "Ih" in keyname2 else 1.0
+                if "Gi" in keyname2  : maxi = 0.1
+                obj.ProfileX().GetYaxis().SetRangeUser(0,maxi)
+                
+                obj.ProfileX().GetYaxis().SetTitle("Avg " + axisYTitle)
+                obj.ProfileX().GetYaxis().SetTitleOffset(1.5)
+                yearSepLine = ROOT.TLine();
+                yearSepLine.SetLineWidth(2);
+                yearSepLine.SetLineStyle(ROOT.kDashed);
+                yearSepLine.DrawLine(307000,obj.ProfileX().GetMinimum(),307000,obj.ProfileX().GetMaximum())
+                tex2.Draw("SAME")
+                tex3.Draw("SAME")
+                tex5.Draw("SAME")
+                tex2017 = ROOT.TLatex(0.225,0.8,"2017");
+                tex2017.SetNDC();
+                tex2017.SetTextFont(52)
+                tex2017.SetTextSize(0.0485)
+                tex2017.SetLineWidth(2)
+                tex2017.Draw("SAME")
+                yearSepLine.DrawLine(314500,obj.ProfileX().GetMinimum(),314500,obj.ProfileX().GetMaximum())
+                tex2018 = ROOT.TLatex(0.65,0.8,"2018");
+                tex2018.SetNDC();
+                tex2018.SetTextFont(52)
+                tex2018.SetTextSize(0.0485)
+                tex2018.SetLineWidth(2)
+                tex2018.Draw("SAME")
+                meanLine = ROOT.TLine();
+                meanLine.SetLineWidth(2);
+                meanLine.SetLineColor(ROOT.kGreen)
+                meanLine.DrawLine(298000,obj.GetMean(2),324000,obj.GetMean(2))
+                
+                legendText = str(axisYTitle)
+                texStdOverMean = ROOT.TLatex(0.5,0.94,legendText + ": Mean = " + str(round(obj.GetMean(2),2)))
+                texStdOverMean.SetNDC();
+                texStdOverMean.SetTextFont(52)
+                texStdOverMean.SetTextSize(0.0485)
+                texStdOverMean.SetLineWidth(2)
+                texStdOverMean.Draw("SAME")
+                tex2.Draw("SAME")
+                tex5.Draw("SAME")
+                can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_avgX.png")
+                  
+                  
               if ((obj.ClassName() == "TH2F") and "VsPixelLayer" in keyname2) :
                 for i in range(4) :
                   obj.SetTitle("")
@@ -911,14 +1143,9 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                   if (numTracks1>0) : projY1.Scale(1/projY1.Integral())
                   if (numTracks2>0) : projY2.Scale(1/projY2.Integral())
                   
-                  blind = True
-#                  blind = False
-
                   if (blind and not "CR" in keyname2 and isData) :
-                    projY1.SetBinContent(7,0)
-                    projY1.SetBinContent(8,0)
-                    projY1.SetBinContent(9,0)
-                    projY1.SetBinContent(10,0)
+                    for binIndex in range(16,50) :
+                      projY1.SetBinContent(binIndex,0)
                   projY1.SetMaximum(projY1.GetMaximum()*100)
                   
                   rp2 = ROOT.TRatioPlot(projY1,projY2,"divsym") #, "diffsigerrasym"
@@ -948,7 +1175,7 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                   rp2.GetLowerRefYaxis().SetLabelSize(0.035);
 
 
-                  rp2.GetLowerRefXaxis().SetTitleSize(0.05);
+                  rp2.GetLowerRefXaxis().SetTitleSize(0.05)
                   rp2.GetLowerRefXaxis().SetTitleOffset(0.8);
                   rp2.GetLowerRefXaxis().SetLabelSize(0.035);
                   legIasForProbQSlice.SetTextFont(42)
@@ -1044,157 +1271,154 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                   legIasForProbQSlice.Draw("SAME")
                   can3.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 + "_Norm_IasSlice.png")
 
-                if ("ProbQNoL1VsIas" in keyname2) :
-                  can2 = ROOT.TCanvas(newname+"2",newname+"2",800,800)
-                  can2.SetLogy()
-                  legIasForProbQSlice =  ROOT.TLegend(.30,.80,.80,.90,"","brNDC")
-                  projY1 = obj.ProjectionY("IasForProbQSlice_Slice1",obj.GetXaxis().FindBin(0.9),obj.GetXaxis().FindBin(1.0),"e")
-                  projY1.SetStats(0)
-                  projY1.SetMarkerColor(1)
-                  projY1.SetLineColor(1)
-                  projY1.SetMarkerStyle(20)
-                  projY1.Draw("SAME")
-                  projY1.GetYaxis().SetTitle("Tracks / 0.05")
-                  projY1.GetYaxis().SetTitleOffset(1.5)
-                  
-                  projY2 = obj.ProjectionY("IasForProbQSlice_Slice2",obj.GetXaxis().FindBin(0.3),obj.GetXaxis().FindBin(0.9),"e")
-                  projY2.SetMarkerStyle(20)
-                  projY2.SetMarkerColor(2)
-                  projY2.SetLineColor(2)
-                  projY2.Draw("SAME")
-                  
-                  numTracks1 = projY1.Integral()
-                  numTracks2 = projY2.Integral()
-
-                  if (blind and not "CR" in keyname2 and isData) :
-                    projY1.SetBinContent(7,0)
-                    projY1.SetBinContent(8,0)
-                    projY1.SetBinContent(9,0)
-                    projY1.SetBinContent(10,0)
-                  projY1.SetMaximum(projY2.GetMaximum()*100)
-                  projY1.SetMinimum(0.1)
-                  
-                  rp2 = ROOT.TRatioPlot(projY1,projY2,"divsym") #, "diffsigerrasym"
-
-                  rp2.SetH1DrawOpt("P");
-                  rp2.SetH2DrawOpt("P");
-
-                  rp2.Draw()
-                  
-                  rp2.SetLeftMargin(0.13);
-                  rp2.SetRightMargin(0.05);
-                  rp2.SetUpTopMargin(0.1);
-                  rp2.SetLowTopMargin(0.02);
-                  rp2.SetLowBottomMargin(0.35);
-
-
-                  rp2.GetLowerRefGraph().SetMinimum(0)
-                  rp2.GetLowerRefGraph().SetMaximum(3.5);
-                  #rp.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
-                  #rp.GetLowerRefGraph().SetLineColor(0) #0
-                  rp2.GetLowerRefGraph().SetMarkerStyle(20)
-                  rp2.GetLowerRefGraph().SetMarkerSize(1);
-                  rp2.GetLowYaxis().SetNdivisions(505);
-                  rp2.GetLowerRefYaxis().SetTitle("Ratio");
-                  rp2.GetLowerRefYaxis().SetTitleSize(0.05);
-                  rp2.GetLowerRefYaxis().SetTitleOffset(1);
-                  rp2.GetLowerRefYaxis().SetLabelSize(0.035);
-
-
-                  rp2.GetLowerRefXaxis().SetTitleSize(0.05);
-                  rp2.GetLowerRefXaxis().SetTitleOffset(0.8);
-                  rp2.GetLowerRefXaxis().SetLabelSize(0.035);
-                  legIasForProbQSlice.SetTextFont(42)
-                  legIasForProbQSlice.SetTextSize(0.035)
-                  legIasForProbQSlice.SetBorderSize(1);
-                  legIasForProbQSlice.SetLineColor(0);
-                  legIasForProbQSlice.SetLineStyle(1);
-                  legIasForProbQSlice.SetLineWidth(1);
-                  legIasForProbQSlice.SetFillColor(0);
-                  legIasForProbQSlice.SetFillStyle(1001);
-                  legIasForProbQSlice.AddEntry(projY1,"F_{i}^{Pixels} (0.9-1.0), #Tracks: " +str(round(numTracks1)),"LP")
-                  legIasForProbQSlice.AddEntry(projY2,"F_{i}^{Pixels}  (0.3-0.9), #Tracks: " +str(round(numTracks2)),"LP")
-                  tex2.Draw("SAME")
-                  tex3.Draw("SAME")
-                  tex4.Draw("SAME")
-                  tex5.Draw("SAME")
-                  legIasForProbQSlice.Draw("SAME")
-                  can2.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 + "_NotNorm_ProbQSlice.png")
-                  
-                  can3 = ROOT.TCanvas(newname+"2",newname+"2",800,800)
-                  can3.SetLogy()
-                  legIasForProbQSlice =  ROOT.TLegend(.30,.80,.80,.90,"","brNDC")
-                  projY1 = obj.ProjectionX("IasForProbQSlice_Slice1",1,obj.GetYaxis().FindBin(0.1),"e")
-                  projY1.SetStats(0)
-                  projY1.SetMarkerColor(1)
-                  projY1.SetLineColor(1)
-                  projY1.SetMarkerStyle(20)
-                  projY1.Draw("SAME")
-                  projY1.GetYaxis().SetTitle("Normalized Tracks / 0.05")
-                  projY1.GetYaxis().SetTitleOffset(1.5)
-
-                  projY2 = obj.ProjectionX("IasForProbQSlice_Slice2",obj.GetYaxis().FindBin(0.1),obj.GetYaxis().FindBin(1.0),"e")
-                  projY2.SetMarkerStyle(20)
-                  projY2.SetMarkerColor(2)
-                  projY2.SetLineColor(2)
-                  projY2.Draw("SAME")
-                  
-                  numTracks3 = projY1.Integral()
-                  numTracks4 = projY2.Integral()
-                
-                  if (blind and not "CR" in keyname2 and isData) :
-                    projY1.SetBinContent(19,0)
-                    projY1.SetBinContent(20,0)
-                  
-                  projY1.SetMaximum(projY1.GetMaximum()*100)
-                  
-                  rp3 = ROOT.TRatioPlot(projY1,projY2,"divsym") #, "diffsigerrasym"
-
-                  rp3.SetH1DrawOpt("P");
-                  rp3.SetH2DrawOpt("P");
-
-                  rp3.Draw()
-                  
-                  rp3.SetLeftMargin(0.13);
-                  rp3.SetRightMargin(0.05);
-                  rp3.SetUpTopMargin(0.1);
-                  rp3.SetLowTopMargin(0.02);
-                  rp3.SetLowBottomMargin(0.35);
-
-
-                  rp3.GetLowerRefGraph().SetMinimum(0)
-                  rp3.GetLowerRefGraph().SetMaximum(3.5)
-                  #rp.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
-                  #rp.GetLowerRefGraph().SetLineColor(0) #0
-                  rp3.GetLowerRefGraph().SetMarkerStyle(20)
-                  rp3.GetLowerRefGraph().SetMarkerSize(1);
-                  rp3.GetLowYaxis().SetNdivisions(505);
-                  rp3.GetLowerRefYaxis().SetTitle("Ratio");
-                  rp3.GetLowerRefYaxis().SetTitleSize(0.05);
-                  rp3.GetLowerRefYaxis().SetTitleOffset(1);
-                  rp3.GetLowerRefYaxis().SetLabelSize(0.035);
-
-
-                  rp3.GetLowerRefXaxis().SetTitleSize(0.05);
-                  rp3.GetLowerRefXaxis().SetTitleOffset(0.8);
-                  rp3.GetLowerRefXaxis().SetLabelSize(0.035);
-                  legIasForProbQSlice.SetTextFont(42)
-                  legIasForProbQSlice.SetTextSize(0.035)
-                  legIasForProbQSlice.SetBorderSize(1);
-                  legIasForProbQSlice.SetLineColor(0);
-                  legIasForProbQSlice.SetLineStyle(1);
-                  legIasForProbQSlice.SetLineWidth(1);
-                  legIasForProbQSlice.SetFillColor(0);
-                  legIasForProbQSlice.SetFillStyle(1001);
-                  legIasForProbQSlice.AddEntry(projY1,"G_{i}^{Strips} (0.0-0.1), #Tracks: "+str(round(numTracks3)),"LP")
-                  legIasForProbQSlice.AddEntry(projY2,"G_{i}^{Strips} (0.1-1.0), #Tracks: "+str(round(numTracks4)),"LP")
-                  tex2.Draw("SAME")
-                  tex3.Draw("SAME")
-                  tex4.Draw("SAME")
-                  tex5.Draw("SAME")
-                  legIasForProbQSlice.Draw("SAME")
-                  can3.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 + "_NotNorm_IasSlice.png")
-
+#                if ("ProbQNoL1VsIas" in keyname2) :
+#                  can2 = ROOT.TCanvas(newname+"2",newname+"2",800,800)
+#                  can2.SetLogy()
+#                  legIasForProbQSlice =  ROOT.TLegend(.30,.80,.80,.90,"","brNDC")
+#                  projY1 = obj.ProjectionY("IasForProbQSlice_Slice1",obj.GetXaxis().FindBin(0.9),obj.GetXaxis().FindBin(1.0),"e")
+#                  projY1.SetStats(0)
+#                  projY1.SetMarkerColor(1)
+#                  projY1.SetLineColor(1)
+#                  projY1.SetMarkerStyle(20)
+#                  projY1.Draw("SAME")
+#                  projY1.GetYaxis().SetTitle("Tracks / 0.05")
+#                  projY1.GetYaxis().SetTitleOffset(1.5)
+#
+#                  projY2 = obj.ProjectionY("IasForProbQSlice_Slice2",obj.GetXaxis().FindBin(0.3),obj.GetXaxis().FindBin(0.9),"e")
+#                  projY2.SetMarkerStyle(20)
+#                  projY2.SetMarkerColor(2)
+#                  projY2.SetLineColor(2)
+#                  projY2.Draw("SAME")
+#
+#                  numTracks1 = projY1.Integral()
+#                  numTracks2 = projY2.Integral()
+#
+#                  if (blind and not "CR" in keyname2 and isData) :
+#                    for binIndex in range(1,50) :
+#                      projY1.SetBinContent(binIndex,0)
+#                  projY1.SetMaximum(projY2.GetMaximum()*100)
+#                  projY1.SetMinimum(0.1)
+#
+#                  rp2 = ROOT.TRatioPlot(projY1,projY2,"divsym") #, "diffsigerrasym"
+#
+#                  rp2.SetH1DrawOpt("P");
+#                  rp2.SetH2DrawOpt("P");
+#
+#                  rp2.Draw()
+#
+#                  rp2.SetLeftMargin(0.13);
+#                  rp2.SetRightMargin(0.05);
+#                  rp2.SetUpTopMargin(0.1);
+#                  rp2.SetLowTopMargin(0.02);
+#                  rp2.SetLowBottomMargin(0.35);
+#
+#
+#                  rp2.GetLowerRefGraph().SetMinimum(0)
+#                  rp2.GetLowerRefGraph().SetMaximum(3.5);
+#                  #rp.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
+#                  #rp.GetLowerRefGraph().SetLineColor(0) #0
+#                  rp2.GetLowerRefGraph().SetMarkerStyle(20)
+#                  rp2.GetLowerRefGraph().SetMarkerSize(1);
+#                  rp2.GetLowYaxis().SetNdivisions(505);
+#                  rp2.GetLowerRefYaxis().SetTitle("Ratio");
+#                  rp2.GetLowerRefYaxis().SetTitleSize(0.05);
+#                  rp2.GetLowerRefYaxis().SetTitleOffset(1);
+#                  rp2.GetLowerRefYaxis().SetLabelSize(0.035);
+#
+#
+#                  rp2.GetLowerRefXaxis().SetTitleSize(0.05);
+#                  rp2.GetLowerRefXaxis().SetTitleOffset(0.8);
+#                  rp2.GetLowerRefXaxis().SetLabelSize(0.035);
+#                  legIasForProbQSlice.SetTextFont(42)
+#                  legIasForProbQSlice.SetTextSize(0.035)
+#                  legIasForProbQSlice.SetBorderSize(1);
+#                  legIasForProbQSlice.SetLineColor(0);
+#                  legIasForProbQSlice.SetLineStyle(1);
+#                  legIasForProbQSlice.SetLineWidth(1);
+#                  legIasForProbQSlice.SetFillColor(0);
+#                  legIasForProbQSlice.SetFillStyle(1001);
+#                  legIasForProbQSlice.AddEntry(projY1,"F_{i}^{Pixels} (0.9-1.0), #Tracks: " +str(round(numTracks1)),"LP")
+#                  legIasForProbQSlice.AddEntry(projY2,"F_{i}^{Pixels}  (0.3-0.9), #Tracks: " +str(round(numTracks2)),"LP")
+#                  tex2.Draw("SAME")
+#                  tex3.Draw("SAME")
+#                  tex4.Draw("SAME")
+#                  tex5.Draw("SAME")
+#                  legIasForProbQSlice.Draw("SAME")
+#                  can2.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 + "_NotNorm_ProbQSlice.png")
+#
+#                  can3 = ROOT.TCanvas(newname+"2",newname+"2",800,800)
+#                  can3.SetLogy()
+#                  legIasForProbQSlice =  ROOT.TLegend(.30,.80,.80,.90,"","brNDC")
+#                  projY1 = obj.ProjectionX("IasForProbQSlice_Slice1",1,obj.GetYaxis().FindBin(0.1),"e")
+#                  projY1.SetStats(0)
+#                  projY1.SetMarkerColor(1)
+#                  projY1.SetLineColor(1)
+#                  projY1.SetMarkerStyle(20)
+#                  projY1.Draw("SAME")
+#                  projY1.GetYaxis().SetTitle("Normalized Tracks / 0.05")
+#                  projY1.GetYaxis().SetTitleOffset(1.5)
+#
+#                  projY2 = obj.ProjectionX("IasForProbQSlice_Slice2",obj.GetYaxis().FindBin(0.1),obj.GetYaxis().FindBin(1.0),"e")
+#                  projY2.SetMarkerStyle(20)
+#                  projY2.SetMarkerColor(2)
+#                  projY2.SetLineColor(2)
+#                  projY2.Draw("SAME")
+#
+#                  numTracks3 = projY1.Integral()
+#                  numTracks4 = projY2.Integral()
+#
+#                  if (blind and not "CR" in keyname2 and isData) :
+#                    projY1.SetBinContent(19,0)
+#                    projY1.SetBinContent(20,0)
+#
+#                  projY1.SetMaximum(projY1.GetMaximum()*100)
+#
+#                  rp3 = ROOT.TRatioPlot(projY1,projY2,"divsym") #, "diffsigerrasym"
+#
+#                  rp3.SetH1DrawOpt("P");
+#                  rp3.SetH2DrawOpt("P");
+#
+#                  rp3.Draw()
+#
+#                  rp3.SetLeftMargin(0.13);
+#                  rp3.SetRightMargin(0.05);
+#                  rp3.SetUpTopMargin(0.1);
+#                  rp3.SetLowTopMargin(0.02);
+#                  rp3.SetLowBottomMargin(0.35);
+#
+#
+#                  rp3.GetLowerRefGraph().SetMinimum(0)
+#                  rp3.GetLowerRefGraph().SetMaximum(3.5)
+#                  #rp.GetLowerRefGraph().SetMarkerColor(ROOT.kGreen+2)
+#                  #rp.GetLowerRefGraph().SetLineColor(0) #0
+#                  rp3.GetLowerRefGraph().SetMarkerStyle(20)
+#                  rp3.GetLowerRefGraph().SetMarkerSize(1);
+#                  rp3.GetLowYaxis().SetNdivisions(505);
+#                  rp3.GetLowerRefYaxis().SetTitle("Ratio");
+#                  rp3.GetLowerRefYaxis().SetTitleSize(0.05);
+#                  rp3.GetLowerRefYaxis().SetTitleOffset(1);
+#                  rp3.GetLowerRefYaxis().SetLabelSize(0.035);
+#
+#
+#                  rp3.GetLowerRefXaxis().SetTitleSize(0.05);
+#                  rp3.GetLowerRefXaxis().SetTitleOffset(0.8);
+#                  rp3.GetLowerRefXaxis().SetLabelSize(0.035);
+#                  legIasForProbQSlice.SetTextFont(42)
+#                  legIasForProbQSlice.SetTextSize(0.035)
+#                  legIasForProbQSlice.SetBorderSize(1);
+#                  legIasForProbQSlice.SetLineColor(0);
+#                  legIasForProbQSlice.SetLineStyle(1);
+#                  legIasForProbQSlice.SetLineWidth(1);
+#                  legIasForProbQSlice.SetFillColor(0);
+#                  legIasForProbQSlice.SetFillStyle(1001);
+#                  legIasForProbQSlice.AddEntry(projY1,"G_{i}^{Strips} (0.0-0.1), #Tracks: "+str(round(numTracks3)),"LP")
+#                  legIasForProbQSlice.AddEntry(projY2,"G_{i}^{Strips} (0.1-1.0), #Tracks: "+str(round(numTracks4)),"LP")
+#                  tex2.Draw("SAME")
+#                  tex3.Draw("SAME")
+#                  tex4.Draw("SAME")
+#                  tex5.Draw("SAME")
+#                  legIasForProbQSlice.Draw("SAME")
+#                  can3.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 + "_NotNorm_IasSlice.png")
               elif (obj.ClassName() == "TH2F" and  (("Trigger" in keyname2) and ( "Vs" in keyname2))) :
                 profYobj = obj.ProfileY()
                 profYobj.SetStats(0)
@@ -1206,6 +1430,8 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 tex5.Draw("SAME")
                 can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_profileY.png")
               
+              if ("FracSat" in keyname2) :
+                print("Mean: ",obj.GetMean())
               if (keyname2== "CutFlow" or keyname2== "EventCutFlow") :
                 if (blind and isData) :
                   obj.SetBinContent(18,0)
@@ -1310,7 +1536,8 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
               if ("TriggerType" in keyname2) :
                 obj.SetMarkerStyle(20)
                 obj.SetStats(0)
-                obj.Scale(1/obj.Integral(1,3))
+                normFactor = obj.GetBinContent(1) + obj.GetBinContent(4)
+                obj.Scale(1/normFactor)
                 obj.GetYaxis().SetTitle("Norm events / category")
                 ROOT.gStyle.SetPaintTextFormat(".2g");
                 obj.Draw("SAMEHISTOTEXT00")
@@ -1356,7 +1583,38 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                 tex5.Draw("SAME")
                 obj.Draw("COLZ")
                 can.SaveAs(name)
-              #and ("Mass" not in keyname2)
+              elif ("K_and_C_Kin_Mass" in keyname2) :
+                print("TADA")
+                tex2.Draw("SAME")
+                tex3.Draw("SAME")
+                tex4.Draw("SAME")
+                tex5.Draw("SAME")
+                tex3.Draw("SAME")
+                obj.GetYaxis().SetTitle("Track / 0.05 GeV")
+                
+                g1 = ROOT.TF1( 'g1', 'gaus',  0.3,  0.7 )
+                g2 = ROOT.TF1( 'g2', 'gaus',  0.7, 1.5 )
+                g3 = ROOT.TF1( 'g3', 'gaus', 1.5, 2.5 )
+                g1.SetLineColor(ROOT.kBlue)
+                g2.SetLineColor(ROOT.kRed)
+                g3.SetLineColor(ROOT.kGreen)
+                obj.Fit(g1, "R")
+                obj.Fit(g2, "R+")
+                obj.Fit(g3, "R+")
+                
+                legMass =  ROOT.TLegend(.45,.75,.80,.9,"","brNDC")
+                legMass.SetTextFont(42)
+                legMass.SetTextSize(0.035)
+                legMass.SetBorderSize(1);
+                legMass.SetLineColor(1);
+                legMass.SetLineStyle(1);
+                legMass.SetLineWidth(1);
+                legMass.SetFillColor(0);
+                legMass.SetFillStyle(1001);
+                legMass.AddEntry(g1,"#mu = "+str(round(g1.GetParameter(1),2)) + " #pm "+str(round(g1.GetParameter(2),2)),"LP")
+                legMass.AddEntry(g2,"#mu = "+str(round(g2.GetParameter(1),2)) + " #pm "+str(round(g2.GetParameter(2),2)),"LP")
+                legMass.AddEntry(g3,"#mu = "+str(round(g3.GetParameter(1),2)) + " #pm "+str(round(g3.GetParameter(2),2)),"LP")
+                legMass.Draw("SAME")
               #and ("PostS" not in keyname2)
               elif ("Max" not in keyname2) and ("Pred" not in keyname2) and ("PDF" not in keyname2):
                 obj.SetMarkerStyle(20)
@@ -1384,7 +1642,7 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
               if ("GenID" in keyname2 or "GenEnviromentID" in keyname2) :
                 continue
                 
-              if (keyname2=="CutFlowProbQ" or keyname2=="CutFlowPfType" or keyname2=="CutFlowEta" or "Vs" in keyname2) :
+              if (keyname2=="CutFlowProbQ" or keyname2=="CutFlowPfType" or keyname2=="CutFlowEta" or keyname2=="CutFlowEoP" or "Vs" in keyname2) :
 #              or "PostPreS_IasPixelIhVsLayer" in keyname2 or "PostPreS_IasStripIhVsLayer" in keyname2
                 obj.SetMaximum(obj.GetMaximum())
                 obj.SetMinimum(0.000001)
