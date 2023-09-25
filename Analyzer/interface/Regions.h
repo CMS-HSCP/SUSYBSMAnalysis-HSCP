@@ -31,13 +31,13 @@ void scale(TH1F* h){
 class Region{
     public:
         Region();
-        Region(TFileDirectory &dir,std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins);
+        Region(TFileDirectory &dir,std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins,bool saveIhP);
         ~Region();
         void setSuffix(std::string suffix);
-        void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins);
-        void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w);
+        void initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins, bool saveIhP);
+        void fill(float& eta, float&p, float& pt, float& pterr, float& ih, float& ias, float& probq, float& m, float& tof, float& w, bool saveIhP);
         void fillPredMass(const std::string&, float weight_);
-        void write();
+        void write(bool saveIhP);
 
         int np;
         float plow;
@@ -63,6 +63,7 @@ class Region{
         TH2F* eta_p;
         TH2F* ih_eta;
         TH2F* ih_p;
+        TH2F* ih_pt;
         TH2F* ias_p;
         TH2F* ias_pt;
         //TH2F* ias_ih;
@@ -71,13 +72,22 @@ class Region{
         TH2F* eta_p_rebinned;
         //TH2F* pt_pterroverpt;
         TH1F* hTOF;
+        TH2F* ih_p_m_inf_0;
+        TH2F* ih_p_m_0_100;
+        TH2F* ih_p_m_100_200;
+        TH2F* ih_p_m_200_300;
+        TH2F* ih_p_m_300_400;
+        TH2F* ih_p_m_400_600;
+        TH2F* ih_p_m_600_800;
+        TH2F* ih_p_m_800_inf;
+        TH2F* mass_probQ;
 };
 
 Region::Region(){}
 
-Region::Region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins){
+Region::Region(TFileDirectory &dir, std::string suffix,int& etabins,int& ihbins,int& pbins,int& massbins,bool saveIhP=false){
     suffix_ = suffix;
-    initHisto(dir,etabins,ihbins,pbins,massbins);
+    initHisto(dir,etabins,ihbins,pbins,massbins,saveIhP);
 } 
 
 Region::~Region(){
@@ -100,14 +110,15 @@ void Region::setSuffix(std::string suffix){
 }
 
 // Function which intializes the histograms with given binnings 
-void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins){
+void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int massbins,bool saveIhP=false){
     TH1::SetDefaultSumw2(kTRUE);
     TH2::SetDefaultSumw2(kTRUE);
     TH3::SetDefaultSumw2(kTRUE);
     np = pbins;
     plow = 0;
     pup = 200;
-    npt = pbins;
+    //npt = pbins;
+    npt = 200;
     ptlow = 0;
     ptup = 10000; 
     nih = ihbins;
@@ -127,8 +138,9 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     eta_p = dir.make<TH2F>(("eta_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];#eta",np,plow,pup,neta,etalow,etaup); 
     ih_eta = dir.make<TH2F>(("ih_eta"+suffix).c_str(),";#eta;I_{h} [MeV/cm]",neta,etalow,etaup,nih,ihlow,ihup); 
     ih_p = dir.make<TH2F>(("ih_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];I_{h} [MeV/cm]",np,plow,pup,nih,ihlow,ihup);
+    ih_pt = dir.make<TH2F>(("ih_pt"+suffix).c_str(),";p_{T} [GeV];I_{h} [MeV/cm]",npt,plow,pup,nih,ihlow,ihup);
     ias_p = dir.make<TH2F>(("ias_p"+suffix).c_str(),";10^{-4}/p [GeV^{-1}];G_{i}",np,plow,pup,nias,iaslow,iasup); 
-    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";pt [GeV];G_{i}",npt,ptlow,ptup,nias,iaslow,iasup);
+    ias_pt = dir.make<TH2F>(("ias_pt"+suffix).c_str(),";p_{T} [GeV];G_{i}",npt,ptlow,ptup,nias,iaslow,iasup);
     //ias_ih = dir.make<TH2F>(("ias_ih"+suffix).c_str(),";I_{h} [MeV/cm];G_{i}",nih,ihlow,ihup,nias,iaslow,iasup);
     mass = dir.make<TH1F>(("mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
     pred_mass = dir.make<TH1F>(("pred_mass"+suffix).c_str(),";Mass [GeV]",nmass,masslow,massup); 
@@ -136,20 +148,39 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     pred_mass->SetBinErrorOption(TH1::EBinErrorOpt::kPoisson);
     //pt_pterroverpt = dir.make<TH2F>(("pt_pterroverpt"+suffix).c_str(),";p_{T} [GeV];#frac{#sigma_{pT}}{p_{T}}",npt,ptlow,ptup,100,0,1); 
     hTOF    = dir.make<TH1F>(("hTOF_"+suffix).c_str(),";TOF",200,-10,10);
+    if(saveIhP)ih_p_m_inf_0 = dir.make<TH2F>(("ih_p_m_inf_0"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_0_100 = dir.make<TH2F>(("ih_p_m_0_100"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_100_200 = dir.make<TH2F>(("ih_p_m_100_200"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_200_300 = dir.make<TH2F>(("ih_p_m_200_300"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_300_400 = dir.make<TH2F>(("ih_p_m_300_400"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_400_600 = dir.make<TH2F>(("ih_p_m_400_600"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_600_800 = dir.make<TH2F>(("ih_p_m_600_800"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    if(saveIhP)ih_p_m_800_inf = dir.make<TH2F>(("ih_p_m_800_inf"+suffix).c_str(),";p [GeV];I_{h} [MeV/cm]",100,0,4000,50,0,10);
+    mass_probQ = dir.make<TH2F>(("mass_probQ"+suffix).c_str(),";Mass [GeV];F_{i}^{pixel}",nmass,masslow,massup,50,0,1); 
 }
 
 // Function which fills histograms
-void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& m, float& tof, float& w){
-   //ih_p_eta->Fill(eta,p,ih,w);
+void Region::fill(float& eta, float& p, float& pt, float& pterr, float& ih, float& ias, float& probq, float& m, float& tof, float& w, bool saveIhP=false){
+    //ih_p_eta->Fill(eta,p,ih,w);
    eta_p->Fill(p,eta,w);
    ih_eta->Fill(eta,ih,w);
    ih_p->Fill(p,ih,w);
+   ih_pt->Fill(pt,ih,w);
    ias_p->Fill(p,ias,w);
    ias_pt->Fill(pt,ias,w);
    //ias_ih->Fill(ih,ias,w);
    mass->Fill(m,w);
    //pt_pterroverpt->Fill(pt,pterr/pt,w);
    hTOF->Fill(tof,w);
+   if(m<=0 && saveIhP)            ih_p_m_inf_0->Fill(1e-4/p,ih,w);
+   if(m>0 && m<=100 && saveIhP)   ih_p_m_0_100->Fill(1e-4/p,ih,w);
+   if(m>100 && m<=200 && saveIhP) ih_p_m_100_200->Fill(1e-4/p,ih,w);
+   if(m>200 && m<=300 && saveIhP) ih_p_m_200_300->Fill(1e-4/p,ih,w);
+   if(m>300 && m<=400 && saveIhP) ih_p_m_300_400->Fill(1e-4/p,ih,w);
+   if(m>400 && m<=600 && saveIhP) ih_p_m_400_600->Fill(1e-4/p,ih,w);
+   if(m>600 && m<=800 && saveIhP) ih_p_m_600_800->Fill(1e-4/p,ih,w);
+   if(m>800 && saveIhP)           ih_p_m_800_inf->Fill(1e-4/p,ih,w);
+   mass_probQ->Fill(m,probq,w);
 }
 
 // in order to compute properly the uncertainties we use the methods SetBinContent SetBinError instead of Fill
@@ -199,7 +230,7 @@ void Region::fillPredMass(const std::string& st_sample,float weight_=-1) {
     }
 }
 
-void Region::write(){
+void Region::write(bool saveIhP=false){
     //ih_p_eta->Write();
     eta_p->Write();
     ih_eta->Write();
@@ -211,6 +242,15 @@ void Region::write(){
     pred_mass->Write();
     //pt_pterroverpt->Write();
     hTOF->Write();
+    if(saveIhP)ih_p_m_inf_0->Write();
+    if(saveIhP)ih_p_m_0_100->Write();
+    if(saveIhP)ih_p_m_100_200->Write();
+    if(saveIhP)ih_p_m_200_300->Write();
+    if(saveIhP)ih_p_m_300_400->Write();
+    if(saveIhP)ih_p_m_400_600->Write();
+    if(saveIhP)ih_p_m_600_800->Write();
+    if(saveIhP)ih_p_m_800_inf->Write();
+    mass_probQ->Write();
 }
 
 void loadHistograms(Region& r, TFile* f, const std::string& regionName, bool bool_rebin=true, int rebineta=1, int rebinp=1, int rebinih=1, int rebinmass=1){
