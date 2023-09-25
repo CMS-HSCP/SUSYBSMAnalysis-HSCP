@@ -85,6 +85,14 @@
 // - 46p7: Add PostS_SR2PASS_PtErrOverPtVsIas, PostS_SR2PASS_TIsolVsIas
 // - 46p8: Fix MuonPOG systs
 // - 46p9: Add AtL1DT and AtL4DT trigger beta plots
+// - 47p0: Add AtL1DT and AtL4DT trigger beta plots
+// - 47p1: Fix to DT timings
+// - 47p2: Same but for the endcap muon chambers
+// - 47p3: Fix so eta>1 plots are filled too
+// - 47p4: Include trigger scale factors determined in 47p3
+// - 47p5: Change so the trigger beta and eta are used for the trig syst
+// - 47p6: Temp to check the most conservative timings at L1 of DT / CSC
+// - 47p7: Back to 47p5
 
 // v25 Dylan
 // - add EoP in the ntuple
@@ -4040,6 +4048,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     bool passedCutsArrayForTriggerSyst[15];
     std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArrayForTriggerSyst));
     passedCutsArrayForTriggerSyst[0] = true;
+    passedCutsArrayForTriggerSyst[2] = true;
 
     float dRclosestTrigAndCandidate = (closestTrigObjIndex > -1) ? deltaR(trigObjP4s[closestTrigObjIndex].Eta(), trigObjP4s[closestTrigObjIndex].Phi(), track->eta(), track->phi()) : 9999;
     if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
@@ -5496,11 +5505,22 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   }
   
   // Systematics plots for trigger at event level
-  float distanceAtThisEta = (trigObjTheta < 9999) ? 500.0/sin(trigObjTheta) : 0;
-  float distanceAtThisEtaAtL1DT = (trigObjTheta < 9999) ? 400.0/sin(trigObjTheta) : 0;
-  float distanceAtThisEtaAtL4DT = (trigObjTheta < 9999) ? 750.0/sin(trigObjTheta) : 0;
+  // Calc trigo once to ease computation
+  float sinTrigObjTheta = sin(trigObjTheta);
+  float cosTrigObjTheta = cos(trigObjTheta);
+  
+  float distanceAtThisEta = (trigObjTheta < 9999) ? fabs(500.0/sinTrigObjTheta) : 0;
+  float distanceAtThisEtaAtL1DT = (trigObjTheta < 9999) ? fabs(400.0/sinTrigObjTheta) : 0;
+  float distanceAtThisEtaAtL4DT = (trigObjTheta < 9999) ? fabs(750.0/sinTrigObjTheta) : 0;
+  if (fabs(trigObjEta) > 0.9) {
+    distanceAtThisEta = std::min(fabs(500.0/sinTrigObjTheta), fabs(820.0/cosTrigObjTheta));
+    distanceAtThisEtaAtL1DT = std::min(fabs(400.0/sinTrigObjTheta), fabs(700.0/cosTrigObjTheta));
+    distanceAtThisEtaAtL4DT = std::min(fabs(750.0/sinTrigObjTheta), fabs(1040.0/cosTrigObjTheta));
+  }
   float speedOfLightInCmPerNs = 29.97;
   float timing = distanceAtThisEta / (trigObjBeta*speedOfLightInCmPerNs);
+  float timingAtL1DT = distanceAtThisEtaAtL1DT / (trigObjBeta*speedOfLightInCmPerNs);
+  float timingAtL4DT = distanceAtThisEtaAtL4DT / (trigObjBeta*speedOfLightInCmPerNs);
   
   float genBetaPrimeUp =  -1.f;
   float genBetaPrimeUpAtL1DT =  -1.f;
@@ -5526,7 +5546,20 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       genBetaPrimeDownTwoSigma = distanceAtThisEta / ((timing-3.0)*speedOfLightInCmPerNs);
     }
   }
+  if (timingAtL1DT > 0) {
+    genBetaPrimeUpAtL1DT = std::min(1.,distanceAtThisEtaAtL1DT / ((timingAtL1DT+1.5)*speedOfLightInCmPerNs));
+    if (((timingAtL1DT-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDownAtL1DT = distanceAtThisEtaAtL1DT / ((timingAtL1DT-1.5)*speedOfLightInCmPerNs);
+    }
+  }
+  if (timingAtL4DT > 0) {
+    genBetaPrimeUpAtL4DT = std::min(1.,distanceAtThisEtaAtL4DT / ((timingAtL4DT+1.5)*speedOfLightInCmPerNs));
+    if (((timingAtL4DT-1.5)*speedOfLightInCmPerNs) > 0.0) {
+      genBetaPrimeDownAtL4DT = distanceAtThisEtaAtL4DT / ((timingAtL4DT-1.5)*speedOfLightInCmPerNs);
+    }
+  }
     // // dr_min_hltMuon_hscpCand < 0.15 to make it event level? doesnt really work for the denominator
+  // trigObjPassedPres let's in any trigger decision + any eta since here we are studying the trigger
   if (trigObjPassedPres && doPostPreSplots_) {
     if (!HLT_Mu50) {
       tuple->PostPreS_TriggerTimingReject->Fill(timing);
@@ -5561,14 +5594,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown->Fill(0., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUpAtL1DT->Fill(0., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDownAtL1DT->Fill(0., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUpAtL4DT->Fill(0., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDownAtL4DT->Fill(0., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 1.2 && fabs(trigObjEta) < 2.1) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaE->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown->Fill(0., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUpAtL1DT->Fill(0., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDownAtL1DT->Fill(0., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUpAtL4DT->Fill(0., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDownAtL4DT->Fill(0., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 2.1 && fabs(trigObjEta) < 2.4) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaF->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown->Fill(0., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUpAtL1DT->Fill(0., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDownAtL1DT->Fill(0., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUpAtL4DT->Fill(0., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDownAtL4DT->Fill(0., genBetaPrimeDownAtL4DT);
       }
       if (fabs(trigObjEta) < 1.0) {
         tuple->PostS_SR2PASS_TriggerMuon50VsBeta_Beta->Fill(0., trigObjBeta);
@@ -5612,14 +5657,26 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDown->Fill(1., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUpAtL1DT->Fill(1., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDownAtL1DT->Fill(1., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaUpAtL4DT->Fill(1., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaD_BetaDownAtL4DT->Fill(1., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 1.2 && fabs(trigObjEta) < 2.1) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaE->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDown->Fill(1., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUpAtL1DT->Fill(1., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDownAtL1DT->Fill(1., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaUpAtL4DT->Fill(1., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaE_BetaDownAtL4DT->Fill(1., genBetaPrimeDownAtL4DT);
       } else  if (fabs(trigObjEta) >= 2.1 && fabs(trigObjEta) < 2.4) {
         tuple->PostPreS_TriggerMuon50VsBeta_EtaF->Fill(1., trigObjBeta);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUp->Fill(1., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDown->Fill(1., genBetaPrimeDown);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUpAtL1DT->Fill(1., genBetaPrimeUpAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDownAtL1DT->Fill(1., genBetaPrimeDownAtL1DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaUpAtL4DT->Fill(1., genBetaPrimeUpAtL4DT);
+        tuple->PostPreS_TriggerMuon50VsBeta_EtaF_BetaDownAtL4DT->Fill(1., genBetaPrimeDownAtL4DT);
       }
       if (fabs(trigObjEta) < 1.0) {
         tuple->PostS_SR2PASS_TriggerGenBeta->Fill(trigObjBeta);
@@ -5640,11 +5697,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaA->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaA_BetaDown->Fill(0., genBetaPrimeDown);
-      } else  if (fabs(trigObjEta) > 0.3 && fabs(trigObjEta) < 0.6) {
+      } else  if (fabs(trigObjEta) >= 0.3 && fabs(trigObjEta) < 0.6) {
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaB->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaB_BetaDown->Fill(0., genBetaPrimeDown);
-      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 1.0) {
+      } else  if (fabs(trigObjEta) > 0.6 && fabs(trigObjEta) < 0.9) {
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaC->Fill(0., trigObjBeta);
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaUp->Fill(0., genBetaPrimeUp);
         tuple->PostPreS_TriggerMuonAllVsBeta_EtaC_BetaDown->Fill(0., genBetaPrimeDown);
@@ -5994,19 +6051,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Systematics plots for Fi rescaling
     float theFiSystFactorUp = 1.005;
     float theFiSystFactorDown = 0.995;
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas,  eventWeight_ * theFiSystFactorUp);
-    tuple->PostS_ProbQNoL1VsIas_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  eventWeight_ * theFiSystFactorDown);
-    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * theFiSystFactorUp);
-    tuple->PostS_ProbQNoL1VsIasVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * theFiSystFactorDown);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_ * theFiSystFactorUp);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_ * theFiSystFactorDown);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_ * theFiSystFactorUp);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_ProbQNoL1_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_ * theFiSystFactorDown);
-    // Systematics plots for trigger rescaling
-    float triggerSystFactorUp = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,+1);
-    float triggerSystFactorDown = triggerSystFactor(bestCandidateTrack->eta(),bestCandidateGenBeta,-1);
+    float triggerSystFactorUp = triggerSystFactor(trigObjEta,trigObjBeta,+1);
+    float triggerSystFactorDown = triggerSystFactor(trigObjEta,trigObjBeta,-1);
 
-    
     tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
     if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
     
@@ -7582,50 +7629,104 @@ float Analyzer::muonTriggerSFsForTrackEta(float eta, int syst) {
 //     Method for returning eta and beta dependent trigger syst factors
 //======================================================================
 float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
-  float betaBins[17] = {0.06, 0.12, 0.17, 0.23, 0.28, 0.34, 0.39, 0.45, 0.5, 0.56, 0.61, 0.67, 0.72, 0.78, 0.83, 0.89, 1};
+  float betaBins[7] = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
   if (syst > 0) {
   // Up systematics
     if (fabs(eta) < 0.3) {
-      float scaleBins[17] = {0.0,0.98,1.04,0.98,1.02,0.98,1.01,0.97,1.11,1.05,1.0,0.98,0.99,0.96,1.0,1.05,0.94};
-      for (int i = 0; i < 17; i++) {
+      //EtaA
+      float scaleBins[7] = {1.0,2.3,1.4,1.1,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 0.6) {
-      float scaleBins[17] = {0.0,0.99,1.0,0.99,1.0,1.0,1.01,1.01,1.04,1.06,1.07,0.98,0.97,0.99,1.0,0.96,1.01};
-      for (int i = 0; i < 17; i++) {
+      //EtaB
+      float scaleBins[7] = {1.0,2.3,2.2,1.2,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 0.9) {
+      //EtaC
+      float scaleBins[7] = {1.0,2.3,2.2,1.4,1.1,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 1.2) {
+      //EtaD
+      float scaleBins[7] = {1.0,2.2,2.2,2.1,1.2,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 2.1) {
+      //EtaE
+      float scaleBins[7] = {1.0,2.3,2.2,1.3,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else {
-      float scaleBins[17] = {0.0,0.99,0.9,1.01,1.04,1.01,1.02,0.99,0.97,1.13,1.08,1.1,0.96,0.95,0.98,0.98,0.98};
-      for (int i = 0; i < 17; i++) {
+      //EtaF
+      float scaleBins[7] = {1.0,2.3,2.2,1.1,1.0,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     }
   } else {
-  // Down systematics
+      // Down systematics
     if (fabs(eta) < 0.3) {
-      float scaleBins[17] = {0.0,0.49,0.98,0.97,0.93,1.01,1.02,0.97,0.96,0.73,0.78,0.86,0.93,0.95,0.97,1.06,};
-      for (int i = 0; i < 17; i++) {
+        //EtaA
+      float scaleBins[7] = {0.0,0.3,0.64,0.86,0.94,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else if(fabs(eta) < 0.6) {
-      float scaleBins[17] = {0.0,1.73,0.9,1.18,1.1,0.86,1.07,0.95,0.98,0.79,0.7,0.77,0.88,0.98,1.0,0.99,1.02};
-      for (int i = 0; i < 17; i++) {
+        //EtaB
+      float scaleBins[7] = {0.0,0.34,0.34,0.74,0.96,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 0.9) {
+        //EtaC
+      float scaleBins[7] = {0.0,0.4,0.4,0.59,0.85,0.96,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 1.2) {
+        //EtaD
+      float scaleBins[7] = {0.0,0.37,0.37,0.37,0.7,0.95,1.0};
+      for (int i = 0; i < 7; i++) {
+        if (beta < betaBins[i]) {
+          return scaleBins[i];
+        }
+      }
+    } else if(fabs(eta) < 2.1) {
+        //EtaE
+      float scaleBins[7] = {0.0,0.37,0.38,0.72,0.95,0.98,0.98};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
       }
     } else {
-      float scaleBins[17] = {0.0,0.0,0.95,1.1,0.81,1.11,1.14,0.95,0.99,0.95,0.79,0.7,0.73,0.86,0.96,1.0,0.99};
-      for (int i = 0; i < 17; i++) {
+        //EtaF
+      float scaleBins[7] = {0.0,0.45,0.45,0.8,0.99,1.0,1.0};
+      for (int i = 0; i < 7; i++) {
         if (beta < betaBins[i]) {
           return scaleBins[i];
         }
@@ -7634,6 +7735,113 @@ float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
   }
   return 0;
 }
+//float Analyzer::triggerSystFactor(float eta, float beta, int syst) {
+//  float betaBins[7] = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
+//  if (syst > 0) {
+//      // Up systematics
+//    if (fabs(eta) < 0.3) {
+//        //EtaA
+//      float scaleBins[7] = {1.0,3.6,1.5,1.1,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.6) {
+//        //EtaB
+//      float scaleBins[7] = {1.0,2.5,2.5,1.2,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.9) {
+//        //EtaC
+//      float scaleBins[7] = {1.0,2.7,2.6,1.6,1.1,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 1.2) {
+//        //EtaD
+//      float scaleBins[7] = {1.0,3.7,3.7,2.5,1.3,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 2.1) {
+//        //EtaE
+//      float scaleBins[7] = {1.0,2.6,2.6,1.3,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else {
+//        //EtaF
+//      float scaleBins[7] = {1.0,2.6,2.6,1.1,1.0,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    }
+//  } else {
+//      // Down systematics
+//    if (fabs(eta) < 0.3) {
+//        //EtaA
+//      float scaleBins[7] = {0.0,0.19,0.56,0.83,0.93,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.6) {
+//        //EtaB
+//      float scaleBins[7] = {0.0,0.25,0.26,0.67,0.93,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 0.9) {
+//        //EtaC
+//      float scaleBins[7] = {0.0,0.34,0.34,0.51,0.80,0.96,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 1.2) {
+//        //EtaD
+//      float scaleBins[7] = {0.0,0.0,0.27,0.27,0.63,0.93,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else if(fabs(eta) < 2.1) {
+//        //EtaE
+//      float scaleBins[7] = {0.0,0.34,0.34,0.67,0.94,0.98,0.98};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    } else {
+//        //EtaF
+//      float scaleBins[7] = {0.0,0.41,0.41,0.76,0.98,1.0,1.0};
+//      for (int i = 0; i < 7; i++) {
+//        if (beta < betaBins[i]) {
+//          return scaleBins[i];
+//        }
+//      }
+//    }
+//  }
+//  return 0;
+//}
 
 
 //=============================================================
