@@ -65,16 +65,16 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
           obj = f.Get(newname)
           
           
-          tex2 = ROOT.TLatex(0.13,0.94,"CMS");
-          #tex2 = ROOT.TLatex(0.20,0.94,"CMS");#if there is 10^x
+#          tex2 = ROOT.TLatex(0.13,0.94,"CMS");
+          tex2 = ROOT.TLatex(0.23,0.94,"CMS");#if there is 10^x
           tex2.SetNDC();
           tex2.SetTextFont(61);
           tex2.SetTextSize(0.0675);
           tex2.SetLineWidth(2);
 
           #tex3 = ROOT.TLatex(0.27,0.96,"Simulation"); # for square plots
-          #tex3 = ROOT.TLatex(0.28,0.94,"Work in Progress 2018"); #if there is 10^x
-          tex3 = ROOT.TLatex(0.27,0.94,"Internal");
+          tex3 = ROOT.TLatex(0.37,0.94,"Internal"); #if there is 10^x
+#          tex3 = ROOT.TLatex(0.27,0.94,"Internal");
           tex3.SetNDC();
           tex3.SetTextFont(52);
           tex3.SetTextSize(0.0485);
@@ -94,6 +94,8 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
             tex4 = ROOT.TLatex(0.6,0.95,"After pre-selection")
           elif ("PostS" in keyname2) :
             tex4 = ROOT.TLatex(0.6,0.95,"After selection")
+          elif ("Calibration" in keyname2) :
+            tex4 = ROOT.TLatex(0.6,0.95,"After calibration cuts")
 #            if ("PostPreS_Eta" in keyname2) :
 #              print("PostPreS number of tracks in plot (" +keyname2 + ") : "+str(obj.Integral()))
           tex4.SetNDC();
@@ -135,7 +137,12 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                   projX.SetMarkerStyle(20)
                   projX.GetYaxis().SetTitle("Clusters")
                   projX.GetYaxis().SetTitleOffset(1.9)
+                  projX.GetXaxis().SetRange(1,15)
                   projX.Draw("COLZ")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
                   can.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_ProjX.png")
                   
                   legGiCalib =  ROOT.TLegend(.6,.55,.80,.9,"","brNDC")
@@ -161,8 +168,13 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                     projY.GetYaxis().SetTitleOffset(1.4)
                     legGiCalib.AddEntry(projY, "Module index: " + str(x),"LP")
                     projY.Draw("SAME")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
                   legGiCalib.Draw("SAME")
                   can3.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_ProjY.png")
+                  
                   can4 = ROOT.TCanvas(newname+"4",newname+"4",800,800)
                   can4.SetLogy()
                   for x in range(1,obj.GetNbinsX()+2) :
@@ -175,11 +187,15 @@ for i in range(0, f.GetListOfKeys().GetEntries()):
                     projZ.GetYaxis().SetTitle("Clusters")
                     projZ.GetYaxis().SetTitleOffset(1.4)
                     projZ.Draw("SAME")
+                  tex2.Draw("SAME")
+                  tex3.Draw("SAME")
+                  tex4.Draw("SAME")
+                  tex5.Draw("SAME")
                   legGiCalib.Draw("SAME")
                   can4.SaveAs(fileName[0:-5] + "_Bin" + str(bin)+ "/" + keyname2 +  "_ProjZ.png")
               
 name = fileName[fileName.find("Run")+3:fileName.find("_CodeV")]
-version = "v4"
+version = "v5"
 outFileName = str('template_{}_{}.root'.format(name,version))
 fOut = ROOT.TFile.Open(outFileName,'UPDATE')
 templ0 = f.Get('HSCParticleAnalyzer/BaseName/Calibration_GiTemplate')

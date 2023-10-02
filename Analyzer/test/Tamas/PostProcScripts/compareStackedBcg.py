@@ -1,11 +1,11 @@
 import ROOT, sys, os, time, re, numpy
-#from common_functions import *
+import numpy as np
 from optparse import OptionParser
 parser = OptionParser(usage="Usage: python %prog codeVersion BinNumber")
 (opt,args) = parser.parse_args()
 
 codeVersion = sys.argv[1]
-BinNumber = sys.argv[2]
+BinNumber = sys.argv[2] if (len(sys.argv)==1) else 3
 bin = int(BinNumber)
 # bin 3: pt>60 and I_as > 0.05
 # bin 25: pt>65 and I_as > 0.175
@@ -62,8 +62,9 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           if (keyname2=="HscpCandidates" or keyname2=="GenHscpCandidates"):
             continue
           if not obj.InheritsFrom("TObject"): continue
+          if any(substring in keyname2 for substring in ["_regionA_", "_regionB_", "_regionC_", "_regionD_", "VR1_Mass",  "VR2_Mass", "VR3_Mass", "SR1_Mass",  "SR2_Mass", "SR3_Mass"]) : continue
           
-#          if not ("CutFlow" in keyname2) : continue
+          if not ("MiniRelIsoAll" in keyname2) : continue
 
           if (obj.GetEntries() == 0 ) : continue
           stackedSummedBackground = ROOT.THStack("stackedSummedBackground","")
@@ -72,6 +73,7 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           SingleMuonHisto = SingleMuon.Get(newname)
           SelectedSignalSamples1Histo = SelectedSignalSamples1.Get(newname)
           SelectedSignalSamples2Histo = SelectedSignalSamples2.Get(newname)
+          
           if (obj.ClassName() == "TH2F") :
             xAxisTitle = SingleMuon.Get(newname).GetYaxis().GetTitle()
             SingleMuonHisto = SingleMuon.Get(newname).ProjectionY(str(keyname2)+"Data_ProjY",bin,bin,"e")
@@ -91,7 +93,7 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           SelectedSignalSamples2Histo.SetLineColor(7)
           SelectedSignalSamples2Histo.SetMarkerStyle(22)
           
-          legend =  ROOT.TLegend(.55,.70,.80,.89,"","brNDC")
+          legend =  ROOT.TLegend(.5,.70,.80,.89,"","brNDC")
           legend.SetTextFont(42)
           legend.SetTextSize(0.02)
           legend.SetBorderSize(1);
@@ -107,25 +109,29 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
 #          else :
 #            axisXTitle = keyname2[keyname2.find("_")+1:keyname2.find("Per")]
 #            axisYTitle = keyname2[keyname2.find("Per")+3:]
-          
-#              print("------------------------------------------------------------")
-#          if (obj.ClassName() == "TH1F") : continue
-          if ((obj.ClassName() == "TH1F") or (obj.ClassName() == "TH2F" and ("PostS" in keyname2) or (("Mass" in keyname2) and not "Vs" in keyname2))) :
+
+          if ((obj.ClassName() == "TH1F") or (obj.ClassName() == "TH2F" and (("PostS" in keyname2) or ("Mass" in keyname2)) and not "Vs" in keyname2) or ("K_and_C_Kin" in keyname2)) :
             # array to contain a specific (keyname2) histogram for all samples
+#            print(keyname2)
             histoArray = []
             nEventsPostTrigArray = []
             for index,fileIn in enumerate(bckArray):
-              if (obj.ClassName() == "TH1F") :
+              if (obj.ClassName() == "TH1F" or obj.ClassName() == "TH1D") :
                 histo = fileIn.Get(newname)
-                xAxisTitle = fileIn.Get(newname).GetXaxis().GetTitle()
-                yAxisTitle = fileIn.Get(newname).GetYaxis().GetTitle()
+                if not histo : continue
+                xAxisTitle = histo.GetXaxis().GetTitle()
+                yAxisTitle = histo.GetYaxis().GetTitle()
                 if (yAxisTitle == "") : yAxisTitle = "Tracks / bin"
-#                if ("MiniTkIso" in keyname2) : xAxisTitle = "MiniTkIso (GeV)"
-#                if ("Ias" in keyname2) : xAxisTitle = "G_{i}"
+                if ("Ias" in keyname2) : xAxisTitle = "G_{i}"
+                if ("Pt" in keyname2) and not ("PtErr" in keyname2) : xAxisTitle = "p_{T} [GeV]"
+                if ("Chi2oNdof" in keyname2) : xAxisTitle = "#chi^{2} / N_{dof}"
+                if ("Dxy" in keyname2) : xAxisTitle = "d_{xy} [cm]"
               if (obj.ClassName() == "TH2F") :
-                histo = fileIn.Get(newname).ProjectionY(str(newname)+"ProjY"+str(index),bin,bin,"e")
-                xAxisTitle = fileIn.Get(newname).GetYaxis().GetTitle()
-                yAxisTitle = fileIn.Get(newname).GetZaxis().GetTitle()
+                histo = obj.ProjectionY(str(newname)+"ProjY"+str(index),bin,bin,"e")
+                if not histo : continue
+                xAxisTitle = histo.GetYaxis().GetTitle()
+                yAxisTitle = histo.GetZaxis().GetTitle()
+              histo.GetXaxis().SetTitle(xAxisTitle)
               histoArray.append(histo)
               stackedSummedBackground.Add(histo)
               if ((index==2)) :
@@ -150,24 +156,39 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
                 legend.AddEntry(histo,"ZToMuMu","LP")
           else :
             continue
+
           cstackedSummedBackgroundString = 'cstackedSummedBackground'+str(j)
           cstackedSummedBackground = ROOT.TCanvas(cstackedSummedBackgroundString, cstackedSummedBackgroundString, 800,800)
           #  convert stacks to (summed) histos
           stackedSummedBackground.Draw()
-          stackedSummedBackground.GetXaxis().SetTitle(xAxisTitle)
+          OFbin = stackedSummedBackground.GetStack().Last().GetNbinsX()+1
+          if any(substring in keyname2 for substring in ["Ias", "ProbQ", "Beta", "CutFlow", "Qual", "Eta", "MiniTkIso", "closestPfJet"]): #"MiniRelIsoAll"
+            OFbin = stackedSummedBackground.GetStack().Last().GetNbinsX()
+          UFbin = 1
+          if any(substring in keyname2 for substring in ["Dxy", "Dz"]):
+            UFbin = 0
+          stackedSummedBackground.GetXaxis().SetRange(UFbin,OFbin)
+#          stackedSummedBackground.GetXaxis().SetTitle(xAxisTitle)
           stackedSummedBackground.GetYaxis().SetTitle(yAxisTitle)
+          stackedSummedBackground.GetXaxis().SetTitle(xAxisTitle)
           stackedSummedBackgroundTmp = stackedSummedBackground.GetStack().Last()
+          
+          for hist in stackedSummedBackground.GetStack():
+            hist.GetXaxis().SetRange(UFbin,OFbin)
+          
+          SelectedSignalSamples1Histo.GetXaxis().SetRange(UFbin,OFbin)
+          SelectedSignalSamples2Histo.GetXaxis().SetRange(UFbin,OFbin)
+          SingleMuonHisto.GetXaxis().SetRange(UFbin,OFbin)
+#          stackedSummedBackgroundTmp
           for index,fileIn in enumerate(bckArray):
             normHisto = fileIn.Get(newname)
+            if not normHisto : continue
             max = stackedSummedBackgroundTmp.GetMaximum()
             if (max==0) : continue
             normHisto.Scale(1/max)
             stackedNormSummedBackground.Add(normHisto)
-
           stackedNormSummedBackground.Draw()
           
-#          print(stackedSummedBackgroundTmp.Integral(1,stackedSummedBackgroundTmp.GetXaxis().FindBin(0.3))/stackedSummedBackgroundTmp.Integral())
-#          print(SingleMuonHisto.Integral(1,SingleMuonHisto.GetXaxis().FindBin(0.3))/SingleMuonHisto.Integral())
           if (keyname2== "EventCutFlow") :
             SingleMuonHisto.Scale(1/SingleMuonHisto.GetMaximum())
             if (blind) :
@@ -178,21 +199,27 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
             SelectedSignalSamples1Histo.Scale(1/SelectedSignalSamples1Histo.GetMaximum())
             SelectedSignalSamples2Histo.Scale(1/SelectedSignalSamples2Histo.GetMaximum())
             obj.SetStats(0)
-            obj.GetXaxis().SetTitle("")
             ROOT.gStyle.SetPaintTextFormat(".2g");
             obj.Draw("HISTOTEXT00")
             tex2.Draw("SAME")
             tex3.Draw("SAME")
             tex4.Draw("SAME")
             tex5.Draw("SAME")
-#                obj.GetYaxis().SetRangeUser(0.,1.3)
-#            cstackedSummedBackground.SaveAs("StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/"+keyname2+"_withNumbersNotNorm.png")
+            overFlowText.Draw("SAME")
+            overFlowLine.DrawLine(overFlowLocX,stackedSummedBackgroundTmp.GetMinimum(),overFlowLocX,max*3)
           elif (keyname2== "CutFlow") :
             SingleMuonHisto.Scale(1/SingleMuonHisto.GetMaximum())
             if (blind) :
               SingleMuonHisto.SetBinContent(18,-1)
               SingleMuonHisto.SetBinContent(19,-1)
               SingleMuonHisto.SetBinContent(20,-1)
+          elif (keyname2== "ProbQ") :
+            SingleMuonHisto.Scale(1/SingleMuonHisto.GetMaximum())
+#            if (blind) :
+#              SingleMuonHisto.SetBinContent(18,-1)
+#              SingleMuonHisto.SetBinContent(19,-1)
+#              SingleMuonHisto.SetBinContent(20,-1)
+#              SingleMuonHisto.SetBinContent(21,-1)
             if (SelectedSignalSamples1Histo.GetMaximum() == 0 ): continue
             SelectedSignalSamples1Histo.Scale(1/SelectedSignalSamples1Histo.GetMaximum())
             SelectedSignalSamples2Histo.Scale(1/SelectedSignalSamples2Histo.GetMaximum())
@@ -205,8 +232,6 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
             if (SelectedSignalSamples1Histo.GetMaximum() == 0 ): continue
             SelectedSignalSamples1Histo.Scale(1/SelectedSignalSamples1Histo.GetMaximum())
             SelectedSignalSamples2Histo.Scale(1/SelectedSignalSamples2Histo.GetMaximum())
-            stackedNormSummedBackground.GetXaxis().SetTitle("")
-            stackedNormSummedBackground.GetYaxis().SetTitle("")
             stackedNormSummedBackground.SetMaximum(1.4)
           elif ("pfType" in keyname2) :
             if (SelectedSignalSamples1Histo.GetMaximum() == 0 ): continue
@@ -226,7 +251,8 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           tex2.SetTextSize(0.0675);
           tex2.SetLineWidth(2);
 
-          tex3 = ROOT.TLatex(0.27,0.94,"Internal"); # for square plots
+          tex3 = ROOT.TLatex(0.27,0.94,""); # for square plots
+#          tex3 = ROOT.TLatex(0.27,0.94,"Internal"); # for square plots
           #tex3 = ROOT.TLatex(0.28,0.94,"Work in Progress 2018"); #if there is 10^x
           #tex3 = ROOT.TLatex(0.28,0.94,"Internal");
           tex3.SetNDC();
@@ -236,18 +262,20 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           
           tex4 = ROOT.TLatex()
 
-          if ("BefPreS" in keyname2) :
-            tex4 = ROOT.TLatex(0.75,0.94,"Before pre-selection")
+          if ("Calibration" in keyname2) :
+            tex4 = ROOT.TLatex(0.6,0.95,"Calibration selection")
+          elif ("BefPreS" in keyname2) :
+            tex4 = ROOT.TLatex(0.6,0.95,"Before preselection")
           elif ("N1" in keyname2) :
-            tex4 = ROOT.TLatex(0.75,0.94,"After N-1 selection")
+            tex4 = ROOT.TLatex(0.6,0.95,"After N-1 selection")
           elif ("PostPreS" in keyname2) :
-            tex4 = ROOT.TLatex(0.75,0.94,"After pre-selection")
+            tex4 = ROOT.TLatex(0.6,0.95,"After preselection")
           elif ("PostS" in keyname2) :
-            tex4 = ROOT.TLatex(0.75,0.94,"After selection")
+            tex4 = ROOT.TLatex(0.6,0.95,"After selection")
             
           tex4.SetNDC();
           tex4.SetTextFont(52);
-          tex4.SetTextSize(0.0285);
+          tex4.SetTextSize(0.045);
           tex4.SetLineWidth(2);
           
           tex5 = ROOT.TLatex(0.07,0.04,"Code version: "+codeVersion);
@@ -256,43 +284,56 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           tex5.SetTextSize(0.0185);
           tex5.SetLineWidth(2);
           max = numpy.maximum(stackedSummedBackground.GetMaximum(),SingleMuonHisto.GetMaximum())
+          
+          overFlowText = ROOT.TLatex(0.836,0.15,"OF");
+#          overFlowText.SetTextAngle(-30)
+          overFlowText.SetNDC();
+          overFlowText.SetTextFont(52);
+          overFlowText.SetTextSize(0.01);
+          overFlowText.SetLineWidth(2);
+          
+          overFlowLine = ROOT.TLine();
+          overFlowLine.SetLineWidth(2);
+          overFlowLine.SetLineStyle(ROOT.kDashed);
+          
+          overFlowLine2 = ROOT.TLine();
+          overFlowLine2.SetLineWidth(2);
+          overFlowLine2.SetLineStyle(ROOT.kDashed);
+          
+          binWidth = histo.GetXaxis().GetBinWidth(1)
+          firstBinLocXCent = histo.GetXaxis().GetBinCenter(1)
+          overFlowLocXCent = histo.GetXaxis().GetBinCenter(histo.GetNbinsX()+ 1)
+          overFlowLocX = (overFlowLocXCent - (binWidth)/2)
 
           if ("CutFlow" in keyname2 or "pfType" in keyname2):
             stackedNormSummedBackground.Draw("HISTO")
-            stackedNormSummedBackground.SetTitle("")
             stackedNormSummedBackground.GetXaxis().SetTitleSize(0.05)
-            stackedNormSummedBackground.GetXaxis().SetTitle("")
             stackedNormSummedBackground.GetYaxis().SetRangeUser(0,1.5)
             stackedNormSummedBackground.SetMaximum(1.3)
           else :
             stackedSummedBackground.Draw("HISTO")
-            stackedSummedBackground.GetXaxis().SetTitleSize(0.05)
-            stackedSummedBackground.GetXaxis().SetTitleOffset(1)
-#            stackedSummedBackground.GetXaxis().SetTitle(axisXTitle)
-#            stackedSummedBackground.GetYaxis().SetTitle(axisYTitle)
+            stackedSummedBackground.GetXaxis().SetTitleOffset(1.1)
+            stackedSummedBackground.GetXaxis().SetTitle(xAxisTitle)
             stackedSummedBackground.SetMaximum(max*1.4)
             stackedSummedBackground.SetMinimum(0.0)
-          if not ("Mass" in keyname2 or "Ias" in keyname2) :
+          if not ("Mass" in keyname2 or "Ias" in keyname2 or "SR2PASS" in keyname2) :
+            SingleMuonHisto.Draw("SAMEP")
+          if ("SR2FAIL" in keyname2) :
             SingleMuonHisto.Draw("SAMEP")
           if ("CR" in keyname2) :
             SingleMuonHisto.Draw("SAMEP")
+          if ("K_and_C_Kin_Mass" in keyname2) :
+            SingleMuonHisto.Draw("SAMEP")
           SelectedSignalSamples1Histo.Draw("SAME")
           SelectedSignalSamples2Histo.Draw("SAME")
-          if ("Mass" in keyname2) :
-            stackedSummedBackground.GetXaxis().SetRangeUser(0,1800)
-#                stackedSummedBackground.GetXaxis().SetTitle("Mass [GeV]")
-#                stackedSummedBackground.GetYaxis().SetTitle("Tracks/bin")
-#                stackedSummedBackground.GetYaxis().SetTitleSize(0.05)
-#                stackedSummedBackground.GetYaxis().SetTitleOffset(1)
-
- 
-          
+           
           legend.Draw("SAME")
           tex2.Draw("SAME")
           tex3.Draw("SAME")
           tex4.Draw("SAME")
           tex5.Draw("SAME")
-
+          overFlowText.Draw("SAME")
+          overFlowLine.DrawLine(overFlowLocX,stackedSummedBackgroundTmp.GetMinimum(),overFlowLocX,max*1.4)
           cstackedSummedBackground.SaveAs("StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/"+keyname2+".png")
           
 #---------------------------------------------------------------------------------------------
@@ -301,27 +342,27 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           cstackedSummedBackground = ROOT.TCanvas(cstackedSummedBackgroundLogString, cstackedSummedBackgroundLogString, 800,800)
           cstackedSummedBackground.SetLogy()
           
-          if ("PrePreS" in keyname2 or "PostPreS" in keyname2 or "N1" in keyname2) :
-            stackedSummedBackground.SetMinimum(0.0001)
-          else:
-            stackedSummedBackground.SetMinimum(0.0001)
+          stackedSummedBackground.SetMinimum(0.0001)
             
           if ("CutFlow" in keyname2 or "pfType" in keyname2):
             stackedNormSummedBackground.Draw("HISTO")
-            stackedNormSummedBackground.SetTitle("")
             stackedNormSummedBackground.GetXaxis().SetTitleSize(0.05)
-            stackedNormSummedBackground.GetXaxis().SetTitle("")
             stackedNormSummedBackground.GetYaxis().SetRangeUser(0,1.5)
             stackedNormSummedBackground.SetMaximum(200)
             stackedNormSummedBackground.SetMinimum(0.0000001)
           else :
             stackedSummedBackground.Draw("HISTO")
-            stackedSummedBackground.GetXaxis().SetTitleSize(0.05)
-            stackedSummedBackground.GetXaxis().SetTitleOffset(1)
+#            stackedSummedBackground.GetXaxis().SetTitleSize(0.05)
+            stackedSummedBackground.GetXaxis().SetTitleOffset(1.1)
+            stackedSummedBackground.GetXaxis().SetTitle(xAxisTitle)
             stackedSummedBackground.SetMaximum(max*10000)
-          if not ("Mass" in keyname2 or "Ias" in keyname2) :
+          if not ("Mass" in keyname2 or "Ias" in keyname2 or "SR2PASS" in keyname2) :
             SingleMuonHisto.Draw("SAMEP")
           if ("CR" in keyname2) :
+            SingleMuonHisto.Draw("SAMEP")
+          if ("K_and_C_Kin_Mass" in keyname2) :
+            SingleMuonHisto.Draw("SAMEP")
+          if ("SR2FAIL" in keyname2) :
             SingleMuonHisto.Draw("SAMEP")
           SelectedSignalSamples1Histo.Draw("SAME")
           SelectedSignalSamples2Histo.Draw("SAME")
@@ -330,8 +371,125 @@ for i in range(0, bckArray[0].GetListOfKeys().GetEntries()):
           tex3.Draw("SAME")
           tex4.Draw("SAME")
           tex5.Draw("SAME")
-
+          overFlowText.Draw("SAME")
+          overFlowLine.DrawLine(overFlowLocX,0.00001,overFlowLocX,max*40000)
+           # max was max*40000 earlier, or stackedSummedBackground.GetMaximum()
+          
           cstackedSummedBackground.SaveAs("StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/"+keyname2+"_log.png")
+          
+          
+#---------------------------------------------------------------------------------------------
+          # now let's do everything again but on a log Y scale normalized to the area
+          cstackedSummedBackgroundNormString = 'cstackedSummedBackgroundNorm'+str(j)
+          cstackedSummedBackgroundNorm = ROOT.TCanvas(cstackedSummedBackgroundNormString, cstackedSummedBackgroundNormString, 800,800)
+          cstackedSummedBackgroundNorm.SetLogy(0)
+
+          normFactToArea = 0 #
+          normFactToArea2 = 0
+          for hist in stackedSummedBackground.GetStack():
+            normFactToArea += hist.Integral(1,hist.GetNbinsX()+1)
+            
+          if (normFactToArea == 0) :
+            print("No data")
+            normFactToArea = 1
+            
+          for hist in stackedSummedBackground.GetStack():
+            normFactToArea2 += hist.Integral(1,hist.GetNbinsX()+1)
+            
+          stackedSummedBackgroundNormToArea = ROOT.THStack("stackedSummedBackgroundNormToArea","")
+          for hist in stackedSummedBackground.GetStack():
+            hist.GetXaxis().SetRange(UFbin,OFbin)
+            normHistoToArea = hist.Clone()
+            normHistoToArea.Scale(1/normFactToArea)
+            stackedSummedBackgroundNormToArea.Add(normHistoToArea)
+            
+          if (SingleMuonHisto.Integral() > 0) :
+            SingleMuonHisto.Scale(1/SingleMuonHisto.Integral(1,SingleMuonHisto.GetNbinsX()+1))
+          if (SelectedSignalSamples1Histo.Integral() > 0) :
+            SelectedSignalSamples1Histo.Scale(1/SelectedSignalSamples1Histo.Integral(1,SelectedSignalSamples1Histo.GetNbinsX()+1))
+          if (SelectedSignalSamples2Histo.Integral() > 0) :
+            SelectedSignalSamples2Histo.Scale(1/SelectedSignalSamples2Histo.Integral(1,SelectedSignalSamples2Histo.GetNbinsX()+1))
+
+          
+          if ("PrePreS" in keyname2 or "PostPreS" in keyname2 or "N1" in keyname2) :
+            stackedSummedBackground.SetMinimum(0.0001)
+          if ("CutFlow" in keyname2 or "pfType" in keyname2):
+            stackedSummedBackgroundNormToArea.Draw("HISTO")
+            stackedSummedBackgroundNormToArea.GetXaxis().SetTitleSize(0.05)
+            stackedSummedBackgroundNormToArea.GetYaxis().SetRangeUser(0,1.5)
+            stackedSummedBackgroundNormToArea.SetMaximum(1)
+            stackedSummedBackgroundNormToArea.SetMinimum(0.00000000001)
+          else :
+            stackedSummedBackgroundNormToArea.Draw("HISTO")
+            stackedSummedBackgroundNormToArea.GetYaxis().SetTitle("Normalized "+stackedSummedBackground.GetYaxis().GetTitle())
+            stackedSummedBackgroundNormToArea.GetXaxis().SetTitleOffset(1.1)
+            stackedSummedBackgroundNormToArea.GetXaxis().SetRange(UFbin,OFbin)
+            stackedSummedBackgroundNormToArea.GetXaxis().SetTitle(xAxisTitle)
+            max1 = np.maximum(stackedSummedBackgroundNormToArea.GetMaximum(),SelectedSignalSamples1Histo.GetMaximum())
+            max2 = np.maximum(SelectedSignalSamples1Histo.GetMaximum(),SingleMuonHisto.GetMaximum())
+            max = np.maximum(max1,max2)
+            stackedSummedBackgroundNormToArea.SetMaximum(max*1.2)
+            stackedSummedBackgroundNormToArea.SetMinimum(0.00000000001)
+          SelectedSignalSamples1Histo.Draw("SAME")
+          SelectedSignalSamples2Histo.Draw("SAME")
+          if not ("Mass" in keyname2 or "Ias" in keyname2 or "SR2PASS" in keyname2) :
+            SingleMuonHisto.Draw("SAMEP")
+            SingleMuonHisto.SetMarkerStyle(24)
+          if ("K_and_C_Kin_Mass" in keyname2 or "SR2FAIL" in keyname2 or "CR" in keyname2) :
+            SingleMuonHisto.Draw("SAMEP")
+            SingleMuonHisto.SetMarkerStyle(24)
+
+          legend.Draw("SAME")
+          tex2.Draw("SAME")
+          tex3.Draw("SAME")
+          tex4.Draw("SAME")
+          tex5.Draw("SAME")
+          overFlowText.Draw("SAME")
+          overFlowLine.DrawLine(overFlowLocX,stackedSummedBackgroundNormToArea.GetMinimum(),overFlowLocX,max*1.2)
+          cstackedSummedBackgroundNorm.SaveAs("StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/"+keyname2+"_Norm.png")
+
+#################################### same again but on log scale ####################################
+          
+          cstackedSummedBackgroundLogNormString = 'cstackedSummedBackgroundLogNorm'+str(j)
+          cstackedSummedBackgroundLogNorm = ROOT.TCanvas(cstackedSummedBackgroundLogNormString, cstackedSummedBackgroundLogNormString, 800,800)
+          cstackedSummedBackgroundLogNorm.SetLogy(1)
+#          stackedSummedBackgroundNormToArea.SetMaximum(1000)
+
+          if ("PrePreS" in keyname2 or "PostPreS" in keyname2 or "N1" in keyname2) :
+            stackedSummedBackground.SetMinimum(0.0001)
+          if ("CutFlow" in keyname2 or "pfType" in keyname2):
+            stackedSummedBackgroundNormToArea.Draw("HISTO")
+            stackedSummedBackgroundNormToArea.GetXaxis().SetTitleSize(0.05)
+            stackedSummedBackgroundNormToArea.GetYaxis().SetRangeUser(0,1.5)
+            stackedSummedBackgroundNormToArea.SetMaximum(1)
+            stackedSummedBackgroundNormToArea.SetMinimum(0.00000000001)
+          else :
+            stackedSummedBackgroundNormToArea.Draw("HISTO")
+#            stackedSummedBackground.GetXaxis().SetTitleSize(0.05)
+            stackedSummedBackgroundNormToArea.GetYaxis().SetTitle("Normalized "+stackedSummedBackground.GetYaxis().GetTitle())
+            stackedSummedBackgroundNormToArea.GetXaxis().SetTitleOffset(1.1)
+            stackedSummedBackgroundNormToArea.GetXaxis().SetRange(UFbin,OFbin)
+            stackedSummedBackgroundNormToArea.GetXaxis().SetTitle(xAxisTitle)
+            stackedSummedBackgroundNormToArea.SetMaximum(max*10000)
+            stackedSummedBackgroundNormToArea.SetMinimum(0.00000000001)
+          SelectedSignalSamples1Histo.Draw("SAME")
+          SelectedSignalSamples2Histo.Draw("SAME")
+          if not any(substring in keyname2 for substring in ["Mass", "Ias", "SR2PASS"]):
+            SingleMuonHisto.Draw("SAMEP")
+            SingleMuonHisto.SetMarkerStyle(24)
+          if any(substring in keyname2 for substring in ["K_and_C_Kin_Mass", "SR2FAIL", "CR"]):
+            SingleMuonHisto.Draw("SAMEP")
+            SingleMuonHisto.SetMarkerStyle(24)
+
+          legend.Draw("SAME")
+          tex2.Draw("SAME")
+          tex3.Draw("SAME")
+          tex4.Draw("SAME")
+          tex5.Draw("SAME")
+          overFlowText.Draw("SAME")
+          
+          overFlowLine2.DrawLine(overFlowLocX,stackedSummedBackgroundNormToArea.GetMinimum(),overFlowLocX,max*40000)
+          cstackedSummedBackgroundLogNorm.SaveAs("StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/"+keyname2+"_LogNorm.png")
 
 os.system("cp forWebpage/* StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/.")
 os.system("cp forWebpage/.htaccess StackedComparrison_CodeV"+codeVersion+"_Bin"+str(bin)+"/.")
