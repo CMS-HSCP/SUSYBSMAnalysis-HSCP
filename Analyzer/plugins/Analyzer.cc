@@ -4655,8 +4655,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_FracSat->Fill(fracsat_highp, eventWeight_);
       }
       
-      if ((((globalIas_ > 0.25 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
-        if (globalIas_ > 0.25)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
+      if ((((globalIas_ > 0.22 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
+        if (globalIas_ > 0.22)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
         if (Mass > 1000) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
         LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
         LogPrint(MOD) << "        >> -----------------------------------------------";
