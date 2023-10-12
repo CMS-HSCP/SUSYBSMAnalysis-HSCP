@@ -21,17 +21,16 @@ To compile the code, run
 scram b -j
 ```
 
-** Copy the relevant scripts to /src**
+**Copy the relevant scripts to `/src`**
 ```bash
 # make sure you are under CMSSW_10_6_30/src/
 cp SUSYBSMAnalysis/Analyzer/test/Tamas/submitCrabJobs* .
 cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_master_cfg.py .
 cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_2018_mc_cfg.py .
 cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py .
-4crab_Template_maxStat.py
 ```
 
-** Customize to you
+**Customize to you
 ```bash
 sed -i  's/tvami/<yourUserName>\ ./g' submitCrabJobs*
 # make sure you have a site to write to:  `crab checkwrite --site=<yourTierTwoSite>`. 
@@ -65,7 +64,7 @@ python3 submitCrabJobsAll.py 46p6
 
 **Status checks and downloading files**
 ```
-# Make sure you are still under /src/
+# Make sure you are still under `/src/`
 cp SUSYBSMAnalysis/Analyzer/test/Tamas/statusCrabJobsMT.py .
 python3 statusCrabJobsMT.py <XvY>
 
@@ -94,7 +93,7 @@ python3 rescaleAndPrintHadd.py <XvY>
 This is done in the https://github.com/tvami/HSCPbackgroundPred repo using 2DAlphabet for the ionization method
 
 
-### Misc
+## Misc
 
 #### Meaning of Analysis Type
 
@@ -111,14 +110,14 @@ FCPs are not done in this group anymore.
 
 ### More on CRAB basics
 
-** If you need to setup CRAB**
+**If you need to setup CRAB**
 
 Setup CRAB environment
 ```bash
 source /cvmfs/cms.cern.ch/common/crab-setup.sh  
 ```
 
-** If you want to check on individual jobs:
+**If you want to check on individual jobs:
 ```
 The following directory will be created: `crab_projects/crab_<request-name>`.
 - To get status: `crab status -d crab_projects/crab_<request-name>`
@@ -128,7 +127,7 @@ The following directory will be created: `crab_projects/crab_<request-name>`.
 - How to get corresponding integrated lumi, see section [Compute Lumi](#compute-lumi).
 ```
 
-#### Compare ROOT files
+### Compare ROOT files
 
 Copy the script:
 ```bash
