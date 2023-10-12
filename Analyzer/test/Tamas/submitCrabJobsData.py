@@ -48,7 +48,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_master_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 4000
-config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR2.txt','SUSYBSMAnalysis/HSCP/data/GiTEMPLATE','MuonTimeOffset.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR2.txt','SUSYBSMAnalysis/HSCP/data/GiTEMPLATE','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 config.JobType.pyCfgParams = ['GTAG=106X_dataRun2_v36', 'SAMPLE=isData', 'YEAR=EVAD', 'ERA=IDOSZAK']
 
 config.section_('Data')
@@ -61,11 +61,11 @@ config.Data.unitsPerJob = 50
 config.Data.outputDatasetTag = config.General.requestName
 config.Data.outLFNDirBase = '/store/user/tvami/HSCP'
 config.Data.ignoreLocality = True
-config.Data.partialDataset = True
+#config.Data.partialDataset = True
 config.Data.publication = False
 
 config.section_('Site')
-config.Site.whitelist = ['T2_ES_*,'T2_IN_TIFR','T2_DE_DESY','T2_CH_CERN','T2_IT_*','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T3_US_*','T2_HU_Budapest','T2_FR_*', 'T2_UK_*']
+config.Site.whitelist = ['T2_BE_*','T2_ES_*','T2_IN_TIFR','T2_DE_DESY','T2_CH_CERN','T2_IT_*','T1_IT_*','T2_US_*', 'T3_US_FNALLPC','T3_US_*','T2_HU_Budapest','T2_FR_*', 'T2_UK_*']
 config.Site.storageSite = 'T2_HU_Budapest'
 #config.Site.storageSite = 'T3_US_FNALLPC'
   '''
@@ -117,7 +117,7 @@ for i in datasetList:
   replaceIDOSZAK  = "sed -i 's/IDOSZAK/"+IDOSZAK+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceIDOSZAK)
   	
-  replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v4.root/g' 4crab_toSubmit_Data.py"
+  replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v5.root/g' 4crab_toSubmit_Data.py"
   os.system(replaceGiTEMPLATE)
 
   os.system("crab submit -c 4crab_toSubmit_Data.py")
