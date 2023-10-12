@@ -36,7 +36,7 @@ config.JobType.psetName = 'HSCParticleProducerAnalyzer_master_cfg.py'
 config.JobType.allowUndistributedCMSSW = True
 #config.JobType.maxJobRuntimeMin = 3000
 config.JobType.maxMemoryMB = 4000
-config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR2.txt','SUSYBSMAnalysis/HSCP/data/GiTEMPLATE','MuonTimeOffset.txt']
+config.JobType.inputFiles = ['SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL2.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL3.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixL4.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR1.txt','SUSYBSMAnalysis/HSCP/data/CorrFactEVADPixR2.txt','SUSYBSMAnalysis/HSCP/data/GiTEMPLATE','SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt']
 config.JobType.pyCfgParams = ['GTAG=106X_dataRun2_v36', 'SAMPLE=isData', 'YEAR=EVAD', 'ERA=IDOSZAK']
 
 config.section_('Data')
@@ -105,7 +105,7 @@ for i in datasetList:
   replaceIDOSZAK  = "sed -i 's/IDOSZAK/"+IDOSZAK+"/g' 4crab_toSubmit_Data.py"
   os.system(replaceIDOSZAK)
   	
-  replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v4.root/g' 4crab_toSubmit_Data.py"
+  replaceGiTEMPLATE = "sed -i 's/GiTEMPLATE/template_"+EVAD+IDOSZAK+"_v5.root/g' 4crab_toSubmit_Data.py"
   os.system(replaceGiTEMPLATE)
 
   os.system("crab submit -c 4crab_toSubmit_Data.py")
