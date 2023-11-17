@@ -6221,47 +6221,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Systematics plots for pT rescaling
-    if (rescaledPtUp > globalMinPt_) {
+    if (rescaledPtUp > globalMinPt_ && doSystsPlots_) {
       tuple->PostS_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_);
     }
-    if (rescaledPtDown > globalMinPt_) {
+    if (rescaledPtDown > globalMinPt_ && doSystsPlots_) {
       tuple->PostS_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_);
     }
-    // Systematics plots for Gi rescaling
-    RNG3 = new TRandom3(long(time(NULL)));
-    float theGiSystFactorUp =  std::max((double)1, RNG3->Gaus(1,1.02));
-    float theGiSystFactorDown =  std::max((double)0, std::min((double)1, RNG3->Gaus(1,1.02)));
-    tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  eventWeight_);
-    
-    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
-    
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStrips*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStripsLog*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
-    
-    // Systematics plots for PU rescaling
-    tuple->PostS_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_ * PUSystFactor_[1]);
-    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[1]);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[1]);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[1]);
-    // Systematics plots for Fi rescaling
+
+
+    float theGiSystFactorUp =  1.02;
+    float theGiSystFactorDown =  0.98;
     float theFiSystFactorUp = 1.005;
     float theFiSystFactorDown = 0.995;
     float triggerSystFactorUp = triggerSystFactor(trigObjEta,trigObjBeta,+1);
     float triggerSystFactorDown = triggerSystFactor(trigObjEta,trigObjBeta,-1);
+
+
 
     tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
     if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
@@ -6546,14 +6527,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //************************************************************************************
-
-    //************************ START FPIX STRATEGY ***************************************
-
-    //************************************************************************************
 
 
-    //VR1 FPIX Strategy pt 70 
+    //**** Mass reco + Fpix strategy ****
+
+    //VR1 pt>70 
 
     if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[3] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[8] && bestCandidateTrack->pt() >= 70) {
         tuple->PostS_VR1_pt70_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
@@ -6585,7 +6563,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //VR1 FPIX Strategy pt 100 
+    //VR1 pt>100 
 
     if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[3] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[8] && bestCandidateTrack->pt() >= 100) {
         tuple->PostS_VR1_pt100_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
@@ -6616,7 +6594,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_VR1_pt100_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
    
-    //VR1 FPIX Strategy pt 200 
+    //VR1 pt>200 
     if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[3] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[8] && bestCandidateTrack->pt() >= 200) {
         tuple->PostS_VR1_pt200_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_VR1_pt200_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
@@ -6646,7 +6624,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_VR1_pt200_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //VR1 FPIX Strategy pt 300 
+    //VR1 pt>300 
     if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[3] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[8] && bestCandidateTrack->pt() >= 300) {
         tuple->PostS_VR1_pt300_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_VR1_pt300_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
@@ -6677,8 +6655,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //SR0 Fpix Strategy  pt 70 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 70) {
+    //SR0  pt>70 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 70 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR0_pt70_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR0_pt70_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6706,8 +6684,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //SR0 Fpix Strategy  pt 100 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 100) {
+    //SR0 pt>100 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 100 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR0_pt100_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR0_pt100_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6734,8 +6712,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR0_pt100_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR0 Fpix Strategy  pt 200 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 200) {
+    //SR0 pt>200 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 200 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR0_pt200_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR0_pt200_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6763,8 +6741,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR0_pt200_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR0 Fpix Strategy  pt 300 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 300) {
+    //SR0 pt>300 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 300 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR0_pt300_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR0_pt300_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6793,8 +6771,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //SR1 Fpix Strategy  pt 70 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 70) {
+    //SR1 pt>70 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 70 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR1_pt70_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR1_pt70_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6821,8 +6799,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR1_pt70_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR1 Fpix Strategy  pt 100 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 100) {
+    //SR1 pt>100 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 100 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR1_pt100_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR1_pt100_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6849,8 +6827,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR1_pt100_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR1 Fpix Strategy  pt 200 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 200) {
+    //SR1 pt>200 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 200 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR1_pt200_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR1_pt200_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6878,8 +6856,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR1_pt200_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR1 Fpix Strategy  pt 300 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 300) {
+    //SR1 pt>300 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 300 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR1_pt300_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR1_pt300_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6908,8 +6886,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //SR2 Fpix Strategy  pt 70 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 70) {
+    //SR2 pt>70 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 70 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR2_pt70_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR2_pt70_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6937,8 +6915,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
 
-    //SR2 Fpix Strategy  pt 100 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 100) {
+    //SR2 pt>100 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 100 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR2_pt100_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR2_pt100_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6965,8 +6943,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR2_pt100_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR2 Fpix Strategy  pt 200 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 200) {
+    //SR2 pt>200 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 200 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR2_pt200_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR2_pt200_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -6994,8 +6972,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR2_pt200_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //SR2 Fpix Strategy  pt 300 
-    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 300) {
+    //SR2 pt>300 
+    if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11] && bestCandidateTrack->pt() >= 300 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         tuple->PostS_SR2_pt300_Fpix_Mass->Fill(bestCandidateMass, eventWeight_);
         tuple->PostS_SR2_pt300_Fpix->Fill(1 - bestCandidateProbQNoL1, eventWeight_);
 
@@ -7023,13 +7001,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR2_pt300_Fpix_Mass_C_down2->Fill(bestCandidateMass_Cdown2, eventWeight_);
     }
 
-    //************************************************************************************
 
-    //************************ END FPIX STRATEGY *****************************************
-
-    //************************************************************************************
+    //**** end mass reco + Fpix strategy ****
     
-
     //SR1
     if (bestCandidateIas>Ias_quantiles[5] && bestCandidatePt > pT_cut) {
         // nominal
@@ -7137,11 +7111,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (rescaledDownIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Ias_down->Fill(bestCandidateMass, eventWeight_);
         if (rescaledDownIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Ias_down->Fill(bestCandidateMass, eventWeight_);
     }
-        
+       
+ 
     //PT rescaling for FPIX method 
-
     //PT > 70
-    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 70) {
+    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 70 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt70_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt70_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt70_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
@@ -7149,7 +7123,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 70) {
+    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 70 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt70_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt70_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt70_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
@@ -7157,7 +7131,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     //PT > 100
-    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 100) {
+    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 100 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt100_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt100_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt100_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
@@ -7166,7 +7140,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 100) {
+    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 100 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt100_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt100_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt100_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
@@ -7174,7 +7148,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
 
     //PT > 200
-    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 200) {
+    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 200 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt200_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt200_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt200_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
@@ -7182,7 +7156,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 200) {
+    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 200 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt200_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt200_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt200_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
@@ -7190,7 +7164,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
    
     //PT > 300
-    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 300) {
+    if (rescaledPtUp > globalMinPt_ && rescaledPtUp >= 300 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt300_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt300_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt300_Fpix_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
@@ -7198,7 +7172,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
     }
 
-    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 300) {
+    if (rescaledPtDown > globalMinPt_ && rescaledPtDown >= 300 && maxIhSoFar > Ih_low && maxIhSoFar <= Ih_quantile) {
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[8] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR0_pt300_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[9] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR1_pt300_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
         if ((1-bestCandidateProbQNoL1) > Fpix_quantiles[10] && (1-bestCandidateProbQNoL1) <= Fpix_quantiles[11]) tuple->PostS_SR2_pt300_Fpix_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
