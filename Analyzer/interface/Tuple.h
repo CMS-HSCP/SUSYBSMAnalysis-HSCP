@@ -46,11 +46,42 @@ struct Tuple {
   std::vector<std::vector<float>> Tree_triggerObjectPt;
   std::vector<std::vector<float>> Tree_triggerObjectEta;
   std::vector<std::vector<float>> Tree_triggerObjectPhi;
+  bool Tree_L1_SingleMu22;
+  bool Tree_L1_SingleMu22or25;
+  std::vector<float> Tree_L1_22or25PT;
+  std::vector<float> Tree_L1_22or25Eta;
+  std::vector<float> Tree_L1_22or25Phi;
+  std::vector<float> Tree_L1_22or25Mass;
+
+  bool Tree_L1_mu22or25Filter0;
+  std::vector<float> Tree_L1_22or25F0PT;
+  std::vector<float> Tree_L1_22or25F0Eta;
+  std::vector<float> Tree_L1_22or25F0Phi;
+  std::vector<float> Tree_L1_22or25F0Mass;
+  bool Tree_L1_mu22or25Filter10;
+  std::vector<float> Tree_L1_22or25F10PT;
+  std::vector<float> Tree_L1_22or25F10Eta;
+  std::vector<float> Tree_L1_22or25F10Phi;
+  std::vector<float> Tree_L1_22or25F10Mass;
+
+  bool Tree_L1_mu22or25_l3Filter0;
+  bool Tree_L1_LastMuFilter;
+  std::vector<float> Tree_HLT_lastFilterPT;
+  std::vector<float> Tree_HLT_lastFilterEta;
+  std::vector<float> Tree_HLT_lastFilterPhi;
+  std::vector<float> Tree_HLT_lastFilterMass;
   bool Tree_HLT_Mu50;
+  int Tree_Multiplicity_Mu50;
   bool Tree_HLT_PFMET120_PFMHT120_IDTight;
   bool Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight;
   bool Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60;
   bool Tree_HLT_MET105_IsoTrk50;
+
+  float Tree_trigObjBeta;
+  float Tree_trigObjEta;
+  std::vector<float> Tree_HSCP_GenBeta;
+  std::vector<float> Tree_HSCP_trigObjBeta;
+  std::vector<float> Tree_HSCP_dRclosestTrigAndCandidate;
   float Tree_RecoCaloMET;
   float Tree_RecoCaloMET_phi;
   float Tree_RecoCaloMET_sigf;
@@ -126,6 +157,7 @@ struct Tuple {
   std::vector<float> Tree_muonPt;
   std::vector<float> Tree_muonEta;
   std::vector<float> Tree_muonPhi;
+  std::vector<float> Tree_muonBeta;
   std::vector<int> Tree_muonCharge;
   std::vector<bool> Tree_muonIsLoose;
   std::vector<bool> Tree_muonIsMedium;
@@ -176,6 +208,7 @@ struct Tuple {
   std::vector<bool> Tree_passPreselection_noIsolation_noIh;
   std::vector<bool> Tree_passPreselection;
   std::vector<bool> Tree_passPreselectionSept8;
+  std::vector<bool> Tree_passPreselectionTrigSys;
   std::vector<bool> Tree_passSelection;
   std::vector<bool> Tree_isPFMuon;
   std::vector<bool> Tree_PFMuonPt;
@@ -204,6 +237,9 @@ struct Tuple {
   std::vector<bool> Tree_isMuon;
   std::vector<bool> Tree_isPhoton;
   std::vector<bool> Tree_isElectron;
+  std::vector<float> Tree_gsfFbremElectron;
+  std::vector<float> Tree_gsfMomentumElectron;
+  std::vector<float> Tree_PFMomentumElectron;
   std::vector<bool> Tree_isChHadron;
   std::vector<bool> Tree_isNeutHadron;
   std::vector<bool> Tree_isPfTrack;
@@ -248,8 +284,8 @@ struct Tuple {
   std::vector<float> Tree_iso_ECAL;
   std::vector<float> Tree_iso_HCAL;
   std::vector<float> Tree_track_genTrackMiniIsoSumPt;
+  std::vector<float> Tree_track_genTrackAbsIsoSumPtFix;
   std::vector<float> Tree_track_genTrackIsoSumPt_dr03;
-
   std::vector<float> Tree_PFMiniIso_relative;
   std::vector<float> Tree_PFMiniIso_wMuon_relative;
 
@@ -1042,6 +1078,7 @@ struct Tuple {
   TH1F* PostS_VR3_Mass_C_up2;
   TH1F* PostS_VR3_Mass_C_down2;
 
+  //**********************************************************
   // SR1: Ias-quantile 90% & pT>70 GeV
   TH1F* PostS_SR1_Mass;
   TH1F* PostS_SR1_Mass_Pileup_up;

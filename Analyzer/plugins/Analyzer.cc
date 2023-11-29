@@ -153,6 +153,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
           iConfig.getParameter<edm::InputTag>("TrackToGenAssoc"))),
       pfCandToken_(consumes<reco::PFCandidateCollection>(iConfig.getParameter<edm::InputTag>("PfCand"))),
       genEventToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("GenCollection"))),
+      l1GtReadoutRecordToken_(consumes<L1GlobalTriggerReadoutRecord>(iConfig.getParameter<edm::InputTag>("gtDigis"))),
       // HLT triggers
       trigger_met_(iConfig.getUntrackedParameter<vector<string>>("Trigger_MET")),
       trigger_mu_(iConfig.getUntrackedParameter<vector<string>>("Trigger_Mu")),
@@ -221,7 +222,9 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       pixelCPE_(iConfig.getParameter<std::string>("PixelCPE")),
       debug_(iConfig.getUntrackedParameter<int>("DebugLevel")),
       hasMCMatch_(iConfig.getUntrackedParameter<bool>("HasMCMatch")),
-      calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics"))
+      calcSyst_(iConfig.getUntrackedParameter<bool>("CalcSystematics")),
+      calibrateTOF_(iConfig.getUntrackedParameter<bool>("CalibrateTOF"))
+
  {
 //now do what ever initialization is needed
 // define the selection to be considered later for the optimization
@@ -246,8 +249,21 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
   } else {
       dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
   }
+  //protection
+  if(calibrateTOF_){ 
+      tofCalculator.loadTimeOffset(timeOffset_);
+  }
+  /*
+  effl1Mu22 = new TEfficiency("eff1", "RAW EfficiencyL1 mu 22 vs bg", 100, 0, 5);
+  effl1Mu22or25 = new TEfficiency("eff2", "RAW Efficiency L1 mu 22 or 25 vs bg", 100, 0, 5);
+  effl1LastMu = new TEfficiency("eff3", "RAW Efficiency Last L1 see mu50 vs betagamma", 100, 0, 5);
+  effHltMu50 = new TEfficiency("eff4", "RAW Efficiency HLT Mu 50 vs betagamma", 100, 0, 5);
 
-  tofCalculator.loadTimeOffset(timeOffset_);
+  effl1Mu22PostS = new TEfficiency("eff1", "PostS EfficiencyL1 mu 22 vs bg", 100, 0, 5);
+  effl1Mu22or25PostS = new TEfficiency("eff2", "PostS Efficiency L1 mu 22 or 25 vs bg", 100, 0, 5);
+  effl1LastMuPostS = new TEfficiency("eff3", "PostS Efficiency Last L1 see mu50 vs betagamma", 100, 0, 5);
+  effHltMu50PostS = new TEfficiency("eff4", "PostS Efficiency HLT Mu 50 vs betagamma", 100, 0, 5);
+  */
 }
 
 Analyzer::~Analyzer() = default;
@@ -261,59 +277,8 @@ void Analyzer::beginJob() {
   // Book histograms using TFileService
   edm::Service<TFileService> fs;
   TFileDirectory dir = fs->mkdir(sampleName_.c_str(), sampleName_.c_str());
-  
-  // -------- NOMENCLATURE 
-  //SigmaPt1 : no SigmaPt cut
-  //SigmaPt2 : SigmaPtOverPt2 cut
-  //SigmaPt3 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 1.0
-  //SigmaPt4 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 2.0
-  //SigmaPt5 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 
-  //iso0 : FixedConeGeneralIso < 50 GeV 
-  //iso1 : miniGeneralIso < 15 GeV + miniRelIso cut 
-  //iso2 : FixedConeGeneralIso < 15 GeV + miniRelIso cut 
-  //IhCut1 : no Ih cut
-  //IhCut2 : Ih > C
-  //IhCut3 : Ih > 3.47 (C ultra-relativistic) 
-  //PtCut1 : no pT cut max
-  //PtCut2 : pT < 2500 GeV
-  //PtCut3 : pT < 3000 GeV
-  //PtCut4 : pT < 4000 GeV
-  
-  TFileDirectory dir_SigmaPt1_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt1_iso1_IhCut1_PtCut1", "SigmaPt1_iso1_IhCut1_PtCut1");
-  //TFileDirectory dir_SigmaPt2_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt2_iso1_IhCut1_PtCut1", "SigmaPt2_iso1_IhCut1_PtCut1");
-  TFileDirectory dir_SigmaPt3_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso1_IhCut1_PtCut1", "SigmaPt3_iso1_IhCut1_PtCut1");
-  //TFileDirectory dir_SigmaPt4_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt4_iso1_IhCut1_PtCut1", "SigmaPt4_iso1_IhCut1_PtCut1");
-  TFileDirectory dir_SigmaPt5_iso1_IhCut1_PtCut1 = fs->mkdir("SigmaPt5_iso1_IhCut1_PtCut1", "SigmaPt5_iso1_IhCut1_PtCut1");
-  
-  
-  TFileDirectory dir_SigmaPt3_iso0_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso0_IhCut1_PtCut1", "SigmaPt3_iso0_IhCut1_PtCut1");
-  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut1", "SigmaPt3_iso2_IhCut1_PtCut1");
-  
-  //TFileDirectory dir_SigmaPt3_iso2_IhCut2_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut2_PtCut1", "SigmaPt3_iso2_IhCut2_PtCut1");
-  //TFileDirectory dir_SigmaPt3_iso2_IhCut3_PtCut1 = fs->mkdir("SigmaPt3_iso2_IhCut3_PtCut1", "SigmaPt3_iso2_IhCut3_PtCut1");
-  
-  //TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut2 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut2", "SigmaPt3_iso2_IhCut1_PtCut2");
-  //TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut3 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut3", "SigmaPt3_iso2_IhCut1_PtCut3");
-  TFileDirectory dir_SigmaPt3_iso2_IhCut1_PtCut4 = fs->mkdir("SigmaPt3_iso2_IhCut1_PtCut4", "SigmaPt3_iso2_IhCut1_PtCut4");
-
   // create histograms & trees
   tuple = new Tuple();
-  
-  tuple_SigmaPt1_iso1_IhCut1_PtCut1 = new Tuple();
-  //tuple_SigmaPt2_iso1_IhCut1_PtCut1 = new Tuple();
-  tuple_SigmaPt3_iso1_IhCut1_PtCut1 = new Tuple();
-  //tuple_SigmaPt4_iso1_IhCut1_PtCut1 = new Tuple();
-  tuple_SigmaPt5_iso1_IhCut1_PtCut1 = new Tuple();
-  
-  tuple_SigmaPt3_iso0_IhCut1_PtCut1 = new Tuple();
-  tuple_SigmaPt3_iso2_IhCut1_PtCut1 = new Tuple();
-  
-  //tuple_SigmaPt3_iso2_IhCut2_PtCut1 = new Tuple();
-  //tuple_SigmaPt3_iso2_IhCut3_PtCut1 = new Tuple();
-  
-  //tuple_SigmaPt3_iso2_IhCut1_PtCut2 = new Tuple();
-  //tuple_SigmaPt3_iso2_IhCut1_PtCut3 = new Tuple();
-  tuple_SigmaPt3_iso2_IhCut1_PtCut4 = new Tuple();
   
   initializeCuts(fs, CutPt_, CutI_, CutTOF_, CutPt_Flip_, CutI_Flip_, CutTOF_Flip_);
   
@@ -348,101 +313,6 @@ void Analyzer::beginJob() {
                                  reg_ihbins_,
                                  reg_pbins_,
                                  reg_massbins_);
-
-  tuple_maker->initializeRegions(tuple_SigmaPt1_iso1_IhCut1_PtCut1,
-                                 dir_SigmaPt1_iso1_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_);
-
-  /*tuple_maker->initializeRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
-                                 dir_SigmaPt2_iso1_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_);*/
-
-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
-                                 dir_SigmaPt3_iso1_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_);
-
-  /*tuple_maker->initializeRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
-                                 dir_SigmaPt4_iso1_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_,
-                                 false);*/
-
-  tuple_maker->initializeRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
-                                 dir_SigmaPt5_iso1_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_
-                                 );
-
-
-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso0_IhCut1_PtCut1,
-                                 dir_SigmaPt3_iso0_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_
-                                 );
-
-
-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
-                                 dir_SigmaPt3_iso2_IhCut1_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_
-                                 );
-
-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
-                                 dir_SigmaPt3_iso2_IhCut2_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_,
-                                 false);*/
-
-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
-                                 dir_SigmaPt3_iso2_IhCut3_PtCut1,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_);*/
-
-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
-                                 dir_SigmaPt3_iso2_IhCut1_PtCut2,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_,
-                                 false);*/
-  
-  /*tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
-                                 dir_SigmaPt3_iso2_IhCut1_PtCut3,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_);*/
-  
-  tuple_maker->initializeRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
-                                 dir_SigmaPt3_iso2_IhCut1_PtCut4,
-                                 reg_etabins_,
-                                 reg_ihbins_,
-                                 reg_pbins_,
-                                 reg_massbins_
-                                 );
-
-
 
 
   // Re-weighting
@@ -526,7 +396,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   //if run change, update conditions
   if (currentRun_ != iEvent.id().run()) {
     currentRun_ = iEvent.id().run();
-    tofCalculator.setRun(currentRun_);
+    //same protection bool to recompute with correct calibration
+    if(calibrateTOF_){
+        tofCalculator.setRun(currentRun_);
+    }
     dEdxSF[0] = dEdxSF_0_;
     dEdxSF[1] = dEdxSF_1_;
   }
@@ -760,7 +633,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       gParticleMotherIndex[i] = -1;
     }
   }
-
   //------------------------------------------------------------------
   // Get trigger results for this event
   //------------------------------------------------------------------
@@ -770,6 +642,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   //edm::Handle<pat::PackedTriggerPrescales> triggerPrescales = iEvent.getHandle(triggerPrescalesToken_);
 
+
+
+   
   //------------------------------------------------------------------
   //Read in HLT Trigger Path List from config file
   //------------------------------------------------------------------
@@ -820,6 +695,123 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   trigInfo_ = 0;
 
   // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
+  edm::Handle<trigger::TriggerEvent> trigEvent2 = iEvent.getHandle(trigEventToken_);
+
+  std::string singleMu22 = "hltL1sSingleMu22";
+  std::string singleMu25 = "hltL1sSingleMu22or25";
+  std::string singleMu22or25Filter0 = "hltL1fL1sMu22or25L1Filtered0";
+  std::string singleMu22or25Filter10 = "hltL2fL1sMu22or25L1f0L2Filtered10Q";
+  std::string singleMu22or25_l3Filter0 = "hltL1fForIterL3L1fL1sMu22or25L1Filtered0";
+  std::string last_singlemu = "hltL3fL1sMu22Or25L1f0L2f10QL3Filtered50Q";
+
+  std::vector<float> L1_22or25PT;
+  std::vector<float> L1_22or25Eta;
+  std::vector<float> L1_22or25Phi;
+  std::vector<float> L1_22or25Mass;
+
+  std::vector<TLorentzVector> trigObjP4sL1Mu22or25;
+  trigtools::getP4sOfObsPassingFilter(trigObjP4sL1Mu22or25,*trigEvent2,singleMu25,"HLT");
+
+  for (const auto& objP4 : trigObjP4sL1Mu22or25){
+      double pT = objP4.Pt();
+      double eta = objP4.Eta();
+      double phi = objP4.Phi();
+      double mass = objP4.M();
+
+      L1_22or25PT.push_back(pT);
+      L1_22or25Eta.push_back(eta);
+      L1_22or25Phi.push_back(phi);
+      L1_22or25Mass.push_back(mass);
+  }
+
+  std::vector<float> L1_22or25F0PT;
+  std::vector<float> L1_22or25F0Eta;
+  std::vector<float> L1_22or25F0Phi;
+  std::vector<float> L1_22or25F0Mass;
+
+  std::vector<TLorentzVector> trigObjP4sL1Mu22or25Filter0;
+  trigtools::getP4sOfObsPassingFilter(trigObjP4sL1Mu22or25Filter0,*trigEvent2,singleMu22or25Filter0,"HLT");
+
+  for (const auto& objP4 : trigObjP4sL1Mu22or25Filter0){
+      double pT = objP4.Pt();
+      double eta = objP4.Eta();
+      double phi = objP4.Phi();
+      double mass = objP4.M();
+
+      L1_22or25F0PT.push_back(pT);
+      L1_22or25F0Eta.push_back(eta);
+      L1_22or25F0Phi.push_back(phi);
+      L1_22or25F0Mass.push_back(mass);
+  }
+
+  std::vector<float> L1_22or25F10PT;
+  std::vector<float> L1_22or25F10Eta;
+  std::vector<float> L1_22or25F10Phi;
+  std::vector<float> L1_22or25F10Mass;
+
+  std::vector<TLorentzVector> trigObjP4sL1Mu22or25Filter10;
+  trigtools::getP4sOfObsPassingFilter(trigObjP4sL1Mu22or25Filter10,*trigEvent2,singleMu22or25Filter10,"HLT");
+
+  for (const auto& objP4 : trigObjP4sL1Mu22or25Filter10){
+      double pT = objP4.Pt();
+      double eta = objP4.Eta();
+      double phi = objP4.Phi();
+      double mass = objP4.M();
+
+      L1_22or25F10PT.push_back(pT);
+      L1_22or25F10Eta.push_back(eta);
+      L1_22or25F10Phi.push_back(phi);
+      L1_22or25F10Mass.push_back(mass);
+  }
+
+  std::vector<float> HLT_lastFilterPT;
+  std::vector<float> HLT_lastFilterEta;
+  std::vector<float> HLT_lastFilterPhi;
+  std::vector<float> HLT_lastFilterMass;
+
+  std::vector<TLorentzVector> trigObjP4sLastHLTFilter;
+  trigtools::getP4sOfObsPassingFilter(trigObjP4sLastHLTFilter,*trigEvent2,last_singlemu,"HLT");
+
+  for (const auto& objP4 : trigObjP4sLastHLTFilter){
+      double pT = objP4.Pt();
+      double eta = objP4.Eta();
+      double phi = objP4.Phi();
+      double mass = objP4.M();
+
+      HLT_lastFilterPT.push_back(pT);
+      HLT_lastFilterEta.push_back(eta);
+      HLT_lastFilterPhi.push_back(phi);
+      HLT_lastFilterMass.push_back(mass);
+  }
+
+
+  bool L1mu22 = false;
+  bool L1mu22or25 = false;
+  bool L1mu22or25Filter0 = false;
+  bool L1mu22or25Filter10 = false;
+  bool L1mu22or25_l3Filter0 = false;
+  bool L1lastmu = false;
+  
+  if(trigtools::passedFilter(*trigEvent2,singleMu22)){
+      L1mu22 = true;
+  }
+  if(trigtools::passedFilter(*trigEvent2,singleMu25)){
+      L1mu22or25=true;
+  } 
+  if(trigtools::passedFilter(*trigEvent2,singleMu22or25Filter0)){
+      L1mu22or25Filter0=true;
+  } 
+  if(trigtools::passedFilter(*trigEvent2,singleMu22or25Filter10)){
+      L1mu22or25Filter10=true;
+  } 
+  if(trigtools::passedFilter(*trigEvent2,singleMu22or25_l3Filter0)){
+      L1mu22or25_l3Filter0=true;
+  } 
+  if(trigtools::passedFilter(*trigEvent2,last_singlemu)){
+      L1lastmu = true;
+  }
+
+
   bool HLT_Mu50 = false;
   bool HLT_PFMET120_PFMHT120_IDTight = false;
   bool HLT_PFHT500_PFMET100_PFMHT100_IDTight = false;
@@ -831,6 +823,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   bool metTrig = passTriggerPatterns(triggerH, triggerNames, trigger_met_);
   bool muTrig = passTriggerPatterns(triggerH, triggerNames, trigger_mu_);
 
+
+  
   for (unsigned int i = 0; i < triggerH->size(); i++) {
     if (TString(triggerNames.triggerName(i)).Contains("HLT_Mu50_v") && triggerH->accept(i))
       HLT_Mu50 = true;
@@ -857,10 +851,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // Get muon collections
   vector<reco::Muon> muonColl = iEvent.get(muonToken_);
 
+
   // Match muon track to HLT muon track
   std::vector<TLorentzVector> trigObjP4s;
   trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
-  
+
+
   bool matchedMuonWasFound = false;
   
   int closestTrigMuIndex = -1;
@@ -1106,8 +1102,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float trigObjTheta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].theta() : maxGenTheta;
   float trigObjEta = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].eta() : maxGenEta;
   float trigObjPt = (triggerObjGenIndex > -1) ?  genColl[triggerObjGenIndex].pt() : maxGenPt;
-//  uint trigObjID = (triggerObjGenIndex > -1) ?  abs(genColl[triggerObjGenIndex].pdgId()) : 0;
-    
+
   // Compute event weight from different SFs
   if (!isData) {
     float PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_, PUSystFactor_);
@@ -1270,6 +1265,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> ele_OneOverEminusOneOverP;
 
 
+
+
   iEvent.getByToken(electron_cutbasedID_decisions_veto_Token_, electron_cutbasedID_decisions_veto);
   iEvent.getByToken(electron_cutbasedID_decisions_loose_Token_, electron_cutbasedID_decisions_loose);
   iEvent.getByToken(electron_cutbasedID_decisions_medium_Token_, electron_cutbasedID_decisions_medium);
@@ -1356,6 +1353,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> muonPt;
   std::vector<float> muonEta;
   std::vector<float> muonPhi;
+  std::vector<float> muonBeta;
+
   std::vector<int> muonCharge;
   std::vector<bool> muonIsLoose;
   std::vector<bool> muonIsMedium;
@@ -1414,7 +1413,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   // loop on the muon collection
   for (unsigned int i = 0; i < muonColl.size(); i++) {
       const reco::Muon* mu = &(muonColl)[i];
-
+      muonBeta.push_back(mu->p()*1.0/0.1057);
       muonE.push_back(mu->energy());
       muonPt.push_back(mu->pt());
       muonEta.push_back(mu->eta());
@@ -1686,11 +1685,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<bool> HSCP_passCutPt55;
   std::vector<bool> HSCP_passPreselection;
   std::vector<bool> HSCP_passPreselectionSept8;
+  std::vector<bool> HSCP_passPreselectionTrigSys;
   std::vector<bool> HSCP_passSelection;
   std::vector<bool> HSCP_isPFMuon;
   std::vector<bool> HSCP_PFMuonPt;
   std::vector<float> HSCP_Charge;
   std::vector<float> HSCP_Pt;
+
+
+  std::vector<float> HSCP_trigObjBeta;
+  std::vector<float> HSCP_dRclosestTrigAndCandidate;
+  std::vector<float> HSCP_GenBeta;
+
   std::vector<float> HSCP_PtErr;
   std::vector<float> HSCP_Is_StripOnly;
   std::vector<float> HSCP_Ias;
@@ -1714,6 +1720,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<bool>  HSCP_isMuon;
   std::vector<bool>  HSCP_isPhoton;
   std::vector<bool>  HSCP_isElectron;
+
+  std::vector<float>  HSCP_gsfFbremElectron;
+
+  std::vector<float>  HSCP_gsfMomentumElectron;
+  std::vector<float>  HSCP_PFMomentumElectron;
+
   std::vector<bool>  HSCP_isChHadron;
   std::vector<bool>  HSCP_isNeutHadron;
   std::vector<bool>  HSCP_isPfTrack;
@@ -1756,6 +1768,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_iso_ECAL;
   std::vector<float> HSCP_iso_HCAL;
   std::vector<float> HSCP_track_genTrackMiniIsoSumPt;
+  std::vector<float> HSCP_track_genTrackAbsIsoSumPtFix;
   std::vector<float> HSCP_track_genTrackIsoSumPt_dr03;
   std::vector<float> HSCP_PFMiniIso_relative;
   std::vector<float> HSCP_PFMiniIso_wMuon_relative;
@@ -1840,6 +1853,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   tuple->EventCutFlow->Fill(0.0, eventWeight_);
   
   for (const auto& hscp : iEvent.get(hscpToken_)) {
+
+
   // Number of tracks before any trigger or preselection
     tuple->CutFlow->Fill(0.);
     if (debug_> 0 && trigInfo_ > 0) LogPrint(MOD) << "  --------------------------------------------";
@@ -2016,8 +2031,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float genPhi = (closestGenIndex > 0) ? genColl[closestGenIndex].phi() : -9999.;
     float genGammaBeta = (closestGenIndex > 0) ? genColl[closestGenIndex].p() /  genColl[closestGenIndex].mass() : -1.;
     float genBeta = (closestGenIndex > 0) ? genColl[closestGenIndex].p() / genColl[closestGenIndex].energy() : -1.f;
-    
-    
+
+    HSCP_GenBeta.push_back(genBeta);
+    HSCP_trigObjBeta.push_back(trigObjBeta);
+ 
     if (!isData && trigInfo_ > 0 && doBefPreSplots_) {
       if (debug_ > 5) {
         LogPrint(MOD) << "  >> The min Gen candidate distance is " << dRMinGen << " for PDG ID " << genPdgId << " with pT " << genPt << " and eta " << genEta ;
@@ -2042,6 +2059,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // the pt of the candidate and the number of siblings
     float closestBackgroundPDGsIDs[8] = {0.,0.,0.,9999.,9999.,0.,9999.,0.};
     // Look at the properties of the closes gen candidate
+
+
     if (isSignal) {
       closestHSCPsPDGsID = abs(genPdgId);
       // All HSCP candidates
@@ -2099,6 +2118,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           tuple->Gen_HSCPCandidateType->Fill(5.);
         }
       }
+
+
     }
     
     // Match candidate track to HLT muon
@@ -2173,8 +2194,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float dRMinPfJetWithNoCuts = 9999.0;
     float closestPfJetMuonFraction = 0.0;
     float closestPfJetElectronFraction = 0.0;
-    float closestPfJetPhotonFraction = 0.0;
-    
+    float closestPfJetPhotonFraction = 0.0; 
+    float EleGsfMomentum = 0;
+    float ElePFMomentum = 0;
+    float EleFbremLost = 0;
     if (debug_ > 5) LogPrint(MOD) << "      >> Calculating PF quantities";
     bool pf_isMuon = false, pf_isElectron = false, pf_isChHadron = false, pf_isNeutHadron = false;
     bool pf_isPfTrack = false,  pf_isPhoton = false, pf_isUndefined = false;
@@ -2195,6 +2218,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         if (pfCand->trackRef().isNonnull() && pfCand->trackRef().key() == track.key()) {
           pf_isElectron = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::e;
+          if(pf_isElectron){
+              const auto& gsfTrackRef = pfCand->gsfTrackRef();
+              const auto& gsfEleRef = pfCand->gsfElectronRef();
+              if (gsfTrackRef.isNonnull()) {
+                  EleGsfMomentum = gsfTrackRef->p();
+                  EleFbremLost = gsfEleRef->fbrem();
+                  ElePFMomentum =pfCand->p4().P();
+                  //std::cout << "The momentum associated to the track is : " << track->p() << " and the momentum associated to the GSF electon associated to the PF cand that is the HSCP = " << EleGsfMomentum << " and the momentum associated to the PF candidate : " << ElePFMomentum << " the fraction lost by brehmstrahlung : " <<EleFbremLost <<  std::endl;
+              }
+          }
           pf_isMuon = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::mu;
           pf_isPhoton = pfCand->translatePdgIdToType(pfCand->pdgId()) == reco::PFCandidate::ParticleType::gamma;
           
@@ -2297,7 +2330,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     HSCP_count++;
     
-    // Fixed size isolation and and EoP variable
+    // Fixed size isolation and EoP variable
     const edm::ValueMap<susybsm::HSCPIsolation> IsolationMap = iEvent.get(hscpIsoToken_);
     susybsm::HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
     float IsoTK_SumEt = hscpIso.Get_TK_SumEt();
@@ -2307,10 +2340,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Loop on generalTracks to get genTrackMiniIso
     float track_genTrackMiniIsoSumPt = 0;
+
+    float track_genTrackMiniIsoSumPtFix = 0;
     for(unsigned int c=0;c<trackCollectionHandle->size();c++){
       reco::TrackRef genTrackRef = reco::TrackRef( trackCollectionHandle.product(), c );
         // Dont count the HSCP candidate in
       if (genTrackRef.isNonnull() && genTrackRef.key() != track.key()) {
+        float drForMiniIsoFix = 0.3;
+
         float drForMiniIso = 0.0;
         if (track->pt() < 50 ) {
           drForMiniIso = 0.2;
@@ -2321,6 +2358,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
         float pt = genTrackRef->pt();
         float dr = deltaR(genTrackRef->eta(),genTrackRef->phi(),track->eta(),track->phi());
+        if(dr < drForMiniIsoFix) {
+          track_genTrackMiniIsoSumPtFix+=pt;
+        }
+
         if (dr<drForMiniIso) {
           track_genTrackMiniIsoSumPt+=pt;
         }
@@ -2370,9 +2411,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     if (!dedxHitsPrescRef.isNull()) {
       preScaleForDeDx = (*dedxPrescCollH)[dedxHitsPrescRef];
     }
-    
+
     if (typeMode_ > 1 && typeMode_ != 5 && !hscp.muonRef().isNull()) {
       if (!isData) {
+
         tof = &(*tofMap)[hscp.muonRef()];
         dttof = &(*tofDtMap)[hscp.muonRef()];
         csctof = &(*tofCscMap)[hscp.muonRef()];
@@ -2380,10 +2422,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
         const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
         // Apply T0 correction on data but not on signal MC
+        tof = &(*tofMap)[hscp.muonRef()];
+        dttof = &(*tofDtMap)[hscp.muonRef()];
+        csctof = &(*tofCscMap)[hscp.muonRef()];
+        // Only recompute using tofCalculator once we have calibration ready
+        /*
         tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1);
         tof = &tofCalculator.combinedTOF;
         dttof = &tofCalculator.dtTOF;
         csctof = &tofCalculator.cscTOF;
+        */
       }
     } // end conditions for TOF including analysis variables
     
@@ -3475,13 +3523,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                           || (typeMode_ == 3 && fabs(dxyFromBeamSpot) < 4)) ? true : false;
     // Cut on the PF based mini-isolation
     passedCutsArray[10] = ( miniRelIsoAll < globalMaxMiniRelIsoAll_ ) ? true : false;
-    // Cut on the absolute pT-dependent cone size TkIsolation
+    // Cut on the absolute pT-dependent cone size TkIsolation CHANGED TO FIXED COMNE SIZE DR = 0.3
     passedCutsArray[11] = ( track_genTrackMiniIsoSumPt < globalMaxTIsol_ ) ? true : false;
+    // Cut on the absolute pT-dependent cone size Mini TkIsolation CHANGED TO FIXED COMNE SIZE DR = 0.3
+    //passedCutsArray[11] = ( (track_genTrackMiniIsoSumPtFix) < globalMaxTIsol_ ) ? true : false;
     // Cut on the energy over momenta
     passedCutsArray[12] = (EoP < globalMaxEoP_) ? true : false;
     // Cut on the uncertainty of the pt measurement, TODO the cut value should be made a global variable
     passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008)) ? true : false;
-    //passedCutsArray[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0)) ? true : false; // test done by Dylan for the mass spectrum method
 
     // Cut away background events based on the probQ
     passedCutsArray[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_) ? true : false;
@@ -3981,6 +4030,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection";
     bool passPre = passPreselection(passedCutsArray, true);
+
     if (debug_ > 2 && trigInfo_ > 0) LogPrint(MOD) << "      >> Check if we pass Preselection with Sept8 cuts";
     bool passPreSept8 = passPreselection(passedCutsArraySept8, true);
     bool passPre_massSpectrum = (passPreselection(passedCutsArray_massSpectrum, true) && globalIh_ > dEdxC_) ? true : false;
@@ -4051,13 +4101,19 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     passedCutsArrayForTriggerSyst[2] = true;
 
     float dRclosestTrigAndCandidate = (closestTrigObjIndex > -1) ? deltaR(trigObjP4s[closestTrigObjIndex].Eta(), trigObjP4s[closestTrigObjIndex].Phi(), track->eta(), track->phi()) : 9999;
+    HSCP_dRclosestTrigAndCandidate.push_back(dRclosestTrigAndCandidate);
+
+    bool passSelTrigSys = passPreselection(passedCutsArrayForTriggerSyst, false);
+    HSCP_passPreselectionTrigSys.push_back(passSelTrigSys); 
+
     if (passPreselection(passedCutsArrayForTriggerSyst, false)) {
       if (HLT_Mu50 && dRclosestTrigAndCandidate < 0.15 ) trigObjPassedPres = true;
       if (!HLT_Mu50 ) trigObjPassedPres = true;
     } // if preselection w/o trigger requirement is passed
-    
+  
     //fill the ABCD histograms and a few other control plots
     if (passPre) {
+ 
       if (trigInfo_ < 1) {
         throw cms::Exception(MOD) << "we are pass preS but the trigger is not passed -- this is wrong!!!" << endl << endl << endl << endl ;
       }
@@ -4460,8 +4516,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_FracSat->Fill(fracsat_highp, eventWeight_);
       }
       
-      if ((((globalIas_ > 0.25 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
-        if (globalIas_ > 0.25)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
+      if ((((globalIas_ > 0.22 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
+        if (globalIas_ > 0.22)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
         if (Mass > 1000) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
         LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
         LogPrint(MOD) << "        >> -----------------------------------------------";
@@ -4976,298 +5032,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     bool PassNonTrivialSelection = false;
 
-  // -------- NOMENCLATURE 
-  //SigmaPt1 : no SigmaPt cut
-  //SigmaPt2 : SigmaPtOverPt2 cut
-  //SigmaPt3 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 1.0
-  //SigmaPt4 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 + SigmaPtOverPt < 2.0
-  //SigmaPt5 : SigmaPtOverPt2 cut + SigmaPtOverPt2 > 0 
-  //iso0 : FixedConeGeneralIso < 50 GeV
-  //iso1 : miniGeneralIso < 15 GeV + miniRelIso cut 
-  //iso2 : FixedConeGeneralIso < 15 GeV + miniRelIso cut 
-  //IhCut1 : no Ih cut
-  //IhCut2 : Ih > C
-  //IhCut3 : Ih > 3.47 (C ultra-relativistic) 
-  //PtCut1 : no pT cut max
-  //PtCut2 : pT < 2500 GeV
-  //PtCut3 : pT < 3000 GeV
-  //PtCut4 : pT < 4000 GeV
-  
-    
-    bool passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1[15];
-    bool passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1[15];
-    bool passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1[15];
-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2[15];
-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3[15];
-    bool passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4[15];
-
-    
-    std::copy(std::begin(passedCutsArray), std::end(passedCutsArray), std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1[13] = true;
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1[13] = passedCutsArray[13];
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0) && (track->ptError() / (track->pt()) < 1.0)) ? true : false;
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0) && (track->ptError() / (track->pt()) < 2.0)) ? true : false;
-
-    std::copy(std::begin(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1[13] = (typeMode_ != 3 && (track->ptError() / (track->pt()*track->pt()) < 0.0008) && (track->ptError() / (track->pt()*track->pt()) > 0.0)) ? true : false;
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1[10] = true;
-    passedCutsArray_SigmaPt3_iso0_IhCut1_PtCut1[11] = ( track_genTrackIsoSumPt_dr03 < 50 ) ? true : false;
-
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1));
-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1[11] = ( track_genTrackIsoSumPt_dr03 < 15) ? true : false;
-
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1));
-    passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_ && globalIh_ > dEdxC_) ? true : false; 
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1));
-    passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1[14] = (probQonTrackNoL1 < globalMaxTrackProbQCut_ && probQonTrackNoL1 > globalMinTrackProbQCut_ && globalIh_ > 3.47) ? true : false; 
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2));
-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2[1] = ((track->pt() > globalMinPt_) && (track->pt() < 2500))? true : false;
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3));
-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3[1] = ((track->pt() > globalMinPt_) && (track->pt() < 3000))? true : false;
-    
-    std::copy(std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::end(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1), std::begin(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4));
-    passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4[1] = ((track->pt() > globalMinPt_) && (track->pt() < 4000))? true : false;
-
-    bool passPre_SigmaPt1_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt1_iso1_IhCut1_PtCut1, false);
-    //bool passPre_SigmaPt2_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt2_iso1_IhCut1_PtCut1, false);
-    bool passPre_SigmaPt3_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso1_IhCut1_PtCut1, false);
-    //bool passPre_SigmaPt4_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt4_iso1_IhCut1_PtCut1, false);
-    bool passPre_SigmaPt5_iso1_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt5_iso1_IhCut1_PtCut1, false);
-    bool passPre_SigmaPt3_iso0_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1, false);
-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut1, false);
-    //bool passPre_SigmaPt3_iso2_IhCut2_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut2_PtCut1, false);
-    //bool passPre_SigmaPt3_iso2_IhCut3_PtCut1 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut3_PtCut1, false);
-    //bool passPre_SigmaPt3_iso2_IhCut1_PtCut2 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut2, false);
-    //bool passPre_SigmaPt3_iso2_IhCut1_PtCut3 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut3, false);
-    bool passPre_SigmaPt3_iso2_IhCut1_PtCut4 = passPreselection(passedCutsArray_SigmaPt3_iso2_IhCut1_PtCut4, false);
-
-    /*
-    //passPre_SigmaPt1_iso1_IhCut1_PtCut1 = false;
-    passPre_SigmaPt2_iso1_IhCut1_PtCut1 = false;
-    //passPre_SigmaPt3_iso1_IhCut1_PtCut1 = false;
-    passPre_SigmaPt4_iso1_IhCut1_PtCut1 = false;
-    //passPre_SigmaPt5_iso1_IhCut1_PtCut1 = false;
-    
-    //passPre_SigmaPt3_iso0_IhCut1_PtCut1 = false;
-    //passPre_SigmaPt3_iso2_IhCut1_PtCut1 = false;
-    passPre_SigmaPt3_iso2_IhCut2_PtCut1 = false;
-    passPre_SigmaPt3_iso2_IhCut3_PtCut1 = false;
-    passPre_SigmaPt3_iso2_IhCut1_PtCut2 = false;
-    passPre_SigmaPt3_iso2_IhCut1_PtCut3 = false;
-    //passPre_SigmaPt3_iso2_IhCut1_PtCut4 = false;
-    */
-
- 
-    if(passPre_SigmaPt1_iso1_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt1_iso1_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_);
-    }
-    /*if(passPre_SigmaPt2_iso1_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt2_iso1_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_,
-                                 false);
-    }*/
-    if(passPre_SigmaPt3_iso1_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso1_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_
-                                 );
-    }
-    /*if(passPre_SigmaPt4_iso1_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt4_iso1_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_,
-                                 false);
-    }*/
-    if(passPre_SigmaPt5_iso1_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt5_iso1_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_
-                                 );
-    }
-    if(passPre_SigmaPt3_iso0_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso0_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_
-                                 );
-    }
-    if(passPre_SigmaPt3_iso2_IhCut1_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_
-                                 );
-    }
-    /*if(passPre_SigmaPt3_iso2_IhCut2_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut2_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_,
-                                 false);
-    }*/
-    /*if(passPre_SigmaPt3_iso2_IhCut3_PtCut1){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut3_PtCut1,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_,
-                                 false);
-    }*/
-    /*if(passPre_SigmaPt3_iso2_IhCut1_PtCut2){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut2,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_,
-                                 false);
-    }
-    if(passPre_SigmaPt3_iso2_IhCut1_PtCut3){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut3,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_,
-                                 false);
-    }*/
-    if(passPre_SigmaPt3_iso2_IhCut1_PtCut4){
-        tuple_maker->fillRegions(tuple_SigmaPt3_iso2_IhCut1_PtCut4,
-                                 pT_cut,
-                                 Ias_quantiles,
-                                 track->eta(),
-                                 10000./track->p(),
-                                 track->pt(),
-                                 track->ptError(),
-                                 dedxMObj ? dedxMObj->dEdx() : -1,
-                                 dedxSObj ? dedxSObj->dEdx() : -1,
-                                 probQonTrackNoL1,
-                                 Mass,
-                                 tof ? tof->inverseBeta() : -99,
-                                 eventWeight_
-                                 );
-    }
-    
     if (passPre_massSpectrum) {
         tuple_maker->fillRegions(tuple,
                                  pT_cut,
@@ -5410,6 +5174,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_isMuon.push_back(pf_isMuon);
     HSCP_isPhoton.push_back(pf_isPhoton);
     HSCP_isElectron.push_back(pf_isElectron);
+    HSCP_gsfFbremElectron.push_back(EleFbremLost);
+    HSCP_gsfMomentumElectron.push_back(EleGsfMomentum);
+    HSCP_PFMomentumElectron.push_back(ElePFMomentum);
+
     HSCP_isChHadron.push_back(pf_isChHadron);
     HSCP_isNeutHadron.push_back(pf_isNeutHadron);
     HSCP_isPfTrack.push_back(pf_isPfTrack);
@@ -5446,6 +5214,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_iso_ECAL.push_back(iso_ECAL);
     HSCP_iso_HCAL.push_back(iso_HCAL);
     HSCP_track_genTrackMiniIsoSumPt.push_back(track_genTrackMiniIsoSumPt);
+    HSCP_track_genTrackAbsIsoSumPtFix.push_back(track_genTrackMiniIsoSumPtFix);
     HSCP_track_genTrackIsoSumPt_dr03.push_back(track_genTrackIsoSumPt_dr03);
     HSCP_PFMiniIso_relative.push_back(miniRelIsoAll);
     HSCP_PFMiniIso_wMuon_relative.push_back(miniRelIsoAll_wMuon);
@@ -6012,47 +5781,28 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     // Systematics plots for pT rescaling
-    if (rescaledPtUp > globalMinPt_) {
+    if (rescaledPtUp > globalMinPt_ && doSystsPlots_) {
       tuple->PostS_ProbQNoL1VsIas_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIasVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_);
     }
-    if (rescaledPtDown > globalMinPt_) {
+    if (rescaledPtDown > globalMinPt_ && doSystsPlots_) {
       tuple->PostS_ProbQNoL1VsIas_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_);
       tuple->PostS_ProbQNoL1VsIasVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pt_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_);
     }
-    // Systematics plots for Gi rescaling
-    RNG3 = new TRandom3(long(time(NULL)));
-    float theGiSystFactorUp =  std::max((double)1, RNG3->Gaus(1,1.02));
-    float theGiSystFactorDown =  std::max((double)0, std::min((double)1, RNG3->Gaus(1,1.02)));
-    tuple->PostS_ProbQNoL1VsIas_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsIas_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown,  eventWeight_);
-    
-    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateIas*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsIasVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
-    
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStrips*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_up->Fill(1 - bestCandidateProbQNoL1, std::min(1.f,bestCandidateFiStripsLog*theGiSystFactorUp), bestCandidateTrack->pt(),  eventWeight_);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Ias_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog*theGiSystFactorDown, bestCandidateTrack->pt(),  eventWeight_);
-    
-    // Systematics plots for PU rescaling
-    tuple->PostS_ProbQNoL1VsIas_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsIas_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas,  eventWeight_ * PUSystFactor_[1]);
-    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsIasVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateIas, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[1]);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsFiStripsVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStrips, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[1]);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_up->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[0]);
-    tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Pileup_down->Fill(1 - bestCandidateProbQNoL1, bestCandidateFiStripsLog, bestCandidateTrack->pt(), eventWeight_ * PUSystFactor_[1]);
-    // Systematics plots for Fi rescaling
+
+
+    float theGiSystFactorUp =  1.02;
+    float theGiSystFactorDown =  0.98;
     float theFiSystFactorUp = 1.005;
     float theFiSystFactorDown = 0.995;
     float triggerSystFactorUp = triggerSystFactor(trigObjEta,trigObjBeta,+1);
     float triggerSystFactorDown = triggerSystFactor(trigObjEta,trigObjBeta,-1);
+
+
 
     tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
     if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
@@ -6335,7 +6085,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_VR3_Mass_Trigger_down->Fill(bestCandidateMass, eventWeight_ * triggerSystFactorDown);
 
     }
-    
+
     //SR1
     if (bestCandidateIas>Ias_quantiles[5] && bestCandidatePt > pT_cut) {
         // nominal
@@ -6443,8 +6193,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (rescaledDownIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Ias_down->Fill(bestCandidateMass, eventWeight_);
         if (rescaledDownIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Ias_down->Fill(bestCandidateMass, eventWeight_);
     }
-        
-
+       
     // pT rescaling
     if (rescaledPtUp > globalMinPt_ && rescaledPtUp > pT_cut) {
         if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
@@ -6453,6 +6202,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         if (bestCandidateIas > Ias_quantiles[5]) tuple->PostS_SR1_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if (bestCandidateIas > Ias_quantiles[6]) tuple->PostS_SR2_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
         if (bestCandidateIas > Ias_quantiles[7]) tuple->PostS_SR3_Mass_Pt_up->Fill(bestCandidateMass, eventWeight_);
+
+
+        
     }
     if (rescaledPtDown > globalMinPt_ && rescaledPtDown > pT_cut) {
         if (bestCandidateIas > Ias_quantiles[1] && bestCandidateIas < Ias_quantiles[5]) tuple->PostS_VR1_Mass_Pt_down->Fill(bestCandidateMass, eventWeight_);
@@ -6886,7 +6638,35 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 triggerObjectPt,
                                 triggerObjectEta,
                                 triggerObjectPhi,
+                                HSCP_GenBeta,
+                                HSCP_dRclosestTrigAndCandidate,
+                                HSCP_trigObjBeta,
+                                trigObjBeta,
+                                trigObjEta,
+                                L1mu22,
+                                L1mu22or25,
+                                L1_22or25PT,
+                                L1_22or25Eta,
+                                L1_22or25Phi,
+                                L1_22or25Mass,     
+                                L1mu22or25Filter0,
+                                L1_22or25F0PT,
+                                L1_22or25F0Eta,
+                                L1_22or25F0Phi,
+                                L1_22or25F0Mass,
+                                L1mu22or25Filter10,
+                                L1_22or25F10PT,
+                                L1_22or25F10Eta,
+                                L1_22or25F10Phi,
+                                L1_22or25F10Mass,
+                                L1mu22or25_l3Filter0,
+                                L1lastmu,
+                                HLT_lastFilterPT,
+                                HLT_lastFilterEta,
+                                HLT_lastFilterPhi,
+                                HLT_lastFilterMass, 
                                 HLT_Mu50,
+                                trigObjP4s.size(), 
                                 HLT_PFMET120_PFMHT120_IDTight,
                                 HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                 HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
@@ -6966,6 +6746,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 muonPt,
                                 muonEta,
                                 muonPhi,
+                                muonBeta,
                                 muonCharge,
                                 muonIsLoose,
                                 muonIsMedium,
@@ -7014,6 +6795,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_passCutPt55,
                                 HSCP_passPreselection,
                                 HSCP_passPreselectionSept8,
+                                HSCP_passPreselectionTrigSys,
                                 HSCP_passSelection,
                                 HSCP_isPFMuon,
                                 HSCP_PFMuonPt,
@@ -7041,6 +6823,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_isMuon,
                                 HSCP_isPhoton,
                                 HSCP_isElectron,
+                                HSCP_gsfFbremElectron,
+                                HSCP_gsfMomentumElectron,
+                                HSCP_PFMomentumElectron,
                                 HSCP_isChHadron,
                                 HSCP_isNeutHadron,
                                 HSCP_isPfTrack,
@@ -7076,6 +6861,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_iso_ECAL,
                                 HSCP_iso_HCAL,
                                 HSCP_track_genTrackMiniIsoSumPt,
+                                HSCP_track_genTrackAbsIsoSumPtFix,
                                 HSCP_track_genTrackIsoSumPt_dr03,
                                 HSCP_PFMiniIso_relative,
                                 HSCP_PFMiniIso_wMuon_relative,
@@ -7125,8 +6911,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_tuneP_Phi,
                                 HSCP_tuneP_MuonBestTrackType,
                                 HSCP_ErrorHisto_bin,
-                                HSCP_type
-                              );
+                                HSCP_type);
 
   //save event dependent information thanks to the bookkeeping
   for (unsigned int CutIndex = 0; CutIndex < CutPt_.size(); CutIndex++) {
@@ -7180,18 +6965,6 @@ void Analyzer::endJob() {
   delete RNG2;
 //  delete RNG3;
   delete tuple;
-  delete tuple_SigmaPt1_iso1_IhCut1_PtCut1;
-  //delete tuple_SigmaPt2_iso1_IhCut1_PtCut1;
-  delete tuple_SigmaPt3_iso1_IhCut1_PtCut1;
-  //delete tuple_SigmaPt4_iso1_IhCut1_PtCut1;
-  delete tuple_SigmaPt5_iso1_IhCut1_PtCut1;
-  delete tuple_SigmaPt3_iso0_IhCut1_PtCut1;
-  delete tuple_SigmaPt3_iso2_IhCut1_PtCut1;
-  //delete tuple_SigmaPt3_iso2_IhCut2_PtCut1;
-  //delete tuple_SigmaPt3_iso2_IhCut3_PtCut1;
-  //delete tuple_SigmaPt3_iso2_IhCut1_PtCut2;
-  //delete tuple_SigmaPt3_iso2_IhCut1_PtCut3;
-  delete tuple_SigmaPt3_iso2_IhCut1_PtCut4;
   if (!isData) {
     delete mcWeight;
   }
@@ -7211,6 +6984,20 @@ void Analyzer::endJob() {
   delete[] MaxMass_SystPU;
   delete[] MaxMass_SystHUp;
   delete[] MaxMass_SystHDown;
+  /*
+  TFile outputFile("EffL1_HLT_vsBetaGamma.root", "RECREATE");
+  effl1Mu22PostS->Write();
+  effl1Mu22or25PostS->Write();
+  effl1LastMuPostS->Write();
+  effHltMu50PostS->Write();
+
+
+  effl1Mu22->Write();
+  effl1Mu22or25->Write();
+  effl1LastMu->Write();
+  effHltMu50->Write();
+  outputFile.Close();
+  */
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
@@ -7323,7 +7110,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     ->setComment("Input collection for particleFlow algorithm");
   desc.add("GenCollection", edm::InputTag("generator","","GEN"))
     ->setComment("A");
-  desc.addUntracked("TypeMode", 0)
+  desc.add("gtDigis", edm::InputTag("gtDigis","","RECO"))
+    ->setComment("A");
+
+  desc.addUntracked("TypeMode", 2)
     ->setComment("0:Tk only, 1:Tk+Muon, 2:Tk+TOF, 3:TOF onlypwd, 4:Q>1, 5:Q<1");
   desc.addUntracked("SampleType", 0)
     ->setComment("0:Data, 1:Background, 2:Signal, 3:Signal Systematics");
@@ -7357,7 +7147,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
   desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
   desc.addUntracked("DeDxC",3.17)->setComment("C constant, really controlled by the config for each era");
-  desc.addUntracked("SaveTree",0)->setComment("0: do not save tree, 6: everything is saved");
+  desc.addUntracked("SaveTree",6)->setComment("0: do not save tree, 6: everything is saved");
   desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/template_2017B.root")
     ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector, really controlled by the config for each era");
 
@@ -7371,6 +7161,8 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("HasMCMatch",false)
     ->setComment("Boolean for having the TrackToGenAssoc collection, only new sample have it");
   desc.addUntracked("CalcSystematics",false)->setComment("Boolean to decide whether we want to calculate the systematics");
+
+  desc.addUntracked("CalibrateTOF",true)->setComment("Boolean to decide whether we want to apply calibration on TOF");
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis

@@ -58,7 +58,6 @@ public:
                         const std::vector<int>  &pvNdof,
                         const std::vector<float>  &pvChi2,
                         const std::vector<float>  &pvSumPt2,
-
                         const unsigned int &Hscp,
                         const unsigned int &nMuons,
                         const unsigned int &njets,
@@ -71,7 +70,35 @@ public:
                         const std::vector<std::vector<float>> &triggerObjectPt,
                         const std::vector<std::vector<float>> &triggerObjectEta,
                         const std::vector<std::vector<float>> &triggerObjectPhi,
+                        const std::vector<float> &HSCP_GenBeta,
+                        const std::vector<float> &HSCP_dRclosestTrigAndCandidate,
+                        const std::vector<float> &HSCP_trigObjBeta,
+                        const float &trigObjBeta,
+                        const float& trigObjEta,
+                        const bool &L1_SingleMu22,
+                        const bool &L1_SingleMu22or25,
+                        const std::vector<float> &L1_22or25PT,
+                        const std::vector<float> &L1_22or25Eta,
+                        const std::vector<float> &L1_22or25Phi,
+                        const std::vector<float> &L1_22or25Mass,
+                        const bool &L1_mu22or25Filter0,
+                        const std::vector<float> &L1_22or25F0PT,
+                        const std::vector<float> &L1_22or25F0Eta,
+                        const std::vector<float> &L1_22or25F0Phi,
+                        const std::vector<float> &L1_22or25F0Mass,
+                        const bool &L1_mu22or25Filter10,
+                        const std::vector<float> &L1_22or25F10PT,
+                        const std::vector<float> &L1_22or25F10Eta,
+                        const std::vector<float> &L1_22or25F10Phi,
+                        const std::vector<float> &L1_22or25F10Mass,
+                        const bool &L1_mu22or25_l3Filter0,
+                        const bool &L1_LastMuFilter,
+                        const std::vector<float> &HLT_lastFilterPT,
+                        const std::vector<float> &HLT_lastFilterEta,
+                        const std::vector<float> &HLT_lastFilterPhi,
+                        const std::vector<float> &HLT_lastFilterMass,
                         const bool &HLT_Mu50,
+                        const int &nbMuTrigObj,
                         const bool &HLT_PFMET120_PFMHT120_IDTight,
                         const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                         const bool &HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
@@ -151,6 +178,7 @@ public:
                         const std::vector<float> &muonPt,
                         const std::vector<float> &muonEta,
                         const std::vector<float> &muonPhi,
+                        const std::vector<float> &muonBeta,
                         const std::vector<int> &muonCharge,
                         const std::vector<bool> &muonIsLoose,
                         const std::vector<bool> &muonIsMedium,
@@ -199,6 +227,7 @@ public:
                         const std::vector<bool> &passCutPt55,
                         const std::vector<bool> &passPreselection,
                         const std::vector<bool> &passPreselectionSept8,
+                        const std::vector<bool> &passPreselectionTrigSys,
                         const std::vector<bool> &passSelection,
                         const std::vector<bool> &isPFMuon,
                         const std::vector<bool> &PFMuonPt,
@@ -226,6 +255,9 @@ public:
                         const std::vector<bool>  &isMuon,
                         const std::vector<bool>  &isPhoton,
                         const std::vector<bool>  &isElectron,
+                        const std::vector<float>  &gsfFbremElectron,
+                        const std::vector<float>  &gsfMomentumElectron,
+                        const std::vector<float>  &PFMomentumElectron,
                         const std::vector<bool>  &isChHadron,
                         const std::vector<bool>  &isNeutHadron,
                         const std::vector<bool>  &isPfTrack,
@@ -261,6 +293,7 @@ public:
                         const std::vector<float> &iso_ECAL,
                         const std::vector<float> &iso_HCAL,
                         const std::vector<float> &track_genTrackMiniIsoSumPt,
+                        const std::vector<float> &track_genTrackAbsIsoSumPtFix,
                         const std::vector<float> &track_genTrackIsoSumPt_dr03,
                         const std::vector<float> &PFMiniIso_relative,
                         const std::vector<float> &PFMiniIso_wMuon_relative,
@@ -1884,7 +1917,6 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_VR3_Mass_C_up2 = dir.make<TH1F>("PostS_VR3_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR3_Mass_C_down2 = dir.make<TH1F>("PostS_VR3_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
 
-
   tuple->PostS_SR1_Mass = dir.make<TH1F>("PostS_SR1_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -2297,7 +2329,45 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("triggerObjectEta", &tuple->Tree_triggerObjectEta);
     tuple->Tree->Branch("triggerObjectPhi", &tuple->Tree_triggerObjectPhi);
 
+    tuple->Tree->Branch("HSCP_GenBeta", &tuple->Tree_HSCP_GenBeta);
+    tuple->Tree->Branch("HSCP_dRclosestTrigAndCandidate", &tuple->Tree_HSCP_dRclosestTrigAndCandidate);
+    tuple->Tree->Branch("HSCP_trigObjBeta", &tuple->Tree_HSCP_trigObjBeta);
+
+    tuple->Tree->Branch("trigObjBeta", &tuple->Tree_trigObjBeta, "trigObjBeta/F");
+    tuple->Tree->Branch("trigObjEta", &tuple->Tree_trigObjEta, "trigObjEta/F");
+    tuple->Tree->Branch("L1_SingleMu22", &tuple->Tree_L1_SingleMu22, "L1_SingleMu22/O");
+    tuple->Tree->Branch("L1_SingleMu22or25", &tuple->Tree_L1_SingleMu22or25, "L1_SingleMu22or25/O");
+
+    tuple->Tree->Branch("L1_22or25PT", &tuple->Tree_L1_22or25PT);
+    tuple->Tree->Branch("L1_22or25Eta", &tuple->Tree_L1_22or25Eta);
+    tuple->Tree->Branch("L1_22or25Phi", &tuple->Tree_L1_22or25Phi);
+    tuple->Tree->Branch("L1_22or25Mass", &tuple->Tree_L1_22or25Mass);
+
+
+    tuple->Tree->Branch("L1_mu22or25Filter0", &tuple->Tree_L1_mu22or25Filter0, "L1_mu22or25Filter0/O");
+    tuple->Tree->Branch("L1_22or25F0PT", &tuple->Tree_L1_22or25F0PT);
+    tuple->Tree->Branch("L1_22or25F0Eta", &tuple->Tree_L1_22or25F0Eta);
+    tuple->Tree->Branch("L1_22or25F0Phi", &tuple->Tree_L1_22or25F0Phi);
+    tuple->Tree->Branch("L1_22or25F0Mass", &tuple->Tree_L1_22or25F0Mass);
+
+    tuple->Tree->Branch("L1_mu22or25Filter10", &tuple->Tree_L1_mu22or25Filter10, "L1_mu22or25Filter10/O");
+    tuple->Tree->Branch("L1_22or25F10PT", &tuple->Tree_L1_22or25F10PT);
+    tuple->Tree->Branch("L1_22or25F10Eta", &tuple->Tree_L1_22or25F10Eta);
+    tuple->Tree->Branch("L1_22or25F10Phi", &tuple->Tree_L1_22or25F10Phi);
+    tuple->Tree->Branch("L1_22or25F10Mass", &tuple->Tree_L1_22or25F10Mass);
+
+    tuple->Tree->Branch("L1_mu22or25_l3Filter0", &tuple->Tree_L1_mu22or25_l3Filter0, "L1_mu22or25_l3Filter0/O");
+    tuple->Tree->Branch("L1_LastMuFilter", &tuple->Tree_L1_LastMuFilter, "L1_LastMuFilter/O");
+
+    tuple->Tree->Branch("HLT_lastFilterPT", &tuple->Tree_HLT_lastFilterPT);
+    tuple->Tree->Branch("HLT_lastFilterEta", &tuple->Tree_HLT_lastFilterEta);
+    tuple->Tree->Branch("HLT_lastFilterPhi", &tuple->Tree_HLT_lastFilterPhi);
+    tuple->Tree->Branch("HLT_lastFilterMass", &tuple->Tree_HLT_lastFilterMass);
+
+
     tuple->Tree->Branch("HLT_Mu50", &tuple->Tree_HLT_Mu50, "HLT_Mu50/O");
+    tuple->Tree->Branch("HLT_Multiplicity_mu50", &tuple->Tree_Multiplicity_Mu50, "HLT_Multiplicity_mu50/I");
+
     tuple->Tree->Branch("HLT_PFMET120_PFMHT120_IDTight",
                         &tuple->Tree_HLT_PFMET120_PFMHT120_IDTight,
                         "HLT_PFMET120_PFMHT120_IDTight/O");
@@ -2386,6 +2456,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("muonPt", &tuple->Tree_muonPt);
     tuple->Tree->Branch("muonEta", &tuple->Tree_muonEta);
     tuple->Tree->Branch("muonPhi", &tuple->Tree_muonPhi);
+    tuple->Tree->Branch("muonBeta", &tuple->Tree_muonBeta);
+    
     tuple->Tree->Branch("muonCharge", &tuple->Tree_muonCharge);
     tuple->Tree->Branch("muonIsLoose", &tuple->Tree_muonIsLoose);
     tuple->Tree->Branch("muonIsMedium", &tuple->Tree_muonIsMedium);
@@ -2442,6 +2514,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
       tuple->Tree->Branch("passPreselection", &tuple->Tree_passPreselection);
       tuple->Tree->Branch("passPreselectionSept8", &tuple->Tree_passPreselectionSept8);
+      tuple->Tree->Branch("passPreselectionTrigSys", &tuple->Tree_passPreselectionTrigSys);
       tuple->Tree->Branch("passSelection", &tuple->Tree_passSelection);
     }
     tuple->Tree->Branch("isPFMuon", &tuple->Tree_isPFMuon);
@@ -2470,6 +2543,12 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
     tuple->Tree->Branch("isPhoton", &tuple->Tree_isPhoton);
     tuple->Tree->Branch("isElectron", &tuple->Tree_isElectron);
+
+   
+    tuple->Tree->Branch("gsfFbremElectron", &tuple->Tree_gsfFbremElectron);
+    tuple->Tree->Branch("gsfMomentumElectron", &tuple->Tree_gsfMomentumElectron);
+    tuple->Tree->Branch("PFMomentumElectron", &tuple->Tree_PFMomentumElectron);
+   
     tuple->Tree->Branch("isChHadron", &tuple->Tree_isChHadron);
     tuple->Tree->Branch("isNeutHadron", &tuple->Tree_isNeutHadron);
     tuple->Tree->Branch("isPfTrack", &tuple->Tree_isPfTrack);
@@ -2505,6 +2584,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("iso_ECAL", &tuple->Tree_iso_ECAL);
     tuple->Tree->Branch("iso_HCAL", &tuple->Tree_iso_HCAL);
     tuple->Tree->Branch("track_genTrackMiniIsoSumPt", &tuple->Tree_track_genTrackMiniIsoSumPt);
+    tuple->Tree->Branch("track_genTrackAbsIsoSumPtFix", &tuple->Tree_track_genTrackAbsIsoSumPtFix);
     tuple->Tree->Branch("track_genTrackIsoSumPt_dr03", &tuple->Tree_track_genTrackIsoSumPt_dr03);
     tuple->Tree->Branch("HSCP_tuneP_Pt", &tuple->Tree_HSCP_tuneP_Pt);
     tuple->Tree->Branch("HSCP_tuneP_PtErr", &tuple->Tree_HSCP_tuneP_PtErr);
@@ -2639,7 +2719,35 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<std::vector<float>> &triggerObjectPt,
                                   const std::vector<std::vector<float>> &triggerObjectEta,
                                   const std::vector<std::vector<float>> &triggerObjectPhi,
+                                  const std::vector<float> &HSCP_GenBeta, 
+                                  const std::vector<float> &HSCP_dRclosestTrigAndCandidate, 
+                                  const std::vector<float> &HSCP_trigObjBeta, 
+                                  const float& trigObjBeta,
+                                  const float& trigObjEta,
+                                  const bool &L1_SingleMu22,
+                                  const bool &L1_SingleMu22or25,
+                                  const std::vector<float> &L1_22or25PT,
+                                  const std::vector<float> &L1_22or25Eta,
+                                  const std::vector<float> &L1_22or25Phi,
+                                  const std::vector<float> &L1_22or25Mass,
+                                  const bool &L1_mu22or25Filter0,
+                                  const std::vector<float> &L1_22or25F0PT,
+                                  const std::vector<float> &L1_22or25F0Eta,
+                                  const std::vector<float> &L1_22or25F0Phi,
+                                  const std::vector<float> &L1_22or25F0Mass,
+                                  const bool &L1_mu22or25Filter10,
+                                  const std::vector<float> &L1_22or25F10PT,
+                                  const std::vector<float> &L1_22or25F10Eta,
+                                  const std::vector<float> &L1_22or25F10Phi,
+                                  const std::vector<float> &L1_22or25F10Mass,
+                                  const bool &L1_mu22or25_l3Filter0,
+                                  const bool &L1_LastMuFilter,
+                                  const std::vector<float> &HLT_lastFilterPT,
+                                  const std::vector<float> &HLT_lastFilterEta,
+                                  const std::vector<float> &HLT_lastFilterPhi,
+                                  const std::vector<float> &HLT_lastFilterMass,
                                   const bool &HLT_Mu50,
+                                  const int &nbMuTrigObj,
                                   const bool &HLT_PFMET120_PFMHT120_IDTight,
                                   const bool &HLT_PFHT500_PFMET100_PFMHT100_IDTight,
                                   const bool &HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60,
@@ -2719,6 +2827,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &muonPt,
                                   const std::vector<float> &muonEta,
                                   const std::vector<float> &muonPhi,
+                                  const std::vector<float> &muonBeta,
                                   const std::vector<int> &muonCharge,
                                   const std::vector<bool> &muonIsLoose,
                                   const std::vector<bool> &muonIsMedium,
@@ -2767,6 +2876,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<bool> &passCutPt55,
                                   const std::vector<bool> &passPreselection,
                                   const std::vector<bool> &passPreselectionSept8,
+                                  const std::vector<bool> &passPreselectionTrigSys,
                                   const std::vector<bool> &passSelection,
                                   const std::vector<bool> &isPFMuon,
                                   const std::vector<bool> &PFMuonPt,
@@ -2794,6 +2904,9 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<bool>  &isMuon,
                                   const std::vector<bool>  &isPhoton,
                                   const std::vector<bool>  &isElectron,
+                                  const std::vector<float>  &gsfFbremElectron,
+                                  const std::vector<float>  &gsfMomentumElectron,
+                                  const std::vector<float>  &PFMomentumElectron,
                                   const std::vector<bool>  &isChHadron,
                                   const std::vector<bool>  &isNeutHadron,
                                   const std::vector<bool>  &isPfTrack,
@@ -2829,9 +2942,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &iso_ECAL,
                                   const std::vector<float> &iso_HCAL,
                                   const std::vector<float> &track_genTrackMiniIsoSumPt,
+                                  const std::vector<float> &track_genTrackAbsIsoSumPtFix,
                                   const std::vector<float> &track_genTrackIsoSumPt_dr03,
-
-
                                   const std::vector<float> &PFMiniIso_relative,
                                   const std::vector<float> &PFMiniIso_wMuon_relative,
                                   const std::vector<float> &track_PFIsolationR005_sumChargedHadronPt,
@@ -2913,7 +3025,44 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_triggerObjectPt = triggerObjectPt;
   tuple->Tree_triggerObjectEta = triggerObjectEta;
   tuple->Tree_triggerObjectPhi = triggerObjectPhi;
+
+  tuple->Tree_HSCP_GenBeta = HSCP_GenBeta;
+  tuple->Tree_HSCP_dRclosestTrigAndCandidate = HSCP_dRclosestTrigAndCandidate;
+  tuple->Tree_HSCP_trigObjBeta = HSCP_trigObjBeta;
+  tuple->Tree_trigObjBeta =trigObjBeta;
+  tuple->Tree_trigObjEta =trigObjEta;
   tuple->Tree_HLT_Mu50 = HLT_Mu50;
+  tuple->Tree_Multiplicity_Mu50 = nbMuTrigObj;
+
+  tuple->Tree_L1_SingleMu22 = L1_SingleMu22;
+  tuple->Tree_L1_SingleMu22or25 = L1_SingleMu22or25;
+  tuple->Tree_L1_22or25PT = L1_22or25PT;
+  tuple->Tree_L1_22or25Eta = L1_22or25Eta;
+  tuple->Tree_L1_22or25Phi = L1_22or25Phi;
+  tuple->Tree_L1_22or25Mass = L1_22or25Mass;
+
+
+  tuple->Tree_L1_mu22or25Filter0 = L1_mu22or25Filter0;
+
+  tuple->Tree_L1_22or25F0PT = L1_22or25F0PT;
+  tuple->Tree_L1_22or25F0Eta = L1_22or25F0Eta;
+  tuple->Tree_L1_22or25F0Phi = L1_22or25F0Phi;
+  tuple->Tree_L1_22or25F0Mass = L1_22or25F0Mass;
+
+  tuple->Tree_L1_mu22or25Filter10 = L1_mu22or25Filter10;
+  tuple->Tree_L1_22or25F10PT = L1_22or25F10PT;
+  tuple->Tree_L1_22or25F10Eta = L1_22or25F10Eta;
+  tuple->Tree_L1_22or25F10Phi = L1_22or25F10Phi;
+  tuple->Tree_L1_22or25F10Mass = L1_22or25F10Mass;
+
+  tuple->Tree_L1_mu22or25_l3Filter0 = L1_mu22or25_l3Filter0;
+  tuple->Tree_L1_LastMuFilter = L1_LastMuFilter;
+
+  tuple->Tree_HLT_lastFilterPT = HLT_lastFilterPT;
+  tuple->Tree_HLT_lastFilterEta = HLT_lastFilterEta;
+  tuple->Tree_HLT_lastFilterPhi = HLT_lastFilterPhi;
+  tuple->Tree_HLT_lastFilterMass = HLT_lastFilterMass;
+
   tuple->Tree_HLT_PFMET120_PFMHT120_IDTight = HLT_PFMET120_PFMHT120_IDTight;
   tuple->Tree_HLT_PFHT500_PFMET100_PFMHT100_IDTight = HLT_PFHT500_PFMET100_PFMHT100_IDTight;
   tuple->Tree_HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60 = HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60;
@@ -3001,6 +3150,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_muonPt = muonPt;
   tuple->Tree_muonEta = muonEta;
   tuple->Tree_muonPhi = muonPhi;
+  tuple->Tree_muonBeta = muonBeta;
   tuple->Tree_muonCharge = muonCharge;
   tuple->Tree_muonIsLoose = muonIsLoose;
   tuple->Tree_muonIsMedium = muonIsMedium;
@@ -3051,6 +3201,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_passCutPt55 = passCutPt55;
   tuple->Tree_passPreselection = passPreselection;
   tuple->Tree_passPreselectionSept8 = passPreselectionSept8;
+  tuple->Tree_passPreselectionTrigSys = passPreselectionTrigSys;
   tuple->Tree_passSelection = passSelection;
   tuple->Tree_isPFMuon = isPFMuon;
   tuple->Tree_PFMuonPt = PFMuonPt;
@@ -3078,6 +3229,9 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_isMuon = isMuon;
   tuple->Tree_isPhoton = isPhoton;
   tuple->Tree_isElectron = isElectron;
+  tuple->Tree_gsfFbremElectron = gsfFbremElectron;
+  tuple->Tree_gsfMomentumElectron = gsfMomentumElectron;
+  tuple->Tree_PFMomentumElectron =  PFMomentumElectron;
   tuple->Tree_isChHadron = isChHadron;
   tuple->Tree_isNeutHadron = isNeutHadron;
   tuple->Tree_isPfTrack = isPfTrack;
@@ -3113,6 +3267,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_iso_ECAL = iso_ECAL;
   tuple->Tree_iso_HCAL = iso_HCAL;
   tuple->Tree_track_genTrackMiniIsoSumPt = track_genTrackMiniIsoSumPt;
+  tuple->Tree_track_genTrackAbsIsoSumPtFix = track_genTrackAbsIsoSumPtFix;
   tuple->Tree_track_genTrackIsoSumPt_dr03 = track_genTrackIsoSumPt_dr03;
   tuple->Tree_PFMiniIso_relative = PFMiniIso_relative;
   tuple->Tree_PFMiniIso_wMuon_relative = PFMiniIso_wMuon_relative;
