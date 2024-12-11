@@ -104,7 +104,6 @@ struct Tuple {
   float Tree_HLTPFMHT;
   float Tree_HLTPFMHT_phi;
   float Tree_HLTPFMHT_sigf;
-  bool Tree_matchedMuonWasFound;
   float Tree_L1MET;
   float Tree_L1MET_phi;
   float Tree_L1METHF;
@@ -113,6 +112,18 @@ struct Tuple {
   float Tree_L1MHT_phi;
   float Tree_L1ETSum;
   float Tree_L1HTSum;
+  //bool  Tree_Flag_primaryVertexFilter;
+  bool  Tree_Flag_globalSuperTightHalo2016Filter;
+  bool  Tree_Flag_HBHENoiseFilter;
+  bool  Tree_Flag_HBHENoiseIsoFilter;
+  bool  Tree_Flag_EcalDeadCellTriggerPrimitiveFilter;
+  bool  Tree_Flag_BadPFMuonFilter;
+  bool  Tree_Flag_BadPFMuonDzFilter;
+  bool  Tree_Flag_hfNoisyHitsFilter;
+  bool  Tree_Flag_eeBadScFilter;
+  bool  Tree_Flag_ecalBadCalibFilter;
+  bool  Tree_Flag_allMETFilters;
+  bool Tree_matchedMuonWasFound;
   std::vector<int> Tree_gParticleId;
   std::vector<int> Tree_gParticleStatus;
   std::vector<float> Tree_gParticleE;

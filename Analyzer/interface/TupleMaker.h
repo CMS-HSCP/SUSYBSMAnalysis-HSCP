@@ -133,6 +133,17 @@ public:
                         const float &L1MHT_phi,
                         const float &L1ETSum,
                         const float &L1HTSum,
+			//const bool &Flag_primaryVertexFilter,
+			const bool &Flag_globalSuperTightHalo2016Filter,
+			const bool &Flag_HBHENoiseFilter, 
+			const bool &Flag_HBHENoiseIsoFilter,
+			const bool &Flag_EcalDeadCellTriggerPrimitiveFilter,
+			const bool &Flag_BadPFMuonFilter, 
+			const bool &Flag_BadPFMuonDzFilter, 
+			const bool &Flag_hfNoisyHitsFilter,
+			const bool &Flag_eeBadScFilter,
+			const bool &Flag_ecalBadCalibFilter,
+			const bool &Flag_allMETFilters,
                         const bool &matchedMuonWasFound,
                         const std::vector<int> &gParticleId,
                         const std::vector<int> &gParticleStatus,
@@ -2416,6 +2427,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("L1MHT_phi", &tuple->Tree_L1MHT_phi, "L1MHT_phi/F");
     tuple->Tree->Branch("L1ETSum", &tuple->Tree_L1ETSum, "L1ETSum/F");
     tuple->Tree->Branch("L1HTSum", &tuple->Tree_L1HTSum, "L1HTSum/F");
+    //tuple->Tree->Branch("Flag_primaryVertexFilter", &tuple->Tree_Flag_primaryVertexFilter, "Flag_primaryVertexFilter/O");
+    tuple->Tree->Branch("Flag_globalSuperTightHalo2016Filter", &tuple->Tree_Flag_globalSuperTightHalo2016Filter, "Flag_globalSuperTightHalo2016Filter/O");
+    tuple->Tree->Branch("Flag_HBHENoiseFilter", &tuple->Tree_Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
+    tuple->Tree->Branch("Flag_HBHENoiseIsoFilter", &tuple->Tree_Flag_HBHENoiseIsoFilter, "Flag_HBHENoiseIsoFilter/O");
+    tuple->Tree->Branch("Flag_EcalDeadCellTriggerPrimitiveFilter", &tuple->Tree_Flag_EcalDeadCellTriggerPrimitiveFilter, "Flag_EcalDeadCellTriggerPrimitiveFilter/O");
+    tuple->Tree->Branch("Flag_BadPFMuonFilter", &tuple->Tree_Flag_BadPFMuonFilter, "Flag_BadPFMuonFilter/O");
+    tuple->Tree->Branch("Flag_BadPFMuonDzFilter", &tuple->Tree_Flag_BadPFMuonDzFilter, "Flag_BadPFMuonDzFilter/O");
+    tuple->Tree->Branch("Flag_hfNoisyHitsFilter", &tuple->Tree_Flag_hfNoisyHitsFilter, "Flag_hfNoisyHitsFilter/O");
+    tuple->Tree->Branch("Flag_eeBadScFilter", &tuple->Tree_Flag_eeBadScFilter, "Flag_eeBadScFilter/O");
+    tuple->Tree->Branch("Flag_ecalBadCalibFilter", &tuple->Tree_Flag_ecalBadCalibFilter, "Flag_ecalBadCalibFilter/O");
+    tuple->Tree->Branch("Flag_allMETFilters", &tuple->Tree_Flag_allMETFilters, "Flag_allMETFilters/O");
     tuple->Tree->Branch("matchedMuonWasFound", &tuple->Tree_matchedMuonWasFound, "matchedMuonWasFound/O");
     tuple->Tree->Branch("gParticleId", &tuple->Tree_gParticleId);
     tuple->Tree->Branch("gParticleStatus", &tuple->Tree_gParticleStatus);
@@ -2798,6 +2820,17 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &L1MHT_phi,
                                   const float &L1ETSum,
                                   const float &L1HTSum,
+				  //const bool &Flag_primaryVertexFilter,
+                                  const bool &Flag_globalSuperTightHalo2016Filter,
+                                  const bool &Flag_HBHENoiseFilter,
+                                  const bool &Flag_HBHENoiseIsoFilter,
+                                  const bool &Flag_EcalDeadCellTriggerPrimitiveFilter,
+                                  const bool &Flag_BadPFMuonFilter,
+                                  const bool &Flag_BadPFMuonDzFilter,
+                                  const bool &Flag_hfNoisyHitsFilter,
+                                  const bool &Flag_eeBadScFilter,
+                                  const bool &Flag_ecalBadCalibFilter,
+                                  const bool &Flag_allMETFilters,
                                   const bool &matchedMuonWasFound,
                                   const std::vector<int> &gParticleId,
                                   const std::vector<int> &gParticleStatus,
@@ -3121,6 +3154,17 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_L1MHT_phi = L1MHT_phi;
   tuple->Tree_L1ETSum = L1ETSum;
   tuple->Tree_L1HTSum = L1HTSum;
+  //tuple->Tree_Flag_primaryVertexFilter = Flag_primaryVertexFilter;
+  tuple->Tree_Flag_globalSuperTightHalo2016Filter = Flag_globalSuperTightHalo2016Filter;
+  tuple->Tree_Flag_HBHENoiseFilter = Flag_HBHENoiseFilter;
+  tuple->Tree_Flag_HBHENoiseIsoFilter = Flag_HBHENoiseIsoFilter;
+  tuple->Tree_Flag_EcalDeadCellTriggerPrimitiveFilter = Flag_EcalDeadCellTriggerPrimitiveFilter;
+  tuple->Tree_Flag_BadPFMuonFilter = Flag_BadPFMuonFilter;
+  tuple->Tree_Flag_BadPFMuonDzFilter = Flag_BadPFMuonDzFilter;
+  tuple->Tree_Flag_hfNoisyHitsFilter = Flag_hfNoisyHitsFilter;
+  tuple->Tree_Flag_eeBadScFilter = Flag_eeBadScFilter;
+  tuple->Tree_Flag_ecalBadCalibFilter = Flag_ecalBadCalibFilter;
+  tuple->Tree_Flag_allMETFilters = Flag_allMETFilters;
   tuple->Tree_matchedMuonWasFound = matchedMuonWasFound;
   tuple->Tree_gParticleId = gParticleId;
   tuple->Tree_gParticleStatus = gParticleStatus;

@@ -241,6 +241,17 @@ private:
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
   edm::EDGetTokenT<l1t::EtSumBxCollection> l1TriggerEtSumToken_;
 
+  //edm::EDGetTokenT<bool> primaryVertexFilterToken_;
+  edm::EDGetTokenT<bool> globalSuperTightHalo2016FilterToken_;
+  edm::EDGetTokenT<bool> HBHENoiseFilterToken_;
+  edm::EDGetTokenT<bool> HBHENoiseIsoFilterToken_;
+  edm::EDGetTokenT<bool> EcalDeadCellTriggerPrimitiveFilterToken_;
+  edm::EDGetTokenT<bool> BadPFMuonFilterToken_;
+  edm::EDGetTokenT<bool> BadPFMuonDzFilterToken_;
+  edm::EDGetTokenT<bool> hfNoisyHitsFilterToken_;
+  edm::EDGetTokenT<bool> eeBadScFilterToken_;
+  edm::EDGetTokenT<bool> ecalBadCalibFilterToken_;
+  
   string filterName_;
   string pathName_;
   string triggerPathNamesFile_;
@@ -277,6 +288,17 @@ private:
   edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90;
   edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose;
 
+  //edm::Handle<bool> primaryVertexFilterHandle;
+  edm::Handle<bool> globalSuperTightHalo2016FilterHandle;
+  edm::Handle<bool> HBHENoiseFilterHandle;
+  edm::Handle<bool> HBHENoiseIsoFilterHandle;
+  edm::Handle<bool> EcalDeadCellTriggerPrimitiveFilterHandle;
+  edm::Handle<bool> BadPFMuonFilterHandle;
+  edm::Handle<bool> BadPFMuonDzFilterHandle;
+  edm::Handle<bool> hfNoisyHitsFilterHandle;
+  edm::Handle<bool> eeBadScFilterHandle;
+  edm::Handle<bool> ecalBadCalibFilterHandle;
+  
   vector<string> trigger_met_, trigger_mu_;
 
 
