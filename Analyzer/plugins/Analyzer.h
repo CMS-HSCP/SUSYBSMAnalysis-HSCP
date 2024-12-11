@@ -100,6 +100,8 @@
 #include "DataFormats/JetReco/interface/CaloJet.h"
 #include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
+#include "DataFormats/L1Trigger/interface/EtSum.h"
+#include "DataFormats/L1Trigger/interface/EtSumHelper.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
@@ -237,6 +239,8 @@ private:
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
+  edm::EDGetTokenT<l1t::EtSumBxCollection> l1TriggerEtSumToken_;
+
   string filterName_;
   string pathName_;
   string triggerPathNamesFile_;
