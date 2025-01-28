@@ -32,8 +32,8 @@ options.register('isSkimmedSample', False,
     VarParsing.varType.bool,
     "is sample Skimmed? True or False"
 )
-#options.register('LUMITOPROCESS', '',
-options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
+options.register('LUMITOPROCESS', '',
+#options.register('LUMITOPROCESS', 'Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt',
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Lumi to process"
@@ -69,43 +69,22 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("Configuration.StandardSequences.Reconstruction_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load("SUSYBSMAnalysis.Analyzer.metFilters_cff")
-#process.load("RecoMET.METFilters.BadPFMuonFilter_cfi")
 
 process.options   = cms.untracked.PSet(
-      wantSummary = cms.untracked.bool(True),
+#      wantSummary = cms.untracked.bool(True),
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents) )
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/eos/uscms/store/user/lpchscp/rkim/2015_gluino1800GeV_10k_reco.root'),
-#    fileNames = cms.untracked.vstring('file:/eos/uscms/store/user/lpchscp/rkim/Broken_gluino1800GeV_10k_reco.root'),
 #   fileNames = cms.untracked.vstring("file:88E0D231-6364-DE49-8279-A7576B7FFAAD.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-2600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2560000/F6D6EB63-9383-3545-8322-893B2C166861.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
-#   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/236673F3-65E3-A745-AEFE-DBED7237EDF1.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/2A9C2E8A-012C-F142-9121-E2FEBC4F81D0.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/33886723-9BFB-9D48-9C70-66F27E7082D4.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/377F77F6-E091-BC4C-93D6-3F8E7D15019E.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/476374C8-9A77-5E4A-A3B2-BBC27166087D.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/4ADA820B-0C4D-C346-8635-AD1651102289.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/4AEE2EE3-9985-3940-BCE7-D0B9D9D12436.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/4C7B5631-1461-304B-B393-B0C0C0F24A06.root",
-#   " /store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/55F9DA7B-F0B0-9D40-AE78-64DE95992DB4.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/583C856B-5686-4946-81B9-0333244D4C02.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/5C44A59B-1D42-D047-9E21-28AA739AE373.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/5D6D85A6-3E65-F340-AD15-50FFBF266AE8.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/88E0D231-6364-DE49-8279-A7576B7FFAAD.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/8E3836EB-07C0-EA40-966F-6579B7595A0B.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/AEAA8279-9175-3C4F-AD3B-04F7CDFFDF4C.root",
-#   " /store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/B0CBF8C8-042E-7A4A-A26C-02245F2025C2.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/B7E71CD8-088C-8647-9AF0-CB7C77E30B3F.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/D27364D1-B3FC-7547-99F3-B99C9F3CE846.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EA117F89-12B7-B148-B568-C663806E225F.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/EC0E5916-F488-B145-90D6-FD10CE393C3F.root",
-#   "/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1800_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/F3F91E76-7BE9-2B40-856B-5B8030BE4A7F.root"),
-   inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
+#   fileNames = cms.untracked.vstring("file:14D8FFC9-039D-5545-93F8-C3D7E4285BB6.root"),
+#    fileNames = cms.untracked.vstring('file:./2015_gluino1800GeV_10k_reco.root'),
+
+inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
 
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -134,7 +113,6 @@ if(options.SAMPLE=='isSignal' or options.SAMPLE=='isBckg'):
 
 ########################################################################
 
-# electron VID
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 electron_id_config = cms.PSet(electron_ids = cms.vstring([                   
                     'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
@@ -152,8 +130,6 @@ for idmod in electron_id_config.electron_ids.value():
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
 process.HSCPTuplePath += process.egmGsfElectronIDSequence
-
-
 
 #make the pool output
 process.Out = cms.OutputModule("PoolOutputModule",
@@ -211,66 +187,103 @@ else:
 
 ########################################################################
 
+if options.SAMPLE == 'isData':
+    SampleType = 0
+    if options.YEAR == '2016':
+        K = 2.3
+        C = 3.17
+        SF0 = 1.0
+        SF1 = 1.0325
+        if options.ERA == 'A':
+            IasTemplate = 'template_2016B_v5.root'
+        if options.ERA == 'B':
+            IasTemplate = 'template_2016B_v5.root'
+        if options.ERA == 'C':
+            IasTemplate = 'template_2016C_v5.root'
+        if options.ERA == 'D':
+            IasTemplate = 'template_2016D_v5.root'
+        if options.ERA == 'E':
+            IasTemplate = 'template_2016E_v5.root'
+        if options.ERA == 'F':
+            IasTemplate = 'template_2016F_v5.root'
+        if options.ERA == 'G':
+            IasTemplate = 'template_2016G_v5.root'
+        if options.ERA == 'H':
+            IasTemplate = 'template_2016H_v5.root'
+    if options.YEAR == '2017':
+        K = 2.54
+        C = 3.14
+        SF0 = 1.0
+        SF1 = 0.990
+        if options.ERA == 'A':
+            IasTemplate = 'template_2017B_v5.root'
+        if options.ERA == 'B':
+            IasTemplate = 'template_2017B_v5.root'
+        if options.ERA == 'C':
+            IasTemplate = 'template_2017C_v5.root'
+        if options.ERA == 'D':
+            IasTemplate = 'template_2017D_v5.root'
+        if options.ERA == 'E':
+            IasTemplate = 'template_2017E_v5.root'
+        if options.ERA == 'F':
+            IasTemplate = 'template_2017F_v5.root'
+        if options.ERA == 'G':
+            IasTemplate = 'template_2017F_v5.root'
+        if options.ERA == 'H':
+            IasTemplate = 'template_2017F_v5.root'
+    if options.YEAR == '2018':
+        K = 2.55
+        C = 3.14
+        SF0 = 1.0
+        SF1 = 1.035
+        if options.ERA == 'A':
+            IasTemplate = 'template_2018A_v5.root'
+        if options.ERA == 'B':
+            IasTemplate = 'template_2018B_v5.root'
+        if options.ERA == 'C':
+            IasTemplate = 'template_2018C_v5.root'
+        if options.ERA == 'D':
+            IasTemplate = 'template_2018D_v5.root'
+else:
+    if options.SAMPLE == 'isBckg':
+        SampleType = 1
+        if options.YEAR == '2017':
+            K = 2.48
+            C = 3.19
+            SF0 = 1.009
+            SF1 = 1.044
+            IasTemplate = 'template_2017MC_v5.root'
+        if options.YEAR == '2018':
+            K = 2.49
+            C = 3.18
+            SF0 = 1.006
+            SF1 = 1.097
+            IasTemplate = 'template_2018MC_v5.root'
+    else:
+        SampleType = 2
+        if options.YEAR == '2017':
+            K = 2.48
+            C = 3.19
+            SF0 = 1.009
+            SF1 = 1.044
+            IasTemplate = 'template_2017MC_v5.root'
+        if options.YEAR == '2018':
+            K = 2.49
+            C = 3.18
+            SF0 = 1.006
+            SF1 = 1.097
+            IasTemplate = 'template_2018MC_v5.root'
+
+
 # run the EDAnalyzer
-
-if options.SAMPLE=='isData' :
-   SampleType = 0
-   if options.YEAR=='2017' :
-       K = 2.30
-       C = 3.17
-       SF0 = 1.0
-       SF1 = 1.0325
-       IasTemplate = "template_2017C.root" 
-   
-   if options.YEAR=='2018' :
-       K = 2.27
-       C = 3.16
-       SF0 = 1.0
-       SF1 = 1.0817
-       IasTemplate = "template_2017C.root" #FIXME template 2018?
-    #HSCP_minPt = 55
-
-elif options.SAMPLE=='isBckg':
-   SampleType = 1
-   if options.YEAR=='2017' :
-       K = 2.26
-       C = 3.22
-       SF0 = 1.0079
-       SF1 = 1.0875
-       IasTemplate = "templateMC.root"
-    
-   if options.YEAR=='2018' :
-       K = 2.27
-       C = 3.22
-       SF0 = 1.0047
-       SF1 = 1.1429
-       IasTemplate = "templateMC.root"
-
-else :
-   SampleType = 2
-   if options.YEAR=='2017' :
-       K = 2.26
-       C = 3.22
-       SF0 = 1.0079
-       SF1 = 1.0875
-       IasTemplate = "templateMC.root"
-    
-   if options.YEAR=='2018' :
-       K = 2.27
-       C = 3.22
-       SF0 = 1.0047
-       SF1 = 1.1429
-       IasTemplate = "templateMC.root"
-
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
 process.HSCParticleAnalyzer.SampleType = SampleType 
 process.HSCParticleAnalyzer.SaveTree = 6 #6 is all saved, 0 is none
-process.HSCParticleAnalyzer.SaveGenTree = 0
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"
-process.HSCParticleAnalyzer.Period = "2018"
-process.HSCParticleAnalyzer.DebugLevel = 0
+process.HSCParticleAnalyzer.Period = options.YEAR
+process.HSCParticleAnalyzer.DebugLevel = 6 
 process.HSCParticleAnalyzer.DeDxK = K
 process.HSCParticleAnalyzer.DeDxC = C
 process.HSCParticleAnalyzer.DeDxSF_0 = SF0
@@ -283,11 +296,6 @@ process.TFileService = cms.Service("TFileService",
 ###process.HSCParticleAnalyzer.OutputFile = 'Data_2017_UL'
 
 process.analysis = cms.Path(process.HSCParticleAnalyzer)
-
-
-
-
-
 
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.endjob_step = cms.EndPath(process.endOfProcess)
@@ -304,6 +312,5 @@ for mod in process.filters_().itervalues():
 
 #schedule the sequence
 process.endPath1 = cms.EndPath(process.Out)
-
-process.schedule = cms.Schedule(process.HSCPTuplePath,  process.endjob_step)
+process.schedule = cms.Schedule(process.HSCPTuplePath, process.endjob_step)
 
