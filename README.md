@@ -24,20 +24,20 @@ scram b -j
 **Copy the relevant scripts to `/src`**
 ```bash
 # make sure you are under CMSSW_10_6_30/src/
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/submitCrabJobs* .
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_master_cfg.py .
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_2018_mc_cfg.py .
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/submitCrabJobs* .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/HSCParticleProducerAnalyzer_master_cfg.py .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/HSCParticleProducerAnalyzer_2018_mc_cfg.py .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py .
 ```
 
 **Customize to you
 ```bash
-sed -i  's/tvami/<yourUserName>\ ./g' submitCrabJobs*
-# make sure you have a site to write to:  `crab checkwrite --site=<yourTierTwoSite>`. 
-sed -i  's/T2_HU_Budapest/<yourTierTwoSite>\ ./g' submitCrabJobs*
+sed -i  's/sawkim/<yourUserName>\ ./g' submitCrabJobs*
+# make sure you have a site to write to:  `crab checkwrite --site=<yourTierTwoSite>`. Or you can keep T3_CH_CERNBOX for where you write the files
+sed -i  's/T3_CH_CERNBOX/<yourTierTwoSite>\ ./g' submitCrabJobs*
 mkdir SUSYBSMAnalysis/Analyzer/test/<yourName>
 cp submitCrabJobs* SUSYBSMAnalysis/Analyzer/test/<yourName>
-# Do not overwrite Tamas's files in the Tamas folder
+# Do not overwrite Ryan's files in the Ryan folder
 ```
 
 ## Run the code in CRAB
@@ -65,11 +65,11 @@ python3 submitCrabJobsAll.py 46p6
 **Status checks and downloading files**
 ```
 # Make sure you are still under `/src/`
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/statusCrabJobsMT.py .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/statusCrabJobsMT.py .
 python3 statusCrabJobsMT.py <XvY>
 
 # To download
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/downloadCrabJobs* .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/downloadCrabJobs* .
 # Depending on how many ppl use the machine / how many jobs are running, use the MT (multi-threaded) option or not (MT will be much faster but will have a big strain on the PC used)
 python3 downloadCrabJobs.py <XvY>
 ```
@@ -77,12 +77,12 @@ python3 downloadCrabJobs.py <XvY>
 ##  `hadd` files / scale histograms to correct yield
 
 ```
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/haddCrabJobsMT.py .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/haddCrabJobsMT.py .
 python3 haddCrabJobsMT.py <XvY>
 # This now creates a single root file for each process
 
 # Rescale and print out further hadd commands
-cp SUSYBSMAnalysis/Analyzer/test/Tamas/rescaleAndPrintHadd.py .
+cp SUSYBSMAnalysis/Analyzer/test/Ryan/rescaleAndPrintHadd.py .
 python3 rescaleAndPrintHadd.py <XvY>
 # This now scales the signal / bkg MC yields to 100 /fb
 # And prints out further hadd commands to add up the bkg MC / different eras in a year
