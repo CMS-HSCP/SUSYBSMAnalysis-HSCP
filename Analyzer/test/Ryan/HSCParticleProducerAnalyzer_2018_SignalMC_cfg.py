@@ -82,7 +82,7 @@ process.source = cms.Source("PoolSource",
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPpairStau_M-871_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/80000/BFEFC38B-8C17-FC4B-A410-4035CECB211E.root"),
 #   fileNames = cms.untracked.vstring("/store/mc/RunIISummer20UL18RECO/HSCPgluino_M-1600_TuneCP5_13TeV-pythia8/AODSIM/106X_upgrade2018_realistic_v11_L1v1-v2/2540000/9AFD6D90-8D7F-2D45-B024-B5D728C824CE.root"),
 #   fileNames = cms.untracked.vstring("file:14D8FFC9-039D-5545-93F8-C3D7E4285BB6.root"),
-    fileNames = cms.untracked.vstring('file:/eos/uscms/store/user/lpchscp/rkim/2015_gluino1800GeV_10k_reco.root'),
+#    fileNames = cms.untracked.vstring('file:./2015_gluino1800GeV_10k_reco.root'),
 
 inputCommands = cms.untracked.vstring("keep *", "drop *_MEtoEDMConverter_*_*")
 )
