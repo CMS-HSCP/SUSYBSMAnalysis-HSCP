@@ -11,6 +11,7 @@
 //
 // Modifications by Dylan Angie Frank Apparu
 //                  and Tamas Almos Vami
+//                  and Ryan Kim
 
 // - 41p0: - Refactor so no tuple is needed in the preslection function
 // - 41p1: - Further code cleaning
@@ -97,6 +98,9 @@
 // v25 Dylan
 // - add EoP in the ntuple
 // - add jets info in the ntuple
+
+// Ryan
+// - 48p1: changing to MET trigger list, adding muon trigger requirement for muon trigger matching, WhenGenMatchNotFound = false
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -707,7 +711,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // These are used in the tree alone, otherwise we use passTriggerPatterns to check the triggers
   edm::Handle<trigger::TriggerEvent> trigEvent2 = iEvent.getHandle(trigEventToken_);
-
+  
   std::string singleMu22 = "hltL1sSingleMu22";
   std::string singleMu25 = "hltL1sSingleMu22or25";
   std::string singleMu22or25Filter0 = "hltL1fL1sMu22or25L1Filtered0";
@@ -795,7 +799,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       HLT_lastFilterMass.push_back(mass);
   }
 
-
   bool L1mu22 = false;
   bool L1mu22or25 = false;
   bool L1mu22or25Filter0 = false;
@@ -821,7 +824,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   if(trigtools::passedFilter(*trigEvent2,last_singlemu)){
       L1lastmu = true;
   }
-
 
   bool HLT_Mu50 = false;
   bool HLT_PFMET120_PFMHT120_IDTight = false;
@@ -865,7 +867,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
   // Match muon track to HLT muon track
   std::vector<TLorentzVector> trigObjP4s;
-  trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
+  //  trigtools::getP4sOfObsPassingFilter(trigObjP4s,*trigEvent,filterName_,"HLT");
 
 
   bool matchedMuonWasFound = false;
@@ -889,58 +891,62 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       const reco::Muon* mu = &(muonColl)[i];
       // this is the def of (muon::isLooseMuon(*mu))
       // if (mu->isPFMuon() && (mu->isGlobalMuon() || mu->isTrackerMuon())) {
+
       if (muon::isLooseMuon(*mu) && mu->pt() > 50) {
-        float drTempLoose = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
-        if (drTempLoose < dr_min_hltMuonLoose_hscpCand_inEvent) {
-          // If a match was already found, think twice if you want to update the match
-          // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
-          if (closestTrigObjIndexLoose > -1) {
-            if ((trigObjP4s[closestTrigObjIndexLoose].Eta() < globalMaxEta_) && (dr_min_hltMuonLoose_hscpCand_inEvent < 0.015)) {
-              doNotMatchThisLoose = true;
-            }
-          }
-          if (!doNotMatchThisLoose) {
-            dr_min_hltMuonLoose_hscpCand_inEvent = drTempLoose;
-            closestTrigObjIndexLoose = objNr;
-          }
-        } // end condition on temp being smaller than the current min
+	float drTempLoose = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
+	if (drTempLoose < dr_min_hltMuonLoose_hscpCand_inEvent) {
+	  // If a match was already found, think twice if you want to update the match
+	  // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
+	  if (closestTrigObjIndexLoose > -1) {
+	    if ((trigObjP4s[closestTrigObjIndexLoose].Eta() < globalMaxEta_) && (dr_min_hltMuonLoose_hscpCand_inEvent < 0.015)) {
+	      doNotMatchThisLoose = true;
+	    }
+	  }
+	  if (!doNotMatchThisLoose) {
+	    dr_min_hltMuonLoose_hscpCand_inEvent = drTempLoose;
+	    closestTrigObjIndexLoose = objNr;
+	  }
+
+  	} // end condition on temp being smaller than the current min
+    
       } // end condition on loose mu ID
+
       
-      // this is the def of (muon::isTightMuon(*mu, highestSumPt2Vertex))
-      // bool muID = mu->isGlobalMuon() && mu->globalTrack()->normalizedChi2()<10. && mu->globalTrack()->hitPattern().numberOfValidMuonHits()>0 && mu->numberOfMatchedStations()>1;
-      // bool hits = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement()>5 && mu->innerTrack()->hitPattern().numberOfValidPixelHits()>0;
-      // bool ip = fabs(mu->muonBestTrack()->dxy(highestSumPt2Vertex.position()))<0.2 && fabs(mu->muonBestTrack()->dz(highestSumPt2Vertex.position()))<0.5;
+        // this is the def of (muon::isTightMuon(*mu, highestSumPt2Vertex))
+        // bool muID = mu->isGlobalMuon() && mu->globalTrack()->normalizedChi2()<10. && mu->globalTrack()->hitPattern().numberOfValidMuonHits()>0 && mu->numberOfMatchedStations()>1;
+        // bool hits = mu->innerTrack()->hitPattern().trackerLayersWithMeasurement()>5 && mu->innerTrack()->hitPattern().numberOfValidPixelHits()>0;
+        // bool ip = fabs(mu->muonBestTrack()->dxy(highestSumPt2Vertex.position()))<0.2 && fabs(mu->muonBestTrack()->dz(highestSumPt2Vertex.position()))<0.5;
       if (!muon::isTightMuon(*mu, highestSumPt2Vertex)) continue;
       
       // For checking the trigger pT let's consider tracks with pT > 25 GeV
       if (mu->pt() < 25)  continue;
       float drTemp = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       if (drTemp < dr_min_hltMuon_hscpCandPt25_inEvent) {
-        dr_min_hltMuon_hscpCandPt25_inEvent = drTemp;
-        closestTrigMuPt25Index = i;
+	dr_min_hltMuon_hscpCandPt25_inEvent = drTemp;
+	closestTrigMuPt25Index = i;
       }
       // But otherwise just consider pT > 50 GeV for the real matching
       if (mu->pt() < 50)  continue;
       float dr_hltmu_muon = deltaR(trigObjP4s[objNr].Eta(),trigObjP4s[objNr].Phi(),mu->eta(),mu->phi());
       // min distance from all muons to this specific trigger object
       if (dr_hltmu_muon < dr_min_hltMuon_trigObj) {
-        dr_min_hltMuon_trigObj = dr_hltmu_muon;
+	dr_min_hltMuon_trigObj = dr_hltmu_muon;
       }
       // min distance from all muons and all trigger objects in the event
       if (dr_hltmu_muon < dr_min_hltMuon_hscpCand_inEvent) {
-        dr_minGlobally_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
-        // If a match was already found, think twice if you want to update the match
-        // e.g. if the second match would be eta > 1.0, for sure dont update the match choice
-        if (closestTrigObjIndex > -1) {
-          if ((trigObjP4s[closestTrigObjIndex].Eta() < globalMaxEta_) && (dr_min_hltMuon_hscpCand_inEvent < 0.015) ) {
-            doNotMatchThis = true;
-          }
-        }
-        if (!doNotMatchThis) {
-          dr_min_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
-          closestTrigMuIndex = i;
-          closestTrigObjIndex = objNr;
-        }
+	dr_minGlobally_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
+	// If a match was already found, think twice if you want to update the match
+	// e.g. if the second match would be eta > 1.0, for sure dont update the match choice
+	if (closestTrigObjIndex > -1) {
+	  if ((trigObjP4s[closestTrigObjIndex].Eta() < globalMaxEta_) && (dr_min_hltMuon_hscpCand_inEvent < 0.015) ) {
+	    doNotMatchThis = true;
+	  }
+	}
+	if (!doNotMatchThis) {
+	  dr_min_hltMuon_hscpCand_inEvent = dr_hltmu_muon;
+	  closestTrigMuIndex = i;
+	  closestTrigObjIndex = objNr;
+	}
       }
     } // end loop on muon objects
     if (dr_min_hltMuon_trigObj < 0.15 ) {
@@ -949,7 +955,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       numPassedMatchingTrigObj++;
       // from that how many are inside the eta
       if (trigObjP4s[objNr].Eta() < 1.0) {
-        numPassedMatchingTrigObjEtaCut++;
+	numPassedMatchingTrigObjEtaCut++;
       }
     }
   } // end loop on trigger objects
@@ -1023,7 +1029,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float maxGenTheta = 9999;
   float maxGenPt = -1;
   if (!isData) {
-    if (trigInfo_ > 0) {
+    if (muTrig && (dr_min_hltMuon_hscpCand_inEvent < 0.15)) { // only run the following for muon trigger
+      //    if (trigInfo_ > 0) {  // what it was before 
       if (debug_> 0 ) LogPrint(MOD) << "Triggered(Mu|Obj) - GEN track matching";
       const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
 
@@ -1033,13 +1040,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       for (unsigned int g = 0; g < genColl.size(); g++) {
         if (genColl[g].pt() < 10) { continue; }
         if (genColl[g].status() != 1) { continue; }
-        
+	      
         // Let's match the matched muon to gen level tracks
         float drGenTrigMatchedMu = deltaR(genColl[g].eta(),genColl[g].phi(),triggerObjMatchedMu->eta(),triggerObjMatchedMu->phi());
         if (drGenTrigMatchedMu < drGenTrigMatchedMuMin) {
           drGenTrigMatchedMuMin = drGenTrigMatchedMu;
           triggerObjMatchedMuGenIndex = g;
         }
+
         // Let's match the original trigger object to gen level tracks
         float drGenTrigObj = deltaR(genColl[g].eta(),genColl[g].phi(),trigObjP4s[closestTrigObjIndex].Eta(),trigObjP4s[closestTrigObjIndex].Phi());
         if (drGenTrigObj < drGenTrigObjMin) {
@@ -1047,7 +1055,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           triggerObjGenIndex = g;
         }
       } // end loop on gen collection
-      
+
       if (dr_min_hltMuon_hscpCand_inEvent < 0.15 && doBefPreSplots_) {
         // Event triggered with reco muon match
         tuple->BefPreS_TriggerGenMatch->Fill(1.);
@@ -1138,13 +1146,16 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     tuple->NumEvents->Fill(3.);
     // Events w/ event weights
     tuple->NumEvents->Fill(4., eventWeight_);
-    // Events w/ DOWN systs on weights
-    float genBetaForTriggerObjMatchedMuGen = (triggerObjMatchedMuGenIndex > 0) ? genColl[triggerObjMatchedMuGenIndex].p() / genColl[triggerObjMatchedMuGenIndex].energy() : -1.f;
-    float triggerSystFactorDown = (!isData) ? triggerSystFactor(trigObjP4s[closestTrigObjIndex].Eta(),genBetaForTriggerObjMatchedMuGen,-1) : 1.;
-    float muonRecoSFsDown = (!isData) ? muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1) : 1.;
-    float muonIdSFsDown = (!isData) ? muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1) : 1.;
-    float muonTriggerSFsDown = (!isData) ? muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1) : 1.;
-    tuple->NumEvents->Fill(5., eventWeight_ * PUSystFactor_[1] * triggerSystFactorDown * muonRecoSFsDown * muonIdSFsDown * muonTriggerSFsDown * triggerSystFactorDown);
+
+    if (muTrig && (dr_min_hltMuon_hscpCand_inEvent < 0.15)) { // only do the following for muon trigger
+      // Events w/ DOWN systs on weights
+      float genBetaForTriggerObjMatchedMuGen = (triggerObjMatchedMuGenIndex > 0) ? genColl[triggerObjMatchedMuGenIndex].p() / genColl[triggerObjMatchedMuGenIndex].energy() : -1.f;
+      float triggerSystFactorDown = (!isData) ? triggerSystFactor(trigObjP4s[closestTrigObjIndex].Eta(),genBetaForTriggerObjMatchedMuGen,-1) : 1.;
+      float muonRecoSFsDown = (!isData) ? muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1) : 1.;
+      float muonIdSFsDown = (!isData) ? muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1) : 1.;
+      float muonTriggerSFsDown = (!isData) ? muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1) : 1.;
+      tuple->NumEvents->Fill(5., eventWeight_ * PUSystFactor_[1] * triggerSystFactorDown * muonRecoSFsDown * muonIdSFsDown * muonTriggerSFsDown * triggerSystFactorDown);
+    }
   } else {
     if (debug_ > 2 ) LogPrint(MOD) << " > This event did not pass the needed triggers";
     if (createAndExitGitemplates_) {
@@ -5774,7 +5785,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     } else if ( bestCandidateHSCP->type() == susybsm::HSCParticleType::unknown) {
       tuple->PostS_RecoHSCParticleType->Fill(5.);
     }
-    
+
     reco::TrackRef bestCandidateTrack =  bestCandidateHSCP->trackRef();
     reco::MuonRef bestCandidateMuon = bestCandidateHSCP->muonRef();
     
@@ -5809,7 +5820,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->EventCutFlow->Fill(20.0, eventWeight_);
       }
     }
-    
+
     float shiftForPtValue = shiftForPt(bestCandidateTrack->pt(),bestCandidateTrack->eta(),bestCandidateTrack->phi(),bestCandidateTrack->charge());
     tuple->PostS_RelativePtShift->Fill(shiftForPtValue,  eventWeight_);
     
@@ -5864,6 +5875,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         }
       }
     }
+
     
     // Systematics plots for pT rescaling
     if (rescaledPtUp > globalMinPt_ && doSystsPlots_) {
@@ -5887,24 +5899,32 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     float triggerSystFactorUp = triggerSystFactor(trigObjEta,trigObjBeta,+1);
     float triggerSystFactorDown = triggerSystFactor(trigObjEta,trigObjBeta,-1);
 
+    float muonTriggerSFsNom = -10.0;
+    float muonRecoSFsNom = -10.0;
+    float muonIdSFsNom = -10.0;
+    float muonRecoSFsUp = -10.0;
+    float muonIdSFsUp = -10.0;
+    float muonTriggerSFsUp = -10.0;
+    float muonRecoSFsDown = -10.0;
+    float muonIdSFsDown = -10.0;
+    float muonTriggerSFsDown = -10.0;
+    
+    if(muTrig && (dr_min_hltMuon_hscpCand_inEvent < 0.15)) { // only do the following for muon trigger
+      tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
+      if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
+    
+      muonTriggerSFsNom = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
+      muonRecoSFsNom = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
+      muonIdSFsNom = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
+      muonRecoSFsUp = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
+      muonIdSFsUp = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
+      muonTriggerSFsUp = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
+      muonRecoSFsDown = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
+      muonIdSFsDown = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
+      muonTriggerSFsDown = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
+    }
 
-
-    tuple->PostS_GenBeta->Fill(bestCandidateGenBeta,  eventWeight_);
-    if (triggerObjGenIndex > -1) tuple->PostS_TriggerGenBeta->Fill(genColl[triggerObjGenIndex].p()/ genColl[triggerObjGenIndex].energy());
     
-    
-    float muonTriggerSFsNom = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
-    float muonRecoSFsNom = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
-    float muonIdSFsNom = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), 0);
-    float muonRecoSFsUp = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
-    float muonIdSFsUp = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
-    float muonTriggerSFsUp = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), +1);
-    float muonRecoSFsDown = muonRecoSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
-    float muonIdSFsDown = muonIdSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
-    float muonTriggerSFsDown = muonTriggerSFsForTrackEta(trigObjP4s[closestTrigObjIndex].Eta(), -1);
-    
-    
-
     float ratioEntries=1.0;
     int NPV = vertexColl.size();
 
@@ -5918,6 +5938,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         ratioEntries = (dEdxTemplates->GetEntries()*1.0)/std::accumulate(NominalEntries_.begin(),NominalEntries_.end(),0);
     }
 
+    
     float scaledParamTwo = (GiSysParamTwo_*1.0)/sqrt(ratioEntries);
     float deltaGi = bestCandidateIas*scaledParamTwo + GiSysParamOne_;
 
@@ -5967,14 +5988,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->PostS_ProbQNoL1VsFiStripsVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStrips, bestCandidateTrack->pt(),  eventWeight_  * triggerSystFactorDown);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_ * triggerSystFactorUp);
       tuple->PostS_ProbQNoL1VsFiStripsLogVsPt_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateFiStripsLog, bestCandidateTrack->pt(),  eventWeight_  * triggerSystFactorDown);
-      
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonRecoSFsUp / muonRecoSFsNom);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonRecoSFsDown / muonRecoSFsNom);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonIdSFsUp / muonIdSFsNom);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonIdSFsDown / muonIdSFsNom);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonTriggerSFsUp / muonTriggerSFsNom);
-      tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonTriggerSFsDown / muonTriggerSFsNom);
+
+      if(muTrig && (dr_min_hltMuon_hscpCand_inEvent < 0.15)) { // only do the following for muon trigger
+	tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonRecoSFsUp / muonRecoSFsNom);
+	tuple->PostS_ProbQNoL1VsIasVsPt_MuonRecoSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonRecoSFsDown / muonRecoSFsNom);
+	tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonIdSFsUp / muonIdSFsNom);
+	tuple->PostS_ProbQNoL1VsIasVsPt_MuonIDSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonIdSFsDown / muonIdSFsNom);
+	tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_up->Fill(std::min(1.f,(1 - bestCandidateProbQNoL1)), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_ * muonTriggerSFsUp / muonTriggerSFsNom);
+	tuple->PostS_ProbQNoL1VsIasVsPt_MuonTriggerSF_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas, bestCandidateTrack->pt(),  eventWeight_  * muonTriggerSFsDown / muonTriggerSFsNom);
+      }
+
     }
+
     
     // Repeat for several SRs with higher pT cut
     if (bestCandidateTrack->pt() >= 100) {
@@ -6008,6 +6033,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostS_SR1_ProbQNoL1VsIas_Trigger_down->Fill((1 - bestCandidateProbQNoL1), bestCandidateIas,  eventWeight_  * triggerSystFactorDown);
       }
     }
+
+    
     // now for even higher pT
     if (bestCandidateTrack->pt() >= 200) {
       tuple->PostS_SR2_Ias->Fill(bestCandidateIas, eventWeight_);
@@ -6081,6 +6108,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       }
     }
 
+    
     // Systematics on mass spectrum
     // VR1
     if (bestCandidateIas>Ias_quantiles[1] && bestCandidateIas<Ias_quantiles[5] && bestCandidatePt > pT_cut) {
@@ -7244,7 +7272,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",true)
+  desc.addUntracked("ExitWhenGenMatchNotFound",false)
     ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment(", really controlled by the config for each era");
   desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
@@ -7269,13 +7297,10 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
-  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"})
-//  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
-  ->setComment("Add the list of muon triggers");
-//  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})
-//     Possibly used in a next version of the analysis
-     desc.addUntracked("Trigger_MET",  std::vector<std::string>{""})
-    ->setComment("Add the list of MET triggers");
+  //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"})
+  //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
+  desc.addUntracked("Trigger_Mu", std::vector<std::string>{""})->setComment("Add the list of muon triggers");
+  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <2500.0 
