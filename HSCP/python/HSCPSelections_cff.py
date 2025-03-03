@@ -41,6 +41,11 @@ HSCPSelectionDefault.minTrackHits             = cms.int32(2)
 HSCPSelectionDefault.minTrackPt               = cms.double(45.0)
 HSCPSelectionDefault.minMuonPt                = cms.double(5.0)
 
+HSCPSelectionMET = HSCPSelectionEmpty.clone()
+HSCPSelectionMET.minTrackHits                 = cms.int32(2)
+HSCPSelectionMET.minTrackPt                   = cms.double(45.0)
+HSCPSelectionMET.minMuonPt                    = cms.double(5.0)
+
 HSCPSelectionHighdEdx = HSCPSelectionDefault.clone()
 HSCPSelectionHighdEdx.onlyConsiderTrack       = cms.bool(True)
 HSCPSelectionHighdEdx.minDedxEstimator1       = cms.double(3.5)
