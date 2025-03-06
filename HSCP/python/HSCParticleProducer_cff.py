@@ -86,9 +86,10 @@ HSCParticleProducer = cms.EDFilter("HSCParticleProducer",
 
    #SELECTION ON THE PRODUCED HSCP CANDIDATES (WILL STORE ONLY INTERESTING CANDIDATES)
    SelectionParameters = cms.VPSet(
-      HSCPSelectionDefault,
-      HSCPSelectionMTMuonOnly,
-      HSCPSelectionSAMuonOnly,
+      #HSCPSelectionDefault,                                                                                                
+      #HSCPSelectionMTMuonOnly,                                                                                             
+      #HSCPSelectionSAMuonOnly,                                                                                             
+      HSCPSelectionMET,
    ),
 )
 
