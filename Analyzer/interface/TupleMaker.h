@@ -350,6 +350,7 @@ public:
                         const std::vector<std::vector<uint32_t>> &clust_detid,
                         const std::vector<std::vector<bool>> &clust_isStrip,
                         const std::vector<std::vector<bool>> &clust_isPixel,
+                        const std::vector<float> &gendRmin,
                         const std::vector<float> &genid,
                         const std::vector<float> &gencharge,
                         const std::vector<float> &genmass,
@@ -2674,6 +2675,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("clust_isPixel", &tuple->Tree_clust_isPixel);
     }
     if (saveTree > 4) {
+      tuple->Tree->Branch("GendRMin", &tuple->Tree_GendRMin);
       tuple->Tree->Branch("GenId", &tuple->Tree_GenId);
       tuple->Tree->Branch("GenCharge", &tuple->Tree_GenCharge);
       tuple->Tree->Branch("GenMass", &tuple->Tree_GenMass);
@@ -3037,6 +3039,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<std::vector<uint32_t>> &clust_detid,
                                   const std::vector<std::vector<bool>> &clust_isStrip,
                                   const std::vector<std::vector<bool>> &clust_isPixel,
+                                  const std::vector<float> &gendRmin,
                                   const std::vector<float> &genid,
                                   const std::vector<float> &gencharge,
                                   const std::vector<float> &genmass,
@@ -3381,6 +3384,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_clust_detid = clust_detid;
   tuple->Tree_clust_isStrip = clust_isStrip;
   tuple->Tree_clust_isPixel = clust_isPixel;
+  tuple->Tree_GendRMin = gendRmin;
   tuple->Tree_GenId = genid;
   tuple->Tree_GenCharge = gencharge;
   tuple->Tree_GenMass = genmass;

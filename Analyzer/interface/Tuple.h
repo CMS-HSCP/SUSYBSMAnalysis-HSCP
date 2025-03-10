@@ -347,6 +347,7 @@ struct Tuple {
   std::vector<std::vector<uint32_t>> Tree_clust_detid;
   std::vector<std::vector<bool>> Tree_clust_isStrip;  //is it a SiStrip cluster?
   std::vector<std::vector<bool>> Tree_clust_isPixel;  //is it a Pixel hit?
+  std::vector<float> Tree_GendRMin;
   std::vector<float> Tree_GenId;
   std::vector<float> Tree_GenCharge;
   std::vector<float> Tree_GenMass;
