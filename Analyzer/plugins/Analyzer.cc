@@ -100,7 +100,8 @@
 // - add jets info in the ntuple
 
 // Ryan
-// - 48p1: changing to MET trigger list, adding muon trigger requirement for muon trigger matching, WhenGenMatchNotFound = false
+// - 48p1: changing to MET trigger list, adding muon trigger requirement for muon trigger matching, ExitWhenGenMatchNotFound = false
+// - 48p2: comment out ExitWhenGenMatchNotFound flag, add GendRMin variable in the nTuples in order to manually apply the cut if desired
 
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
@@ -224,7 +225,8 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       GiSysParamOne_(iConfig.getUntrackedParameter<double>("GiSysParamOne")),
       GiSysParamTwo_(iConfig.getUntrackedParameter<double>("GiSysParamTwo")),
       NominalEntries_(iConfig.getUntrackedParameter<vector<int>>("NominalEntries")),
-      exitWhenGenMatchNotFound_(iConfig.getUntrackedParameter<bool>("ExitWhenGenMatchNotFound")),
+      //48p2: comment out exitWhenGenMatchNotFound flag
+      //exitWhenGenMatchNotFound_(iConfig.getUntrackedParameter<bool>("ExitWhenGenMatchNotFound")),
       useTemplateLayer_(iConfig.getUntrackedParameter<bool>("UseTemplateLayer")),
       dEdxSF_0_(iConfig.getUntrackedParameter<double>("DeDxSF_0")),
       dEdxSF_1_(iConfig.getUntrackedParameter<double>("DeDxSF_1")),
@@ -1904,6 +1906,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<std::vector<uint32_t>> HSCP_clust_detid;
   std::vector<std::vector<bool>> HSCP_clust_isStrip;//is it a SiStrip cluster?
   std::vector<std::vector<bool>> HSCP_clust_isPixel;//is it a Pixel hit?
+  std::vector<float> HSCP_GendRMin;
   std::vector<float> HSCP_GenId;
   std::vector<float> HSCP_GenCharge;
   std::vector<float> HSCP_GenMass;
@@ -2120,7 +2123,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       if (trigInfo_ > 0) {
         tuple->ErrorHisto->Fill(4.);
       }
-      if (exitWhenGenMatchNotFound_) continue;
+      //48p2: comment out exitWhenGenMatchNotFound flag
+      //if (exitWhenGenMatchNotFound_) continue;
     }
     
     int genPdgId =  (closestGenIndex > 0) ?  genColl[closestGenIndex].pdgId() : 0;
@@ -2143,8 +2147,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
       tuple->BefPreS_RelDiffMuonPtAndTruthPt->Fill((muonPt-genPt)/genPt, eventWeight_);
       tuple->BefPreS_RelDiffTrackPtAndTruthPt->Fill((trackerPt-genPt)/genPt, eventWeight_);
     }
-    
-    if (!isData && exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
+
+    HSCP_GendRMin.push_back(dRMinGen);
+
+    //48p2: comment out exitWhenGenMatchNotFound flag
+    //if (!isData && exitWhenGenMatchNotFound_ && dRMinGen > 0.015) continue;
     
     if (trigInfo_ > 0 && !isData && doBefPreSplots_) {
       tuple->BefPreS_GenPtVsdRMinGenPostCut->Fill(genPt, dRMinGen);
@@ -7033,7 +7040,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_clust_detid,
                                 HSCP_clust_isStrip,
                                 HSCP_clust_isPixel,
-                                HSCP_GenId,
+                                HSCP_GendRMin,
+				HSCP_GenId,
                                 HSCP_GenCharge,
                                 HSCP_GenMass,
                                 HSCP_GenPt,
@@ -7274,8 +7282,9 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxS_UpLim",1.0)->setComment("A");
   desc.addUntracked("DeDxM_UpLim",30.0)->setComment("A");
   desc.addUntracked("UseTemplateLayer",false)->setComment("A");
-  desc.addUntracked("ExitWhenGenMatchNotFound",false)
-    ->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
+  //48p2: comment out exitWhenGenMatchNotFound flag
+  //desc.addUntracked("ExitWhenGenMatchNotFound",false)
+  //->setComment("For studies it could make sense to only look at tracks that have gen level matched equivalents, should be false for the main analysis");
   desc.addUntracked("DeDxSF_0",1.0)->setComment(", really controlled by the config for each era");
   desc.addUntracked("DeDxSF_1",1.035)->setComment("Scale factor to scale the pixel charge to match the strips scale, really controlled by the config for each era");
   desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
