@@ -11,7 +11,8 @@
 // Need to load the correction parameters from a file
 //
 //=======================================================================================
-#include "SaturationCorrection.h"  // New procedure for the correction of the saturation phenomena
+#include "SaturationCorrection.h"
+#include "SaturationCorrectionInStrip.h"  // Method to correct saturated strip clusters  
 SaturationCorrection sc;
 void LoadCorrectionParameters() {
   char PathToParameters[2048];
@@ -1025,32 +1026,38 @@ std::vector<int> Correction(const std::vector<int>& Q,
 
 
 
-std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat) {
-  const unsigned N=Q.size();
+std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat)
+{
   std::vector<int> QII;
-  std::vector<float> QI(N,0);
 
-//---  only for one max well-defined
- if(Q.size()<2 || Q.size()>8){
-        for (unsigned int i=0;i<Q.size();i++){
-                QII.push_back((int) Q[i]);
-        }
+  // if clusters too small or too large --> no correction
+  if(Q.size()<2 || Q.size()>8)
+  {
+    for (unsigned int i=0;i<Q.size();i++) QII.push_back((int) Q[i]);
+    return QII;
+  }
+  
+  if(way)
+  {
+    vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
+    
+    if(*mQ>253)
+    {
+      // if more than one saturated strip --> no correction
+      if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253) return Q;
+      
+      // if one saturated strip and adjacent strips not saturated and above a given threshold --> correction
+      if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1))<40)
+      {
+        QII.push_back( (10*(*(mQ-1)) + 10*(*(mQ+1))) /2 );
         return QII;
-  }
- if(way){
-          vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
-          if(*mQ>253){
-                 if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
-                 if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
-                     QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
-          }
-      else{
-          return Q; // no saturation --> no x-talk inversion
       }
+    }
+    else return Q; // no saturation --> no correction
   }
-//---
- // do nothing else
- return Q;
+
+  // do nothing else
+  return Q;
 }
 
 std::vector<int> CrossTalkInv(const std::vector<int>& Q,
@@ -1064,25 +1071,33 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
   std::vector<int> QII;
   std::vector<float> QI(N, 0);
   Double_t a = 1 - 2 * x1 - 2 * x2;
-  //  bool debugbool=false;
   TMatrix A(N, N);
 
-  //---
-  if (Q.size() < 2 || Q.size() > 8) {
-    for (unsigned int i = 0; i < Q.size(); i++) {
-      QII.push_back((int)Q[i]);
-    }
+  // EXCLUSION PART: ANOMALOUS SHAPES or SATURATION
+  // if clusters too small or too large --> no correction
+  if(Q.size()<2 || Q.size()>8)
+  {
+    for (unsigned int i=0;i<Q.size();i++) QII.push_back((int) Q[i]);
     return QII;
   }
-
-  if(way){
-      std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end()) ;
-      if(*mQ>253){
-         if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
-         if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
-             QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
+  
+  if(way)
+  {
+    vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
+    
+    if(*mQ>253)
+    {
+      // if more than one saturated strip --> no correction
+      if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253) return Q;
+      
+      // if one saturated strip and adjacent strips not saturated and above a given threshold --> correction
+      if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1))<40)
+      {
+        QII.push_back( (10*(*(mQ-1)) + 10*(*(mQ+1))) /2 );
+        return QII;
       }
-   }
+    }
+  }
   //---
 
   for (unsigned int i = 0; i < N; i++) {
@@ -1117,6 +1132,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
 
   return QII;
 }
+
 
 #ifdef FWCORE
 bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
@@ -1501,6 +1517,345 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
 
   return true;
 }
+
+reco::DeDxData computedEdxUpdated (const float& track_eta,
+                           const edm::EventSetup& iSetup,
+                           const int& run_number,
+                           string year,
+                           const reco::DeDxHitInfo* dedxHits,
+                           float* scaleFactors,
+                           TH3* templateHisto = nullptr,
+                           bool usePixel = false,
+                           bool useStrip = true,
+                           bool useClusterCleaning = true,
+                           bool useTruncated = false,
+                           bool mustBeInside = false,
+                           size_t MaxStripNOM = 999,
+                           bool correctFEDSat = false,
+                           int crossTalkInvAlgo = 0,
+                           float dropLowerDeDxValue = 0.0,
+                           float* dEdxErr = nullptr,
+                           bool useTemplateLayer = false,
+                           bool skipPixelL1 = false,
+                           int  skip_templates_ias = 0,
+                           bool symmetricSmirnov = false,
+                           bool useMorrisMethod = false,
+                           bool usePixelClusterCleaning = true,
+                           const std::string pixelCPE_ = "",
+                           const TrackerTopology* tTopo = nullptr,
+                           const float& track_px=0,
+                           const float& track_py=0,
+                           const float& track_pz=0,
+                           const int& track_charge=0) {
+
+  if (!dedxHits)
+    return reco::DeDxData(-1, -1, -1);
+
+  std::vector<float> vect;
+  std::vector<float> vectStrip;
+  std::vector<float> vectPixel;
+
+
+  edm::ESHandle<TrackerGeometry> tkGeometry;
+  iSetup.get<TrackerDigiGeometryRecord>().get(tkGeometry);
+  edm::ESHandle<PixelClusterParameterEstimator> pixelCPE;
+  iSetup.get<TkPixelCPERecord>().get(pixelCPE_, pixelCPE);
+
+  // loop in order to have the number of saturated clusters in a track
+  unsigned int nsatclust = 0;
+  for (unsigned int t = 0; t < dedxHits->size(); t++) {
+    DetId detid(dedxHits->detId(t));
+    bool test_sat = false;
+    if (detid.subdetId() < 3)
+      continue;
+    const SiStripCluster* cluster = dedxHits->stripCluster(t);
+    std::vector<int> amplitudes = convert(cluster->amplitudes());
+    for (unsigned int s = 0; s < amplitudes.size(); s++) {
+      if (amplitudes[s] > 253)
+        test_sat = true;
+    }
+    if (test_sat)
+      nsatclust++;
+  }
+  float rsat = (float)nsatclust / (float)dedxHits->size();
+
+  unsigned int NSat = 0;
+  unsigned int SiStripNOM = 0;
+  //float lowerStripDeDx=1000; UNUSED
+  //int lowerStripDeDxIndex=-1; UNUSED
+  for (unsigned int h = 0; h < dedxHits->size(); h++) {
+    DetId detid(dedxHits->detId(h));
+    if (!usePixel && detid.subdetId() < 3)
+      continue;  // skip pixels
+    if (!useStrip && detid.subdetId() >= 3)
+      continue;  // skip strips
+
+    if (mustBeInside &&
+        !isHitInsideTkModule(dedxHits->pos(h), detid, detid.subdetId() >= 3 ? dedxHits->stripCluster(h) : nullptr))
+      continue;
+    if (detid.subdetId() >= 3 && ++SiStripNOM > MaxStripNOM)
+      continue;  // skip remaining strips, but not pixel
+
+    int ClusterCharge = dedxHits->charge(h);
+
+//    if (skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
+    if (skipPixelL1 && detid.subdetId() == 1 && abs(int(tTopo->pxbLayer(detid))) == 1) //decoding mask through the topology
+      continue;
+
+//
+    if (detid.subdetId() <3 && usePixelClusterCleaning) { // for pixel only
+         auto const* pixelCluster =  dedxHits->pixelCluster(h);
+         if (pixelCluster == nullptr)  continue;
+         const GeomDetUnit& geomDet = *tkGeometry->idToDetUnit(detid);
+         LocalVector lv = geomDet.toLocal(GlobalVector(track_px, track_py, track_pz));
+         auto reCPE = std::get<2>(pixelCPE->getParameters(*pixelCluster, geomDet, LocalTrajectoryParameters(dedxHits->pos(h), lv, track_charge)));
+         float probQ = SiPixelRecHitQuality::thePacking.probabilityQ(reCPE);
+         float probXY = SiPixelRecHitQuality::thePacking.probabilityXY(reCPE);
+         bool cpeHasFailed = false;
+         if (!SiPixelRecHitQuality::thePacking.hasFilledProb(reCPE)) {
+          cpeHasFailed = true;
+         }
+         if (cpeHasFailed) continue;
+
+        if (probQ <= 0.0 || probQ >= 1.f) probQ = 1.f;
+        if (probXY <= 0.0 || probXY >= 1.f) probXY = 0.f;
+        bool isOnEdge = SiPixelRecHitQuality::thePacking.isOnEdge(reCPE);
+        bool hasBadPixels = SiPixelRecHitQuality::thePacking.hasBadPixels(reCPE);
+        bool spansTwoROCs = SiPixelRecHitQuality::thePacking.spansTwoROCs(reCPE);
+        bool specInCPE = (isOnEdge || hasBadPixels || spansTwoROCs) ? true : false;
+
+        if (specInCPE) continue;
+        if (probQ>0.8) continue;
+
+        auto clustSizeX = pixelCluster->sizeX();
+        auto clustSizeY = pixelCluster->sizeY();
+        if (clustSizeX==1 && clustSizeY==1) continue;
+
+    }
+    if (detid.subdetId() >= 3) {  //for strip only
+      
+      if(fabs(track_eta) < 1.0 && !(detid.subdetId() == 3 || detid.subdetId() == 5)) continue; // eta < 1.0 -> only TIB+TOB hits
+      if(fabs(track_eta) > 1.0 && track_eta < 1.7 && !(detid.subdetId() == 3 || detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // 1.0 < eta < 1.7 -> only TIB+TID+TEC hits
+      if(fabs(track_eta) > 1.7 && !(detid.subdetId() == 4 || detid.subdetId() == 6)) continue; // eta > 1.7 -> only TID+TEC hits
+
+      SiStripDetId Sdetid(dedxHits->detId(h));
+      const SiStripCluster* cluster = dedxHits->stripCluster(h);
+      std::vector<int> amplitudes = convert(cluster->amplitudes());
+      //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
+      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+
+      // why is this hardcoded now?
+      //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
+      if (useClusterCleaning && !clusterCleaning(amplitudesPrim, 1))
+        continue;
+
+      //////////////////////////////////////////////////////////////
+      //
+      //     0: no correction & no cross-talk inversion
+      //     1: standard correction & use of cross-talk inversion
+      //     2: correction from fits & no cross-talk inversion
+      //     3: correction from fits & use of cross-talk inversion (no recorrection -- see bool=false)
+      //     4: Saturation correction using neighbourhood strip information
+      //
+      //////////////////////////////////////////////////////////////
+
+
+      crossTalkInvAlgo = 4;
+
+      if (crossTalkInvAlgo == 1)
+        //amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+        amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+      if (crossTalkInvAlgo == 2)
+        amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
+      if (crossTalkInvAlgo == 3)
+        amplitudes =
+            CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
+      if (crossTalkInvAlgo == 4)
+        amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), true);
+
+      float gain = 1.0;
+      bool isSatCluster = false;
+      ClusterCharge = 0;
+      for (unsigned int s = 0; s < amplitudes.size(); s++) {
+        int StripCharge = amplitudes[s];
+        if (StripCharge < 254) {
+          // TAV: it's kinda funny to divide with 1.0
+          StripCharge = (int)(StripCharge / gain);
+          if (StripCharge >= 1024) {
+            StripCharge = 255;
+          } else if (StripCharge >= 254) {
+            StripCharge = 254;
+          }
+        }
+
+        if (StripCharge >= 254) {
+          isSatCluster = true;
+        }
+        if (StripCharge >= 255 && correctFEDSat) {
+          StripCharge = 512;
+        }
+        ClusterCharge += StripCharge;
+      }
+      if (isSatCluster)
+        NSat++;
+    }
+
+    float scaleFactor = scaleFactors[0];
+    if (detid.subdetId() < 3){
+      scaleFactor *= scaleFactors[1];  // add pixel scaling
+      float pixelScaling = GetSFPixel(detid.subdetId(), detid, year, run_number);
+      scaleFactor *= pixelScaling;
+    }
+
+    if (templateHisto) {  //save discriminator probability
+      float ChargeOverPathlength =
+          scaleFactor * ClusterCharge / (dedxHits->pathlength(h) * 10.0 * (detid.subdetId() < 3 ? 265 : 1));
+
+      int moduleGeometry = 0;  // underflow for debug
+      int layer = 0;
+      if (detid.subdetId() < 3) {
+        moduleGeometry = 15;
+      }  // 15 == pixel
+      else {
+        SiStripDetId SSdetId(detid);
+        moduleGeometry = SSdetId.moduleGeometry();
+      }
+
+      /*
+      if (detid.subdetId() == 3) {
+        layer = ((detid >> 14) & 0x7);
+      }  //TIB
+      if (detid.subdetId() == 4) {
+        layer = ((detid >> 9) & 0x3) + 10;
+      }  //TID
+      if (detid.subdetId() == 5) {
+        layer = ((detid >> 14) & 0x7) + 4;
+      }  //TOB
+      if (detid.subdetId() == 6) {
+        layer = ((detid >> 5) & 0x7) + 13;
+      }  //TEC
+      */
+
+      if (detid.subdetId() == StripSubdetector::TIB) layer= abs(int(tTopo->tibLayer(detid)));
+      if (detid.subdetId() == StripSubdetector::TOB) layer= abs(int(tTopo->tobLayer(detid))) + 4;
+      if (detid.subdetId() == StripSubdetector::TID) layer= abs(int(tTopo->tidWheel(detid))) + 10;
+      if (detid.subdetId() == StripSubdetector::TEC) layer= abs(int(tTopo->tecWheel(detid))) + 13;
+
+      //skip templates ias = 1 --> skip pixel, TIB, TID, 3 first TEC layers
+      if (skip_templates_ias == 1 && (
+                     detid.subdetId()<5 ||
+                     layer == 14 ||
+                     layer == 15 ||
+                     layer == 16
+                  )
+        ){continue;}
+
+      //skip templates ias = 2 --> pixel only, with pixL1 or not
+      //
+      bool isBPIXL1=false;
+      int numLayers = tkGeometry->numberOfLayers(PixelSubdetector::PixelBarrel);
+      if ((numLayers == 4) && ((detid.subdetId() == PixelSubdetector::PixelBarrel) && (tTopo->pxbLayer(detid) == 1))) isBPIXL1=true;  // only for 2017 and 2018
+      if (skip_templates_ias == 2 && (
+                  detid.subdetId()>2 ||
+                  isBPIXL1 
+                  //(skipPixelL1 && detid.subdetId() == 1 && ((detid >> 16) & 0xF) == 1) //decoding mask for 2016 !
+                  //(skipPixelL1 && detid.subdetId() == 1 && ((detid >> 20) & 0xF) == 1) //decoding mask for 2017-2018
+                  )
+        ){continue;}
+
+      int BinX = templateHisto->GetXaxis()->FindBin(moduleGeometry);
+      if (useTemplateLayer)
+        BinX = templateHisto->GetXaxis()->FindBin(layer);
+      int BinY = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h) * 10.0);  // x10 because of cm-->mm
+      int BinZ = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
+      float Prob = templateHisto->GetBinContent(BinX, BinY, BinZ);
+      //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
+      vect.push_back(Prob);  //save probability
+      //printf("%i %i %i %i  %f\n", layer, BinX, BinY, BinZ, Prob);
+    } else {
+      float Norm = (detid.subdetId() < 3) ? 3.61e-06 : 3.61e-06 * 265;
+      float ChargeOverPathlength = scaleFactor * Norm * ClusterCharge / dedxHits->pathlength(h);
+
+      vect.push_back(ChargeOverPathlength);  //save charge
+      if (detid.subdetId() < 3)
+        vectPixel.push_back(ChargeOverPathlength);
+        //vectPixel.push_back(ClusterCharge/dedxHits->pathlength(h));
+      if (detid.subdetId() >= 3)
+        vectStrip.push_back(ChargeOverPathlength);
+        //vectStrip.push_back(ClusterCharge/dedxHits->pathlength(h));
+      //           printf("%i - %f / %f = %f\n", h, scaleFactor*Norm*dedxHits->charge(h), dedxHits->pathlength(h), ChargeOverPathlength);
+    }
+  }
+
+  if (dropLowerDeDxValue > 0) {
+    std::vector<float> tmp(vect.size());
+    std::copy(vect.begin(), vect.end(), tmp.begin());
+    std::sort(tmp.begin(), tmp.end(), std::greater<float>());
+    int nTrunc = tmp.size() * dropLowerDeDxValue;
+    vect.clear();
+    for (unsigned int t = 0; t + nTrunc < tmp.size(); t++) {
+      vect.push_back(tmp[t]);
+    }
+  }
+
+  float result;
+  int size = vect.size();
+
+  if (size > 0) {
+    if (templateHisto) {
+      if (useMorrisMethod) {
+        // FiStrips discriminator
+        float alpha = 1;
+        for (int i = 0; i < size; i++) {
+          alpha *= vect[i];
+        }
+        float logAlpha = log(alpha);
+        float probQm = 0;
+        for (int i = 0; i < size; i++) {
+          probQm += ((pow(-logAlpha, i)) / (factorial(i)));
+        }
+        result = alpha * probQm;
+      } else {
+        //Ias discriminator
+        result = 1.0 / (12 * size);
+        std::sort(vect.begin(), vect.end(), std::less<float>());
+        for (int i = 1; i <= size; i++) {
+          if(!symmetricSmirnov) result += vect[i - 1] * pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Ias 
+          else result += pow(vect[i - 1] - ((2.0 * i - 1.0) / (2.0 * size)), 2); //Is 
+        }
+        result *= (3.0 / size);
+       }
+    } else {  //dEdx estimator
+      if (useTruncated) {
+        //truncated40 estimator
+        std::sort(vect.begin(), vect.end(), std::less<float>());
+        result = 0;
+        int nTrunc = size * 0.40;
+        for (int i = 0; i + nTrunc < size; i++) {
+          result += vect[i];
+        }
+        result /= (size - nTrunc);
+      } else {
+        //harmonic2 estimator (Ih)
+        result = 0;
+        float expo = -2;
+        if (dEdxErr) *dEdxErr = 0;
+
+        for (int i = 0; i < size; i++) {
+          result += pow(vect[i], expo);
+          if (dEdxErr) *dEdxErr += pow(vect[i], 2 * (expo - 1)) * pow(0.01, 2);
+        }
+        result = pow(result / size, 1. / expo);
+        if (dEdxErr) *dEdxErr = result * result * result * sqrt(*dEdxErr) / size;
+      }
+      //           printf("Ih = %f\n------------------\n",result);
+    }
+  } else {
+    result = -1;
+  }
+  return reco::DeDxData(result, NSat, size);
+}
+
 
 reco::DeDxData computedEdx(const float& track_eta,
                            const edm::EventSetup& iSetup,
