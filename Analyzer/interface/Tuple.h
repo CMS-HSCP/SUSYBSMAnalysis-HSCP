@@ -19,6 +19,8 @@ struct Tuple {
   unsigned long Tree_Event;
   unsigned int Tree_Lumi;
   unsigned int Tree_PileUp;
+  float Tree_PileUpSystDown;
+  float Tree_PileUpSystUp;
   std::vector<int> Tree_BunchXing;
   std::vector<int> Tree_nPU;
   std::vector<float> Tree_nPUmean;
@@ -123,6 +125,14 @@ struct Tuple {
   bool  Tree_Flag_eeBadScFilter;
   bool  Tree_Flag_ecalBadCalibFilter;
   bool  Tree_Flag_allMETFilters;
+  float Tree_triggerSystFactorUp;
+  float Tree_triggerSystFactorDown;
+  float Tree_muonTriggerSFsUpEff;
+  float Tree_muonTriggerSFsDownEff;
+  float Tree_muonRecoSFsUpEff;
+  float Tree_muonRecoSFsDownEff;
+  float Tree_muonIdSFsUpEff;
+  float Tree_muonIdSFsDownEff;
   bool Tree_matchedMuonWasFound;
   std::vector<int> Tree_gParticleId;
   std::vector<int> Tree_gParticleStatus;
@@ -174,6 +184,14 @@ struct Tuple {
   std::vector<float> Tree_ele_OneOverEminusOneOverP;
   std::vector<float> Tree_muonE;
   std::vector<float> Tree_muonPt;
+  std::vector<float> Tree_globalTrackMuonPt;
+  std::vector<float> Tree_rescaledPtUpGlobalMuon;
+  std::vector<float> Tree_rescaledPtDownGlobalMuon; 
+  std::vector<float> Tree_innerTrackMuonPt;
+  std::vector<float> Tree_rescaledPtUpInnerMuon;
+  std::vector<float> Tree_rescaledPtDownInnerMuon; 
+  std::vector<float> Tree_outerTrackMuonPt;
+  std::vector<float> Tree_muonPtErr;
   std::vector<float> Tree_muonEta;
   std::vector<float> Tree_muonPhi;
   std::vector<float> Tree_muonBeta;
@@ -254,6 +272,7 @@ struct Tuple {
   std::vector<float> Tree_EoverP;
   std::vector<float> Tree_muon_eta;
   std::vector<bool> Tree_isMuon;
+  std::vector<bool> Tree_isGlobalMuon;
   std::vector<bool> Tree_isPhoton;
   std::vector<bool> Tree_isElectron;
   std::vector<float> Tree_gsfFbremElectron;
@@ -381,7 +400,6 @@ struct Tuple {
   //=============================================================
   //      Declare Histograms
   //=============================================================
-
 
   TProfile* IntLumi;
   TProfile* XSection;
@@ -766,6 +784,9 @@ struct Tuple {
   TH1F* PostPreS_Pt_lowPt;
   TH2F* PostPreS_PtVsIas;
   TH1F* PostPreS_P;
+  TH2F* PostPreS_PVsIh;
+  TH2F* PostPreS_PVsIhCutSigptAndIsoMass;
+  TH2F* PostPreS_genPVsIh;
   
   TH1F* PostPreS_Ias_NoEventWeight;
   TH1F* PostPreS_FiStrips_NoEventWeight;
@@ -815,6 +836,12 @@ struct Tuple {
   TH1F* PostPreS_Dz_Cosmic;
   TH1F* PostPreS_Dz_CSC;
   TH1F* PostPreS_Dz_DT;
+
+
+  TH2F* BefPreS_RUN_vs_TOF_2017;
+  TH2F* BefPreS_RUN_vs_TOF_2018;
+  TH2F* PostPreS_RUN_vs_TOF_2017;
+  TH2F* PostPreS_RUN_vs_TOF_2018;
 
   TH1F* PostPreS_LastHitDXY;
   TH2F* PostPreS_LastHitDXYVsEta;
@@ -1098,6 +1125,471 @@ struct Tuple {
   TH1F* PostS_VR3_Mass_C_up2;
   TH1F* PostS_VR3_Mass_C_down2;
 
+
+  //**********************************************************
+
+
+  //VR1 0.3<Fpix<0.8 pT  > 70
+ 
+  TH1F* PostS_VR1_pt70_Fpix_Mass;
+  TH1F* PostS_VR1_pt70_Fpix;
+  //PU
+  TH1F* PostS_VR1_pt70_Fpix_Mass_Pileup_up;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_VR1_pt70_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_VR1_pt70_Fpix_Mass_Pt_up;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_VR1_pt70_Fpix_Mass_Trigger_up;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_VR1_pt70_Fpix_Mass_K_up1;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_K_down1;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_C_up1;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_VR1_pt70_Fpix_Mass_K_up2;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_K_down2;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_C_up2;
+  TH1F* PostS_VR1_pt70_Fpix_Mass_C_down2;
+
+  //VR1 0.3<Fpix<0.8 pT  > 100
+ 
+  TH1F* PostS_VR1_pt100_Fpix_Mass;
+  TH1F* PostS_VR1_pt100_Fpix;
+  //PU
+  TH1F* PostS_VR1_pt100_Fpix_Mass_Pileup_up;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_VR1_pt100_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_VR1_pt100_Fpix_Mass_Pt_up;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_VR1_pt100_Fpix_Mass_Trigger_up;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_VR1_pt100_Fpix_Mass_K_up1;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_K_down1;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_C_up1;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_VR1_pt100_Fpix_Mass_K_up2;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_K_down2;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_C_up2;
+  TH1F* PostS_VR1_pt100_Fpix_Mass_C_down2;
+
+
+  //VR1 0.3<Fpix<0.8 pT  > 200
+ 
+  TH1F* PostS_VR1_pt200_Fpix_Mass;
+  TH1F* PostS_VR1_pt200_Fpix;
+  //PU
+  TH1F* PostS_VR1_pt200_Fpix_Mass_Pileup_up;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_VR1_pt200_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_VR1_pt200_Fpix_Mass_Pt_up;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_VR1_pt200_Fpix_Mass_Trigger_up;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_VR1_pt200_Fpix_Mass_K_up1;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_K_down1;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_C_up1;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_VR1_pt200_Fpix_Mass_K_up2;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_K_down2;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_C_up2;
+  TH1F* PostS_VR1_pt200_Fpix_Mass_C_down2;
+
+  //VR1 0.3<Fpix<0.8 pT  > 300
+ 
+  TH1F* PostS_VR1_pt300_Fpix_Mass;
+  TH1F* PostS_VR1_pt300_Fpix;
+  //PU
+  TH1F* PostS_VR1_pt300_Fpix_Mass_Pileup_up;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_VR1_pt300_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_VR1_pt300_Fpix_Mass_Pt_up;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_VR1_pt300_Fpix_Mass_Trigger_up;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_VR1_pt300_Fpix_Mass_K_up1;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_K_down1;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_C_up1;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_VR1_pt300_Fpix_Mass_K_up2;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_K_down2;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_C_up2;
+  TH1F* PostS_VR1_pt300_Fpix_Mass_C_down2;
+
+
+  //***********************************************************
+
+
+  //SR0 Fpix >0.8 pT  > 70 
+
+  TH1F* PostS_SR0_pt70_Fpix_Mass;
+  TH1F* PostS_SR0_pt70_Fpix;
+  //PU
+  TH1F* PostS_SR0_pt70_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR0_pt70_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR0_pt70_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR0_pt70_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR0_pt70_Fpix_Mass_K_up1;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_K_down1;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_C_up1;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR0_pt70_Fpix_Mass_K_up2;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_K_down2;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_C_up2;
+  TH1F* PostS_SR0_pt70_Fpix_Mass_C_down2;
+
+  //SR0 Fpix >0.8 pT  > 100 
+
+  TH1F* PostS_SR0_pt100_Fpix_Mass;
+  TH1F* PostS_SR0_pt100_Fpix;
+  //PU
+  TH1F* PostS_SR0_pt100_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR0_pt100_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR0_pt100_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR0_pt100_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR0_pt100_Fpix_Mass_K_up1;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_K_down1;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_C_up1;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR0_pt100_Fpix_Mass_K_up2;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_K_down2;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_C_up2;
+  TH1F* PostS_SR0_pt100_Fpix_Mass_C_down2;
+
+  //SR0 Fpix >0.8 pT  > 200 
+
+  TH1F* PostS_SR0_pt200_Fpix_Mass;
+  TH1F* PostS_SR0_pt200_Fpix;
+  //PU
+  TH1F* PostS_SR0_pt200_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR0_pt200_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR0_pt200_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR0_pt200_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR0_pt200_Fpix_Mass_K_up1;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_K_down1;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_C_up1;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR0_pt200_Fpix_Mass_K_up2;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_K_down2;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_C_up2;
+  TH1F* PostS_SR0_pt200_Fpix_Mass_C_down2;
+
+  //SR0 Fpix >0.8 pT  > 300 
+
+  TH1F* PostS_SR0_pt300_Fpix_Mass;
+  TH1F* PostS_SR0_pt300_Fpix;
+  //PU
+  TH1F* PostS_SR0_pt300_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR0_pt300_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR0_pt300_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR0_pt300_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR0_pt300_Fpix_Mass_K_up1;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_K_down1;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_C_up1;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR0_pt300_Fpix_Mass_K_up2;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_K_down2;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_C_up2;
+  TH1F* PostS_SR0_pt300_Fpix_Mass_C_down2;
+
+  //**********************************************************
+
+
+  //SR1 Fpix >0.9 pT  > 70 
+
+  TH1F* PostS_SR1_pt70_Fpix_Mass;
+  TH1F* PostS_SR1_pt70_Fpix;
+  //PU
+  TH1F* PostS_SR1_pt70_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR1_pt70_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR1_pt70_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR1_pt70_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR1_pt70_Fpix_Mass_K_up1;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_K_down1;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_C_up1;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR1_pt70_Fpix_Mass_K_up2;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_K_down2;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_C_up2;
+  TH1F* PostS_SR1_pt70_Fpix_Mass_C_down2;
+
+  //SR1 Fpix >0.9 pT  > 100 
+
+  TH1F* PostS_SR1_pt100_Fpix_Mass;
+  TH1F* PostS_SR1_pt100_Fpix;
+  //PU
+  TH1F* PostS_SR1_pt100_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR1_pt100_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR1_pt100_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR1_pt100_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR1_pt100_Fpix_Mass_K_up1;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_K_down1;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_C_up1;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR1_pt100_Fpix_Mass_K_up2;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_K_down2;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_C_up2;
+  TH1F* PostS_SR1_pt100_Fpix_Mass_C_down2;
+
+  //SR1 Fpix >0.9 pT  > 200 
+
+  TH1F* PostS_SR1_pt200_Fpix_Mass;
+  TH1F* PostS_SR1_pt200_Fpix;
+  //PU
+  TH1F* PostS_SR1_pt200_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR1_pt200_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR1_pt200_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR1_pt200_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR1_pt200_Fpix_Mass_K_up1;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_K_down1;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_C_up1;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR1_pt200_Fpix_Mass_K_up2;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_K_down2;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_C_up2;
+  TH1F* PostS_SR1_pt200_Fpix_Mass_C_down2;
+
+  //SR1 Fpix >0.9 pT  > 300 
+
+  TH1F* PostS_SR1_pt300_Fpix_Mass;
+  TH1F* PostS_SR1_pt300_Fpix;
+  //PU
+  TH1F* PostS_SR1_pt300_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR1_pt300_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR1_pt300_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR1_pt300_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR1_pt300_Fpix_Mass_K_up1;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_K_down1;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_C_up1;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR1_pt300_Fpix_Mass_K_up2;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_K_down2;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_C_up2;
+  TH1F* PostS_SR1_pt300_Fpix_Mass_C_down2;
+
+  //**********************************************************
+
+
+  //SR2 Fpix >0.99 pT  > 70 
+  
+  TH1F* PostS_SR2_pt70_Fpix_Mass;
+  TH1F* PostS_SR2_pt70_Fpix;
+  //PU
+  TH1F* PostS_SR2_pt70_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR2_pt70_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR2_pt70_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR2_pt70_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR2_pt70_Fpix_Mass_K_up1;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_K_down1;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_C_up1;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR2_pt70_Fpix_Mass_K_up2;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_K_down2;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_C_up2;
+  TH1F* PostS_SR2_pt70_Fpix_Mass_C_down2;
+
+  //SR2 Fpix >0.99 pT  > 100 
+  
+  TH1F* PostS_SR2_pt100_Fpix_Mass;
+  TH1F* PostS_SR2_pt100_Fpix;
+  //PU
+  TH1F* PostS_SR2_pt100_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR2_pt100_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR2_pt100_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR2_pt100_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR2_pt100_Fpix_Mass_K_up1;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_K_down1;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_C_up1;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR2_pt100_Fpix_Mass_K_up2;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_K_down2;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_C_up2;
+  TH1F* PostS_SR2_pt100_Fpix_Mass_C_down2;
+
+  //SR2 Fpix >0.99 pT  > 200 
+
+  TH1F* PostS_SR2_pt200_Fpix_Mass;
+  TH1F* PostS_SR2_pt200_Fpix;
+  //PU
+  TH1F* PostS_SR2_pt200_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR2_pt200_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR2_pt200_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR2_pt200_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR2_pt200_Fpix_Mass_K_up1;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_K_down1;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_C_up1;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR2_pt200_Fpix_Mass_K_up2;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_K_down2;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_C_up2;
+  TH1F* PostS_SR2_pt200_Fpix_Mass_C_down2;
+
+  //SR2 Fpix >0.99 pT  > 300 
+
+  TH1F* PostS_SR2_pt300_Fpix_Mass;
+  TH1F* PostS_SR2_pt300_Fpix;
+  //PU
+  TH1F* PostS_SR2_pt300_Fpix_Mass_Pileup_up;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_Pileup_down;
+  //Systematics plots for Fi rescaling
+  TH1F* PostS_SR2_pt300_Fpix_Mass_ProbQNoL1_up;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_ProbQNoL1_down;
+  //PT
+  TH1F* PostS_SR2_pt300_Fpix_Mass_Pt_up;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_Pt_down;
+  //TRIGGER
+  TH1F* PostS_SR2_pt300_Fpix_Mass_Trigger_up;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_Trigger_down;
+
+  //K&C senario 1
+  TH1F* PostS_SR2_pt300_Fpix_Mass_K_up1;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_K_down1;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_C_up1;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_C_down1;
+  //K&C senario 2
+  TH1F* PostS_SR2_pt300_Fpix_Mass_K_up2;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_K_down2;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_C_up2;
+  TH1F* PostS_SR2_pt300_Fpix_Mass_C_down2;
+
+  //**********************************************************
+
   //**********************************************************
   // SR1: Ias-quantile 90% & pT>70 GeV
   TH1F* PostS_SR1_Mass;
@@ -1145,6 +1637,12 @@ struct Tuple {
   TH1F* PostS_SR3_Mass;
   TH1F* PostS_SR3_Mass_Pileup_up;
   TH1F* PostS_SR3_Mass_Pileup_down;
+  TH1F* PostS_SR3_Mass_MuonTriggerSF_up;
+  TH1F* PostS_SR3_Mass_MuonTriggerSF_down;
+  TH1F* PostS_SR3_Mass_MuonRecoSF_up;
+  TH1F* PostS_SR3_Mass_MuonRecoSF_down;
+  TH1F* PostS_SR3_Mass_MuonIdSF_up;
+  TH1F* PostS_SR3_Mass_MuonIdSF_down;
   TH1F* PostS_SR3_Mass_ProbQNoL1_up;
   TH1F* PostS_SR3_Mass_ProbQNoL1_down;
   TH1F* PostS_SR3_Mass_Ias_up;
