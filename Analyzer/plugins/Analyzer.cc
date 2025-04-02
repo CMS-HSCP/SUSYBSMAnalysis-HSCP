@@ -2524,8 +2524,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         dttof = &(*tofDtMap)[hscp.muonRef()];
         csctof = &(*tofCscMap)[hscp.muonRef()];
       } else {
-        const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
-        const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
+        //const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollH;
+        //const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollH;
         // Apply T0 correction on data but not on signal MC
         tof = &(*tofMap)[hscp.muonRef()];
         dttof = &(*tofDtMap)[hscp.muonRef()];

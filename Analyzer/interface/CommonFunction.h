@@ -1661,6 +1661,7 @@ reco::DeDxData computedEdxUpdated (const float& track_eta,
 
 
       crossTalkInvAlgo = 4;
+      bool totrash = true;
 
       if (crossTalkInvAlgo == 1)
         //amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
@@ -1671,7 +1672,7 @@ reco::DeDxData computedEdxUpdated (const float& track_eta,
         amplitudes =
             CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
       if (crossTalkInvAlgo == 4)
-        amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), true);
+        amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), totrash);
 
       float gain = 1.0;
       bool isSatCluster = false;
