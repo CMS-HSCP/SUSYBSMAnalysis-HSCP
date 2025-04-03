@@ -128,8 +128,8 @@ void Region::initHisto(TFileDirectory &dir,int etabins,int ihbins,int pbins,int 
     iaslow = 0;
     iasup = 1;
     neta = etabins;
-    etalow = -1;
-    etaup = 1;
+    etalow = -2.4;
+    etaup = +2.4;
     nmass = massbins;
     masslow = 0;
     massup = 4000;
