@@ -2782,7 +2782,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (ampl[s] == 255)
             sat255 = true;
         }
-        ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
+        //ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
+        SiStripDetId Sdetid(dedxHits->detId(i));
+        ampl = CrossTalkInvInStrip(ampl, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+            
+        
         clust_nstrip.push_back(ampl.size());
         clust_sat254.push_back(sat254);
         clust_sat255.push_back(sat255);
@@ -4033,8 +4037,12 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         else {
               // saturation correction of the charge
               const SiStripCluster* cluster = dedxHits->stripCluster(h);
+              SiStripDetId Sdetid(dedxHits->detId(h));
+              bool totrash = true;
               std::vector<int> amplitudes = convert(cluster->amplitudes());
-              amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+              //amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+              amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), totrash);
+              
               float dedx_charge = 0;
               for (unsigned int s = 0; s < amplitudes.size(); s++) {
                  dedx_charge+=amplitudes[s];
@@ -4043,7 +4051,9 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
               // cleaning cuts
               std::vector<int> amplitudes2 = convert(cluster->amplitudes());
-              std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
+              //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
+              std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+              
               cleaning = clusterCleaning(amplitudesPrim, 1);
               dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
         }
@@ -5035,7 +5045,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           // Taking the strips cluster
           auto const* stripsCluster = dedxHits->stripCluster(i);
           std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
-          std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
+          //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
+          SiStripDetId Sdetid(dedxHits->detId(i));
+          std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+              
           unsigned int clusterCleaned = (clusterCleaning(amplitudesPrim, 1)) ? 0 : 1;
           
           
@@ -6622,8 +6635,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (detid.subdetId() >=3 ) {
             // saturation correction of the charge
             const SiStripCluster* cluster = dedxHits->stripCluster(h);
+            SiStripDetId Sdetid(dedxHits->detId(h));
+            bool totrash = true;
             std::vector<int> amplitudes = convert(cluster->amplitudes());
-            amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+            //amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+            amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), totrash);
             dedx_charge = 0;
             for (unsigned int s = 0; s < amplitudes.size(); s++) {
                dedx_charge+=amplitudes[s];
@@ -6633,7 +6649,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
             // cleaning cuts
             std::vector<int> amplitudes2 = convert(cluster->amplitudes());
-            std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
+            //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
+            std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+              
+            
             bool cleaning = clusterCleaning(amplitudesPrim, 1);
             bool dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
 
