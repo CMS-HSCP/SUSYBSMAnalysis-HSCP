@@ -134,6 +134,7 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/TOFUtility.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TupleMaker.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrection.h"
+#include "SUSYBSMAnalysis/Analyzer/interface/SaturationCorrectionInStrip.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
