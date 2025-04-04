@@ -2840,8 +2840,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             sat255 = true;
         }
         //ampl = CrossTalkInv(ampl, 0.10, 0.04, true);
-        SiStripDetId Sdetid(dedxHits->detId(i));
-        ampl = CrossTalkInvInStrip(ampl, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+        ampl = CrossTalkInvInStrip(ampl, detid.subdetId(), dedxHits->detId(i), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
             
         
         clust_nstrip.push_back(ampl.size());
@@ -4096,11 +4095,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         else {
               // saturation correction of the charge
               const SiStripCluster* cluster = dedxHits->stripCluster(h);
-              SiStripDetId Sdetid(dedxHits->detId(h));
               bool totrash = true;
               std::vector<int> amplitudes = convert(cluster->amplitudes());
               //amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
-              amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), totrash);
+              amplitudes = ReturnCorrVec(amplitudes, detid.subdetId(), dedxHits->detId(h), totrash);
               
               float dedx_charge = 0;
               for (unsigned int s = 0; s < amplitudes.size(); s++) {
@@ -4111,7 +4109,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               // cleaning cuts
               std::vector<int> amplitudes2 = convert(cluster->amplitudes());
               //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
-              std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+              std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, detid.subdetId(), dedxHits->detId(h), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
               
               cleaning = clusterCleaning(amplitudesPrim, 1);
               dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
@@ -5119,8 +5117,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           auto const* stripsCluster = dedxHits->stripCluster(i);
           std::vector<int> amplitudes = convert(stripsCluster->amplitudes());
           //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
-          SiStripDetId Sdetid(dedxHits->detId(i));
-          std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+          std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, detid.subdetId(), dedxHits->detId(i), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
               
           unsigned int clusterCleaned = (clusterCleaning(amplitudesPrim, 1)) ? 0 : 1;
           
@@ -7201,11 +7198,10 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
           if (detid.subdetId() >=3 ) {
             // saturation correction of the charge
             const SiStripCluster* cluster = dedxHits->stripCluster(h);
-            SiStripDetId Sdetid(dedxHits->detId(h));
             bool totrash = true;
             std::vector<int> amplitudes = convert(cluster->amplitudes());
             //amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
-            amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), totrash);
+            amplitudes = ReturnCorrVec(amplitudes, detid.subdetId(), dedxHits->detId(h), totrash);
             dedx_charge = 0;
             for (unsigned int s = 0; s < amplitudes.size(); s++) {
                dedx_charge+=amplitudes[s];
@@ -7216,7 +7212,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             // cleaning cuts
             std::vector<int> amplitudes2 = convert(cluster->amplitudes());
             //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
-            std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+            std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, detid.subdetId(), dedxHits->detId(h), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
               
             
             bool cleaning = clusterCleaning(amplitudesPrim, 1);
@@ -7914,10 +7910,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
-  //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"})
+    desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"});
+    desc.addUntracked("Trigger_MET", std::vector<std::string>{""})->setComment("Add the list of MET triggers");
   //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
-  desc.addUntracked("Trigger_Mu", std::vector<std::string>{""})->setComment("Add the list of muon triggers");
-  desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})->setComment("Add the list of MET triggers");
+    //desc.addUntracked("Trigger_Mu", std::vector<std::string>{""})->setComment("Add the list of muon triggers");
+    //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <2500.0 

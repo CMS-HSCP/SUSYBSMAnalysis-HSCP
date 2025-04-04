@@ -1642,7 +1642,7 @@ reco::DeDxData computedEdx (const float& track_eta,
       const SiStripCluster* cluster = dedxHits->stripCluster(h);
       std::vector<int> amplitudes = convert(cluster->amplitudes());
       //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
-      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, detid.subdetId(), dedxHits->detId(h), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
 
       // why is this hardcoded now?
       //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
@@ -1665,7 +1665,7 @@ reco::DeDxData computedEdx (const float& track_eta,
       if (crossTalkInvAlgo == 1) amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
       if (crossTalkInvAlgo == 2) amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
       if (crossTalkInvAlgo == 3) amplitudes = CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
-      if (crossTalkInvAlgo == 4) amplitudes = ReturnCorrVec(amplitudes, Sdetid.subDetector(), Sdetid.rawId(), totrash);
+      if (crossTalkInvAlgo == 4) amplitudes = ReturnCorrVec(amplitudes, detid.subdetId(), dedxHits->detId(h), totrash);
 
       float gain = 1.0;
       bool isSatCluster = false;
