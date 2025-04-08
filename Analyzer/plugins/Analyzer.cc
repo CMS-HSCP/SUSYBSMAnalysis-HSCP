@@ -961,7 +961,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 	// lets see how many of them are like this
 	numPassedMatchingTrigObj++;
 	// from that how many are inside the eta
-	if (trigObjP4s[objNr].Eta() < 2.4) {
+	if (trigObjP4s[objNr].Eta() < globalMaxEta_) {
 	  numPassedMatchingTrigObjEtaCut++;
 	}
       }
@@ -991,7 +991,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     matchedMuonWasFound = true;
     const reco::Muon* triggerObjMatchedMu = &(muonColl)[closestTrigMuIndex];
     // To prove that it's fine to use the official SFs
-    if (fabs(triggerObjMatchedMu->eta()) < 2.4) {
+    if (fabs(triggerObjMatchedMu->eta()) < globalMaxEta_) {
       // Baseline: Muon50 + Tight ID
       if (HLT_Mu50)                tuple->BefPreS_TriggerMuonType->Fill(1);
         // Exploration: Muon50 + Tight ID + IsoMu24
@@ -2859,7 +2859,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         
         if (trigInfo_ > 0) {
           float stripNormCharge = um2cmUnit * dedxHits->charge(i) * 265 / dedxHits->pathlength(i);
-          
+
           if (!isData && genGammaBeta > 0.31623 && genGammaBeta < 0.6  && doBefPreSplots_) {
             tuple->BefPreS_CluNormChargeVsStripLayer_lowBetaGamma->Fill(stripNormCharge, stripLayerIndex, eventWeight_);
           } else if (!isData && genGammaBeta > 0.6 ) {
@@ -7391,25 +7391,25 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HLTPFMHT,
                                 HLTPFMHT_phi,
                                 HLTPFMHT_sigf,
-                            L1MET,
-                            L1MET_phi,
-                            L1METHF,
-                            L1METHF_phi,
-                            L1MHT,
-                            L1MHT_phi,
-                            L1ETSum,
-                            L1HTSum,
-                            //Flag_primaryVertexFilter,
-                            Flag_globalSuperTightHalo2016Filter,
-                            Flag_HBHENoiseFilter,
-                            Flag_HBHENoiseIsoFilter,
-                            Flag_EcalDeadCellTriggerPrimitiveFilter,
-                            Flag_BadPFMuonFilter,
-                            Flag_BadPFMuonDzFilter,
-                            Flag_hfNoisyHitsFilter,
-                            Flag_eeBadScFilter,
-                            Flag_ecalBadCalibFilter,
-                            Flag_allMETFilters,
+                                L1MET,
+                                L1MET_phi,
+                                L1METHF,
+                                L1METHF_phi,
+                                L1MHT,
+                                L1MHT_phi,
+                                L1ETSum,
+                                L1HTSum,
+                                //Flag_primaryVertexFilter,
+                                Flag_globalSuperTightHalo2016Filter,
+                                Flag_HBHENoiseFilter,
+                                Flag_HBHENoiseIsoFilter,
+                                Flag_EcalDeadCellTriggerPrimitiveFilter,
+                                Flag_BadPFMuonFilter,
+                                Flag_BadPFMuonDzFilter,
+                                Flag_hfNoisyHitsFilter,
+                                Flag_eeBadScFilter,
+                                Flag_ecalBadCalibFilter,
+                                Flag_allMETFilters,
                                 matchedMuonWasFound,
                                 gParticleId,
                                 gParticleStatus,
