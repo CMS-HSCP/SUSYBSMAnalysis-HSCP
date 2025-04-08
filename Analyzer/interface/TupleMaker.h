@@ -46,6 +46,8 @@ public:
                         const unsigned long &Event,
                         const unsigned int &Lumi,
                         const unsigned int &PileUp,
+                        const float &PileUpSystDown,
+                        const float &PileUpSystUp,
                         const std::vector<int>  &BunchXing,
                         const std::vector<int>  &nPU,
                         const std::vector<float>  &nPUmean,
@@ -125,26 +127,26 @@ public:
                         const float &HLTPFMHT,
                         const float &HLTPFMHT_phi,
                         const float &HLTPFMHT_sigf,
-			const float &L1MET,
-                        const float &L1MET_phi,
-			const float &L1METHF,
-			const float &L1METHF_phi,
-                        const float &L1MHT,
-                        const float &L1MHT_phi,
-                        const float &L1ETSum,
-                        const float &L1HTSum,
-			//const bool &Flag_primaryVertexFilter,
-			const bool &Flag_globalSuperTightHalo2016Filter,
-			const bool &Flag_HBHENoiseFilter, 
-			const bool &Flag_HBHENoiseIsoFilter,
-			const bool &Flag_EcalDeadCellTriggerPrimitiveFilter,
-			const bool &Flag_BadPFMuonFilter, 
-			const bool &Flag_BadPFMuonDzFilter, 
-			const bool &Flag_hfNoisyHitsFilter,
-			const bool &Flag_eeBadScFilter,
-			const bool &Flag_ecalBadCalibFilter,
-			const bool &Flag_allMETFilters,
-                        const bool &matchedMuonWasFound,
+                    const float &L1MET,
+                    const float &L1MET_phi,
+                    const float &L1METHF,
+                    const float &L1METHF_phi,
+                    const float &L1MHT,
+                    const float &L1MHT_phi,
+                    const float &L1ETSum,
+                    const float &L1HTSum,
+                    //const bool &Flag_primaryVertexFilter,
+                    const bool &Flag_globalSuperTightHalo2016Filter,
+                    const bool &Flag_HBHENoiseFilter, 
+                    const bool &Flag_HBHENoiseIsoFilter,
+                    const bool &Flag_EcalDeadCellTriggerPrimitiveFilter,
+                    const bool &Flag_BadPFMuonFilter, 
+                    const bool &Flag_BadPFMuonDzFilter, 
+                    const bool &Flag_hfNoisyHitsFilter,
+                    const bool &Flag_eeBadScFilter,
+                    const bool &Flag_ecalBadCalibFilter,
+                    const bool &Flag_allMETFilters,
+                      const bool &matchedMuonWasFound,
                         const std::vector<int> &gParticleId,
                         const std::vector<int> &gParticleStatus,
                         const std::vector<float> &gParticleE,
@@ -195,6 +197,22 @@ public:
                         const std::vector<float> &ele_OneOverEminusOneOverP,
                         const std::vector<float> &muonE,
                         const std::vector<float> &muonPt,
+                        const std::vector<float> &globalTrackMuonPt,
+                        const std::vector<float> &rescaledPtUpGlobalMuon,
+                        const std::vector<float> &rescaledPtDownGlobalMuon,
+                        const std::vector<float> &innerTrackMuonPt,
+                        const std::vector<float> &rescaledPtUpInnerMuon,
+                        const std::vector<float> &rescaledPtDownInnerMuon,
+                        const std::vector<float> &outerTrackMuonPt,
+                        const float &triggerSystFactorUp, 
+                        const float &triggerSystFactorDown, 
+                        const float &muonTriggerSFsUpEff,
+                        const float &muonTriggerSFsDownEff,
+                        const float &muonRecoSFsUpEff,
+                        const float &muonRecoSFsDownEff,
+                        const float &muonIdSFsUpEff,
+                        const float &muonIdSFsDownEff,
+                        const std::vector<float> &muonPtErr,
                         const std::vector<float> &muonEta,
                         const std::vector<float> &muonPhi,
                         const std::vector<float> &muonBeta,
@@ -272,6 +290,7 @@ public:
                         const std::vector<bool>  &isHighPurity,
                         const std::vector<float>  &EoverP,
                         const std::vector<bool>  &isMuon,
+                        const std::vector<bool>  &isGlobalMuon,
                         const std::vector<bool>  &isPhoton,
                         const std::vector<bool>  &isElectron,
                         const std::vector<float>  &gsfFbremElectron,
@@ -953,6 +972,11 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->BefPreS_PVsIas = dir.make<TH2F>("BefPreS_PVsIas", ";P;G_{i}^{strips};Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 100, 0, dEdxS_UpLim);
     tuple->BefPreS_IhVsIas = dir.make<TH2F>("BefPreS_IhVsIas", ";I_{h} [MeV/cm];G_{i}^{strips};Tracks / bin", 50, 0., dEdxM_UpLim, 20, 0, dEdxS_UpLim);
     tuple->BefPreS_PVsIh = dir.make<TH2F>("BefPreS_PVsIh", ";P;I_{h} [MeV/cm];Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 50, 0., dEdxM_UpLim);
+
+    tuple->PostPreS_PVsIh = dir.make<TH2F>("PostPreS_PVsIh", ";P;I_{h} [MeV/cm];Tracks / 80 GeV", 800, 0., PtHistoUpperBound, 1000, 0., dEdxM_UpLim);
+    tuple->PostPreS_PVsIhCutSigptAndIsoMass = dir.make<TH2F>("PostPreS_PVsIhCutSigptAndIsoMass", ";P;I_{h} [MeV/cm];Tracks / 80 GeV", 800, 0., PtHistoUpperBound, 1000, 0., dEdxM_UpLim);
+    tuple->PostPreS_genPVsIh = dir.make<TH2F>("PostPreS_genPVsIh", ";gen P;I_{h} [MeV/cm];Tracks / 80 GeV", 800, 0., PtHistoUpperBound, 1000, 0., dEdxM_UpLim);
+
     tuple->BefPreS_PtVsIas = dir.make<TH2F>("BefPreS_PtVsIas", ";p_{T} [GeV];G_{i}^{strips};Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 10, 0., 1.);
     tuple->BefPreS_PtVsIh = dir.make<TH2F>("BefPreS_PtVsIh", ";p_{T} [GeV];I_{h} [MeV/cm];Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 100, 0, dEdxM_UpLim);
     tuple->BefPreS_PtVsTOF = dir.make<TH2F>("BefPreS_PtVsTOF", ";Pt;TOF;Tracks / 80 GeV", 40, 0., PtHistoUpperBound, 50, 0., 5);
@@ -1300,6 +1324,14 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->PostPreS_Dz_Cosmic = dir.make<TH1F>("PostPreS_Dz_Cosmic", ";Dz_Cosmic;Tracks / bin", 150, -IPbound, IPbound);
     tuple->PostPreS_Dz_CSC = dir.make<TH1F>("PostPreS_Dz_CSC", ";Dz_CSC;Tracks / bin", 150, -IPbound, IPbound);
     tuple->PostPreS_Dz_DT = dir.make<TH1F>("PostPreS_Dz_DT", ";Dz_DT;Tracks / bin", 150, -IPbound, IPbound);
+
+    tuple->BefPreS_RUN_vs_TOF_2017 = dir.make<TH2F>("BefPreS_RUN_vs_TOF_2017", ";RUN;TOF", 10500, 296000.5, 306500.5,40,0.5,1.5);
+    tuple->BefPreS_RUN_vs_TOF_2018 = dir.make<TH2F>("BefPreS_RUN_vs_TOF_2018", ";RUN;TOF", 11000, 315000.5, 326000.5,40,0.5,1.5);
+    tuple->PostPreS_RUN_vs_TOF_2017 = dir.make<TH2F>("PostPreS_RUN_vs_TOF_2017", ";RUN;TOF", 10500, 296000.5, 306500.5,40,0.5,1.5);
+    tuple->PostPreS_RUN_vs_TOF_2018 = dir.make<TH2F>("PostPreS_RUN_vs_TOF_2018", ";RUN;TOF", 11000, 315000.5, 326000.5,40,0.5,1.5);
+
+
+
     tuple->PostPreS_Pt_FailDz = dir.make<TH1F>("PostPreS_Pt_FailDz", ";p_{T} (FailDz;Tracks / 100 GeV", 40, 0., PtHistoUpperBound);
     tuple->PostPreS_Pt_FailDz_DT = dir.make<TH1F>("PostPreS_Pt_FailDz_DT", ";p_{T} (FailDz_DT;Tracks / 100 GeV", 40, 0., PtHistoUpperBound);
     tuple->PostPreS_Pt_FailDz_CSC = dir.make<TH1F>("PostPreS_Pt_FailDz_CSC", ";p_{T} (FailDz_CSC;Tracks / 100 GeV", 40, 0., PtHistoUpperBound);
@@ -1937,6 +1969,443 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_VR3_Mass_C_up2 = dir.make<TH1F>("PostS_VR3_Mass_C_up2", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_VR3_Mass_C_down2 = dir.make<TH1F>("PostS_VR3_Mass_C_down2", ";Mass [GeV];Events / bin", 400, 0, 4000);
 
+  //Fpix mass reconstruction method
+
+  //VR1 pt 70
+  tuple->PostS_VR1_pt70_Fpix_Mass = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix = dir.make<TH1F>("PostS_VR1_pt70_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_VR1_pt70_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt70_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt70_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt70_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt70_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt70_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_VR1_pt70_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  //END VR1 pt 100
+
+
+  //VR1 pt 100
+  tuple->PostS_VR1_pt100_Fpix_Mass = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix = dir.make<TH1F>("PostS_VR1_pt100_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_VR1_pt100_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt100_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt100_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt100_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt100_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt100_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_VR1_pt100_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  //END VR1 pt 100
+
+  
+  //VR1 pt 200
+  tuple->PostS_VR1_pt200_Fpix_Mass = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix = dir.make<TH1F>("PostS_VR1_pt200_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_VR1_pt200_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt200_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt200_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt200_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt200_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt200_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_VR1_pt200_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  //END VR1 pt 200
+
+  //VR1 pt 300
+  tuple->PostS_VR1_pt300_Fpix_Mass = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix = dir.make<TH1F>("PostS_VR1_pt300_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_VR1_pt300_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt300_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt300_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt300_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_VR1_pt300_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_VR1_pt300_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_VR1_pt300_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  //END VR1 pt 300
+
+  //*************************************************************************
+  //************************ SEARCH REGIONS *********************************
+  //*************************************************************************
+
+
+  //SR0 (Fpix > 0.8) pt 70
+  tuple->PostS_SR0_pt70_Fpix_Mass = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix = dir.make<TH1F>("PostS_SR0_pt70_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR0_pt70_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt70_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt70_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt70_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt70_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt70_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR0_pt70_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+
+  //SR0 (Fpix > 0.8) pt 100
+  tuple->PostS_SR0_pt100_Fpix_Mass = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix = dir.make<TH1F>("PostS_SR0_pt100_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR0_pt100_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt100_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt100_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt100_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt100_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt100_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR0_pt100_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+  //SR0 (Fpix > 0.8) pt 200
+  tuple->PostS_SR0_pt200_Fpix_Mass = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix = dir.make<TH1F>("PostS_SR0_pt200_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR0_pt200_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt200_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt200_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt200_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt200_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt200_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR0_pt200_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+  //SR0 (Fpix > 0.8) pt 300
+  tuple->PostS_SR0_pt300_Fpix_Mass = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix = dir.make<TH1F>("PostS_SR0_pt300_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR0_pt300_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt300_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt300_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt300_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR0_pt300_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR0_pt300_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR0_pt300_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  //*************************************************************************
+  //END SR0 (Fpix > 0.8)
+
+
+  //SR1 (Fpix > 0.9) pt 70
+  tuple->PostS_SR1_pt70_Fpix_Mass = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix = dir.make<TH1F>("PostS_SR1_pt70_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR1_pt70_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt70_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt70_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt70_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt70_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt70_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR1_pt70_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+
+
+  //SR1 (Fpix > 0.9) pt 100
+  tuple->PostS_SR1_pt100_Fpix_Mass = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix = dir.make<TH1F>("PostS_SR1_pt100_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR1_pt100_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt100_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt100_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt100_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt100_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt100_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR1_pt100_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+  //SR1 (Fpix > 0.9) pt 200
+  tuple->PostS_SR1_pt200_Fpix_Mass = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix = dir.make<TH1F>("PostS_SR1_pt200_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR1_pt200_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt200_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt200_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt200_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt200_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt200_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR1_pt200_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+  //SR1 (Fpix > 0.9) pt 300
+  tuple->PostS_SR1_pt300_Fpix_Mass = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix = dir.make<TH1F>("PostS_SR1_pt300_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR1_pt300_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt300_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt300_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt300_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR1_pt300_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR1_pt300_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR1_pt300_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  //*************************************************************************
+
+
+  //SR2 (Fpix > 0.99) pt 70
+  tuple->PostS_SR2_pt70_Fpix_Mass = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix = dir.make<TH1F>("PostS_SR2_pt70_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR2_pt70_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt70_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt70_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt70_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt70_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt70_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR2_pt70_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+
+  //SR2 (Fpix > 0.99) pt 100
+  tuple->PostS_SR2_pt100_Fpix_Mass = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix = dir.make<TH1F>("PostS_SR2_pt100_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR2_pt100_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt100_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt100_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt100_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt100_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt100_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR2_pt100_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+  //SR2 (Fpix > 0.99) pt 200
+  tuple->PostS_SR2_pt200_Fpix_Mass = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix = dir.make<TH1F>("PostS_SR2_pt200_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR2_pt200_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt200_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt200_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt200_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt200_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt200_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR2_pt200_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  
+  //SR2 (Fpix > 0.99) pt 300
+  tuple->PostS_SR2_pt300_Fpix_Mass = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix = dir.make<TH1F>("PostS_SR2_pt300_Fpix", ";F_{i}^{pixels};Events / bin", 20, 0., 1.);
+
+  tuple->PostS_SR2_pt300_Fpix_Mass_Pileup_up = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_Pileup_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_Pileup_down = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_Pileup_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt300_Fpix_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt300_Fpix_Mass_Pt_up = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_Pt_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_Pt_down = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_Pt_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt300_Fpix_Mass_Trigger_up = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_Trigger_up", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_Trigger_down = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_Trigger_down", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+  tuple->PostS_SR2_pt300_Fpix_Mass_K_up1 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_K_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_K_down1 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_K_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_C_up1 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_C_up1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_C_down1 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_C_down1", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_K_up2 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_K_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_K_down2 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_K_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_C_up2 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_C_up2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+  tuple->PostS_SR2_pt300_Fpix_Mass_C_down2 = dir.make<TH1F>("PostS_SR2_pt300_Fpix_Mass_C_down2", ";Mass [GeV];Events / bin", 800, 0, 4000);
+
+
+  //*************************************************************************
+  //*************************************************************************
+
+
+
   tuple->PostS_SR1_Mass = dir.make<TH1F>("PostS_SR1_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Pileup_up = dir.make<TH1F>("PostS_SR1_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR1_Mass_Pileup_down = dir.make<TH1F>("PostS_SR1_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -1982,6 +2451,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
   tuple->PostS_SR3_Mass = dir.make<TH1F>("PostS_SR3_Mass", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_Pileup_up = dir.make<TH1F>("PostS_SR3_Mass_Pileup_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_Pileup_down = dir.make<TH1F>("PostS_SR3_Mass_Pileup_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_MuonTriggerSF_up = dir.make<TH1F>("PostS_SR3_Mass_MuonTriggerSF_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_MuonTriggerSF_down = dir.make<TH1F>("PostS_SR3_Mass_MuonTriggerSF_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_MuonRecoSF_up = dir.make<TH1F>("PostS_SR3_Mass_MuonRecoSF_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_MuonRecoSF_down = dir.make<TH1F>("PostS_SR3_Mass_MuonRecoSF_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_MuonIdSF_up = dir.make<TH1F>("PostS_SR3_Mass_MuonIdSF_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
+  tuple->PostS_SR3_Mass_MuonIdSF_down = dir.make<TH1F>("PostS_SR3_Mass_MuonIdSF_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
+
   tuple->PostS_SR3_Mass_ProbQNoL1_up = dir.make<TH1F>("PostS_SR3_Mass_ProbQNoL1_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_ProbQNoL1_down = dir.make<TH1F>("PostS_SR3_Mass_ProbQNoL1_down", ";Mass [GeV];Events / bin", 400, 0, 4000);
   tuple->PostS_SR3_Mass_Ias_up = dir.make<TH1F>("PostS_SR3_Mass_Ias_up", ";Mass [GeV];Events / bin", 400, 0, 4000);
@@ -2321,6 +2797,8 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Event", &tuple->Tree_Event, "Event/l");
     tuple->Tree->Branch("Lumi", &tuple->Tree_Lumi, "Lumi/i");
     tuple->Tree->Branch("PileUp", &tuple->Tree_PileUp, "PileUp/i");
+    tuple->Tree->Branch("PileUpSystDown", &tuple->Tree_PileUpSystDown, "PileUpSystDown/F");
+    tuple->Tree->Branch("PileUpSystUp", &tuple->Tree_PileUpSystUp, "PileUpSystUp/F");
     tuple->Tree->Branch("BunchXing", &tuple->Tree_BunchXing);
     tuple->Tree->Branch("nPU", &tuple->Tree_nPU);
     tuple->Tree->Branch("nPUmean", &tuple->Tree_nPUmean);
@@ -2439,6 +2917,17 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Flag_eeBadScFilter", &tuple->Tree_Flag_eeBadScFilter, "Flag_eeBadScFilter/O");
     tuple->Tree->Branch("Flag_ecalBadCalibFilter", &tuple->Tree_Flag_ecalBadCalibFilter, "Flag_ecalBadCalibFilter/O");
     tuple->Tree->Branch("Flag_allMETFilters", &tuple->Tree_Flag_allMETFilters, "Flag_allMETFilters/O");
+    
+
+    tuple->Tree->Branch("triggerSystFactorUp", &tuple->Tree_triggerSystFactorUp, "triggerSystFactorUp/F");
+    tuple->Tree->Branch("triggerSystFactorDown", &tuple->Tree_triggerSystFactorDown, "triggerSystFactorDown/F");
+    tuple->Tree->Branch("muonTriggerSFsUpEff", &tuple->Tree_muonTriggerSFsUpEff, "muonTriggerSFsUpEff/F");
+    tuple->Tree->Branch("muonTriggerSFsDownEff", &tuple->Tree_muonTriggerSFsDownEff, "muonTriggerSFsDownEff/F");
+    tuple->Tree->Branch("muonRecoSFsUpEff", &tuple->Tree_muonRecoSFsUpEff, "muonRecoSFsUpEff/F");
+    tuple->Tree->Branch("muonRecoSFsDownEff", &tuple->Tree_muonRecoSFsDownEff, "muonRecoSFsDownEff/F");
+    tuple->Tree->Branch("muonIdSFsUpEff", &tuple->Tree_muonIdSFsUpEff, "muonIdSFsUpEff/F");
+    tuple->Tree->Branch("muonIdSFsDownEff", &tuple->Tree_muonIdSFsDownEff, "muonIdSFsDownEff/F");
+
     tuple->Tree->Branch("matchedMuonWasFound", &tuple->Tree_matchedMuonWasFound, "matchedMuonWasFound/O");
     tuple->Tree->Branch("gParticleId", &tuple->Tree_gParticleId);
     tuple->Tree->Branch("gParticleStatus", &tuple->Tree_gParticleStatus);
@@ -2493,6 +2982,15 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
 
     tuple->Tree->Branch("muonE", &tuple->Tree_muonE);
     tuple->Tree->Branch("muonPt", &tuple->Tree_muonPt);
+    tuple->Tree->Branch("globalTrackMuonPt", &tuple->Tree_globalTrackMuonPt);
+    tuple->Tree->Branch("rescaledPtUpGlobalMuon", &tuple->Tree_rescaledPtUpGlobalMuon);
+    tuple->Tree->Branch("rescaledPtDownGlobalMuon", &tuple->Tree_rescaledPtDownGlobalMuon);
+    tuple->Tree->Branch("innerTrackMuonPt", &tuple->Tree_innerTrackMuonPt);
+    tuple->Tree->Branch("rescaledPtUpInnerMuon", &tuple->Tree_rescaledPtUpInnerMuon);
+    tuple->Tree->Branch("rescaledPtDownInnerMuon", &tuple->Tree_rescaledPtDownInnerMuon);
+
+    tuple->Tree->Branch("outerTrackMuonPt", &tuple->Tree_outerTrackMuonPt);
+    tuple->Tree->Branch("muonPtErr", &tuple->Tree_muonPtErr);
     tuple->Tree->Branch("muonEta", &tuple->Tree_muonEta);
     tuple->Tree->Branch("muonPhi", &tuple->Tree_muonPhi);
     tuple->Tree->Branch("muonBeta", &tuple->Tree_muonBeta);
@@ -2548,6 +3046,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
       tuple->Tree->Branch("Jet_pileupE", &tuple->Tree_jet_pileupE);
 
     }
+
     tuple->Tree->Branch("mT", &tuple->Tree_vect_mT);
     if (saveTree > 1) {
       tuple->Tree->Branch("passCutPt55", &tuple->Tree_passCutPt55);
@@ -2580,6 +3079,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("isHighPurity", &tuple->Tree_isHighPurity);
     tuple->Tree->Branch("EoverP", &tuple->Tree_EoverP);
     tuple->Tree->Branch("isMuon", &tuple->Tree_isMuon);
+    tuple->Tree->Branch("isGlobalMuon", &tuple->Tree_isGlobalMuon);
     tuple->Tree->Branch("isPhoton", &tuple->Tree_isPhoton);
     tuple->Tree->Branch("isElectron", &tuple->Tree_isElectron);
 
@@ -2735,6 +3235,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const unsigned long &Event,
                                   const unsigned int &Lumi,
                                   const unsigned int &PileUp,
+                                  const float &PileUpSystDown,
+                                  const float &PileUpSystUp,
                                   const std::vector<int>  &BunchXing,
                                   const std::vector<int>  &nPU,
                                   const std::vector<float>  &nPUmean,
@@ -2814,15 +3316,15 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &HLTPFMHT,
                                   const float &HLTPFMHT_phi,
                                   const float &HLTPFMHT_sigf,
-				  const float &L1MET,
-                                  const float &L1MET_phi,
-				  const float &L1METHF,
-				  const float &L1METHF_phi,
-                                  const float &L1MHT,
-                                  const float &L1MHT_phi,
-                                  const float &L1ETSum,
-                                  const float &L1HTSum,
-				  //const bool &Flag_primaryVertexFilter,
+                              const float &L1MET,
+                              const float &L1MET_phi,
+                              const float &L1METHF,
+                              const float &L1METHF_phi,
+                              const float &L1MHT,
+                              const float &L1MHT_phi,
+                              const float &L1ETSum,
+                              const float &L1HTSum,
+                              //const bool &Flag_primaryVertexFilter,
                                   const bool &Flag_globalSuperTightHalo2016Filter,
                                   const bool &Flag_HBHENoiseFilter,
                                   const bool &Flag_HBHENoiseIsoFilter,
@@ -2884,6 +3386,22 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &ele_OneOverEminusOneOverP,
                                   const std::vector<float> &muonE,
                                   const std::vector<float> &muonPt,
+                                  const std::vector<float> &globalTrackMuonPt,
+                                  const std::vector<float> &rescaledPtUpGlobalMuon,
+                                  const std::vector<float> &rescaledPtDownGlobalMuon,
+                                  const std::vector<float> &innerTrackMuonPt,
+                                  const std::vector<float> &rescaledPtUpInnerMuon,
+                                  const std::vector<float> &rescaledPtDownInnerMuon,
+                                  const std::vector<float> &outerTrackMuonPt,
+                                  const float &triggerSystFactorUp, 
+                                  const float &triggerSystFactorDown, 
+                                  const float &muonTriggerSFsUpEff,
+                                  const float &muonTriggerSFsDownEff,
+                                  const float &muonRecoSFsUpEff,
+                                  const float &muonRecoSFsDownEff,
+                                  const float &muonIdSFsUpEff,
+                                  const float &muonIdSFsDownEff,
+                                  const std::vector<float> &muonPtErr,
                                   const std::vector<float> &muonEta,
                                   const std::vector<float> &muonPhi,
                                   const std::vector<float> &muonBeta,
@@ -2961,6 +3479,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<bool>  &isHighPurity,
                                   const std::vector<float>  &EoverP,
                                   const std::vector<bool>  &isMuon,
+                                  const std::vector<bool>  &isGlobalMuon,
                                   const std::vector<bool>  &isPhoton,
                                   const std::vector<bool>  &isElectron,
                                   const std::vector<float>  &gsfFbremElectron,
@@ -3059,6 +3578,8 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Event = Event;
   tuple->Tree_Lumi = Lumi;
   tuple->Tree_PileUp = PileUp;
+  tuple->Tree_PileUpSystDown = PileUpSystDown;
+  tuple->Tree_PileUpSystUp = PileUpSystUp;
   tuple->Tree_BunchXing = BunchXing;
   tuple->Tree_nPU = nPU;
   tuple->Tree_nPUmean = nPUmean;
@@ -3168,6 +3689,17 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Flag_eeBadScFilter = Flag_eeBadScFilter;
   tuple->Tree_Flag_ecalBadCalibFilter = Flag_ecalBadCalibFilter;
   tuple->Tree_Flag_allMETFilters = Flag_allMETFilters;
+
+  tuple->Tree_triggerSystFactorUp = triggerSystFactorUp;
+  tuple->Tree_triggerSystFactorDown = triggerSystFactorDown;
+
+  tuple->Tree_muonTriggerSFsUpEff = muonTriggerSFsUpEff;
+  tuple->Tree_muonTriggerSFsDownEff = muonTriggerSFsDownEff;
+  tuple->Tree_muonRecoSFsUpEff = muonRecoSFsUpEff;
+  tuple->Tree_muonRecoSFsDownEff = muonRecoSFsDownEff;
+  tuple->Tree_muonIdSFsUpEff = muonIdSFsUpEff;
+  tuple->Tree_muonIdSFsDownEff = muonIdSFsDownEff;
+
   tuple->Tree_matchedMuonWasFound = matchedMuonWasFound;
   tuple->Tree_gParticleId = gParticleId;
   tuple->Tree_gParticleStatus = gParticleStatus;
@@ -3227,6 +3759,14 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
 
   tuple->Tree_muonE = muonE;
   tuple->Tree_muonPt = muonPt;
+  tuple->Tree_globalTrackMuonPt = globalTrackMuonPt;
+  tuple->Tree_rescaledPtUpGlobalMuon = rescaledPtUpGlobalMuon;
+  tuple->Tree_rescaledPtDownGlobalMuon = rescaledPtDownGlobalMuon;
+  tuple->Tree_innerTrackMuonPt = innerTrackMuonPt;
+  tuple->Tree_rescaledPtUpInnerMuon = rescaledPtUpInnerMuon;
+  tuple->Tree_rescaledPtDownInnerMuon = rescaledPtDownInnerMuon;
+  tuple->Tree_outerTrackMuonPt = outerTrackMuonPt;
+  tuple->Tree_muonPtErr = muonPtErr;
   tuple->Tree_muonEta = muonEta;
   tuple->Tree_muonPhi = muonPhi;
   tuple->Tree_muonBeta = muonBeta;
@@ -3306,6 +3846,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_isHighPurity = isHighPurity;
   tuple->Tree_EoverP = EoverP;
   tuple->Tree_isMuon = isMuon;
+  tuple->Tree_isGlobalMuon = isGlobalMuon;
   tuple->Tree_isPhoton = isPhoton;
   tuple->Tree_isElectron = isElectron;
   tuple->Tree_gsfFbremElectron = gsfFbremElectron;

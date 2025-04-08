@@ -83,6 +83,7 @@
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 
 #include "TrackingTools/TransientTrackingRecHit/interface/TransientTrackingRecHit.h"
 #include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
@@ -136,6 +137,7 @@
 #include "SUSYBSMAnalysis/Analyzer/interface/MCWeight.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/Regions.h"
 #include "SUSYBSMAnalysis/Analyzer/interface/TrigToolsFuncs.h"
+#include "SUSYBSMAnalysis/HSCP/interface/MuonTimingCalculator.h"
 
 
 using namespace std;
@@ -353,6 +355,10 @@ private:
   //Ias-quantiles update
   //Ias-quantiles { 40%, 50%, 60%, 70%, 80%, 90%, 99%, 99.9% }
   float Ias_quantiles[8]={ 0.014565036, 0.017987774, 0.022399569, 0.028518069, 0.038047370, 0.056746799, 0.13331622, 0.22018057 }; //data or signal -- IAS STRIP ONLY NO FSTRIP CUT
+  //float Ias_quantiles[8]={ 0.014565036, 0.017987774, 0.022399569, 0.028518069, 0.038047370, 0.056746799, 0.13331622, 0.35 }; //data or signal -- IAS STRIP ONLY NO FSTRIP CUT
+  float Fpix_quantiles[12]={ 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7,0.8,0.9,0.99,1.0 }; //data or signal -- F PIXEL ONLY
+  float Ih_quantile = 10000;
+  float Ih_low = 0.;
 
   //pT cut update 60-->70 GeV
   float pT_cut = 70;
@@ -474,6 +480,8 @@ private:
   const int debug_;
   const bool hasMCMatch_,calcSyst_;
   const bool calibrateTOF_;
+  const bool smearingTOF_;
+  const bool fpixMassStrategy_;
   unsigned int trigInfo_;
 
   static constexpr const char* const MOD = "Analyzer";
