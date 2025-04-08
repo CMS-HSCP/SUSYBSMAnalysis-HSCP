@@ -3995,6 +3995,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     // Preselection steps that can be changed for template generation
     passedCutsArrayForGiTemplates[0] = true;
+    // for |eta|<1, use track->p() to generate the Gstrip template
+    // for |eta|>1 (here |eta|<2.4), use track->pt() to generate the Gstrip template in order to have data at large eta 
     passedCutsArrayForGiTemplates[1] = ( (track->pt() > 20) && (track->pt() < 48) );
     // PAY ATTENTION : PU == NPV for the following loop !
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
