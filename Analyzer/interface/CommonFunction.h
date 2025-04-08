@@ -1546,7 +1546,8 @@ reco::DeDxData computedEdx (const float& track_eta,
                            const float& track_px=0,
                            const float& track_py=0,
                            const float& track_pz=0,
-                           const int& track_charge=0) {
+                           const int& track_charge=0,
+                           const std::string& templateFilePath = "SUSYBSMAnalysis/HSCP/data/Template_CENTER.txt") {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
@@ -1642,7 +1643,13 @@ reco::DeDxData computedEdx (const float& track_eta,
       const SiStripCluster* cluster = dedxHits->stripCluster(h);
       std::vector<int> amplitudes = convert(cluster->amplitudes());
       //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
-      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, detid.subdetId(), dedxHits->detId(h), "../../HSCP/data/Template_CrossTalkInv.txt", true, 20);
+
+      unsigned int stripLayerIndex = 0;
+      if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+      if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+      if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidRing(detid))) + 10;
+      if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecRing(detid))) + 13;
+      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, stripLayerIndex, templateFilePath, true, 20);
 
       // why is this hardcoded now?
       //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
@@ -1665,7 +1672,8 @@ reco::DeDxData computedEdx (const float& track_eta,
       if (crossTalkInvAlgo == 1) amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
       if (crossTalkInvAlgo == 2) amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
       if (crossTalkInvAlgo == 3) amplitudes = CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
-      if (crossTalkInvAlgo == 4) amplitudes = ReturnCorrVec(amplitudes, detid.subdetId(), dedxHits->detId(h), totrash);
+      if (crossTalkInvAlgo == 4) amplitudes = ReturnCorrVec(amplitudes, stripLayerIndex, totrash);
+
 
       float gain = 1.0;
       bool isSatCluster = false;

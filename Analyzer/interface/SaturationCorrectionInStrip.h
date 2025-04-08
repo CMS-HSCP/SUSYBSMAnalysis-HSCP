@@ -3,100 +3,17 @@
 #ifndef SUSYBSMAnalysis_Analyzer_SaturationCorrectionInStrip_h
 #define SUSYBSMAnalysis_Analyzer_SaturationCorrectionInStrip_h
 
-
-#include <iostream>
+#include <numeric> // pour std::accumulate
 #include <vector>
-#include <numeric>
-#include <fstream>  
-#include <sstream>  
-#include <string>   
-#include <algorithm> 
-#include <cmath>   
-#include "TMatrix.h"
-#include <stdlib.h>
-#include "TFile.h"
-#include "TTree.h"
-#include "TBranch.h"
-#include "TChain.h"
-#include "TF1.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TH3F.h"
-#include "THStack.h"
-#include "TProfile.h"
-#include "TFitResult.h"
-#include "TCanvas.h"
-#include "TLine.h"
-#include "TStyle.h"
-#include "TEfficiency.h"
-#include "TText.h"
-#include "TLegend.h"
-#include "TMath.h"
-#include "Rtypes.h"
-#include "TLatex.h"
-#include "TMathText.h"
-
+#include <iostream>
 using namespace std;
 
+// Layer:
+//       1-4: TIB 
+//      5-10: TOB
+//     11-13: TEC ring
+//     14-20: TEC ring
 
-    // GLOBAL FUNCTIONS
-int FindLayer(const int subdetid, const int detid)
-{
-    if(subdetid==3)  // TIB
-    {
-        if(((detid>>14)&0x7)==1) return 1;
-        else if(((detid>>14)&0x7)==2) return 2;
-        else if(((detid>>14)&0x7)==3) return 3;
-        else if(((detid>>14)&0x7)==4) return 4;
-    }    
-    else if(subdetid==5) // TOB
-    {       
-        if(((detid>>14)&0x7)==1) return 5;
-        else if(((detid>>14)&0x7)==2) return 6;
-        else if(((detid>>14)&0x7)==3) return 7;
-        else if(((detid>>14)&0x7)==4) return 8;
-        else if(((detid>>14)&0x7)==5) return 9;
-        else if(((detid>>14)&0x7)==6) return 10;
-    }       
-    /*else if(subdetid==4)  //TID by disk 
-    {    
-        if(((detid>>11)&0x3)==1) return 11;
-        else if(((detid>>11)&0x3)==2) return 12;
-        else if(((detid>>11)&0x3)==3) return 13;
-    }*/
-    else if(subdetid==4)  //TID by ring 
-    {    
-        if(((detid>>9)&0x3)==1) return 11;
-        else if(((detid>>9)&0x3)==2) return 12;
-        else if(((detid>>9)&0x3)==3) return 13;
-    }
-    /*else if(subdetid==6) // TEC by wheel 
-    {
-        if(((detid>>14)&0xF)==1) return 14;
-        else if(((detid>>14)&0xF)==2) return 15;
-        else if(((detid>>14)&0xF)==3) return 16;
-        else if(((detid>>14)&0xF)==4) return 17;
-        else if(((detid>>14)&0xF)==5) return 18;
-        else if(((detid>>14)&0xF)==6) return 19;
-        else if(((detid>>14)&0xF)==7) return 20;
-        else if(((detid>>14)&0xF)==8) return 21;
-        else if(((detid>>14)&0xF)==9) return 22;
-    }*/
-    else if(subdetid==6) // TEC by ring 
-    {
-        if(((detid>>5)&0x7)==1) return 14;
-        else if(((detid>>5)&0x7)==2) return 15;
-        else if(((detid>>5)&0x7)==3) return 16;
-        else if(((detid>>5)&0x7)==4) return 17;
-        else if(((detid>>5)&0x7)==5) return 18;
-        else if(((detid>>5)&0x7)==6) return 19;
-        else if(((detid>>5)&0x7)==7) return 20;
-        else return -1;
-    }
-    return -1;
-}
-
-    // CORRECTION FUNCTIONS
 int Correction_FL_FR(const std::vector <int>&  Q, int layer, std::string TemplateFile)
 {
     int N_sat = 0;
@@ -270,14 +187,22 @@ int Correction_2strips(const std::vector <int>&  Q)
     return Qcorr;
 }
 
-void ClusterShape(const std::vector <int>&  Q, bool &left, bool &right, bool &center, bool &FullLeft, bool &FullRight)
+void ClusterShape(const std::vector <int>& Q, bool &left, bool &right, bool &center, bool &FullLeft, bool &FullRight)
 {
     // SETUP
-    int max_Q = *max_element(Q.begin(), Q.end());
-    unsigned int i_max = find(Q.begin(), Q.end(), max_Q) - Q.begin();
+    if (Q.empty()) return;
+
+    auto it_max = std::max_element(Q.begin(), Q.end());
+    if (it_max == Q.end()) return;
+
+    int max_Q = *it_max;
+    auto it_found = std::find(Q.begin(), Q.end(), max_Q);
+    if (it_found == Q.end()) return;
+
+    unsigned int i_max = it_found - Q.begin();
 
     int Nleft = -1, Nright = -1;
-    if (Q.size()>=3) {Nleft = Q[i_max-1]; Nright = Q[i_max+1];}
+    if (Q.size()>=3 && i_max>0 && i_max<Q.size()-1) {Nleft = Q[i_max-1]; Nright = Q[i_max+1];}
     
     int N_sat = 0;
     for (unsigned int i=0; i<Q.size(); i++) { if (Q[i]>=254) N_sat++; }
@@ -292,45 +217,13 @@ void ClusterShape(const std::vector <int>&  Q, bool &left, bool &right, bool &ce
     return;
 }
 
-int ReturnCorr(const std::vector <int>& Q, const int subdetid, const int detid)
+std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int layer, bool& AreSameCluster)
 {
     // SETUP
+    if (Q.empty()) return {};
     bool left=false, right=false, center=false, FullLeft=false, FullRight=false;
     int MaxCorr = -1;
 
-    // SHAPE
-    ClusterShape(Q, left, right, center, FullLeft, FullRight);
-    
-
-    // CORRECTION
-        // 2 consecutive saturated strips
-    MaxCorr = Correction_2strips(Q);
-    if (MaxCorr > accumulate(Q.begin(), Q.end(), 0)) return MaxCorr;
-    
-    MaxCorr = *max_element(Q.begin(), Q.end());
-        // 1 saturated strip
-    if (center) MaxCorr = Correction_LRC(Q, FindLayer(subdetid, detid), "../../HSCP/data/Template_CENTER.txt", true);
-    else if (left || right) MaxCorr = Correction_LRC(Q, FindLayer(subdetid, detid), "../../HSCP/data/Template_LEFTRIGHT.txt", false);
-    else if (FullLeft || FullRight) MaxCorr = Correction_FL_FR(Q, FindLayer(subdetid, detid), "../../HSCP/data/Template_FLFR.txt");
-    
-
-    // SUM CORRECTION
-    int sum_Qcorr = 0;
-    unsigned int i_max = find(Q.begin(), Q.end(), *max_element(Q.begin(), Q.end())) - Q.begin();
-    for (unsigned int i=0; i<Q.size(); i++)
-    {
-        if (i != i_max) sum_Qcorr += Q[i];
-    }
-    sum_Qcorr += MaxCorr;
-
-    return sum_Qcorr;
-}
-
-std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int subdetid, const int detid, bool& AreSameCluster)
-{
-    // SETUP
-    bool left=false, right=false, center=false, FullLeft=false, FullRight=false;
-    int MaxCorr = -1;
 
     // SHAPE
     ClusterShape(Q, left, right, center, FullLeft, FullRight);
@@ -350,9 +243,9 @@ std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int subdetid, 
     
     MaxCorr = *max_element(Q.begin(), Q.end());
         // 1 saturated strip
-    if (center) MaxCorr = Correction_LRC(Q, FindLayer(subdetid, detid), "../../HSCP/data/Template_CENTER.txt", true);
-    else if (left || right) MaxCorr = Correction_LRC(Q, FindLayer(subdetid, detid), "../../HSCP/data/Template_LEFTRIGHT.txt", false);
-    else if (FullLeft || FullRight) MaxCorr = Correction_FL_FR(Q, FindLayer(subdetid, detid), "../../HSCP/data/Template_FLFR.txt");
+    if (center) MaxCorr = Correction_LRC(Q, layer, "SUSYBSMAnalysis/HSCP/data/Template_CENTER.txt", true);
+    else if (left || right) MaxCorr = Correction_LRC(Q, layer, "SUSYBSMAnalysis/HSCP/data/Template_LEFTRIGHT.txt", false);
+    else if (FullLeft || FullRight) MaxCorr = Correction_FL_FR(Q, layer, "SUSYBSMAnalysis/HSCP/data/Template_FLFR.txt");
     
 
     // SUM CORRECTION
@@ -370,7 +263,7 @@ std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int subdetid, 
     return Qcorr;
 }
 
-std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int subdetid, const int detid, const std::string TemplateFile, bool IfCorrApplied = true, float threshold = 20) {
+std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int layer, const std::string TemplateFile, bool IfCorrApplied = true, float threshold = 20) {
 
       // CROSS-TALK COEFF.      
   std::ifstream Template(TemplateFile);
@@ -392,6 +285,7 @@ std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int subde
 
 
       // EXCLUSION PART: ANOMALOUS SHAPES or SATURATION
+  if (Q.empty()) return {};
   std::vector<int> QII;
   if(Q.size()<2 || Q.size()>8)
   {
@@ -407,7 +301,7 @@ std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int subde
     if(N_sat>0)
     {
       bool AreSameCluster = true;
-      QII = ReturnCorrVec(Q, subdetid, detid, AreSameCluster);
+      QII = ReturnCorrVec(Q, layer, AreSameCluster);
       if (!AreSameCluster) return QII;    // saturation correction
     }
   }
@@ -421,7 +315,6 @@ std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int subde
   const unsigned N = Q.size();
   std::vector<float> QI(N, 0);
   TMatrix A(N, N);
-  int layer = FindLayer(subdetid, detid);
 
   for (unsigned int i = 0; i < N; i++) {
     A(i, i) = a[layer-1];
@@ -435,16 +328,16 @@ std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int subde
       A(i, i + 2) = x2[layer-1];
     }
   }
-  /*
-      A =   a x1 x2 0--------------0
-            x1  a x1 x2 0          |
-            x2 x1  a x1 x2 0       |
-            0 x2 x1  a x1 x2 0     |
-            |  0               0   |
-            |     0              0 |
-            |        0             0
-            0----------0 x2 x1  a x1
-  */
+  
+  //    A =   a x1 x2 0--------------0
+  //          x1  a x1 x2 0          |
+  //          x2 x1  a x1 x2 0       |
+  //          0 x2 x1  a x1 x2 0     |
+  //          |  0               0   |
+  //          |     0              0 |
+  //          |        0             0
+  //          0----------0 x2 x1  a x1
+  
 
   if (N == 1) A(0, 0) = 1 / a[layer-1];
   else A.InvertFast();
@@ -462,6 +355,5 @@ std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int subde
 
   return QII;
 }
-
 
 #endif
