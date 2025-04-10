@@ -1728,28 +1728,56 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   iEvent.getByToken(hfNoisyHitsFilterToken_, hfNoisyHitsFilterHandle);
   iEvent.getByToken(eeBadScFilterToken_, eeBadScFilterHandle);
   iEvent.getByToken(ecalBadCalibFilterToken_, ecalBadCalibFilterHandle);
+  
+  bool passHalo = true;  // default value
+  if (globalSuperTightHalo2016FilterHandle.isValid()) passHalo = *globalSuperTightHalo2016FilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "globalSuperTightHalo2016Filter not found in event (probably MC)";}
+  bool passHBHE = true;  // default value
+  if (HBHENoiseFilterHandle.isValid()) passHBHE = *HBHENoiseFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "HBHENoiseFilterResult not found in event (probably MC)";}
+  bool passHBHEIso = true;  // default value
+  if (HBHENoiseIsoFilterHandle.isValid()) passHBHEIso = *HBHENoiseIsoFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "HBHENoiseFilterResult not found in event (probably MC)";}
+  bool passEcalDeadCell = true;  // default value
+  if (EcalDeadCellTriggerPrimitiveFilterHandle.isValid()) passEcalDeadCell = *EcalDeadCellTriggerPrimitiveFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "EcalDeadCellTriggerPrimitiveFilter not found in event (probably MC)";}
+  bool passBadPFMuon = true;  // default value
+  if (BadPFMuonFilterHandle.isValid()) passBadPFMuon = *BadPFMuonFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "BadPFMuonFilter not found in event (probably MC)";}
+  bool passBadPFMuonDz = true;  // default value
+  if (BadPFMuonDzFilterHandle.isValid()) passBadPFMuonDz = *BadPFMuonDzFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "BadPFMuonDzFilter not found in event (probably MC)";}
+  bool passHfNoisyHits = true;  // default value
+  if (hfNoisyHitsFilterHandle.isValid()) passHfNoisyHits = *hfNoisyHitsFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "hfNoisyHitsFilter not found in event (probably MC)";}
+  bool passEcalBadSc = true;  // default value
+  if (eeBadScFilterHandle.isValid()) passEcalBadSc = *eeBadScFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "eeBadScFilter not found in event (probably MC)";}
+  bool passEcalBadCalib = true;  // default value
+  if (ecalBadCalibFilterHandle.isValid()) passEcalBadCalib = *ecalBadCalibFilterHandle;
+  else{ if (debug_ > 0) LogPrint(MOD) << "ecalBadCalibFilter not found in event (probably MC)";}
 
   //Flag_primaryVertexFilter = *primaryVertexFilterHandle;
-  Flag_globalSuperTightHalo2016Filter = *globalSuperTightHalo2016FilterHandle;
-  Flag_HBHENoiseFilter = *HBHENoiseFilterHandle;
-  Flag_HBHENoiseIsoFilter = *HBHENoiseIsoFilterHandle;
-  Flag_EcalDeadCellTriggerPrimitiveFilter = *EcalDeadCellTriggerPrimitiveFilterHandle;
-  Flag_BadPFMuonFilter = *BadPFMuonFilterHandle;
-  Flag_BadPFMuonDzFilter = *BadPFMuonDzFilterHandle;
-  Flag_hfNoisyHitsFilter = *hfNoisyHitsFilterHandle;
-  Flag_eeBadScFilter = *eeBadScFilterHandle;
-  Flag_ecalBadCalibFilter = *ecalBadCalibFilterHandle;
+  Flag_globalSuperTightHalo2016Filter = passHalo;
+  Flag_HBHENoiseFilter = passHBHE;
+  Flag_HBHENoiseIsoFilter = passHBHEIso;
+  Flag_EcalDeadCellTriggerPrimitiveFilter = passEcalDeadCell;
+  Flag_BadPFMuonFilter = passBadPFMuon;
+  Flag_BadPFMuonDzFilter = passBadPFMuonDz;
+  Flag_hfNoisyHitsFilter = passHfNoisyHits;
+  Flag_eeBadScFilter = passEcalBadSc;
+  Flag_ecalBadCalibFilter = passEcalBadCalib;
   Flag_allMETFilters =
-    //Flag_primaryVertexFilter &&
-    Flag_globalSuperTightHalo2016Filter && 
-    Flag_HBHENoiseFilter && 
-    Flag_HBHENoiseIsoFilter &&
-    Flag_EcalDeadCellTriggerPrimitiveFilter && 
-    Flag_BadPFMuonFilter && 
-    Flag_BadPFMuonDzFilter && 
-    Flag_hfNoisyHitsFilter && 
-    Flag_eeBadScFilter && 
-    Flag_ecalBadCalibFilter;
+  //Flag_primaryVertexFilter &&
+  Flag_globalSuperTightHalo2016Filter && 
+  Flag_HBHENoiseFilter && 
+  Flag_HBHENoiseIsoFilter &&
+  Flag_EcalDeadCellTriggerPrimitiveFilter && 
+  Flag_BadPFMuonFilter && 
+  Flag_BadPFMuonDzFilter && 
+  Flag_hfNoisyHitsFilter && 
+  Flag_eeBadScFilter && 
+  Flag_ecalBadCalibFilter;
 
   
   // PF jet info for the ntuple
@@ -3975,7 +4003,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     passedCutsArrayForGiTemplates[0] = true;
     // for |eta|<1, use track->p() to generate the Gstrip template
     // for |eta|>1 (here |eta|<2.4), use track->pt() to generate the Gstrip template in order to have data at large eta 
-    passedCutsArrayForGiTemplates[1] = ( (track->pt() > 20) && (track->pt() < 48) );  
+
+    passedCutsArrayForGiTemplates[1] = ( (track->pt() > 20) && (track->pt() < 48) );
     // PAY ATTENTION : PU == NPV for the following loop !
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
       if (doPostPreSplots_) {
@@ -7907,11 +7936,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   // Trigger choice
   // Choice of HLT_Mu50_v is to simplify analysis
-    desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"})->setComment("Add the list of muon triggers");
-    desc.addUntracked("Trigger_MET", std::vector<std::string>{""})->setComment("Add the list of MET triggers");
-  //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"})
-    //desc.addUntracked("Trigger_Mu", std::vector<std::string>{""})->setComment("Add the list of muon triggers");
-    //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})->setComment("Add the list of MET triggers");
+  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v", "HLT_IsoMu24_v"})->setComment("Add the list of muon triggers");
+  desc.addUntracked("Trigger_MET", std::vector<std::string>{""})->setComment("Add the list of MET triggers");
+  //  desc.addUntracked("Trigger_Mu", std::vector<std::string>{"HLT_Mu50_v","HLT_OldMu100_v","HLT_TkMu100_v"}))->setComment("Add the list of muon triggers");
+  //desc.addUntracked("Trigger_Mu", std::vector<std::string>{""})->setComment("Add the list of muon triggers");
+  //desc.addUntracked("Trigger_MET",  std::vector<std::string>{"HLT_PFMET120_PFMHT120_IDTight_v","HLT_PFHT500_PFMET100_PFMHT100_IDTight_v","HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60_v","HLT_MET105_IsoTrk50_v"})->setComment("Add the list of MET triggers");
   // Choice of >55.0 is motivated by the fact that Single muon trigger threshold is 50 GeV
   desc.addUntracked("GlobalMinPt",55.0)->setComment("Cut on pT at PRE-SELECTION");
   // Choice of <2500.0 
