@@ -329,7 +329,7 @@ std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int layer
     }
   }
   
-  //    A =   a x1 x2 0--------------0
+  //    A =   a  x1 x2 0-------------0
   //          x1  a x1 x2 0          |
   //          x2 x1  a x1 x2 0       |
   //          0 x2 x1  a x1 x2 0     |

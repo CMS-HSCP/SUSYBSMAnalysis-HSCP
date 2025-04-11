@@ -7981,7 +7981,7 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 
   // GiStrips templates related parameters
   desc.addUntracked("PileUpTreatment",true)->setComment("Boolean to decide whether we want to have pile up dependent templates or not");
-  desc.addUntracked("CreateGiTemplates",false)->setComment("Boolean to decide whether we create templates or not, true means we generate");
+  desc.addUntracked("CreateGiTemplates",true)->setComment("Boolean to decide whether we create templates or not, true means we generate");
   desc.addUntracked("CreateAndExitGitemplates",true)->setComment("Set to true if the only purpose is to create templates");
   // TODO: This is not really needed, one could take PuBins_ and have its size-1 to be NbPuBins_
   desc.addUntracked("NbPileUpBins",5)->setComment("Number of pile up bins for GiStrips templates");
