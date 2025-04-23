@@ -3024,6 +3024,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Temporary dEdx info
     reco::DeDxData dedxIas_FullTrackerTmp, dedxIas_noL1Tmp,dedxIas_noTIBnoTIDno3TEC_Tmp, dedxIas_PixelOnly_Tmp, dedxIas_StripOnly_Tmp, dedxIas_PixelOnly_noL1_Tmp, dedxIs_StripOnly_Tmp, dedxMorrisMethod_StripOnly_Tmp;
     
+    //reco::DeDxData dedxIas_StripOnly_NewCorr_Tmp;
+
     // Pointers that will have the dEdx info laterr
     // Ias including all pixel layers and strips
     reco::DeDxData* dedxIas_FullTracker = nullptr;
@@ -3033,6 +3035,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     reco::DeDxData* dedxIas_PixelOnly = nullptr; //globalIas_ Pixel only
     reco::DeDxData* dedxIas_StripOnly = nullptr; //globalIas_ Strip only
+    //reco::DeDxData* dedxIas_StripOnly_NewCorr = nullptr; //globalIas_ Strip only with new sat correction
     reco::DeDxData* dedxIas_PixelOnly_noL1 = nullptr; //globalIas_ Pixel only no BPIXL1
     reco::DeDxData* dedxIs_StripOnly = nullptr; //symmetric Smirnov discriminator - Is
     reco::DeDxData* dedxMorrisMethod_StripOnly = nullptr; // FiStrips
@@ -3121,6 +3124,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                          false, false, true, pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge(), pathTemplateXtalk_);
             dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
+            //dedxIas_StripOnly_NewCorr_Tmp =
+            //    computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false, mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0,
+            //             false, false, true, pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge(), pathTemplateXtalk_);
+            //dedxIas_StripOnly_NewCorr = dedxIas_StripOnly_NewCorr_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_NewCorr_Tmp : nullptr;
+
+
+
             //globalIas_ Pixel only no BPIXL1
             dedxIas_PixelOnly_noL1_Tmp =
                 computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = true, useStrip = false, useClusterCleaning, useTruncated = false, mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = true, skip_templates_ias = 2,
@@ -3154,6 +3164,8 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //Choose of Ias definition - strips only
     auto dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : -1.f;
+    //auto dedxSObj_NewCorr = dedxIas_StripOnly_NewCorr;
+    //float globalIas_NewCorr = (dedxSObj_NewCorr) ? dedxSObj_NewCorr->dEdx() : -1.f;
     
     globalFiStrips_ = (dedxMorrisMethod_StripOnly) ? dedxMorrisMethod_StripOnly->dEdx() : -1.f;
     
