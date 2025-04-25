@@ -114,7 +114,7 @@ struct Tuple {
   float Tree_L1MHT_phi;
   float Tree_L1ETSum;
   float Tree_L1HTSum;
-  //bool  Tree_Flag_primaryVertexFilter;
+  bool  Tree_Flag_primaryVertexFilter;
   bool  Tree_Flag_globalSuperTightHalo2016Filter;
   bool  Tree_Flag_HBHENoiseFilter;
   bool  Tree_Flag_HBHENoiseIsoFilter;
