@@ -135,7 +135,7 @@ public:
                         const float &L1MHT_phi,
                         const float &L1ETSum,
                         const float &L1HTSum,
-                        //const bool &Flag_primaryVertexFilter,
+                        const bool &Flag_primaryVertexFilter,
                         const bool &Flag_globalSuperTightHalo2016Filter,
                         const bool &Flag_HBHENoiseFilter, 
                         const bool &Flag_HBHENoiseIsoFilter,
@@ -2906,7 +2906,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("L1MHT_phi", &tuple->Tree_L1MHT_phi, "L1MHT_phi/F");
     tuple->Tree->Branch("L1ETSum", &tuple->Tree_L1ETSum, "L1ETSum/F");
     tuple->Tree->Branch("L1HTSum", &tuple->Tree_L1HTSum, "L1HTSum/F");
-    //tuple->Tree->Branch("Flag_primaryVertexFilter", &tuple->Tree_Flag_primaryVertexFilter, "Flag_primaryVertexFilter/O");
+    tuple->Tree->Branch("Flag_primaryVertexFilter", &tuple->Tree_Flag_primaryVertexFilter, "Flag_primaryVertexFilter/O");
     tuple->Tree->Branch("Flag_globalSuperTightHalo2016Filter", &tuple->Tree_Flag_globalSuperTightHalo2016Filter, "Flag_globalSuperTightHalo2016Filter/O");
     tuple->Tree->Branch("Flag_HBHENoiseFilter", &tuple->Tree_Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
     tuple->Tree->Branch("Flag_HBHENoiseIsoFilter", &tuple->Tree_Flag_HBHENoiseIsoFilter, "Flag_HBHENoiseIsoFilter/O");
@@ -3324,7 +3324,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const float &L1MHT_phi,
                                   const float &L1ETSum,
                                   const float &L1HTSum,
-                                  //const bool &Flag_primaryVertexFilter,
+                                  const bool &Flag_primaryVertexFilter,
                                   const bool &Flag_globalSuperTightHalo2016Filter,
                                   const bool &Flag_HBHENoiseFilter,
                                   const bool &Flag_HBHENoiseIsoFilter,
@@ -3678,7 +3678,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_L1MHT_phi = L1MHT_phi;
   tuple->Tree_L1ETSum = L1ETSum;
   tuple->Tree_L1HTSum = L1HTSum;
-  //tuple->Tree_Flag_primaryVertexFilter = Flag_primaryVertexFilter;
+  tuple->Tree_Flag_primaryVertexFilter = Flag_primaryVertexFilter;
   tuple->Tree_Flag_globalSuperTightHalo2016Filter = Flag_globalSuperTightHalo2016Filter;
   tuple->Tree_Flag_HBHENoiseFilter = Flag_HBHENoiseFilter;
   tuple->Tree_Flag_HBHENoiseIsoFilter = Flag_HBHENoiseIsoFilter;

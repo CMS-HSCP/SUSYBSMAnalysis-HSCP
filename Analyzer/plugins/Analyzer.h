@@ -244,7 +244,7 @@ private:
   edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_ ;
   edm::EDGetTokenT<l1t::EtSumBxCollection> l1TriggerEtSumToken_;
 
-  //edm::EDGetTokenT<bool> primaryVertexFilterToken_;
+  edm::EDGetTokenT<bool> primaryVertexFilterToken_;
   edm::EDGetTokenT<bool> globalSuperTightHalo2016FilterToken_;
   edm::EDGetTokenT<bool> HBHENoiseFilterToken_;
   edm::EDGetTokenT<bool> HBHENoiseIsoFilterToken_;
@@ -291,7 +291,7 @@ private:
   edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wp90;
   edm::Handle<edm::ValueMap<bool> > electron_mvaNoIsoID_decisions_wpLoose;
 
-  //edm::Handle<bool> primaryVertexFilterHandle;
+  edm::Handle<bool> primaryVertexFilterHandle;
   edm::Handle<bool> globalSuperTightHalo2016FilterHandle;
   edm::Handle<bool> HBHENoiseFilterHandle;
   edm::Handle<bool> HBHENoiseIsoFilterHandle;
