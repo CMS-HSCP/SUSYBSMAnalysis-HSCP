@@ -2113,7 +2113,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     }
     
     
-  // For the checks with TuneP pT when the HSCP candidate is a muon
+  // For the checks with TuneP pT when the  HSCPcandidate is a muon
     float trackerPt = track->pt();
     float muonPt = 0.f;
     if (!muon.isNull()) {

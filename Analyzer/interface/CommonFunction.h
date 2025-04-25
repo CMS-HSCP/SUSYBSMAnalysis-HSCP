@@ -1547,7 +1547,7 @@ reco::DeDxData computedEdx (const float& track_eta,
                            const float& track_py=0,
                            const float& track_pz=0,
                            const int& track_charge=0,
-                           const std::string& templateFilePath = "SUSYBSMAnalysis/HSCP/data/Template_CENTER.txt") {
+                           const std::string& templateFilePath = "SUSYBSMAnalysis/HSCP/data/Template_CrossTalkInv.txt") {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);

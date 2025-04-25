@@ -28,6 +28,11 @@ int Correction_FL_FR(const std::vector <int>&  Q, int layer, std::string Templat
     std::vector<double> template_FR;
 
     std::ifstream Template(TemplateFile);
+    if (!Template.is_open())
+    {
+        std::cerr << "cannot open file " << TemplateFile << std::endl;
+        return {};
+    }
     while (std::getline(Template, line))
     {
         std::istringstream iss(line);
@@ -112,6 +117,11 @@ int Correction_LRC(const std::vector <int>&  Q, int layer, std::string TemplateF
 
     // CORRECTION TEMPLATES
     std::ifstream Template(TemplateFile);
+    if (!Template.is_open())
+    {
+        std::cerr << "cannot open file " << TemplateFile << std::endl;
+        return {};
+    }
     std::string line;
     std::vector<double> template_a1;
     std::vector<double> template_a2;
@@ -266,7 +276,13 @@ std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int layer, boo
 std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int layer, const std::string TemplateFile, bool IfCorrApplied = true, float threshold = 20) {
 
       // CROSS-TALK COEFF.      
-  std::ifstream Template(TemplateFile);
+  std::ifstream Template(TemplateFile);  
+  if (!Template.is_open())
+  {
+      std::cerr << "cannot open file " << TemplateFile << std::endl;
+      return {};
+  }
+        // CORRECTION TEMPLATES
   std::string line;
   std::vector <double> x1;
   std::vector <double> x2;
