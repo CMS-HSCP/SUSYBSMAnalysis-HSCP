@@ -281,9 +281,13 @@ public:
                         const std::vector<float> &Ick,
                         const std::vector<float> &Fmip,
                         const std::vector<float> &ProbXY,
+                        const std::vector<int> &numHitProbXY,
                         const std::vector<float> &ProbXY_noL1,
+                        const std::vector<int> &numHitProbXYNoL1,
                         const std::vector<float> &ProbQ,
+                        const std::vector<int> &numHitProbQ,
                         const std::vector<float> &ProbQ_noL1,
+                        const std::vector<int> &numHitProbQNoL1,
                         const std::vector<float> &Ndof,
                         const std::vector<float> &Chi2,
                         const std::vector<int>   &QualityMask,
@@ -325,6 +329,7 @@ public:
                         const std::vector<unsigned int> &nomh,
                         const std::vector<float> &fovhd,
                         const std::vector<unsigned int> &nom,
+                        const std::vector<unsigned int> &nomstrip,
                         const std::vector<float> &matchTrigMuon_minDeltaR,
                         const std::vector<float> &matchTrigMuon_pT,
                         const std::vector<float> &iso_TK,
@@ -3070,9 +3075,13 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Ick", &tuple->Tree_Ick);
     tuple->Tree->Branch("Fmip", &tuple->Tree_Fmip);
     tuple->Tree->Branch("ProbXY", &tuple->Tree_ProbXY);
+    tuple->Tree->Branch("numHitProbXY", &tuple->Tree_numHitProbXY);
     tuple->Tree->Branch("ProbXY_noL1", &tuple->Tree_ProbXY_noL1);
+    tuple->Tree->Branch("numHitProbXYNoL1", &tuple->Tree_numHitProbXYNoL1);
     tuple->Tree->Branch("ProbQ", &tuple->Tree_ProbQ);
+    tuple->Tree->Branch("numHitProbQ", &tuple->Tree_numHitProbQ);
     tuple->Tree->Branch("ProbQ_noL1", &tuple->Tree_ProbQ_noL1);
+    tuple->Tree->Branch("numHitProbQNoL1", &tuple->Tree_numHitProbQNoL1);
     tuple->Tree->Branch("Ndof", &tuple->Tree_Ndof);
     tuple->Tree->Branch("Chi2", &tuple->Tree_Chi2);
     tuple->Tree->Branch("QualityMask", &tuple->Tree_QualityMask);
@@ -3117,6 +3126,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("NOMH", &tuple->Tree_NOMH);
     tuple->Tree->Branch("FOVHD", &tuple->Tree_FOVHD);
     tuple->Tree->Branch("NOM", &tuple->Tree_NOM);
+    tuple->Tree->Branch("NOMStrip", &tuple->Tree_NOMStrip);
     tuple->Tree->Branch("matchTrigMuon_minDeltaR", &tuple->Tree_matchTrigMuon_minDeltaR);
     tuple->Tree->Branch("matchTrigMuon_pT", &tuple->Tree_matchTrigMuon_pT);
     tuple->Tree->Branch("iso_TK", &tuple->Tree_iso_TK);
@@ -3470,9 +3480,13 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Ick,
                                   const std::vector<float> &Fmip,
                                   const std::vector<float> &ProbXY,
+                                  const std::vector<int> &numHitProbXY,
                                   const std::vector<float> &ProbXY_noL1,
+                                  const std::vector<int> &numHitProbXYNoL1,
                                   const std::vector<float> &ProbQ,
+                                  const std::vector<int> &numHitProbQ,
                                   const std::vector<float> &ProbQ_noL1,
+                                  const std::vector<int> &numHitProbQNoL1,
                                   const std::vector<float> &Ndof,
                                   const std::vector<float> &Chi2,
                                   const std::vector<int>   &QualityMask,
@@ -3514,6 +3528,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<unsigned int> &nomh,
                                   const std::vector<float> &fovhd,
                                   const std::vector<unsigned int> &nom,
+                                  const std::vector<unsigned int> &nomstrip,
                                   const std::vector<float> &matchTrigMuon_minDeltaR,
                                   const std::vector<float> &matchTrigMuon_pT,
                                   const std::vector<float> &iso_TK,
@@ -3837,9 +3852,13 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Ick = Ick;
   tuple->Tree_Fmip = Fmip;
   tuple->Tree_ProbXY = ProbXY;
+  tuple->Tree_numHitProbXY = numHitProbXY;
   tuple->Tree_ProbXY_noL1 = ProbXY_noL1;
+  tuple->Tree_numHitProbXYNoL1 = numHitProbXYNoL1;
   tuple->Tree_ProbQ = ProbQ;
+  tuple->Tree_numHitProbQ = numHitProbQ;
   tuple->Tree_ProbQ_noL1 = ProbQ_noL1;
+  tuple->Tree_numHitProbQNoL1 = numHitProbQNoL1;
   tuple->Tree_Ndof = Ndof;
   tuple->Tree_Chi2 = Chi2;
   tuple->Tree_QualityMask = QualityMask;
@@ -3881,6 +3900,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_NOMH = nomh;
   tuple->Tree_FOVHD = fovhd;
   tuple->Tree_NOM = nom;
+  tuple->Tree_NOMStrip = nomstrip;
   tuple->Tree_matchTrigMuon_minDeltaR = matchTrigMuon_minDeltaR;
   tuple->Tree_matchTrigMuon_pT = matchTrigMuon_pT;
   tuple->Tree_iso_TK = iso_TK;

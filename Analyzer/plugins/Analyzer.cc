@@ -1893,9 +1893,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ick;//return (Ih-C)/K
   std::vector<float> HSCP_Fmip;
   std::vector<float> HSCP_ProbXY;
+  std::vector<int> HSCP_numHitProbXY;
   std::vector<float> HSCP_ProbXY_noL1;
+  std::vector<int> HSCP_numHitProbXYNoL1;
   std::vector<float> HSCP_ProbQ;
+  std::vector<int> HSCP_numHitProbQ;
   std::vector<float> HSCP_ProbQ_noL1;
+  std::vector<int> HSCP_numHitProbQNoL1;
   std::vector<float> HSCP_ProbQ_dEdx;
   std::vector<float> HSCP_Ndof;
   std::vector<float> HSCP_Chi2;
@@ -1947,6 +1951,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_FOVHD;
   // Number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
   std::vector<unsigned int> HSCP_NOM;
+  std::vector<unsigned int> HSCP_NOMStrip;
   std::vector<float> HSCP_matchTrigMuon_minDeltaR;
   std::vector<float> HSCP_matchTrigMuon_pT;
 
@@ -3125,6 +3130,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
             dedxIas_StripOnly_Tmp =
                 computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false, mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0,
                          false, false, true, pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge(), pathTemplateXtalk_);
+
             dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
             //dedxIas_StripOnly_NewCorr_Tmp =
@@ -5377,9 +5383,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ick.push_back(dedxMObj ? Ick2 : -99);
     HSCP_Fmip.push_back(Fmip);
     HSCP_ProbXY.push_back(probXYonTrack);
+    HSCP_numHitProbXY.push_back(numRecHitsXY);
     HSCP_ProbXY_noL1.push_back(probXYonTrackNoL1);
+    HSCP_numHitProbXYNoL1.push_back(numRecHitsXYNoL1);
     HSCP_ProbQ.push_back(probQonTrack);
+    HSCP_numHitProbQ.push_back(numRecHitsQ);
     HSCP_ProbQ_noL1.push_back(probQonTrackNoL1);
+    HSCP_numHitProbQNoL1.push_back(numRecHitsQNoL1);
     HSCP_Ndof.push_back(track->ndof());
     HSCP_Chi2.push_back(track->chi2());
     HSCP_QualityMask.push_back(track->qualityMask());
@@ -5423,6 +5433,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_NOMH.push_back(missingHitsTillLast);
     HSCP_FOVHD.push_back(validFractionTillLast);
     HSCP_NOM.push_back(numDeDxHits);
+    HSCP_NOMStrip.push_back(numDeDxHitsOnStrips);
     HSCP_matchTrigMuon_minDeltaR.push_back(dr_min_hltMuon_hscpCand);
     HSCP_matchTrigMuon_pT.push_back(hlt_match_pt);
     HSCP_iso_TK.push_back(iso_TK);
@@ -7590,9 +7601,13 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ick,
                                 HSCP_Fmip,
                                 HSCP_ProbXY,
+                                HSCP_numHitProbXY,
                                 HSCP_ProbXY_noL1,
+                                HSCP_numHitProbXYNoL1,
                                 HSCP_ProbQ,
+                                HSCP_numHitProbQ,
                                 HSCP_ProbQ_noL1,
+                                HSCP_numHitProbQNoL1,
                                 HSCP_Ndof,
                                 HSCP_Chi2,
                                 HSCP_QualityMask,
@@ -7634,6 +7649,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_NOMH,
                                 HSCP_FOVHD,
                                 HSCP_NOM,
+                                HSCP_NOMStrip,
                                 HSCP_matchTrigMuon_minDeltaR,
                                 HSCP_matchTrigMuon_pT,
                                 HSCP_iso_TK,

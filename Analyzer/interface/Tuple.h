@@ -262,9 +262,13 @@ struct Tuple {
   std::vector<float> Tree_Ick;  //return (Ih-C)/K
   std::vector<float> Tree_Fmip;
   std::vector<float> Tree_ProbXY;
+  std::vector<float> Tree_numHitProbXY;
   std::vector<float> Tree_ProbXY_noL1;
+  std::vector<float> Tree_numHitProbXYNoL1;
   std::vector<float> Tree_ProbQ;
+  std::vector<float> Tree_numHitProbQ;
   std::vector<float> Tree_ProbQ_noL1;
+  std::vector<float> Tree_numHitProbQNoL1;
   std::vector<float> Tree_Ndof;
   std::vector<float> Tree_Chi2;
   std::vector<int>   Tree_QualityMask;
@@ -313,6 +317,8 @@ struct Tuple {
   std::vector<float> Tree_FOVHD;
   //number of dEdx hits (= #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
   std::vector<unsigned int> Tree_NOM;
+  //number of dEdx hits in strip
+  std::vector<unsigned int> Tree_NOMStrip;
   //minDeltaR bewteen triggermuon and HSCP
   std::vector<float> Tree_matchTrigMuon_minDeltaR;
   //pt of trigger muon with minDeltaR bewteen triggermuon and HSCP
