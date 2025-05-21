@@ -262,13 +262,13 @@ struct Tuple {
   std::vector<float> Tree_Ick;  //return (Ih-C)/K
   std::vector<float> Tree_Fmip;
   std::vector<float> Tree_ProbXY;
-  std::vector<float> Tree_numHitProbXY;
+  std::vector<int> Tree_numHitProbXY;
   std::vector<float> Tree_ProbXY_noL1;
-  std::vector<float> Tree_numHitProbXYNoL1;
+  std::vector<int> Tree_numHitProbXYNoL1;
   std::vector<float> Tree_ProbQ;
-  std::vector<float> Tree_numHitProbQ;
+  std::vector<int> Tree_numHitProbQ;
   std::vector<float> Tree_ProbQ_noL1;
-  std::vector<float> Tree_numHitProbQNoL1;
+  std::vector<int> Tree_numHitProbQNoL1;
   std::vector<float> Tree_Ndof;
   std::vector<float> Tree_Chi2;
   std::vector<int>   Tree_QualityMask;
