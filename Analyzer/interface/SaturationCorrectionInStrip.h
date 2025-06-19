@@ -273,103 +273,81 @@ std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int layer, boo
     return Qcorr;
 }
 
-std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q, const int layer, const std::string TemplateFile, bool IfCorrApplied = true, float threshold = 20) {
-
-      // CROSS-TALK COEFF.      
-  std::ifstream Template(TemplateFile);  
-  if (!Template.is_open())
-  {
-      std::cerr << "cannot open file " << TemplateFile << std::endl;
-      return {};
-  }
-        // CORRECTION TEMPLATES
-  std::string line;
-  std::vector <double> x1;
-  std::vector <double> x2;
-  
-  while (std::getline(Template, line))
-  {
-      std::istringstream iss(line);
-      int i_layer=-1;
-      double x1_value=-1, x2_value=-1;
-      if (!(iss >> i_layer >> x1_value >> x2_value)) break; // error
-          
-      x1.push_back(x1_value);
-      x2.push_back(x2_value);
-  }
-  Template.close();
-
-
-      // EXCLUSION PART: ANOMALOUS SHAPES or SATURATION
-  if (Q.empty()) return {};
-  std::vector<int> QII;
-  if(Q.size()<2 || Q.size()>8)
-  {
-    for (unsigned int i=0;i<Q.size();i++) QII.push_back((int) Q[i]);
-    return QII;
-  }
-
-  if(IfCorrApplied)
-  {
-    int N_sat = 0;
-    for (unsigned int i=0; i<Q.size(); i++) { if (Q[i]>=254) N_sat++;}
-    
-    if(N_sat>0)
+std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q,
+                                      const int layer,
+                                      bool IfCorrApplied = true,
+                                      float threshold = 20, 
+                                      const float x1 = 0.10,
+                                      const float x2 = 0.04) {
+ 
+        // EXCLUSION PART: ANOMALOUS SHAPES or SATURATION
+    if (Q.empty()) return {};
+    std::vector<int> QII;
+    if(Q.size()<2 || Q.size()>8)
     {
-      bool AreSameCluster = true;
-      QII = ReturnCorrVec(Q, layer, AreSameCluster);
-      if (!AreSameCluster) return QII;    // saturation correction
+        for (unsigned int i=0;i<Q.size();i++) QII.push_back((int) Q[i]);
+        return QII;
     }
-  }
+
+    if(IfCorrApplied)
+    {
+        int N_sat = 0;
+        for (unsigned int i=0; i<Q.size(); i++) { if (Q[i]>=254) N_sat++;}
+
+        if(N_sat>0)
+        {
+            bool AreSameCluster = true;
+            QII = ReturnCorrVec(Q, layer, AreSameCluster);
+            if (!AreSameCluster) return QII;    // saturation correction
+        }
+    }
 
 
       // CROSS-TALK INVERSION
-  QII.clear();
-  std::vector <double> a;
-  for (unsigned int i = 0; i < x1.size(); i++) a.push_back(1 - 2*x1[i] - 2*x2[i]);
-  
-  const unsigned N = Q.size();
-  std::vector<float> QI(N, 0);
-  TMatrix A(N, N);
+    QII.clear();
+    double a = 1 - 2*x1 - 2*x2;
+    const unsigned N = Q.size();
+    std::vector<float> QI(N, 0);
+    TMatrix A(N, N);
 
-  for (unsigned int i = 0; i < N; i++) {
-    A(i, i) = a[layer-1];
-    if (i < N - 1) {
-      A(i + 1, i) = x1[layer-1];
-      A(i, i + 1) = x1[layer-1];
+    for (unsigned int i = 0; i < N; i++) {
+        A(i, i) = a;
+        if (i < N - 1) {
+        A(i + 1, i) = x1;
+        A(i, i + 1) = x1;
+        }
+        else continue;
+        if (i < N - 2) {
+        A(i + 2, i) = x2;
+        A(i, i + 2) = x2;
+        }
     }
-    else continue;
-    if (i < N - 2) {
-      A(i + 2, i) = x2[layer-1];
-      A(i, i + 2) = x2[layer-1];
-    }
-  }
   
-  //    A =   a  x1 x2 0-------------0
-  //          x1  a x1 x2 0          |
-  //          x2 x1  a x1 x2 0       |
-  //          0 x2 x1  a x1 x2 0     |
-  //          |  0               0   |
-  //          |     0              0 |
-  //          |        0             0
-  //          0----------0 x2 x1  a x1
-  
+    //    A =   a  x1 x2 0-------------0
+    //          x1  a x1 x2 0          |
+    //          x2 x1  a x1 x2 0       |
+    //          0 x2 x1  a x1 x2 0     |
+    //          |  0               0   |
+    //          |     0              0 |
+    //          |        0             0
+    //          0----------0 x2 x1  a x1
+    
 
-  if (N == 1) A(0, 0) = 1 / a[layer-1];
-  else A.InvertFast();
+    if (N == 1) A(0, 0) = 1/a;
+    else A.InvertFast();
 
-  for (unsigned int i = 0; i < N; i++) {
-    for (unsigned int j = 0; j < N; j++) {
-      QI[i] += A(i, j) * (float)Q[j];
+    for (unsigned int i = 0; i < N; i++) {
+        for (unsigned int j = 0; j < N; j++) {
+        QI[i] += A(i, j) * (float)Q[j];
+        }
     }
-  }
 
-  for (unsigned int i = 0; i < QI.size(); i++) {
-    if (QI[i] < threshold) QI[i] = 0;
-    QII.push_back((int)QI[i]);
-  }
+    for (unsigned int i = 0; i < QI.size(); i++) {
+        if (QI[i] < threshold) QI[i] = 0;
+        QII.push_back((int)QI[i]);
+    }
 
-  return QII;
+    return QII;
 }
 
 #endif

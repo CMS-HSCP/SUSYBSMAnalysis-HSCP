@@ -446,7 +446,6 @@ private:
 
   dedxGainCorrector trackerCorrector;
   string dEdxTemplate_;
-  string pathTemplateXtalk_;
   bool enableDeDxCalibration_;
   string timeOffset_;
   muonTimingCalculator tofCalculator;

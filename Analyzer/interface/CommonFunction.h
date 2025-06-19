@@ -1546,8 +1546,7 @@ reco::DeDxData computedEdx (const float& track_eta,
                            const float& track_px=0,
                            const float& track_py=0,
                            const float& track_pz=0,
-                           const int& track_charge=0,
-                           const std::string& templateFilePath = "SUSYBSMAnalysis/HSCP/data/Template_CrossTalkInv.txt") {
+                           const int& track_charge=0) {
 
   if (!dedxHits)
     return reco::DeDxData(-1, -1, -1);
@@ -1649,7 +1648,7 @@ reco::DeDxData computedEdx (const float& track_eta,
       if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
       if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidRing(detid))) + 10;
       if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecRing(detid))) + 13;
-      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, stripLayerIndex, templateFilePath, true, 20);
+      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, stripLayerIndex, true, 20, 0.10, 0.04);
 
       // why is this hardcoded now?
       //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
