@@ -4143,6 +4143,18 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               
               cleaning = clusterCleaning(amplitudesPrim, 1);
               dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
+
+              if (debug_ == -12 ){
+                LogPrint(MOD) << "Before corr:   size=" << amplitudes2.size() << "    ";
+                for (unsigned int s = 0; s < amplitudes2.size(); s++) LogPrint(MOD) << amplitudes2[s];
+                LogPrint(MOD) << "After corr:   size=" << amplitudes.size() << "    ";
+                for (unsigned int s = 0; s < amplitudes.size(); s++) LogPrint(MOD) << amplitudes[s];
+                LogPrint(MOD) << "After xtalk inv:   size=" << amplitudesPrim.size() << "    ";
+                for (unsigned int s = 0; s < amplitudesPrim.size(); s++) LogPrint(MOD) << amplitudesPrim[s];
+                LogPrint(MOD) << "cleaning: " << cleaning;
+              }
+
+
         }
         // TODO
         if (cleaning && dedx_inside)  {
