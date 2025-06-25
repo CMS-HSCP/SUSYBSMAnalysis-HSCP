@@ -4025,6 +4025,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // for |eta|>1 (here |eta|<2.4), use track->pt() to generate the Gstrip template in order to have data at large eta 
     passedCutsArrayForGiTemplates[1] = ( (track->pt() > 20) && (track->pt() < 48) );
     // PAY ATTENTION : PU == NPV for the following loop !
+    if (debug_ == -12 ) LogPrint(MOD) << "Im here";
     if (passPreselection(passedCutsArrayForGiTemplates, false)) {
       if (doPostPreSplots_) {
         //check impact of no clustercleaning (in strip and in pix)
