@@ -1132,7 +1132,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   float PUSystDown = 1.;
   float PUSystUp = 1.;
 
-  if (!isData) { // only do the following for muon trigger
+  if (!isData) {
     float PUWeight = mcWeight->getEventPUWeight(iEvent, pileupInfoToken_, PUSystFactor_);
     eventWeight_ *= PUWeight;
     PUSystDown = PUSystFactor_[1];
