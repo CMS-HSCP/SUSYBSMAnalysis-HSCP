@@ -88,11 +88,11 @@ process.source = cms.Source("PoolSource",
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.GTAG, '')
 
-process.HSCPTuplePath = cms.Path() 
+process.HSCPTuplePath = cms.Path()
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
-process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff") 
+process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff")
 process.HSCPTuplePath += process.nEventsBefEDM + process.HSCParticleProducerSeq
 
 ########################################################################  
@@ -145,13 +145,13 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep recoTracks_standAloneMuons_*_*",
          "keep recoTrackExtras_standAloneMuons_*_*",
          "keep TrackingRecHitsOwned_standAloneMuons_*_*",
-         "keep recoTracks_globalMuons_*_*",  
+         "keep recoTracks_globalMuons_*_*",
          "keep recoTrackExtras_globalMuons_*_*",
          "keep recoMuons_muons_*_*",
          "keep recoMuonTimeExtraedmValueMap_muons_*_*",
          "keep edmTriggerResults_TriggerResults_*_*",
-         "keep *_ak4PFJetsCHS__*", 
-         "keep recoPFMETs_pfMet__*",     
+         "keep *_ak4PFJetsCHS__*",
+         "keep recoPFMETs_pfMet__*",
          "keep *_HSCParticleProducer_*_*",
          "keep *_HSCPIsolation*_*_*",
          "keep *_dedxHitInfo*_*_*",
@@ -160,9 +160,9 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep *_MuonSegmentProducer_*_*",
          "keep *_g4SimHits_StoppedParticles*_*",
          "keep PileupSummaryInfos_addPileupInfo_*_*",
-         "keep *_dt4DSegments__*",  
-         "keep *_cscSegments__*",  
-         "keep *_scalersRawToDigi_*_*", 
+         "keep *_dt4DSegments__*",
+         "keep *_cscSegments__*",
+         "keep *_scalersRawToDigi_*_*",
          "keep *_caloMet_*_*",
     ),
     fileName = cms.untracked.string(options.outputFile),
@@ -276,7 +276,7 @@ else:
 # run the EDAnalyzer
 process.load("SUSYBSMAnalysis.Analyzer.HSCParticleAnalyzer_cfi")
 process.HSCParticleAnalyzer.TypeMode = 0 # 0: Tracker only
-process.HSCParticleAnalyzer.SampleType = SampleType 
+process.HSCParticleAnalyzer.SampleType = SampleType
 process.HSCParticleAnalyzer.SaveTree = 0 #6 is all saved, 0 is none
 process.HSCParticleAnalyzer.DeDxTemplate=IasTemplate
 process.HSCParticleAnalyzer.TimeOffset="MuonTimeOffset.txt"

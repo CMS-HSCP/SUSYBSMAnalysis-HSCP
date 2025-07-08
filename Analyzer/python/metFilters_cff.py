@@ -96,7 +96,7 @@ from RecoMET.METFilters.BadPFMuonDzFilter_cfi import *
 #HF noise filter 
 from RecoMET.METFilters.hfNoisyHitsFilter_cfi import *
 
-#primaryVertexFilter.taggingMode = cms.bool(True)
+primaryVertexFilter.taggingMode = cms.bool(True)
 #goodVertices.taggingMode = cms.bool(True)
 globalSuperTightHalo2016Filter.taggingMode = cms.bool(True)
 #HBHENoiseFilter.taggingMode = cms.bool(True)

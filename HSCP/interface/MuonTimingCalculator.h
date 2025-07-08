@@ -770,7 +770,6 @@ public:
         if ((!hitxl.size()) || (!hitxr.size()))
           continue;
 
-        int segidx = 0;
         for (std::vector<MuonTimingCalculator::TimeMeasurementDT>::const_iterator tm = seg.begin(); tm != seg.end();
              ++tm) {
           DetId id = tm->driftCell;

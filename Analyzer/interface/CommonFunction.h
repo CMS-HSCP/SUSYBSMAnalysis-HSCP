@@ -11,7 +11,8 @@
 // Need to load the correction parameters from a file
 //
 //=======================================================================================
-#include "SaturationCorrection.h"  // New procedure for the correction of the saturation phenomena
+#include "SaturationCorrection.h"
+#include "SaturationCorrectionInStrip.h"  // Method to correct saturated strip clusters  
 SaturationCorrection sc;
 void LoadCorrectionParameters() {
   char PathToParameters[2048];
@@ -1025,32 +1026,38 @@ std::vector<int> Correction(const std::vector<int>& Q,
 
 
 
-std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat) {
-  const unsigned N=Q.size();
+std::vector<int> SaturationCorrection(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat)
+{
   std::vector<int> QII;
-  std::vector<float> QI(N,0);
 
-//---  only for one max well-defined
- if(Q.size()<2 || Q.size()>8){
-        for (unsigned int i=0;i<Q.size();i++){
-                QII.push_back((int) Q[i]);
-        }
+  // if clusters too small or too large --> no correction
+  if(Q.size()<2 || Q.size()>8)
+  {
+    for (unsigned int i=0;i<Q.size();i++) QII.push_back((int) Q[i]);
+    return QII;
+  }
+  
+  if(way)
+  {
+    vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
+    
+    if(*mQ>253)
+    {
+      // if more than one saturated strip --> no correction
+      if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253) return Q;
+      
+      // if one saturated strip and adjacent strips not saturated and above a given threshold --> correction
+      if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1))<40)
+      {
+        QII.push_back( (10*(*(mQ-1)) + 10*(*(mQ+1))) /2 );
         return QII;
-  }
- if(way){
-          vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
-          if(*mQ>253){
-                 if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
-                 if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
-                     QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
-          }
-      else{
-          return Q; // no saturation --> no x-talk inversion
       }
+    }
+    else return Q; // no saturation --> no correction
   }
-//---
- // do nothing else
- return Q;
+
+  // do nothing else
+  return Q;
 }
 
 std::vector<int> CrossTalkInv(const std::vector<int>& Q,
@@ -1064,25 +1071,33 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
   std::vector<int> QII;
   std::vector<float> QI(N, 0);
   Double_t a = 1 - 2 * x1 - 2 * x2;
-  //  bool debugbool=false;
   TMatrix A(N, N);
 
-  //---
-  if (Q.size() < 2 || Q.size() > 8) {
-    for (unsigned int i = 0; i < Q.size(); i++) {
-      QII.push_back((int)Q[i]);
-    }
+  // EXCLUSION PART: ANOMALOUS SHAPES or SATURATION
+  // if clusters too small or too large --> no correction
+  if(Q.size()<2 || Q.size()>8)
+  {
+    for (unsigned int i=0;i<Q.size();i++) QII.push_back((int) Q[i]);
     return QII;
   }
-
-  if(way){
-      std::vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end()) ;
-      if(*mQ>253){
-         if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
-         if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
-             QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
+  
+  if(way)
+  {
+    vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())      ;
+    
+    if(*mQ>253)
+    {
+      // if more than one saturated strip --> no correction
+      if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253) return Q;
+      
+      // if one saturated strip and adjacent strips not saturated and above a given threshold --> correction
+      if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1))<40)
+      {
+        QII.push_back( (10*(*(mQ-1)) + 10*(*(mQ+1))) /2 );
+        return QII;
       }
-   }
+    }
+  }
   //---
 
   for (unsigned int i = 0; i < N; i++) {
@@ -1117,6 +1132,7 @@ std::vector<int> CrossTalkInv(const std::vector<int>& Q,
 
   return QII;
 }
+
 
 #ifdef FWCORE
 bool clusterCleaning(std::vector<int> ampls, int crosstalkInv = 0, uint8_t* exitCode = nullptr) {
@@ -1502,7 +1518,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
   return true;
 }
 
-reco::DeDxData computedEdx(const float& track_eta,
+reco::DeDxData computedEdx (const float& track_eta,
                            const edm::EventSetup& iSetup,
                            const int& run_number,
                            string year,
@@ -1625,7 +1641,14 @@ reco::DeDxData computedEdx(const float& track_eta,
       SiStripDetId Sdetid(dedxHits->detId(h));
       const SiStripCluster* cluster = dedxHits->stripCluster(h);
       std::vector<int> amplitudes = convert(cluster->amplitudes());
-      std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
+      //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes,0.10,0.04,true);
+
+      unsigned int stripLayerIndex = 0;
+      if (detid.subdetId() == StripSubdetector::TIB) stripLayerIndex = abs(int(tTopo->tibLayer(detid)));
+      if (detid.subdetId() == StripSubdetector::TOB) stripLayerIndex = abs(int(tTopo->tobLayer(detid))) + 4;
+      if (detid.subdetId() == StripSubdetector::TID) stripLayerIndex = abs(int(tTopo->tidRing(detid))) + 10;
+      if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecRing(detid))) + 13;
+      std::vector <int> amplitudesPrim = CrossTalkInvInStrip(amplitudes, stripLayerIndex, true, 20, 0.10, 0.04);
 
       // why is this hardcoded now?
       //if (useClusterCleaning && !clusterCleaning(amplitudes, crossTalkInvAlgo))
@@ -1638,21 +1661,18 @@ reco::DeDxData computedEdx(const float& track_eta,
       //     1: standard correction & use of cross-talk inversion
       //     2: correction from fits & no cross-talk inversion
       //     3: correction from fits & use of cross-talk inversion (no recorrection -- see bool=false)
+      //     4: Saturation correction using neighbourhood strip information
       //
       //////////////////////////////////////////////////////////////
 
-      //if (crossTalkInvAlgo>0) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
 
-crossTalkInvAlgo=1;
+      crossTalkInvAlgo = 4;
+      bool totrash = true;
+      if (crossTalkInvAlgo == 1) amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
+      if (crossTalkInvAlgo == 2) amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
+      if (crossTalkInvAlgo == 3) amplitudes = CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
+      if (crossTalkInvAlgo == 4) amplitudes = ReturnCorrVec(amplitudes, stripLayerIndex, totrash);
 
-      if (crossTalkInvAlgo == 1)
-        //amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
-        amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
-      if (crossTalkInvAlgo == 2)
-        amplitudes = Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6);
-      if (crossTalkInvAlgo == 3)
-        amplitudes =
-            CrossTalkInv(Correction(amplitudes, Sdetid.moduleGeometry(), rsat, 25, 40, 0.6), 0.10, 0.04, false);
 
       float gain = 1.0;
       bool isSatCluster = false;
@@ -1701,7 +1721,8 @@ crossTalkInvAlgo=1;
         SiStripDetId SSdetId(detid);
         moduleGeometry = SSdetId.moduleGeometry();
       }
-/*
+
+      /*
       if (detid.subdetId() == 3) {
         layer = ((detid >> 14) & 0x7);
       }  //TIB
@@ -1714,7 +1735,8 @@ crossTalkInvAlgo=1;
       if (detid.subdetId() == 6) {
         layer = ((detid >> 5) & 0x7) + 13;
       }  //TEC
-*/
+      */
+
       if (detid.subdetId() == StripSubdetector::TIB) layer= abs(int(tTopo->tibLayer(detid)));
       if (detid.subdetId() == StripSubdetector::TOB) layer= abs(int(tTopo->tobLayer(detid))) + 4;
       if (detid.subdetId() == StripSubdetector::TID) layer= abs(int(tTopo->tidWheel(detid))) + 10;
@@ -1745,7 +1767,7 @@ crossTalkInvAlgo=1;
       int BinX = templateHisto->GetXaxis()->FindBin(moduleGeometry);
       if (useTemplateLayer)
         BinX = templateHisto->GetXaxis()->FindBin(layer);
-      int BinY = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h) * 10.0);  //*10 because of cm-->mm
+      int BinY = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h) * 10.0);  // x10 because of cm-->mm
       int BinZ = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
       float Prob = templateHisto->GetBinContent(BinX, BinY, BinZ);
       //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
