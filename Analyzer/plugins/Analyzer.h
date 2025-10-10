@@ -436,6 +436,9 @@ private:
   TH3F* dEdxTemplates = nullptr;
   vector<TH3F*> dEdxTemplatesPU;
 
+  TH3F* dEdxTemplates_OldSatCorr = nullptr;
+  vector<TH3F*> dEdxTemplatesPU_OldSatCorr;
+
   float dEdxSF_0_, dEdxSF_1_;
   float dEdxSF[2] = {dEdxSF_0_, dEdxSF_1_};
   float dEdxK_;
@@ -446,6 +449,7 @@ private:
 
   dedxGainCorrector trackerCorrector;
   string dEdxTemplate_;
+  string dEdxTemplate_OldSatCorr_;
   bool enableDeDxCalibration_;
   string timeOffset_;
   muonTimingCalculator tofCalculator;

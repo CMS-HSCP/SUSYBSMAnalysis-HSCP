@@ -267,10 +267,16 @@ std::vector <int> ReturnCorrVec(const std::vector <int>& Q, const int layer, boo
         else Qcorr.push_back(MaxCorr);
     }
 
-    if (accumulate(Qcorr.begin(), Qcorr.end(), 0) <= accumulate(Q.begin(), Q.end(), 0)) AreSameCluster = true;
-    else AreSameCluster = false;
-    
-    return Qcorr;
+    if (accumulate(Qcorr.begin(), Qcorr.end(), 0) <= accumulate(Q.begin(), Q.end(), 0)) 
+    {
+        AreSameCluster = true;
+        return Q; // no correction applied
+    }
+    else
+    {
+        AreSameCluster = false;
+        return Qcorr;
+    }
 }
 
 std::vector <int> CrossTalkInvInStrip(const std::vector<int>& Q,

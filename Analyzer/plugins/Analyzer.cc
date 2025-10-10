@@ -103,6 +103,11 @@
 // - 48p1: changing to MET trigger list, adding muon trigger requirement for muon trigger matching, ExitWhenGenMatchNotFound = false
 // - 48p2: comment out ExitWhenGenMatchNotFound flag, add GendRMin variable in the nTuples in order to manually apply the cut if desired
 
+// Gael
+// - V49p1: New saturation correction method implemented for the computation of the dE/dx, used for the Gi templates.
+// - V49p2: Add Gi templates with PU dependence (2017+2018 data). Comparison between the old and new correction method used for ias.
+
+
 #include "SUSYBSMAnalysis/Analyzer/plugins/Analyzer.h"
 
 Analyzer::Analyzer(const edm::ParameterSet& iConfig)
@@ -233,6 +238,7 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
       dEdxK_(iConfig.getUntrackedParameter<double>("DeDxK")),
       dEdxC_(iConfig.getUntrackedParameter<double>("DeDxC")),
       dEdxTemplate_(iConfig.getUntrackedParameter<string>("DeDxTemplate")),
+      dEdxTemplate_OldSatCorr_(iConfig.getUntrackedParameter<string>("DeDxTemplate_OldSatCorr")),
       timeOffset_(iConfig.getUntrackedParameter<string>("TimeOffset")),
       saveTree_(iConfig.getUntrackedParameter<int>("SaveTree")),
       plotsPreS_massSpectrumApproach_(iConfig.getUntrackedParameter<bool>("plotsPreS_massSpectrumApproach")),
@@ -260,14 +266,18 @@ Analyzer::Analyzer(const edm::ParameterSet& iConfig)
 
   bool splitByModuleType = true;
   dEdxTemplatesPU.resize(NbPuBins_, NULL);
+  dEdxTemplatesPU_OldSatCorr.resize(NbPuBins_, NULL);
   // Option for Gi to have PU dependence
   if (puTreatment_){
     for (int i = 0; i < NbPuBins_ ; i++){
       dEdxTemplatesPU[i] = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,true,(i+1));
+      dEdxTemplatesPU_OldSatCorr[i] = loadDeDxTemplate(dEdxTemplate_OldSatCorr_, splitByModuleType,true,(i+1));
     }
   } else {
       dEdxTemplates = loadDeDxTemplate(dEdxTemplate_, splitByModuleType,false,0);
+      dEdxTemplates_OldSatCorr = loadDeDxTemplate(dEdxTemplate_OldSatCorr_, splitByModuleType,false,0);
   }
+
   //protection
   if(calibrateTOF_){ 
       tofCalculator.loadTimeOffset(timeOffset_);
@@ -1887,6 +1897,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
   std::vector<float> HSCP_Ias_noPix_noTIB_noTID_no3TEC;
   std::vector<float> HSCP_Ias_PixelOnly;
   std::vector<float> HSCP_Ias_StripOnly;
+  std::vector<float> HSCP_Ias_StripOnly_OldCorr;
   std::vector<float> HSCP_Ias_PixelOnly_noL1;
   std::vector<float> HSCP_Ih;
   std::vector<float> HSCP_Ick;//return (Ih-C)/K
@@ -3031,7 +3042,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     // Temporary dEdx info
     reco::DeDxData dedxIas_FullTrackerTmp, dedxIas_noL1Tmp,dedxIas_noTIBnoTIDno3TEC_Tmp, dedxIas_PixelOnly_Tmp, dedxIas_StripOnly_Tmp, dedxIas_PixelOnly_noL1_Tmp, dedxIs_StripOnly_Tmp, dedxMorrisMethod_StripOnly_Tmp;
     
-    //reco::DeDxData dedxIas_StripOnly_NewCorr_Tmp;
+    reco::DeDxData dedxIas_StripOnly_OldCorr_Tmp;
 
     // Pointers that will have the dEdx info laterr
     // Ias including all pixel layers and strips
@@ -3042,7 +3053,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     
     reco::DeDxData* dedxIas_PixelOnly = nullptr; //globalIas_ Pixel only
     reco::DeDxData* dedxIas_StripOnly = nullptr; //globalIas_ Strip only
-    //reco::DeDxData* dedxIas_StripOnly_NewCorr = nullptr; //globalIas_ Strip only with new sat correction
+    reco::DeDxData* dedxIas_StripOnly_OldCorr = nullptr; //globalIas_ Strip only with old sat correction method and |eta|<2.4
     reco::DeDxData* dedxIas_PixelOnly_noL1 = nullptr; //globalIas_ Pixel only no BPIXL1
     reco::DeDxData* dedxIs_StripOnly = nullptr; //symmetric Smirnov discriminator - Is
     reco::DeDxData* dedxMorrisMethod_StripOnly = nullptr; // FiStrips
@@ -3132,12 +3143,11 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
             dedxIas_StripOnly = dedxIas_StripOnly_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_Tmp : nullptr;
 
-            //dedxIas_StripOnly_NewCorr_Tmp =
-            //    computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false, mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0,
-            //             false, false, true, pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge());
-            //dedxIas_StripOnly_NewCorr = dedxIas_StripOnly_NewCorr_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_NewCorr_Tmp : nullptr;
-
-
+            //globalIas_ Strip only BUT using the Gstrip templates under the old saturation correction method and |eta|<2.4
+            dedxIas_StripOnly_OldCorr_Tmp =
+                computedEdx(track->eta(), iSetup, run_number, year, dedxHits, dEdxSF, localdEdxTemplates = dEdxTemplatesPU_OldSatCorr[i], usePixel = false, useStrip = true, useClusterCleaning, useTruncated = false, mustBeInside, MaxStripNOM, correctFEDSat, crossTalkInvAlgo = 1, dropLowerDeDxValue = 0.0, 0, useTemplateLayer_, skipPixelL1 = false, skip_templates_ias = 0,
+                         false, false, true, pixelCPE_, tTopo, track->px(), track->py(), track->pz(), track->charge());
+            dedxIas_StripOnly_OldCorr = dedxIas_StripOnly_OldCorr_Tmp.numberOfMeasurements() > 0 ? &dedxIas_StripOnly_OldCorr_Tmp : nullptr;
 
             //globalIas_ Pixel only no BPIXL1
             dedxIas_PixelOnly_noL1_Tmp =
@@ -3172,8 +3182,6 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     //Choose of Ias definition - strips only
     auto dedxSObj = dedxIas_StripOnly;
     globalIas_ = (dedxSObj) ? dedxSObj->dEdx() : -1.f;
-    //auto dedxSObj_NewCorr = dedxIas_StripOnly_NewCorr;
-    //float globalIas_NewCorr = (dedxSObj_NewCorr) ? dedxSObj_NewCorr->dEdx() : -1.f;
     
     globalFiStrips_ = (dedxMorrisMethod_StripOnly) ? dedxMorrisMethod_StripOnly->dEdx() : -1.f;
     
@@ -4129,7 +4137,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
               if (detid.subdetId() == StripSubdetector::TEC) stripLayerIndex = abs(int(tTopo->tecRing(detid))) + 13;
               amplitudes = ReturnCorrVec(amplitudes, stripLayerIndex, totrash);
               //amplitudes = SaturationCorrection(amplitudes,0.10,0.04,true,20,25);
-              
+             
               float dedx_charge = 0;
               for (unsigned int s = 0; s < amplitudes.size(); s++) {
                  dedx_charge+=amplitudes[s];
@@ -4138,14 +4146,14 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 
               // cleaning cuts
               std::vector<int> amplitudes2 = convert(cluster->amplitudes());
-              //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
               std::vector<int> amplitudesPrim = CrossTalkInvInStrip(amplitudes2, stripLayerIndex, true, 20, 0.10, 0.04);
+              //std::vector<int> amplitudesPrim = CrossTalkInv(amplitudes2, 0.10, 0.04, true);
               
               cleaning = clusterCleaning(amplitudesPrim, 1);
               dedx_inside = isHitInsideTkModule(dedxHits->pos(h), dedxHits->detId(h), cluster);
         }
         // TODO
-        if (cleaning && dedx_inside)  {
+        if (cleaning && dedx_inside) {
           // sampleType_ < 2 means dont create templates for signal samples
           if (createGiTemplates_ && (sampleType_ < 2)) {
            int npv = vertexColl.size();
@@ -4732,7 +4740,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         tuple->PostPreS_FracSat->Fill(fracsat_highp, eventWeight_);
       }
       
-      if ((((globalIas_ > 0.22 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0) {
+      if ((((globalIas_ > 0.22 || Mass > 1000) && !isSignal) || (debug_ > 7))  && trigInfo_ > 0 && debug_>0) {
         if (globalIas_ > 0.22)    { LogPrint(MOD) << "\n        >> After passing preselection, the globalIas_ > 0.25";}
         if (Mass > 1000) { LogPrint(MOD) << "\n        >> After passing preselection, the Mass > 1000";}
         LogPrint(MOD) << "        >> LS: " << iEvent.luminosityBlock() << " Event number: " << iEvent.id().event();
@@ -4745,7 +4753,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
         LogPrint(MOD) << "        >> track->validFraction()  " <<   track->validFraction() ;
         LogPrint(MOD) << "        >> numDeDxHits  " <<   numDeDxHits ;
         LogPrint(MOD) << "        >> track->chi2() / track->ndof()   " <<   track->chi2() / track->ndof() ;
-        LogPrint(MOD) << "        >> EoP   " <<   EoP << "     --> | PF E = " << pf_energy <<  " | Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " | p = " << track->p() << " | " ;
+        LogPrint(MOD) << "        >> EoP   " <<   EoP << "     --> | PF E = " << pf_energy <<  " | Cone based (0.3) E = " << hscpIso.Get_ECAL_Energy() + hscpIso.Get_HCAL_Energy() << " | p = " << track->p() << " | " ;
         LogPrint(MOD) << "        >> dz  " <<   dz ;
         LogPrint(MOD) << "        >> dxy  " <<   dxy ;
         LogPrint(MOD) << "        >> track->ptError() / track->pt()  " <<   track->ptError() / track->pt() ;
@@ -5376,6 +5384,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
     HSCP_Ias_noPix_noTIB_noTID_no3TEC.push_back(dedxIas_noTIBnoTIDno3TEC ? dedxIas_noTIBnoTIDno3TEC->dEdx() : -1);
     HSCP_Ias_PixelOnly.push_back(dedxIas_PixelOnly ? dedxIas_PixelOnly->dEdx() : -1);
     HSCP_Ias_StripOnly.push_back(dedxIas_StripOnly ? dedxIas_StripOnly->dEdx() : -1);
+    HSCP_Ias_StripOnly_OldCorr.push_back(dedxIas_StripOnly_OldCorr ? dedxIas_StripOnly_OldCorr->dEdx() : -1);
     HSCP_Ias_PixelOnly_noL1.push_back(dedxIas_PixelOnly_noL1 ? dedxIas_PixelOnly_noL1->dEdx() : -1);
 //    HSCP_Ih.push_back(dedxMObj_FullTracker ? dedxMObj_FullTracker->dEdx() : -1);
     HSCP_Ih.push_back(globalIh_);
@@ -7595,6 +7604,7 @@ void Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
                                 HSCP_Ias_noPix_noTIB_noTID_no3TEC,
                                 HSCP_Ias_PixelOnly,
                                 HSCP_Ias_StripOnly,
+                                HSCP_Ias_StripOnly_OldCorr,
                                 HSCP_Ias_PixelOnly_noL1,
                                 HSCP_Ih,
                                 HSCP_Ick,
@@ -7944,8 +7954,11 @@ void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.addUntracked("DeDxK",2.3)->setComment("K constant, really controlled by the config for each era");
   desc.addUntracked("DeDxC",3.17)->setComment("C constant, really controlled by the config for each era");
   desc.addUntracked("SaveTree",6)->setComment("0: do not save tree, 6: everything is saved");
-  desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/GiTemplate_EtaExtension.root")
+  desc.addUntracked<std::string>("DeDxTemplate","SUSYBSMAnalysis/HSCP/data/GiTemplate_EtaExtension_SatNewCorr_v2.root")
     ->setComment("Norm charge vs path lenght vs module geometry templates for the strips detector, really controlled by the config for each era");
+  desc.addUntracked<std::string>("DeDxTemplate_OldSatCorr","SUSYBSMAnalysis/HSCP/data/GiTemplate_EtaExtension.root")
+    ->setComment("Previous iteration of the DeDx templates, using the original method to correct saturated dEdx clusters");
+
 
   desc.addUntracked("plotsPreS_massSpectrumApproach",true)->setComment("false: provide plots at PreS step with the ionisation approach preselection; true: provide plots at PreS step with the mass spectrum approach preselection");
 

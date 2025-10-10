@@ -276,6 +276,7 @@ public:
                         const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                         const std::vector<float> &Ias_PixelOnly,
                         const std::vector<float> &Ias_StripOnly,
+                        const std::vector<float> &Ias_StripOnly_OldCorr,
                         const std::vector<float> &Ias_PixelOnly_noL1,
                         const std::vector<float> &Ih,
                         const std::vector<float> &Ick,
@@ -3070,6 +3071,7 @@ void TupleMaker::initializeTuple(Tuple *&tuple,
     tuple->Tree->Branch("Ias_noTIBnoTIDno3TEC", &tuple->Tree_Ias_noTIBnoTIDno3TEC);
     tuple->Tree->Branch("Ias_PixelOnly", &tuple->Tree_Ias_PixelOnly);
     tuple->Tree->Branch("Ias_StripOnly", &tuple->Tree_Ias_StripOnly);
+    tuple->Tree->Branch("Ias_StripOnly_OldCorr", &tuple->Tree_Ias_StripOnly_OldCorr);
     tuple->Tree->Branch("Ias_PixelOnly_noL1", &tuple->Tree_Ias_PixelOnly_noL1);
     tuple->Tree->Branch("Ih", &tuple->Tree_Ih);
     tuple->Tree->Branch("Ick", &tuple->Tree_Ick);
@@ -3475,6 +3477,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
                                   const std::vector<float> &Ias_noTIBnoTIDno3TEC,
                                   const std::vector<float> &Ias_PixelOnly,
                                   const std::vector<float> &Ias_StripOnly,
+                                  const std::vector<float> &Ias_StripOnly_OldCorr,
                                   const std::vector<float> &Ias_PixelOnly_noL1,
                                   const std::vector<float> &Ih,
                                   const std::vector<float> &Ick,
@@ -3847,6 +3850,7 @@ void TupleMaker::fillTreeBranches(Tuple *&tuple,
   tuple->Tree_Ias_noTIBnoTIDno3TEC = Ias_noTIBnoTIDno3TEC;
   tuple->Tree_Ias_PixelOnly = Ias_PixelOnly;
   tuple->Tree_Ias_StripOnly = Ias_StripOnly;
+  tuple->Tree_Ias_StripOnly_OldCorr = Ias_StripOnly_OldCorr;
   tuple->Tree_Ias_PixelOnly_noL1 = Ias_PixelOnly_noL1;
   tuple->Tree_Ih = Ih;
   tuple->Tree_Ick = Ick;
